@@ -175,12 +175,12 @@
 - Redirects to `/` if not authenticated
 - Accepts `role` prop for role-based access
 - `src/routes/GuestRoute.tsx`
-- Allows Guest + Authenticated
+- Allows anonymous guest mode and authenticated role users
 - Blocks completely unauthenticated
 **Acceptance Criteria**:
 - [ ] `/home` redirects to `/` when not authenticated
 - [ ] `/menu` accessible to guest
-- [ ] `/editor` only accessible to `Admin` role
+- [ ] `/editor` accessible only to `ROOT`, `OWNER`, `ADMIN` roles
 
 ### TASK-106
 **Title**: Configure Redux Persist for auth state  
@@ -203,10 +203,12 @@
 **Description**:
 - Create `src/routes/index.tsx` with all routes
 - Public: `/`
-- Guest+Auth: `/menu`
-- Auth: `/home`, `/reserve`, `/reservation/success`, `/cart`, `/reviews`
-- Admin: `/editor`, `/dashboard`
-- Staff: `/hall`, `/orders`
+- AnonymousGuest+Roles: `/menu`
+- Role `GUEST` and above: `/home`, `/reserve`, `/reservation/success`, `/cart`, `/reviews`
+- `ROOT`/`OWNER`: `/dashboard`
+- `ROOT`/`OWNER`/`ADMIN`: `/editor`
+- `WAITER` and above: `/hall`
+- `COOK` and above: `/orders`
 - Wrap private routes in `ProtectedRoute`
 **Acceptance Criteria**:
 - [ ] All routes render correct page
@@ -484,7 +486,7 @@
 ## Phase 8 - Staff Views
 
 ### TASK-801
-**Title**: Build live hall map for Hostess  
+**Title**: Build live hall map for Waiter  
 **Labels**: `feature`, `phase-8`, `staff`  
 **Description**:
 - Create `src/features/restaurants/HallStatus.tsx`

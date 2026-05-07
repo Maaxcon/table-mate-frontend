@@ -5,7 +5,7 @@
 
 ## Summary
 
-Deliver frontend-only MVP for Tablemate with three access modes (Guest, Authenticated User, Admin/Staff), strict role-based route protection, Google OAuth-only auth, reservation hall map, menu browsing, shared real-time cart, admin editor canvas, and staff operational views.
+Deliver frontend-only MVP for Tablemate with anonymous guest mode plus role-based access (`ROOT`, `OWNER`, `ADMIN`, `WAITER`, `COOK`, `GUEST`), strict route protection, Google OAuth-only auth, reservation hall map, menu browsing, shared real-time cart, admin editor canvas, and staff operational views.
 
 Execution strategy is module-by-module with controlled parallel streams for a 2-3 developer team:
 - Week 1: foundation + auth + routing.
@@ -139,13 +139,13 @@ Definition of Done:
 
 1. Implement full router tree in `src/routes/`.
 2. Build `AdminLayout` and `GuestLayout`.
-3. Apply route guards by role for auth/admin/waiter/hostess paths.
+3. Apply route guards by role hierarchy for `ROOT`, `OWNER`, `ADMIN`, `WAITER`, `COOK`, `GUEST` paths.
 4. Create placeholder pages for all routes.
 
 Definition of Done:
 - Correct layout per route group.
 - Role mismatch redirects reliably.
-- Guest can access only `/` and `/menu`.
+- Anonymous guest mode can access only `/` and `/menu`.
 
 ### Phase 3 - Auth + Routing Merge Gate
 

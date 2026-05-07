@@ -94,9 +94,11 @@ As staff roles, I can access pages relevant to operations while unauthorized rol
 
 **Acceptance Scenarios**:
 
-1. **Given** user role `Admin`, **When** they open `/editor` or `/dashboard`, **Then** access is allowed.
-2. **Given** user role `Waiter` or `Hostess`, **When** they open `/hall` or `/orders`, **Then** access is allowed.
-3. **Given** insufficient role, **When** protected route is requested, **Then** user is redirected to an allowed route and receives access feedback.
+1. **Given** user role `ROOT` or `OWNER`, **When** they open `/dashboard`, **Then** access is allowed.
+2. **Given** user role `ROOT`, `OWNER`, or `ADMIN`, **When** they open `/editor`, **Then** access is allowed.
+3. **Given** user role `WAITER`, **When** they open `/hall`, **Then** access is allowed.
+4. **Given** user role `COOK`, **When** they open `/orders`, **Then** access is allowed.
+5. **Given** insufficient role, **When** protected route is requested, **Then** user is redirected to an allowed route and receives access feedback.
 
 ### Edge Cases
 - OAuth popup is closed by user before completion.
@@ -116,8 +118,8 @@ As staff roles, I can access pages relevant to operations while unauthorized rol
 - **FR-001**: System MUST provide landing page `/` with actions `SIGN IN / REGISTER` and `Continue as Guest`.
 - **FR-002**: System MUST authenticate only through Google OAuth (`@react-oauth/google`) and store auth state in RTK `authSlice`.
 - **FR-003**: System MUST set `isLoading` during auth request and surface auth failures through RTK error state and toast.
-- **FR-004**: System MUST support guest browsing mode with `isGuest = true` and enforce read-only restrictions on ordering, reservation, and cart actions.
-- **FR-005**: System MUST expose protected route wrappers for authenticated and role-scoped access (`Admin`, `Waiter`, `Hostess`).
+- **FR-004**: System MUST support anonymous guest browsing mode with `isGuest = true` and enforce read-only restrictions on ordering, reservation, and cart actions.
+- **FR-005**: System MUST expose protected route wrappers for role-scoped access using backend role matrix: `ROOT`, `OWNER`, `ADMIN`, `WAITER`, `COOK`, `GUEST`.
 - **FR-006**: System MUST provide routes: `/`, `/menu`, `/home`, `/reserve`, `/reservation/success`, `/cart`, `/reviews`, `/editor`, `/dashboard`, `/hall`, `/orders`.
 - **FR-007**: System MUST use Redux Toolkit exclusively for app state: `authSlice`, `editorSlice`, `reservationSlice`, `menuSlice`, `cartSlice`.
 - **FR-008**: System MUST persist auth state in localStorage through Redux Persist.
@@ -126,20 +128,29 @@ As staff roles, I can access pages relevant to operations while unauthorized rol
 - **FR-011**: System MUST load menu categories and items from API and support category filtering (`ALL`, `SALADS`, `SIDES`, `DESSERTS`, `DRINKS`).
 - **FR-012**: System MUST implement shared cart with REST session APIs and WebSocket sync for `ITEM_ADDED`, `ITEM_REMOVED`, `USER_JOINED`, `USER_LEFT`.
 - **FR-013**: Staff hall realtime flow MUST process `TABLE_STATUS_CHANGED` and `NEW_RESERVATION` events from `ws/hall/`.
-- **FR-013**: System MUST route all HTTP requests through `src/api/` Axios instances with interceptors.
-- **FR-014**: System MUST NOT call `fetch()` directly in pages/components/features.
-- **FR-015**: System MUST use monochromatic styling: black background, white text, 1px borders, and tokenized values from `src/assets/tokens`.
-- **FR-016**: System MUST use CSS Modules or Styled Components only and MUST NOT use inline styles.
-- **FR-017**: System MUST compile under TypeScript strict mode with explicit interfaces in `src/types/` and no `any`.
-- **FR-018**: System MUST use domain-level types/enums for IDs and statuses (`Role`, `TableStatus`, `ReservationStatus`, `CanvasMode`, `CartSessionStatus`, etc.).
-- **FR-019**: System MUST implement async RTK actions with `pending`/`fulfilled`/`rejected` lifecycle and must never silently swallow errors.
-- **FR-020**: System MUST enforce code quality gates: Prettier + ESLint (Airbnb), Husky pre-commit formatting on staged files.
-- **FR-021**: System MUST exclude non-goals from MVP: non-Google auth providers, AI features, predictive models, recommendations, payments, offline mode.
+- **FR-014**: System MUST route all HTTP requests through `src/api/` Axios instances with interceptors.
+- **FR-015**: System MUST NOT call `fetch()` directly in pages/components/features.
+- **FR-016**: System MUST use monochromatic styling: black background, white text, 1px borders, and tokenized values from `src/assets/tokens`.
+- **FR-017**: System MUST use CSS Modules or Styled Components only and MUST NOT use inline styles.
+- **FR-018**: System MUST compile under TypeScript strict mode with explicit interfaces in `src/types/` and no `any`.
+- **FR-019**: System MUST use domain-level types/enums for IDs and statuses (`Role`, `TableStatus`, `ReservationStatus`, `CanvasMode`, `CartSessionStatus`, etc.).
+- **FR-020**: System MUST implement async RTK actions with `pending`/`fulfilled`/`rejected` lifecycle and must never silently swallow errors.
+- **FR-021**: System MUST enforce code quality gates: Prettier + ESLint (Airbnb), Husky pre-commit formatting on staged files.
+- **FR-022**: System MUST exclude non-goals from MVP: non-Google auth providers, AI features, predictive models, recommendations, payments, offline mode.
+
+### Role Permission Matrix
+
+- **ROOT (Level 1)**: global access including restaurant ownership management and all protected frontend routes.
+- **OWNER (Level 2)**: restaurant settings/staff management and management dashboards.
+- **ADMIN (Level 3)**: floor-plan editor and table/menu administration.
+- **WAITER (Level 4)**: hall map operations, table status workflows, shared cart operations.
+- **COOK (Level 5)**: kitchen order board and order state updates.
+- **GUEST (Level 6)**: authenticated guest experience (menu, reservation, assigned-table ordering).
 
 ### Key Entities *(include if feature involves data)*
 
 - **UserDTO**: Authenticated user profile, includes role and identity data used by route guards and cart participants.
-- **Role**: Enum controlling permission boundaries (`Guest`, `AuthUser`, `Admin`, `Waiter`, `Hostess`).
+- **Role**: Enum controlling permission boundaries (`ROOT`, `OWNER`, `ADMIN`, `WAITER`, `COOK`, `GUEST`).
 - **TableDTO**: Hall table representation with ID, shape, coordinates, and availability status.
 - **TableStatus**: Enum for table lifecycle (`Free`, `Occupied`, `Dirty`, `Reserved`).
 - **ReservationDTO**: Reservation record linked to user and table with status and time metadata.
@@ -166,7 +177,8 @@ As staff roles, I can access pages relevant to operations while unauthorized rol
 - Backend endpoints listed in this spec are available and return contract-compatible payloads for frontend DTO mapping.
 - `/reviews` is an MVP frontend route and does not require dedicated backend API in this phase.
 - MVP targets modern desktop and mobile browsers with stable internet connectivity.
-- Guest mode is intentionally session-local and does not require server-side identity.
+- Anonymous guest mode is session-local and does not require server-side identity.
+- Role `GUEST` is a backend-issued role in authenticated JWT context and may have broader capabilities than anonymous guest mode.
 - Role assignment is provided by backend identity payload and is trusted for frontend route gating.
 - Payment processing is intentionally out of MVP scope and `Place Order` is checkout intent only.
 - Design token files under `src/assets/tokens` will be created or expanded as part of implementation.
