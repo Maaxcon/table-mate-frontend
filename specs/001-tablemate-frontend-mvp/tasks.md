@@ -263,7 +263,7 @@
 **Labels**: `feature`, `phase-4`, `reservation`  
 **Description**:
 - Create `src/api/reservation.ts`
-- `GET /api/tables/available/`
+- `GET /api/editor/tables/available/`
 - `POST /api/reservations/`
 - Use Axios instance from `src/api/client.ts`
 **Acceptance Criteria**:
@@ -406,10 +406,10 @@
 **Labels**: `feature`, `phase-6`, `cart`  
 **Description**:
 - Create `src/api/cart.ts`
-- `POST /api/cart/sessions/`
-- `GET /api/cart/sessions/:id/`
-- `POST /api/cart/sessions/:id/items/`
-- `DELETE /api/cart/sessions/:id/items/:itemId/`
+- `POST /api/orders/cart/sessions/`
+- `GET /api/orders/cart/sessions/:id/`
+- `POST /api/orders/cart/sessions/:id/items/`
+- `DELETE /api/orders/cart/sessions/:id/items/:itemId/`
 **Acceptance Criteria**:
 - [ ] All calls typed correctly
 - [ ] Errors propagate to RTK
@@ -472,7 +472,7 @@
 - `Stage` + `Layer`
 - Render each `TableDTO` as draggable shape
 - Grid snapping on drag (20px)
-- `onDragEnd` -> `PATCH /api/tables/:id/position/`
+- `onDragEnd` -> `PATCH /api/editor/tables/:id/position/`
 - Click -> dispatch `selectTable(id)`
 **Acceptance Criteria**:
 - [ ] All tables render on canvas

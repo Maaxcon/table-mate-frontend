@@ -158,7 +158,7 @@ Merge gate:
 ### Phase 4 - Reservation Module (Owner: Developer 1, Parallel with Phase 5)
 
 1. Implement `reservationSlice` with required fields.
-2. Add API calls: `GET /api/tables/available/`, `POST /api/reservations/`.
+2. Add API calls: `GET /api/editor/tables/available/`, `POST /api/reservations/`.
 3. Build interactive hall map with availability colors.
 4. Wire selection and confirmation flow.
 5. Handle success redirect to `/reservation/success`.
@@ -205,7 +205,7 @@ Definition of Done:
 ### Phase 7 - Admin Canvas Editor (Owner: Developer 3, or Developer 1 after Phase 4)
 
 1. Implement `editorSlice` (`tables`, `selectedTableId`, `canvasMode`).
-2. Add API calls: `GET /api/tables/`, `PATCH /api/tables/:id/position/`.
+2. Add API calls: `GET /api/editor/tables/`, `PATCH /api/editor/tables/:id/position/`.
 3. Build `react-konva` canvas for table editing.
 4. Implement drag-and-drop with snapping.
 5. Persist coordinates on drag end.

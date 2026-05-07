@@ -102,7 +102,7 @@ As staff roles, I can access pages relevant to operations while unauthorized rol
 - OAuth popup is closed by user before completion.
 - Authenticated session expires while user is on protected route.
 - Guest manually opens `/cart`, `/reserve`, `/home`, `/editor`, `/hall`, or `/orders` by URL.
-- `/api/tables/available/` response changes between selection and confirmation.
+- `/api/editor/tables/available/` response changes between selection and confirmation.
 - Duplicate cart events arrive out of order from WebSocket.
 - WebSocket reconnects after disconnect and must resync server state.
 - Menu categories are empty or endpoint returns partial data.
