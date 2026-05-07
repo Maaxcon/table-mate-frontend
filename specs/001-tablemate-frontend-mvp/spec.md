@@ -79,7 +79,7 @@ As an authenticated user, I can view and manage shared cart items with real-time
 **Acceptance Scenarios**:
 
 1. **Given** an authenticated user on `/cart`, **When** cart session is loaded, **Then** item list, subtotal, and service fee are displayed.
-2. **Given** active socket `ws/cart/:session_id/`, **When** events `ITEM_ADDED`, `ITEM_REMOVED`, or `USER_JOINED` arrive, **Then** cart state updates in RTK without page reload.
+2. **Given** active socket `ws/cart/:session_id/`, **When** events `ITEM_ADDED`, `ITEM_REMOVED`, `USER_JOINED`, or `USER_LEFT` arrive, **Then** cart state updates in RTK without page reload.
 3. **Given** temporary network loss, **When** socket disconnects, **Then** `sessionStatus` moves to `disconnected` and user sees non-blocking status feedback.
 
 ---
@@ -124,7 +124,8 @@ As staff roles, I can access pages relevant to operations while unauthorized rol
 - **FR-009**: System MUST implement reservation flow with interactive table map and submit reservation via `POST /api/reservations/`.
 - **FR-010**: System MUST handle reservation conflict `409` with user-facing toast `"Table was just taken"`.
 - **FR-011**: System MUST load menu categories and items from API and support category filtering (`ALL`, `SALADS`, `SIDES`, `DESSERTS`, `DRINKS`).
-- **FR-012**: System MUST implement shared cart with REST session APIs and WebSocket sync for `ITEM_ADDED`, `ITEM_REMOVED`, `USER_JOINED`.
+- **FR-012**: System MUST implement shared cart with REST session APIs and WebSocket sync for `ITEM_ADDED`, `ITEM_REMOVED`, `USER_JOINED`, `USER_LEFT`.
+- **FR-013**: Staff hall realtime flow MUST process `TABLE_STATUS_CHANGED` and `NEW_RESERVATION` events from `ws/hall/`.
 - **FR-013**: System MUST route all HTTP requests through `src/api/` Axios instances with interceptors.
 - **FR-014**: System MUST NOT call `fetch()` directly in pages/components/features.
 - **FR-015**: System MUST use monochromatic styling: black background, white text, 1px borders, and tokenized values from `src/assets/tokens`.
@@ -163,6 +164,7 @@ As staff roles, I can access pages relevant to operations while unauthorized rol
 
 ## Assumptions
 - Backend endpoints listed in this spec are available and return contract-compatible payloads for frontend DTO mapping.
+- `/reviews` is an MVP frontend route and does not require dedicated backend API in this phase.
 - MVP targets modern desktop and mobile browsers with stable internet connectivity.
 - Guest mode is intentionally session-local and does not require server-side identity.
 - Role assignment is provided by backend identity payload and is trusted for frontend route gating.

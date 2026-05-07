@@ -1,39 +1,53 @@
 # AGENTS.md
 
-## Project
-Tablemate — Restaurant Automation System
-Frontend: React 18, Vite, TypeScript strict
+## Mission
+Ship frontend features with strict alignment to constitution and active Speckit artifacts.
 
-## Speckit Documents
-- Constitution: .speckit/constitution.md
-- Specification: .speckit/specify.md
-- Plan:          .speckit/plan.md
-- Tasks:         .speckit/tasks.md
+## Required Context
+- Always read active feature docs first:
+- `specs/<feature>/spec.md`
+- `specs/<feature>/plan.md`
+- `specs/<feature>/tasks.md`
+- `.specify/memory/constitution.md`
+- If no active feature exists, start with `speckit-specify`.
 
-## Key Rules
-- RTK only for state management (no Zustand, no Context)
-- Feature-Sliced Design — no cross-feature imports
-- Prettier + ESLint (Airbnb) enforced
-- Husky blocks unformatted commits
-- Conventional Commits required
-- No AI features, no predictive models
+## Workflow (Mandatory)
+1. `speckit-specify "<feature description>"`
+2. `speckit-plan`
+3. `speckit-tasks`
+4. `speckit-implement` (or manual implementation from `tasks.md`)
 
-## Stack
-- React 18 + Vite
-- TypeScript (strict mode, no any)
-- Redux Toolkit + Redux Persist
-- @react-oauth/google
-- react-konva
-- Axios
-- React Router v6
+### Codex Command Mapping
+- `$speckit-specify`
+- `$speckit-plan`
+- `$speckit-tasks`
+- `$speckit-implement`
 
-## Git Flow
-- main   → production, locked
-- develop → integration
-- feature/* and fix/* → work branches
-- All PRs → develop, require 1 approval + CI
+## Project Standards
+- Stack: React 18, Vite, TypeScript strict mode.
+- State: Redux Toolkit only (including auth, cart, reservation, editor/UI state).
+- API: Axios-only via `src/api/` with interceptors; no direct `fetch()` in features/components.
+- Architecture: Feature-Sliced Design, no cross-feature imports.
+- Styling: Monochrome token system, CSS Modules or Styled Components only, no inline styles.
+- Quality: ESLint (Airbnb) + Prettier + Husky pre-commit.
 
-## Auth
-- Google OAuth only
-- Guest mode → /menu read-only only
-- ProtectedRoute by role
+## Git Rules
+- Base branch: `develop`
+- Work branches: `feature/*`, `fix/*`, `chore/*`
+- If a matching feature branch already exists, continue there (avoid duplicate branches).
+- Conventional Commits required.
+- PR target is `develop` with 1+ approval and green CI.
+
+## Commit Scope
+- Include when changed:
+- `AGENTS.md`
+- `.specify/memory/constitution.md`
+- `.specify/**`
+- `specs/**` for active feature
+- implementation code/tests/config updates
+
+## Definition of Done
+- Behavior matches `spec.md`.
+- `constitution/spec/plan/tasks` are synchronized.
+- Lint/format/tests pass.
+- PR is review-ready.

@@ -409,7 +409,7 @@
 - `POST /api/orders/cart/sessions/`
 - `GET /api/orders/cart/sessions/:id/`
 - `POST /api/orders/cart/sessions/:id/items/`
-- `DELETE /api/orders/cart/sessions/:id/items/:itemId/`
+- `DELETE /api/orders/cart/sessions/:id/items/:item_id/`
 **Acceptance Criteria**:
 - [ ] All calls typed correctly
 - [ ] Errors propagate to RTK
@@ -494,7 +494,7 @@
 - Occupied -> red
 - Dirty -> yellow
 - Reserved -> orange
-- `TABLE_STATUS_CHANGED` event updates RTK
+- `TABLE_STATUS_CHANGED` and `NEW_RESERVATION` events update RTK
 **Acceptance Criteria**:
 - [ ] Colors reflect real-time status
 - [ ] Updates without page refresh
