@@ -17,21 +17,29 @@
   the iteration process.
 -->
 
-**Language/Version**: [e.g., Python 3.11, Swift 5.9, Rust 1.75 or NEEDS CLARIFICATION]  
-**Primary Dependencies**: [e.g., FastAPI, UIKit, LLVM or NEEDS CLARIFICATION]  
-**Storage**: [if applicable, e.g., PostgreSQL, CoreData, files or N/A]  
-**Testing**: [e.g., pytest, XCTest, cargo test or NEEDS CLARIFICATION]  
-**Target Platform**: [e.g., Linux server, iOS 15+, WASM or NEEDS CLARIFICATION]
-**Project Type**: [e.g., library/cli/web-service/mobile-app/compiler/desktop-app or NEEDS CLARIFICATION]  
-**Performance Goals**: [domain-specific, e.g., 1000 req/s, 10k lines/sec, 60 fps or NEEDS CLARIFICATION]  
-**Constraints**: [domain-specific, e.g., <200ms p95, <100MB memory, offline-capable or NEEDS CLARIFICATION]  
-**Scale/Scope**: [domain-specific, e.g., 10k users, 1M LOC, 50 screens or NEEDS CLARIFICATION]
+**Language/Version**: [e.g., TypeScript strict, Rust 1.75 or NEEDS CLARIFICATION]
+**Primary Dependencies**: [e.g., React 18, RTK, Axios, ws client or NEEDS CLARIFICATION]
+**Storage**: [if applicable, e.g., PostgreSQL, localStorage, files or N/A]
+**Testing**: [e.g., Vitest, RTL, Playwright or NEEDS CLARIFICATION]
+**Target Platform**: [e.g., web tablet, mobile browser, desktop browser]
+**Project Type**: [e.g., frontend web app, backend service]
+**Realtime Transport**: [WebSocket event channels + schema version policy]
+**Performance Goals**: [domain-specific, e.g., floor plan update paint <100ms]
+**Constraints**: [e.g., role-scoped mounts, no polling, no offline writes]
+**Scale/Scope**: [domain-specific, e.g., 50-table floor plan, shift-level concurrency]
 
 ## Constitution Check
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-[Gates determined based on constitution file]
+- [ ] `Role-scoped render tree`: unauthorized role routes/components are not mounted.
+- [ ] `Backend authority`: table and order-item statuses are rendered from backend-pushed state, not local inference.
+- [ ] `Realtime contract`: all live state is websocket-delivered; no polling loops.
+- [ ] `Event version safety`: client behavior for unknown `schema_version` is explicitly defined as ignore-safe.
+- [ ] `Destructive-action safeguards`: void/cancel reservation/close table include explicit consequence confirmations.
+- [ ] `Offline behavior`: write actions are blocked on disconnect; reconnect includes full state refetch before writes resume.
+- [ ] `Design tokens`: status colors and theme values are semantic tokens, no hardcoded status hex values.
+- [ ] `Floor plan SLA`: planned implementation includes evidence/strategy for <100ms floor-plan render update budget.
 
 ## Project Structure
 
@@ -100,5 +108,5 @@ directories captured above]
 
 | Violation | Why Needed | Simpler Alternative Rejected Because |
 |-----------|------------|-------------------------------------|
-| [e.g., 4th project] | [current need] | [why 3 projects insufficient] |
-| [e.g., Repository pattern] | [specific problem] | [why direct DB access insufficient] |
+| [e.g., temporary polling fallback] | [current constraint] | [why websocket-only path not yet possible] |
+| [e.g., extra mounted role surface] | [specific operational need] | [why strict role isolation cannot yet apply] |
