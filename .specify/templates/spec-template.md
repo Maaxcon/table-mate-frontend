@@ -9,15 +9,7 @@
 
 <!--
   IMPORTANT: User stories should be PRIORITIZED as user journeys ordered by importance.
-  Each user story/journey must be INDEPENDENTLY TESTABLE - meaning if you implement just ONE of them,
-  you should still have a viable MVP (Minimum Viable Product) that delivers value.
-
-  Assign priorities (P1, P2, P3, etc.) to each story, where P1 is the most critical.
-  Think of each story as a standalone slice of functionality that can be:
-  - Developed independently
-  - Tested independently
-  - Deployed independently
-  - Demonstrated to users independently
+  Each user story/journey must be INDEPENDENTLY TESTABLE.
 -->
 
 ### User Story 1 - [Brief Title] (Priority: P1)
@@ -26,7 +18,7 @@
 
 **Why this priority**: [Explain the value and why it has this priority level]
 
-**Independent Test**: [Describe how this can be tested independently - e.g., "Can be fully tested by [specific action] and delivers [specific value]"]
+**Independent Test**: [Describe how this can be tested independently]
 
 **Acceptance Scenarios**:
 
@@ -61,96 +53,63 @@
 
 1. **Given** [initial state], **When** [action], **Then** [expected outcome]
 
----
-
-[Add more user stories as needed, each with an assigned priority]
-
 ### Edge Cases
-
-<!--
-  ACTION REQUIRED: The content in this section represents placeholders.
-  Fill them out with the right edge cases.
--->
 
 - What happens when [boundary condition]?
 - How does system handle [error scenario]?
-- What happens when websocket disconnects during a write flow?
-- How does the client handle unknown event `schema_version` payloads?
+- What happens when an event version is unknown?
 
 ## Requirements *(mandatory)*
 
-<!--
-  ACTION REQUIRED: The content in this section represents placeholders.
-  Fill them out with the right functional requirements.
--->
-
 ### Functional Requirements
 
-- **FR-001**: System MUST [specific capability, e.g., "allow users to create accounts"]
-- **FR-002**: System MUST [specific capability, e.g., "validate email addresses"]
-- **FR-003**: Users MUST be able to [key interaction, e.g., "reset their password"]
-- **FR-004**: System MUST [data requirement, e.g., "persist user preferences"]
-- **FR-005**: System MUST [behavior, e.g., "log all security events"]
-
-*Example of marking unclear requirements:*
-
-- **FR-006**: System MUST authenticate users via [NEEDS CLARIFICATION: auth method not specified - email/password, SSO, OAuth?]
-- **FR-007**: System MUST retain user data for [NEEDS CLARIFICATION: retention period not specified]
+- **FR-001**: System MUST [specific capability]
+- **FR-002**: System MUST [specific capability]
+- **FR-003**: Users MUST be able to [key interaction]
+- **FR-004**: System MUST [data/lifecycle requirement]
+- **FR-005**: System MUST [observable business behavior]
 
 ### Role Access Impact *(mandatory)*
 
-- Define which roles can access each new route/surface.
-- Define which routes/components MUST NOT mount for unauthorized roles.
+- Define which roles can access each route/surface/action affected by this feature.
+- Define denied paths for unauthorized roles.
 - Define backend authorization dependencies for each role-gated action.
 
-### Real-Time Event Contract *(mandatory if feature is live state)*
+### Business State And Lifecycle Impact *(mandatory)*
 
-- List websocket channels/event types consumed.
-- Define expected payload fields and `schema_version` handling.
-- State explicit behavior for unknown event versions (MUST ignore safely).
-- Confirm that polling is not introduced for live state.
+- Identify canonical entities this feature creates/updates/reads.
+- Define authoritative state transitions and trigger conditions.
+- State how session boundaries, payment status, and order lifecycle are preserved.
 
-### Destructive Action Safeguards *(mandatory if applicable)*
+### Event And Compatibility Contract *(mandatory if live state involved)*
 
-- List irreversible actions introduced by the feature.
-- Specify confirmation UI contents and blocking validation conditions.
-- Specify cancel/dismiss behavior with no side effects.
+- List event channels/types consumed or emitted.
+- Define payload fields and schema-version behavior.
+- Unknown versions MUST be ignored safely.
+- Changes to existing event contracts MUST be additive or versioned.
 
-### Connectivity And Staleness Behavior *(mandatory)*
+### Irreversible Action Safeguards *(mandatory if applicable)*
 
-- Define disconnection UX state.
-- Define blocked write actions while disconnected.
-- Define reconnection state re-fetch requirements before writes resume.
+- List irreversible actions introduced.
+- Specify required confirmation inputs and consequence messaging.
+- Specify dismiss/cancel behavior with no side effects.
 
 ### Key Entities *(include if feature involves data)*
 
-- **[Entity 1]**: [What it represents, key attributes without implementation]
-- **[Entity 2]**: [What it represents, relationships to other entities]
+- **[Entity 1]**: [What it represents, key attributes]
+- **[Entity 2]**: [What it represents, relationships]
 
 ## Success Criteria *(mandatory)*
 
-<!--
-  ACTION REQUIRED: Define measurable success criteria.
-  These must be technology-agnostic and measurable.
--->
-
 ### Measurable Outcomes
 
-- **SC-001**: [Measurable metric, e.g., "Users can complete account creation in under 2 minutes"]
-- **SC-002**: [Measurable metric, e.g., "System handles 1000 concurrent users without degradation"]
-- **SC-003**: [User satisfaction metric, e.g., "90% of users successfully complete primary task on first attempt"]
-- **SC-004**: [Business metric, e.g., "Reduce support tickets related to [X] by 50%"]
-- **SC-005**: [Performance metric for live updates where applicable, e.g., "Floor plan update paints <100ms from websocket delivery"]
+- **SC-001**: [Operational metric, e.g., completion time]
+- **SC-002**: [Permission correctness metric]
+- **SC-003**: [State integrity metric]
+- **SC-004**: [Business KPI or failure-rate reduction metric]
 
 ## Assumptions
 
-<!--
-  ACTION REQUIRED: The content in this section represents placeholders.
-  Fill them out with the right assumptions based on reasonable defaults
-  chosen when the feature description did not specify certain details.
--->
-
-- [Assumption about target users, e.g., "Users have stable internet connectivity"]
-- [Assumption about scope boundaries, e.g., "Mobile support is out of scope for v1"]
-- [Assumption about data/environment, e.g., "Existing authentication system will be reused"]
-- [Dependency on existing system/service, e.g., "Requires access to the existing user profile API"]
+- [Assumption about users/environment]
+- [Assumption about external systems]
+- [Assumption about scope boundaries]

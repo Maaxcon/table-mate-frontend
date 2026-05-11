@@ -1,28 +1,24 @@
 <!--
 Sync Impact Report
-- Version change: 1.0.0 -> 2.0.0
+- Version change: 2.0.0 -> 3.0.0
 - Modified principles:
-  - I. Stack And Type Safety -> Principle One: Role Determines Everything
-  - II. Architecture Boundaries -> Principle Two: The Floor Plan Is A Live Document, Not A Cached Image
-  - III. State Management Contract -> Principle Three: Notifications Are A Stream, Not A Badge Count
-  - IV. API And Async Discipline -> Principle Four: Status Colors Are A Design System Primitive, Not A Component Decision
-  - V. Routing And Access Control -> Principle Five: The Modifier Modal Is The Most Critical Input Surface
-  - VI. Real-Time Discipline -> Principle Six: Offline Is An Error State, Not A Degraded Mode
-  - VII. Visual System And Styling Rules -> Principle Seven: The Spatial Editor Is A Separate Environment, Not A Modal
+  - Principle One: Role Determines Everything -> Principle One: Role Scope Is A Business Control
+  - Principle Two: The Floor Plan Is A Live Document, Not A Cached Image -> Principle Two: Canonical Business Entities Are Non-Negotiable
+  - Principle Three: Notifications Are A Stream, Not A Badge Count -> Principle Three: Operational State Is Backend-Authoritative
+  - Principle Four: Status Colors Are A Design System Primitive, Not A Component Decision -> Principle Four: Order Intake Is Authorized Only By Business Events
+  - Principle Five: The Modifier Modal Is The Most Critical Input Surface -> Principle Five: Void Is Atomic And Auditable
+  - Principle Six: Offline Is An Error State, Not A Degraded Mode -> Principle Six: Session Lifecycle Defines Revenue Truth
+  - Principle Seven: The Spatial Editor Is A Separate Environment, Not A Modal -> Principle Seven: Time-Critical Signals Must Reach The Responsible Role Immediately
+  - Principle Eight: Every Destructive Action Has A Confirmation Layer -> Principle Eight: Irreversible Actions Require Explicit Human Intent
+  - Principle Nine: Performance Budget Is Tied To The Floor Plan Render -> Principle Nine: Cycle Time Is A Contract Metric
+  - Principle Ten: Theme Support Is A First-Class Requirement -> Principle Ten: Unknown Event Versions Must Fail Safe
 - Added sections:
-  - Foundation (Shared by Frontend & Backend)
-  - Shared Data Contracts
-  - Role Access Matrix
-  - Real-Time Architecture
-  - Payment Contract
-  - Void Contract
-  - Cycle Time Metric
-  - Principle Eight: Every Destructive Action Has A Confirmation Layer
-  - Principle Nine: Performance Budget Is Tied To The Floor Plan Render
-  - Principle Ten: Theme Support Is A First-Class Requirement
-  - Engineering Standards And Delivery
+  - Business Scope And Non-Goals
+  - Governance Model
 - Removed sections:
-  - Product Scope And Non-Goals (replaced by explicit platform contracts and role-governed scope)
+  - Engineering Standards And Delivery
+  - Frontend Stack And Architecture
+  - Delivery Requirements
 - Templates requiring updates:
   - ✅ .specify/templates/plan-template.md
   - ✅ .specify/templates/spec-template.md
@@ -39,209 +35,123 @@ Sync Impact Report
 
 ### Core Philosophy
 TableMate is a real-time, multi-role restaurant operations platform.
-Every architecture and design decision MUST enforce one operating rule:
-the right information reaches the right role at the right moment,
-with zero ambiguity and zero delay.
+Every product decision MUST ensure that the right information reaches
+Customer, Waiter, Cook, and Owner/Manager at the right moment, without ambiguity.
 
-Cook, Waiter, Admin, and Customer surfaces carry different stakes.
-Latency and inconsistency are functional defects, not visual defects.
+Operational delay, stale state, and role confusion are business defects.
 
 ### Shared Data Contracts
-The canonical entities below are the single source of truth for all clients.
-No role-specific frontend or backend implementation MAY invent local variants.
+The following entities are canonical and MUST remain role-consistent:
 
-- `Restaurant` MUST include `id`, `name`, `working_hours`, `active_floor_plan_ref`, and `qr_codes` mapped to `table_id`.
-- `Table` MUST include `id`, `sector`, `capacity`, and backend-computed `status` in `{free, reserved, occupied}`.
-- `Order` MUST include `id`, `table_ref`, `session_ref`, `origin` in `{waiter_manual, customer_prepaid}`, `payment_status` in `{unpaid, paid, settled}`, and `order_items[]`.
-- `OrderItem` MUST include `id`, `menu_item_ref`, `quantity`, `modifier_text`, `guest_slot_index`, and `status` in `{pending, in_progress, ready, voided, completed}`.
-- `Ticket` MUST be a kitchen-scoped projection of `Order` and MUST be created only by backend queue injection.
-- `Session` MUST represent one table occupancy window and MUST be the boundary for cycle time, void count, and revenue computation.
-- `Staff` MUST include `id`, `name`, `email`, `role` in `{cook, waiter, manager, owner}`, and `shift_status` in `{online, offline}`.
+- `Restaurant`: `id`, `name`, `working_hours`, `active_floor_plan_ref`, `qr_codes` to `table_id` mapping.
+- `Table`: `id`, `sector`, `capacity`, `status` in `{free, reserved, occupied}`.
+- `Order`: `id`, `table_ref`, `session_ref`, `origin` in `{waiter_manual, customer_prepaid}`,
+  `payment_status` in `{unpaid, paid, settled}`, `order_items[]`.
+- `OrderItem`: `id`, `menu_item_ref`, `quantity`, `modifier_text`, `guest_slot_index`,
+  `status` in `{pending, in_progress, ready, voided, completed}`.
+- `Ticket`: kitchen-scoped projection of an order.
+- `Session`: one table occupancy window and the only boundary for cycle, void, and revenue rollups.
+- `Staff`: `id`, `name`, `email`, `role` in `{cook, waiter, manager, owner}`,
+  `shift_status` in `{online, offline}`.
 
-`Table.status` MUST be backend-computed and pushed to clients.
-Clients MUST render the pushed status and MUST NOT derive it from stale local order state.
-
-### Role Access Matrix
-Role access MUST be enforced server-side on every request and mirrored structurally in frontend routing and mounts.
-Inaccessible routes/components MUST NOT mount in the render tree.
-
-- `Cook` MAY access only Kitchen Kanban.
-- `Waiter` MAY access floor plan, order creation, notification stream, and table detail overlays.
-- `Manager` inherits Waiter access and MAY additionally approve voids and apply discounts.
-- `Owner` has full access including financial reports, spatial editor, staff management, and menu control.
-
-Cook MUST NOT access floor plan, order creation, or financial screens.
-Waiter and Manager MUST NOT access unauthorized financial/editor/staff surfaces.
-
-### Real-Time Architecture
-All live state MUST be delivered via WebSocket.
-REST endpoints MUST be used for creation and mutation only.
-Polling for live updates is prohibited.
-
-Each authenticated session MUST maintain exactly one WebSocket connection.
-Event fan-out MUST be role-targeted.
-
-Events MUST be typed and versioned with explicit `schema_version`.
-Clients MUST ignore unknown versions safely.
-Backends MUST preserve existing fields for published event types and MAY add only optional fields.
-
-### Payment Contract
-Customer-originated order confirmation MUST occur only after successful online payment webhook processing.
-Client-side payment state transitions are prohibited.
-
-Supported payment methods are Apple Pay, Google Pay, and card.
-Frontend MAY render payment sheets, but backend MUST validate webhook signatures and perform all authoritative state transitions (`unpaid -> paid`) and kitchen ticket injection.
-
-### Void Contract
-Void execution MUST be an atomic backend transaction.
-The following operations MUST succeed together or all rollback:
-
-1. `OrderItem.status` transitions to `voided`.
-2. Kitchen KDS VOID event emits.
-3. Session running total decrements.
-4. Corrected receipt queues.
-
-Void initiation MUST include:
-- `reason_code` in `{mispick, guest_changed_mind, quality_issue, out_of_stock}`.
-- `is_wasted` boolean indicating inventory return behavior.
-
-### Cycle Time Metric
-Each ticket MUST record:
-- `injection_timestamp` (entry to kitchen queue)
-- `bump_timestamp` (cook taps BUMP)
-
-Cycle time MUST be computed as `bump_timestamp - injection_timestamp`.
-Average Prep Time MUST be backend-aggregated per shift and per day and surfaced on Admin dashboards.
+No consumer MAY invent local entity variants that redefine business meaning.
 
 ## Core Principles
 
-### Principle One: Role Determines Everything
-The frontend MUST operate as four distinct role experiences in one codebase.
-Role assignment MUST determine mounted navigation, routes, screens, and event handlers.
-Components unauthorized for the active role MUST NOT exist in the render tree.
+### Principle One: Role Scope Is A Business Control
+Role permissions are product behavior, not UI preference.
+Access boundaries for Cook, Waiter, Manager, and Owner MUST be enforced
+consistently across all interfaces and all backend operations.
 
-Rationale: structural isolation prevents accidental access and reduces cognitive load per role.
+Rationale: wrong-surface access causes direct service failures.
 
-### Principle Two: The Floor Plan Is A Live Document, Not A Cached Image
-Waiter and Admin floor plan surfaces MUST reflect backend state within a single WebSocket frame.
-Floor plan state MUST subscribe directly to websocket patches.
-Client-side inference of table status from local order data is prohibited.
+### Principle Two: Canonical Business Entities Are Non-Negotiable
+`Restaurant`, `Table`, `Order`, `OrderItem`, `Ticket`, `Session`, and `Staff`
+MUST preserve the same business meaning in every workflow.
 
-Rationale: stale occupancy is an operational incident, not a cosmetic lag.
+Rationale: entity drift creates contradictory operational decisions.
 
-### Principle Three: Notifications Are A Stream, Not A Badge Count
-Waiter/Admin notification UI MUST remain mounted persistently and render two channels:
-Client Stream and Kitchen Stream.
-Each inbound event MUST render as an individual, ordered stream item immediately.
-Notification tap MUST navigate directly to the relevant table context.
+### Principle Three: Operational State Is Backend-Authoritative
+Business-critical status fields (table occupancy, order lifecycle, payment state)
+MUST be authoritative from backend state transitions.
 
-Rationale: immediate event visibility is required for service timing.
+Rationale: one source of truth is required for service coordination.
 
-### Principle Four: Status Colors Are A Design System Primitive, Not A Component Decision
-Order item lifecycle statuses and table statuses MUST map to semantic design tokens.
-Components MUST reference semantic tokens and MUST NOT hardcode status color values.
+### Principle Four: Order Intake Is Authorized Only By Business Events
+Customer-originated kitchen intake MUST occur only after verified payment success.
+Waiter-originated intake MUST follow explicit service actions.
 
-Required lifecycle token mapping:
-- Pending -> gray token
-- In Progress -> amber/yellow token
-- Ready -> green token
+Rationale: kitchen work cannot begin on unconfirmed demand.
 
-Rationale: centralized semantics prevent visual drift and reduce regression risk.
+### Principle Five: Void Is Atomic And Auditable
+Void execution MUST be all-or-nothing and leave an auditable trail.
+Void reason code MUST be one of
+`{mispick, guest_changed_mind, quality_issue, out_of_stock}` and MUST include `is_wasted`.
 
-### Principle Five: The Modifier Modal Is The Most Critical Input Surface
-When a Waiter adds an item, modifier entry MUST be one tap from any menu item.
-Modal focus MUST default to comment input on open.
-Guest slot controls MUST be large-touch targets suitable for tablet operation.
-Confirm action MUST remain disabled until a guest slot is selected.
+Rationale: partial reversals corrupt inventory, receipts, and shift accounting.
 
-Rationale: modifier errors propagate directly into kitchen execution failures.
+### Principle Six: Session Lifecycle Defines Revenue Truth
+A table `Session` opens at service start and closes only on explicit table close.
+Revenue, void totals, and cycle analytics MUST be computed against session boundaries.
 
-### Principle Six: Offline Is An Error State, Not A Degraded Mode
-The platform MUST NOT provide offline write mode.
-WebSocket disconnect MUST surface as a full-screen or persistent blocking error state.
-Write interactions (add item, send to kitchen, close table) MUST be disabled while disconnected.
-Read-only data MAY remain visible but MUST be marked stale.
+Rationale: session boundaries prevent financial misattribution.
 
-On reconnect, client MUST re-fetch current state for all open sessions before re-enabling writes.
+### Principle Seven: Time-Critical Signals Must Reach The Responsible Role Immediately
+Kitchen-ready, table-status, and reservation events MUST route to responsible roles without batching.
+Role-targeted event delivery is mandatory for operational timeliness.
 
-Rationale: stale writes create irreversible operational divergence.
+Rationale: delayed signals increase wait time and waste.
 
-### Principle Seven: The Spatial Editor Is A Separate Environment, Not A Modal
-Spatial editor and live floor monitoring MUST be separate route contexts.
-Editor route MUST not mount live session data.
-Live route MUST not mount edit tooling.
-Publishing a layout MUST exit edit context and navigate back to live monitoring.
+### Principle Eight: Irreversible Actions Require Explicit Human Intent
+Void, cancel reservation, and close table are destructive actions and MUST require
+an explicit confirmation step that states business consequence.
 
-Rationale: editing and operations require different mental models and safety boundaries.
+Rationale: irreversible operations need deliberate accountability.
 
-### Principle Eight: Every Destructive Action Has A Confirmation Layer
-Void, cancel reservation, and close table MUST require explicit confirmation flows.
+### Principle Nine: Cycle Time Is A Contract Metric
+Ticket cycle time is defined only as `bump_timestamp - injection_timestamp`.
+Average Prep Time MUST be computed from that definition and reported consistently.
 
-Void confirmation MUST include:
-- item name
-- reason code selector
-- `is_wasted` toggle
+Rationale: operations and staffing decisions depend on stable metric definitions.
 
-Close table confirmation MUST include:
-- total bill amount
-- number of served items
+### Principle Ten: Unknown Event Versions Must Fail Safe
+When an event schema version is unknown, consumers MUST ignore it safely and continue operating.
+Published event contracts MUST evolve compatibly by additive optional fields.
 
-Destructive confirmation MUST name consequence explicitly.
-Backdrop tap MUST dismiss without side effects.
+Rationale: version mismatch must never disrupt active service.
 
-Rationale: irreversible actions require deliberate operator intent.
+## Business Scope And Non-Goals
 
-### Principle Nine: Performance Budget Is Tied To The Floor Plan Render
-Floor plan updates for full layouts MUST paint within 100ms from WebSocket delivery on a mid-range tablet.
-Any change that breaches this budget MUST be optimized before release.
-Floor plan table icons MUST render in a single pass and MUST NOT trigger per-icon network fetches.
+In scope:
+- Real-time restaurant operations across Customer, Waiter, Cook, Manager, and Owner workflows.
+- Reservation, order intake, kitchen execution, void handling, and session close lifecycle.
+- Shift/day operational metrics and financial correctness based on canonical session boundaries.
 
-Rationale: floor plan responsiveness is a hard operational SLA.
+Out of scope in this constitution:
+- Framework, library, and coding-style choices.
+- Branching strategy, lint/format tooling, and CI implementation detail.
+- UI implementation patterns that do not alter business behavior.
 
-### Principle Ten: Theme Support Is A First-Class Requirement
-Customer and staff interfaces MUST support system dark theme.
-Staff dark mode MUST be validated under high ambient light for kitchen-grade contrast.
-Design system MUST define semantic tokens for both light and dark modes.
-Theme switching MUST be instantaneous without flash.
+## Governance Model
 
-Rationale: readability and operational reliability depend on environmental ergonomics.
-
-## Engineering Standards And Delivery
-
-### Frontend Stack And Architecture
-- Frontend runtime MUST use React 18 + Vite + TypeScript strict mode.
-- State management MUST use Redux Toolkit only.
-- API integration MUST use Axios clients under `src/api/` with interceptors.
-- Direct `fetch()` use inside pages/components/features is prohibited.
-- Architecture MUST follow Feature-Sliced Design boundaries with no cross-feature imports.
-- Styling MUST use tokenized semantic values via CSS Modules or Styled Components.
-
-### Delivery Requirements
-- Base branch is `develop`.
-- Working branches MUST use `feature/*`, `fix/*`, or `chore/*`.
-- Pull requests MUST target `develop`, include at least one approval, and pass CI.
-- Conventional Commits are mandatory.
-- Definition of done requires behavior parity with `spec.md` and synchronized `constitution/spec/plan/tasks` artifacts.
-
-## Governance
-
-This constitution is authoritative for TableMate platform delivery and supersedes conflicting local practices.
-Every plan, spec, task set, and pull request MUST include explicit constitution compliance checks.
+This constitution governs business logic and operational invariants.
+Technical implementation standards MAY exist in separate engineering guidance,
+but MUST NOT contradict business rules defined here.
 
 Amendment policy:
-1. Amendments MUST be proposed via pull request.
-2. Amendment PRs MUST include migration impact for active features.
-3. Approval MUST include engineering owner sign-off.
-4. Dependent templates/docs MUST be updated in the same change set.
+1. Amendments MUST be proposed in pull requests.
+2. Any business rule change MUST include migration impact on active features.
+3. Approval MUST include product/operations owner sign-off.
+4. `spec.md`, `plan.md`, and `tasks.md` templates MUST be updated when governance meaning changes.
 
 Versioning policy:
-- MAJOR: backward-incompatible governance or principle redefinition/removal.
-- MINOR: new principle/section or materially expanded mandatory guidance.
-- PATCH: clarification-only or non-semantic wording updates.
+- MAJOR: incompatible business rule redefinition/removal.
+- MINOR: new business principle/section or materially expanded scope.
+- PATCH: wording clarifications without rule meaning changes.
 
 Compliance review policy:
-- Planning phase MUST fail if constitution gates are unresolved.
-- Implementation phase MUST map tasks to constitutional constraints where applicable.
-- Review phase MUST reject merges with unresolved constitution violations.
+- Planning MUST map feature behavior to applicable business principles.
+- Specification MUST define role, state, and lifecycle impacts.
+- Tasks MUST include verification of business invariants before delivery.
 
-**Version**: 2.0.0 | **Ratified**: 2026-05-07 | **Last Amended**: 2026-05-11
+**Version**: 3.0.0 | **Ratified**: 2026-05-07 | **Last Amended**: 2026-05-11

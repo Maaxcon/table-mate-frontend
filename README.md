@@ -2,21 +2,14 @@
 
 Frontend for the TableMate restaurant operations platform.
 
-## Stack
-
-- React 18 + Vite
-- TypeScript (strict mode)
-- Redux Toolkit (single state management layer)
-- Axios API layer (`src/api/`)
-- Feature-Sliced Design structure
-
 ## Governance Sources
 
-- Constitution: `.specify/memory/constitution.md`
+- Business constitution: `.specify/memory/constitution.md`
 - Active feature artifacts: `specs/<feature>/spec.md`, `plan.md`, `tasks.md`
-- Agent workflow rules: `AGENTS.md`
+- Engineering workflow/rules: `AGENTS.md`
 
-All implementation and planning work MUST satisfy constitution gates before merge.
+The constitution defines business logic and operational invariants.
+Implementation standards live in engineering guidance and MUST align with business rules.
 
 ## Local Development
 
@@ -31,5 +24,3 @@ npm run dev
 npm run lint
 npm run build
 ```
-
-Use Conventional Commits and target PRs to `develop`.

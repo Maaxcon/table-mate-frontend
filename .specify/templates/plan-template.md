@@ -7,39 +7,35 @@
 
 ## Summary
 
-[Extract from feature spec: primary requirement + technical approach from research]
+[Extract from feature spec: business objective + operational impact]
 
 ## Technical Context
 
 <!--
-  ACTION REQUIRED: Replace the content in this section with the technical details
-  for the project. The structure here is presented in advisory capacity to guide
-  the iteration process.
+  ACTION REQUIRED: Replace the content in this section with technical details
+  needed to implement the feature. Keep this section implementation-oriented.
 -->
 
-**Language/Version**: [e.g., TypeScript strict, Rust 1.75 or NEEDS CLARIFICATION]
-**Primary Dependencies**: [e.g., React 18, RTK, Axios, ws client or NEEDS CLARIFICATION]
+**Language/Version**: [e.g., TypeScript strict, Python 3.12 or NEEDS CLARIFICATION]
+**Primary Dependencies**: [e.g., React, RTK, Axios, ws client or NEEDS CLARIFICATION]
 **Storage**: [if applicable, e.g., PostgreSQL, localStorage, files or N/A]
 **Testing**: [e.g., Vitest, RTL, Playwright or NEEDS CLARIFICATION]
 **Target Platform**: [e.g., web tablet, mobile browser, desktop browser]
 **Project Type**: [e.g., frontend web app, backend service]
-**Realtime Transport**: [WebSocket event channels + schema version policy]
-**Performance Goals**: [domain-specific, e.g., floor plan update paint <100ms]
-**Constraints**: [e.g., role-scoped mounts, no polling, no offline writes]
 **Scale/Scope**: [domain-specific, e.g., 50-table floor plan, shift-level concurrency]
 
 ## Constitution Check
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-- [ ] `Role-scoped render tree`: unauthorized role routes/components are not mounted.
-- [ ] `Backend authority`: table and order-item statuses are rendered from backend-pushed state, not local inference.
-- [ ] `Realtime contract`: all live state is websocket-delivered; no polling loops.
-- [ ] `Event version safety`: client behavior for unknown `schema_version` is explicitly defined as ignore-safe.
-- [ ] `Destructive-action safeguards`: void/cancel reservation/close table include explicit consequence confirmations.
-- [ ] `Offline behavior`: write actions are blocked on disconnect; reconnect includes full state refetch before writes resume.
-- [ ] `Design tokens`: status colors and theme values are semantic tokens, no hardcoded status hex values.
-- [ ] `Floor plan SLA`: planned implementation includes evidence/strategy for <100ms floor-plan render update budget.
+- [ ] `Role control`: impacted routes/actions preserve role permission boundaries.
+- [ ] `Canonical entities`: changes preserve shared entity semantics.
+- [ ] `Backend authority`: business-critical statuses remain backend-authoritative.
+- [ ] `Payment gating`: customer-originated order intake requires verified payment success.
+- [ ] `Void integrity`: void flow remains atomic and auditable with required reason + waste flag.
+- [ ] `Session accounting`: feature preserves session-bound revenue/void/cycle calculations.
+- [ ] `Signal timeliness`: role-targeted events remain immediate and non-batched for critical flows.
+- [ ] `Compatibility`: unknown event versions are ignored safely and existing contracts remain additive.
 
 ## Project Structure
 
@@ -108,5 +104,5 @@ directories captured above]
 
 | Violation | Why Needed | Simpler Alternative Rejected Because |
 |-----------|------------|-------------------------------------|
-| [e.g., temporary polling fallback] | [current constraint] | [why websocket-only path not yet possible] |
-| [e.g., extra mounted role surface] | [specific operational need] | [why strict role isolation cannot yet apply] |
+| [e.g., temporary contract exception] | [current constraint] | [why compliant flow is not currently possible] |
+| [e.g., partial rollout by role] | [business rollout need] | [why full role matrix cannot ship immediately] |
