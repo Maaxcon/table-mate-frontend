@@ -19,11 +19,21 @@ Frontend responsibilities:
 - submit command intents
 - present success/failure outcomes
 
+## Canonical Staff Roles
+
+Backend staff roles consumed by frontend:
+- `admin`
+- `manager`
+- `waiter`
+- `cook`
+
+Anonymous guest mode in frontend is a read-only UX mode and is not a backend staff role.
+
 ## Event Consumption Contract
 
 Consumed channels:
-- `ws/cart/:session_id/`: `ITEM_ADDED`, `ITEM_REMOVED`, `USER_JOINED`, `USER_LEFT`
-- `ws/hall/`: `TABLE_STATUS_CHANGED`, `NEW_RESERVATION`
+- `ws/cart/:session_id/`: `CART_ITEM_ADDED`, `CART_ITEM_REMOVED`, `CART_PARTICIPANT_JOINED`, `CART_PARTICIPANT_LEFT`
+- `ws/hall/`: `HALL_TABLE_STATUS_CHANGED`, `HALL_NEW_RESERVATION`
 
 Rules:
 - payload MUST include `schema_version`

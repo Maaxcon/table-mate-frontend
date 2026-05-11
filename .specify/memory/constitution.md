@@ -36,7 +36,7 @@ Sync Impact Report
 ### Core Philosophy
 TableMate is a real-time, multi-role restaurant operations platform.
 Every product decision MUST ensure that the right information reaches
-Customer, Waiter, Cook, and Owner/Manager at the right moment, without ambiguity.
+Customer, Waiter, Cook, and Admin/Manager at the right moment, without ambiguity.
 
 Operational delay, stale state, and role confusion are business defects.
 
@@ -51,7 +51,7 @@ The following entities are canonical and MUST remain role-consistent:
   `status` in `{pending, in_progress, ready, voided, completed}`.
 - `Ticket`: kitchen-scoped projection of an order.
 - `Session`: one table occupancy window and the only boundary for cycle, void, and revenue rollups.
-- `Staff`: `id`, `name`, `email`, `role` in `{cook, waiter, manager, owner}`,
+- `Staff`: `id`, `name`, `email`, `role` in `{cook, waiter, manager, admin}`,
   `shift_status` in `{online, offline}`.
 
 No consumer MAY invent local entity variants that redefine business meaning.
@@ -60,7 +60,7 @@ No consumer MAY invent local entity variants that redefine business meaning.
 
 ### Principle One: Role Scope Is A Business Control
 Role permissions are product behavior, not UI preference.
-Access boundaries for Cook, Waiter, Manager, and Owner MUST be enforced
+Access boundaries for Cook, Waiter, Manager, and Admin MUST be enforced
 consistently across all interfaces and all backend operations.
 
 Rationale: wrong-surface access causes direct service failures.
@@ -123,7 +123,7 @@ Rationale: version mismatch must never disrupt active service.
 ## Business Scope And Non-Goals
 
 In scope:
-- Real-time restaurant operations across Customer, Waiter, Cook, Manager, and Owner workflows.
+- Real-time restaurant operations across Customer, Waiter, Cook, Manager, and Admin workflows.
 - Reservation, order intake, kitchen execution, void handling, and session close lifecycle.
 - Shift/day operational metrics and financial correctness based on canonical session boundaries.
 
@@ -141,7 +141,7 @@ but MUST NOT contradict business rules defined here.
 Amendment policy:
 1. Amendments MUST be proposed in pull requests.
 2. Any business rule change MUST include migration impact on active features.
-3. Approval MUST include product/operations owner sign-off.
+3. Approval MUST include product/operations admin sign-off.
 4. `spec.md`, `plan.md`, and `tasks.md` templates MUST be updated when governance meaning changes.
 
 Versioning policy:
