@@ -6,7 +6,7 @@
 **Status**: Approved
 **Input**: User description: "TableMate restaurant automation frontend MVP with guest/auth/staff flows, real-time updates, and constitution-aligned business behavior."
 
-## User Scenarios & Testing *(mandatory)*
+## User Scenarios & Testing _(mandatory)_
 
 ### User Story 1 - Landing, Authentication, and Guest Entry (Priority: P1)
 
@@ -98,7 +98,7 @@ As staff, I can access only role-appropriate operational surfaces while unauthor
 - Reconnect occurs after missed events and requires state replay/recovery.
 - A record moves into immutable business state (e.g., settled/completed) while user keeps stale screen open.
 
-## Requirements *(mandatory)*
+## Requirements _(mandatory)_
 
 ### Functional Requirements
 
@@ -118,20 +118,20 @@ As staff, I can access only role-appropriate operational surfaces while unauthor
 - **FR-014**: Frontend MUST preserve immutable boundaries for settled/completed business records by treating them as read-only in operational views.
 - **FR-015**: Any frontend-only mock behavior MUST be explicitly labeled `MVP/demo-only` and MUST NOT simulate authoritative state transitions.
 
-### Role Access Impact *(mandatory)*
+### Role Access Impact _(mandatory)_
 
 - Backend canonical staff roles are: `admin`, `manager`, `waiter`, `cook`.
 - Access decisions are deny-by-default for protected routes/actions not explicitly granted.
 - Anonymous guest mode is a frontend read-only access mode and is not a backend staff role.
 - Frontend visibility, navigation, and action availability MUST align with backend role outcomes.
 
-### Business State And Lifecycle Impact *(mandatory)*
+### Business State And Lifecycle Impact _(mandatory)_
 
 - Frontend is a consumer of business state, not a business authority.
 - Backend remains the single source of truth for order lifecycle, table occupancy, payment state, session boundaries, and ticket lifecycle.
 - Frontend sends user intents (mutations) and reflects backend-confirmed transitions.
 
-### Authoritative State Transitions *(mandatory)*
+### Authoritative State Transitions _(mandatory)_
 
 The following transitions are backend-owned only:
 
@@ -142,17 +142,20 @@ The following transitions are backend-owned only:
 - `Ticket`: creation/injection and completion lifecycle
 
 Frontend responsibilities:
+
 - submit user intent;
 - display backend-confirmed transition;
 - reject/stall local optimistic transition if backend rejects or conflicts.
 
-### Event And Compatibility Contract *(mandatory if live state involved)*
+### Event And Compatibility Contract _(mandatory if live state involved)_
 
 Event channels in MVP scope:
+
 - `ws/cart/:session_id/`: `CART_ITEM_ADDED`, `CART_ITEM_REMOVED`, `CART_PARTICIPANT_JOINED`, `CART_PARTICIPANT_LEFT`
 - `ws/hall/`: `HALL_TABLE_STATUS_CHANGED`, `HALL_NEW_RESERVATION`
 
 Compatibility rules:
+
 - Event payload consumption MUST check `schema_version`.
 - Unknown `schema_version` events MUST be ignored safely.
 - Existing event contracts are treated as additive; missing optional fields must not crash UI.
@@ -163,21 +166,22 @@ Compatibility rules:
 - If replay endpoint is unavailable in MVP, frontend MUST perform full snapshot re-fetch after reconnect.
 - Re-applied events MUST be idempotent from frontend state perspective (no duplicate visible side effects).
 
-### Irreversible Action Safeguards *(mandatory if applicable)*
+### Irreversible Action Safeguards _(mandatory if applicable)_
 
 - `void`, `cancel reservation`, and `close table` require explicit confirmation UI.
 - Confirmation UI MUST present consequence context before submit.
 - Dismiss/cancel MUST produce zero business side effects.
 
-### Immutable Boundaries *(mandatory)*
+### Immutable Boundaries _(mandatory)_
 
 Frontend MUST treat the following as read-only once finalized:
+
 - Settled payment records
 - Completed/voided order items (except views explicitly allowed by backend policy)
 - Closed sessions and their final totals
 - Historical operational metrics and reporting snapshots
 
-### Frontend Scope Exceptions *(MVP)*
+### Frontend Scope Exceptions _(MVP)_
 
 The following backend-dependent flows are explicitly out of frontend MVP authority:
 
@@ -186,7 +190,7 @@ The following backend-dependent flows are explicitly out of frontend MVP authori
 - Immutable financial/reporting record creation (backend-owned)
 - Full historical event replay service (frontend fallback is reconnect + snapshot re-fetch in MVP)
 
-### Key Entities *(include if feature involves data)*
+### Key Entities _(include if feature involves data)_
 
 - **UserDTO**: User identity and role claims used for route/action authorization decisions.
 - **Role**: Staff role enum (`admin`, `manager`, `waiter`, `cook`).
@@ -195,7 +199,7 @@ The following backend-dependent flows are explicitly out of frontend MVP authori
 - **MenuItemDTO / CategoryDTO**: Menu browsing entities for customer/staff surfaces.
 - **CartSessionDTO / CartItemDTO**: Shared cart entities synchronized from backend state and events.
 
-## Success Criteria *(mandatory)*
+## Success Criteria _(mandatory)_
 
 ### Measurable Outcomes
 

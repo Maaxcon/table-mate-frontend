@@ -36,41 +36,41 @@ Plan rule: constitution constraints are treated as business invariants only; imp
 
 ## Constitution Check
 
-*GATE: Must pass before implementation and be re-checked after design artifacts are finalized.*
+_GATE: Must pass before implementation and be re-checked after design artifacts are finalized._
 
-| Gate | Constitution Principle | Plan Alignment | Status |
-|------|------------------------|----------------|--------|
-| C1 | Role Scope Is A Business Control | All protected route/action visibility is backend-role driven; deny by default. | PASS |
-| C2 | Canonical Business Entities Are Non-Negotiable | Frontend DTOs mirror canonical entities; no local semantic variants. | PASS |
-| C3 | Operational State Is Backend-Authoritative | UI shows backend-provided status; no client authority over business state. | PASS |
-| C4 | Order Intake Is Authorized Only By Business Events | Frontend never marks customer order paid/sent-to-kitchen; backend-confirmed only. | PASS |
-| C5 | Void Is Atomic And Auditable | Frontend sends void intent and renders backend result; no partial local void transitions. | PASS |
-| C6 | Session Lifecycle Defines Revenue Truth | Session open/close and revenue implications are backend-owned and rendered read-only when finalized. | PASS |
-| C7 | Time-Critical Signals Reach Responsible Role | Cart/hall event handling is role-scoped and immediate; reconnect resync is mandatory. | PASS |
-| C8 | Irreversible Actions Require Explicit Human Intent | UI confirms void/cancel/close actions before command dispatch. | PASS |
-| C9 | Cycle Time Is A Contract Metric | Frontend displays backend-computed cycle metrics only; no local recalculation authority. | PASS |
-| C10 | Unknown Event Versions Must Fail Safe | Event consumers check `schema_version`; unknown versions are ignored safely. | PASS |
-| C11 | Explicit Frontend Scope Exceptions | Payment/webhook/replay/reporting authority exceptions are documented with integration boundaries. | PASS |
+| Gate | Constitution Principle                             | Plan Alignment                                                                                       | Status |
+| ---- | -------------------------------------------------- | ---------------------------------------------------------------------------------------------------- | ------ |
+| C1   | Role Scope Is A Business Control                   | All protected route/action visibility is backend-role driven; deny by default.                       | PASS   |
+| C2   | Canonical Business Entities Are Non-Negotiable     | Frontend DTOs mirror canonical entities; no local semantic variants.                                 | PASS   |
+| C3   | Operational State Is Backend-Authoritative         | UI shows backend-provided status; no client authority over business state.                           | PASS   |
+| C4   | Order Intake Is Authorized Only By Business Events | Frontend never marks customer order paid/sent-to-kitchen; backend-confirmed only.                    | PASS   |
+| C5   | Void Is Atomic And Auditable                       | Frontend sends void intent and renders backend result; no partial local void transitions.            | PASS   |
+| C6   | Session Lifecycle Defines Revenue Truth            | Session open/close and revenue implications are backend-owned and rendered read-only when finalized. | PASS   |
+| C7   | Time-Critical Signals Reach Responsible Role       | Cart/hall event handling is role-scoped and immediate; reconnect resync is mandatory.                | PASS   |
+| C8   | Irreversible Actions Require Explicit Human Intent | UI confirms void/cancel/close actions before command dispatch.                                       | PASS   |
+| C9   | Cycle Time Is A Contract Metric                    | Frontend displays backend-computed cycle metrics only; no local recalculation authority.             | PASS   |
+| C10  | Unknown Event Versions Must Fail Safe              | Event consumers check `schema_version`; unknown versions are ignored safely.                         | PASS   |
+| C11  | Explicit Frontend Scope Exceptions                 | Payment/webhook/replay/reporting authority exceptions are documented with integration boundaries.    | PASS   |
 
 ## Frontend MVP Scope Exceptions
 
 These are explicit frontend-scope exceptions (not silent omissions):
 
 1. Payment settlement and webhook verification.
-Reason: backend is the authoritative payment processor.
-Integration boundary: frontend sends checkout intent and displays backend payment state only.
+   Reason: backend is the authoritative payment processor.
+   Integration boundary: frontend sends checkout intent and displays backend payment state only.
 
 2. Authoritative ticket injection and kitchen queue sequencing.
-Reason: queue integrity and sequencing belong to backend domain logic.
-Integration boundary: frontend submits order intent and renders ticket/status updates from backend.
+   Reason: queue integrity and sequencing belong to backend domain logic.
+   Integration boundary: frontend submits order intent and renders ticket/status updates from backend.
 
 3. Full historical event replay service.
-Reason: replay infrastructure is backend capability beyond MVP.
-Integration boundary: frontend fallback in MVP is reconnect + full snapshot re-fetch.
+   Reason: replay infrastructure is backend capability beyond MVP.
+   Integration boundary: frontend fallback in MVP is reconnect + full snapshot re-fetch.
 
 4. Immutable reporting generation (financial audit views).
-Reason: immutable reporting requires backend persistence and settlement guarantees.
-Integration boundary: frontend consumes reporting endpoints when backend exposes immutable snapshots.
+   Reason: immutable reporting requires backend persistence and settlement guarantees.
+   Integration boundary: frontend consumes reporting endpoints when backend exposes immutable snapshots.
 
 ## Project Structure
 
@@ -119,6 +119,7 @@ src/
 3. Finalize frontend-backend boundary contract docs.
 
 Definition of Done:
+
 - Constitution gates C1-C11 remain PASS.
 - Required feature artifacts exist and are synchronized.
 
@@ -129,6 +130,7 @@ Definition of Done:
 3. Add deny-path UX for unauthorized routes/actions.
 
 Definition of Done:
+
 - Entry and role gating reflect backend authorization outcomes only.
 
 ### Phase 2 - Reservation and Menu Flows
@@ -138,6 +140,7 @@ Definition of Done:
 3. Handle conflict and validation failures from backend as first-class UX paths.
 
 Definition of Done:
+
 - No frontend-authoritative reservation or table status transitions.
 
 ### Phase 3 - Real-Time Cart and Hall Consumption
@@ -147,6 +150,7 @@ Definition of Done:
 3. Implement reconnect behavior with authoritative snapshot re-fetch.
 
 Definition of Done:
+
 - Event-driven UI remains consistent with backend state after reconnect.
 
 ### Phase 4 - Irreversible and Immutable UX Boundaries
@@ -156,6 +160,7 @@ Definition of Done:
 3. Validate frontend exceptions remain explicit and non-authoritative.
 
 Definition of Done:
+
 - Irreversible flows and immutable boundaries align with constitution rules.
 
 ## Out of Scope (This Plan)
@@ -167,5 +172,5 @@ Definition of Done:
 ## Complexity Tracking
 
 | Violation | Why Needed | Simpler Alternative Rejected Because |
-|-----------|------------|-------------------------------------|
-| None | N/A | N/A |
+| --------- | ---------- | ------------------------------------ |
+| None      | N/A        | N/A                                  |

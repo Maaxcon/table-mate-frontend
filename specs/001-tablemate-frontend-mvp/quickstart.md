@@ -20,6 +20,7 @@ npm run dev
 ## 3) Validate explicit scope exceptions
 
 Confirm frontend does not perform:
+
 - payment settlement or webhook verification,
 - authoritative ticket injection sequencing,
 - historical replay service implementation,

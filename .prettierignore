@@ -1,0 +1,16 @@
+node_modules
+dist
+coverage
+
+.git
+.github
+.agents
+.specify
+
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+bun.lockb
+
+*.log
+*.tsbuildinfo
