@@ -2,14 +2,16 @@
 
 Frontend for the TableMate restaurant operations platform.
 
-## Governance Sources
+## Spec Kit Workflow (Frontend)
 
-- Business constitution: `.specify/memory/constitution.md`
-- Active feature artifacts: `specs/<feature>/spec.md`, `plan.md`, `tasks.md`
-- Engineering workflow/rules: `AGENTS.md`
+Spec Kit is managed from the repository root/backend side, not inside this frontend package.
+Source of truth is the backend/root workspace where product specs are maintained.
 
-The constitution defines business logic and operational invariants.
-Implementation standards live in engineering guidance and MUST align with business rules.
+- Run all Spec Kit commands from the root folder.
+- Backend/root is responsible for creating and updating `spec.md`, `plan.md`, and `tasks.md`.
+- Keep `.specify/`, `specs/`, and `AGENTS.md` in the root only.
+- In this frontend package, implement tasks based on the active root spec artifacts.
+- Do not recreate Spec Kit folders/files locally in `table-mate-frontend`.
 
 ## Local Development
 
