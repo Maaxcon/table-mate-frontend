@@ -1,0 +1,130 @@
+.app-shell {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 32px;
+  background: #ffffff;
+  color: #111111;
+  text-align: left;
+  box-sizing: border-box;
+}
+
+.hero-panel,
+.panel {
+  border: 1px solid #111111;
+  background: #ffffff;
+}
+
+.hero-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 28px;
+}
+
+.hero-copy {
+  max-width: 760px;
+}
+
+.hero-copy h1 {
+  margin: 0 0 14px;
+  font-size: clamp(2.2rem, 5vw, 4rem);
+  line-height: 1;
+  letter-spacing: -0.05em;
+  color: #111111;
+}
+
+.hero-text {
+  max-width: 640px;
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.7;
+  color: #333333;
+}
+
+.status-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 14px;
+  border: 1px solid #111111;
+  background: #ffffff;
+  color: #111111;
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+.status-pill--ready {
+  background: #111111;
+  color: #ffffff;
+}
+
+.content-grid {
+  gap: 24px;
+}
+
+.panel {
+  padding: 24px;
+}
+
+.panel-header {
+  margin-bottom: 18px;
+}
+
+.panel-header h2 {
+  margin: 0 0 6px;
+  font-size: 1.2rem;
+  color: #111111;
+}
+
+.panel-header p {
+  margin: 0;
+  color: #444444;
+}
+
+.config-list {
+  display: grid;
+  gap: 14px;
+  margin: 0;
+}
+
+.config-row {
+  padding: 14px 16px;
+  border: 1px solid #111111;
+}
+
+.config-row dt {
+  margin: 0 0 8px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #444444;
+}
+
+.config-row dd {
+  margin: 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.95rem;
+  color: #111111;
+  overflow-wrap: anywhere;
+}
+
+.checklist {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding-left: 20px;
+  color: #222222;
+}
+
+.checklist li {
+  line-height: 1.6;
+}
