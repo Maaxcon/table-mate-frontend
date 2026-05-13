@@ -1,4 +1,5 @@
 import "./App.css"
+import { env } from "./config/env"
 
 type RuntimeValue = {
   label: string
@@ -8,15 +9,15 @@ type RuntimeValue = {
 const runtimeValues: RuntimeValue[] = [
   {
     label: "API base URL",
-    value: import.meta.env.VITE_API_BASE_URL ?? "Not configured",
+    value: env.apiBaseUrl,
   },
   {
     label: "WebSocket URL",
-    value: import.meta.env.VITE_WS_URL ?? "Not configured",
+    value: env.wsUrl,
   },
   {
     label: "Google client ID",
-    value: import.meta.env.VITE_GOOGLE_CLIENT_ID ?? "Not configured",
+    value: env.googleClientId,
   },
 ]
 
@@ -44,7 +45,7 @@ function App() {
         <article className="panel">
           <div className="panel-header">
             <h2>Runtime Config</h2>
-            <p>These values come from `import.meta.env`.</p>
+            <p>These values are centralized through the frontend env config module.</p>
           </div>
 
           <dl className="config-list">
