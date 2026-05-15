@@ -1,0 +1,19 @@
+:root {
+  --color-bg-page: #ffffff;
+  --color-bg-surface: #ffffff;
+  --color-text-primary: #111111;
+  --color-text-secondary: #444444;
+  --color-border-default: #d9d9d9;
+  --color-border-strong: #111111;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg-page: #16171d;
+    --color-bg-surface: #1f2028;
+    --color-text-primary: #f3f4f6;
+    --color-text-secondary: #9ca3af;
+    --color-border-default: #2e303a;
+    --color-border-strong: #f3f4f6;
+  }
+}
