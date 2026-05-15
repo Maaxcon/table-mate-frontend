@@ -15,6 +15,7 @@
     "generate:api": "openapi-typescript ../table-mate-backend/schema.yaml --output ./src/types/api.ts"
   },
   "dependencies": {
+    "@react-oauth/google": "^0.13.5",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
     "react-icons": "^5.6.0"
