@@ -5,6 +5,13 @@
   gap: 40px;
   padding-inline: 8px;
   box-sizing: border-box;
+  font-family: var(--font-family-base);
+}
+
+.greeting-page .social-auth-group__title,
+.greeting-page .guest-access__button,
+.greeting-page .auth-hero__subtitle {
+  font-family: var(--font-family-display);
 }
 
 .greeting-page__divider {
