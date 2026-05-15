@@ -11,7 +11,24 @@
   transition:
     background-color 120ms ease,
     border-color 120ms ease,
-    color 120ms ease;
+    color 120ms ease,
+    transform 120ms ease,
+    box-shadow 120ms ease;
+}
+
+.tm-icon-button:hover:not(:disabled) {
+  transform: translateY(-1px) scale(1.02);
+  box-shadow: 0 8px 18px rgb(0 0 0 / 12%);
+}
+
+.tm-icon-button:focus-visible {
+  outline: 2px solid var(--color-border-strong);
+  outline-offset: 3px;
+}
+
+.tm-icon-button:active:not(:disabled) {
+  transform: translateY(0) scale(0.99);
+  box-shadow: none;
 }
 
 .tm-icon-button:disabled {

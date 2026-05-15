@@ -4,6 +4,8 @@
   display: grid;
   gap: 18px;
   justify-items: center;
+  animation: group-fade-up 460ms ease both;
+  animation-delay: 80ms;
 }
 
 .social-auth-group__title {
@@ -37,5 +39,17 @@
 @media (max-width: 560px) {
   .social-auth-group {
     padding: 26px 16px;
+  }
+}
+
+@keyframes group-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }

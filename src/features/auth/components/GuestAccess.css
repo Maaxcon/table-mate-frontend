@@ -3,6 +3,8 @@
   display: grid;
   justify-items: center;
   gap: 14px;
+  animation: guest-fade-up 540ms ease both;
+  animation-delay: 140ms;
 }
 
 .guest-access__button {
@@ -21,4 +23,16 @@
   color: var(--color-text-muted);
   max-width: 500px;
   line-height: 1.45;
+}
+
+@keyframes guest-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
