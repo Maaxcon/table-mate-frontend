@@ -3,6 +3,8 @@
   display: grid;
   justify-items: center;
   gap: 40px;
+  padding-inline: 8px;
+  box-sizing: border-box;
 }
 
 .greeting-page__divider {
@@ -22,6 +24,7 @@
 @media (max-width: 560px) {
   .greeting-page {
     gap: 28px;
+    padding-inline: 12px;
   }
 
   .greeting-page__footer {

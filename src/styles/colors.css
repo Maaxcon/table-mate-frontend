@@ -10,18 +10,3 @@
   --color-border-default: #d9d9d9;
   --color-border-strong: #111111;
 }
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-bg-page: #16171d;
-    --color-bg-surface: #1f2028;
-    --color-bg-surface-subtle: #2b2d36;
-    --color-bg-auth: #050505;
-    --color-text-primary: #f3f4f6;
-    --color-text-secondary: #9ca3af;
-    --color-text-muted: #8e96a6;
-    --color-text-subtle: #aab1bf;
-    --color-border-default: #2e303a;
-    --color-border-strong: #f3f4f6;
-  }
-}
