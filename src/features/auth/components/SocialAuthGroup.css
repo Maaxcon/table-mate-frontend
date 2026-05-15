@@ -36,6 +36,21 @@
   gap: 0;
 }
 
+.social-auth-group__feedback {
+  margin: 4px 0 0;
+  text-align: center;
+  font-size: 0.85rem;
+  line-height: 1.35;
+}
+
+.social-auth-group__feedback--success {
+  color: #1f7a41;
+}
+
+.social-auth-group__feedback--error {
+  color: #b42318;
+}
+
 @media (max-width: 560px) {
   .social-auth-group {
     padding: 26px 16px;
