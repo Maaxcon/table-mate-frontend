@@ -4,16 +4,16 @@
   flex-direction: column;
   gap: 24px;
   padding: 32px;
-  background: #ffffff;
-  color: #111111;
+  background: var(--color-bg-page);
+  color: var(--color-text-primary);
   text-align: left;
   box-sizing: border-box;
 }
 
 .hero-panel,
 .panel {
-  border: 1px solid #111111;
-  background: #ffffff;
+  border: 1px solid var(--color-border-strong);
+  background: var(--color-bg-surface);
 }
 
 .hero-panel {
@@ -32,7 +32,7 @@
   font-size: clamp(2.2rem, 5vw, 4rem);
   line-height: 1;
   letter-spacing: -0.05em;
-  color: #111111;
+  color: var(--color-text-primary);
 }
 
 .hero-text {
@@ -40,7 +40,7 @@
   margin: 0;
   font-size: 1rem;
   line-height: 1.7;
-  color: #333333;
+  color: var(--color-text-secondary);
 }
 
 .status-row {
@@ -54,16 +54,16 @@
   align-items: center;
   justify-content: center;
   padding: 10px 14px;
-  border: 1px solid #111111;
-  background: #ffffff;
-  color: #111111;
+  border: 1px solid var(--color-border-strong);
+  background: var(--color-bg-surface);
+  color: var(--color-text-primary);
   font-size: 0.92rem;
   font-weight: 600;
 }
 
 .status-pill--ready {
-  background: #111111;
-  color: #ffffff;
+  background: var(--color-text-primary);
+  color: var(--color-bg-surface);
 }
 
 .status-pill--error {
@@ -87,12 +87,12 @@
 .panel-header h2 {
   margin: 0 0 6px;
   font-size: 1.2rem;
-  color: #111111;
+  color: var(--color-text-primary);
 }
 
 .panel-header p {
   margin: 0;
-  color: #444444;
+  color: var(--color-text-secondary);
 }
 
 .config-list {
@@ -103,7 +103,7 @@
 
 .config-row {
   padding: 14px 16px;
-  border: 1px solid #111111;
+  border: 1px solid var(--color-border-strong);
 }
 
 .config-row dt {
@@ -112,14 +112,14 @@
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #444444;
+  color: var(--color-text-secondary);
 }
 
 .config-row dd {
   margin: 0;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 0.95rem;
-  color: #111111;
+  color: var(--color-text-primary);
   overflow-wrap: anywhere;
 }
 
@@ -128,7 +128,7 @@
   gap: 12px;
   margin: 0;
   padding-left: 20px;
-  color: #222222;
+  color: var(--color-text-secondary);
 }
 
 .checklist li {

@@ -23,7 +23,7 @@
 .auth-hero__subtitle {
   margin: 0;
   max-width: 430px;
-  color: #c6c6c6;
+  color: var(--color-text-subtle);
   font-weight: 600;
   letter-spacing: 0.14em;
   text-transform: uppercase;
