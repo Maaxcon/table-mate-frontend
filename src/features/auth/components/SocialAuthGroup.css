@@ -1,0 +1,41 @@
+.social-auth-group {
+  width: min(100%, 760px);
+  padding: 34px 24px;
+  display: grid;
+  gap: 18px;
+  justify-items: center;
+}
+
+.social-auth-group__title {
+  margin: 0;
+  font-size: clamp(1.8rem, 6vw, 3rem);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  line-height: 1;
+}
+
+.social-auth-group__text {
+  margin: 0;
+  text-align: center;
+  color: var(--color-text-secondary);
+  max-width: 450px;
+  line-height: 1.35;
+  font-size: clamp(1rem, 4vw, 1.75rem);
+}
+
+.social-auth-group__icons {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-top: 6px;
+}
+
+.social-auth-group__icons--single {
+  gap: 0;
+}
+
+@media (max-width: 560px) {
+  .social-auth-group {
+    padding: 26px 16px;
+  }
+}
