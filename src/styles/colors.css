@@ -1,8 +1,11 @@
 :root {
   --color-bg-page: #ffffff;
   --color-bg-surface: #ffffff;
+  --color-bg-surface-subtle: #f2f2f2;
   --color-text-primary: #111111;
   --color-text-secondary: #444444;
+  --color-text-muted: #b8b8b8;
+  --color-text-subtle: #c6c6c6;
   --color-border-default: #d9d9d9;
   --color-border-strong: #111111;
 }
@@ -11,8 +14,11 @@
   :root {
     --color-bg-page: #16171d;
     --color-bg-surface: #1f2028;
+    --color-bg-surface-subtle: #2b2d36;
     --color-text-primary: #f3f4f6;
     --color-text-secondary: #9ca3af;
+    --color-text-muted: #8e96a6;
+    --color-text-subtle: #aab1bf;
     --color-border-default: #2e303a;
     --color-border-strong: #f3f4f6;
   }
