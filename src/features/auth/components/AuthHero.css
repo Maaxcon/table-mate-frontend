@@ -1,0 +1,32 @@
+.auth-hero {
+  width: min(100%, 760px);
+  display: grid;
+  justify-items: center;
+  gap: 16px;
+  text-align: center;
+}
+
+.auth-hero__logo {
+  width: min(92vw, 340px);
+  height: auto;
+  display: block;
+}
+
+.auth-hero__title {
+  margin: 0;
+  font-size: clamp(2.1rem, 9vw, 3.9rem);
+  line-height: 0.95;
+  letter-spacing: 0.03em;
+  font-weight: 800;
+}
+
+.auth-hero__subtitle {
+  margin: 0;
+  max-width: 430px;
+  color: #c6c6c6;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  line-height: 1.5;
+  font-size: 0.8rem;
+}
