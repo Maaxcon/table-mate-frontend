@@ -2,6 +2,7 @@
   --color-bg-page: #ffffff;
   --color-bg-surface: #ffffff;
   --color-bg-surface-subtle: #f2f2f2;
+  --color-bg-auth: #050505;
   --color-text-primary: #111111;
   --color-text-secondary: #444444;
   --color-text-muted: #b8b8b8;
@@ -15,6 +16,7 @@
     --color-bg-page: #16171d;
     --color-bg-surface: #1f2028;
     --color-bg-surface-subtle: #2b2d36;
+    --color-bg-auth: #050505;
     --color-text-primary: #f3f4f6;
     --color-text-secondary: #9ca3af;
     --color-text-muted: #8e96a6;
