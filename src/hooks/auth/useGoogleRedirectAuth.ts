@@ -11,8 +11,6 @@ type UseGoogleRedirectAuthResult = {
 }
 
 type BackendGoogleAuthResponse = {
-  access?: string
-  refresh?: string
   detail?: string
   message?: string
 }
@@ -92,12 +90,7 @@ function useGoogleRedirectAuth(): UseGoogleRedirectAuthResult {
           throw new Error(payload.detail ?? payload.message ?? googleAuthMessage.backendAuthFailed)
         }
 
-        if (payload.access) {
-          localStorage.setItem("tm_access_token", payload.access)
-        }
-        if (payload.refresh) {
-          localStorage.setItem("tm_refresh_token", payload.refresh)
-        }
+        // TODO: tokens are set via httpOnly cookies on the backend
 
         setGoogleFeedback(googleAuthMessage.backendAuthSuccess)
         setGoogleFeedbackType("success")
