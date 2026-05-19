@@ -5,9 +5,9 @@ import { FcGoogle } from "react-icons/fc"
 import "./SocialAuthGroup.css"
 
 type SocialAuthGroupProps = {
-  onGoogleLogin?: () => void
-  googleFeedback?: string
-  googleFeedbackType?: GoogleFeedbackType
+  onGoogleLogin: () => void
+  googleFeedback: string
+  googleFeedbackType: GoogleFeedbackType
 }
 
 function SocialAuthGroup({
