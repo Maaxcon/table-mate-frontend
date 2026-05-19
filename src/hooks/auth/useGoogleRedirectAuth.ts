@@ -3,6 +3,8 @@ import { useGoogleLogin } from "@react-oauth/google"
 import { useEffect, useState } from "react"
 import { googleAuthCleanupQueryParams, googleAuthMessage } from "./googleAuth.constants"
 import type { GoogleFeedbackType, InitialGoogleFeedback } from "@/types/auth/googleAuth"
+import { useAppDispatch } from "@/store/hooks"
+import { setAccessToken } from "@/store/auth/authSlice"
 
 type UseGoogleRedirectAuthResult = {
   googleFeedback: string
@@ -11,6 +13,7 @@ type UseGoogleRedirectAuthResult = {
 }
 
 type BackendGoogleAuthResponse = {
+  access?: string
   detail?: string
   message?: string
 }
@@ -48,6 +51,7 @@ function getInitialGoogleFeedback(): InitialGoogleFeedback {
 }
 
 function useGoogleRedirectAuth(): UseGoogleRedirectAuthResult {
+  const dispatch = useAppDispatch()
   const [initialGoogleFeedback] = useState<InitialGoogleFeedback>(() => getInitialGoogleFeedback())
   const [googleFeedback, setGoogleFeedback] = useState<string>(initialGoogleFeedback.message)
   const [googleFeedbackType, setGoogleFeedbackType] = useState<GoogleFeedbackType>(
@@ -90,7 +94,10 @@ function useGoogleRedirectAuth(): UseGoogleRedirectAuthResult {
           throw new Error(payload.detail ?? payload.message ?? googleAuthMessage.backendAuthFailed)
         }
 
-        // TODO: tokens are set via httpOnly cookies on the backend
+        if (payload.access) {
+          dispatch(setAccessToken(payload.access))
+        }
+        // refresh_token is set as httpOnly cookie by the backend
 
         setGoogleFeedback(googleAuthMessage.backendAuthSuccess)
         setGoogleFeedbackType("success")
@@ -106,7 +113,7 @@ function useGoogleRedirectAuth(): UseGoogleRedirectAuthResult {
 
     void exchangeGoogleCode()
     return () => controller.abort()
-  }, [initialGoogleFeedback.code])
+  }, [initialGoogleFeedback.code, dispatch])
 
   useEffect(() => {
     if (initialGoogleFeedback.cleanUrl) {
