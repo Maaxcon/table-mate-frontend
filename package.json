@@ -5,12 +5,14 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "npm run generate:api && tsc -b && vite build",
+    "smoke": "npm run build",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "preview": "vite preview",
-    "prepare": "husky"
+    "prepare": "husky",
+    "generate:api": "openapi-typescript ../table-mate-backend/schema.yaml --output ./src/types/api.ts"
   },
   "dependencies": {
     "react": "^19.2.5",

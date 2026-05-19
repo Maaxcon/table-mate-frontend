@@ -1,12 +1,11 @@
+import { useEffect, useState } from "react"
 import "./App.css"
 import { env } from "./config/env"
+import { pingApi } from "./api/ping"
 
-type RuntimeValue = {
-  label: string
-  value: string
-}
+type ApiPingState = "pending" | "success" | "failure"
 
-const runtimeValues: RuntimeValue[] = [
+const runtimeValues = [
   {
     label: "API base URL",
     value: env.apiBaseUrl,
@@ -22,6 +21,34 @@ const runtimeValues: RuntimeValue[] = [
 ]
 
 function App() {
+  const [apiPingState, setApiPingState] = useState<ApiPingState>("pending")
+  const [apiPingDetails, setApiPingDetails] = useState<string>("Checking…")
+
+  useEffect(() => {
+    let mounted = true
+
+    async function runPing() {
+      const result = await pingApi()
+      if (!mounted) return
+
+      setApiPingState(result.ok ? "success" : "failure")
+      setApiPingDetails(result.statusText)
+    }
+
+    runPing()
+
+    return () => {
+      mounted = false
+    }
+  }, [])
+
+  const pingLabel =
+    apiPingState === "pending"
+      ? "API ping pending"
+      : apiPingState === "success"
+        ? "API reachable"
+        : "API unreachable"
+
   return (
     <main className="app-shell">
       <section className="hero-panel">
@@ -36,8 +63,22 @@ function App() {
 
         <div className="status-row">
           <span className="status-pill status-pill--ready">App shell online</span>
-          <span className="status-pill">API ping pending</span>
-          <span className="status-pill">Type-gen pending</span>
+          <span
+            className={`status-pill ${
+              apiPingState === "success"
+                ? "status-pill--ready"
+                : apiPingState === "failure"
+                  ? "status-pill--error"
+                  : ""
+            }`}
+          >
+            {pingLabel}
+          </span>
+          <span className="status-pill status-pill--ready">Type-gen ready</span>
+        </div>
+
+        <div className="status-row">
+          <span className="status-pill">{apiPingDetails}</span>
         </div>
       </section>
 

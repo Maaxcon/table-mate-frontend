@@ -66,6 +66,12 @@
   color: #ffffff;
 }
 
+.status-pill--error {
+  background: #ff3535;
+  color: #ffffff;
+  border-color: #ff3535;
+}
+
 .content-grid {
   gap: 24px;
 }
