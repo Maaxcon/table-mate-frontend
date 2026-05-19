@@ -118,15 +118,6 @@ function useGoogleRedirectAuth(): UseGoogleRedirectAuthResult {
     flow: "auth-code",
     ux_mode: "redirect",
     redirect_uri: window.location.origin,
-    onSuccess: (tokenResponse) => {
-      console.info("Google login success", tokenResponse)
-      setGoogleFeedback(googleAuthMessage.successFromCallback)
-      setGoogleFeedbackType("success")
-    },
-    onError: () => {
-      setGoogleFeedback(googleAuthMessage.genericError)
-      setGoogleFeedbackType("error")
-    },
   })
 
   const handleGoogleLogin = () => {

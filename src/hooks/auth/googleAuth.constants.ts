@@ -1,6 +1,5 @@
 export const googleAuthMessage = {
   successFromRedirect: "Google sign-in success. Completing backend authorization...",
-  successFromCallback: "Google sign-in success. Completing backend authorization...",
   exchangingCode: "Exchanging Google code with backend...",
   backendAuthSuccess: "Signed in successfully.",
   backendAuthFailed: "Google sign-in succeeded, but backend authorization failed.",
