@@ -61,6 +61,8 @@ function useGoogleRedirectAuth(): UseGoogleRedirectAuthResult {
       return
     }
 
+    const controller = new AbortController()
+
     const exchangeGoogleCode = async () => {
       if (env.apiBaseUrl === ENV_NOT_CONFIGURED_VALUE) {
         setGoogleFeedback(googleAuthMessage.missingApiBaseUrl)
@@ -81,6 +83,7 @@ function useGoogleRedirectAuth(): UseGoogleRedirectAuthResult {
             code: initialGoogleFeedback.code,
             redirect_uri: window.location.origin,
           }),
+          signal: controller.signal,
         })
 
         const payload = (await response.json()) as BackendGoogleAuthResponse
@@ -99,6 +102,9 @@ function useGoogleRedirectAuth(): UseGoogleRedirectAuthResult {
         setGoogleFeedback(googleAuthMessage.backendAuthSuccess)
         setGoogleFeedbackType("success")
       } catch (error) {
+        if (error instanceof DOMException && error.name === "AbortError") {
+          return
+        }
         const message = error instanceof Error ? error.message : googleAuthMessage.backendAuthFailed
         setGoogleFeedback(message)
         setGoogleFeedbackType("error")
@@ -106,6 +112,7 @@ function useGoogleRedirectAuth(): UseGoogleRedirectAuthResult {
     }
 
     void exchangeGoogleCode()
+    return () => controller.abort()
   }, [initialGoogleFeedback.code])
 
   useEffect(() => {
