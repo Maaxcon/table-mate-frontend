@@ -65,7 +65,7 @@ function useGoogleRedirectAuth(): UseGoogleRedirectAuthResult {
 
     const controller = new AbortController()
 
-    const exchangeGoogleCode = async () => {
+    const exchangeGoogleCode = async (code: string) => {
       if (env.apiBaseUrl === ENV_NOT_CONFIGURED_VALUE) {
         setGoogleFeedback(googleAuthMessage.missingApiBaseUrl)
         setGoogleFeedbackType("error")
@@ -82,7 +82,7 @@ function useGoogleRedirectAuth(): UseGoogleRedirectAuthResult {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            code: initialGoogleFeedback.code,
+            code,
             redirect_uri: window.location.origin,
           }),
           signal: controller.signal,
@@ -111,7 +111,7 @@ function useGoogleRedirectAuth(): UseGoogleRedirectAuthResult {
       }
     }
 
-    void exchangeGoogleCode()
+    void exchangeGoogleCode(initialGoogleFeedback.code)
     return () => controller.abort()
   }, [initialGoogleFeedback.code, dispatch])
 
