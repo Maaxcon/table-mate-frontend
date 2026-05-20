@@ -5,7 +5,7 @@ type AuthUsersListResponse =
   paths["/api/auth/users/"]["get"]["responses"]["200"]["content"]["application/json"]
 
 export async function pingApi(): Promise<{ ok: boolean; statusText: string }> {
-  if (env.apiBaseUrl === "Not configured") {
+  if (!env.apiBaseUrl) {
     return { ok: false, statusText: "API base URL not configured" }
   }
 

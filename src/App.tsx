@@ -8,15 +8,15 @@ type ApiPingState = "pending" | "success" | "failure"
 const runtimeValues = [
   {
     label: "API base URL",
-    value: env.apiBaseUrl,
+    value: env.apiBaseUrl ?? "Not configured",
   },
   {
     label: "WebSocket URL",
-    value: env.wsUrl,
+    value: env.wsUrl ?? "Not configured",
   },
   {
     label: "Google client ID",
-    value: env.googleClientId,
+    value: env.googleClientId ?? "Not configured",
   },
 ]
 

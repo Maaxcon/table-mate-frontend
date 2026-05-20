@@ -20,7 +20,7 @@ export interface paths {
     patch?: never
     trace?: never
   }
-  "/api/auth/users/{id}/": {
+  "/api/auth/users/{public_id}/": {
     parameters: {
       query?: never
       header?: never
@@ -52,7 +52,7 @@ export interface paths {
     patch?: never
     trace?: never
   }
-  "/api/editor/layouts/{id}/": {
+  "/api/editor/layouts/{public_id}/": {
     parameters: {
       query?: never
       header?: never
@@ -84,7 +84,7 @@ export interface paths {
     patch?: never
     trace?: never
   }
-  "/api/menu/menu-categories/{id}/": {
+  "/api/menu/menu-categories/{public_id}/": {
     parameters: {
       query?: never
       header?: never
@@ -116,7 +116,7 @@ export interface paths {
     patch?: never
     trace?: never
   }
-  "/api/menu/menu-items/{id}/": {
+  "/api/menu/menu-items/{public_id}/": {
     parameters: {
       query?: never
       header?: never
@@ -148,7 +148,7 @@ export interface paths {
     patch?: never
     trace?: never
   }
-  "/api/menu/menus/{id}/": {
+  "/api/menu/menus/{public_id}/": {
     parameters: {
       query?: never
       header?: never
@@ -180,7 +180,7 @@ export interface paths {
     patch?: never
     trace?: never
   }
-  "/api/orders/order-items/{id}/": {
+  "/api/orders/order-items/{public_id}/": {
     parameters: {
       query?: never
       header?: never
@@ -212,7 +212,7 @@ export interface paths {
     patch?: never
     trace?: never
   }
-  "/api/orders/orders/{id}/": {
+  "/api/orders/orders/{public_id}/": {
     parameters: {
       query?: never
       header?: never
@@ -244,7 +244,7 @@ export interface paths {
     patch?: never
     trace?: never
   }
-  "/api/orders/sessions/{id}/": {
+  "/api/orders/sessions/{public_id}/": {
     parameters: {
       query?: never
       header?: never
@@ -276,7 +276,7 @@ export interface paths {
     patch?: never
     trace?: never
   }
-  "/api/orders/tickets/{id}/": {
+  "/api/orders/tickets/{public_id}/": {
     parameters: {
       query?: never
       header?: never
@@ -308,7 +308,7 @@ export interface paths {
     patch?: never
     trace?: never
   }
-  "/api/payments/payments/{id}/": {
+  "/api/payments/payments/{public_id}/": {
     parameters: {
       query?: never
       header?: never
@@ -316,38 +316,6 @@ export interface paths {
       cookie?: never
     }
     get: operations["payments_payments_retrieve"]
-    put?: never
-    post?: never
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  "/api/payments/webhook-events/": {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get: operations["payments_webhook_events_list"]
-    put?: never
-    post?: never
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  "/api/payments/webhook-events/{id}/": {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get: operations["payments_webhook_events_retrieve"]
     put?: never
     post?: never
     delete?: never
@@ -372,7 +340,7 @@ export interface paths {
     patch?: never
     trace?: never
   }
-  "/api/reservations/reservations/{id}/": {
+  "/api/reservations/reservations/{public_id}/": {
     parameters: {
       query?: never
       header?: never
@@ -404,7 +372,7 @@ export interface paths {
     patch?: never
     trace?: never
   }
-  "/api/restaurants/restaurant-settings/{id}/": {
+  "/api/restaurants/restaurant-settings/{public_id}/": {
     parameters: {
       query?: never
       header?: never
@@ -436,7 +404,7 @@ export interface paths {
     patch?: never
     trace?: never
   }
-  "/api/restaurants/restaurants/{id}/": {
+  "/api/restaurants/restaurants/{public_id}/": {
     parameters: {
       query?: never
       header?: never
@@ -468,7 +436,7 @@ export interface paths {
     patch?: never
     trace?: never
   }
-  "/api/restaurants/tables/{id}/": {
+  "/api/restaurants/tables/{public_id}/": {
     parameters: {
       query?: never
       header?: never
@@ -644,7 +612,6 @@ export interface components {
       amount: string
       currency: string
       status?: components["schemas"]["PaymentStatusEnum"]
-      raw_payload?: unknown
       /** Format: date-time */
       readonly created_at: string
       /** Format: date-time */
@@ -813,7 +780,6 @@ export interface components {
       last_name?: string
       phone?: string | null
       role?: components["schemas"]["RoleEnum"]
-      is_staff?: boolean
       is_active?: boolean
       /** Format: date-time */
       readonly created_at: string
@@ -828,21 +794,6 @@ export interface components {
      * @enum {string}
      */
     VoidReasonEnum: "mispick" | "guest_changed_mind" | "quality_issue" | "out_of_stock"
-    WebhookEvent: {
-      /** Format: uuid */
-      readonly public_id: string
-      provider: string
-      event_id: string
-      payload: unknown
-      /** Format: date-time */
-      received_at: string
-      /** Format: date-time */
-      processed_at?: string | null
-      /** Format: date-time */
-      readonly created_at: string
-      /** Format: date-time */
-      readonly updated_at: string
-    }
   }
   responses: never
   parameters: never
@@ -876,8 +827,7 @@ export interface operations {
       query?: never
       header?: never
       path: {
-        /** @description A unique integer value identifying this user. */
-        id: number
+        public_id: string
       }
       cookie?: never
     }
@@ -917,8 +867,7 @@ export interface operations {
       query?: never
       header?: never
       path: {
-        /** @description A unique integer value identifying this layout. */
-        id: number
+        public_id: string
       }
       cookie?: never
     }
@@ -958,8 +907,7 @@ export interface operations {
       query?: never
       header?: never
       path: {
-        /** @description A unique integer value identifying this menu category. */
-        id: number
+        public_id: string
       }
       cookie?: never
     }
@@ -999,8 +947,7 @@ export interface operations {
       query?: never
       header?: never
       path: {
-        /** @description A unique integer value identifying this menu item. */
-        id: number
+        public_id: string
       }
       cookie?: never
     }
@@ -1040,8 +987,7 @@ export interface operations {
       query?: never
       header?: never
       path: {
-        /** @description A unique integer value identifying this menu. */
-        id: number
+        public_id: string
       }
       cookie?: never
     }
@@ -1081,8 +1027,7 @@ export interface operations {
       query?: never
       header?: never
       path: {
-        /** @description A unique integer value identifying this order item. */
-        id: number
+        public_id: string
       }
       cookie?: never
     }
@@ -1122,8 +1067,7 @@ export interface operations {
       query?: never
       header?: never
       path: {
-        /** @description A unique integer value identifying this order. */
-        id: number
+        public_id: string
       }
       cookie?: never
     }
@@ -1163,8 +1107,7 @@ export interface operations {
       query?: never
       header?: never
       path: {
-        /** @description A unique integer value identifying this session. */
-        id: number
+        public_id: string
       }
       cookie?: never
     }
@@ -1204,8 +1147,7 @@ export interface operations {
       query?: never
       header?: never
       path: {
-        /** @description A unique integer value identifying this ticket. */
-        id: number
+        public_id: string
       }
       cookie?: never
     }
@@ -1245,8 +1187,7 @@ export interface operations {
       query?: never
       header?: never
       path: {
-        /** @description A unique integer value identifying this payment. */
-        id: number
+        public_id: string
       }
       cookie?: never
     }
@@ -1258,47 +1199,6 @@ export interface operations {
         }
         content: {
           "application/json": components["schemas"]["Payment"]
-        }
-      }
-    }
-  }
-  payments_webhook_events_list: {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          "application/json": components["schemas"]["WebhookEvent"][]
-        }
-      }
-    }
-  }
-  payments_webhook_events_retrieve: {
-    parameters: {
-      query?: never
-      header?: never
-      path: {
-        /** @description A unique integer value identifying this webhook event. */
-        id: number
-      }
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          "application/json": components["schemas"]["WebhookEvent"]
         }
       }
     }
@@ -1327,8 +1227,7 @@ export interface operations {
       query?: never
       header?: never
       path: {
-        /** @description A unique integer value identifying this reservation. */
-        id: number
+        public_id: string
       }
       cookie?: never
     }
@@ -1368,8 +1267,7 @@ export interface operations {
       query?: never
       header?: never
       path: {
-        /** @description A unique integer value identifying this restaurant settings. */
-        id: number
+        public_id: string
       }
       cookie?: never
     }
@@ -1409,8 +1307,7 @@ export interface operations {
       query?: never
       header?: never
       path: {
-        /** @description A unique integer value identifying this restaurant. */
-        id: number
+        public_id: string
       }
       cookie?: never
     }
@@ -1450,8 +1347,7 @@ export interface operations {
       query?: never
       header?: never
       path: {
-        /** @description A unique integer value identifying this table. */
-        id: number
+        public_id: string
       }
       cookie?: never
     }
