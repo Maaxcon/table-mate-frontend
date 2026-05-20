@@ -1,8 +1,4 @@
 import { env } from "../config/env"
-import type { paths } from "../types/api"
-
-type AuthUsersListResponse =
-  paths["/api/auth/users/"]["get"]["responses"]["200"]["content"]["application/json"]
 
 export async function pingApi(): Promise<{ ok: boolean; statusText: string }> {
   if (!env.apiBaseUrl) {
@@ -10,17 +6,12 @@ export async function pingApi(): Promise<{ ok: boolean; statusText: string }> {
   }
 
   const apiUrl = env.apiBaseUrl.replace(/\/$/, "")
-  const url = `${apiUrl}/api/auth/users/`
 
   try {
-    const response = await fetch(url, { method: "GET" })
-    const ok = response.ok || response.status === 401 || response.status === 403
-
-    const _sample: AuthUsersListResponse = []
-    void _sample
+    const response = await fetch(apiUrl, { method: "HEAD" })
 
     return {
-      ok,
+      ok: true,
       statusText: `${response.status} ${response.statusText}`,
     }
   } catch (error) {

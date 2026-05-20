@@ -4,38 +4,6 @@
  */
 
 export interface paths {
-  "/api/auth/users/": {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get: operations["auth_users_list"]
-    put?: never
-    post?: never
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  "/api/auth/users/{public_id}/": {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get: operations["auth_users_retrieve"]
-    put?: never
-    post?: never
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
   "/api/editor/layouts/": {
     parameters: {
       query?: never
@@ -468,12 +436,14 @@ export interface components {
     Layout: {
       /** Format: uuid */
       readonly public_id: string
-      readonly restaurant: number
+      /** Format: uuid */
+      readonly restaurant: string
       version: number
       payload?: unknown
       /** Format: date-time */
       published_at?: string | null
-      readonly published_by: number
+      /** Format: uuid */
+      readonly published_by: string
       /** Format: date-time */
       readonly created_at: string
       /** Format: date-time */
@@ -482,11 +452,12 @@ export interface components {
     Menu: {
       /** Format: uuid */
       readonly public_id: string
-      restaurant: number
+      /** Format: uuid */
+      readonly restaurant: string
       name: string
       is_active?: boolean
-      readonly items: number[]
-      readonly categories: number[]
+      readonly items: string[]
+      readonly categories: string[]
       /** Format: date-time */
       readonly created_at: string
       /** Format: date-time */
@@ -495,7 +466,8 @@ export interface components {
     MenuCategory: {
       /** Format: uuid */
       readonly public_id: string
-      menu: number
+      /** Format: uuid */
+      readonly menu: string
       name: string
       sort_order?: number
       /** Format: date-time */
@@ -506,9 +478,12 @@ export interface components {
     MenuItem: {
       /** Format: uuid */
       readonly public_id: string
-      restaurant: number
-      readonly menu: number
-      readonly category: number
+      /** Format: uuid */
+      readonly restaurant: string
+      /** Format: uuid */
+      readonly menu: string
+      /** Format: uuid */
+      readonly category: string
       name: string
       description?: string | null
       /** Format: decimal */
@@ -525,9 +500,12 @@ export interface components {
     Order: {
       /** Format: uuid */
       readonly public_id: string
-      restaurant: number
-      readonly session: number
-      readonly created_by: number
+      /** Format: uuid */
+      readonly restaurant: string
+      /** Format: uuid */
+      readonly session: string
+      /** Format: uuid */
+      readonly created_by: string
       created_by_source?: components["schemas"]["CreatedBySourceEnum"]
       source?: components["schemas"]["SourceEnum"]
       status?: components["schemas"]["OrderStatusEnum"]
@@ -552,10 +530,14 @@ export interface components {
     OrderItem: {
       /** Format: uuid */
       readonly public_id: string
-      restaurant: number
-      readonly order: number
-      readonly ticket: number
-      readonly menu_item: number
+      /** Format: uuid */
+      readonly restaurant: string
+      /** Format: uuid */
+      readonly order: string
+      /** Format: uuid */
+      readonly ticket: string
+      /** Format: uuid */
+      readonly menu_item: string
       guest_slot: number
       quantity: number
       comment?: string | null
@@ -571,7 +553,8 @@ export interface components {
       tax_amount?: string
       /** Format: date-time */
       voided_at?: string | null
-      readonly voided_by: number
+      /** Format: uuid */
+      readonly voided_by: string
       void_reason?:
         | (
             | components["schemas"]["VoidReasonEnum"]
@@ -579,6 +562,7 @@ export interface components {
             | components["schemas"]["NullEnum"]
           )
         | null
+      is_wasted?: boolean
       /** Format: date-time */
       readonly created_at: string
       /** Format: date-time */
@@ -604,8 +588,10 @@ export interface components {
     Payment: {
       /** Format: uuid */
       readonly public_id: string
-      readonly restaurant: number
-      readonly order: number
+      /** Format: uuid */
+      readonly restaurant: string
+      /** Format: uuid */
+      readonly order: string
       provider: string
       provider_transaction_id: string
       /** Format: decimal */
@@ -630,9 +616,12 @@ export interface components {
     Reservation: {
       /** Format: uuid */
       readonly public_id: string
-      restaurant: number
-      readonly customer: number
-      readonly table: number
+      /** Format: uuid */
+      readonly restaurant: string
+      /** Format: uuid */
+      readonly customer: string
+      /** Format: uuid */
+      readonly table: string
       guest_count: number
       /** Format: date-time */
       start_at: string
@@ -666,7 +655,8 @@ export interface components {
     RestaurantSettings: {
       /** Format: uuid */
       readonly public_id: string
-      readonly restaurant: number
+      /** Format: uuid */
+      readonly restaurant: string
       timezone?: string
       currency: string
       locale?: string
@@ -680,21 +670,17 @@ export interface components {
       /** Format: date-time */
       readonly updated_at: string
     }
-    /**
-     * @description * `admin` - Admin
-     *     * `waiter` - Waiter
-     *     * `cook` - Cook
-     *     * `customer` - Customer
-     * @enum {string}
-     */
-    RoleEnum: "admin" | "waiter" | "cook" | "customer"
     Session: {
       /** Format: uuid */
       readonly public_id: string
-      restaurant: number
-      readonly table: number
-      readonly reservation: number
-      readonly opened_by: number
+      /** Format: uuid */
+      readonly restaurant: string
+      /** Format: uuid */
+      readonly table: string
+      /** Format: uuid */
+      readonly reservation: string
+      /** Format: uuid */
+      readonly opened_by: string
       guest_count: number
       status?: components["schemas"]["SessionStatusEnum"]
       currency: string
@@ -727,7 +713,8 @@ export interface components {
     Table: {
       /** Format: uuid */
       readonly public_id: string
-      readonly restaurant: number
+      /** Format: uuid */
+      readonly restaurant: string
       table_number: string
       capacity: number
       status?: components["schemas"]["TableStatusEnum"]
@@ -748,9 +735,12 @@ export interface components {
     Ticket: {
       /** Format: uuid */
       readonly public_id: string
-      restaurant: number
-      readonly session: number
-      readonly order: number
+      /** Format: uuid */
+      readonly restaurant: string
+      /** Format: uuid */
+      readonly session: string
+      /** Format: uuid */
+      readonly order: string
       status?: components["schemas"]["TicketStatusEnum"]
       /** Format: date-time */
       injected_at: string
@@ -771,21 +761,6 @@ export interface components {
      * @enum {string}
      */
     TicketStatusEnum: "incoming" | "active" | "completed" | "bumped"
-    User: {
-      /** Format: uuid */
-      readonly public_id: string
-      /** Format: email */
-      email: string
-      first_name?: string
-      last_name?: string
-      phone?: string | null
-      role?: components["schemas"]["RoleEnum"]
-      is_active?: boolean
-      /** Format: date-time */
-      readonly created_at: string
-      /** Format: date-time */
-      readonly updated_at: string
-    }
     /**
      * @description * `mispick` - Mispick
      *     * `guest_changed_mind` - Guest changed mind
@@ -803,46 +778,6 @@ export interface components {
 }
 export type $defs = Record<string, never>
 export interface operations {
-  auth_users_list: {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          "application/json": components["schemas"]["User"][]
-        }
-      }
-    }
-  }
-  auth_users_retrieve: {
-    parameters: {
-      query?: never
-      header?: never
-      path: {
-        public_id: string
-      }
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          "application/json": components["schemas"]["User"]
-        }
-      }
-    }
-  }
   editor_layouts_list: {
     parameters: {
       query?: never
