@@ -14,10 +14,8 @@ export async function pingApi(): Promise<{ ok: boolean; statusText: string }> {
 
   try {
     const response = await fetch(url, { method: "GET" })
-    const ok =
-      response.ok || response.status === 401 || response.status === 403 || response.status === 404
+    const ok = response.ok || response.status === 401 || response.status === 403
 
-    // Type alias is imported from generated types to ensure the type pipeline is consumed.
     const _sample: AuthUsersListResponse = []
     void _sample
 
