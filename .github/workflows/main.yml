@@ -38,6 +38,9 @@ jobs:
       - name: Generate typed API
         run: npm run generate:api
 
+      - name: Check generated API type drift
+        run: git diff --exit-code -- src/types/api.ts
+
       - name: Lint
         run: npm run lint
 
