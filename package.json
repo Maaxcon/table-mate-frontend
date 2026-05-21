@@ -5,12 +5,14 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "npm run generate:api && tsc -b && vite build",
+    "smoke": "npm run build",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "preview": "vite preview",
-    "prepare": "husky"
+    "prepare": "husky",
+    "generate:api": "openapi-typescript ../table-mate-backend/schema.yaml --output ./src/types/api.ts"
   },
   "dependencies": {
     "react": "^19.2.5",
@@ -24,7 +26,7 @@
     "*.{json,css,scss,md,html}": "prettier --write"
   },
   "devDependencies": {
-    "@eslint/js": "^10.0.1",
+    "@eslint/js": "^9.39.0",
     "@types/node": "^24.12.2",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
@@ -36,8 +38,9 @@
     "globals": "^17.5.0",
     "husky": "^9.1.7",
     "lint-staged": "^17.0.4",
+    "openapi-typescript": "^7.13.0",
     "prettier": "^3.8.3",
-    "typescript": "~6.0.2",
+    "typescript": "~5.9.3",
     "typescript-eslint": "^8.58.2",
     "vite": "^8.0.10"
   }
