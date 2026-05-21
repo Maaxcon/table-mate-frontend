@@ -4,6 +4,46 @@
  */
 
 export interface paths {
+  "/api/auth/token/": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * @description Takes a set of user credentials and returns an access and refresh JSON web
+     *     token pair to prove the authentication of those credentials.
+     */
+    post: operations["auth_token_create"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/auth/token/refresh/": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * @description Takes a refresh type JSON web token and returns an access type JSON web
+     *     token if the refresh token is valid.
+     */
+    post: operations["auth_token_refresh_create"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   "/api/editor/layouts/": {
     parameters: {
       query?: never
@@ -585,6 +625,201 @@ export interface components {
      * @enum {string}
      */
     OrderStatusEnum: "draft" | "submitted" | "completed" | "cancelled"
+    PaginatedLayoutList: {
+      /** @example 123 */
+      count: number
+      /**
+       * Format: uri
+       * @example http://api.example.org/accounts/?page=4
+       */
+      next?: string | null
+      /**
+       * Format: uri
+       * @example http://api.example.org/accounts/?page=2
+       */
+      previous?: string | null
+      results: components["schemas"]["Layout"][]
+    }
+    PaginatedMenuCategoryList: {
+      /** @example 123 */
+      count: number
+      /**
+       * Format: uri
+       * @example http://api.example.org/accounts/?page=4
+       */
+      next?: string | null
+      /**
+       * Format: uri
+       * @example http://api.example.org/accounts/?page=2
+       */
+      previous?: string | null
+      results: components["schemas"]["MenuCategory"][]
+    }
+    PaginatedMenuItemList: {
+      /** @example 123 */
+      count: number
+      /**
+       * Format: uri
+       * @example http://api.example.org/accounts/?page=4
+       */
+      next?: string | null
+      /**
+       * Format: uri
+       * @example http://api.example.org/accounts/?page=2
+       */
+      previous?: string | null
+      results: components["schemas"]["MenuItem"][]
+    }
+    PaginatedMenuList: {
+      /** @example 123 */
+      count: number
+      /**
+       * Format: uri
+       * @example http://api.example.org/accounts/?page=4
+       */
+      next?: string | null
+      /**
+       * Format: uri
+       * @example http://api.example.org/accounts/?page=2
+       */
+      previous?: string | null
+      results: components["schemas"]["Menu"][]
+    }
+    PaginatedOrderItemList: {
+      /** @example 123 */
+      count: number
+      /**
+       * Format: uri
+       * @example http://api.example.org/accounts/?page=4
+       */
+      next?: string | null
+      /**
+       * Format: uri
+       * @example http://api.example.org/accounts/?page=2
+       */
+      previous?: string | null
+      results: components["schemas"]["OrderItem"][]
+    }
+    PaginatedOrderList: {
+      /** @example 123 */
+      count: number
+      /**
+       * Format: uri
+       * @example http://api.example.org/accounts/?page=4
+       */
+      next?: string | null
+      /**
+       * Format: uri
+       * @example http://api.example.org/accounts/?page=2
+       */
+      previous?: string | null
+      results: components["schemas"]["Order"][]
+    }
+    PaginatedPaymentList: {
+      /** @example 123 */
+      count: number
+      /**
+       * Format: uri
+       * @example http://api.example.org/accounts/?page=4
+       */
+      next?: string | null
+      /**
+       * Format: uri
+       * @example http://api.example.org/accounts/?page=2
+       */
+      previous?: string | null
+      results: components["schemas"]["Payment"][]
+    }
+    PaginatedReservationList: {
+      /** @example 123 */
+      count: number
+      /**
+       * Format: uri
+       * @example http://api.example.org/accounts/?page=4
+       */
+      next?: string | null
+      /**
+       * Format: uri
+       * @example http://api.example.org/accounts/?page=2
+       */
+      previous?: string | null
+      results: components["schemas"]["Reservation"][]
+    }
+    PaginatedRestaurantList: {
+      /** @example 123 */
+      count: number
+      /**
+       * Format: uri
+       * @example http://api.example.org/accounts/?page=4
+       */
+      next?: string | null
+      /**
+       * Format: uri
+       * @example http://api.example.org/accounts/?page=2
+       */
+      previous?: string | null
+      results: components["schemas"]["Restaurant"][]
+    }
+    PaginatedRestaurantSettingsList: {
+      /** @example 123 */
+      count: number
+      /**
+       * Format: uri
+       * @example http://api.example.org/accounts/?page=4
+       */
+      next?: string | null
+      /**
+       * Format: uri
+       * @example http://api.example.org/accounts/?page=2
+       */
+      previous?: string | null
+      results: components["schemas"]["RestaurantSettings"][]
+    }
+    PaginatedSessionList: {
+      /** @example 123 */
+      count: number
+      /**
+       * Format: uri
+       * @example http://api.example.org/accounts/?page=4
+       */
+      next?: string | null
+      /**
+       * Format: uri
+       * @example http://api.example.org/accounts/?page=2
+       */
+      previous?: string | null
+      results: components["schemas"]["Session"][]
+    }
+    PaginatedTableList: {
+      /** @example 123 */
+      count: number
+      /**
+       * Format: uri
+       * @example http://api.example.org/accounts/?page=4
+       */
+      next?: string | null
+      /**
+       * Format: uri
+       * @example http://api.example.org/accounts/?page=2
+       */
+      previous?: string | null
+      results: components["schemas"]["Table"][]
+    }
+    PaginatedTicketList: {
+      /** @example 123 */
+      count: number
+      /**
+       * Format: uri
+       * @example http://api.example.org/accounts/?page=4
+       */
+      next?: string | null
+      /**
+       * Format: uri
+       * @example http://api.example.org/accounts/?page=2
+       */
+      previous?: string | null
+      results: components["schemas"]["Ticket"][]
+    }
     Payment: {
       /** Format: uuid */
       readonly public_id: string
@@ -761,6 +996,16 @@ export interface components {
      * @enum {string}
      */
     TicketStatusEnum: "incoming" | "active" | "completed" | "bumped"
+    TokenObtainPair: {
+      email: string
+      password: string
+      readonly access: string
+      readonly refresh: string
+    }
+    TokenRefresh: {
+      readonly access: string
+      refresh: string
+    }
     /**
      * @description * `mispick` - Mispick
      *     * `guest_changed_mind` - Guest changed mind
@@ -778,9 +1023,67 @@ export interface components {
 }
 export type $defs = Record<string, never>
 export interface operations {
-  editor_layouts_list: {
+  auth_token_create: {
     parameters: {
       query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["TokenObtainPair"]
+        "application/x-www-form-urlencoded": components["schemas"]["TokenObtainPair"]
+        "multipart/form-data": components["schemas"]["TokenObtainPair"]
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["TokenObtainPair"]
+        }
+      }
+    }
+  }
+  auth_token_refresh_create: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["TokenRefresh"]
+        "application/x-www-form-urlencoded": components["schemas"]["TokenRefresh"]
+        "multipart/form-data": components["schemas"]["TokenRefresh"]
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["TokenRefresh"]
+        }
+      }
+    }
+  }
+  editor_layouts_list: {
+    parameters: {
+      query?: {
+        /** @description Which field to use when ordering the results. */
+        ordering?: string
+        /** @description A page number within the paginated result set. */
+        page?: number
+        published_at?: string
+        published_by?: number
+        version?: number
+      }
       header?: never
       path?: never
       cookie?: never
@@ -792,7 +1095,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          "application/json": components["schemas"]["Layout"][]
+          "application/json": components["schemas"]["PaginatedLayoutList"]
         }
       }
     }
@@ -820,7 +1123,13 @@ export interface operations {
   }
   menu_menu_categories_list: {
     parameters: {
-      query?: never
+      query?: {
+        menu?: number
+        /** @description Which field to use when ordering the results. */
+        ordering?: string
+        /** @description A page number within the paginated result set. */
+        page?: number
+      }
       header?: never
       path?: never
       cookie?: never
@@ -832,7 +1141,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          "application/json": components["schemas"]["MenuCategory"][]
+          "application/json": components["schemas"]["PaginatedMenuCategoryList"]
         }
       }
     }
@@ -860,7 +1169,15 @@ export interface operations {
   }
   menu_menu_items_list: {
     parameters: {
-      query?: never
+      query?: {
+        category?: number
+        is_available?: boolean
+        menu?: number
+        /** @description Which field to use when ordering the results. */
+        ordering?: string
+        /** @description A page number within the paginated result set. */
+        page?: number
+      }
       header?: never
       path?: never
       cookie?: never
@@ -872,7 +1189,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          "application/json": components["schemas"]["MenuItem"][]
+          "application/json": components["schemas"]["PaginatedMenuItemList"]
         }
       }
     }
@@ -900,7 +1217,13 @@ export interface operations {
   }
   menu_menus_list: {
     parameters: {
-      query?: never
+      query?: {
+        is_active?: boolean
+        /** @description Which field to use when ordering the results. */
+        ordering?: string
+        /** @description A page number within the paginated result set. */
+        page?: number
+      }
       header?: never
       path?: never
       cookie?: never
@@ -912,7 +1235,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          "application/json": components["schemas"]["Menu"][]
+          "application/json": components["schemas"]["PaginatedMenuList"]
         }
       }
     }
@@ -940,7 +1263,32 @@ export interface operations {
   }
   orders_order_items_list: {
     parameters: {
-      query?: never
+      query?: {
+        is_wasted?: boolean
+        menu_item?: number
+        order?: number
+        /** @description Which field to use when ordering the results. */
+        ordering?: string
+        /** @description A page number within the paginated result set. */
+        page?: number
+        /**
+         * @description * `pending` - Pending
+         *     * `in_progress` - In progress
+         *     * `ready` - Ready
+         *     * `served` - Served
+         *     * `voided` - Voided
+         */
+        status?: "in_progress" | "pending" | "ready" | "served" | "voided"
+        ticket?: number
+        /**
+         * @description * `mispick` - Mispick
+         *     * `guest_changed_mind` - Guest changed mind
+         *     * `quality_issue` - Quality issue
+         *     * `out_of_stock` - Out of stock
+         */
+        void_reason?: "guest_changed_mind" | "mispick" | "out_of_stock" | "quality_issue" | null
+        voided_by?: number
+      }
       header?: never
       path?: never
       cookie?: never
@@ -952,7 +1300,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          "application/json": components["schemas"]["OrderItem"][]
+          "application/json": components["schemas"]["PaginatedOrderItemList"]
         }
       }
     }
@@ -980,7 +1328,42 @@ export interface operations {
   }
   orders_orders_list: {
     parameters: {
-      query?: never
+      query?: {
+        created_by?: number
+        /**
+         * @description * `staff` - Staff
+         *     * `customer` - Customer
+         *     * `system` - System
+         */
+        created_by_source?: "customer" | "staff" | "system"
+        currency?: string
+        /** @description Which field to use when ordering the results. */
+        ordering?: string
+        /** @description A page number within the paginated result set. */
+        page?: number
+        /**
+         * @description * `unpaid` - Unpaid
+         *     * `authorized` - Authorized
+         *     * `paid` - Paid
+         *     * `settled` - Settled
+         *     * `refunded` - Refunded
+         *     * `cancelled` - Cancelled
+         */
+        payment_status?: "authorized" | "cancelled" | "paid" | "refunded" | "settled" | "unpaid"
+        session?: number
+        /**
+         * @description * `waiter_manual` - Waiter manual
+         *     * `customer_prepaid` - Customer prepaid
+         */
+        source?: "customer_prepaid" | "waiter_manual"
+        /**
+         * @description * `draft` - Draft
+         *     * `submitted` - Submitted
+         *     * `completed` - Completed
+         *     * `cancelled` - Cancelled
+         */
+        status?: "cancelled" | "completed" | "draft" | "submitted"
+      }
       header?: never
       path?: never
       cookie?: never
@@ -992,7 +1375,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          "application/json": components["schemas"]["Order"][]
+          "application/json": components["schemas"]["PaginatedOrderList"]
         }
       }
     }
@@ -1020,7 +1403,22 @@ export interface operations {
   }
   orders_sessions_list: {
     parameters: {
-      query?: never
+      query?: {
+        currency?: string
+        opened_by?: number
+        /** @description Which field to use when ordering the results. */
+        ordering?: string
+        /** @description A page number within the paginated result set. */
+        page?: number
+        reservation?: number
+        /**
+         * @description * `open` - Open
+         *     * `closed` - Closed
+         *     * `cancelled` - Cancelled
+         */
+        status?: "cancelled" | "closed" | "open"
+        table?: number
+      }
       header?: never
       path?: never
       cookie?: never
@@ -1032,7 +1430,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          "application/json": components["schemas"]["Session"][]
+          "application/json": components["schemas"]["PaginatedSessionList"]
         }
       }
     }
@@ -1060,7 +1458,21 @@ export interface operations {
   }
   orders_tickets_list: {
     parameters: {
-      query?: never
+      query?: {
+        order?: number
+        /** @description Which field to use when ordering the results. */
+        ordering?: string
+        /** @description A page number within the paginated result set. */
+        page?: number
+        session?: number
+        /**
+         * @description * `incoming` - Incoming
+         *     * `active` - Active
+         *     * `completed` - Completed
+         *     * `bumped` - Bumped
+         */
+        status?: "active" | "bumped" | "completed" | "incoming"
+      }
       header?: never
       path?: never
       cookie?: never
@@ -1072,7 +1484,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          "application/json": components["schemas"]["Ticket"][]
+          "application/json": components["schemas"]["PaginatedTicketList"]
         }
       }
     }
@@ -1100,7 +1512,24 @@ export interface operations {
   }
   payments_payments_list: {
     parameters: {
-      query?: never
+      query?: {
+        currency?: string
+        order?: number
+        /** @description Which field to use when ordering the results. */
+        ordering?: string
+        /** @description A page number within the paginated result set. */
+        page?: number
+        provider?: string
+        /**
+         * @description * `pending` - Pending
+         *     * `authorized` - Authorized
+         *     * `paid` - Paid
+         *     * `failed` - Failed
+         *     * `refunded` - Refunded
+         *     * `cancelled` - Cancelled
+         */
+        status?: "authorized" | "cancelled" | "failed" | "paid" | "pending" | "refunded"
+      }
       header?: never
       path?: never
       cookie?: never
@@ -1112,7 +1541,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          "application/json": components["schemas"]["Payment"][]
+          "application/json": components["schemas"]["PaginatedPaymentList"]
         }
       }
     }
@@ -1140,7 +1569,21 @@ export interface operations {
   }
   reservations_reservations_list: {
     parameters: {
-      query?: never
+      query?: {
+        customer?: number
+        /** @description Which field to use when ordering the results. */
+        ordering?: string
+        /** @description A page number within the paginated result set. */
+        page?: number
+        /**
+         * @description * `pending` - Pending
+         *     * `confirmed` - Confirmed
+         *     * `cancelled` - Cancelled
+         *     * `completed` - Completed
+         */
+        status?: "cancelled" | "completed" | "confirmed" | "pending"
+        table?: number
+      }
       header?: never
       path?: never
       cookie?: never
@@ -1152,7 +1595,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          "application/json": components["schemas"]["Reservation"][]
+          "application/json": components["schemas"]["PaginatedReservationList"]
         }
       }
     }
@@ -1180,7 +1623,16 @@ export interface operations {
   }
   restaurants_restaurant_settings_list: {
     parameters: {
-      query?: never
+      query?: {
+        currency?: string
+        locale?: string
+        /** @description Which field to use when ordering the results. */
+        ordering?: string
+        /** @description A page number within the paginated result set. */
+        page?: number
+        restaurant?: number
+        timezone?: string
+      }
       header?: never
       path?: never
       cookie?: never
@@ -1192,7 +1644,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          "application/json": components["schemas"]["RestaurantSettings"][]
+          "application/json": components["schemas"]["PaginatedRestaurantSettingsList"]
         }
       }
     }
@@ -1220,7 +1672,12 @@ export interface operations {
   }
   restaurants_restaurants_list: {
     parameters: {
-      query?: never
+      query?: {
+        /** @description Which field to use when ordering the results. */
+        ordering?: string
+        /** @description A page number within the paginated result set. */
+        page?: number
+      }
       header?: never
       path?: never
       cookie?: never
@@ -1232,7 +1689,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          "application/json": components["schemas"]["Restaurant"][]
+          "application/json": components["schemas"]["PaginatedRestaurantList"]
         }
       }
     }
@@ -1260,7 +1717,19 @@ export interface operations {
   }
   restaurants_tables_list: {
     parameters: {
-      query?: never
+      query?: {
+        capacity?: number
+        /** @description Which field to use when ordering the results. */
+        ordering?: string
+        /** @description A page number within the paginated result set. */
+        page?: number
+        /**
+         * @description * `free` - Free
+         *     * `reserved` - Reserved
+         *     * `occupied` - Occupied
+         */
+        status?: "free" | "occupied" | "reserved"
+      }
       header?: never
       path?: never
       cookie?: never
@@ -1272,7 +1741,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          "application/json": components["schemas"]["Table"][]
+          "application/json": components["schemas"]["PaginatedTableList"]
         }
       }
     }
