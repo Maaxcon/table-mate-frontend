@@ -16,6 +16,7 @@
 .waiter-view__main {
   padding: 24px;
   overflow-y: auto;
+  overflow-x: auto;
 }
 
 .waiter-view__placeholder {
@@ -30,8 +31,24 @@
   letter-spacing: 0.05em;
 }
 
+@media (max-width: 1024px) {
+  .waiter-view__layout {
+    grid-template-columns: 1fr 260px;
+  }
+
+  .waiter-view__main {
+    padding: 20px;
+  }
+}
+
 @media (max-width: 900px) {
   .waiter-view__layout {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .waiter-view__main {
+    padding: 12px;
   }
 }

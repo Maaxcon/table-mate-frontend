@@ -17,8 +17,10 @@
   position: relative;
   flex: 1;
   min-height: 520px;
+  min-width: 680px;
   border: 2px solid var(--color-border);
   background: var(--color-bg);
+  overflow: auto;
 }
 
 .floor-plan__table {
