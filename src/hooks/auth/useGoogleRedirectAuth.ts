@@ -97,6 +97,9 @@ function useGoogleRedirectAuth(): UseGoogleRedirectAuthResult {
         dispatch(setAccessToken(payload.access))
 
         const meResponse = await apiFetch("/api/auth/me/", { signal: controller.signal })
+        if (!meResponse.ok) {
+          throw new Error(googleAuthMessage.backendAuthFailed)
+        }
         const me = (await meResponse.json()) as MeResponse
 
         dispatch(
