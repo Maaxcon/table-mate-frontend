@@ -1,6 +1,7 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom"
 import { ENV_NOT_CONFIGURED_VALUE, env } from "@/config/env"
 import { GoogleOAuthProvider } from "@react-oauth/google"
+import AuthInitializer from "@/components/AuthInitializer"
 import GreetingPage from "@/pages/GreetingPage"
 import HomePlaceholderPage from "@/pages/HomePlaceholderPage"
 import ProtectedRoute from "@/routes/ProtectedRoute"
@@ -22,8 +23,13 @@ const router = (
 )
 
 function App() {
-  if (!googleClientId) return router
-  return <GoogleOAuthProvider clientId={googleClientId}>{router}</GoogleOAuthProvider>
+  const content = googleClientId ? (
+    <GoogleOAuthProvider clientId={googleClientId}>{router}</GoogleOAuthProvider>
+  ) : (
+    router
+  )
+
+  return <AuthInitializer>{content}</AuthInitializer>
 }
 
 export default App
