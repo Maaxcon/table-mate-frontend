@@ -30,7 +30,7 @@ function SocialAuthGroup({
 
       {googleFeedback ? (
         <p
-          className={`social-auth-group__feedback social-auth-group__feedback--${googleFeedbackType ?? "success"}`}
+          className={`social-auth-group__feedback social-auth-group__feedback--${googleFeedbackType}`}
         >
           {googleFeedback}
         </p>
