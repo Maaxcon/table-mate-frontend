@@ -7,29 +7,25 @@ import HomePlaceholderPage from "@/pages/HomePlaceholderPage"
 import ProtectedRoute from "@/routes/ProtectedRoute"
 import PublicRoute from "@/routes/PublicRoute"
 
-const googleClientId = env.googleClientId !== ENV_NOT_CONFIGURED_VALUE ? env.googleClientId : null
-
-const router = (
-  <BrowserRouter>
-    <Routes>
-      <Route element={<PublicRoute />}>
-        <Route path="/" element={<GreetingPage />} />
-      </Route>
-      <Route element={<ProtectedRoute />}>
-        <Route path="/home" element={<HomePlaceholderPage />} />
-      </Route>
-    </Routes>
-  </BrowserRouter>
-)
+const clientId = env.googleClientId !== ENV_NOT_CONFIGURED_VALUE ? env.googleClientId : ""
 
 function App() {
-  const content = googleClientId ? (
-    <GoogleOAuthProvider clientId={googleClientId}>{router}</GoogleOAuthProvider>
-  ) : (
-    router
+  return (
+    <GoogleOAuthProvider clientId={clientId}>
+      <AuthInitializer>
+        <BrowserRouter>
+          <Routes>
+            <Route element={<PublicRoute />}>
+              <Route path="/" element={<GreetingPage />} />
+            </Route>
+            <Route element={<ProtectedRoute />}>
+              <Route path="/home" element={<HomePlaceholderPage />} />
+            </Route>
+          </Routes>
+        </BrowserRouter>
+      </AuthInitializer>
+    </GoogleOAuthProvider>
   )
-
-  return <AuthInitializer>{content}</AuthInitializer>
 }
 
 export default App
