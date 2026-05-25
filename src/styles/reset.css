@@ -92,8 +92,8 @@ video {
   vertical-align: baseline;
 }
 
-/* make sure to set some focus styles for accessibility */
-:focus {
+/* suppress outline for mouse/touch; preserve it for keyboard navigation */
+:focus:not(:focus-visible) {
   outline: 0;
 }
 
