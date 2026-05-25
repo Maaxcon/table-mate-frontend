@@ -4,7 +4,8 @@ import { useEffect, useState } from "react"
 import { googleAuthCleanupQueryParams, googleAuthMessage } from "./googleAuth.constants"
 import type { GoogleFeedbackType, InitialGoogleFeedback } from "@/types/auth/googleAuth"
 import { useAppDispatch } from "@/store/hooks"
-import { setAccessToken } from "@/store/auth/authSlice"
+import { setAccessToken, setUser } from "@/store/auth/authSlice"
+import { apiFetch } from "@/api/client"
 
 type UseGoogleRedirectAuthResult = {
   googleFeedback: string
@@ -16,6 +17,13 @@ type BackendGoogleAuthResponse = {
   access?: string
   detail?: string
   message?: string
+}
+
+type MeResponse = {
+  email: string
+  first_name: string
+  last_name: string
+  role: string
 }
 
 function getInitialGoogleFeedback(): InitialGoogleFeedback {
@@ -78,13 +86,8 @@ function useGoogleRedirectAuth(): UseGoogleRedirectAuthResult {
       try {
         const response = await fetch(`${env.apiBaseUrl}/api/auth/google/`, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            code,
-            redirect_uri: window.location.origin,
-          }),
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ code, redirect_uri: window.location.origin }),
           signal: controller.signal,
         })
 
@@ -94,10 +97,23 @@ function useGoogleRedirectAuth(): UseGoogleRedirectAuthResult {
           throw new Error(payload.detail ?? payload.message ?? googleAuthMessage.backendAuthFailed)
         }
 
-        if (payload.access) {
-          dispatch(setAccessToken(payload.access))
+        if (!payload.access) {
+          throw new Error(googleAuthMessage.backendAuthFailed)
         }
-        // refresh_token is set as httpOnly cookie by the backend
+
+        dispatch(setAccessToken(payload.access))
+
+        const meResponse = await apiFetch("/api/auth/me/", { signal: controller.signal })
+        const me = (await meResponse.json()) as MeResponse
+
+        dispatch(
+          setUser({
+            email: me.email,
+            firstName: me.first_name,
+            lastName: me.last_name,
+            role: me.role,
+          }),
+        )
 
         setGoogleFeedback(googleAuthMessage.backendAuthSuccess)
         setGoogleFeedbackType("success")
