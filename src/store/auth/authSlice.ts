@@ -1,10 +1,11 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit"
+import type { UserRole } from "@/types/auth"
 
 type AuthUser = {
   email: string
   firstName: string
   lastName: string
-  role: string
+  role: UserRole
 }
 
 type AuthState = {

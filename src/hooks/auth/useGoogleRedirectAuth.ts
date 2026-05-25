@@ -2,7 +2,7 @@ import { ENV_NOT_CONFIGURED_VALUE, env } from "@/config/env"
 import { useGoogleLogin } from "@react-oauth/google"
 import { useEffect, useState } from "react"
 import { googleAuthCleanupQueryParams, googleAuthMessage } from "./googleAuth.constants"
-import type { GoogleFeedbackType, InitialGoogleFeedback } from "@/types/auth/googleAuth"
+import type { GoogleFeedbackType, InitialGoogleFeedback, MeResponse } from "@/types/auth"
 import { useAppDispatch } from "@/store/hooks"
 import { setAccessToken, setUser } from "@/store/auth/authSlice"
 import { apiFetch } from "@/api/client"
@@ -17,13 +17,6 @@ type BackendGoogleAuthResponse = {
   access?: string
   detail?: string
   message?: string
-}
-
-type MeResponse = {
-  email: string
-  first_name: string
-  last_name: string
-  role: string
 }
 
 function getInitialGoogleFeedback(): InitialGoogleFeedback {
