@@ -7,8 +7,11 @@ function HomePlaceholderPage() {
   const dispatch = useAppDispatch()
 
   const handleLogout = async () => {
-    await apiFetch("/api/auth/logout/", { method: "POST" })
-    dispatch(clearAuth())
+    try {
+      await apiFetch("/api/auth/logout/", { method: "POST" })
+    } finally {
+      dispatch(clearAuth())
+    }
   }
 
   return (
