@@ -4,8 +4,10 @@ import { GoogleOAuthProvider } from "@react-oauth/google"
 import AuthInitializer from "@/components/AuthInitializer"
 import GreetingPage from "@/pages/GreetingPage"
 import HomePlaceholderPage from "@/pages/HomePlaceholderPage"
+import SelectRestaurantPlaceholderPage from "@/pages/SelectRestaurantPlaceholderPage"
 import ProtectedRoute from "@/routes/ProtectedRoute"
 import PublicRoute from "@/routes/PublicRoute"
+import StaffContextRoute from "@/routes/StaffContextRoute"
 
 const clientId = env.googleClientId !== ENV_NOT_CONFIGURED_VALUE ? env.googleClientId : ""
 
@@ -17,6 +19,9 @@ function App() {
           <Routes>
             <Route element={<PublicRoute />}>
               <Route path="/" element={<GreetingPage />} />
+            </Route>
+            <Route element={<StaffContextRoute />}>
+              <Route path="/select-restaurant" element={<SelectRestaurantPlaceholderPage />} />
             </Route>
             <Route element={<ProtectedRoute />}>
               <Route path="/home" element={<HomePlaceholderPage />} />

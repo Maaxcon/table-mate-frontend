@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import { googleAuthCleanupQueryParams, googleAuthMessage } from "./googleAuth.constants"
 import type { GoogleFeedbackType, InitialGoogleFeedback, MeResponse } from "@/types/auth"
 import { useAppDispatch } from "@/store/hooks"
-import { setAccessToken, setUser } from "@/store/auth/authSlice"
+import { setAccessToken, setStaffContextPending, setUser } from "@/store/auth/authSlice"
 import { apiFetch } from "@/api/client"
 
 type UseGoogleRedirectAuthResult = {
@@ -15,6 +15,7 @@ type UseGoogleRedirectAuthResult = {
 
 type BackendGoogleAuthResponse = {
   access?: string
+  needs_restaurant_context?: boolean
   detail?: string
   message?: string
 }
@@ -95,6 +96,11 @@ function useGoogleRedirectAuth(): UseGoogleRedirectAuthResult {
         }
 
         dispatch(setAccessToken(payload.access))
+
+        if (payload.needs_restaurant_context) {
+          dispatch(setStaffContextPending())
+          return
+        }
 
         const meResponse = await apiFetch("/api/auth/me/", { signal: controller.signal })
         if (!meResponse.ok) {
