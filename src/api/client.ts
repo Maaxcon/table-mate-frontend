@@ -1,6 +1,6 @@
 import { env } from "@/config/env"
 import { store } from "@/store"
-import { clearAccessToken, setAccessToken } from "@/store/auth/authSlice"
+import { clearAuth, setAccessToken } from "@/store/auth/authSlice"
 
 let refreshPromise: Promise<string> | null = null
 
@@ -54,7 +54,7 @@ async function apiFetch(path: string, init: RequestInit = {}): Promise<Response>
       credentials: "include",
     })
   } catch {
-    store.dispatch(clearAccessToken())
+    store.dispatch(clearAuth())
     return response
   }
 }
