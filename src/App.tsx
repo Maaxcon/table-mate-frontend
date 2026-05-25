@@ -1,19 +1,29 @@
-import GreetingPage from "@/pages/GreetingPage"
+import { BrowserRouter, Route, Routes } from "react-router-dom"
 import { ENV_NOT_CONFIGURED_VALUE, env } from "@/config/env"
 import { GoogleOAuthProvider } from "@react-oauth/google"
+import GreetingPage from "@/pages/GreetingPage"
+import HomePlaceholderPage from "@/pages/HomePlaceholderPage"
+import ProtectedRoute from "@/routes/ProtectedRoute"
+import PublicRoute from "@/routes/PublicRoute"
 
 const googleClientId = env.googleClientId !== ENV_NOT_CONFIGURED_VALUE ? env.googleClientId : null
 
-function App() {
-  if (!googleClientId) {
-    return <GreetingPage />
-  }
+const router = (
+  <BrowserRouter>
+    <Routes>
+      <Route element={<PublicRoute />}>
+        <Route path="/" element={<GreetingPage />} />
+      </Route>
+      <Route element={<ProtectedRoute />}>
+        <Route path="/home" element={<HomePlaceholderPage />} />
+      </Route>
+    </Routes>
+  </BrowserRouter>
+)
 
-  return (
-    <GoogleOAuthProvider clientId={googleClientId}>
-      <GreetingPage />
-    </GoogleOAuthProvider>
-  )
+function App() {
+  if (!googleClientId) return router
+  return <GoogleOAuthProvider clientId={googleClientId}>{router}</GoogleOAuthProvider>
 }
 
 export default App
