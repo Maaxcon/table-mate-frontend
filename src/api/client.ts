@@ -15,9 +15,10 @@ async function refreshAccessToken(): Promise<string> {
   })
     .then(async (res) => {
       if (!res.ok) throw new Error("Refresh failed")
-      const { access } = (await res.json()) as { access: string }
-      store.dispatch(setAccessToken(access))
-      return access
+      const data = (await res.json()) as { access?: string }
+      if (!data.access) throw new Error("Refresh failed")
+      store.dispatch(setAccessToken(data.access))
+      return data.access
     })
     .finally(() => {
       refreshPromise = null
