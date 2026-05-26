@@ -13,6 +13,7 @@ export type MenuItem = {
   name: string
   description: string | null
   ingredients: string[]
+  weight_grams: number | null
   price: string
   is_available: boolean
   sort_order: number

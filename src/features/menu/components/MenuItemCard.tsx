@@ -29,7 +29,12 @@ function MenuItemCard({ item, onClick, onAddToCart, cartQuantity = 0 }: MenuItem
       {cartQuantity > 0 && <span className="menu-item-card__qty-badge">{cartQuantity}</span>}
 
       <div className="menu-item-card__body">
-        <span className="menu-item-card__name">{item.name}</span>
+        <div className="menu-item-card__name-row">
+          <span className="menu-item-card__name">{item.name}</span>
+          {item.weight_grams && (
+            <span className="menu-item-card__weight">{item.weight_grams} г</span>
+          )}
+        </div>
         {item.description && (
           <span className="menu-item-card__description">{item.description}</span>
         )}

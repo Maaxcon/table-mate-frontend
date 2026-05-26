@@ -65,7 +65,10 @@ function MenuItemModal({ item, onClose, onAddToCart }: MenuItemModalProps) {
         )}
 
         <div className="menu-modal__footer">
-          <span className="menu-modal__price">{formatPrice(item.price)}</span>
+          <div className="menu-modal__price-block">
+            <span className="menu-modal__price">{formatPrice(item.price)} ₴</span>
+            {item.weight_grams && <span className="menu-modal__weight">{item.weight_grams} г</span>}
+          </div>
           {item.is_available ? (
             <button
               className={`menu-modal__add${added ? " menu-modal__add--added" : ""}`}

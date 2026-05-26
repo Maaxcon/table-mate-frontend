@@ -107,11 +107,23 @@
   border-top: 1px solid var(--color-border-default);
 }
 
+.menu-modal__price-block {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
 .menu-modal__price {
   font-size: 1.1rem;
   font-weight: 700;
   color: var(--color-text-primary);
   font-variant-numeric: tabular-nums;
+}
+
+.menu-modal__weight {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  font-weight: 500;
 }
 
 .menu-modal__badge {
