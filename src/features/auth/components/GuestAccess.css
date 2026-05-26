@@ -1,0 +1,38 @@
+.guest-access {
+  width: min(100%, 760px);
+  display: grid;
+  justify-items: center;
+  gap: 14px;
+  animation: guest-fade-up 540ms ease both;
+  animation-delay: 140ms;
+}
+
+.guest-access__button {
+  width: 100%;
+  min-height: 56px;
+  border-radius: 0;
+  background: var(--color-bg-surface);
+  border-color: var(--color-border-default);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.guest-access__note {
+  margin: 0;
+  text-align: center;
+  color: var(--color-text-muted);
+  max-width: 500px;
+  line-height: 1.45;
+}
+
+@keyframes guest-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
