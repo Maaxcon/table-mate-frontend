@@ -1,10 +1,10 @@
 .menu-item-card {
-  position: relative;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   gap: 14px;
   padding: 18px 18px 16px;
+  box-sizing: border-box;
   background: var(--color-bg-surface);
   border: 1px solid var(--color-border-default);
   border-top: 2px solid var(--color-text-primary);
@@ -31,25 +31,6 @@
 .menu-item-card--unavailable:hover {
   box-shadow: none;
   transform: none;
-}
-
-/* кількість у кошику — бейдж у верхньому правому куті */
-.menu-item-card__qty-badge {
-  position: absolute;
-  top: -8px;
-  right: -8px;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: var(--color-text-primary);
-  color: var(--color-bg-surface);
-  font-family: var(--font-family-base);
-  font-size: 0.65rem;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1;
 }
 
 .menu-item-card__body {
@@ -124,7 +105,8 @@
 .menu-item-card__add {
   width: 30px;
   height: 30px;
-  border: 1px solid var(--color-border-strong);
+  border: 1.5px solid var(--color-border-strong);
+  border-radius: 50%;
   background: transparent;
   color: var(--color-text-primary);
   cursor: pointer;
@@ -133,22 +115,55 @@
   justify-content: center;
   flex-shrink: 0;
   transition:
-    background 120ms ease,
-    color 120ms ease,
-    border-color 120ms ease,
-    transform 120ms ease;
+    background 140ms ease,
+    color 140ms ease,
+    border-color 140ms ease,
+    transform 140ms ease;
 }
 
 .menu-item-card__add:hover {
   background: var(--color-text-primary);
   color: var(--color-bg-surface);
-  transform: scale(1.08);
+  border-color: var(--color-text-primary);
+  transform: scale(1.1);
 }
 
-.menu-item-card__add--added {
-  background: #1a8a4a;
-  border-color: #1a8a4a;
-  color: #fff;
+.menu-item-card__stepper {
+  display: flex;
+  align-items: center;
+  height: 30px;
+  border-radius: 15px;
+  background: var(--color-text-primary);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.menu-item-card__stepper-btn {
+  width: 28px;
+  height: 30px;
+  background: transparent;
+  border: none;
+  color: var(--color-bg-surface);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 120ms ease;
+}
+
+.menu-item-card__stepper-btn:hover {
+  background: rgb(255 255 255 / 0.18);
+}
+
+.menu-item-card__stepper-qty {
+  min-width: 18px;
+  text-align: center;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--color-bg-surface);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
 }
 
 .menu-item-card__unavailable-dot {

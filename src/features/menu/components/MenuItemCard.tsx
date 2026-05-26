@@ -1,5 +1,4 @@
-import { useState } from "react"
-import { LuCheck, LuShoppingCart } from "react-icons/lu"
+import { LuMinus, LuPlus } from "react-icons/lu"
 import type { MenuItem } from "@/types/menu"
 import { formatPrice } from "../utils"
 import "./MenuItemCard.css"
@@ -8,26 +7,40 @@ type MenuItemCardProps = {
   item: MenuItem
   onClick: (item: MenuItem) => void
   onAddToCart: (item: MenuItem) => void
+  onSetQuantity: (publicId: string, quantity: number) => void
   cartQuantity?: number
 }
 
-function MenuItemCard({ item, onClick, onAddToCart, cartQuantity = 0 }: MenuItemCardProps) {
-  const [added, setAdded] = useState(false)
-
+function MenuItemCard({
+  item,
+  onClick,
+  onAddToCart,
+  onSetQuantity,
+  cartQuantity = 0,
+}: MenuItemCardProps) {
   const handleAdd = (e: React.MouseEvent) => {
     e.stopPropagation()
     onAddToCart(item)
-    setAdded(true)
-    setTimeout(() => setAdded(false), 1200)
+  }
+
+  const handleDecrement = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    onSetQuantity(item.public_id, cartQuantity - 1)
+  }
+
+  const handleIncrement = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    onAddToCart(item)
   }
 
   return (
-    <button
+    <div
       className={`menu-item-card${!item.is_available ? " menu-item-card--unavailable" : ""}`}
+      role="button"
+      tabIndex={0}
       onClick={() => onClick(item)}
+      onKeyDown={(e) => e.key === "Enter" && onClick(item)}
     >
-      {cartQuantity > 0 && <span className="menu-item-card__qty-badge">{cartQuantity}</span>}
-
       <div className="menu-item-card__body">
         <div className="menu-item-card__name-row">
           <span className="menu-item-card__name">{item.name}</span>
@@ -47,18 +60,38 @@ function MenuItemCard({ item, onClick, onAddToCart, cartQuantity = 0 }: MenuItem
         </span>
 
         {item.is_available ? (
-          <button
-            className={`menu-item-card__add${added ? " menu-item-card__add--added" : ""}`}
-            onClick={handleAdd}
-            aria-label={`Додати ${item.name} до кошика`}
-          >
-            {added ? <LuCheck size={14} strokeWidth={2.5} /> : <LuShoppingCart size={14} />}
-          </button>
+          cartQuantity > 0 ? (
+            <div className="menu-item-card__stepper">
+              <button
+                className="menu-item-card__stepper-btn"
+                onClick={handleDecrement}
+                aria-label="Зменшити кількість"
+              >
+                <LuMinus size={11} strokeWidth={2.5} />
+              </button>
+              <span className="menu-item-card__stepper-qty">{cartQuantity}</span>
+              <button
+                className="menu-item-card__stepper-btn"
+                onClick={handleIncrement}
+                aria-label="Збільшити кількість"
+              >
+                <LuPlus size={11} strokeWidth={2.5} />
+              </button>
+            </div>
+          ) : (
+            <button
+              className="menu-item-card__add"
+              onClick={handleAdd}
+              aria-label={`Додати ${item.name} до кошика`}
+            >
+              <LuPlus size={14} strokeWidth={2.5} />
+            </button>
+          )
         ) : (
           <span className="menu-item-card__unavailable-dot" aria-label="Недоступно" />
         )}
       </div>
-    </button>
+    </div>
   )
 }
 
