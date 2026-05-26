@@ -19,7 +19,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-bottom: 20px;
+  padding-bottom: clamp(16px, 2vw, 28px);
   border-bottom: 1px solid var(--color-border-default);
 }
 
@@ -105,7 +105,7 @@
 }
 
 .menu-page__logo {
-  height: 22px;
+  height: clamp(28px, 3.5vw, 44px);
   width: auto;
   object-fit: contain;
   filter: brightness(0);
