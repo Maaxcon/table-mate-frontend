@@ -94,3 +94,29 @@
 .menu-modal__badge--unavailable {
   color: var(--color-text-muted);
 }
+
+.menu-modal__add {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 20px;
+  border: 1px solid var(--color-border-strong);
+  background: var(--color-text-primary);
+  color: var(--color-bg-surface);
+  font-family: var(--font-family-base);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 150ms ease,
+    border-color 150ms ease;
+}
+
+.menu-modal__add:hover {
+  opacity: 0.85;
+}
+
+.menu-modal__add--added {
+  background: #1a8a4a;
+  border-color: #1a8a4a;
+}

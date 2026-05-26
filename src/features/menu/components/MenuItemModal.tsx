@@ -1,4 +1,5 @@
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
+import { LuCheck, LuShoppingCart } from "react-icons/lu"
 import type { MenuItem } from "@/types/menu"
 import { formatPrice } from "../utils"
 import "./MenuItemModal.css"
@@ -6,9 +7,21 @@ import "./MenuItemModal.css"
 type MenuItemModalProps = {
   item: MenuItem
   onClose: () => void
+  onAddToCart: (item: MenuItem) => void
 }
 
-function MenuItemModal({ item, onClose }: MenuItemModalProps) {
+function MenuItemModal({ item, onClose, onAddToCart }: MenuItemModalProps) {
+  const [added, setAdded] = useState(false)
+
+  const handleAdd = () => {
+    onAddToCart(item)
+    setAdded(true)
+    setTimeout(() => {
+      setAdded(false)
+      onClose()
+    }, 900)
+  }
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose()
@@ -40,11 +53,17 @@ function MenuItemModal({ item, onClose }: MenuItemModalProps) {
 
         <div className="menu-modal__footer">
           <span className="menu-modal__price">{formatPrice(item.price)}</span>
-          <span
-            className={`menu-modal__badge${item.is_available ? " menu-modal__badge--available" : " menu-modal__badge--unavailable"}`}
-          >
-            {item.is_available ? "Available" : "Unavailable"}
-          </span>
+          {item.is_available ? (
+            <button
+              className={`menu-modal__add${added ? " menu-modal__add--added" : ""}`}
+              onClick={handleAdd}
+            >
+              {added ? <LuCheck size={16} /> : <LuShoppingCart size={16} />}
+              {added ? "Додано" : "До кошика"}
+            </button>
+          ) : (
+            <span className="menu-modal__badge menu-modal__badge--unavailable">Недоступно</span>
+          )}
         </div>
       </div>
     </div>

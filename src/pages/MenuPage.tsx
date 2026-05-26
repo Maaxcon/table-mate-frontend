@@ -1,8 +1,10 @@
 import { useState } from "react"
 import { Link, useParams } from "react-router-dom"
+import { LuShoppingCart } from "react-icons/lu"
 import logo from "@/assets/logo.png"
 import { useAppSelector } from "@/store/hooks"
 import {
+  CartDrawer,
   CategoryRail,
   MenuEmptyState,
   MenuItemCard,
@@ -10,6 +12,7 @@ import {
   MenuSkeleton,
   RestaurantInfoPanel,
 } from "@/features/menu/components"
+import { useCart } from "@/features/menu/hooks/useCart"
 import { useMenuPage } from "@/features/menu/hooks/useMenuPage"
 import type { MenuItem } from "@/types/menu"
 import "./MenuPage.css"
@@ -17,7 +20,10 @@ import "./MenuPage.css"
 function MenuPage() {
   const { restaurantId } = useParams<{ restaurantId: string }>()
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null)
+  const [cartOpen, setCartOpen] = useState(false)
   const user = useAppSelector((s) => s.auth.user)
+
+  const { items: cartItems, totalCount, totalPrice, addItem, removeItem, setQuantity } = useCart()
 
   const {
     restaurantName,
@@ -58,6 +64,14 @@ function MenuPage() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
+            <button
+              className="menu-page__cart-btn"
+              onClick={() => setCartOpen(true)}
+              aria-label="Кошик"
+            >
+              <LuShoppingCart size={18} />
+              {totalCount > 0 && <span className="menu-page__cart-badge">{totalCount}</span>}
+            </button>
             {user ? (
               <div className="menu-page__avatar" title={`${user.firstName} ${user.lastName}`}>
                 {user.firstName[0]}
@@ -101,7 +115,12 @@ function MenuPage() {
             <>
               <div className="menu-page__grid">
                 {items.map((item) => (
-                  <MenuItemCard key={item.public_id} item={item} onClick={setSelectedItem} />
+                  <MenuItemCard
+                    key={item.public_id}
+                    item={item}
+                    onClick={setSelectedItem}
+                    onAddToCart={addItem}
+                  />
                 ))}
               </div>
               {hasMore && !itemsLoading && (
@@ -120,7 +139,23 @@ function MenuPage() {
         />
       </div>
 
-      {selectedItem && <MenuItemModal item={selectedItem} onClose={() => setSelectedItem(null)} />}
+      {selectedItem && (
+        <MenuItemModal
+          item={selectedItem}
+          onClose={() => setSelectedItem(null)}
+          onAddToCart={addItem}
+        />
+      )}
+
+      {cartOpen && (
+        <CartDrawer
+          items={cartItems}
+          totalPrice={totalPrice}
+          onSetQuantity={setQuantity}
+          onRemove={removeItem}
+          onClose={() => setCartOpen(false)}
+        />
+      )}
     </main>
   )
 }

@@ -29,6 +29,43 @@
   gap: 12px;
 }
 
+.menu-page__cart-btn {
+  position: relative;
+  background: none;
+  border: 1px solid var(--color-border-default);
+  width: 36px;
+  height: 36px;
+  cursor: pointer;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: border-color 150ms ease;
+}
+
+.menu-page__cart-btn:hover {
+  border-color: var(--color-border-strong);
+}
+
+.menu-page__cart-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background: var(--color-text-primary);
+  color: var(--color-bg-surface);
+  font-family: var(--font-family-base);
+  font-size: 0.65rem;
+  font-weight: 700;
+  min-width: 16px;
+  height: 16px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+}
+
 .menu-page__avatar {
   width: 34px;
   height: 34px;

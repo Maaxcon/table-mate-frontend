@@ -73,3 +73,31 @@
 .menu-item-card__badge--unavailable {
   color: var(--color-text-muted);
 }
+
+.menu-item-card__add {
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--color-border-strong);
+  background: transparent;
+  color: var(--color-text-primary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition:
+    background 120ms ease,
+    color 120ms ease,
+    border-color 120ms ease;
+}
+
+.menu-item-card__add:hover {
+  background: var(--color-text-primary);
+  color: var(--color-bg-surface);
+}
+
+.menu-item-card__add--added {
+  background: #1a8a4a;
+  border-color: #1a8a4a;
+  color: #fff;
+}
