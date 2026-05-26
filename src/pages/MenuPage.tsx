@@ -7,6 +7,7 @@ import {
   MenuItemCard,
   MenuItemModal,
   MenuSkeleton,
+  RestaurantInfoPanel,
 } from "@/features/menu/components"
 import { useMenuPage } from "@/features/menu/hooks/useMenuPage"
 import type { MenuItem } from "@/types/menu"
@@ -18,6 +19,9 @@ function MenuPage() {
 
   const {
     restaurantName,
+    restaurantAddress,
+    restaurantPhone,
+    restaurantSettings,
     categories,
     categoriesLoading,
     activeCategory,
@@ -69,26 +73,38 @@ function MenuPage() {
 
       {error && <p className="menu-page__error">{error}</p>}
 
-      {itemsLoading ? (
-        <MenuSkeleton count={6} />
-      ) : items.length === 0 ? (
-        <MenuEmptyState
-          message={searchQuery ? `No results for "${searchQuery}".` : "No items in this category."}
-        />
-      ) : (
-        <>
-          <div className="menu-page__grid">
-            {items.map((item) => (
-              <MenuItemCard key={item.public_id} item={item} onClick={setSelectedItem} />
-            ))}
-          </div>
-          {hasMore && !itemsLoading && (
-            <button className="menu-page__load-more" onClick={loadMore}>
-              Load more
-            </button>
+      <div className="menu-page__body">
+        <div className="menu-page__content">
+          {itemsLoading ? (
+            <MenuSkeleton count={6} />
+          ) : items.length === 0 ? (
+            <MenuEmptyState
+              message={
+                searchQuery ? `No results for "${searchQuery}".` : "No items in this category."
+              }
+            />
+          ) : (
+            <>
+              <div className="menu-page__grid">
+                {items.map((item) => (
+                  <MenuItemCard key={item.public_id} item={item} onClick={setSelectedItem} />
+                ))}
+              </div>
+              {hasMore && !itemsLoading && (
+                <button className="menu-page__load-more" onClick={loadMore}>
+                  Load more
+                </button>
+              )}
+            </>
           )}
-        </>
-      )}
+        </div>
+
+        <RestaurantInfoPanel
+          address={restaurantAddress}
+          phone={restaurantPhone}
+          settings={restaurantSettings}
+        />
+      </div>
 
       {selectedItem && <MenuItemModal item={selectedItem} onClose={() => setSelectedItem(null)} />}
     </main>

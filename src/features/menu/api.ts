@@ -48,10 +48,23 @@ export function searchItems(
   return menuGet("/api/menu/items/search/", { restaurant: restaurantId, q: query })
 }
 
+export type WorkingHoursDay = { open: string; close: string }
+export type WorkingHours = Partial<
+  Record<"mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun", WorkingHoursDay>
+>
+
+export type PublicRestaurantSettings = {
+  currency: string
+  timezone: string
+  working_hours: WorkingHours
+}
+
 export type PublicRestaurant = {
   public_id: string
   name: string
   address: string
+  phone: string
+  settings: PublicRestaurantSettings | null
 }
 
 export function fetchRestaurant(restaurantId: string): Promise<PublicRestaurant> {

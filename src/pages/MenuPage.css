@@ -76,9 +76,22 @@
   color: var(--color-text-muted);
 }
 
+.menu-page__body {
+  display: grid;
+  grid-template-columns: 1fr 260px;
+  gap: 24px;
+  align-items: start;
+}
+
+.menu-page__content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
 .menu-page__grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 16px;
 }
 
@@ -105,6 +118,12 @@
   margin: 0;
   font-size: 0.875rem;
   color: #c0392b;
+}
+
+@media (max-width: 860px) {
+  .menu-page__body {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 560px) {

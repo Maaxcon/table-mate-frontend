@@ -1,9 +1,13 @@
 import { useCallback, useEffect, useReducer } from "react"
 import { fetchCategories, fetchItems, fetchRestaurant, searchItems } from "../api"
+import type { PublicRestaurantSettings } from "../api"
 import type { MenuCategory, MenuItem } from "@/types/menu"
 
 export type UseMenuPageResult = {
   restaurantName: string | null
+  restaurantAddress: string | null
+  restaurantPhone: string | null
+  restaurantSettings: PublicRestaurantSettings | null
   categories: MenuCategory[]
   categoriesLoading: boolean
   activeCategory: string | null
@@ -19,6 +23,9 @@ export type UseMenuPageResult = {
 
 type State = {
   restaurantName: string | null
+  restaurantAddress: string | null
+  restaurantPhone: string | null
+  restaurantSettings: PublicRestaurantSettings | null
   categories: MenuCategory[]
   categoriesLoading: boolean
   activeCategory: string | null
@@ -31,7 +38,13 @@ type State = {
 }
 
 type Action =
-  | { type: "RESTAURANT_SUCCESS"; name: string }
+  | {
+      type: "RESTAURANT_SUCCESS"
+      name: string
+      address: string
+      phone: string
+      settings: PublicRestaurantSettings | null
+    }
   | { type: "CATEGORIES_LOADING" }
   | { type: "CATEGORIES_SUCCESS"; categories: MenuCategory[] }
   | { type: "CATEGORIES_ERROR" }
@@ -44,6 +57,9 @@ type Action =
 
 const initialState: State = {
   restaurantName: null,
+  restaurantAddress: null,
+  restaurantPhone: null,
+  restaurantSettings: null,
   categories: [],
   categoriesLoading: true,
   activeCategory: null,
@@ -58,7 +74,13 @@ const initialState: State = {
 function reducer(state: State, action: Action): State {
   switch (action.type) {
     case "RESTAURANT_SUCCESS":
-      return { ...state, restaurantName: action.name }
+      return {
+        ...state,
+        restaurantName: action.name,
+        restaurantAddress: action.address,
+        restaurantPhone: action.phone,
+        restaurantSettings: action.settings,
+      }
     case "CATEGORIES_LOADING":
       return { ...state, categoriesLoading: true }
     case "CATEGORIES_SUCCESS":
@@ -105,7 +127,14 @@ function useMenuPage(restaurantId: string): UseMenuPageResult {
     let mounted = true
     fetchRestaurant(restaurantId)
       .then((data) => {
-        if (mounted) dispatch({ type: "RESTAURANT_SUCCESS", name: data.name })
+        if (mounted)
+          dispatch({
+            type: "RESTAURANT_SUCCESS",
+            name: data.name,
+            address: data.address,
+            phone: data.phone,
+            settings: data.settings,
+          })
       })
       .catch(() => {
         /* non-critical, fail silently */
@@ -183,6 +212,9 @@ function useMenuPage(restaurantId: string): UseMenuPageResult {
 
   return {
     restaurantName: state.restaurantName,
+    restaurantAddress: state.restaurantAddress,
+    restaurantPhone: state.restaurantPhone,
+    restaurantSettings: state.restaurantSettings,
     categories: state.categories,
     categoriesLoading: state.categoriesLoading,
     activeCategory,
