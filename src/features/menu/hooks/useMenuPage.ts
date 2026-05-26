@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useReducer } from "react"
-import { fetchCategories, fetchItems, searchItems } from "../api"
+import { fetchCategories, fetchItems, fetchRestaurant, searchItems } from "../api"
 import type { MenuCategory, MenuItem } from "@/types/menu"
 
 export type UseMenuPageResult = {
+  restaurantName: string | null
   categories: MenuCategory[]
   categoriesLoading: boolean
   activeCategory: string | null
@@ -17,6 +18,7 @@ export type UseMenuPageResult = {
 }
 
 type State = {
+  restaurantName: string | null
   categories: MenuCategory[]
   categoriesLoading: boolean
   activeCategory: string | null
@@ -29,6 +31,7 @@ type State = {
 }
 
 type Action =
+  | { type: "RESTAURANT_SUCCESS"; name: string }
   | { type: "CATEGORIES_LOADING" }
   | { type: "CATEGORIES_SUCCESS"; categories: MenuCategory[] }
   | { type: "CATEGORIES_ERROR" }
@@ -40,6 +43,7 @@ type Action =
   | { type: "SET_SEARCH"; query: string }
 
 const initialState: State = {
+  restaurantName: null,
   categories: [],
   categoriesLoading: true,
   activeCategory: null,
@@ -53,6 +57,8 @@ const initialState: State = {
 
 function reducer(state: State, action: Action): State {
   switch (action.type) {
+    case "RESTAURANT_SUCCESS":
+      return { ...state, restaurantName: action.name }
     case "CATEGORIES_LOADING":
       return { ...state, categoriesLoading: true }
     case "CATEGORIES_SUCCESS":
@@ -93,6 +99,21 @@ function reducer(state: State, action: Action): State {
 function useMenuPage(restaurantId: string): UseMenuPageResult {
   const [state, dispatch] = useReducer(reducer, initialState)
   const { activeCategory, searchQuery, itemsLoading, hasMore, page } = state
+
+  useEffect(() => {
+    if (!restaurantId) return
+    let mounted = true
+    fetchRestaurant(restaurantId)
+      .then((data) => {
+        if (mounted) dispatch({ type: "RESTAURANT_SUCCESS", name: data.name })
+      })
+      .catch(() => {
+        /* non-critical, fail silently */
+      })
+    return () => {
+      mounted = false
+    }
+  }, [restaurantId])
 
   useEffect(() => {
     if (!restaurantId) return
@@ -161,6 +182,7 @@ function useMenuPage(restaurantId: string): UseMenuPageResult {
   }, [itemsLoading, hasMore, searchQuery, page, restaurantId, activeCategory])
 
   return {
+    restaurantName: state.restaurantName,
     categories: state.categories,
     categoriesLoading: state.categoriesLoading,
     activeCategory,

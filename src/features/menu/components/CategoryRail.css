@@ -16,8 +16,11 @@
   border: 1px solid var(--color-border-default);
   background: transparent;
   color: var(--color-text-secondary);
-  font-size: 0.875rem;
-  font-weight: 500;
+  font-family: var(--font-family-display);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   cursor: pointer;
   white-space: nowrap;
   transition:

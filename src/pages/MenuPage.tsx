@@ -17,6 +17,7 @@ function MenuPage() {
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null)
 
   const {
+    restaurantName,
     categories,
     categoriesLoading,
     activeCategory,
@@ -41,17 +42,20 @@ function MenuPage() {
   return (
     <main className="menu-page">
       <header className="menu-page__header">
-        <div className="menu-page__brand">
+        <div className="menu-page__topbar">
           <img src={logo} alt="TableMate" className="menu-page__logo" />
-          <h1 className="menu-page__title">Menu</h1>
+          {restaurantName && <span className="menu-page__restaurant">{restaurantName}</span>}
         </div>
-        <input
-          className="menu-page__search"
-          type="search"
-          placeholder="Search dishes…"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
+        <div className="menu-page__titlerow">
+          <h1 className="menu-page__title">Menu</h1>
+          <input
+            className="menu-page__search"
+            type="search"
+            placeholder="Search dishes…"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
       </header>
 
       <CategoryRail

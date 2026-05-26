@@ -47,3 +47,13 @@ export function searchItems(
 ): Promise<PaginatedResponse<MenuItem>> {
   return menuGet("/api/menu/items/search/", { restaurant: restaurantId, q: query })
 }
+
+export type PublicRestaurant = {
+  public_id: string
+  name: string
+  address: string
+}
+
+export function fetchRestaurant(restaurantId: string): Promise<PublicRestaurant> {
+  return menuGet(`/api/restaurants/restaurants-public/${restaurantId}/`, {})
+}
