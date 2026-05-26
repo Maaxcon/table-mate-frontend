@@ -41,6 +41,12 @@ function MenuItemCard({
       onClick={() => onClick(item)}
       onKeyDown={(e) => e.key === "Enter" && onClick(item)}
     >
+      {item.image ? (
+        <img className="menu-item-card__image" src={item.image} alt={item.name} loading="lazy" />
+      ) : (
+        <div className="menu-item-card__image-placeholder" />
+      )}
+
       <div className="menu-item-card__body">
         <div className="menu-item-card__name-row">
           <span className="menu-item-card__name">{item.name}</span>

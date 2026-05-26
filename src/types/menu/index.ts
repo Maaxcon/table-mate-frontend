@@ -14,6 +14,7 @@ export type MenuItem = {
   description: string | null
   ingredients: string[]
   weight_grams: number | null
+  image: string | null
   price: string
   is_available: boolean
   sort_order: number
