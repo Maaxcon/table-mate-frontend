@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { useParams } from "react-router-dom"
+import logo from "@/assets/logo.png"
 import {
   CategoryRail,
   MenuEmptyState,
@@ -40,7 +41,10 @@ function MenuPage() {
   return (
     <main className="menu-page">
       <header className="menu-page__header">
-        <h1 className="menu-page__title">Menu</h1>
+        <div className="menu-page__brand">
+          <img src={logo} alt="TableMate" className="menu-page__logo" />
+          <h1 className="menu-page__title">Menu</h1>
+        </div>
         <input
           className="menu-page__search"
           type="search"

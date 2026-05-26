@@ -16,6 +16,19 @@
   flex-wrap: wrap;
 }
 
+.menu-page__brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.menu-page__logo {
+  height: 32px;
+  width: auto;
+  object-fit: contain;
+  filter: brightness(0);
+}
+
 .menu-page__title {
   margin: 0;
   font-size: clamp(1.6rem, 4vw, 2.4rem);
