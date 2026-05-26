@@ -23,6 +23,50 @@
   border-bottom: 1px solid var(--color-border-default);
 }
 
+.menu-page__topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.menu-page__avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--color-text-primary);
+  color: var(--color-bg-surface);
+  font-family: var(--font-family-display);
+  font-size: 0.75rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  cursor: default;
+  flex-shrink: 0;
+}
+
+.menu-page__signin {
+  padding: 7px 16px;
+  border: 1px solid var(--color-border-strong);
+  background: transparent;
+  color: var(--color-text-primary);
+  font-family: var(--font-family-base);
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    background 150ms ease,
+    color 150ms ease;
+}
+
+.menu-page__signin:hover {
+  background: var(--color-text-primary);
+  color: var(--color-bg-surface);
+}
+
 .menu-page__logo {
   height: 22px;
   width: auto;
