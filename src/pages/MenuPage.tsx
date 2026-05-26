@@ -44,10 +44,6 @@ function MenuPage() {
       <header className="menu-page__header">
         <div className="menu-page__topbar">
           <img src={logo} alt="TableMate" className="menu-page__logo" />
-          {restaurantName && <span className="menu-page__restaurant">{restaurantName}</span>}
-        </div>
-        <div className="menu-page__titlerow">
-          <h1 className="menu-page__title">Menu</h1>
           <input
             className="menu-page__search"
             type="search"
@@ -55,6 +51,12 @@ function MenuPage() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
+        </div>
+        <div className="menu-page__titlerow">
+          <div>
+            <p className="menu-page__label">Menu</p>
+            <h1 className="menu-page__title">{restaurantName ?? "—"}</h1>
+          </div>
         </div>
       </header>
 
