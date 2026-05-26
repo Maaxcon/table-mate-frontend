@@ -51,6 +51,19 @@ function MenuItemModal({ item, onClose, onAddToCart }: MenuItemModalProps) {
 
         {item.description && <p className="menu-modal__description">{item.description}</p>}
 
+        {item.ingredients.length > 0 && (
+          <div className="menu-modal__ingredients">
+            <p className="menu-modal__ingredients-label">Склад</p>
+            <ul className="menu-modal__ingredients-list">
+              {item.ingredients.map((ing) => (
+                <li key={ing} className="menu-modal__ingredient-chip">
+                  {ing}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         <div className="menu-modal__footer">
           <span className="menu-modal__price">{formatPrice(item.price)}</span>
           {item.is_available ? (
