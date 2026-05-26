@@ -120,6 +120,9 @@ function MenuPage() {
                     item={item}
                     onClick={setSelectedItem}
                     onAddToCart={addItem}
+                    cartQuantity={
+                      cartItems.find((c) => c.item.public_id === item.public_id)?.quantity ?? 0
+                    }
                   />
                 ))}
               </div>
