@@ -1,0 +1,39 @@
+.tm-button {
+  border: 1px solid var(--color-border-default);
+  border-radius: 8px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  background: var(--color-bg-surface-subtle);
+  color: var(--color-text-primary);
+  min-height: 44px;
+  padding: 10px 16px;
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease,
+    border-color 120ms ease,
+    transform 120ms ease,
+    box-shadow 120ms ease;
+}
+
+.tm-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: var(--color-border-strong);
+  box-shadow: 0 8px 18px rgb(0 0 0 / 12%);
+}
+
+.tm-button:focus-visible {
+  outline: 2px solid var(--color-border-strong);
+  outline-offset: 2px;
+}
+
+.tm-button:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+.tm-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

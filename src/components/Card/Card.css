@@ -1,0 +1,22 @@
+.tm-card {
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-default);
+  padding: 32px;
+  box-sizing: border-box;
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    border-color 180ms ease;
+}
+
+.tm-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgb(0 0 0 / 10%);
+  border-color: var(--color-border-strong);
+}
+
+@media (max-width: 560px) {
+  .tm-card {
+    padding: 26px;
+  }
+}
