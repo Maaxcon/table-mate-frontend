@@ -8,4 +8,5 @@ export type MeResponse = {
   first_name: string
   last_name: string
   role: UserRole
+  restaurant_public_id: string | null
 }

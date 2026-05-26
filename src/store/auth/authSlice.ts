@@ -6,6 +6,7 @@ type AuthUser = {
   firstName: string
   lastName: string
   role: UserRole
+  restaurantId: string | null
 }
 
 type AuthState = {

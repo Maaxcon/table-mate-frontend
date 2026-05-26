@@ -21,6 +21,7 @@ function AuthInitializer({ children }: PropsWithChildren) {
               firstName: me.first_name,
               lastName: me.last_name,
               role: me.role,
+              restaurantId: me.restaurant_public_id,
             }),
           )
         }
