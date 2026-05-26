@@ -1,0 +1,55 @@
+.menu-skeleton__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.menu-skeleton__card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 20px;
+  border: 1px solid var(--color-border-default);
+  min-height: 120px;
+}
+
+.menu-skeleton__line {
+  height: 14px;
+  background: var(--color-bg-surface-subtle);
+  animation: menu-skeleton-pulse 1.4s ease-in-out infinite;
+}
+
+.menu-skeleton__line--title {
+  height: 18px;
+  width: 70%;
+}
+
+.menu-skeleton__line--short {
+  width: 50%;
+}
+
+.menu-skeleton__line--price {
+  width: 60px;
+  height: 18px;
+}
+
+.menu-skeleton__line--badge {
+  width: 80px;
+  height: 22px;
+}
+
+.menu-skeleton__footer {
+  display: flex;
+  justify-content: space-between;
+  margin-top: auto;
+}
+
+@keyframes menu-skeleton-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
