@@ -44,11 +44,11 @@
 }
 
 .social-auth-group__feedback--success {
-  color: #1f7a41;
+  color: var(--color-success-text);
 }
 
 .social-auth-group__feedback--error {
-  color: #b42318;
+  color: var(--color-error-text);
 }
 
 @media (max-width: 560px) {

@@ -177,7 +177,7 @@
 }
 
 .menu-item-card__like--active {
-  color: #c81e1e;
+  color: var(--color-like);
 }
 
 .menu-item-card__like-icon {
@@ -208,7 +208,7 @@
   height: 34px;
   border: none;
   border-radius: 50%;
-  background: #111;
+  background: var(--color-text-primary);
   color: var(--color-bg-surface);
   cursor: pointer;
   display: flex;
@@ -223,14 +223,14 @@
 }
 
 .menu-item-card__add:hover {
-  background: #000;
-  color: #fff;
+  background: var(--color-border-strong);
+  color: var(--color-bg-surface);
   box-shadow: 0 10px 18px rgb(0 0 0 / 24%);
   transform: translateY(-1px) scale(1.02);
 }
 
 .menu-item-card__add:focus-visible {
-  outline: 2px solid #111;
+  outline: 2px solid var(--color-border-strong);
   outline-offset: 2px;
 }
 
@@ -259,7 +259,7 @@
 }
 
 .menu-item-card__stepper-btn:hover {
-  background: rgb(255 255 255 / 0.18);
+  background: var(--color-surface-tint);
 }
 
 .menu-item-card__stepper-qty {

@@ -10,6 +10,37 @@
   --color-text-subtle: #c6c6c6;
   --color-border-default: #d9d9d9;
   --color-border-strong: #111111;
+
+  /* Overlays */
+  --color-overlay: rgb(0 0 0 / 52%);
+  --color-overlay-dim: rgb(0 0 0 / 35%);
+
+  /* Transparent surfaces */
+  --color-bg-frosted: rgb(255 255 255 / 90%);
+  --color-bg-sticky: rgb(252 252 252 / 88%);
+  --color-surface-tint: rgb(255 255 255 / 18%);
+
+  /* Status: success / open */
+  --color-success: #1a8a4a;
+  --color-success-text: #1f7a3a;
+  --color-success-border: rgb(31 122 58 / 28%);
+  --color-success-bg: #f2fbf5;
+
+  /* Status: error / closed */
+  --color-error: #c0392b;
+  --color-error-text: #b42318;
+  --color-error-muted-text: #a03939;
+  --color-error-border: rgb(160 57 57 / 24%);
+  --color-error-bg: #fdf4f4;
+
+  /* Warning (allergens) */
+  --color-warning-bg: #fffbeb;
+  --color-warning-icon: #b57c00;
+  --color-warning-label: #7a5000;
+  --color-warning-text: #8a6200;
+
+  /* Interactive */
+  --color-like: #c81e1e;
 }
 
 [data-theme="dark"] {
