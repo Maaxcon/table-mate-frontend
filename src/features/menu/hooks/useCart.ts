@@ -1,4 +1,4 @@
-import { useCallback, useReducer } from "react"
+import { useCallback, useEffect, useReducer } from "react"
 import type { MenuItem } from "@/types/menu"
 
 export type CartItem = { item: MenuItem; quantity: number }
@@ -10,6 +10,20 @@ type Action =
   | { type: "REMOVE"; publicId: string }
   | { type: "SET_QTY"; publicId: string; quantity: number }
   | { type: "CLEAR" }
+
+const STORAGE_KEY = "tablemate.cart.v1"
+
+function loadFromStorage(): State {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY)
+    if (!raw) return { items: [] }
+    const parsed = JSON.parse(raw)
+    if (!Array.isArray(parsed)) return { items: [] }
+    return { items: parsed }
+  } catch {
+    return { items: [] }
+  }
+}
 
 function reducer(state: State, action: Action): State {
   switch (action.type) {
@@ -52,7 +66,15 @@ export type UseCartResult = {
 }
 
 function useCart(): UseCartResult {
-  const [state, dispatch] = useReducer(reducer, { items: [] })
+  const [state, dispatch] = useReducer(reducer, undefined, loadFromStorage)
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state.items))
+    } catch {
+      // localStorage unavailable (private mode, quota exceeded) — ignore
+    }
+  }, [state.items])
 
   const addItem = useCallback((item: MenuItem) => dispatch({ type: "ADD", item }), [])
   const removeItem = useCallback((publicId: string) => dispatch({ type: "REMOVE", publicId }), [])
@@ -63,7 +85,10 @@ function useCart(): UseCartResult {
   const clear = useCallback(() => dispatch({ type: "CLEAR" }), [])
 
   const totalCount = state.items.reduce((sum, i) => sum + i.quantity, 0)
-  const totalPrice = state.items.reduce((sum, i) => sum + parseFloat(i.item.price) * i.quantity, 0)
+  const totalPrice = state.items.reduce((sum, i) => {
+    const p = parseFloat(i.item.price)
+    return sum + (isNaN(p) ? 0 : p) * i.quantity
+  }, 0)
 
   return { items: state.items, totalCount, totalPrice, addItem, removeItem, setQuantity, clear }
 }
