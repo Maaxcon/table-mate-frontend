@@ -80,8 +80,8 @@ function MenuItemCard({
             disabled={likePending}
             aria-label={item.is_liked ? `Прибрати лайк з ${item.name}` : `Лайкнути ${item.name}`}
           >
-            <LuHeart size={13} />
-            <span>{item.likes_count}</span>
+            <LuHeart className="menu-item-card__like-icon" size={13} />
+            <span className="menu-item-card__like-count">{item.likes_count}</span>
           </button>
         </div>
 
