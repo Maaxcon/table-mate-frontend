@@ -59,9 +59,6 @@ function MenuItemCard({
       <div className="menu-item-card__body">
         <div className="menu-item-card__name-row">
           <span className="menu-item-card__name">{item.name}</span>
-          {item.weight_grams && (
-            <span className="menu-item-card__weight">{item.weight_grams} г</span>
-          )}
         </div>
         {item.description && (
           <span className="menu-item-card__description">{item.description}</span>
@@ -69,53 +66,60 @@ function MenuItemCard({
       </div>
 
       <div className="menu-item-card__footer">
-        <div className="menu-item-card__left-meta">
+        <div className="menu-item-card__footer-top">
           <span className="menu-item-card__price">
             <span className="menu-item-card__price-value">{formatPrice(item.price)}</span>
             <span className="menu-item-card__price-currency">₴</span>
           </span>
+
+          {item.is_available ? (
+            cartQuantity > 0 ? (
+              <div className="menu-item-card__stepper">
+                <button
+                  className="menu-item-card__stepper-btn"
+                  onClick={handleDecrement}
+                  aria-label="Зменшити кількість"
+                >
+                  <LuMinus size={12} strokeWidth={2.6} />
+                </button>
+                <span className="menu-item-card__stepper-qty">{cartQuantity}</span>
+                <button
+                  className="menu-item-card__stepper-btn"
+                  onClick={handleIncrement}
+                  aria-label="Збільшити кількість"
+                >
+                  <LuPlus size={12} strokeWidth={2.6} />
+                </button>
+              </div>
+            ) : (
+              <button
+                className="menu-item-card__add"
+                onClick={handleAdd}
+                aria-label={`Додати ${item.name} до кошика`}
+              >
+                <LuPlus size={17} strokeWidth={2.8} />
+              </button>
+            )
+          ) : (
+            <span className="menu-item-card__unavailable-dot" aria-label="Недоступно" />
+          )}
+        </div>
+
+        <div className="menu-item-card__footer-bottom">
+          {item.weight_grams && (
+            <span className="menu-item-card__meta-text">{item.weight_grams} г</span>
+          )}
+          {item.weight_grams && <span className="menu-item-card__meta-dot">·</span>}
           <button
             className={`menu-item-card__like${item.is_liked ? " menu-item-card__like--active" : ""}`}
             onClick={handleToggleLike}
             disabled={likePending}
             aria-label={item.is_liked ? `Прибрати лайк з ${item.name}` : `Лайкнути ${item.name}`}
           >
-            <LuHeart className="menu-item-card__like-icon" size={13} />
-            <span className="menu-item-card__like-count">{item.likes_count}</span>
+            <LuHeart className="menu-item-card__like-icon" size={12} />
+            <span className="menu-item-card__like-count">{item.likes_count} likes</span>
           </button>
         </div>
-
-        {item.is_available ? (
-          cartQuantity > 0 ? (
-            <div className="menu-item-card__stepper">
-              <button
-                className="menu-item-card__stepper-btn"
-                onClick={handleDecrement}
-                aria-label="Зменшити кількість"
-              >
-                <LuMinus size={11} strokeWidth={2.5} />
-              </button>
-              <span className="menu-item-card__stepper-qty">{cartQuantity}</span>
-              <button
-                className="menu-item-card__stepper-btn"
-                onClick={handleIncrement}
-                aria-label="Збільшити кількість"
-              >
-                <LuPlus size={11} strokeWidth={2.5} />
-              </button>
-            </div>
-          ) : (
-            <button
-              className="menu-item-card__add"
-              onClick={handleAdd}
-              aria-label={`Додати ${item.name} до кошика`}
-            >
-              <LuPlus size={14} strokeWidth={2.5} />
-            </button>
-          )
-        ) : (
-          <span className="menu-item-card__unavailable-dot" aria-label="Недоступно" />
-        )}
       </div>
     </div>
   )
