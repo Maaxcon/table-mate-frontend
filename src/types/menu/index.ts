@@ -15,6 +15,8 @@ export type MenuItem = {
   ingredients: string[]
   weight_grams: number | null
   image: string | null
+  likes_count: number
+  is_liked: boolean
   price: string
   is_available: boolean
   sort_order: number

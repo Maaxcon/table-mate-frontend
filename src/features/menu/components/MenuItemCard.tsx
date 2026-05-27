@@ -1,4 +1,4 @@
-import { LuMinus, LuPlus } from "react-icons/lu"
+import { LuHeart, LuMinus, LuPlus } from "react-icons/lu"
 import type { MenuItem } from "@/types/menu"
 import { formatPrice } from "../utils"
 import "./MenuItemCard.css"
@@ -7,16 +7,20 @@ type MenuItemCardProps = {
   item: MenuItem
   onClick: (item: MenuItem) => void
   onAddToCart: (item: MenuItem) => void
+  onToggleLike: (item: MenuItem) => void
   onSetQuantity: (publicId: string, quantity: number) => void
   cartQuantity?: number
+  likePending?: boolean
 }
 
 function MenuItemCard({
   item,
   onClick,
   onAddToCart,
+  onToggleLike,
   onSetQuantity,
   cartQuantity = 0,
+  likePending = false,
 }: MenuItemCardProps) {
   const handleAdd = (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -31,6 +35,11 @@ function MenuItemCard({
   const handleIncrement = (e: React.MouseEvent) => {
     e.stopPropagation()
     onAddToCart(item)
+  }
+
+  const handleToggleLike = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    onToggleLike(item)
   }
 
   return (
@@ -60,10 +69,21 @@ function MenuItemCard({
       </div>
 
       <div className="menu-item-card__footer">
-        <span className="menu-item-card__price">
-          <span className="menu-item-card__price-value">{formatPrice(item.price)}</span>
-          <span className="menu-item-card__price-currency">₴</span>
-        </span>
+        <div className="menu-item-card__left-meta">
+          <span className="menu-item-card__price">
+            <span className="menu-item-card__price-value">{formatPrice(item.price)}</span>
+            <span className="menu-item-card__price-currency">₴</span>
+          </span>
+          <button
+            className={`menu-item-card__like${item.is_liked ? " menu-item-card__like--active" : ""}`}
+            onClick={handleToggleLike}
+            disabled={likePending}
+            aria-label={item.is_liked ? `Прибрати лайк з ${item.name}` : `Лайкнути ${item.name}`}
+          >
+            <LuHeart size={13} />
+            <span>{item.likes_count}</span>
+          </button>
+        </div>
 
         {item.is_available ? (
           cartQuantity > 0 ? (

@@ -1,8 +1,9 @@
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { Link, useParams } from "react-router-dom"
 import { LuShoppingCart } from "react-icons/lu"
 import logo from "@/assets/logo.png"
 import { useAppSelector } from "@/store/hooks"
+import { toggleItemLike } from "@/features/menu/api"
 import {
   CartDrawer,
   CategoryRail,
@@ -12,6 +13,7 @@ import {
   MenuSkeleton,
   RestaurantInfoPanel,
 } from "@/features/menu/components"
+import { getGuestToken } from "@/features/menu/guestToken"
 import { useCart } from "@/features/menu/hooks/useCart"
 import { useMenuPage } from "@/features/menu/hooks/useMenuPage"
 import type { MenuItem } from "@/types/menu"
@@ -21,7 +23,9 @@ function MenuPage() {
   const { restaurantId } = useParams<{ restaurantId: string }>()
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null)
   const [cartOpen, setCartOpen] = useState(false)
+  const [likePendingMap, setLikePendingMap] = useState<Record<string, boolean>>({})
   const user = useAppSelector((s) => s.auth.user)
+  const guestToken = useMemo(() => getGuestToken(), [])
 
   const { items: cartItems, totalCount, totalPrice, addItem, removeItem, setQuantity } = useCart()
 
@@ -40,8 +44,9 @@ function MenuPage() {
     loadMore,
     searchQuery,
     setSearchQuery,
+    setItemLikeState,
     error,
-  } = useMenuPage(restaurantId ?? "")
+  } = useMenuPage(restaurantId ?? "", guestToken)
 
   if (!restaurantId) {
     return (
@@ -49,6 +54,26 @@ function MenuPage() {
         <p className="menu-page__error">Restaurant not found.</p>
       </main>
     )
+  }
+
+  const handleToggleLike = async (item: MenuItem) => {
+    if (likePendingMap[item.public_id]) return
+    setLikePendingMap((prev) => ({ ...prev, [item.public_id]: true }))
+    try {
+      const updated = await toggleItemLike(restaurantId, item.public_id, guestToken)
+      setItemLikeState(item.public_id, updated.is_liked, updated.likes_count)
+      setSelectedItem((prev) =>
+        prev && prev.public_id === item.public_id
+          ? {
+              ...prev,
+              is_liked: updated.is_liked,
+              likes_count: updated.likes_count,
+            }
+          : prev,
+      )
+    } finally {
+      setLikePendingMap((prev) => ({ ...prev, [item.public_id]: false }))
+    }
   }
 
   return (
@@ -120,7 +145,9 @@ function MenuPage() {
                     item={item}
                     onClick={setSelectedItem}
                     onAddToCart={addItem}
+                    onToggleLike={handleToggleLike}
                     onSetQuantity={setQuantity}
+                    likePending={Boolean(likePendingMap[item.public_id])}
                     cartQuantity={
                       cartItems.find((c) => c.item.public_id === item.public_id)?.quantity ?? 0
                     }

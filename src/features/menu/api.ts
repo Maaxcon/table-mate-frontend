@@ -18,6 +18,20 @@ async function menuGet<T>(path: string, params: Record<string, string | undefine
   return res.json() as Promise<T>
 }
 
+async function menuPost<T>(
+  path: string,
+  params: Record<string, string | undefined>,
+  body: Record<string, string>,
+): Promise<T> {
+  const res = await fetch(buildUrl(path, params), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  })
+  if (!res.ok) throw new Error(`${res.status} ${res.statusText}`)
+  return res.json() as Promise<T>
+}
+
 export function fetchCategories(restaurantId: string): Promise<PaginatedResponse<MenuCategory>> {
   return menuGet("/api/menu/categories/", { restaurant: restaurantId, ordering: "sort_order" })
 }
@@ -26,15 +40,18 @@ export type FetchItemsParams = {
   restaurantId: string
   categoryId?: string
   page?: number
+  guestToken?: string
 }
 
 export function fetchItems({
   restaurantId,
   categoryId,
   page,
+  guestToken,
 }: FetchItemsParams): Promise<PaginatedResponse<MenuItem>> {
   return menuGet("/api/menu/items/", {
     restaurant: restaurantId,
+    guest_token: guestToken,
     ordering: "sort_order",
     ...(categoryId ? { category: categoryId } : {}),
     ...(page && page > 1 ? { page: String(page) } : {}),
@@ -44,8 +61,33 @@ export function fetchItems({
 export function searchItems(
   restaurantId: string,
   query: string,
+  guestToken?: string,
 ): Promise<PaginatedResponse<MenuItem>> {
-  return menuGet("/api/menu/items/search/", { restaurant: restaurantId, q: query })
+  return menuGet("/api/menu/items/search/", {
+    restaurant: restaurantId,
+    q: query,
+    guest_token: guestToken,
+  })
+}
+
+export type ToggleLikeResponse = {
+  public_id: string
+  is_liked: boolean
+  likes_count: number
+}
+
+export function toggleItemLike(
+  restaurantId: string,
+  itemPublicId: string,
+  guestToken: string,
+): Promise<ToggleLikeResponse> {
+  return menuPost(
+    `/api/menu/items/${itemPublicId}/toggle-like/`,
+    { restaurant: restaurantId },
+    {
+      guest_token: guestToken,
+    },
+  )
 }
 
 export type WorkingHoursDay = { open: string; close: string }

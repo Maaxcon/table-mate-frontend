@@ -18,6 +18,7 @@ export type UseMenuPageResult = {
   loadMore: () => void
   searchQuery: string
   setSearchQuery: (q: string) => void
+  setItemLikeState: (publicId: string, isLiked: boolean, likesCount: number) => void
   error: string | null
 }
 
@@ -54,6 +55,7 @@ type Action =
   | { type: "ITEMS_ERROR"; message: string }
   | { type: "SET_CATEGORY"; id: string | null }
   | { type: "SET_SEARCH"; query: string }
+  | { type: "SET_ITEM_LIKE"; publicId: string; isLiked: boolean; likesCount: number }
 
 const initialState: State = {
   restaurantName: null,
@@ -115,10 +117,23 @@ function reducer(state: State, action: Action): State {
         searchQuery: action.query,
         ...(action.query ? { activeCategory: null } : {}),
       }
+    case "SET_ITEM_LIKE":
+      return {
+        ...state,
+        items: state.items.map((item) =>
+          item.public_id === action.publicId
+            ? {
+                ...item,
+                is_liked: action.isLiked,
+                likes_count: action.likesCount,
+              }
+            : item,
+        ),
+      }
   }
 }
 
-function useMenuPage(restaurantId: string): UseMenuPageResult {
+function useMenuPage(restaurantId: string, guestToken: string): UseMenuPageResult {
   const [state, dispatch] = useReducer(reducer, initialState)
   const { activeCategory, searchQuery, itemsLoading, hasMore, page } = state
 
@@ -168,8 +183,12 @@ function useMenuPage(restaurantId: string): UseMenuPageResult {
     const load = () => {
       dispatch({ type: "ITEMS_LOADING" })
       const promise = isSearching
-        ? searchItems(restaurantId, searchQuery.trim())
-        : fetchItems({ restaurantId, categoryId: activeCategory ?? undefined })
+        ? searchItems(restaurantId, searchQuery.trim(), guestToken)
+        : fetchItems({
+            restaurantId,
+            categoryId: activeCategory ?? undefined,
+            guestToken,
+          })
       promise
         .then((data) => {
           if (!mounted) return
@@ -192,7 +211,7 @@ function useMenuPage(restaurantId: string): UseMenuPageResult {
     return () => {
       mounted = false
     }
-  }, [restaurantId, activeCategory, searchQuery])
+  }, [restaurantId, activeCategory, searchQuery, guestToken])
 
   const setActiveCategory = useCallback((id: string | null) => {
     dispatch({ type: "SET_CATEGORY", id })
@@ -205,10 +224,19 @@ function useMenuPage(restaurantId: string): UseMenuPageResult {
   const loadMore = useCallback(() => {
     if (itemsLoading || !hasMore || searchQuery) return
     dispatch({ type: "ITEMS_LOADING" })
-    fetchItems({ restaurantId, categoryId: activeCategory ?? undefined, page: page + 1 })
+    fetchItems({
+      restaurantId,
+      categoryId: activeCategory ?? undefined,
+      page: page + 1,
+      guestToken,
+    })
       .then((data) => dispatch({ type: "ITEMS_APPEND", results: data.results, next: data.next }))
       .catch(() => dispatch({ type: "ITEMS_ERROR", message: "Failed to load more" }))
-  }, [itemsLoading, hasMore, searchQuery, page, restaurantId, activeCategory])
+  }, [itemsLoading, hasMore, searchQuery, page, restaurantId, activeCategory, guestToken])
+
+  const setItemLikeState = useCallback((publicId: string, isLiked: boolean, likesCount: number) => {
+    dispatch({ type: "SET_ITEM_LIKE", publicId, isLiked, likesCount })
+  }, [])
 
   return {
     restaurantName: state.restaurantName,
@@ -225,6 +253,7 @@ function useMenuPage(restaurantId: string): UseMenuPageResult {
     loadMore,
     searchQuery,
     setSearchQuery,
+    setItemLikeState,
     error: state.error,
   }
 }
