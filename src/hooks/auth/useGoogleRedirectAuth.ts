@@ -75,6 +75,7 @@ function useGoogleRedirectAuth(): UseGoogleRedirectAuthResult {
         const response = await fetch(`${env.apiBaseUrl}/api/auth/google/`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
+          credentials: "include",
           body: JSON.stringify({ code, redirect_uri: window.location.origin }),
           signal: controller.signal,
         })
