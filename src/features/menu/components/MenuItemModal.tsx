@@ -37,9 +37,6 @@ function MenuItemModal({ item, onClose, onAddToCart }: MenuItemModalProps) {
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose()
       }}
-      onKeyDown={(e) => {
-        if (e.key === "Escape") onClose()
-      }}
     >
       <div
         className={`menu-modal${!item.image ? " menu-modal--no-image" : ""}`}

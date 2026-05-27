@@ -27,9 +27,6 @@ export function CartDrawer({ items, totalPrice, onSetQuantity, onRemove, onClose
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose()
       }}
-      onKeyDown={(e) => {
-        if (e.key === "Escape") onClose()
-      }}
     >
       <aside className="cart-drawer" aria-label="Кошик">
         <div className="cart-drawer__header">
