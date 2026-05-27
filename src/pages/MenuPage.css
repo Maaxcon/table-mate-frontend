@@ -48,11 +48,24 @@
   gap: 10px;
 }
 
+.menu-page__sticky-controls {
+  position: sticky;
+  top: calc(env(safe-area-inset-top, 0px) + 8px);
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px;
+  border: 1px solid var(--color-border-default);
+  background: rgb(252 252 252 / 88%);
+  backdrop-filter: blur(10px);
+}
+
 .menu-page__searchrow {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: clamp(14px, 1.8vw, 18px);
+  padding: clamp(12px, 1.6vw, 16px);
   border: 1px solid var(--color-border-default);
   background: var(--color-bg-surface);
 }
@@ -351,6 +364,12 @@
 
   .menu-page__searchrow {
     padding: 10px;
+  }
+
+  .menu-page__sticky-controls {
+    top: calc(env(safe-area-inset-top, 0px) + 6px);
+    gap: 8px;
+    padding: 8px;
   }
 
   .menu-page__hero-meta {

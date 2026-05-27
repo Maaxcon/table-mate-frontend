@@ -112,23 +112,6 @@ function MenuPage() {
             )}
           </div>
         </div>
-        <div className="menu-page__searchrow">
-          <input
-            className="menu-page__search"
-            type="search"
-            placeholder="Search dishes..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-          <button
-            className="menu-page__cart-btn"
-            onClick={() => setCartOpen(true)}
-            aria-label="Кошик"
-          >
-            <LuShoppingCart size={18} />
-            {totalCount > 0 && <span className="menu-page__cart-badge">{totalCount}</span>}
-          </button>
-        </div>
         <div className="menu-page__hero">
           <p className="menu-page__label">Menu</p>
           <h1 className="menu-page__title">{restaurantName ?? "TableMate Demo"}</h1>
@@ -149,12 +132,31 @@ function MenuPage() {
         </div>
       </header>
 
-      <CategoryRail
-        categories={categories}
-        activeCategory={activeCategory}
-        onSelect={setActiveCategory}
-        loading={categoriesLoading}
-      />
+      <div className="menu-page__sticky-controls">
+        <div className="menu-page__searchrow">
+          <input
+            className="menu-page__search"
+            type="search"
+            placeholder="Search dishes..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          <button
+            className="menu-page__cart-btn"
+            onClick={() => setCartOpen(true)}
+            aria-label="Кошик"
+          >
+            <LuShoppingCart size={18} />
+            {totalCount > 0 && <span className="menu-page__cart-badge">{totalCount}</span>}
+          </button>
+        </div>
+        <CategoryRail
+          categories={categories}
+          activeCategory={activeCategory}
+          onSelect={setActiveCategory}
+          loading={categoriesLoading}
+        />
+      </div>
 
       {error && <p className="menu-page__error">{error}</p>}
 
