@@ -48,7 +48,12 @@ function MenuItemCard({
       role="button"
       tabIndex={0}
       onClick={() => onClick(item)}
-      onKeyDown={(e) => e.key === "Enter" && onClick(item)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault()
+          onClick(item)
+        }
+      }}
     >
       {item.image ? (
         <img className="menu-item-card__image" src={item.image} alt={item.name} loading="lazy" />
