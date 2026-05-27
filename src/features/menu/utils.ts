@@ -3,14 +3,13 @@ const PRICE_FORMATTER = new Intl.NumberFormat("uk-UA", {
   maximumFractionDigits: 2,
 })
 
-export function formatPrice(price: string): string {
-  const num = parseFloat(price)
-  return isNaN(num) ? price : PRICE_FORMATTER.format(num)
+export function formatAmount(amount: number): string {
+  if (!Number.isFinite(amount)) return "0"
+  return PRICE_FORMATTER.format(amount)
 }
 
-export function formatAmount(amount: number): string {
-  if (!Number.isFinite(amount)) return String(amount)
-  return PRICE_FORMATTER.format(amount)
+export function formatPrice(price: string): string {
+  return formatAmount(parseFloat(price) || 0)
 }
 
 type WorkingHoursDay = { open: string; close: string }
