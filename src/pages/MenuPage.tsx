@@ -16,7 +16,7 @@ import {
 import { getGuestToken } from "@/features/menu/guestToken"
 import { useCart } from "@/features/menu/hooks/useCart"
 import { useMenuPage } from "@/features/menu/hooks/useMenuPage"
-import { getCurrencySymbol, isRestaurantOpenNow } from "@/features/menu/utils"
+import { formatAmount, getCurrencySymbol, isRestaurantOpenNow } from "@/features/menu/utils"
 import type { MenuItem } from "@/types/menu"
 import "./MenuPage.css"
 
@@ -59,7 +59,7 @@ function MenuPage() {
   const openNow = restaurantSettings
     ? isRestaurantOpenNow(restaurantSettings.working_hours, restaurantSettings.timezone)
     : true
-  const totalPriceLabel = totalPrice % 1 === 0 ? totalPrice.toFixed(0) : totalPrice.toFixed(2)
+  const totalPriceLabel = formatAmount(totalPrice)
 
   if (!restaurantId) {
     return (

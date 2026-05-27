@@ -1,5 +1,6 @@
 import { useEffect } from "react"
 import type { CartItem } from "../hooks/useCart"
+import { formatAmount } from "../utils"
 import "./CartDrawer.css"
 
 type Props = {
@@ -48,7 +49,7 @@ export function CartDrawer({ items, totalPrice, onSetQuantity, onRemove, onClose
                   <div className="cart-drawer__item-info">
                     <span className="cart-drawer__item-name">{item.name}</span>
                     <span className="cart-drawer__item-price">
-                      {(parseFloat(item.price) * quantity).toFixed(2)}
+                      {formatAmount(parseFloat(item.price) * quantity)} ₴
                     </span>
                   </div>
                   <div className="cart-drawer__item-controls">
@@ -82,7 +83,7 @@ export function CartDrawer({ items, totalPrice, onSetQuantity, onRemove, onClose
             <div className="cart-drawer__footer">
               <div className="cart-drawer__total">
                 <span>Разом</span>
-                <span>{totalPrice.toFixed(2)}</span>
+                <span>{formatAmount(totalPrice)} ₴</span>
               </div>
               <button className="cart-drawer__order">Замовити</button>
             </div>

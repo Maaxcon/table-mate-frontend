@@ -1,6 +1,16 @@
+const PRICE_FORMATTER = new Intl.NumberFormat("uk-UA", {
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 2,
+})
+
 export function formatPrice(price: string): string {
   const num = parseFloat(price)
-  return isNaN(num) ? price : num.toFixed(2)
+  return isNaN(num) ? price : PRICE_FORMATTER.format(num)
+}
+
+export function formatAmount(amount: number): string {
+  if (!Number.isFinite(amount)) return String(amount)
+  return PRICE_FORMATTER.format(amount)
 }
 
 type WorkingHoursDay = { open: string; close: string }
