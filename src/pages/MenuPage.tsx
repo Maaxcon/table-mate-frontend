@@ -59,6 +59,7 @@ function MenuPage() {
   const openNow = restaurantSettings
     ? isRestaurantOpenNow(restaurantSettings.working_hours, restaurantSettings.timezone)
     : true
+  const totalPriceLabel = totalPrice % 1 === 0 ? totalPrice.toFixed(0) : totalPrice.toFixed(2)
 
   if (!restaurantId) {
     return (
@@ -89,7 +90,7 @@ function MenuPage() {
   }
 
   return (
-    <main className="menu-page">
+    <main className={`menu-page${totalCount > 0 ? " menu-page--has-cart-bar" : ""}`}>
       <header className="menu-page__header">
         <div className="menu-page__topbar">
           <div className="menu-page__brand">
@@ -207,6 +208,17 @@ function MenuPage() {
           onClose={() => setSelectedItem(null)}
           onAddToCart={addItem}
         />
+      )}
+
+      {totalCount > 0 && (
+        <button
+          className="menu-page__cart-bar"
+          onClick={() => setCartOpen(true)}
+          aria-label="Відкрити кошик"
+        >
+          <span className="menu-page__cart-bar-summary">{`${totalCount} items · ${totalPriceLabel} ${currencySymbol}`}</span>
+          <span className="menu-page__cart-bar-action">Переглянути кошик</span>
+        </button>
       )}
 
       {cartOpen && (
