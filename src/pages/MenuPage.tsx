@@ -80,23 +80,13 @@ function MenuPage() {
     <main className="menu-page">
       <header className="menu-page__header">
         <div className="menu-page__topbar">
-          <img src={logo} alt="TableMate" className="menu-page__logo" />
+          <div className="menu-page__brand">
+            <img src={logo} alt="TableMate" className="menu-page__logo" />
+            <div className="menu-page__brand-copy">
+              <span className="menu-page__brand-name">TableMate</span>
+            </div>
+          </div>
           <div className="menu-page__topbar-right">
-            <input
-              className="menu-page__search"
-              type="search"
-              placeholder="Search dishes…"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-            <button
-              className="menu-page__cart-btn"
-              onClick={() => setCartOpen(true)}
-              aria-label="Кошик"
-            >
-              <LuShoppingCart size={18} />
-              {totalCount > 0 && <span className="menu-page__cart-badge">{totalCount}</span>}
-            </button>
             {user ? (
               <div className="menu-page__avatar" title={`${user.firstName} ${user.lastName}`}>
                 {user.firstName[0]}
@@ -108,6 +98,23 @@ function MenuPage() {
               </Link>
             )}
           </div>
+        </div>
+        <div className="menu-page__searchrow">
+          <input
+            className="menu-page__search"
+            type="search"
+            placeholder="Search dishes..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          <button
+            className="menu-page__cart-btn"
+            onClick={() => setCartOpen(true)}
+            aria-label="Кошик"
+          >
+            <LuShoppingCart size={18} />
+            {totalCount > 0 && <span className="menu-page__cart-badge">{totalCount}</span>}
+          </button>
         </div>
         <div className="menu-page__titlerow">
           <div>
