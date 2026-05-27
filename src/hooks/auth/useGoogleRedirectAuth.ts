@@ -3,6 +3,7 @@ import { useGoogleLogin } from "@react-oauth/google"
 import { useEffect, useState } from "react"
 import { googleAuthCleanupQueryParams, googleAuthMessage } from "./googleAuth.constants"
 import type { GoogleFeedbackType, InitialGoogleFeedback, MeResponse } from "@/types/auth"
+import type { GoogleAuthResponse } from "@/types/api/types.gen"
 import { useAppDispatch } from "@/store/hooks"
 import { setAccessToken, setStaffContextPending, setUser } from "@/store/auth/authSlice"
 import { apiFetch } from "@/api/client"
@@ -11,13 +12,6 @@ type UseGoogleRedirectAuthResult = {
   googleFeedback: string
   googleFeedbackType: GoogleFeedbackType
   handleGoogleLogin: () => void
-}
-
-type BackendGoogleAuthResponse = {
-  access?: string
-  needs_restaurant_context?: boolean
-  detail?: string
-  message?: string
 }
 
 function getInitialGoogleFeedback(): InitialGoogleFeedback {
@@ -85,7 +79,10 @@ function useGoogleRedirectAuth(): UseGoogleRedirectAuthResult {
           signal: controller.signal,
         })
 
-        const payload = (await response.json()) as BackendGoogleAuthResponse
+        const payload = (await response.json()) as GoogleAuthResponse & {
+          detail?: string
+          message?: string
+        }
 
         if (!response.ok) {
           throw new Error(payload.detail ?? payload.message ?? googleAuthMessage.backendAuthFailed)
