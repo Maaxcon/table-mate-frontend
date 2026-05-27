@@ -185,39 +185,41 @@ function useMenuPage(restaurantId: string, guestToken: string): UseMenuPageResul
 
   useEffect(() => {
     if (!restaurantId) return
-    let mounted = true
+    const controller = new AbortController()
+    const { signal } = controller
     const isSearching = searchQuery.trim().length > 0
 
     const load = () => {
       dispatch({ type: "ITEMS_LOADING" })
       const promise = isSearching
-        ? searchItems(restaurantId, searchQuery.trim(), guestToken)
+        ? searchItems(restaurantId, searchQuery.trim(), guestToken, signal)
         : fetchItems({
             restaurantId,
             categoryId: activeCategory ?? undefined,
             guestToken,
+            signal,
           })
       promise
         .then((data) => {
-          if (!mounted) return
           dispatch({ type: "ITEMS_SUCCESS", results: data.results, next: data.next })
         })
         .catch(() => {
-          if (mounted) dispatch({ type: "ITEMS_ERROR", message: "Failed to load items" })
+          if (signal.aborted) return
+          dispatch({ type: "ITEMS_ERROR", message: "Failed to load items" })
         })
     }
 
     if (isSearching) {
       const timer = setTimeout(load, 400)
       return () => {
-        mounted = false
         clearTimeout(timer)
+        controller.abort()
       }
     }
 
     load()
     return () => {
-      mounted = false
+      controller.abort()
     }
   }, [restaurantId, activeCategory, searchQuery, guestToken])
 

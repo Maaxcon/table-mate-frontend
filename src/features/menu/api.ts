@@ -12,8 +12,12 @@ function buildUrl(path: string, params: Record<string, string | undefined>): str
   return url.toString()
 }
 
-async function menuGet<T>(path: string, params: Record<string, string | undefined>): Promise<T> {
-  const res = await fetch(buildUrl(path, params))
+async function menuGet<T>(
+  path: string,
+  params: Record<string, string | undefined>,
+  signal?: AbortSignal,
+): Promise<T> {
+  const res = await fetch(buildUrl(path, params), { signal })
   if (!res.ok) throw new Error(`${res.status} ${res.statusText}`)
   return res.json() as Promise<T>
 }
@@ -41,6 +45,7 @@ export type FetchItemsParams = {
   categoryId?: string
   page?: number
   guestToken?: string
+  signal?: AbortSignal
 }
 
 export function fetchItems({
@@ -48,26 +53,32 @@ export function fetchItems({
   categoryId,
   page,
   guestToken,
+  signal,
 }: FetchItemsParams): Promise<PaginatedResponse<MenuItem>> {
-  return menuGet("/api/menu/items/", {
-    restaurant: restaurantId,
-    guest_token: guestToken,
-    ordering: "sort_order",
-    ...(categoryId ? { category: categoryId } : {}),
-    ...(page && page > 1 ? { page: String(page) } : {}),
-  })
+  return menuGet(
+    "/api/menu/items/",
+    {
+      restaurant: restaurantId,
+      guest_token: guestToken,
+      ordering: "sort_order",
+      ...(categoryId ? { category: categoryId } : {}),
+      ...(page && page > 1 ? { page: String(page) } : {}),
+    },
+    signal,
+  )
 }
 
 export function searchItems(
   restaurantId: string,
   query: string,
   guestToken?: string,
+  signal?: AbortSignal,
 ): Promise<PaginatedResponse<MenuItem>> {
-  return menuGet("/api/menu/items/search/", {
-    restaurant: restaurantId,
-    q: query,
-    guest_token: guestToken,
-  })
+  return menuGet(
+    "/api/menu/items/search/",
+    { restaurant: restaurantId, q: query, guest_token: guestToken },
+    signal,
+  )
 }
 
 export type ToggleLikeResponse = {
