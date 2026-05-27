@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useReducer } from "react"
+import { useCallback, useEffect, useReducer, useRef } from "react"
 import { fetchCategories, fetchItems, fetchRestaurant, searchItems } from "../api"
 import type { PublicRestaurantSettings } from "../api"
 import type { MenuCategory, MenuItem } from "@/types/menu"
@@ -144,6 +144,7 @@ function reducer(state: State, action: Action): State {
 function useMenuPage(restaurantId: string, guestToken: string): UseMenuPageResult {
   const [state, dispatch] = useReducer(reducer, initialState)
   const { activeCategory, searchQuery, itemsLoading, loadingMore, hasMore, page } = state
+  const loadingMoreRef = useRef(false)
 
   useEffect(() => {
     if (!restaurantId) return
@@ -232,7 +233,8 @@ function useMenuPage(restaurantId: string, guestToken: string): UseMenuPageResul
   }, [])
 
   const loadMore = useCallback(() => {
-    if (itemsLoading || loadingMore || !hasMore || searchQuery) return
+    if (itemsLoading || loadingMoreRef.current || !hasMore || searchQuery) return
+    loadingMoreRef.current = true
     dispatch({ type: "ITEMS_LOADING_MORE" })
     fetchItems({
       restaurantId,
@@ -240,18 +242,15 @@ function useMenuPage(restaurantId: string, guestToken: string): UseMenuPageResul
       page: page + 1,
       guestToken,
     })
-      .then((data) => dispatch({ type: "ITEMS_APPEND", results: data.results, next: data.next }))
-      .catch(() => dispatch({ type: "ITEMS_ERROR", message: "Failed to load more" }))
-  }, [
-    itemsLoading,
-    loadingMore,
-    hasMore,
-    searchQuery,
-    page,
-    restaurantId,
-    activeCategory,
-    guestToken,
-  ])
+      .then((data) => {
+        loadingMoreRef.current = false
+        dispatch({ type: "ITEMS_APPEND", results: data.results, next: data.next })
+      })
+      .catch(() => {
+        loadingMoreRef.current = false
+        dispatch({ type: "ITEMS_ERROR", message: "Failed to load more" })
+      })
+  }, [itemsLoading, hasMore, searchQuery, page, restaurantId, activeCategory, guestToken])
 
   const setItemLikeState = useCallback((publicId: string, isLiked: boolean, likesCount: number) => {
     dispatch({ type: "SET_ITEM_LIKE", publicId, isLiked, likesCount })
