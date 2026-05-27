@@ -22,6 +22,12 @@ export function getGuestToken(): string {
   }
 
   try {
+    const urlParam = new URLSearchParams(window.location.search).get("guest")
+    if (urlParam && isValidUUID(urlParam)) {
+      window.localStorage.setItem(GUEST_TOKEN_STORAGE_KEY, urlParam)
+      return urlParam
+    }
+
     const existing = window.localStorage.getItem(GUEST_TOKEN_STORAGE_KEY)
     if (existing && isValidUUID(existing)) return existing
 
