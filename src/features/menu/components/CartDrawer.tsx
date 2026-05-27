@@ -46,7 +46,7 @@ export function CartDrawer({ items, totalPrice, onSetQuantity, onRemove, onClose
                   <div className="cart-drawer__item-info">
                     <span className="cart-drawer__item-name">{item.name}</span>
                     <span className="cart-drawer__item-price">
-                      {formatAmount(parseFloat(item.price) * quantity)} ₴
+                      {formatAmount((parseFloat(item.price) || 0) * quantity)} ₴
                     </span>
                   </div>
                   <div className="cart-drawer__item-controls">
