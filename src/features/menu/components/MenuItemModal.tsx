@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { LuCheck, LuShoppingCart, LuTriangle } from "react-icons/lu"
+import { LuCheck, LuHeart, LuShoppingCart, LuTriangle } from "react-icons/lu"
 import type { MenuItem } from "@/types/menu"
 import { formatPrice } from "../utils"
 import "./MenuItemModal.css"
@@ -41,46 +41,60 @@ function MenuItemModal({ item, onClose, onAddToCart }: MenuItemModalProps) {
         if (e.key === "Escape") onClose()
       }}
     >
-      <div className="menu-modal" role="dialog" aria-modal="true">
+      <div
+        className={`menu-modal${!item.image ? " menu-modal--no-image" : ""}`}
+        role="dialog"
+        aria-modal="true"
+      >
+        <button className="menu-modal__close" onClick={onClose} aria-label="Close">
+          ✕
+        </button>
+
         {item.image && (
           <div className="menu-modal__image-shell">
             <img className="menu-modal__image" src={item.image} alt={item.name} loading="lazy" />
           </div>
         )}
 
-        <div className="menu-modal__header">
-          <h2 className="menu-modal__name">{item.name}</h2>
-          <button className="menu-modal__close" onClick={onClose} aria-label="Close">
-            ✕
-          </button>
+        <div className="menu-modal__content">
+          <div className="menu-modal__header">
+            <h2 className="menu-modal__name">{item.name}</h2>
+            {item.likes_count > 0 && (
+              <div className="menu-modal__likes">
+                <LuHeart size={13} />
+                <span>{item.likes_count}</span>
+              </div>
+            )}
+          </div>
+
+          {item.description && <p className="menu-modal__description">{item.description}</p>}
+
+          {item.ingredients.length > 0 && (
+            <div className="menu-modal__ingredients">
+              <p className="menu-modal__section-label">Склад</p>
+              <ul className="menu-modal__ingredients-list">
+                {item.ingredients.map((ing) => (
+                  <li key={ing} className="menu-modal__ingredient-chip">
+                    {ing}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {item.allergens.length > 0 && (
+            <div
+              className="menu-modal__allergens"
+              aria-label={`Алергени: ${item.allergens.join(", ")}`}
+            >
+              <LuTriangle className="menu-modal__allergens-icon" size={14} />
+              <div>
+                <span className="menu-modal__allergens-label">Алергени: </span>
+                <span className="menu-modal__allergens-text">{item.allergens.join(", ")}</span>
+              </div>
+            </div>
+          )}
         </div>
-
-        {item.description && <p className="menu-modal__description">{item.description}</p>}
-
-        {item.ingredients.length > 0 && (
-          <div className="menu-modal__ingredients">
-            <p className="menu-modal__ingredients-label">Склад</p>
-            <ul className="menu-modal__ingredients-list">
-              {item.ingredients.map((ing) => (
-                <li key={ing} className="menu-modal__ingredient-chip">
-                  {ing}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-        {item.allergens.length > 0 && (
-          <div
-            className="menu-modal__allergens"
-            title={`Contains: ${item.allergens.join(", ")}`}
-            aria-label={`Алергени: ${item.allergens.join(", ")}`}
-          >
-            <LuTriangle size={14} />
-            <span className="menu-modal__allergens-label">Алергени:</span>
-            <span className="menu-modal__allergens-text">{item.allergens.join(", ")}</span>
-          </div>
-        )}
 
         <div className="menu-modal__footer">
           <div className="menu-modal__price-block">

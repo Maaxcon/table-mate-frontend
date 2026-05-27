@@ -213,7 +213,7 @@ function MenuPage() {
         />
       )}
 
-      {totalCount > 0 && (
+      {totalCount > 0 && !selectedItem && (
         <button
           className="menu-page__cart-bar"
           onClick={() => setCartOpen(true)}
