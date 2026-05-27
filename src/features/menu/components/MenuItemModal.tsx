@@ -42,6 +42,12 @@ function MenuItemModal({ item, onClose, onAddToCart }: MenuItemModalProps) {
       }}
     >
       <div className="menu-modal" role="dialog" aria-modal="true">
+        {item.image && (
+          <div className="menu-modal__image-shell">
+            <img className="menu-modal__image" src={item.image} alt={item.name} loading="lazy" />
+          </div>
+        )}
+
         <div className="menu-modal__header">
           <h2 className="menu-modal__name">{item.name}</h2>
           <button className="menu-modal__close" onClick={onClose} aria-label="Close">

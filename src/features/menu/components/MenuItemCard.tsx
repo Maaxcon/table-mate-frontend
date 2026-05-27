@@ -60,9 +60,11 @@ function MenuItemCard({
         <div className="menu-item-card__name-row">
           <span className="menu-item-card__name">{item.name}</span>
         </div>
-        {item.description && (
-          <span className="menu-item-card__description">{item.description}</span>
-        )}
+        <span
+          className={`menu-item-card__description${item.description ? "" : " menu-item-card__description--empty"}`}
+        >
+          {item.description ?? " "}
+        </span>
       </div>
 
       <div className="menu-item-card__footer">

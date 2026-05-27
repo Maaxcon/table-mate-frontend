@@ -278,6 +278,14 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 16px;
+  align-items: stretch;
+}
+
+@media (min-width: 1024px) {
+  .menu-page__grid {
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+  }
 }
 
 .menu-page__load-more {
