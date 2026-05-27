@@ -7,6 +7,7 @@ import GreetingPage from "@/pages/GreetingPage"
 import HomePlaceholderPage from "@/pages/HomePlaceholderPage"
 import MenuPage from "@/pages/MenuPage"
 import SelectRestaurantPlaceholderPage from "@/pages/SelectRestaurantPlaceholderPage"
+import { ErrorBoundary } from "@/components/ErrorBoundary"
 import { WaiterOrderPage } from "@/pages/WaiterOrderPage"
 import ProtectedRoute from "@/routes/ProtectedRoute"
 import PublicRoute from "@/routes/PublicRoute"
@@ -33,7 +34,14 @@ function App() {
             </Route>
             <Route element={<ThemedLayout />}>
               <Route path="/waiter-order" element={<WaiterOrderPage />} />
-              <Route path="/menu/:restaurantId" element={<MenuPage />} />
+              <Route
+                path="/menu/:restaurantId"
+                element={
+                  <ErrorBoundary>
+                    <MenuPage />
+                  </ErrorBoundary>
+                }
+              />
               <Route element={<StaffContextRoute />}>
                 <Route path="/select-restaurant" element={<SelectRestaurantPlaceholderPage />} />
               </Route>
