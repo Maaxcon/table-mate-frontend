@@ -4,6 +4,7 @@ import { FloorPlan } from "./components/FloorPlan"
 import { ReservationSidebar } from "./components/ReservationSidebar"
 import { TableDetailOverlay } from "./components/TableDetailOverlay"
 import { FLOOR_TABLES, RESERVATIONS, OVERLAY_DETAILS, type FloorTable } from "./data/mockData"
+import "@/assets/colors.css"
 import "./WaiterOrderView.css"
 
 export function WaiterOrderView() {
