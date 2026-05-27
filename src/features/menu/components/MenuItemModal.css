@@ -98,6 +98,29 @@
   line-height: 1.6;
 }
 
+.menu-modal__allergens {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  max-width: 100%;
+  padding: 6px 10px;
+  border: 1px dashed rgb(185 73 73 / 44%);
+  background: rgb(255 245 245 / 80%);
+  color: #7d2e2e;
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
+.menu-modal__allergens-label {
+  font-weight: 600;
+}
+
+.menu-modal__allergens-text {
+  color: #965858;
+  font-style: italic;
+}
+
 .menu-modal__footer {
   display: flex;
   align-items: center;

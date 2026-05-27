@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { LuCheck, LuShoppingCart } from "react-icons/lu"
+import { LuCheck, LuShoppingCart, LuTriangle } from "react-icons/lu"
 import type { MenuItem } from "@/types/menu"
 import { formatPrice } from "../utils"
 import "./MenuItemModal.css"
@@ -61,6 +61,18 @@ function MenuItemModal({ item, onClose, onAddToCart }: MenuItemModalProps) {
                 </li>
               ))}
             </ul>
+          </div>
+        )}
+
+        {item.allergens.length > 0 && (
+          <div
+            className="menu-modal__allergens"
+            title={`Contains: ${item.allergens.join(", ")}`}
+            aria-label={`Алергени: ${item.allergens.join(", ")}`}
+          >
+            <LuTriangle size={14} />
+            <span className="menu-modal__allergens-label">Алергени:</span>
+            <span className="menu-modal__allergens-text">{item.allergens.join(", ")}</span>
           </div>
         )}
 

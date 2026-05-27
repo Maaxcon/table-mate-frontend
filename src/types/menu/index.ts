@@ -13,6 +13,7 @@ export type MenuItem = {
   name: string
   description: string | null
   ingredients: string[]
+  allergens: string[]
   weight_grams: number | null
   image: string | null
   likes_count: number
