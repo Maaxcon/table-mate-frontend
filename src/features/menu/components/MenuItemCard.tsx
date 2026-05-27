@@ -97,7 +97,7 @@ function MenuItemCard({
                 onClick={handleAdd}
                 aria-label={`Додати ${item.name} до кошика`}
               >
-                <LuPlus size={17} strokeWidth={2.8} />
+                <LuPlus size={22} strokeWidth={3} />
               </button>
             )
           ) : (
