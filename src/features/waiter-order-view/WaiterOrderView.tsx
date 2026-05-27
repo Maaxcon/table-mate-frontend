@@ -14,7 +14,7 @@ export function WaiterOrderView() {
 
   const handleTableSelect = (table: FloorTable) => {
     if (table.status === "occupied") {
-      setSelectedTableId(table.id)
+      setSelectedTableId(table.public_id)
     }
   }
 

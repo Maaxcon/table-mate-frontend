@@ -14,33 +14,34 @@ export function FloorPlan({ tables, selectedId, onSelect }: FloorPlanProps) {
       <div className="floor-plan__canvas">
         {tables.map((table) => {
           const isOccupied = table.status === "occupied"
-          const isReserved = table.status === "reserved"
           const isFree = table.status === "free"
+          const hasReservation = Boolean(table.reservation_name)
 
           return (
             <button
-              key={table.id}
+              key={table.public_id}
               type="button"
               className={[
                 "floor-plan__table",
                 `floor-plan__table--${table.status}`,
                 `floor-plan__table--${table.shape}`,
-                selectedId === table.id ? "floor-plan__table--selected" : "",
+                hasReservation ? "floor-plan__table--reservation" : "",
+                selectedId === table.public_id ? "floor-plan__table--selected" : "",
               ].join(" ")}
               style={{
-                left: table.position.x,
-                top: table.position.y,
+                left: table.position_x ?? undefined,
+                top: table.position_y ?? undefined,
               }}
               onClick={() => onSelect(table)}
               disabled={isFree}
             >
               <span className="floor-plan__table-badge">
-                {isFree && "FREE"}
                 {isOccupied && "OCCUPIED"}
-                {isReserved && "RESERVED"}
+                {hasReservation && !isOccupied && "RESERVED"}
+                {isFree && !hasReservation && "FREE"}
               </span>
 
-              <span className="floor-plan__table-number">{table.number}</span>
+              <span className="floor-plan__table-number">{table.table_number}</span>
 
               {isOccupied && table.guest_count && (
                 <span className="floor-plan__table-guests">
@@ -51,7 +52,9 @@ export function FloorPlan({ tables, selectedId, onSelect }: FloorPlanProps) {
               )}
 
               <div className="floor-plan__table-meta">
-                {isFree && <span className="floor-plan__table-available">AVAILABLE</span>}
+                {isFree && !hasReservation && (
+                  <span className="floor-plan__table-available">AVAILABLE</span>
+                )}
                 {isOccupied && (
                   <>
                     <span className="floor-plan__table-name">
@@ -60,7 +63,7 @@ export function FloorPlan({ tables, selectedId, onSelect }: FloorPlanProps) {
                     <span className="floor-plan__table-since">SINCE {table.since}</span>
                   </>
                 )}
-                {isReserved && (
+                {hasReservation && !isOccupied && (
                   <>
                     <span className="floor-plan__table-name">
                       {table.reservation_name} &bull; {table.party_size}P

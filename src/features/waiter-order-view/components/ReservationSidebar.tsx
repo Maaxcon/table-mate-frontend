@@ -1,4 +1,5 @@
 import type { ReservationItem } from "../data/mockData"
+import { getTimeFromDatetime } from "../data/mockData"
 import "./ReservationSidebar.css"
 
 interface ReservationSidebarProps {
@@ -50,15 +51,17 @@ export function ReservationSidebar({ reservations }: ReservationSidebarProps) {
       <div className="reservation-sidebar__list">
         {reservations.map((r, i) => (
           <div
-            key={r.id}
+            key={r.public_id}
             className={`reservation-sidebar__item ${i < reservations.length - 1 ? "reservation-sidebar__item--bordered" : ""}`}
           >
             <div className="reservation-sidebar__item-left">
-              <span className="reservation-sidebar__item-time">{r.time}</span>
+              <span className="reservation-sidebar__item-time">
+                {getTimeFromDatetime(r.start_at)}
+              </span>
               <div className="reservation-sidebar__item-info">
                 <span className="reservation-sidebar__item-name">{r.name}</span>
                 <span className="reservation-sidebar__item-meta">
-                  {r.guests} GUESTS{r.vip ? " \u2022 VIP ACCESS" : ""}
+                  {r.guest_count} GUESTS{r.vip ? " \u2022 VIP ACCESS" : ""}
                 </span>
               </div>
             </div>

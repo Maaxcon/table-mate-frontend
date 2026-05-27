@@ -1,5 +1,6 @@
 import { StatusChip } from "@/components/StatusChip/StatusChip"
 import type { OverlayOrderItem } from "../data/mockData"
+import { VOID_REASON_LABELS } from "../data/mockData"
 import "./OrderItemRow.css"
 
 interface OrderItemRowProps {
@@ -8,6 +9,10 @@ interface OrderItemRowProps {
 
 export function OrderItemRow({ item }: OrderItemRowProps) {
   const isVoided = item.status === "voided"
+  const voidReasonLabel =
+    item.void_reason != null
+      ? (VOID_REASON_LABELS[item.void_reason] ?? `reason_${item.void_reason}`)
+      : null
 
   return (
     <div className={`order-item-row ${isVoided ? "order-item-row--voided" : ""}`}>
@@ -15,12 +20,10 @@ export function OrderItemRow({ item }: OrderItemRowProps) {
         <span className="order-item-row__name">
           {item.quantity}&times; {item.name}
         </span>
-        {item.void_reason && (
-          <span className="order-item-row__void-reason">{item.void_reason}</span>
-        )}
+        {voidReasonLabel && <span className="order-item-row__void-reason">{voidReasonLabel}</span>}
       </div>
       <div className="order-item-row__right">
-        <span className="order-item-row__price">&euro;{item.price}</span>
+        <span className="order-item-row__price">&euro;{item.unit_price}</span>
         <StatusChip status={item.status} />
       </div>
     </div>

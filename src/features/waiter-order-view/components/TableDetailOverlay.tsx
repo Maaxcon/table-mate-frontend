@@ -67,7 +67,7 @@ export function TableDetailOverlay({ detail, onClose }: TableDetailOverlayProps)
               <div key={slot} className="overlay__slot">
                 <h3 className="overlay__slot-title">GUEST {slot}</h3>
                 {slotItems.map((item) => (
-                  <OrderItemRow key={item.id} item={item} />
+                  <OrderItemRow key={item.public_id} item={item} />
                 ))}
               </div>
             )
@@ -83,12 +83,12 @@ export function TableDetailOverlay({ detail, onClose }: TableDetailOverlayProps)
           </div>
           <div className="overlay__total-row">
             <span className="overlay__total-label">TAX</span>
-            <span className="overlay__total-value">&euro;{detail.taxes}</span>
+            <span className="overlay__total-value">&euro;{detail.tax_total}</span>
           </div>
           <div className="overlay__total-row overlay__total-row--final">
             <span className="overlay__total-label overlay__total-label--large">TOTAL</span>
             <span className="overlay__total-value overlay__total-value--large">
-              &euro;{detail.total}
+              &euro;{detail.total_amount}
             </span>
           </div>
           <button type="button" className="overlay__cta">

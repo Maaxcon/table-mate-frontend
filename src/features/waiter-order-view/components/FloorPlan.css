@@ -53,7 +53,7 @@
   border-radius: 0;
 }
 
-.floor-plan__table--circle {
+.floor-plan__table--round {
   border-radius: 50%;
   width: 130px;
   height: 130px;
@@ -74,7 +74,7 @@
   border-color: var(--color-border);
 }
 
-.floor-plan__table--reserved {
+.floor-plan__table--reservation {
   border-style: dotted;
   border-color: var(--color-border);
   opacity: 0.8;
@@ -99,7 +99,7 @@
   color: var(--color-bg);
 }
 
-.floor-plan__table--reserved .floor-plan__table-badge {
+.floor-plan__table--reservation .floor-plan__table-badge {
   border: 1px solid var(--color-border);
   color: var(--color-text);
   background: var(--color-bg);
@@ -152,14 +152,14 @@
   line-height: 1.2;
 }
 
-.floor-plan__table--circle .floor-plan__table-guests {
+.floor-plan__table--round .floor-plan__table-guests {
   margin-top: 0;
 }
 
-.floor-plan__table--circle .floor-plan__table-meta {
+.floor-plan__table--round .floor-plan__table-meta {
   margin-top: 2px;
 }
 
-.floor-plan__table--circle .floor-plan__table-number {
+.floor-plan__table--round .floor-plan__table-number {
   font-size: 1.6rem;
 }

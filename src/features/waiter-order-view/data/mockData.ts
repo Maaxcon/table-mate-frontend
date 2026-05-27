@@ -1,10 +1,19 @@
+import type {
+  TableStatus,
+  TableShape,
+  OrderItemStatusEnum,
+  ReservationStatus,
+} from "@/types/api/types.gen"
+
 export interface FloorTable {
-  id: string
-  number: string
+  public_id: string
+  table_number: string
   capacity: number
-  shape: "square" | "circle"
-  status: "free" | "occupied" | "reserved"
-  position: { x: number; y: number }
+  shape: TableShape
+  status: TableStatus
+  position_x: number | null
+  position_y: number | null
+  active: boolean
 
   guest_name?: string
   guest_count?: number
@@ -16,122 +25,151 @@ export interface FloorTable {
 }
 
 export interface ReservationItem {
-  id: string
-  time: string
+  public_id: string
+  start_at: string
   table: string
+  guest_count: number
+  status: ReservationStatus
+  notes?: string | null
+
   name: string
-  guests: number
   vip: boolean
 }
 
 export interface OverlayOrderItem {
-  id: string
+  public_id: string
   guest_slot: number
   quantity: number
   name: string
-  price: string
-  status: "pending" | "in_progress" | "ready" | "served" | "voided"
-  void_reason?: string | null
+  unit_price: string
+  status: OrderItemStatusEnum
+  is_wasted: boolean
+  void_reason?: number | null
 }
 
 export interface OverlayDetail {
+  public_id: string
   table_number: string
   guest_name: string
   guest_count: number
   duration: string
+  currency: string
   items: OverlayOrderItem[]
   subtotal: string
-  taxes: string
-  total: string
+  tax_total: string
+  total_amount: string
+  discount_total?: string
+  service_charge?: string
 }
 
 export const FLOOR_TABLES: FloorTable[] = [
   {
-    id: "t1",
-    number: "01",
+    public_id: "t1",
+    table_number: "01",
     capacity: 2,
     shape: "square",
     status: "occupied",
-    position: { x: 60, y: 80 },
+    position_x: 60,
+    position_y: 80,
+    active: true,
     guest_name: "Miller",
     guest_count: 2,
     since: "18:30",
   },
   {
-    id: "t2",
-    number: "02",
+    public_id: "t2",
+    table_number: "02",
     capacity: 4,
     shape: "square",
     status: "occupied",
-    position: { x: 280, y: 80 },
+    position_x: 280,
+    position_y: 80,
+    active: true,
     guest_name: "Chen",
     guest_count: 3,
     since: "19:00",
   },
   {
-    id: "t3",
-    number: "03",
+    public_id: "t3",
+    table_number: "03",
     capacity: 4,
     shape: "square",
     status: "free",
-    position: { x: 60, y: 260 },
+    position_x: 60,
+    position_y: 260,
+    active: true,
+    reservation_name: "Sofia Rossi",
+    party_size: 3,
+    arriving: "21:15",
   },
   {
-    id: "t4",
-    number: "04",
+    public_id: "t4",
+    table_number: "04",
     capacity: 6,
-    shape: "circle",
-    status: "reserved",
-    position: { x: 280, y: 260 },
+    shape: "round",
+    status: "free",
+    position_x: 280,
+    position_y: 260,
+    active: true,
     reservation_name: "Smith",
     party_size: 2,
     arriving: "20:15",
   },
   {
-    id: "t5",
-    number: "05",
+    public_id: "t5",
+    table_number: "05",
     capacity: 2,
     shape: "square",
     status: "free",
-    position: { x: 60, y: 420 },
+    position_x: 60,
+    position_y: 420,
+    active: true,
   },
   {
-    id: "t6",
-    number: "06",
+    public_id: "t6",
+    table_number: "06",
     capacity: 4,
     shape: "square",
     status: "occupied",
-    position: { x: 280, y: 420 },
+    position_x: 280,
+    position_y: 420,
+    active: true,
     guest_name: "Nakamura",
     guest_count: 4,
     since: "18:45",
   },
   {
-    id: "t7",
-    number: "07",
+    public_id: "t7",
+    table_number: "07",
     capacity: 2,
     shape: "square",
-    status: "reserved",
-    position: { x: 500, y: 80 },
+    status: "free",
+    position_x: 500,
+    position_y: 80,
+    active: true,
     reservation_name: "Watson",
     party_size: 2,
     arriving: "20:30",
   },
   {
-    id: "t8",
-    number: "08",
+    public_id: "t8",
+    table_number: "08",
     capacity: 4,
-    shape: "circle",
+    shape: "round",
     status: "free",
-    position: { x: 500, y: 260 },
+    position_x: 500,
+    position_y: 260,
+    active: true,
   },
   {
-    id: "t9",
-    number: "09",
+    public_id: "t9",
+    table_number: "09",
     capacity: 6,
     shape: "square",
-    status: "reserved",
-    position: { x: 500, y: 420 },
+    status: "free",
+    position_x: 500,
+    position_y: 420,
+    active: true,
     reservation_name: "Garcia",
     party_size: 5,
     arriving: "21:00",
@@ -139,152 +177,239 @@ export const FLOOR_TABLES: FloorTable[] = [
 ]
 
 export const RESERVATIONS: ReservationItem[] = [
-  { id: "r1", time: "20:00", table: "T-04", name: "Alexander Volkov", guests: 4, vip: true },
-  { id: "r2", time: "20:30", table: "T-07", name: "Emma Watson", guests: 2, vip: false },
-  { id: "r3", time: "21:00", table: "T-09", name: "Carlos Garcia", guests: 5, vip: true },
-  { id: "r4", time: "21:15", table: "T-03", name: "Sofia Rossi", guests: 3, vip: false },
+  {
+    public_id: "r1",
+    start_at: "2025-06-01T20:00:00",
+    table: "T-04",
+    guest_count: 4,
+    status: "confirmed",
+    name: "Alexander Volkov",
+    vip: true,
+  },
+  {
+    public_id: "r2",
+    start_at: "2025-06-01T20:30:00",
+    table: "T-07",
+    guest_count: 2,
+    status: "confirmed",
+    name: "Emma Watson",
+    vip: false,
+  },
+  {
+    public_id: "r3",
+    start_at: "2025-06-01T21:00:00",
+    table: "T-09",
+    guest_count: 5,
+    status: "confirmed",
+    name: "Carlos Garcia",
+    vip: true,
+  },
+  {
+    public_id: "r4",
+    start_at: "2025-06-01T21:15:00",
+    table: "T-03",
+    guest_count: 3,
+    status: "confirmed",
+    name: "Sofia Rossi",
+    vip: false,
+  },
 ]
 
 export const OVERLAY_DETAILS: Record<string, OverlayDetail> = {
   t1: {
+    public_id: "ord-t1",
     table_number: "01",
     guest_name: "Miller",
     guest_count: 2,
     duration: "75m",
+    currency: "EUR",
     subtotal: "49.00",
-    taxes: "4.90",
-    total: "53.90",
+    tax_total: "4.90",
+    total_amount: "53.90",
     items: [
       {
-        id: "oi1",
+        public_id: "oi1",
         guest_slot: 1,
         quantity: 1,
         name: "Caesar Salad",
-        price: "12.50",
+        unit_price: "12.50",
         status: "served",
+        is_wasted: false,
       },
       {
-        id: "oi2",
+        public_id: "oi2",
         guest_slot: 1,
         quantity: 1,
         name: "Classic Burger",
-        price: "18.00",
+        unit_price: "18.00",
         status: "ready",
+        is_wasted: false,
       },
-      { id: "oi3", guest_slot: 1, quantity: 1, name: "Cola", price: "4.50", status: "served" },
       {
-        id: "oi4",
+        public_id: "oi3",
+        guest_slot: 1,
+        quantity: 1,
+        name: "Cola",
+        unit_price: "4.50",
+        status: "served",
+        is_wasted: false,
+      },
+      {
+        public_id: "oi4",
         guest_slot: 2,
         quantity: 1,
         name: "Buffalo Wings",
-        price: "14.00",
+        unit_price: "14.00",
         status: "in_progress",
+        is_wasted: false,
       },
       {
-        id: "oi5",
+        public_id: "oi5",
         guest_slot: 2,
         quantity: 1,
         name: "Sparkling Water",
-        price: "4.00",
+        unit_price: "4.00",
         status: "served",
+        is_wasted: false,
       },
     ],
   },
   t2: {
+    public_id: "ord-t2",
     table_number: "02",
     guest_name: "Chen",
     guest_count: 3,
     duration: "45m",
+    currency: "EUR",
     subtotal: "84.50",
-    taxes: "8.45",
-    total: "92.95",
+    tax_total: "8.45",
+    total_amount: "92.95",
     items: [
       {
-        id: "oi6",
+        public_id: "oi6",
         guest_slot: 1,
         quantity: 1,
         name: "Buffalo Wings",
-        price: "14.00",
+        unit_price: "14.00",
         status: "ready",
+        is_wasted: false,
       },
       {
-        id: "oi7",
+        public_id: "oi7",
         guest_slot: 1,
         quantity: 1,
         name: "Ribeye Steak",
-        price: "34.00",
+        unit_price: "34.00",
         status: "in_progress",
+        is_wasted: false,
       },
       {
-        id: "oi8",
+        public_id: "oi8",
         guest_slot: 2,
         quantity: 1,
         name: "Caesar Salad",
-        price: "12.50",
+        unit_price: "12.50",
         status: "served",
+        is_wasted: false,
       },
       {
-        id: "oi9",
+        public_id: "oi9",
         guest_slot: 2,
         quantity: 1,
         name: "Spaghetti Carbonara",
-        price: "22.00",
+        unit_price: "22.00",
         status: "pending",
+        is_wasted: false,
       },
       {
-        id: "oi10",
+        public_id: "oi10",
         guest_slot: 3,
         quantity: 1,
         name: "Grilled Salmon",
-        price: "26.00",
+        unit_price: "26.00",
         status: "voided",
-        void_reason: "out_of_stock",
+        is_wasted: true,
+        void_reason: 4,
       },
-      { id: "oi11", guest_slot: 3, quantity: 2, name: "Cola", price: "4.50", status: "pending" },
+      {
+        public_id: "oi11",
+        guest_slot: 3,
+        quantity: 2,
+        name: "Cola",
+        unit_price: "4.50",
+        status: "pending",
+        is_wasted: false,
+      },
     ],
   },
   t6: {
+    public_id: "ord-t6",
     table_number: "06",
     guest_name: "Nakamura",
     guest_count: 4,
     duration: "60m",
+    currency: "EUR",
     subtotal: "118.00",
-    taxes: "11.80",
-    total: "129.80",
+    tax_total: "11.80",
+    total_amount: "129.80",
     items: [
       {
-        id: "oi12",
+        public_id: "oi12",
         guest_slot: 1,
         quantity: 2,
         name: "Truffle Risotto",
-        price: "24.00",
+        unit_price: "24.00",
         status: "ready",
+        is_wasted: false,
       },
       {
-        id: "oi13",
+        public_id: "oi13",
         guest_slot: 2,
         quantity: 1,
         name: "Grilled Salmon",
-        price: "26.00",
+        unit_price: "26.00",
         status: "in_progress",
+        is_wasted: false,
       },
       {
-        id: "oi14",
+        public_id: "oi14",
         guest_slot: 3,
         quantity: 1,
         name: "Caesar Salad",
-        price: "12.50",
+        unit_price: "12.50",
         status: "served",
+        is_wasted: false,
       },
       {
-        id: "oi15",
+        public_id: "oi15",
         guest_slot: 4,
         quantity: 1,
         name: "Ribeye Steak",
-        price: "34.00",
+        unit_price: "34.00",
         status: "pending",
+        is_wasted: false,
       },
-      { id: "oi16", guest_slot: 4, quantity: 3, name: "Cola", price: "4.50", status: "pending" },
+      {
+        public_id: "oi16",
+        guest_slot: 4,
+        quantity: 3,
+        name: "Cola",
+        unit_price: "4.50",
+        status: "pending",
+        is_wasted: false,
+      },
     ],
   },
+}
+
+export const VOID_REASON_LABELS: Record<number, string> = {
+  1: "mispick",
+  2: "guest_changed_mind",
+  3: "quality_issue",
+  4: "out_of_stock",
+}
+
+export function getTimeFromDatetime(datetime: string): string {
+  const d = new Date(datetime)
+  return `${d.getHours().toString().padStart(2, "0")}:${d.getMinutes().toString().padStart(2, "0")}`
 }
