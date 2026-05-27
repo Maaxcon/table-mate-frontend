@@ -32,7 +32,7 @@
     border-color 150ms ease;
 }
 
-.category-rail__btn:hover {
+.category-rail__btn:not(.category-rail__btn--active):hover {
   border-color: var(--color-border-strong);
   color: var(--color-text-primary);
 }
