@@ -41,6 +41,7 @@ function MenuPage() {
     setActiveCategory,
     items,
     itemsLoading,
+    loadingMore,
     hasMore,
     loadMore,
     searchQuery,
@@ -162,7 +163,7 @@ function MenuPage() {
 
       <div className="menu-page__body">
         <div className="menu-page__content">
-          {itemsLoading ? (
+          {itemsLoading && items.length === 0 ? (
             <MenuSkeleton count={6} />
           ) : items.length === 0 ? (
             <MenuEmptyState
@@ -188,9 +189,9 @@ function MenuPage() {
                   />
                 ))}
               </div>
-              {hasMore && !itemsLoading && (
-                <button className="menu-page__load-more" onClick={loadMore}>
-                  Load more
+              {hasMore && (
+                <button className="menu-page__load-more" onClick={loadMore} disabled={loadingMore}>
+                  {loadingMore ? "Loading..." : "Load more"}
                 </button>
               )}
             </>

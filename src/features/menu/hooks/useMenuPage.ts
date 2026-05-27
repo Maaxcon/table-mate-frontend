@@ -14,6 +14,7 @@ export type UseMenuPageResult = {
   setActiveCategory: (id: string | null) => void
   items: MenuItem[]
   itemsLoading: boolean
+  loadingMore: boolean
   hasMore: boolean
   loadMore: () => void
   searchQuery: string
@@ -32,6 +33,7 @@ type State = {
   activeCategory: string | null
   items: MenuItem[]
   itemsLoading: boolean
+  loadingMore: boolean
   page: number
   hasMore: boolean
   searchQuery: string
@@ -50,6 +52,7 @@ type Action =
   | { type: "CATEGORIES_SUCCESS"; categories: MenuCategory[] }
   | { type: "CATEGORIES_ERROR" }
   | { type: "ITEMS_LOADING" }
+  | { type: "ITEMS_LOADING_MORE" }
   | { type: "ITEMS_SUCCESS"; results: MenuItem[]; next: string | null }
   | { type: "ITEMS_APPEND"; results: MenuItem[]; next: string | null }
   | { type: "ITEMS_ERROR"; message: string }
@@ -67,6 +70,7 @@ const initialState: State = {
   activeCategory: null,
   items: [],
   itemsLoading: true,
+  loadingMore: false,
   page: 1,
   hasMore: false,
   searchQuery: "",
@@ -90,11 +94,14 @@ function reducer(state: State, action: Action): State {
     case "CATEGORIES_ERROR":
       return { ...state, categoriesLoading: false, error: "Failed to load categories" }
     case "ITEMS_LOADING":
-      return { ...state, itemsLoading: true }
+      return { ...state, itemsLoading: true, loadingMore: false }
+    case "ITEMS_LOADING_MORE":
+      return { ...state, loadingMore: true }
     case "ITEMS_SUCCESS":
       return {
         ...state,
         itemsLoading: false,
+        loadingMore: false,
         items: action.results,
         hasMore: action.next !== null,
         page: 1,
@@ -103,12 +110,13 @@ function reducer(state: State, action: Action): State {
       return {
         ...state,
         itemsLoading: false,
+        loadingMore: false,
         items: [...state.items, ...action.results],
         hasMore: action.next !== null,
         page: state.page + 1,
       }
     case "ITEMS_ERROR":
-      return { ...state, itemsLoading: false, error: action.message }
+      return { ...state, itemsLoading: false, loadingMore: false, error: action.message }
     case "SET_CATEGORY":
       return { ...state, activeCategory: action.id, searchQuery: "" }
     case "SET_SEARCH":
@@ -135,7 +143,7 @@ function reducer(state: State, action: Action): State {
 
 function useMenuPage(restaurantId: string, guestToken: string): UseMenuPageResult {
   const [state, dispatch] = useReducer(reducer, initialState)
-  const { activeCategory, searchQuery, itemsLoading, hasMore, page } = state
+  const { activeCategory, searchQuery, itemsLoading, loadingMore, hasMore, page } = state
 
   useEffect(() => {
     if (!restaurantId) return
@@ -222,8 +230,8 @@ function useMenuPage(restaurantId: string, guestToken: string): UseMenuPageResul
   }, [])
 
   const loadMore = useCallback(() => {
-    if (itemsLoading || !hasMore || searchQuery) return
-    dispatch({ type: "ITEMS_LOADING" })
+    if (itemsLoading || loadingMore || !hasMore || searchQuery) return
+    dispatch({ type: "ITEMS_LOADING_MORE" })
     fetchItems({
       restaurantId,
       categoryId: activeCategory ?? undefined,
@@ -232,7 +240,16 @@ function useMenuPage(restaurantId: string, guestToken: string): UseMenuPageResul
     })
       .then((data) => dispatch({ type: "ITEMS_APPEND", results: data.results, next: data.next }))
       .catch(() => dispatch({ type: "ITEMS_ERROR", message: "Failed to load more" }))
-  }, [itemsLoading, hasMore, searchQuery, page, restaurantId, activeCategory, guestToken])
+  }, [
+    itemsLoading,
+    loadingMore,
+    hasMore,
+    searchQuery,
+    page,
+    restaurantId,
+    activeCategory,
+    guestToken,
+  ])
 
   const setItemLikeState = useCallback((publicId: string, isLiked: boolean, likesCount: number) => {
     dispatch({ type: "SET_ITEM_LIKE", publicId, isLiked, likesCount })
@@ -249,6 +266,7 @@ function useMenuPage(restaurantId: string, guestToken: string): UseMenuPageResul
     setActiveCategory,
     items: state.items,
     itemsLoading,
+    loadingMore,
     hasMore,
     loadMore,
     searchQuery,
