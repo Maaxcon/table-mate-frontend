@@ -99,6 +99,10 @@ export type PublicRestaurantSettings = {
   currency: string
   timezone: string
   working_hours: WorkingHours
+  rating: string
+  eta_min_minutes: number
+  eta_max_minutes: number
+  price_band: number
 }
 
 export type PublicRestaurant = {

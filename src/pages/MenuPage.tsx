@@ -16,6 +16,7 @@ import {
 import { getGuestToken } from "@/features/menu/guestToken"
 import { useCart } from "@/features/menu/hooks/useCart"
 import { useMenuPage } from "@/features/menu/hooks/useMenuPage"
+import { getCurrencySymbol, isRestaurantOpenNow } from "@/features/menu/utils"
 import type { MenuItem } from "@/types/menu"
 import "./MenuPage.css"
 
@@ -47,6 +48,17 @@ function MenuPage() {
     setItemLikeState,
     error,
   } = useMenuPage(restaurantId ?? "", guestToken)
+
+  const currencyCode = restaurantSettings?.currency ?? "UAH"
+  const currencySymbol = getCurrencySymbol(currencyCode)
+  const priceBandValue = restaurantSettings?.price_band ?? 2
+  const priceBand = currencySymbol.repeat(Math.max(1, Math.min(4, priceBandValue)))
+  const rating = restaurantSettings?.rating ?? "4.80"
+  const etaMin = restaurantSettings?.eta_min_minutes ?? 20
+  const etaMax = restaurantSettings?.eta_max_minutes ?? 30
+  const openNow = restaurantSettings
+    ? isRestaurantOpenNow(restaurantSettings.working_hours, restaurantSettings.timezone)
+    : true
 
   if (!restaurantId) {
     return (
@@ -116,10 +128,22 @@ function MenuPage() {
             {totalCount > 0 && <span className="menu-page__cart-badge">{totalCount}</span>}
           </button>
         </div>
-        <div className="menu-page__titlerow">
-          <div>
-            <p className="menu-page__label">Menu</p>
-            <h1 className="menu-page__title">{restaurantName ?? "—"}</h1>
+        <div className="menu-page__hero">
+          <p className="menu-page__label">Menu</p>
+          <h1 className="menu-page__title">{restaurantName ?? "TableMate Demo"}</h1>
+          <p className="menu-page__hero-description">Fresh dishes, fast ordering, cozy taste.</p>
+          <div className="menu-page__hero-meta">
+            <span
+              className={`menu-page__hero-pill${openNow ? " menu-page__hero-pill--open" : " menu-page__hero-pill--closed"}`}
+            >
+              {openNow ? "Open now" : "Closed now"}
+            </span>
+            <span className="menu-page__hero-dot">·</span>
+            <span className="menu-page__hero-pill">{priceBand}</span>
+            <span className="menu-page__hero-dot">·</span>
+            <span className="menu-page__hero-pill">{Number(rating).toFixed(1)} ★</span>
+            <span className="menu-page__hero-dot">·</span>
+            <span className="menu-page__hero-pill">{`${etaMin}-${etaMax} min`}</span>
           </div>
         </div>
       </header>
