@@ -3,8 +3,18 @@ import { store } from "@/store"
 import { clearAuth, setAccessToken } from "@/store/auth/authSlice"
 
 let refreshPromise: Promise<string> | null = null
+let refreshFailed = false
+
+// Reset the flag whenever a fresh access token lands in the store (after login).
+store.subscribe(() => {
+  if (store.getState().auth.accessToken && refreshFailed) {
+    refreshFailed = false
+  }
+})
 
 async function refreshAccessToken(): Promise<string> {
+  if (refreshFailed) throw new Error("Refresh failed")
+
   if (refreshPromise) {
     return refreshPromise
   }
@@ -19,6 +29,10 @@ async function refreshAccessToken(): Promise<string> {
       if (!data.access) throw new Error("Refresh failed")
       store.dispatch(setAccessToken(data.access))
       return data.access
+    })
+    .catch((err: unknown) => {
+      refreshFailed = true
+      throw err
     })
     .finally(() => {
       refreshPromise = null
