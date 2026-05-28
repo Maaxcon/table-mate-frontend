@@ -65,7 +65,7 @@ export function TopNav({ tables, activeTab, onTabChange }: TopNavProps) {
           OCCUPIED: {occupiedCount}
         </span>
         <span className="top-nav__stat">
-          <span className="top-nav__stat-icon top-nav__stat-icon--outlined" />
+          <span className="top-nav__stat-icon" />
           FREE: {freeCount}
         </span>
         <span className="top-nav__time">{currentTime}</span>
