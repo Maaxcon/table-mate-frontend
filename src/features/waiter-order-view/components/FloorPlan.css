@@ -74,12 +74,6 @@
   border-color: var(--color-border);
 }
 
-.floor-plan__table--reservation {
-  border-style: dotted;
-  border-color: var(--color-border);
-  opacity: 0.8;
-}
-
 .floor-plan__table-badge {
   font-size: 0.6rem;
   font-weight: 700;
@@ -97,12 +91,6 @@
 .floor-plan__table--occupied .floor-plan__table-badge {
   background: var(--color-text);
   color: var(--color-bg);
-}
-
-.floor-plan__table--reservation .floor-plan__table-badge {
-  border: 1px solid var(--color-border);
-  color: var(--color-text);
-  background: var(--color-bg);
 }
 
 .floor-plan__table-number {

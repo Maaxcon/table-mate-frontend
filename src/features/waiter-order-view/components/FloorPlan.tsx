@@ -25,15 +25,15 @@ export function FloorPlan({ tables, selectedId, onSelect }: FloorPlanProps) {
                 "floor-plan__table",
                 `floor-plan__table--${table.status}`,
                 `floor-plan__table--${table.shape}`,
-                hasReservation ? "floor-plan__table--reservation" : "",
-                selectedId === table.public_id ? "floor-plan__table--selected" : "",
-              ].join(" ")}
+                selectedId === table.public_id ? "floor-plan__table--selected" : null,
+              ]
+                .filter(Boolean)
+                .join(" ")}
               style={{
                 left: table.position_x ?? undefined,
                 top: table.position_y ?? undefined,
               }}
               onClick={() => onSelect(table)}
-              disabled={isFree}
             >
               <span className="floor-plan__table-badge">
                 {isOccupied && "OCCUPIED"}
