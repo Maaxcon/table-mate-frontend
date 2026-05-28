@@ -1,13 +1,13 @@
 import { type PropsWithChildren, useEffect, useMemo, useState } from "react"
-import { apiFetch } from "@/api/client"
-import { setUser } from "@/store/auth/authSlice"
+import { env } from "@/config/env"
+import { setAccessToken, setUser } from "@/store/auth/authSlice"
 import { useAppDispatch } from "@/store/hooks"
 import type { MeResponse } from "@/features/auth/types"
 
 function AuthInitializer({ children }: PropsWithChildren) {
   const dispatch = useAppDispatch()
   // If an OAuth code/error is present, useGoogleRedirectAuth handles auth —
-  // skip the session-restore check so we don't spam spurious 401s.
+  // skip the session-restore check to avoid spurious 401s.
   const isOAuthFlow = useMemo(() => {
     const params = new URLSearchParams(window.location.search)
     return params.has("code") || params.has("error")
@@ -18,29 +18,50 @@ function AuthInitializer({ children }: PropsWithChildren) {
     if (isOAuthFlow) return
 
     const controller = new AbortController()
+    const { signal } = controller
 
-    apiFetch("/api/auth/me/", { signal: controller.signal })
-      .then(async (res) => {
-        if (res.ok) {
-          const me = (await res.json()) as MeResponse
-          dispatch(
-            setUser({
-              email: me.email,
-              firstName: me.first_name,
-              lastName: me.last_name,
-              role: me.role,
-              restaurantId: me.restaurant_public_id,
-            }),
-          )
-        }
-      })
-      .catch((err: unknown) => {
+    async function restoreSession() {
+      try {
+        // 1. Refresh first — get a fresh access token from the httpOnly cookie.
+        //    This avoids the 401 → retry cycle that apiFetch would produce.
+        const refreshRes = await fetch(`${env.apiBaseUrl}/api/auth/refresh/`, {
+          method: "POST",
+          credentials: "include",
+          signal,
+        })
+        if (!refreshRes.ok) return // no active session, stay logged out silently
+
+        const { access } = (await refreshRes.json()) as { access?: string }
+        if (!access) return
+
+        dispatch(setAccessToken(access))
+
+        // 2. Load user data with the fresh token — no 401 risk.
+        const meRes = await fetch(`${env.apiBaseUrl}/api/auth/me/`, {
+          headers: { Authorization: `Bearer ${access}` },
+          credentials: "include",
+          signal,
+        })
+        if (!meRes.ok) return
+
+        const me = (await meRes.json()) as MeResponse
+        dispatch(
+          setUser({
+            email: me.email,
+            firstName: me.first_name,
+            lastName: me.last_name,
+            role: me.role,
+            restaurantId: me.restaurant_public_id,
+          }),
+        )
+      } catch (err) {
         if (err instanceof DOMException && err.name === "AbortError") return
-      })
-      .finally(() => {
-        if (!controller.signal.aborted) setReady(true)
-      })
+      } finally {
+        if (!signal.aborted) setReady(true)
+      }
+    }
 
+    void restoreSession()
     return () => controller.abort()
   }, [dispatch, isOAuthFlow])
 
