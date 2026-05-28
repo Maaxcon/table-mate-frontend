@@ -89,9 +89,9 @@ function isOpenFromPreviousOvernightSchedule(
   return nowMinutes < close
 }
 
-export function isRestaurantOpenNow(workingHours: WorkingHours, timezone: string): boolean {
+export function isRestaurantOpenNow(workingHours: WorkingHours, timezone: string): boolean | null {
   const now = getNowInTimezone(timezone)
-  if (!now) return true
+  if (!now) return null
 
   const todayIndex = DAY_ORDER.indexOf(now.dayKey)
   const previousIndex = (todayIndex + 6) % 7
