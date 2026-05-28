@@ -17,6 +17,7 @@ export function TableDetailOverlay({ detail, onClose }: TableDetailOverlayProps)
         onClick={onClose}
         role="button"
         tabIndex={0}
+        aria-label="Close table detail overlay"
         onKeyDown={(e) => {
           if (e.key === "Enter" || e.key === " ") onClose()
         }}

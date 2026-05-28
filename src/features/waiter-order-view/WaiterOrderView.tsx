@@ -19,7 +19,6 @@ export function WaiterOrderView() {
     }
   }
 
-  // When "FLOOR PLAN" tab is not active, the floor plan is hidden behind a message
   const showFloorPlan = activeTab === "FLOOR PLAN"
 
   return (
