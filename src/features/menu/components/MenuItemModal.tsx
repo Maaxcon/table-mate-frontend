@@ -42,8 +42,14 @@ function MenuItemModal({ item, onClose, onAddToCart }: MenuItemModalProps) {
         className={`menu-modal${!item.image ? " menu-modal--no-image" : ""}`}
         role="dialog"
         aria-modal="true"
+        aria-labelledby="menu-modal-heading"
       >
-        <button className="menu-modal__close" onClick={onClose} aria-label="Close">
+        <button
+          ref={(el) => el?.focus()}
+          className="menu-modal__close"
+          onClick={onClose}
+          aria-label="Close"
+        >
           ✕
         </button>
 
@@ -55,7 +61,9 @@ function MenuItemModal({ item, onClose, onAddToCart }: MenuItemModalProps) {
 
         <div className="menu-modal__content">
           <div className="menu-modal__header">
-            <h2 className="menu-modal__name">{item.name}</h2>
+            <h2 id="menu-modal-heading" className="menu-modal__name">
+              {item.name}
+            </h2>
             {item.likes_count > 0 && (
               <div className="menu-modal__likes">
                 <LuHeart size={13} />
