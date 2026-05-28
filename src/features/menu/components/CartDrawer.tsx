@@ -82,7 +82,9 @@ export function CartDrawer({ items, totalPrice, onSetQuantity, onRemove, onClose
                 <span>Разом</span>
                 <span>{formatAmount(totalPrice)} ₴</span>
               </div>
-              <button className="cart-drawer__order">Замовити</button>
+              <button className="cart-drawer__order" disabled>
+                Замовити (незабаром)
+              </button>
             </div>
           </>
         )}
