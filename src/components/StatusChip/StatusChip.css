@@ -1,0 +1,44 @@
+.status-chip {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  line-height: 1;
+}
+
+.status-chip--ready {
+  padding: 4px 10px;
+  background: var(--badge-filled-bg);
+  color: var(--badge-filled-text);
+}
+
+.status-chip--in_progress {
+  padding: 4px 10px;
+  background: var(--badge-outlined-bg);
+  color: var(--badge-outlined-text);
+  border: 1px solid var(--badge-outlined-border);
+}
+
+.status-chip--pending {
+  padding: 4px 10px;
+  background: var(--badge-outlined-bg);
+  color: var(--badge-pending-text);
+  border: 1px dashed var(--badge-pending-border);
+}
+
+.status-chip--served {
+  padding: 4px 0;
+  color: var(--badge-served-text);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.status-chip--voided {
+  padding: 4px 10px;
+  color: var(--badge-voided-text);
+  text-decoration: line-through;
+  font-weight: 500;
+}

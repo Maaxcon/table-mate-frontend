@@ -1,0 +1,153 @@
+.floor-plan {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  height: 100%;
+}
+
+.floor-plan__title {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--color-text-secondary);
+}
+
+.floor-plan__canvas {
+  position: relative;
+  flex: 1;
+  min-height: 520px;
+  min-width: 680px;
+  border: 2px solid var(--color-border);
+  background: var(--color-bg);
+  overflow: auto;
+}
+
+.floor-plan__table {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: 140px;
+  padding: 20px 12px;
+  border-width: 2px;
+  border-style: solid;
+  background: var(--color-bg);
+  cursor: pointer;
+  font-family: inherit;
+  text-align: center;
+  transition: box-shadow 0.1s;
+}
+
+.floor-plan__table:hover:not(:disabled) {
+  box-shadow: 4px 4px 0 var(--color-text);
+}
+
+.floor-plan__table:disabled {
+  cursor: default;
+}
+
+.floor-plan__table--square {
+  border-radius: 0;
+}
+
+.floor-plan__table--round {
+  border-radius: 50%;
+  width: 130px;
+  height: 130px;
+  padding: 0;
+}
+
+.floor-plan__table--selected {
+  box-shadow: 4px 4px 0 var(--color-text);
+}
+
+.floor-plan__table--free {
+  border-style: dashed;
+  border-color: var(--color-border-dashed);
+}
+
+.floor-plan__table--occupied {
+  border-style: solid;
+  border-color: var(--color-border);
+}
+
+.floor-plan__table-badge {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  padding: 2px 8px;
+  line-height: 1;
+}
+
+.floor-plan__table--free .floor-plan__table-badge {
+  border: 1px solid var(--color-border-dashed);
+  color: var(--color-text-secondary);
+  background: var(--color-bg);
+}
+
+.floor-plan__table--occupied .floor-plan__table-badge {
+  background: var(--color-text);
+  color: var(--color-bg);
+}
+
+.floor-plan__table-number {
+  font-size: 2rem;
+  font-weight: 900;
+  line-height: 1;
+  color: var(--color-text);
+}
+
+.floor-plan__table-guests {
+  display: flex;
+  gap: 4px;
+  margin-top: 2px;
+}
+
+.floor-plan__guest-dot {
+  width: 8px;
+  height: 8px;
+  background: var(--color-text);
+}
+
+.floor-plan__table-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin-top: 6px;
+}
+
+.floor-plan__table-available {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  letter-spacing: 0.05em;
+}
+
+.floor-plan__table-name {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--color-text);
+  line-height: 1.2;
+}
+
+.floor-plan__table-since {
+  font-size: 0.62rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  line-height: 1.2;
+}
+
+.floor-plan__table--round .floor-plan__table-guests {
+  margin-top: 0;
+}
+
+.floor-plan__table--round .floor-plan__table-meta {
+  margin-top: 2px;
+}
+
+.floor-plan__table--round .floor-plan__table-number {
+  font-size: 1.6rem;
+}

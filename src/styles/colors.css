@@ -1,4 +1,5 @@
-:root {
+:root,
+[data-theme="light"] {
   --color-bg-page: #ffffff;
   --color-bg-surface: #ffffff;
   --color-bg-surface-subtle: #f2f2f2;
@@ -9,4 +10,17 @@
   --color-text-subtle: #c6c6c6;
   --color-border-default: #d9d9d9;
   --color-border-strong: #111111;
+}
+
+[data-theme="dark"] {
+  --color-bg-page: #16171d;
+  --color-bg-surface: #1e1f28;
+  --color-bg-surface-subtle: #2a2b36;
+  --color-bg-auth: #000000;
+  --color-text-primary: #f3f4f6;
+  --color-text-secondary: #9ca3af;
+  --color-text-muted: #6b7280;
+  --color-text-subtle: #4b5563;
+  --color-border-default: #374151;
+  --color-border-strong: #6b7280;
 }

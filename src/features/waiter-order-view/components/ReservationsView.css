@@ -1,0 +1,79 @@
+.reservations-view {
+  padding: 24px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.reservations-view__title {
+  margin: 0 0 20px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--color-text-secondary);
+}
+
+.reservations-view__list {
+  display: flex;
+  flex-direction: column;
+}
+
+.reservations-view__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.reservations-view__item-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.reservations-view__item-time {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--color-text);
+  font-variant-numeric: tabular-nums;
+  min-width: 48px;
+}
+
+.reservations-view__item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.reservations-view__item-name {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--color-text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.reservations-view__item-meta {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.reservations-view__item-table {
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: var(--color-text);
+  padding: 4px 12px;
+  border: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+
+.reservations-view__empty {
+  color: var(--color-text-secondary);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-align: center;
+  padding: 40px 0;
+}
