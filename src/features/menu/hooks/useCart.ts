@@ -15,13 +15,23 @@ function storageKey(restaurantId: string): string {
   return `tablemate.cart.${restaurantId}.v1`
 }
 
+function isValidCartItem(v: unknown): v is CartItem {
+  return (
+    typeof v === "object" &&
+    v !== null &&
+    "item" in v &&
+    typeof (v as CartItem).item?.public_id === "string" &&
+    typeof (v as CartItem).quantity === "number"
+  )
+}
+
 function loadFromStorage(restaurantId: string): State {
   try {
     const raw = localStorage.getItem(storageKey(restaurantId))
     if (!raw) return { items: [] }
-    const parsed = JSON.parse(raw)
+    const parsed: unknown = JSON.parse(raw)
     if (!Array.isArray(parsed)) return { items: [] }
-    return { items: parsed }
+    return { items: (parsed as unknown[]).filter(isValidCartItem) }
   } catch {
     return { items: [] }
   }
