@@ -1,3 +1,4 @@
+import { useEffect } from "react"
 import Divider from "@/components/Divider"
 import { AuthHero, GuestAccess, SocialAuthGroup } from "@/features/auth/components"
 import { useGoogleRedirectAuth } from "@/hooks/auth"
@@ -6,6 +7,16 @@ import "./GreetingPage.css"
 
 function GreetingPage() {
   const { googleFeedback, googleFeedbackType, handleGoogleLogin } = useGoogleRedirectAuth()
+
+  useEffect(() => {
+    const root = document.documentElement
+    const prev = root.getAttribute("data-theme")
+    root.setAttribute("data-theme", "light")
+    return () => {
+      if (prev) root.setAttribute("data-theme", prev)
+      else root.removeAttribute("data-theme")
+    }
+  }, [])
 
   return (
     <AuthLayout>
