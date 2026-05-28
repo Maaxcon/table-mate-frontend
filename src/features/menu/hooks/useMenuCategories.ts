@@ -37,17 +37,19 @@ function useMenuCategories(restaurantId: string): UseMenuCategoriesResult {
 
   useEffect(() => {
     if (!restaurantId) return
+    const controller = new AbortController()
     let mounted = true
     dispatch({ type: "LOADING" })
-    fetchCategories(restaurantId)
+    fetchCategories(restaurantId, controller.signal)
       .then((data) => {
         if (mounted) dispatch({ type: "SUCCESS", categories: data.results })
       })
       .catch(() => {
-        if (mounted) dispatch({ type: "ERROR" })
+        if (mounted && !controller.signal.aborted) dispatch({ type: "ERROR" })
       })
     return () => {
       mounted = false
+      controller.abort()
     }
   }, [restaurantId])
 

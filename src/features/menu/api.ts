@@ -36,8 +36,15 @@ async function menuPost<T>(
   return res.json() as Promise<T>
 }
 
-export function fetchCategories(restaurantId: string): Promise<PaginatedResponse<MenuCategory>> {
-  return menuGet("/api/menu/categories/", { restaurant: restaurantId, ordering: "sort_order" })
+export function fetchCategories(
+  restaurantId: string,
+  signal?: AbortSignal,
+): Promise<PaginatedResponse<MenuCategory>> {
+  return menuGet(
+    "/api/menu/categories/",
+    { restaurant: restaurantId, ordering: "sort_order" },
+    signal,
+  )
 }
 
 export type FetchItemsParams = {
