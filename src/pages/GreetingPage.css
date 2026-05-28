@@ -8,13 +8,6 @@
   font-family: var(--font-family-base);
 }
 
-.greeting-page__theme-toggle {
-  position: fixed;
-  top: 16px;
-  right: 16px;
-  z-index: 10;
-}
-
 .greeting-page .social-auth-group__title,
 .greeting-page .guest-access__button,
 .greeting-page .auth-hero__subtitle {
