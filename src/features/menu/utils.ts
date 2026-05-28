@@ -1,3 +1,5 @@
+import type { WorkingHours, WorkingHoursDay } from "./api"
+
 const PRICE_FORMATTER = new Intl.NumberFormat("uk-UA", {
   minimumFractionDigits: 0,
   maximumFractionDigits: 2,
@@ -11,8 +13,6 @@ export function formatAmount(amount: number): string {
 export function formatPrice(price: string): string {
   return formatAmount(parseFloat(price) || 0)
 }
-
-import type { WorkingHours, WorkingHoursDay } from "./api"
 
 const DAY_ORDER = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const
 type DayKey = (typeof DAY_ORDER)[number]
