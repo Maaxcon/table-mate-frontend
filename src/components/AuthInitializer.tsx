@@ -1,4 +1,4 @@
-import { type PropsWithChildren, useEffect, useState } from "react"
+import { type PropsWithChildren, useEffect, useMemo, useState } from "react"
 import { apiFetch } from "@/api/client"
 import { setUser } from "@/store/auth/authSlice"
 import { useAppDispatch } from "@/store/hooks"
@@ -6,9 +6,17 @@ import type { MeResponse } from "@/features/auth/types"
 
 function AuthInitializer({ children }: PropsWithChildren) {
   const dispatch = useAppDispatch()
-  const [ready, setReady] = useState(false)
+  // If an OAuth code/error is present, useGoogleRedirectAuth handles auth —
+  // skip the session-restore check so we don't spam spurious 401s.
+  const isOAuthFlow = useMemo(() => {
+    const params = new URLSearchParams(window.location.search)
+    return params.has("code") || params.has("error")
+  }, [])
+  const [ready, setReady] = useState(isOAuthFlow)
 
   useEffect(() => {
+    if (isOAuthFlow) return
+
     const controller = new AbortController()
 
     apiFetch("/api/auth/me/", { signal: controller.signal })
@@ -34,7 +42,7 @@ function AuthInitializer({ children }: PropsWithChildren) {
       })
 
     return () => controller.abort()
-  }, [dispatch])
+  }, [dispatch, isOAuthFlow])
 
   if (!ready) return null
 
