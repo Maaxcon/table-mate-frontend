@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { getTimeFromDatetime } from "../data/mockData"
 import type { FloorTable, ReservationItem, OverlayDetail } from "../data/mockData"
 import { OrderItemRow } from "./OrderItemRow"
 import "./TableDetailOverlay.css"
@@ -63,7 +64,7 @@ export function TableDetailOverlay({
             {isOccupied && detail
               ? `Current Party: ${detail.guest_name} • ${detail.guest_count} Guests • Duration: ${detail.duration}`
               : nearestReservation
-                ? `Capacity: ${table.capacity} • Next: ${nearestReservation.name} at ${new Date(nearestReservation.start_at).toLocaleTimeString("uk-UA", { hour: "2-digit", minute: "2-digit", hour12: false })}`
+                ? `Capacity: ${table.capacity} • Next: ${nearestReservation.name} at ${getTimeFromDatetime(nearestReservation.start_at)}`
                 : `Capacity: ${table.capacity} • Available`}
           </p>
         </div>
@@ -151,12 +152,7 @@ export function TableDetailOverlay({
                   <div className="overlay__reservation-info">
                     <span className="overlay__reservation-name">{r.name}</span>
                     <span className="overlay__reservation-meta">
-                      {r.guest_count} guests &middot;{" "}
-                      {new Date(r.start_at).toLocaleTimeString("uk-UA", {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                        hour12: false,
-                      })}
+                      {r.guest_count} guests &middot; {getTimeFromDatetime(r.start_at)}
                     </span>
                   </div>
                 </div>
