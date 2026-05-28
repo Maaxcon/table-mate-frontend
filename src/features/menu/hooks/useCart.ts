@@ -11,11 +11,13 @@ type Action =
   | { type: "SET_QTY"; publicId: string; quantity: number }
   | { type: "CLEAR" }
 
-const STORAGE_KEY = "tablemate.cart.v1"
+function storageKey(restaurantId: string): string {
+  return `tablemate.cart.${restaurantId}.v1`
+}
 
-function loadFromStorage(): State {
+function loadFromStorage(restaurantId: string): State {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY)
+    const raw = localStorage.getItem(storageKey(restaurantId))
     if (!raw) return { items: [] }
     const parsed = JSON.parse(raw)
     if (!Array.isArray(parsed)) return { items: [] }
@@ -65,16 +67,16 @@ export type UseCartResult = {
   clear: () => void
 }
 
-function useCart(): UseCartResult {
-  const [state, dispatch] = useReducer(reducer, undefined, loadFromStorage)
+function useCart(restaurantId: string): UseCartResult {
+  const [state, dispatch] = useReducer(reducer, restaurantId, loadFromStorage)
 
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state.items))
+      localStorage.setItem(storageKey(restaurantId), JSON.stringify(state.items))
     } catch {
       // localStorage unavailable (private mode, quota exceeded) — ignore
     }
-  }, [state.items])
+  }, [restaurantId, state.items])
 
   const addItem = useCallback((item: MenuItem) => dispatch({ type: "ADD", item }), [])
   const removeItem = useCallback((publicId: string) => dispatch({ type: "REMOVE", publicId }), [])

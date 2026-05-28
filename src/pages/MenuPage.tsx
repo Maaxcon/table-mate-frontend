@@ -28,7 +28,14 @@ function MenuPage() {
   const user = useAppSelector((s) => s.auth.user)
   const guestToken = useMemo(() => getGuestToken(), [])
 
-  const { items: cartItems, totalCount, totalPrice, addItem, removeItem, setQuantity } = useCart()
+  const {
+    items: cartItems,
+    totalCount,
+    totalPrice,
+    addItem,
+    removeItem,
+    setQuantity,
+  } = useCart(restaurantId ?? "")
 
   const {
     restaurantName,
