@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react"
 import type { FloorTable } from "../data/mockData"
 import { ThemeToggle } from "@/components/ThemeToggle/ThemeToggle"
 import "./TopNav.css"
@@ -17,9 +18,19 @@ function getTimeString(): string {
   return `${h}:${m}`
 }
 
+function useCurrentTime(): string {
+  const [time, setTime] = useState(getTimeString)
+  useEffect(() => {
+    const id = setInterval(() => setTime(getTimeString()), 10_000)
+    return () => clearInterval(id)
+  }, [])
+  return time
+}
+
 export function TopNav({ tables, activeTab, onTabChange }: TopNavProps) {
   const occupiedCount = tables.filter((t) => t.status === "occupied").length
   const freeCount = tables.filter((t) => t.status === "free").length
+  const currentTime = useCurrentTime()
 
   return (
     <nav className="top-nav">
@@ -57,7 +68,7 @@ export function TopNav({ tables, activeTab, onTabChange }: TopNavProps) {
           <span className="top-nav__stat-icon top-nav__stat-icon--outlined" />
           FREE: {freeCount}
         </span>
-        <span className="top-nav__time">{getTimeString()}</span>
+        <span className="top-nav__time">{currentTime}</span>
         <div className="top-nav__avatar" />
         <ThemeToggle />
       </div>
