@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react"
+import { Fragment, type ReactElement, useMemo, useState } from "react"
 import { Link, useParams } from "react-router-dom"
 import { LuShoppingCart } from "react-icons/lu"
 import logo from "@/assets/logo.png"
@@ -50,16 +50,16 @@ function MenuPage() {
     error,
   } = useMenuPage(restaurantId ?? "", guestToken)
 
-  const currencyCode = restaurantSettings?.currency ?? "UAH"
-  const currencySymbol = getCurrencySymbol(currencyCode)
-  const priceBandValue = restaurantSettings?.price_band ?? 2
-  const priceBand = currencySymbol.repeat(Math.max(1, Math.min(4, priceBandValue)))
-  const rating = restaurantSettings?.rating ?? "4.80"
-  const etaMin = restaurantSettings?.eta_min_minutes ?? 20
-  const etaMax = restaurantSettings?.eta_max_minutes ?? 30
+  const currencySymbol = restaurantSettings ? getCurrencySymbol(restaurantSettings.currency) : ""
+  const priceBand = restaurantSettings
+    ? currencySymbol.repeat(Math.max(1, Math.min(4, restaurantSettings.price_band)))
+    : null
+  const rating = restaurantSettings?.rating ?? null
+  const etaMin = restaurantSettings?.eta_min_minutes ?? null
+  const etaMax = restaurantSettings?.eta_max_minutes ?? null
   const openNow = restaurantSettings
     ? isRestaurantOpenNow(restaurantSettings.working_hours, restaurantSettings.timezone)
-    : true
+    : null
   const totalPriceLabel = formatAmount(totalPrice)
 
   if (!restaurantId) {
@@ -115,20 +115,39 @@ function MenuPage() {
         </div>
         <div className="menu-page__hero">
           <p className="menu-page__label">Menu</p>
-          <h1 className="menu-page__title">{restaurantName ?? "TableMate Demo"}</h1>
+          <h1 className="menu-page__title">{restaurantName}</h1>
           <p className="menu-page__hero-description">Fresh dishes, fast ordering, cozy taste.</p>
           <div className="menu-page__hero-meta">
-            <span
-              className={`menu-page__hero-pill${openNow ? " menu-page__hero-pill--open" : " menu-page__hero-pill--closed"}`}
-            >
-              {openNow ? "Open now" : "Closed now"}
-            </span>
-            <span className="menu-page__hero-dot">·</span>
-            <span className="menu-page__hero-pill">{priceBand}</span>
-            <span className="menu-page__hero-dot">·</span>
-            <span className="menu-page__hero-pill">{Number(rating).toFixed(1)} ★</span>
-            <span className="menu-page__hero-dot">·</span>
-            <span className="menu-page__hero-pill">{`${etaMin}-${etaMax} min`}</span>
+            {[
+              openNow !== null ? (
+                <span
+                  key="open"
+                  className={`menu-page__hero-pill${openNow ? " menu-page__hero-pill--open" : " menu-page__hero-pill--closed"}`}
+                >
+                  {openNow ? "Open now" : "Closed now"}
+                </span>
+              ) : null,
+              priceBand !== null ? (
+                <span key="price-band" className="menu-page__hero-pill">
+                  {priceBand}
+                </span>
+              ) : null,
+              rating !== null ? (
+                <span key="rating" className="menu-page__hero-pill">
+                  {Number(rating).toFixed(1)} ★
+                </span>
+              ) : null,
+              etaMin !== null && etaMax !== null ? (
+                <span key="eta" className="menu-page__hero-pill">{`${etaMin}-${etaMax} min`}</span>
+              ) : null,
+            ]
+              .filter((pill): pill is ReactElement => pill !== null)
+              .map((pill, i) => (
+                <Fragment key={pill.key}>
+                  {i > 0 && <span className="menu-page__hero-dot">·</span>}
+                  {pill}
+                </Fragment>
+              ))}
           </div>
         </div>
       </header>
