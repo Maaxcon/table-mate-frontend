@@ -1,5 +1,4 @@
 import Divider from "@/components/Divider"
-import { ThemeToggle } from "@/components/ThemeToggle/ThemeToggle"
 import { AuthHero, GuestAccess, SocialAuthGroup } from "@/features/auth/components"
 import { useGoogleRedirectAuth } from "@/hooks/auth"
 import AuthLayout from "@/layouts/AuthLayout"
@@ -10,7 +9,6 @@ function GreetingPage() {
 
   return (
     <AuthLayout>
-      <ThemeToggle className="greeting-page__theme-toggle" />
       <section className="greeting-page">
         <AuthHero />
         <SocialAuthGroup

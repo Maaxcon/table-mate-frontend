@@ -1,4 +1,4 @@
-import { BrowserRouter, Route, Routes } from "react-router-dom"
+import { BrowserRouter, Outlet, Route, Routes } from "react-router-dom"
 import { ENV_NOT_CONFIGURED_VALUE, env } from "@/config/env"
 import { GoogleOAuthProvider } from "@react-oauth/google"
 import AuthInitializer from "@/components/AuthInitializer"
@@ -13,16 +13,24 @@ import StaffContextRoute from "@/routes/StaffContextRoute"
 
 const clientId = env.googleClientId !== ENV_NOT_CONFIGURED_VALUE ? env.googleClientId : ""
 
+function ThemedLayout() {
+  return (
+    <ThemeProvider>
+      <Outlet />
+    </ThemeProvider>
+  )
+}
+
 function App() {
   return (
     <GoogleOAuthProvider clientId={clientId}>
       <AuthInitializer>
         <BrowserRouter>
-          <ThemeProvider>
-            <Routes>
-              <Route element={<PublicRoute />}>
-                <Route path="/" element={<GreetingPage />} />
-              </Route>
+          <Routes>
+            <Route element={<PublicRoute />}>
+              <Route path="/" element={<GreetingPage />} />
+            </Route>
+            <Route element={<ThemedLayout />}>
               <Route path="/waiter-order" element={<WaiterOrderPage />} />
               <Route element={<StaffContextRoute />}>
                 <Route path="/select-restaurant" element={<SelectRestaurantPlaceholderPage />} />
@@ -30,8 +38,8 @@ function App() {
               <Route element={<ProtectedRoute />}>
                 <Route path="/home" element={<HomePlaceholderPage />} />
               </Route>
-            </Routes>
-          </ThemeProvider>
+            </Route>
+          </Routes>
         </BrowserRouter>
       </AuthInitializer>
     </GoogleOAuthProvider>
