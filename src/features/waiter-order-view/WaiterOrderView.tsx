@@ -2,7 +2,6 @@ import { useState } from "react"
 import { TopNav } from "./components/TopNav"
 import { FloorPlan } from "./components/FloorPlan"
 import { ReservationSidebar } from "./components/ReservationSidebar"
-import { ReservationsView } from "./components/ReservationsView"
 import { TableDetailOverlay } from "./components/TableDetailOverlay"
 import { FLOOR_TABLES, RESERVATIONS, OVERLAY_DETAILS, type FloorTable } from "./data/mockData"
 import "@/assets/colors.css"
@@ -25,7 +24,6 @@ export function WaiterOrderView() {
   }
 
   const showFloorPlan = activeTab === "FLOOR PLAN"
-  const showReservations = activeTab === "RESERVATIONS"
 
   return (
     <div className="waiter-view">
@@ -33,15 +31,13 @@ export function WaiterOrderView() {
 
       <div className="waiter-view__layout">
         <div className="waiter-view__main">
-          {showFloorPlan && (
+          {showFloorPlan ? (
             <FloorPlan
               tables={FLOOR_TABLES}
               selectedId={selectedTableId}
               onSelect={handleTableSelect}
             />
-          )}
-          {showReservations && <ReservationsView reservations={RESERVATIONS} />}
-          {!showFloorPlan && !showReservations && (
+          ) : (
             <div className="waiter-view__placeholder">
               <p>{activeTab} view — not yet implemented</p>
             </div>

@@ -2,7 +2,7 @@ import type { FloorTable } from "../data/mockData"
 import { ThemeToggle } from "@/components/ThemeToggle/ThemeToggle"
 import "./TopNav.css"
 
-const TABS = ["FLOOR PLAN", "RESERVATIONS", "WAITLIST", "ANALYTICS"]
+const TABS = ["FLOOR PLAN", "WAITLIST", "ANALYTICS"]
 
 interface TopNavProps {
   tables: FloorTable[]

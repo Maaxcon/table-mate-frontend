@@ -21,6 +21,12 @@ export function TableDetailOverlay({
     isOccupied ? "order" : "reservations",
   )
   const guestSlots = detail ? [...new Set(detail.items.map((i) => i.guest_slot))].sort() : []
+  const nearestReservation =
+    tableReservations.length > 0
+      ? tableReservations.sort(
+          (a, b) => new Date(a.start_at).getTime() - new Date(b.start_at).getTime(),
+        )[0]
+      : null
 
   return (
     <>
@@ -56,11 +62,9 @@ export function TableDetailOverlay({
           <p className="overlay__subtitle">
             {isOccupied && detail
               ? `Current Party: ${detail.guest_name} • ${detail.guest_count} Guests • Duration: ${detail.duration}`
-              : `Capacity: ${table.capacity} • ${
-                  table.reservation_name
-                    ? `Reserved by ${table.reservation_name} at ${table.arriving}`
-                    : "Available"
-                }`}
+              : nearestReservation
+                ? `Capacity: ${table.capacity} • Next: ${nearestReservation.name} at ${new Date(nearestReservation.start_at).toLocaleTimeString("uk-UA", { hour: "2-digit", minute: "2-digit", hour12: false })}`
+                : `Capacity: ${table.capacity} • Available`}
           </p>
         </div>
 

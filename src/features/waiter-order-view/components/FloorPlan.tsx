@@ -15,7 +15,6 @@ export function FloorPlan({ tables, selectedId, onSelect }: FloorPlanProps) {
         {tables.map((table) => {
           const isOccupied = table.status === "occupied"
           const isFree = table.status === "free"
-          const hasReservation = Boolean(table.reservation_name)
 
           return (
             <button
@@ -35,11 +34,7 @@ export function FloorPlan({ tables, selectedId, onSelect }: FloorPlanProps) {
               }}
               onClick={() => onSelect(table)}
             >
-              <span className="floor-plan__table-badge">
-                {isOccupied && "OCCUPIED"}
-                {hasReservation && !isOccupied && "RESERVED"}
-                {isFree && !hasReservation && "FREE"}
-              </span>
+              <span className="floor-plan__table-badge">{isOccupied ? "OCCUPIED" : "FREE"}</span>
 
               <span className="floor-plan__table-number">{table.table_number}</span>
 
@@ -52,23 +47,13 @@ export function FloorPlan({ tables, selectedId, onSelect }: FloorPlanProps) {
               )}
 
               <div className="floor-plan__table-meta">
-                {isFree && !hasReservation && (
-                  <span className="floor-plan__table-available">AVAILABLE</span>
-                )}
+                {isFree && <span className="floor-plan__table-available">AVAILABLE</span>}
                 {isOccupied && (
                   <>
                     <span className="floor-plan__table-name">
                       {table.guest_name} &bull; {table.guest_count}P
                     </span>
                     <span className="floor-plan__table-since">SINCE {table.since}</span>
-                  </>
-                )}
-                {hasReservation && !isOccupied && (
-                  <>
-                    <span className="floor-plan__table-name">
-                      {table.reservation_name} &bull; {table.party_size}P
-                    </span>
-                    <span className="floor-plan__table-since">ARRIVING {table.arriving}</span>
                   </>
                 )}
               </div>

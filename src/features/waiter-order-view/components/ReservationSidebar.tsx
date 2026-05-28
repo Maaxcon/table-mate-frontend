@@ -7,6 +7,10 @@ interface ReservationSidebarProps {
 }
 
 export function ReservationSidebar({ reservations }: ReservationSidebarProps) {
+  const sorted = [...reservations].sort(
+    (a, b) => new Date(a.start_at).getTime() - new Date(b.start_at).getTime(),
+  )
+
   return (
     <aside className="reservation-sidebar">
       <div className="reservation-sidebar__header">
@@ -49,7 +53,7 @@ export function ReservationSidebar({ reservations }: ReservationSidebarProps) {
       </div>
 
       <div className="reservation-sidebar__list">
-        {reservations.map((r, i) => (
+        {sorted.map((r, i) => (
           <div
             key={r.public_id}
             className={`reservation-sidebar__item ${i < reservations.length - 1 ? "reservation-sidebar__item--bordered" : ""}`}

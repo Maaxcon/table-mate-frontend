@@ -98,9 +98,6 @@ export const FLOOR_TABLES: FloorTable[] = [
     position_x: 60,
     position_y: 260,
     active: true,
-    reservation_name: "Sofia Rossi",
-    party_size: 3,
-    arriving: "21:15",
   },
   {
     public_id: "t4",
@@ -111,9 +108,6 @@ export const FLOOR_TABLES: FloorTable[] = [
     position_x: 280,
     position_y: 260,
     active: true,
-    reservation_name: "Smith",
-    party_size: 2,
-    arriving: "20:15",
   },
   {
     public_id: "t5",
@@ -147,9 +141,6 @@ export const FLOOR_TABLES: FloorTable[] = [
     position_x: 500,
     position_y: 80,
     active: true,
-    reservation_name: "Watson",
-    party_size: 2,
-    arriving: "20:30",
   },
   {
     public_id: "t8",
@@ -170,9 +161,6 @@ export const FLOOR_TABLES: FloorTable[] = [
     position_x: 500,
     position_y: 420,
     active: true,
-    reservation_name: "Garcia",
-    party_size: 5,
-    arriving: "21:00",
   },
 ]
 
