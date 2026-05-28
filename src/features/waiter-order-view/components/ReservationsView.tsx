@@ -1,3 +1,4 @@
+import { getTimeFromDatetime } from "../data/mockData"
 import type { ReservationItem } from "../data/mockData"
 import "./ReservationsView.css"
 
@@ -14,11 +15,7 @@ export function ReservationsView({ reservations }: ReservationsViewProps) {
           <div key={r.public_id} className="reservations-view__item">
             <div className="reservations-view__item-left">
               <span className="reservations-view__item-time">
-                {new Date(r.start_at).toLocaleTimeString("uk-UA", {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                  hour12: false,
-                })}
+                {getTimeFromDatetime(r.start_at)}
               </span>
               <div className="reservations-view__item-info">
                 <span className="reservations-view__item-name">{r.name}</span>
