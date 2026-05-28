@@ -236,12 +236,3 @@
   font-weight: 600;
   color: var(--color-text-secondary);
 }
-
-.overlay__reservation-vip {
-  font-size: 0.6rem;
-  font-weight: 800;
-  letter-spacing: 0.1em;
-  padding: 2px 6px;
-  background: var(--color-text);
-  color: var(--color-bg);
-}

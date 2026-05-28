@@ -11,10 +11,7 @@ export function ReservationsView({ reservations }: ReservationsViewProps) {
       <h2 className="reservations-view__title">ALL RESERVATIONS</h2>
       <div className="reservations-view__list">
         {reservations.map((r) => (
-          <div
-            key={r.public_id}
-            className={`reservations-view__item ${r.vip ? "reservations-view__item--vip" : ""}`}
-          >
+          <div key={r.public_id} className="reservations-view__item">
             <div className="reservations-view__item-left">
               <span className="reservations-view__item-time">
                 {new Date(r.start_at).toLocaleTimeString("uk-UA", {
@@ -24,10 +21,7 @@ export function ReservationsView({ reservations }: ReservationsViewProps) {
                 })}
               </span>
               <div className="reservations-view__item-info">
-                <span className="reservations-view__item-name">
-                  {r.name}
-                  {r.vip && <span className="reservations-view__vip-badge">VIP</span>}
-                </span>
+                <span className="reservations-view__item-name">{r.name}</span>
                 <span className="reservations-view__item-meta">
                   {r.guest_count} guests &middot; {r.notes ?? "No notes"}
                 </span>

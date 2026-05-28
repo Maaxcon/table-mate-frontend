@@ -64,9 +64,7 @@ export function ReservationSidebar({ reservations }: ReservationSidebarProps) {
               </span>
               <div className="reservation-sidebar__item-info">
                 <span className="reservation-sidebar__item-name">{r.name}</span>
-                <span className="reservation-sidebar__item-meta">
-                  {r.guest_count} GUESTS{r.vip ? " \u2022 VIP ACCESS" : ""}
-                </span>
+                <span className="reservation-sidebar__item-meta">{r.guest_count} GUESTS</span>
               </div>
             </div>
             <span className="reservation-sidebar__item-table">

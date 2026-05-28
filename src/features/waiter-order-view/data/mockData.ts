@@ -33,7 +33,6 @@ export interface ReservationItem {
   notes?: string | null
 
   name: string
-  vip: boolean
 }
 
 export interface OverlayOrderItem {
@@ -172,7 +171,6 @@ export const RESERVATIONS: ReservationItem[] = [
     guest_count: 2,
     status: "confirmed",
     name: "Olena Kovalenko",
-    vip: false,
     notes: "Anniversary dinner",
   },
   {
@@ -182,7 +180,6 @@ export const RESERVATIONS: ReservationItem[] = [
     guest_count: 2,
     status: "confirmed",
     name: "Maksym Bondar",
-    vip: true,
     notes: "Birthday celebration",
   },
   {
@@ -192,7 +189,6 @@ export const RESERVATIONS: ReservationItem[] = [
     guest_count: 4,
     status: "confirmed",
     name: "David Kim",
-    vip: false,
     notes: null,
   },
   {
@@ -202,7 +198,6 @@ export const RESERVATIONS: ReservationItem[] = [
     guest_count: 2,
     status: "confirmed",
     name: "Anna Shevchenko",
-    vip: true,
     notes: "Window table requested",
   },
   {
@@ -212,7 +207,6 @@ export const RESERVATIONS: ReservationItem[] = [
     guest_count: 3,
     status: "confirmed",
     name: "Sofia Rossi",
-    vip: false,
     notes: null,
   },
   {
@@ -222,7 +216,6 @@ export const RESERVATIONS: ReservationItem[] = [
     guest_count: 4,
     status: "confirmed",
     name: "Ivan Petrov",
-    vip: false,
     notes: "Allergies: nuts",
   },
   {
@@ -232,7 +225,6 @@ export const RESERVATIONS: ReservationItem[] = [
     guest_count: 2,
     status: "confirmed",
     name: "Smith",
-    vip: false,
     notes: null,
   },
   {
@@ -242,7 +234,6 @@ export const RESERVATIONS: ReservationItem[] = [
     guest_count: 6,
     status: "confirmed",
     name: "Tetiana Melnyk",
-    vip: true,
     notes: "Business dinner",
   },
   {
@@ -252,7 +243,6 @@ export const RESERVATIONS: ReservationItem[] = [
     guest_count: 2,
     status: "confirmed",
     name: "John Doe",
-    vip: false,
     notes: null,
   },
   {
@@ -262,7 +252,6 @@ export const RESERVATIONS: ReservationItem[] = [
     guest_count: 4,
     status: "confirmed",
     name: "Maria Gonzalez",
-    vip: true,
     notes: "Dietary restrictions: vegetarian",
   },
   {
@@ -272,7 +261,6 @@ export const RESERVATIONS: ReservationItem[] = [
     guest_count: 2,
     status: "confirmed",
     name: "Emma Watson",
-    vip: false,
     notes: null,
   },
   {
@@ -282,7 +270,6 @@ export const RESERVATIONS: ReservationItem[] = [
     guest_count: 5,
     status: "confirmed",
     name: "Carlos Garcia",
-    vip: true,
     notes: "Gluten-free options needed",
   },
 ]

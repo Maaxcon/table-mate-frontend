@@ -159,7 +159,6 @@ export function TableDetailOverlay({
                       })}
                     </span>
                   </div>
-                  {r.vip && <span className="overlay__reservation-vip">VIP</span>}
                 </div>
               ))
             )}
