@@ -1,5 +1,5 @@
 import { ENV_NOT_CONFIGURED_VALUE, env } from "@/config/env"
-import type { MenuCategory, MenuItem, PaginatedResponse } from "@/types/menu"
+import type { MenuCategory, MenuItem, PaginatedResponse } from "../types"
 
 function buildUrl(path: string, params: Record<string, string | undefined>): string {
   if (env.apiBaseUrl === ENV_NOT_CONFIGURED_VALUE) {

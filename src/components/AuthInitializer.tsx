@@ -2,7 +2,7 @@ import { type PropsWithChildren, useEffect, useState } from "react"
 import { apiFetch } from "@/api/client"
 import { setUser } from "@/store/auth/authSlice"
 import { useAppDispatch } from "@/store/hooks"
-import type { MeResponse } from "@/types/auth"
+import type { MeResponse } from "@/features/auth/types"
 
 function AuthInitializer({ children }: PropsWithChildren) {
   const dispatch = useAppDispatch()

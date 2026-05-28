@@ -19,7 +19,7 @@ import {
   LuWheat,
   LuWine,
 } from "react-icons/lu"
-import type { MenuCategory } from "@/types/menu"
+import type { MenuCategory } from "@/features/menu/types"
 import "./CategoryRail.css"
 
 function getCategoryIcon(name: string): ReactElement {

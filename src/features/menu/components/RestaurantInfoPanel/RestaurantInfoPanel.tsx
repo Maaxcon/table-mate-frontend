@@ -1,4 +1,4 @@
-import type { PublicRestaurantSettings, WorkingHours } from "../api"
+import type { PublicRestaurantSettings, WorkingHours } from "../../api"
 import "./RestaurantInfoPanel.css"
 
 const DAY_LABELS: Record<keyof WorkingHours, string> = {

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react"
 import { LuCheck, LuHeart, LuShoppingCart, LuTriangle } from "react-icons/lu"
-import type { MenuItem } from "@/types/menu"
-import { formatPrice } from "../utils"
+import type { MenuItem } from "@/features/menu/types"
+import { formatPrice } from "../../utils"
 import "./MenuItemModal.css"
 
 type MenuItemModalProps = {

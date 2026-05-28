@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useReducer, useRef } from "react"
 import { fetchItems, searchItems } from "../api"
-import type { MenuItem } from "@/types/menu"
+import type { MenuItem } from "../types"
 
 type State = {
   items: MenuItem[]

@@ -1,0 +1,1 @@
+export { RestaurantInfoPanel } from "./RestaurantInfoPanel"

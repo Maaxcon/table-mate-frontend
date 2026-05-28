@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useReducer } from "react"
-import type { MenuItem } from "@/types/menu"
+import type { MenuItem } from "../types"
 
 export type CartItem = { item: MenuItem; quantity: number }
 

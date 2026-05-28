@@ -1,6 +1,6 @@
 import { useEffect } from "react"
-import type { CartItem } from "../hooks/useCart"
-import { formatAmount } from "../utils"
+import type { CartItem } from "../../hooks/useCart"
+import { formatAmount } from "../../utils"
 import "./CartDrawer.css"
 
 type Props = {

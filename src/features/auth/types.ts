@@ -1,4 +1,11 @@
-export type { GoogleFeedbackType, InitialGoogleFeedback } from "./googleAuth"
+export type GoogleFeedbackType = "success" | "error"
+
+export type InitialGoogleFeedback = {
+  code: string | null
+  message: string
+  type: GoogleFeedbackType
+  cleanUrl: string | null
+}
 
 export type UserRole = "admin" | "waiter" | "cook" | "customer"
 
