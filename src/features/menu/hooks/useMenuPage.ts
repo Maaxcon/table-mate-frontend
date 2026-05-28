@@ -32,7 +32,7 @@ function useMenuPage(restaurantId: string, guestToken: string): UseMenuPageResul
   const [searchQuery, setSearchQueryState] = useState("")
 
   const { name, address, phone, settings, notFound, fetchError } = useRestaurantInfo(restaurantId)
-  const { categories, categoriesLoading } = useMenuCategories(restaurantId)
+  const { categories, categoriesLoading, categoriesError } = useMenuCategories(restaurantId)
   const { items, itemsLoading, loadingMore, hasMore, loadMore, itemsError, setItemLikeState } =
     useMenuItems(restaurantId, activeCategory, searchQuery, guestToken)
 
@@ -65,7 +65,7 @@ function useMenuPage(restaurantId: string, guestToken: string): UseMenuPageResul
     searchQuery,
     setSearchQuery,
     setItemLikeState,
-    error: itemsError,
+    error: itemsError ?? categoriesError,
   }
 }
 
