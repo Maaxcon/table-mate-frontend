@@ -2,6 +2,7 @@ import { BrowserRouter, Route, Routes } from "react-router-dom"
 import { ENV_NOT_CONFIGURED_VALUE, env } from "@/config/env"
 import { GoogleOAuthProvider } from "@react-oauth/google"
 import AuthInitializer from "@/components/AuthInitializer"
+import { ThemeProvider } from "@/context/ThemeContext"
 import GreetingPage from "@/pages/GreetingPage"
 import HomePlaceholderPage from "@/pages/HomePlaceholderPage"
 import SelectRestaurantPlaceholderPage from "@/pages/SelectRestaurantPlaceholderPage"
@@ -17,18 +18,20 @@ function App() {
     <GoogleOAuthProvider clientId={clientId}>
       <AuthInitializer>
         <BrowserRouter>
-          <Routes>
-            <Route element={<PublicRoute />}>
-              <Route path="/" element={<GreetingPage />} />
-            </Route>
-            <Route path="/waiter-order" element={<WaiterOrderPage />} />
-            <Route element={<StaffContextRoute />}>
-              <Route path="/select-restaurant" element={<SelectRestaurantPlaceholderPage />} />
-            </Route>
-            <Route element={<ProtectedRoute />}>
-              <Route path="/home" element={<HomePlaceholderPage />} />
-            </Route>
-          </Routes>
+          <ThemeProvider>
+            <Routes>
+              <Route element={<PublicRoute />}>
+                <Route path="/" element={<GreetingPage />} />
+              </Route>
+              <Route path="/waiter-order" element={<WaiterOrderPage />} />
+              <Route element={<StaffContextRoute />}>
+                <Route path="/select-restaurant" element={<SelectRestaurantPlaceholderPage />} />
+              </Route>
+              <Route element={<ProtectedRoute />}>
+                <Route path="/home" element={<HomePlaceholderPage />} />
+              </Route>
+            </Routes>
+          </ThemeProvider>
         </BrowserRouter>
       </AuthInitializer>
     </GoogleOAuthProvider>
