@@ -36,6 +36,7 @@ function MenuPage() {
     restaurantPhone,
     restaurantSettings,
     restaurantNotFound,
+    restaurantFetchError,
     categories,
     categoriesLoading,
     activeCategory,
@@ -67,6 +68,14 @@ function MenuPage() {
     return (
       <main className="menu-page">
         <p className="menu-page__error">Restaurant not found.</p>
+      </main>
+    )
+  }
+
+  if (restaurantFetchError) {
+    return (
+      <main className="menu-page">
+        <p className="menu-page__error">{restaurantFetchError}</p>
       </main>
     )
   }

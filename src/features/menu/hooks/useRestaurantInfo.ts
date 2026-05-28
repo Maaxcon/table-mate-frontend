@@ -9,7 +9,7 @@ export type RestaurantInfo = {
   settings: PublicRestaurantSettings | null
 }
 
-type UseRestaurantInfoResult = RestaurantInfo & { notFound: boolean }
+type UseRestaurantInfoResult = RestaurantInfo & { notFound: boolean; fetchError: string | null }
 
 function useRestaurantInfo(restaurantId: string): UseRestaurantInfoResult {
   const [info, setInfo] = useState<RestaurantInfo>({
@@ -19,29 +19,36 @@ function useRestaurantInfo(restaurantId: string): UseRestaurantInfoResult {
     settings: null,
   })
   const [notFound, setNotFound] = useState(false)
+  const [fetchError, setFetchError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!restaurantId) return
     let mounted = true
     fetchRestaurant(restaurantId)
       .then((data) => {
-        if (mounted)
-          setInfo({
-            name: data.name,
-            address: data.address,
-            phone: data.phone,
-            settings: data.settings,
-          })
+        if (!mounted) return
+        setInfo({
+          name: data.name,
+          address: data.address,
+          phone: data.phone,
+          settings: data.settings,
+        })
       })
-      .catch(() => {
-        if (mounted) setNotFound(true)
+      .catch((err: unknown) => {
+        if (!mounted) return
+        const is404 = err instanceof Error && err.message.startsWith("404")
+        if (is404) {
+          setNotFound(true)
+        } else {
+          setFetchError("Unable to load restaurant info. Please try again.")
+        }
       })
     return () => {
       mounted = false
     }
   }, [restaurantId])
 
-  return { ...info, notFound }
+  return { ...info, notFound, fetchError }
 }
 
 export { useRestaurantInfo }
