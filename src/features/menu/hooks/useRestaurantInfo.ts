@@ -9,13 +9,16 @@ export type RestaurantInfo = {
   settings: PublicRestaurantSettings | null
 }
 
-function useRestaurantInfo(restaurantId: string): RestaurantInfo {
+type UseRestaurantInfoResult = RestaurantInfo & { notFound: boolean }
+
+function useRestaurantInfo(restaurantId: string): UseRestaurantInfoResult {
   const [info, setInfo] = useState<RestaurantInfo>({
     name: null,
     address: null,
     phone: null,
     settings: null,
   })
+  const [notFound, setNotFound] = useState(false)
 
   useEffect(() => {
     if (!restaurantId) return
@@ -31,14 +34,14 @@ function useRestaurantInfo(restaurantId: string): RestaurantInfo {
           })
       })
       .catch(() => {
-        /* non-critical */
+        if (mounted) setNotFound(true)
       })
     return () => {
       mounted = false
     }
   }, [restaurantId])
 
-  return info
+  return { ...info, notFound }
 }
 
 export { useRestaurantInfo }

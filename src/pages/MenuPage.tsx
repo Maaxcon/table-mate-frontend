@@ -35,6 +35,7 @@ function MenuPage() {
     restaurantAddress,
     restaurantPhone,
     restaurantSettings,
+    restaurantNotFound,
     categories,
     categoriesLoading,
     activeCategory,
@@ -62,7 +63,7 @@ function MenuPage() {
     : null
   const totalPriceLabel = formatAmount(totalPrice)
 
-  if (!restaurantId) {
+  if (!restaurantId || restaurantNotFound) {
     return (
       <main className="menu-page">
         <p className="menu-page__error">Restaurant not found.</p>
