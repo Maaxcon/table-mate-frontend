@@ -73,10 +73,16 @@ export function searchItems(
   query: string,
   guestToken?: string,
   signal?: AbortSignal,
+  page?: number,
 ): Promise<PaginatedResponse<MenuItem>> {
   return menuGet(
     "/api/menu/items/search/",
-    { restaurant: restaurantId, q: query, guest_token: guestToken },
+    {
+      restaurant: restaurantId,
+      q: query,
+      guest_token: guestToken,
+      ...(page && page > 1 ? { page: String(page) } : {}),
+    },
     signal,
   )
 }

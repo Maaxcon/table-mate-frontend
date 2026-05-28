@@ -122,15 +122,20 @@ function useMenuItems(
   }, [restaurantId, activeCategory, searchQuery, guestToken])
 
   const loadMore = useCallback(() => {
-    if (loading || loadingMoreRef.current || !hasMore || searchQuery) return
+    if (loading || loadingMoreRef.current || !hasMore) return
     loadingMoreRef.current = true
     dispatch({ type: "LOADING_MORE" })
-    fetchItems({
-      restaurantId,
-      categoryId: activeCategory ?? undefined,
-      page: page + 1,
-      guestToken,
-    })
+    const nextPage = page + 1
+    const isSearching = searchQuery.trim().length > 0
+    const promise = isSearching
+      ? searchItems(restaurantId, searchQuery.trim(), guestToken, undefined, nextPage)
+      : fetchItems({
+          restaurantId,
+          categoryId: activeCategory ?? undefined,
+          page: nextPage,
+          guestToken,
+        })
+    promise
       .then((data) => {
         loadingMoreRef.current = false
         dispatch({ type: "APPEND", results: data.results, next: data.next })
