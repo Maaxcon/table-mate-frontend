@@ -12,10 +12,7 @@ export function formatPrice(price: string): string {
   return formatAmount(parseFloat(price) || 0)
 }
 
-type WorkingHoursDay = { open: string; close: string }
-type WorkingHours = Partial<
-  Record<"mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun", WorkingHoursDay>
->
+import type { WorkingHours, WorkingHoursDay } from "./api"
 
 const DAY_ORDER = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const
 type DayKey = (typeof DAY_ORDER)[number]
