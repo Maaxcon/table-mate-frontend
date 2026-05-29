@@ -12,9 +12,10 @@
     "format:check": "prettier --check .",
     "preview": "vite preview",
     "prepare": "husky",
-    "generate:api": "openapi-typescript ../table-mate-backend/schema.yaml --output ./src/types/api.ts"
+    "generate:api": "openapi-ts"
   },
   "dependencies": {
+    "@hey-api/client-fetch": "^0.13.1",
     "@react-oauth/google": "^0.13.5",
     "@reduxjs/toolkit": "^2.12.0",
     "react": "^19.2.5",
@@ -32,6 +33,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.0",
+    "@hey-api/openapi-ts": "^0.97.3",
     "@types/node": "^24.12.2",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
@@ -43,7 +45,6 @@
     "globals": "^17.5.0",
     "husky": "^9.1.7",
     "lint-staged": "^17.0.4",
-    "openapi-typescript": "^7.13.0",
     "playwright": "^1.60.0",
     "prettier": "^3.8.3",
     "typescript": "~5.9.3",

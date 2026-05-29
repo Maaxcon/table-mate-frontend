@@ -237,6 +237,8 @@ export type {
   SessionWritable,
   SourceEnum,
   Table,
+  TableInfo,
+  TableInfoWritable,
   TableShape,
   TableStatus,
   TableWritable,

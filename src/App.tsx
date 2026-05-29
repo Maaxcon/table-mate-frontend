@@ -5,6 +5,7 @@ import AuthInitializer from "@/components/AuthInitializer"
 import { ThemeProvider } from "@/context/ThemeContext"
 import GreetingPage from "@/pages/GreetingPage"
 import HomePlaceholderPage from "@/pages/HomePlaceholderPage"
+import { ReservationPage } from "@/features/reservation/ReservationPage"
 import SelectRestaurantPlaceholderPage from "@/pages/SelectRestaurantPlaceholderPage"
 import { WaiterOrderPage } from "@/pages/WaiterOrderPage"
 import ProtectedRoute from "@/routes/ProtectedRoute"
@@ -37,6 +38,7 @@ function App() {
               </Route>
               <Route element={<ProtectedRoute />}>
                 <Route path="/home" element={<HomePlaceholderPage />} />
+                <Route path="/reservations" element={<ReservationPage />} />
               </Route>
             </Route>
           </Routes>
