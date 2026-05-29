@@ -211,7 +211,9 @@ function MenuPage() {
       <div className="menu-page__body">
         <div className="menu-page__content">
           {itemsLoading && items.length === 0 ? (
-            <MenuSkeleton count={6} />
+            <div className="menu-page__grid">
+              <MenuSkeleton count={6} />
+            </div>
           ) : items.length === 0 ? (
             <MenuEmptyState
               message={
