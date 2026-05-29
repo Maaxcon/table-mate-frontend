@@ -1,4 +1,4 @@
-import { Fragment, type ReactElement, useMemo, useState } from "react"
+import { Fragment, type ReactElement, useEffect, useMemo, useRef, useState } from "react"
 import { Link, useParams } from "react-router-dom"
 import { LuShoppingCart } from "react-icons/lu"
 import { FaTelegram, FaFacebook } from "react-icons/fa"
@@ -26,6 +26,8 @@ function MenuPage() {
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null)
   const [cartOpen, setCartOpen] = useState(false)
   const [likePendingMap, setLikePendingMap] = useState<Record<string, boolean>>({})
+  const [scrollActiveCategory, setScrollActiveCategory] = useState<string | null>(null)
+  const sectionRefs = useRef<Map<string, HTMLElement>>(new Map())
   const user = useAppSelector((s) => s.auth.user)
   const guestToken = useMemo(() => getGuestToken(), [])
 
@@ -62,6 +64,57 @@ function MenuPage() {
     setItemLikeState,
     error,
   } = useMenuPage(restaurantId ?? "", guestToken)
+
+  const showAllGrouped = activeCategory === null && !searchQuery
+
+  useEffect(() => {
+    if (showAllGrouped && hasMore && !loadingMore && !itemsLoading) {
+      loadMore()
+    }
+  }, [showAllGrouped, hasMore, loadingMore, itemsLoading, loadMore])
+
+  const groupedItems = useMemo(() => {
+    if (!showAllGrouped || categories.length === 0) return null
+    const map = new Map<string, MenuItem[]>()
+    for (const cat of categories) map.set(cat.public_id, [])
+    for (const item of items) {
+      if (item.category && map.has(item.category)) map.get(item.category)!.push(item)
+    }
+    return map
+  }, [showAllGrouped, categories, items])
+
+  useEffect(() => {
+    if (!groupedItems) return
+    const refs = sectionRefs.current
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((e) => e.isIntersecting)
+          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)
+        if (visible.length > 0) {
+          const id = visible[0].target.getAttribute("data-category-id")
+          if (id) setScrollActiveCategory(id)
+        }
+      },
+      { rootMargin: "-15% 0px -75% 0px", threshold: 0 },
+    )
+    refs.forEach((el) => observer.observe(el))
+    return () => observer.disconnect()
+  }, [groupedItems])
+
+  const handleCategorySelect = (id: string | null) => {
+    if (id === null) {
+      setActiveCategory(null)
+      setScrollActiveCategory(null)
+    } else if (showAllGrouped) {
+      const el = sectionRefs.current.get(id)
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" })
+    } else {
+      setActiveCategory(id)
+    }
+  }
+
+  const railActiveCategory = showAllGrouped ? scrollActiveCategory : activeCategory
 
   const currencySymbol = restaurantSettings ? getCurrencySymbol(restaurantSettings.currency) : ""
   const priceBand = restaurantSettings
@@ -200,8 +253,8 @@ function MenuPage() {
         </div>
         <CategoryRail
           categories={categories}
-          activeCategory={activeCategory}
-          onSelect={setActiveCategory}
+          activeCategory={railActiveCategory}
+          onSelect={handleCategorySelect}
           loading={categoriesLoading}
         />
       </div>
@@ -220,6 +273,48 @@ function MenuPage() {
                 searchQuery ? `No results for "${searchQuery}".` : "No items in this category."
               }
             />
+          ) : showAllGrouped && groupedItems ? (
+            <>
+              {categories.map((cat) => {
+                const catItems = groupedItems.get(cat.public_id) ?? []
+                if (catItems.length === 0) return null
+                return (
+                  <section
+                    key={cat.public_id}
+                    className="menu-page__category-section"
+                    data-category-id={cat.public_id}
+                    ref={(el) => {
+                      if (el) sectionRefs.current.set(cat.public_id, el)
+                      else sectionRefs.current.delete(cat.public_id)
+                    }}
+                  >
+                    <h2 className="menu-page__category-heading">{cat.name}</h2>
+                    <div className="menu-page__grid">
+                      {catItems.map((item) => (
+                        <MenuItemCard
+                          key={item.public_id}
+                          item={item}
+                          onClick={setSelectedItem}
+                          onAddToCart={addItem}
+                          onToggleLike={handleToggleLike}
+                          onSetQuantity={setQuantity}
+                          likePending={Boolean(likePendingMap[item.public_id])}
+                          cartQuantity={
+                            cartItems.find((c) => c.item.public_id === item.public_id)?.quantity ??
+                            0
+                          }
+                        />
+                      ))}
+                    </div>
+                  </section>
+                )
+              })}
+              {hasMore && (
+                <button className="menu-page__load-more" onClick={loadMore} disabled={loadingMore}>
+                  {loadingMore ? "Loading..." : "Load more"}
+                </button>
+              )}
+            </>
           ) : (
             <>
               <div className="menu-page__grid">

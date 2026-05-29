@@ -1,4 +1,4 @@
-import type { ReactElement } from "react"
+import { type ReactElement, useEffect, useRef } from "react"
 import {
   LuBeef,
   LuBeer,
@@ -58,6 +58,17 @@ type CategoryRailProps = {
 }
 
 function CategoryRail({ categories, activeCategory, onSelect, loading }: CategoryRailProps) {
+  const railRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const rail = railRef.current
+    if (!rail) return
+    const activeBtn = rail.querySelector<HTMLElement>(".category-rail__btn--active")
+    if (activeBtn) {
+      activeBtn.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" })
+    }
+  }, [activeCategory])
+
   if (loading) {
     return (
       <div className="category-rail">
@@ -69,7 +80,7 @@ function CategoryRail({ categories, activeCategory, onSelect, loading }: Categor
   }
 
   return (
-    <div className="category-rail">
+    <div className="category-rail" ref={railRef}>
       <button
         className={`category-rail__btn${activeCategory === null ? " category-rail__btn--active" : ""}`}
         onClick={() => onSelect(null)}

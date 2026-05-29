@@ -1,5 +1,8 @@
 .menu-page {
   min-height: 100vh;
+  width: 100%;
+  max-width: 1440px;
+  margin: 0 auto;
   padding: 32px;
   background: var(--color-bg-page);
   font-family: var(--font-family-base);
@@ -55,11 +58,7 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
-  padding: 10px 42px;
-  margin: 0 -32px;
-  border-left: none;
-  border-right: none;
-  border-top: none;
+  padding: 10px 0;
   border-bottom: 1px solid var(--color-border-default);
   background: var(--color-bg-sticky);
   backdrop-filter: blur(10px);
@@ -327,6 +326,24 @@
   }
 }
 
+.menu-page__category-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  scroll-margin-top: 120px;
+}
+
+.menu-page__category-heading {
+  font-family: var(--font-family-display);
+  font-size: clamp(1.1rem, 1.5vw, 1.4rem);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  letter-spacing: -0.02em;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--color-text-primary);
+  width: fit-content;
+}
+
 .menu-page__load-more {
   align-self: center;
   padding: 12px 32px;
@@ -421,8 +438,7 @@
   .menu-page__sticky-controls {
     top: 0;
     gap: 8px;
-    padding: 8px 24px;
-    margin: 0 -16px;
+    padding: 8px 0;
   }
 
   .menu-page__hero-meta {
