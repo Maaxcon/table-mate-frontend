@@ -7,6 +7,8 @@ export type RestaurantInfo = {
   address: string | null
   phone: string | null
   coverImage: string | null
+  telegramUrl: string
+  facebookUrl: string
   settings: PublicRestaurantSettings | null
 }
 
@@ -18,6 +20,8 @@ function useRestaurantInfo(restaurantId: string): UseRestaurantInfoResult {
     address: null,
     phone: null,
     coverImage: null,
+    telegramUrl: "",
+    facebookUrl: "",
     settings: null,
   })
   const [notFound, setNotFound] = useState(false)
@@ -34,6 +38,8 @@ function useRestaurantInfo(restaurantId: string): UseRestaurantInfoResult {
           address: data.address,
           phone: data.phone,
           coverImage: data.cover_image,
+          telegramUrl: data.telegram_url,
+          facebookUrl: data.facebook_url,
           settings: data.settings,
         })
       })

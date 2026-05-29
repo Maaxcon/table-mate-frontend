@@ -39,6 +39,8 @@ import type {
   MenuItemsRetrieveResponses,
   MenuItemsSearchRetrieveData,
   MenuItemsSearchRetrieveResponses,
+  MenuItemsToggleLikeCreateData,
+  MenuItemsToggleLikeCreateResponses,
   MenuMenusListData,
   MenuMenusListResponses,
   MenuMenusRetrieveData,
@@ -79,6 +81,8 @@ import type {
   RestaurantsRestaurantSettingsRetrieveResponses,
   RestaurantsRestaurantsListData,
   RestaurantsRestaurantsListResponses,
+  RestaurantsRestaurantsPublicRetrieveData,
+  RestaurantsRestaurantsPublicRetrieveResponses,
   RestaurantsRestaurantsRetrieveData,
   RestaurantsRestaurantsRetrieveResponses,
   RestaurantsTablesListData,
@@ -375,6 +379,29 @@ export const menuItemsRetrieve = <ThrowOnError extends boolean = false>(
     ],
     url: "/api/menu/items/{public_id}/",
     ...options,
+  })
+
+/**
+ * Toggle like on a menu item for an anonymous client token
+ */
+export const menuItemsToggleLikeCreate = <ThrowOnError extends boolean = false>(
+  options: Options<MenuItemsToggleLikeCreateData, ThrowOnError>,
+) =>
+  (options.client ?? client).post<MenuItemsToggleLikeCreateResponses, unknown, ThrowOnError>({
+    security: [
+      { scheme: "bearer", type: "http" },
+      {
+        in: "cookie",
+        name: "sessionid",
+        type: "apiKey",
+      },
+    ],
+    url: "/api/menu/items/{public_id}/toggle-like/",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
   })
 
 export const menuItemsSearchRetrieve = <ThrowOnError extends boolean = false>(
@@ -730,6 +757,26 @@ export const restaurantsRestaurantsList = <ThrowOnError extends boolean = false>
       },
     ],
     url: "/api/restaurants/restaurants/",
+    ...options,
+  })
+
+export const restaurantsRestaurantsPublicRetrieve = <ThrowOnError extends boolean = false>(
+  options: Options<RestaurantsRestaurantsPublicRetrieveData, ThrowOnError>,
+) =>
+  (options.client ?? client).get<
+    RestaurantsRestaurantsPublicRetrieveResponses,
+    unknown,
+    ThrowOnError
+  >({
+    security: [
+      { scheme: "bearer", type: "http" },
+      {
+        in: "cookie",
+        name: "sessionid",
+        type: "apiKey",
+      },
+    ],
+    url: "/api/restaurants/restaurants-public/{public_id}/",
     ...options,
   })
 

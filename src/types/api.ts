@@ -140,6 +140,54 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  "/api/editor/tables/": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations["editor_tables_list"]
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/editor/tables/{public_id}/": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations["editor_tables_retrieve"]
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch: operations["editor_tables_partial_update"]
+    trace?: never
+  }
+  "/api/editor/tables/available/": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations["editor_tables_available_list"]
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   "/api/menu/categories/": {
     parameters: {
       query?: never
@@ -438,7 +486,7 @@ export interface paths {
     }
     get: operations["reservations_reservations_list"]
     put?: never
-    post?: never
+    post: operations["reservations_reservations_create"]
     delete?: never
     options?: never
     head?: never
@@ -453,6 +501,22 @@ export interface paths {
       cookie?: never
     }
     get: operations["reservations_reservations_retrieve"]
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch: operations["reservations_reservations_partial_update"]
+    trace?: never
+  }
+  "/api/reservations/reservations/my/": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations["reservations_reservations_my_list"]
     put?: never
     post?: never
     delete?: never
@@ -590,6 +654,23 @@ export interface components {
       readonly refresh: string
       email: string
       password: string
+    }
+    EditorTable: {
+      /** Format: uuid */
+      readonly public_id: string
+      /** Format: uuid */
+      readonly restaurant: string
+      readonly table_number: string
+      readonly capacity: number
+      status?: components["schemas"]["TableStatus"]
+      shape?: components["schemas"]["TableShape"]
+      active?: boolean
+      position_x?: number | null
+      position_y?: number | null
+      /** Format: date-time */
+      readonly created_at: string
+      /** Format: date-time */
+      readonly updated_at: string
     }
     GoogleAuth: {
       code: string
@@ -756,6 +837,21 @@ export interface components {
      * @enum {string}
      */
     OrderStatusEnum: "draft" | "submitted" | "completed" | "cancelled"
+    PaginatedEditorTableList: {
+      /** @example 123 */
+      count: number
+      /**
+       * Format: uri
+       * @example http://api.example.org/accounts/?page=4
+       */
+      next?: string | null
+      /**
+       * Format: uri
+       * @example http://api.example.org/accounts/?page=2
+       */
+      previous?: string | null
+      results: components["schemas"]["EditorTable"][]
+    }
     PaginatedLayoutList: {
       /** @example 123 */
       count: number
@@ -951,6 +1047,44 @@ export interface components {
       previous?: string | null
       results: components["schemas"]["Ticket"][]
     }
+    PatchedEditorTable: {
+      /** Format: uuid */
+      readonly public_id?: string
+      /** Format: uuid */
+      readonly restaurant?: string
+      readonly table_number?: string
+      readonly capacity?: number
+      status?: components["schemas"]["TableStatus"]
+      shape?: components["schemas"]["TableShape"]
+      active?: boolean
+      position_x?: number | null
+      position_y?: number | null
+      /** Format: date-time */
+      readonly created_at?: string
+      /** Format: date-time */
+      readonly updated_at?: string
+    }
+    PatchedReservation: {
+      /** Format: uuid */
+      readonly public_id?: string
+      /** Format: uuid */
+      readonly restaurant?: string
+      /** Format: uuid */
+      readonly customer?: string
+      /** Format: uuid */
+      table?: string
+      guest_count?: number
+      /** Format: date-time */
+      start_at?: string
+      /** Format: date-time */
+      end_at?: string
+      readonly status?: components["schemas"]["ReservationStatus"]
+      notes?: string | null
+      /** Format: date-time */
+      readonly created_at?: string
+      /** Format: date-time */
+      readonly updated_at?: string
+    }
     Payment: {
       /** Format: uuid */
       readonly public_id: string
@@ -1005,13 +1139,13 @@ export interface components {
       /** Format: uuid */
       readonly customer: string
       /** Format: uuid */
-      readonly table: string
+      table: string
       guest_count: number
       /** Format: date-time */
       start_at: string
       /** Format: date-time */
       end_at: string
-      status?: components["schemas"]["ReservationStatusEnum"]
+      readonly status: components["schemas"]["ReservationStatus"]
       notes?: string | null
       /** Format: date-time */
       readonly created_at: string
@@ -1025,7 +1159,7 @@ export interface components {
      *     * `completed` - Completed
      * @enum {string}
      */
-    ReservationStatusEnum: "pending" | "confirmed" | "cancelled" | "completed"
+    ReservationStatus: "pending" | "confirmed" | "cancelled" | "completed"
     Restaurant: {
       /** Format: uuid */
       readonly public_id: string
@@ -1114,7 +1248,9 @@ export interface components {
       readonly restaurant: string
       table_number: string
       capacity: number
-      status?: components["schemas"]["TableStatusEnum"]
+      status?: components["schemas"]["TableStatus"]
+      shape?: components["schemas"]["TableShape"]
+      active?: boolean
       position_x?: number | null
       position_y?: number | null
       /** Format: date-time */
@@ -1123,12 +1259,19 @@ export interface components {
       readonly updated_at: string
     }
     /**
+     * @description * `rectangle` - Rectangle
+     *     * `round` - Round
+     *     * `square` - Square
+     *     * `booth` - Booth
+     * @enum {string}
+     */
+    TableShape: "rectangle" | "round" | "square" | "booth"
+    /**
      * @description * `free` - Free
-     *     * `reserved` - Reserved
      *     * `occupied` - Occupied
      * @enum {string}
      */
-    TableStatusEnum: "free" | "reserved" | "occupied"
+    TableStatus: "free" | "occupied"
     Ticket: {
       /** Format: uuid */
       readonly public_id: string
@@ -1391,6 +1534,119 @@ export interface operations {
         }
         content: {
           "application/json": components["schemas"]["Layout"]
+        }
+      }
+    }
+  }
+  editor_tables_list: {
+    parameters: {
+      query?: {
+        active?: boolean
+        capacity?: number
+        /** @description Which field to use when ordering the results. */
+        ordering?: string
+        /** @description A page number within the paginated result set. */
+        page?: number
+        /**
+         * @description * `rectangle` - Rectangle
+         *     * `round` - Round
+         *     * `square` - Square
+         *     * `booth` - Booth
+         */
+        shape?: "booth" | "rectangle" | "round" | "square"
+        /**
+         * @description * `free` - Free
+         *     * `occupied` - Occupied
+         */
+        status?: "free" | "occupied"
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["PaginatedEditorTableList"]
+        }
+      }
+    }
+  }
+  editor_tables_retrieve: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        public_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["EditorTable"]
+        }
+      }
+    }
+  }
+  editor_tables_partial_update: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        public_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        "application/json": components["schemas"]["PatchedEditorTable"]
+        "application/x-www-form-urlencoded": components["schemas"]["PatchedEditorTable"]
+        "multipart/form-data": components["schemas"]["PatchedEditorTable"]
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["EditorTable"]
+        }
+      }
+    }
+  }
+  editor_tables_available_list: {
+    parameters: {
+      query: {
+        /** @description ISO 8601 datetime */
+        end_at: string
+        guest_count?: number
+        /** @description A page number within the paginated result set. */
+        page?: number
+        /** @description ISO 8601 datetime */
+        start_at: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["PaginatedEditorTableList"]
         }
       }
     }
@@ -1916,6 +2172,31 @@ export interface operations {
       }
     }
   }
+  reservations_reservations_create: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["Reservation"]
+        "application/x-www-form-urlencoded": components["schemas"]["Reservation"]
+        "multipart/form-data": components["schemas"]["Reservation"]
+      }
+    }
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["Reservation"]
+        }
+      }
+    }
+  }
   reservations_reservations_retrieve: {
     parameters: {
       query?: never
@@ -1933,6 +2214,66 @@ export interface operations {
         }
         content: {
           "application/json": components["schemas"]["Reservation"]
+        }
+      }
+    }
+  }
+  reservations_reservations_partial_update: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        public_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        "application/json": components["schemas"]["PatchedReservation"]
+        "application/x-www-form-urlencoded": components["schemas"]["PatchedReservation"]
+        "multipart/form-data": components["schemas"]["PatchedReservation"]
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["Reservation"]
+        }
+      }
+    }
+  }
+  reservations_reservations_my_list: {
+    parameters: {
+      query?: {
+        customer?: number
+        /** @description Which field to use when ordering the results. */
+        ordering?: string
+        /** @description A page number within the paginated result set. */
+        page?: number
+        /**
+         * @description * `pending` - Pending
+         *     * `confirmed` - Confirmed
+         *     * `cancelled` - Cancelled
+         *     * `completed` - Completed
+         */
+        status?: "cancelled" | "completed" | "confirmed" | "pending"
+        table?: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["PaginatedReservationList"]
         }
       }
     }
@@ -2063,10 +2404,9 @@ export interface operations {
         page?: number
         /**
          * @description * `free` - Free
-         *     * `reserved` - Reserved
          *     * `occupied` - Occupied
          */
-        status?: "free" | "occupied" | "reserved"
+        status?: "free" | "occupied"
       }
       header?: never
       path?: never

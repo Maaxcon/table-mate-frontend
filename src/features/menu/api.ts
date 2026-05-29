@@ -135,6 +135,8 @@ export type PublicRestaurant = {
   address: string
   phone: string
   cover_image: string | null
+  telegram_url: string
+  facebook_url: string
   settings: PublicRestaurantSettings | null
 }
 

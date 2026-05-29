@@ -1,6 +1,7 @@
 import { Fragment, type ReactElement, useMemo, useState } from "react"
 import { Link, useParams } from "react-router-dom"
 import { LuShoppingCart } from "react-icons/lu"
+import { FaTelegram, FaFacebook } from "react-icons/fa"
 import logo from "@/assets/logo.png"
 import { useAppSelector } from "@/store/hooks"
 import { toggleItemLike } from "@/features/menu/api"
@@ -42,6 +43,8 @@ function MenuPage() {
     restaurantAddress,
     restaurantPhone,
     restaurantCoverImage,
+    restaurantTelegramUrl,
+    restaurantFacebookUrl,
     restaurantSettings,
     restaurantNotFound,
     restaurantFetchError,
@@ -276,6 +279,38 @@ function MenuPage() {
           onRemove={removeItem}
           onClose={() => setCartOpen(false)}
         />
+      )}
+
+      {(restaurantTelegramUrl || restaurantFacebookUrl) && (
+        <footer className="menu-page__footer">
+          <span className="menu-page__footer-label">Ми в соцмережах</span>
+          <div className="menu-page__footer-links">
+            {restaurantTelegramUrl && (
+              <a
+                className="menu-page__footer-link menu-page__footer-link--telegram"
+                href={restaurantTelegramUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Telegram"
+              >
+                <FaTelegram size={20} />
+                <span>Telegram</span>
+              </a>
+            )}
+            {restaurantFacebookUrl && (
+              <a
+                className="menu-page__footer-link menu-page__footer-link--facebook"
+                href={restaurantFacebookUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Facebook"
+              >
+                <FaFacebook size={20} />
+                <span>Facebook</span>
+              </a>
+            )}
+          </div>
+        </footer>
       )}
     </main>
   )
