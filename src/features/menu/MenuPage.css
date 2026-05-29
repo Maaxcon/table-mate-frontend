@@ -50,13 +50,17 @@
 
 .menu-page__sticky-controls {
   position: sticky;
-  top: calc(env(safe-area-inset-top, 0px) + 8px);
+  top: 0;
   z-index: 60;
   display: flex;
   flex-direction: column;
   gap: 10px;
-  padding: 10px;
-  border: 1px solid var(--color-border-default);
+  padding: 10px 42px;
+  margin: 0 -32px;
+  border-left: none;
+  border-right: none;
+  border-top: none;
+  border-bottom: 1px solid var(--color-border-default);
   background: var(--color-bg-sticky);
   backdrop-filter: blur(10px);
 }
@@ -380,9 +384,10 @@
   }
 
   .menu-page__sticky-controls {
-    top: calc(env(safe-area-inset-top, 0px) + 6px);
+    top: 0;
     gap: 8px;
-    padding: 8px;
+    padding: 8px 24px;
+    margin: 0 -16px;
   }
 
   .menu-page__hero-meta {
