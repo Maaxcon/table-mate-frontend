@@ -173,9 +173,6 @@ function MenuPage() {
         <div className="menu-page__topbar">
           <div className="menu-page__brand">
             <img src={logo} alt="TableMate" className="menu-page__logo" />
-            <div className="menu-page__brand-copy">
-              <span className="menu-page__brand-name">TableMate</span>
-            </div>
           </div>
           <div className="menu-page__topbar-right">
             {user ? (

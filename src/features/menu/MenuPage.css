@@ -193,7 +193,7 @@
 }
 
 .menu-page__logo {
-  height: clamp(28px, 2.8vw, 36px);
+  height: clamp(36px, 4vw, 52px);
   width: auto;
   object-fit: contain;
   filter: brightness(0);
