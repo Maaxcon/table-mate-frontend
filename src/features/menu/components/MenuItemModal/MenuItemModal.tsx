@@ -1,8 +1,48 @@
 import { useEffect, useState } from "react"
-import { LuCheck, LuHeart, LuShoppingCart, LuTriangle } from "react-icons/lu"
+import type { ReactElement } from "react"
+import {
+  LuCheck,
+  LuHeart,
+  LuShoppingCart,
+  LuWheat,
+  LuFish,
+  LuMilk,
+  LuEgg,
+  LuNut,
+  LuLeaf,
+  LuTriangle,
+  LuFlame,
+} from "react-icons/lu"
 import type { MenuItem } from "@/features/menu/types"
 import { formatPrice } from "../../utils"
 import "./MenuItemModal.css"
+
+type AllergenInfo = { icon: ReactElement; color: string }
+
+function getAllergenInfo(name: string): AllergenInfo {
+  const n = name.toLowerCase()
+  if (
+    n.includes("глютен") ||
+    n.includes("пшениц") ||
+    n.includes("жито") ||
+    n.includes("ячмін") ||
+    n.includes("wheat") ||
+    n.includes("gluten")
+  )
+    return { icon: <LuWheat size={13} />, color: "amber" }
+  if (n.includes("молок") || n.includes("лактоз") || n.includes("dairy") || n.includes("milk"))
+    return { icon: <LuMilk size={13} />, color: "blue" }
+  if (n.includes("яйц") || n.includes("egg")) return { icon: <LuEgg size={13} />, color: "yellow" }
+  if (n.includes("риб") || n.includes("fish")) return { icon: <LuFish size={13} />, color: "blue" }
+  if (n.includes("горіх") || n.includes("мигдал") || n.includes("nut"))
+    return { icon: <LuNut size={13} />, color: "brown" }
+  if (n.includes("соя") || n.includes("soy")) return { icon: <LuLeaf size={13} />, color: "green" }
+  if (n.includes("арахіс") || n.includes("peanut"))
+    return { icon: <LuFlame size={13} />, color: "orange" }
+  if (n.includes("морепродукт") || n.includes("ракоподібн") || n.includes("shellfish"))
+    return { icon: <LuFish size={13} />, color: "teal" }
+  return { icon: <LuTriangle size={13} />, color: "red" }
+}
 
 type MenuItemModalProps = {
   item: MenuItem
@@ -88,14 +128,21 @@ function MenuItemModal({ item, onClose, onAddToCart }: MenuItemModalProps) {
           )}
 
           {item.allergens.length > 0 && (
-            <div
-              className="menu-modal__allergens"
-              aria-label={`Алергени: ${item.allergens.join(", ")}`}
-            >
-              <LuTriangle className="menu-modal__allergens-icon" size={14} />
-              <div>
-                <span className="menu-modal__allergens-label">Алергени: </span>
-                <span className="menu-modal__allergens-text">{item.allergens.join(", ")}</span>
+            <div className="menu-modal__allergens">
+              <p className="menu-modal__section-label">Алергени</p>
+              <div className="menu-modal__allergen-list">
+                {item.allergens.map((allergen) => {
+                  const { icon, color } = getAllergenInfo(allergen)
+                  return (
+                    <span
+                      key={allergen}
+                      className={`menu-modal__allergen-badge menu-modal__allergen-badge--${color}`}
+                    >
+                      {icon}
+                      {allergen}
+                    </span>
+                  )
+                })}
               </div>
             </div>
           )}
