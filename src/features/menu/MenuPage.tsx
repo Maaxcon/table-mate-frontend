@@ -38,6 +38,7 @@ function MenuPage() {
     addItem,
     removeItem,
     setQuantity,
+    clear,
   } = useCart(restaurantId ?? "")
 
   const {
@@ -374,6 +375,7 @@ function MenuPage() {
           totalPrice={totalPrice}
           onSetQuantity={setQuantity}
           onRemove={removeItem}
+          onClear={clear}
           onClose={() => setCartOpen(false)}
         />
       )}

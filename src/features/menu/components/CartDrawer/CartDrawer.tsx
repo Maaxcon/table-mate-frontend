@@ -1,5 +1,5 @@
-import { useEffect } from "react"
-import { LuMinus, LuPlus, LuShoppingCart, LuTrash2, LuX } from "react-icons/lu"
+import { useEffect, useState } from "react"
+import { LuCheck, LuMinus, LuPlus, LuShoppingCart, LuTrash2, LuX } from "react-icons/lu"
 import type { CartItem } from "../../hooks/useCart"
 import { formatAmount } from "../../utils"
 import "./CartDrawer.css"
@@ -10,9 +10,14 @@ type Props = {
   onSetQuantity: (publicId: string, quantity: number) => void
   onRemove: (publicId: string) => void
   onClose: () => void
+  onClear?: () => void
 }
 
-export function CartDrawer({ items, totalPrice, onSetQuantity, onClose }: Props) {
+export function CartDrawer({ items, totalPrice, onSetQuantity, onClose, onClear }: Props) {
+  const [step, setStep] = useState<"cart" | "confirming" | "confirmed">("cart")
+  const [confirmedItems, setConfirmedItems] = useState<CartItem[]>([])
+  const [confirmedTotal, setConfirmedTotal] = useState(0)
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose()
@@ -20,6 +25,13 @@ export function CartDrawer({ items, totalPrice, onSetQuantity, onClose }: Props)
     document.addEventListener("keydown", onKey)
     return () => document.removeEventListener("keydown", onKey)
   }, [onClose])
+
+  const handleConfirm = () => {
+    setConfirmedItems([...items])
+    setConfirmedTotal(totalPrice)
+    setStep("confirmed")
+    onClear?.()
+  }
 
   const totalCount = items.reduce((s, i) => s + i.quantity, 0)
 
@@ -43,7 +55,55 @@ export function CartDrawer({ items, totalPrice, onSetQuantity, onClose }: Props)
           </button>
         </div>
 
-        {items.length === 0 ? (
+        {step === "confirming" ? (
+          <div className="cart-drawer__confirm-dialog">
+            <p className="cart-drawer__confirm-dialog-title">Підтвердити замовлення?</p>
+            <p className="cart-drawer__confirm-dialog-sub">
+              {items.reduce((s, i) => s + i.quantity, 0)} позицій · {formatAmount(totalPrice)} ₴
+            </p>
+            <div className="cart-drawer__confirm-dialog-btns">
+              <button className="cart-drawer__confirm-dialog-yes" onClick={handleConfirm}>
+                Так, замовити
+              </button>
+              <button className="cart-drawer__confirm-dialog-no" onClick={() => setStep("cart")}>
+                Скасувати
+              </button>
+            </div>
+          </div>
+        ) : step === "confirmed" ? (
+          <div className="cart-drawer__confirm">
+            <div className="cart-drawer__confirm-icon">
+              <LuCheck size={52} strokeWidth={1.4} />
+            </div>
+            <h3 className="cart-drawer__confirm-title">Замовлення прийнято!</h3>
+            <p className="cart-drawer__confirm-sub">Офіціант отримав ваше замовлення</p>
+
+            <div className="cart-drawer__receipt">
+              <p className="cart-drawer__receipt-label">Ваше замовлення</p>
+              <ul className="cart-drawer__receipt-list">
+                {confirmedItems.map(({ item, quantity }) => (
+                  <li key={item.public_id} className="cart-drawer__receipt-row">
+                    <span className="cart-drawer__receipt-name">
+                      {item.name}
+                      <span className="cart-drawer__receipt-qty"> × {quantity}</span>
+                    </span>
+                    <span className="cart-drawer__receipt-price">
+                      {formatAmount((parseFloat(item.price) || 0) * quantity)} ₴
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              <div className="cart-drawer__receipt-total">
+                <span>Разом</span>
+                <span>{formatAmount(confirmedTotal)} ₴</span>
+              </div>
+            </div>
+
+            <button className="cart-drawer__confirm-btn" onClick={onClose}>
+              Закрити
+            </button>
+          </div>
+        ) : items.length === 0 ? (
           <div className="cart-drawer__empty">
             <LuShoppingCart size={48} strokeWidth={1.2} />
             <p className="cart-drawer__empty-title">Кошик порожній</p>
@@ -103,7 +163,7 @@ export function CartDrawer({ items, totalPrice, onSetQuantity, onClose }: Props)
                 <span className="cart-drawer__total-label">Разом</span>
                 <span className="cart-drawer__total-value">{formatAmount(totalPrice)} ₴</span>
               </div>
-              <button className="cart-drawer__order" disabled>
+              <button className="cart-drawer__order" onClick={() => setStep("confirming")}>
                 Оформити замовлення
               </button>
             </div>
