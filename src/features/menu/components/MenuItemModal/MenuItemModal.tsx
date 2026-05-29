@@ -19,29 +19,25 @@ import "./MenuItemModal.css"
 
 type AllergenInfo = { icon: ReactElement; color: string }
 
+const ALLERGEN_MAP: Record<string, AllergenInfo> = {
+  Глютен: { icon: <LuWheat size={13} />, color: "amber" },
+  Молоко: { icon: <LuMilk size={13} />, color: "blue" },
+  Яйця: { icon: <LuEgg size={13} />, color: "yellow" },
+  Риба: { icon: <LuFish size={13} />, color: "blue" },
+  Ракоподібні: { icon: <LuFish size={13} />, color: "teal" },
+  Горіхи: { icon: <LuNut size={13} />, color: "brown" },
+  Арахіс: { icon: <LuFlame size={13} />, color: "orange" },
+  Соя: { icon: <LuLeaf size={13} />, color: "green" },
+  Кунжут: { icon: <LuWheat size={13} />, color: "amber" },
+  Сульфіти: { icon: <LuTriangle size={13} />, color: "red" },
+  Селера: { icon: <LuLeaf size={13} />, color: "green" },
+  Гірчиця: { icon: <LuFlame size={13} />, color: "orange" },
+  Люпин: { icon: <LuLeaf size={13} />, color: "green" },
+  Молюски: { icon: <LuFish size={13} />, color: "teal" },
+}
+
 function getAllergenInfo(name: string): AllergenInfo {
-  const n = name.toLowerCase()
-  if (
-    n.includes("глютен") ||
-    n.includes("пшениц") ||
-    n.includes("жито") ||
-    n.includes("ячмін") ||
-    n.includes("wheat") ||
-    n.includes("gluten")
-  )
-    return { icon: <LuWheat size={13} />, color: "amber" }
-  if (n.includes("молок") || n.includes("лактоз") || n.includes("dairy") || n.includes("milk"))
-    return { icon: <LuMilk size={13} />, color: "blue" }
-  if (n.includes("яйц") || n.includes("egg")) return { icon: <LuEgg size={13} />, color: "yellow" }
-  if (n.includes("риб") || n.includes("fish")) return { icon: <LuFish size={13} />, color: "blue" }
-  if (n.includes("горіх") || n.includes("мигдал") || n.includes("nut"))
-    return { icon: <LuNut size={13} />, color: "brown" }
-  if (n.includes("соя") || n.includes("soy")) return { icon: <LuLeaf size={13} />, color: "green" }
-  if (n.includes("арахіс") || n.includes("peanut"))
-    return { icon: <LuFlame size={13} />, color: "orange" }
-  if (n.includes("морепродукт") || n.includes("ракоподібн") || n.includes("shellfish"))
-    return { icon: <LuFish size={13} />, color: "teal" }
-  return { icon: <LuTriangle size={13} />, color: "red" }
+  return ALLERGEN_MAP[name] ?? { icon: <LuTriangle size={13} />, color: "red" }
 }
 
 type MenuItemModalProps = {
