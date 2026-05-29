@@ -6,6 +6,7 @@ export type RestaurantInfo = {
   name: string | null
   address: string | null
   phone: string | null
+  coverImage: string | null
   settings: PublicRestaurantSettings | null
 }
 
@@ -16,6 +17,7 @@ function useRestaurantInfo(restaurantId: string): UseRestaurantInfoResult {
     name: null,
     address: null,
     phone: null,
+    coverImage: null,
     settings: null,
   })
   const [notFound, setNotFound] = useState(false)
@@ -31,6 +33,7 @@ function useRestaurantInfo(restaurantId: string): UseRestaurantInfoResult {
           name: data.name,
           address: data.address,
           phone: data.phone,
+          coverImage: data.cover_image,
           settings: data.settings,
         })
       })

@@ -9,6 +9,7 @@ export type UseMenuPageResult = {
   restaurantName: string | null
   restaurantAddress: string | null
   restaurantPhone: string | null
+  restaurantCoverImage: string | null
   restaurantSettings: PublicRestaurantSettings | null
   restaurantNotFound: boolean
   restaurantFetchError: string | null
@@ -31,7 +32,8 @@ function useMenuPage(restaurantId: string, guestToken: string): UseMenuPageResul
   const [activeCategory, setActiveCategoryState] = useState<string | null>(null)
   const [searchQuery, setSearchQueryState] = useState("")
 
-  const { name, address, phone, settings, notFound, fetchError } = useRestaurantInfo(restaurantId)
+  const { name, address, phone, coverImage, settings, notFound, fetchError } =
+    useRestaurantInfo(restaurantId)
   const { categories, categoriesLoading, categoriesError } = useMenuCategories(restaurantId)
   const { items, itemsLoading, loadingMore, hasMore, loadMore, itemsError, setItemLikeState } =
     useMenuItems(restaurantId, activeCategory, searchQuery, guestToken)
@@ -50,6 +52,7 @@ function useMenuPage(restaurantId: string, guestToken: string): UseMenuPageResul
     restaurantName: name,
     restaurantAddress: address,
     restaurantPhone: phone,
+    restaurantCoverImage: coverImage,
     restaurantSettings: settings,
     restaurantNotFound: notFound,
     restaurantFetchError: fetchError,

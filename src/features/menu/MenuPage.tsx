@@ -41,6 +41,7 @@ function MenuPage() {
     restaurantName,
     restaurantAddress,
     restaurantPhone,
+    restaurantCoverImage,
     restaurantSettings,
     restaurantNotFound,
     restaurantFetchError,
@@ -130,7 +131,14 @@ function MenuPage() {
             )}
           </div>
         </div>
-        <div className="menu-page__hero">
+        <div
+          className={`menu-page__hero${restaurantCoverImage ? " menu-page__hero--has-cover" : ""}`}
+          style={
+            restaurantCoverImage
+              ? ({ "--hero-cover": `url(${restaurantCoverImage})` } as React.CSSProperties)
+              : undefined
+          }
+        >
           <p className="menu-page__label">Menu</p>
           <h1 className="menu-page__title">{restaurantName}</h1>
           <p className="menu-page__hero-description">Fresh dishes, fast ordering, cozy taste.</p>

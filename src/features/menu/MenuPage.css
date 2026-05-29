@@ -179,6 +179,41 @@
     linear-gradient(180deg, var(--color-bg-surface) 0%, var(--color-bg-page) 100%);
 }
 
+.menu-page__hero--has-cover {
+  position: relative;
+  overflow: hidden;
+  border-color: transparent;
+}
+
+.menu-page__hero--has-cover::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: var(--hero-cover);
+  background-size: cover;
+  background-position: center;
+  z-index: 0;
+}
+
+.menu-page__hero--has-cover::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(160deg, rgb(0 0 0 / 52%) 0%, rgb(0 0 0 / 30%) 100%);
+  z-index: 1;
+}
+
+.menu-page__hero--has-cover > * {
+  position: relative;
+  z-index: 2;
+}
+
+.menu-page__hero--has-cover .menu-page__label,
+.menu-page__hero--has-cover .menu-page__title,
+.menu-page__hero--has-cover .menu-page__hero-description {
+  color: #fff;
+}
+
 .menu-page__label {
   margin: 0 0 6px;
   font-family: var(--font-family-display);
