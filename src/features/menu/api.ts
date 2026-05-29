@@ -47,12 +47,15 @@ export function fetchCategories(
   )
 }
 
+export type SortOrder = "sort_order" | "price" | "-price"
+
 export type FetchItemsParams = {
   restaurantId: string
   categoryId?: string
   page?: number
   guestToken?: string
   signal?: AbortSignal
+  sortOrder?: SortOrder
 }
 
 export function fetchItems({
@@ -61,13 +64,14 @@ export function fetchItems({
   page,
   guestToken,
   signal,
+  sortOrder = "sort_order",
 }: FetchItemsParams): Promise<PaginatedResponse<MenuItem>> {
   return menuGet(
     "/api/menu/items/",
     {
       restaurant: restaurantId,
       guest_token: guestToken,
-      ordering: "sort_order",
+      ordering: sortOrder,
       ...(categoryId ? { category: categoryId } : {}),
       ...(page && page > 1 ? { page: String(page) } : {}),
     },

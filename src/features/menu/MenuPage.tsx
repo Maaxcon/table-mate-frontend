@@ -1,6 +1,6 @@
 import { Fragment, type ReactElement, useEffect, useMemo, useRef, useState } from "react"
 import { Link, useParams } from "react-router-dom"
-import { LuShoppingCart } from "react-icons/lu"
+import { LuArrowDownUp, LuShoppingCart } from "react-icons/lu"
 import { FaTelegram, FaFacebook } from "react-icons/fa"
 import logo from "@/assets/logo.png"
 import { useAppSelector } from "@/store/hooks"
@@ -62,6 +62,8 @@ function MenuPage() {
     loadMore,
     searchQuery,
     setSearchQuery,
+    sortOrder,
+    setSortOrder,
     setItemLikeState,
     error,
   } = useMenuPage(restaurantId ?? "", guestToken)
@@ -243,6 +245,31 @@ function MenuPage() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
+          <button
+            className={`menu-page__sort-btn${sortOrder !== "sort_order" ? " menu-page__sort-btn--active" : ""}`}
+            onClick={() =>
+              setSortOrder(
+                sortOrder === "sort_order"
+                  ? "price"
+                  : sortOrder === "price"
+                    ? "-price"
+                    : "sort_order",
+              )
+            }
+            aria-label="Сортування"
+            title={
+              sortOrder === "sort_order"
+                ? "За замовчуванням"
+                : sortOrder === "price"
+                  ? "Ціна: від низької"
+                  : "Ціна: від високої"
+            }
+          >
+            <LuArrowDownUp size={16} />
+            <span className="menu-page__sort-label">
+              {sortOrder === "price" ? "↑ Ціна" : sortOrder === "-price" ? "↓ Ціна" : "Сорт."}
+            </span>
+          </button>
           <button
             className="menu-page__cart-btn"
             onClick={() => setCartOpen(true)}

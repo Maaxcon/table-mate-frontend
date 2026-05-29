@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react"
-import type { PublicRestaurantSettings } from "../api"
+import type { PublicRestaurantSettings, SortOrder } from "../api"
 import type { MenuCategory, MenuItem } from "../types"
 import { useRestaurantInfo } from "./useRestaurantInfo"
 import { useMenuCategories } from "./useMenuCategories"
@@ -26,6 +26,8 @@ export type UseMenuPageResult = {
   loadMore: () => void
   searchQuery: string
   setSearchQuery: (q: string) => void
+  sortOrder: SortOrder
+  setSortOrder: (s: SortOrder) => void
   setItemLikeState: (publicId: string, isLiked: boolean, likesCount: number) => void
   error: string | null
 }
@@ -33,6 +35,7 @@ export type UseMenuPageResult = {
 function useMenuPage(restaurantId: string, guestToken: string): UseMenuPageResult {
   const [activeCategory, setActiveCategoryState] = useState<string | null>(null)
   const [searchQuery, setSearchQueryState] = useState("")
+  const [sortOrder, setSortOrder] = useState<SortOrder>("sort_order")
 
   const {
     name,
@@ -47,7 +50,7 @@ function useMenuPage(restaurantId: string, guestToken: string): UseMenuPageResul
   } = useRestaurantInfo(restaurantId)
   const { categories, categoriesLoading, categoriesError } = useMenuCategories(restaurantId)
   const { items, itemsLoading, loadingMore, hasMore, loadMore, itemsError, setItemLikeState } =
-    useMenuItems(restaurantId, activeCategory, searchQuery, guestToken)
+    useMenuItems(restaurantId, activeCategory, searchQuery, guestToken, sortOrder)
 
   const setActiveCategory = useCallback((id: string | null) => {
     setActiveCategoryState(id)
@@ -80,6 +83,8 @@ function useMenuPage(restaurantId: string, guestToken: string): UseMenuPageResul
     loadMore,
     searchQuery,
     setSearchQuery,
+    sortOrder,
+    setSortOrder,
     setItemLikeState,
     error: itemsError ?? categoriesError,
   }

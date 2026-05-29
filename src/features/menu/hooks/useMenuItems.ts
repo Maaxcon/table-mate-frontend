@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useReducer, useRef } from "react"
+import type { SortOrder } from "../api"
 import { fetchItems, searchItems } from "../api"
 import type { MenuItem } from "../types"
 
@@ -81,6 +82,7 @@ function useMenuItems(
   activeCategory: string | null,
   searchQuery: string,
   guestToken: string,
+  sortOrder: SortOrder = "sort_order",
 ): UseMenuItemsResult {
   const [state, dispatch] = useReducer(reducer, initialState)
   const { loading, loadingMore, hasMore, page } = state
@@ -96,7 +98,13 @@ function useMenuItems(
       dispatch({ type: "LOADING" })
       const promise = isSearching
         ? searchItems(restaurantId, searchQuery.trim(), guestToken, signal)
-        : fetchItems({ restaurantId, categoryId: activeCategory ?? undefined, guestToken, signal })
+        : fetchItems({
+            restaurantId,
+            categoryId: activeCategory ?? undefined,
+            guestToken,
+            signal,
+            sortOrder,
+          })
       promise
         .then((data) => {
           dispatch({ type: "SUCCESS", results: data.results, next: data.next })
@@ -119,7 +127,7 @@ function useMenuItems(
     return () => {
       controller.abort()
     }
-  }, [restaurantId, activeCategory, searchQuery, guestToken])
+  }, [restaurantId, activeCategory, searchQuery, guestToken, sortOrder])
 
   const loadMore = useCallback(() => {
     if (loading || loadingMoreRef.current || !hasMore) return
@@ -134,6 +142,7 @@ function useMenuItems(
           categoryId: activeCategory ?? undefined,
           page: nextPage,
           guestToken,
+          sortOrder,
         })
     promise
       .then((data) => {
@@ -144,7 +153,7 @@ function useMenuItems(
         loadingMoreRef.current = false
         dispatch({ type: "ERROR", message: "Failed to load more" })
       })
-  }, [loading, hasMore, searchQuery, page, restaurantId, activeCategory, guestToken])
+  }, [loading, hasMore, searchQuery, page, restaurantId, activeCategory, guestToken, sortOrder])
 
   const setItemLikeState = useCallback((publicId: string, isLiked: boolean, likesCount: number) => {
     dispatch({ type: "SET_LIKE", publicId, isLiked, likesCount })
