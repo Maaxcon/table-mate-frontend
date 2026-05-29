@@ -3,7 +3,8 @@ import { Link, useParams } from "react-router-dom"
 import { LuArrowDownUp, LuShoppingCart } from "react-icons/lu"
 import { FaTelegram, FaFacebook } from "react-icons/fa"
 import logo from "@/assets/logo.png"
-import { useAppSelector } from "@/store/hooks"
+import { useAppDispatch, useAppSelector } from "@/store/hooks"
+import { clearAuth } from "@/store/auth/authSlice"
 import { toggleItemLike } from "@/features/menu/api"
 import {
   CartDrawer,
@@ -29,6 +30,7 @@ function MenuPage() {
   const [scrollActiveCategory, setScrollActiveCategory] = useState<string | null>(null)
   const sectionRefs = useRef<Map<string, HTMLElement>>(new Map())
   const user = useAppSelector((s) => s.auth.user)
+  const dispatch = useAppDispatch()
   const guestToken = useMemo(() => getGuestToken(), [])
 
   const {
@@ -176,10 +178,15 @@ function MenuPage() {
           </div>
           <div className="menu-page__topbar-right">
             {user ? (
-              <div className="menu-page__avatar" title={`${user.firstName} ${user.lastName}`}>
-                {user.firstName[0]}
-                {user.lastName[0]}
-              </div>
+              <>
+                <div className="menu-page__avatar" title={`${user.firstName} ${user.lastName}`}>
+                  {user.firstName[0]}
+                  {user.lastName[0]}
+                </div>
+                <button className="menu-page__signout" onClick={() => dispatch(clearAuth())}>
+                  Вийти
+                </button>
+              </>
             ) : (
               <Link to="/" className="menu-page__signin">
                 Увійти
