@@ -9,7 +9,7 @@ export type MenuItem = {
   public_id: string
   restaurant: string
   menu: string
-  category: string
+  category: string | null
   name: string
   description: string | null
   ingredients: string[]
