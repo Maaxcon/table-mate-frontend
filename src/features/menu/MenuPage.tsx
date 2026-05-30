@@ -325,6 +325,7 @@ function MenuPage() {
                         <MenuItemCard
                           key={item.public_id}
                           item={item}
+                          currencySymbol={currencySymbol}
                           onClick={setSelectedItem}
                           onAddToCart={addItem}
                           onToggleLike={handleToggleLike}
@@ -353,6 +354,7 @@ function MenuPage() {
                   <MenuItemCard
                     key={item.public_id}
                     item={item}
+                    currencySymbol={currencySymbol}
                     onClick={setSelectedItem}
                     onAddToCart={addItem}
                     onToggleLike={handleToggleLike}
@@ -383,6 +385,7 @@ function MenuPage() {
       {selectedItem && (
         <MenuItemModal
           item={selectedItem}
+          currencySymbol={currencySymbol}
           onClose={() => setSelectedItem(null)}
           onAddToCart={addItem}
         />
@@ -403,6 +406,7 @@ function MenuPage() {
         <CartDrawer
           items={cartItems}
           totalPrice={totalPrice}
+          currencySymbol={currencySymbol}
           onSetQuantity={setQuantity}
           onClear={clear}
           onClose={() => setCartOpen(false)}

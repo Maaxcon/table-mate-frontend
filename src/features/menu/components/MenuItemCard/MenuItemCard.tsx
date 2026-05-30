@@ -5,6 +5,7 @@ import "./MenuItemCard.css"
 
 type MenuItemCardProps = {
   item: MenuItem
+  currencySymbol: string
   onClick: (item: MenuItem) => void
   onAddToCart: (item: MenuItem) => void
   onToggleLike: (item: MenuItem) => void
@@ -15,6 +16,7 @@ type MenuItemCardProps = {
 
 function MenuItemCard({
   item,
+  currencySymbol,
   onClick,
   onAddToCart,
   onToggleLike,
@@ -41,6 +43,8 @@ function MenuItemCard({
     e.stopPropagation()
     onToggleLike(item)
   }
+
+  const hasWeight = item.weight_grams != null && item.weight_grams > 0
 
   return (
     <div
@@ -76,7 +80,7 @@ function MenuItemCard({
         <div className="menu-item-card__footer-top">
           <span className="menu-item-card__price">
             <span className="menu-item-card__price-value">{formatPrice(item.price)}</span>
-            <span className="menu-item-card__price-currency">₴</span>
+            <span className="menu-item-card__price-currency">{currencySymbol}</span>
           </span>
 
           {item.is_available ? (
@@ -113,10 +117,8 @@ function MenuItemCard({
         </div>
 
         <div className="menu-item-card__footer-bottom">
-          {item.weight_grams && (
-            <span className="menu-item-card__meta-text">{item.weight_grams} г</span>
-          )}
-          {item.weight_grams && <span className="menu-item-card__meta-dot">·</span>}
+          {hasWeight && <span className="menu-item-card__meta-text">{item.weight_grams} г</span>}
+          {hasWeight && <span className="menu-item-card__meta-dot">·</span>}
           <button
             className={`menu-item-card__like${item.is_liked ? " menu-item-card__like--active" : ""}`}
             onClick={handleToggleLike}

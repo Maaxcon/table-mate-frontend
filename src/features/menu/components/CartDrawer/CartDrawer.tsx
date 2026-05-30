@@ -7,12 +7,20 @@ import "./CartDrawer.css"
 type Props = {
   items: CartItem[]
   totalPrice: number
+  currencySymbol: string
   onSetQuantity: (publicId: string, quantity: number) => void
   onClose: () => void
   onClear?: () => void
 }
 
-export function CartDrawer({ items, totalPrice, onSetQuantity, onClose, onClear }: Props) {
+export function CartDrawer({
+  items,
+  totalPrice,
+  currencySymbol,
+  onSetQuantity,
+  onClose,
+  onClear,
+}: Props) {
   const [step, setStep] = useState<"cart" | "confirming" | "confirmed">("cart")
   const [confirmedItems, setConfirmedItems] = useState<CartItem[]>([])
   const [confirmedTotal, setConfirmedTotal] = useState(0)
@@ -58,7 +66,8 @@ export function CartDrawer({ items, totalPrice, onSetQuantity, onClose, onClear 
           <div className="cart-drawer__confirm-dialog">
             <p className="cart-drawer__confirm-dialog-title">Підтвердити замовлення?</p>
             <p className="cart-drawer__confirm-dialog-sub">
-              {items.reduce((s, i) => s + i.quantity, 0)} позицій · {formatAmount(totalPrice)} ₴
+              {items.reduce((s, i) => s + i.quantity, 0)} позицій · {formatAmount(totalPrice)}{" "}
+              {currencySymbol}
             </p>
             <div className="cart-drawer__confirm-dialog-btns">
               <button className="cart-drawer__confirm-dialog-yes" onClick={handleConfirm}>
@@ -87,14 +96,16 @@ export function CartDrawer({ items, totalPrice, onSetQuantity, onClose, onClear 
                       <span className="cart-drawer__receipt-qty"> × {quantity}</span>
                     </span>
                     <span className="cart-drawer__receipt-price">
-                      {formatAmount((parseFloat(item.price) || 0) * quantity)} ₴
+                      {formatAmount((parseFloat(item.price) || 0) * quantity)} {currencySymbol}
                     </span>
                   </li>
                 ))}
               </ul>
               <div className="cart-drawer__receipt-total">
                 <span>Разом</span>
-                <span>{formatAmount(confirmedTotal)} ₴</span>
+                <span>
+                  {formatAmount(confirmedTotal)} {currencySymbol}
+                </span>
               </div>
             </div>
 
@@ -127,13 +138,13 @@ export function CartDrawer({ items, totalPrice, onSetQuantity, onClose, onClear 
                   <div className="cart-drawer__item-body">
                     <span className="cart-drawer__item-name">{item.name}</span>
                     <span className="cart-drawer__item-unit-price">
-                      {formatAmount(parseFloat(item.price) || 0)} ₴ / шт
+                      {formatAmount(parseFloat(item.price) || 0)} {currencySymbol} / шт
                     </span>
                   </div>
 
                   <div className="cart-drawer__item-right">
                     <span className="cart-drawer__item-total">
-                      {formatAmount((parseFloat(item.price) || 0) * quantity)} ₴
+                      {formatAmount((parseFloat(item.price) || 0) * quantity)} {currencySymbol}
                     </span>
                     <div className="cart-drawer__stepper">
                       <button
@@ -160,7 +171,9 @@ export function CartDrawer({ items, totalPrice, onSetQuantity, onClose, onClear 
             <div className="cart-drawer__footer">
               <div className="cart-drawer__total-row">
                 <span className="cart-drawer__total-label">Разом</span>
-                <span className="cart-drawer__total-value">{formatAmount(totalPrice)} ₴</span>
+                <span className="cart-drawer__total-value">
+                  {formatAmount(totalPrice)} {currencySymbol}
+                </span>
               </div>
               <button className="cart-drawer__order" onClick={() => setStep("confirming")}>
                 Оформити замовлення

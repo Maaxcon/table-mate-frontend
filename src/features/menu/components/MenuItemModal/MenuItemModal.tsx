@@ -42,12 +42,14 @@ function getAllergenInfo(name: string): AllergenInfo {
 
 type MenuItemModalProps = {
   item: MenuItem
+  currencySymbol: string
   onClose: () => void
   onAddToCart: (item: MenuItem) => void
 }
 
-function MenuItemModal({ item, onClose, onAddToCart }: MenuItemModalProps) {
+function MenuItemModal({ item, currencySymbol, onClose, onAddToCart }: MenuItemModalProps) {
   const [added, setAdded] = useState(false)
+  const hasWeight = item.weight_grams != null && item.weight_grams > 0
 
   const handleAdd = () => {
     onAddToCart(item)
@@ -146,8 +148,10 @@ function MenuItemModal({ item, onClose, onAddToCart }: MenuItemModalProps) {
 
         <div className="menu-modal__footer">
           <div className="menu-modal__price-block">
-            <span className="menu-modal__price">{formatPrice(item.price)} ₴</span>
-            {item.weight_grams && <span className="menu-modal__weight">{item.weight_grams} г</span>}
+            <span className="menu-modal__price">
+              {formatPrice(item.price)} {currencySymbol}
+            </span>
+            {hasWeight && <span className="menu-modal__weight">{item.weight_grams} г</span>}
           </div>
           {item.is_available ? (
             <button
