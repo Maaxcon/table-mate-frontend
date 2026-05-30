@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import type { ReactElement } from "react"
 import {
   LuCheck,
@@ -49,16 +49,31 @@ type MenuItemModalProps = {
 
 function MenuItemModal({ item, currencySymbol, onClose, onAddToCart }: MenuItemModalProps) {
   const [added, setAdded] = useState(false)
+  const closeButtonRef = useRef<HTMLButtonElement | null>(null)
+  const closeTimerRef = useRef<number | null>(null)
   const hasWeight = item.weight_grams != null && item.weight_grams > 0
 
   const handleAdd = () => {
     onAddToCart(item)
     setAdded(true)
-    setTimeout(() => {
+    if (closeTimerRef.current != null) {
+      window.clearTimeout(closeTimerRef.current)
+    }
+    closeTimerRef.current = window.setTimeout(() => {
+      closeTimerRef.current = null
       setAdded(false)
       onClose()
     }, 900)
   }
+
+  useEffect(() => {
+    closeButtonRef.current?.focus()
+    return () => {
+      if (closeTimerRef.current != null) {
+        window.clearTimeout(closeTimerRef.current)
+      }
+    }
+  }, [])
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -83,7 +98,7 @@ function MenuItemModal({ item, currencySymbol, onClose, onAddToCart }: MenuItemM
         aria-labelledby="menu-modal-heading"
       >
         <button
-          ref={(el) => el?.focus()}
+          ref={closeButtonRef}
           className="menu-modal__close"
           onClick={onClose}
           aria-label="Close"
