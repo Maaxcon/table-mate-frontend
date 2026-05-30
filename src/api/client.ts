@@ -48,6 +48,19 @@ async function refreshAccessToken(): Promise<string> {
   return refreshPromise
 }
 
+async function ensureSession(): Promise<string | null> {
+  try {
+    return await refreshAccessToken()
+  } catch (err) {
+    if (err instanceof RefreshAuthError) {
+      refreshFailedForAccessToken = null
+      store.dispatch(clearAuth())
+      return null
+    }
+    throw err
+  }
+}
+
 async function apiFetch(path: string, init: RequestInit = {}): Promise<Response> {
   const accessToken = store.getState().auth.accessToken
 
@@ -84,4 +97,4 @@ async function apiFetch(path: string, init: RequestInit = {}): Promise<Response>
   }
 }
 
-export { apiFetch }
+export { apiFetch, ensureSession }
