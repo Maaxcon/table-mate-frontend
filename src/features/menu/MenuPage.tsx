@@ -157,6 +157,8 @@ function MenuPage() {
             }
           : prev,
       )
+    } catch {
+      // Like failed (network/server error) — keep current state, just stop the spinner.
     } finally {
       setLikePendingMap((prev) => ({ ...prev, [item.public_id]: false }))
     }
