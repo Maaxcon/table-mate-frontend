@@ -7,7 +7,6 @@ type State = { items: CartItem[] }
 
 type Action =
   | { type: "ADD"; item: MenuItem }
-  | { type: "REMOVE"; publicId: string }
   | { type: "SET_QTY"; publicId: string; quantity: number }
   | { type: "CLEAR" }
 
@@ -50,8 +49,6 @@ function reducer(state: State, action: Action): State {
       }
       return { items: [...state.items, { item: action.item, quantity: 1 }] }
     }
-    case "REMOVE":
-      return { items: state.items.filter((i) => i.item.public_id !== action.publicId) }
     case "SET_QTY": {
       if (action.quantity <= 0) {
         return { items: state.items.filter((i) => i.item.public_id !== action.publicId) }
@@ -72,7 +69,6 @@ export type UseCartResult = {
   totalCount: number
   totalPrice: number
   addItem: (item: MenuItem) => void
-  removeItem: (publicId: string) => void
   setQuantity: (publicId: string, quantity: number) => void
   clear: () => void
 }
@@ -89,7 +85,6 @@ function useCart(restaurantId: string): UseCartResult {
   }, [restaurantId, state.items])
 
   const addItem = useCallback((item: MenuItem) => dispatch({ type: "ADD", item }), [])
-  const removeItem = useCallback((publicId: string) => dispatch({ type: "REMOVE", publicId }), [])
   const setQuantity = useCallback(
     (publicId: string, quantity: number) => dispatch({ type: "SET_QTY", publicId, quantity }),
     [],
@@ -102,7 +97,7 @@ function useCart(restaurantId: string): UseCartResult {
     return sum + (isNaN(p) ? 0 : p) * i.quantity
   }, 0)
 
-  return { items: state.items, totalCount, totalPrice, addItem, removeItem, setQuantity, clear }
+  return { items: state.items, totalCount, totalPrice, addItem, setQuantity, clear }
 }
 
 export { useCart }

@@ -8,7 +8,6 @@ type Props = {
   items: CartItem[]
   totalPrice: number
   onSetQuantity: (publicId: string, quantity: number) => void
-  onRemove: (publicId: string) => void
   onClose: () => void
   onClear?: () => void
 }

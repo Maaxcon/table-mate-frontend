@@ -38,7 +38,6 @@ function MenuPage() {
     totalCount,
     totalPrice,
     addItem,
-    removeItem,
     setQuantity,
     clear,
   } = useCart(restaurantId ?? "")
@@ -405,7 +404,6 @@ function MenuPage() {
           items={cartItems}
           totalPrice={totalPrice}
           onSetQuantity={setQuantity}
-          onRemove={removeItem}
           onClear={clear}
           onClose={() => setCartOpen(false)}
         />

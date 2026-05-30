@@ -3,40 +3,47 @@ import { store } from "@/store"
 import { clearAuth, setAccessToken } from "@/store/auth/authSlice"
 
 let refreshPromise: Promise<string> | null = null
-let refreshFailed = false
+let refreshFailedForAccessToken: string | null | undefined
 
-// Reset the flag whenever a fresh access token lands in the store (after login).
-store.subscribe(() => {
-  if (store.getState().auth.accessToken && refreshFailed) {
-    refreshFailed = false
+class RefreshAuthError extends Error {
+  constructor() {
+    super("Refresh token rejected")
   }
-})
+}
 
 async function refreshAccessToken(): Promise<string> {
-  if (refreshFailed) throw new Error("Refresh failed")
+  const accessToken = store.getState().auth.accessToken
+
+  if (refreshFailedForAccessToken !== undefined && refreshFailedForAccessToken === accessToken) {
+    throw new RefreshAuthError()
+  }
 
   if (refreshPromise) {
     return refreshPromise
   }
 
-  refreshPromise = fetch(`${env.apiBaseUrl}/api/auth/refresh/`, {
-    method: "POST",
-    credentials: "include",
+  refreshPromise = (async () => {
+    const res = await fetch(`${env.apiBaseUrl}/api/auth/refresh/`, {
+      method: "POST",
+      credentials: "include",
+    })
+
+    if (res.status === 401 || res.status === 403) {
+      refreshFailedForAccessToken = accessToken
+      throw new RefreshAuthError()
+    }
+
+    if (!res.ok) throw new Error("Refresh failed")
+
+    const data = (await res.json()) as { access?: string }
+    if (!data.access) throw new Error("Refresh failed")
+
+    refreshFailedForAccessToken = undefined
+    store.dispatch(setAccessToken(data.access))
+    return data.access
+  })().finally(() => {
+    refreshPromise = null
   })
-    .then(async (res) => {
-      if (!res.ok) throw new Error("Refresh failed")
-      const data = (await res.json()) as { access?: string }
-      if (!data.access) throw new Error("Refresh failed")
-      store.dispatch(setAccessToken(data.access))
-      return data.access
-    })
-    .catch((err: unknown) => {
-      refreshFailed = true
-      throw err
-    })
-    .finally(() => {
-      refreshPromise = null
-    })
 
   return refreshPromise
 }
@@ -68,8 +75,11 @@ async function apiFetch(path: string, init: RequestInit = {}): Promise<Response>
       headers: retryHeaders,
       credentials: "include",
     })
-  } catch {
-    store.dispatch(clearAuth())
+  } catch (err) {
+    if (err instanceof RefreshAuthError) {
+      refreshFailedForAccessToken = null
+      store.dispatch(clearAuth())
+    }
     return response
   }
 }
