@@ -87,10 +87,12 @@ function useMenuItems(
   const [state, dispatch] = useReducer(reducer, initialState)
   const { loading, loadingMore, hasMore, page } = state
   const loadingMoreRef = useRef(false)
+  const abortRef = useRef<AbortController | null>(null)
 
   useEffect(() => {
     if (!restaurantId) return
     const controller = new AbortController()
+    abortRef.current = controller
     const { signal } = controller
     const isSearching = searchQuery.trim().length > 0
 
@@ -135,13 +137,17 @@ function useMenuItems(
     dispatch({ type: "LOADING_MORE" })
     const nextPage = page + 1
     const isSearching = searchQuery.trim().length > 0
+    // Reuse the active filter's controller so a filter change (which aborts it)
+    // also cancels this in-flight request and prevents a stale APPEND.
+    const signal = abortRef.current?.signal
     const promise = isSearching
-      ? searchItems(restaurantId, searchQuery.trim(), guestToken, undefined, nextPage)
+      ? searchItems(restaurantId, searchQuery.trim(), guestToken, signal, nextPage)
       : fetchItems({
           restaurantId,
           categoryId: activeCategory ?? undefined,
           page: nextPage,
           guestToken,
+          signal,
           sortOrder,
         })
     promise
@@ -151,6 +157,7 @@ function useMenuItems(
       })
       .catch(() => {
         loadingMoreRef.current = false
+        if (signal?.aborted) return
         dispatch({ type: "ERROR", message: "Failed to load more" })
       })
   }, [loading, hasMore, searchQuery, page, restaurantId, activeCategory, guestToken, sortOrder])
