@@ -40,7 +40,7 @@ function MenuPage() {
     addItem,
     setQuantity,
     clear,
-  } = useCart(restaurantId ?? "")
+  } = useCart(restaurantId ?? "", guestToken)
 
   const {
     restaurantName,

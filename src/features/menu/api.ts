@@ -79,6 +79,24 @@ export function fetchItems({
   )
 }
 
+export async function fetchItem(
+  restaurantId: string,
+  itemPublicId: string,
+  guestToken?: string,
+  signal?: AbortSignal,
+): Promise<MenuItem | null> {
+  const res = await fetch(
+    buildUrl(`/api/menu/items/${itemPublicId}/`, {
+      restaurant: restaurantId,
+      guest_token: guestToken,
+    }),
+    { signal },
+  )
+  if (res.status === 404) return null
+  if (!res.ok) throw new Error(`${res.status} ${res.statusText}`)
+  return res.json() as Promise<MenuItem>
+}
+
 export function searchItems(
   restaurantId: string,
   query: string,
