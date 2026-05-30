@@ -1,0 +1,167 @@
+import { ENV_NOT_CONFIGURED_VALUE, env } from "@/config/env"
+import type { MenuCategory, MenuItem, PaginatedResponse } from "./types"
+
+function buildUrl(path: string, params: Record<string, string | undefined>): string {
+  if (env.apiBaseUrl === ENV_NOT_CONFIGURED_VALUE) {
+    throw new Error("VITE_API_BASE_URL is not configured")
+  }
+  const url = new URL(`${env.apiBaseUrl}${path}`)
+  for (const [key, value] of Object.entries(params)) {
+    if (value !== undefined) url.searchParams.set(key, value)
+  }
+  return url.toString()
+}
+
+async function menuGet<T>(
+  path: string,
+  params: Record<string, string | undefined>,
+  signal?: AbortSignal,
+): Promise<T> {
+  const res = await fetch(buildUrl(path, params), { signal })
+  if (!res.ok) throw new Error(`${res.status} ${res.statusText}`)
+  return res.json() as Promise<T>
+}
+
+async function menuPost<T>(
+  path: string,
+  params: Record<string, string | undefined>,
+  body: Record<string, string>,
+): Promise<T> {
+  const res = await fetch(buildUrl(path, params), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  })
+  if (!res.ok) throw new Error(`${res.status} ${res.statusText}`)
+  return res.json() as Promise<T>
+}
+
+export function fetchCategories(
+  restaurantId: string,
+  signal?: AbortSignal,
+): Promise<PaginatedResponse<MenuCategory>> {
+  return menuGet(
+    "/api/menu/categories/",
+    { restaurant: restaurantId, ordering: "sort_order" },
+    signal,
+  )
+}
+
+export type SortOrder = "sort_order" | "price" | "-price"
+
+export type FetchItemsParams = {
+  restaurantId: string
+  categoryId?: string
+  page?: number
+  guestToken?: string
+  signal?: AbortSignal
+  sortOrder?: SortOrder
+}
+
+export function fetchItems({
+  restaurantId,
+  categoryId,
+  page,
+  guestToken,
+  signal,
+  sortOrder = "sort_order",
+}: FetchItemsParams): Promise<PaginatedResponse<MenuItem>> {
+  return menuGet(
+    "/api/menu/items/",
+    {
+      restaurant: restaurantId,
+      guest_token: guestToken,
+      ordering: sortOrder,
+      ...(categoryId ? { category: categoryId } : {}),
+      ...(page && page > 1 ? { page: String(page) } : {}),
+    },
+    signal,
+  )
+}
+
+export async function fetchItem(
+  restaurantId: string,
+  itemPublicId: string,
+  guestToken?: string,
+  signal?: AbortSignal,
+): Promise<MenuItem | null> {
+  const res = await fetch(
+    buildUrl(`/api/menu/items/${itemPublicId}/`, {
+      restaurant: restaurantId,
+      guest_token: guestToken,
+    }),
+    { signal },
+  )
+  if (res.status === 404) return null
+  if (!res.ok) throw new Error(`${res.status} ${res.statusText}`)
+  return res.json() as Promise<MenuItem>
+}
+
+export function searchItems(
+  restaurantId: string,
+  query: string,
+  guestToken?: string,
+  signal?: AbortSignal,
+  page?: number,
+): Promise<PaginatedResponse<MenuItem>> {
+  return menuGet(
+    "/api/menu/items/search/",
+    {
+      restaurant: restaurantId,
+      q: query,
+      guest_token: guestToken,
+      ...(page && page > 1 ? { page: String(page) } : {}),
+    },
+    signal,
+  )
+}
+
+export type ToggleLikeResponse = {
+  public_id: string
+  is_liked: boolean
+  likes_count: number
+}
+
+export function toggleItemLike(
+  restaurantId: string,
+  itemPublicId: string,
+  guestToken: string,
+): Promise<ToggleLikeResponse> {
+  return menuPost(
+    `/api/menu/items/${itemPublicId}/toggle-like/`,
+    { restaurant: restaurantId },
+    {
+      guest_token: guestToken,
+    },
+  )
+}
+
+export type WorkingHoursDay = { open: string; close: string }
+export type WorkingHours = Partial<
+  Record<"mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun", WorkingHoursDay>
+>
+
+export type PublicRestaurantSettings = {
+  currency: string
+  timezone: string
+  working_hours: WorkingHours
+  rating: string | null
+  eta_min_minutes: number
+  eta_max_minutes: number
+  price_band: number
+}
+
+export type PublicRestaurant = {
+  public_id: string
+  name: string
+  address: string
+  phone: string
+  cover_image: string | null
+  telegram_url: string
+  facebook_url: string
+  settings: PublicRestaurantSettings | null
+}
+
+export function fetchRestaurant(restaurantId: string): Promise<PublicRestaurant> {
+  return menuGet(`/api/restaurants/restaurants-public/${restaurantId}/`, {})
+}

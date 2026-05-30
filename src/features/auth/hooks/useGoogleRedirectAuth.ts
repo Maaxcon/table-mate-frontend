@@ -2,7 +2,7 @@ import { ENV_NOT_CONFIGURED_VALUE, env } from "@/config/env"
 import { useGoogleLogin } from "@react-oauth/google"
 import { useEffect, useState } from "react"
 import { googleAuthCleanupQueryParams, googleAuthMessage } from "./googleAuth.constants"
-import type { GoogleFeedbackType, InitialGoogleFeedback, MeResponse } from "@/types/auth"
+import type { GoogleFeedbackType, InitialGoogleFeedback, MeResponse } from "@/features/auth/types"
 import type { GoogleAuthResponse } from "@/types/api/types.gen"
 import { useAppDispatch } from "@/store/hooks"
 import { setAccessToken, setStaffContextPending, setUser } from "@/store/auth/authSlice"
@@ -75,6 +75,7 @@ function useGoogleRedirectAuth(): UseGoogleRedirectAuthResult {
         const response = await fetch(`${env.apiBaseUrl}/api/auth/google/`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
+          credentials: "include",
           body: JSON.stringify({ code, redirect_uri: window.location.origin }),
           signal: controller.signal,
         })
@@ -111,6 +112,7 @@ function useGoogleRedirectAuth(): UseGoogleRedirectAuthResult {
             firstName: me.first_name,
             lastName: me.last_name,
             role: me.role,
+            restaurantId: me.restaurant_public_id,
           }),
         )
 
