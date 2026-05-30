@@ -71,12 +71,6 @@ function MenuPage() {
 
   const showAllGrouped = activeCategory === null && !searchQuery
 
-  useEffect(() => {
-    if (showAllGrouped && hasMore && !loadingMore && !itemsLoading) {
-      loadMore()
-    }
-  }, [showAllGrouped, hasMore, loadingMore, itemsLoading, loadMore])
-
   const groupedItems = useMemo(() => {
     if (!showAllGrouped || categories.length === 0) return null
     const map = new Map<string, MenuItem[]>()
