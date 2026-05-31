@@ -1,9 +1,11 @@
+import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { LuArrowLeft, LuLogOut } from "react-icons/lu"
 import { apiFetch } from "@/api/client"
 import { clearAuth } from "@/store/auth/authSlice"
 import { useAppDispatch } from "@/store/hooks"
 import { BookingsList, HistoryList, ProfileHeader } from "./components"
+import { ReceiptDialog } from "./components/ReceiptDialog/ReceiptDialog"
 import { useCabinet } from "./hooks/useCabinet"
 import type { HistoryEntry, Reservation } from "./types"
 import "./CabinetPage.css"
@@ -13,6 +15,7 @@ function CabinetPage() {
   const dispatch = useAppDispatch()
   const { profile, bookings, history, loading, bookingsError, cancelBooking, updateProfile } =
     useCabinet()
+  const [receipt, setReceipt] = useState<HistoryEntry | null>(null)
 
   const handleLogout = async () => {
     try {
@@ -36,9 +39,7 @@ function CabinetPage() {
   }
 
   const handleOpenReceipt = (entry: HistoryEntry) => {
-    // TODO(backend): open the real receipt once order history is wired up.
-    console.info("Open receipt", entry.id)
-    window.alert("Receipt view is coming soon.")
+    setReceipt(entry)
   }
 
   return (
@@ -79,6 +80,8 @@ function CabinetPage() {
       ) : (
         <p className="cabinet-page__loading">We could not load your profile.</p>
       )}
+
+      {receipt && <ReceiptDialog entry={receipt} onClose={() => setReceipt(null)} />}
     </main>
   )
 }
