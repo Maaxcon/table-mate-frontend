@@ -25,16 +25,38 @@ export type Reservation = {
   notes: string | null
 }
 
-// One past visit shown in the History list.
+// A single line on a receipt.
+export type ReceiptItem = {
+  name: string
+  quantity: number
+  // Unit price in major currency units.
+  unitPrice: number
+}
+
+// One past visit shown in the History list and the receipt modal.
 // NOTE: there is no customer order-history endpoint yet, so this is filled
 // with seeded mock data for now. The shape mirrors the future Order payload.
 export type HistoryEntry = {
   id: string
+  // Human-friendly receipt/order number, e.g. "TM-2026-0518-014".
+  orderNumber: string
   restaurantName: string
+  restaurantImage: string
+  restaurantAddress: string
+  restaurantPhone: string
   // ISO date string of the visit.
   date: string
-  // Total bill as a number in the smallest sensible unit (major currency units).
-  total: number
   currency: string
-  itemCount: number
+  tableLabel: string
+  server: string
+  guests: number
+  items: ReceiptItem[]
+  // All amounts are in major currency units.
+  subtotal: number
+  tax: number
+  serviceCharge: number
+  tip: number
+  total: number
+  paymentMethod: "card" | "cash"
+  paymentStatus: string
 }
