@@ -11,7 +11,8 @@ import "./CabinetPage.css"
 function CabinetPage() {
   const navigate = useNavigate()
   const dispatch = useAppDispatch()
-  const { profile, bookings, history, loading, bookingsError, cancelBooking } = useCabinet()
+  const { profile, bookings, history, loading, bookingsError, cancelBooking, updateProfile } =
+    useCabinet()
 
   const handleLogout = async () => {
     try {
@@ -66,7 +67,7 @@ function CabinetPage() {
         <p className="cabinet-page__loading">Loading your cabinet…</p>
       ) : profile ? (
         <>
-          <ProfileHeader profile={profile} />
+          <ProfileHeader profile={profile} onSave={updateProfile} />
           <BookingsList
             bookings={bookings}
             error={bookingsError}

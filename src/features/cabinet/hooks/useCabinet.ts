@@ -1,10 +1,13 @@
-import { useCallback, useEffect, useState } from "react"
-import { useAppSelector } from "@/store/hooks"
+import { useCallback, useEffect, useRef, useState } from "react"
+import { setUser } from "@/store/auth/authSlice"
+import { useAppDispatch, useAppSelector } from "@/store/hooks"
 import {
   cancelReservation,
   fetchMyProfile,
   fetchMyReservations,
   filterActiveBookings,
+  updateMyProfile,
+  type ProfileUpdate,
 } from "../api"
 import { MOCK_HISTORY } from "../data/mockHistory"
 import type { CabinetProfile, HistoryEntry, Reservation } from "../types"
@@ -16,12 +19,18 @@ type UseCabinetResult = {
   loading: boolean
   bookingsError: string | null
   cancelBooking: (publicId: string) => void
+  updateProfile: (patch: ProfileUpdate) => Promise<void>
 }
 
 export function useCabinet(): UseCabinetResult {
+  const dispatch = useAppDispatch()
   // The store already holds the signed-in user; use it as an instant fallback
   // for the header while the full profile (with "member since") loads.
   const storeUser = useAppSelector((s) => s.auth.user)
+  const storeUserRef = useRef(storeUser)
+  useEffect(() => {
+    storeUserRef.current = storeUser
+  }, [storeUser])
 
   const [profile, setProfile] = useState<CabinetProfile | null>(null)
   const [bookings, setBookings] = useState<Reservation[]>([])
@@ -41,16 +50,17 @@ export function useCabinet(): UseCabinetResult {
 
       if (signal.aborted) return
 
+      const fallbackUser = storeUserRef.current
       if (profileResult.status === "fulfilled") {
         setProfile(profileResult.value)
-      } else if (storeUser) {
+      } else if (fallbackUser) {
         // Fall back to the store user; createdAt is unknown here.
         setProfile({
-          firstName: storeUser.firstName,
-          lastName: storeUser.lastName,
-          email: storeUser.email,
+          firstName: fallbackUser.firstName,
+          lastName: fallbackUser.lastName,
+          email: fallbackUser.email,
           phone: null,
-          role: storeUser.role,
+          role: fallbackUser.role,
           createdAt: "",
         })
       }
@@ -67,13 +77,31 @@ export function useCabinet(): UseCabinetResult {
 
     void load()
     return () => controller.abort()
-  }, [storeUser])
+  }, [])
 
   const cancelBooking = useCallback((publicId: string) => {
     // Optimistic: drop it from the active list right away.
     setBookings((prev) => prev.filter((b) => b.public_id !== publicId))
     void cancelReservation(publicId)
   }, [])
+
+  const updateProfile = useCallback(
+    async (patch: ProfileUpdate) => {
+      const updated = await updateMyProfile(patch)
+      setProfile(updated)
+      // Keep the Redux user in sync so the rest of the app shows the new data.
+      dispatch(
+        setUser({
+          email: updated.email,
+          firstName: updated.firstName,
+          lastName: updated.lastName,
+          role: updated.role,
+          restaurantId: storeUserRef.current?.restaurantId ?? null,
+        }),
+      )
+    },
+    [dispatch],
+  )
 
   return {
     profile,
@@ -82,5 +110,6 @@ export function useCabinet(): UseCabinetResult {
     loading,
     bookingsError,
     cancelBooking,
+    updateProfile,
   }
 }
