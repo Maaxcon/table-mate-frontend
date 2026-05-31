@@ -3,6 +3,7 @@ import { ENV_NOT_CONFIGURED_VALUE, env } from "@/config/env"
 import { GoogleOAuthProvider } from "@react-oauth/google"
 import AuthInitializer from "@/components/AuthInitializer"
 import { ThemeProvider } from "@/context/ThemeContext"
+import CabinetPage from "@/pages/CabinetPage"
 import GreetingPage from "@/pages/GreetingPage"
 import HomePlaceholderPage from "@/pages/HomePlaceholderPage"
 import MenuPage from "@/pages/MenuPage"
@@ -47,6 +48,7 @@ function App() {
               </Route>
               <Route element={<ProtectedRoute />}>
                 <Route path="/home" element={<HomePlaceholderPage />} />
+                <Route path="/cabinet" element={<CabinetPage />} />
               </Route>
             </Route>
           </Routes>
