@@ -3,8 +3,18 @@ import { LuCreditCard, LuSettings } from "react-icons/lu"
 import Card from "@/components/Card"
 import type { ProfileUpdate } from "../../api"
 import type { CabinetProfile } from "../../types"
-import { memberSinceYear } from "../../utils"
+import {
+  composeUaPhone,
+  extractUaNational,
+  formatUaNational,
+  isValidEmail,
+  isValidUaNational,
+  memberSinceYear,
+} from "../../utils"
+import { FeedbackDialog } from "../FeedbackDialog/FeedbackDialog"
 import "./ProfileHeader.css"
+
+type Feedback = { variant: "success" | "error"; title: string; message?: string }
 
 type ProfileHeaderProps = {
   profile: CabinetProfile
@@ -19,11 +29,11 @@ export function ProfileHeader({ profile, onSave }: ProfileHeaderProps) {
   const [open, setOpen] = useState(false)
   const [firstName, setFirstName] = useState(profile.firstName)
   const [lastName, setLastName] = useState(profile.lastName)
-  const [phone, setPhone] = useState(profile.phone ?? "")
+  // Only the 9 national digits; the +380 prefix is fixed in the UI.
+  const [phone, setPhone] = useState(() => extractUaNational(profile.phone))
   const [email, setEmail] = useState(profile.email)
   const [saving, setSaving] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [saved, setSaved] = useState(false)
+  const [feedback, setFeedback] = useState<Feedback | null>(null)
 
   const fullName = `${profile.firstName} ${profile.lastName}`.trim() || profile.email
 
@@ -32,36 +42,60 @@ export function ProfileHeader({ profile, onSave }: ProfileHeaderProps) {
   const isDirty =
     firstName.trim() !== profile.firstName ||
     lastName.trim() !== profile.lastName ||
-    phone.trim() !== (profile.phone ?? "") ||
+    phone !== extractUaNational(profile.phone) ||
     email.trim() !== profile.email
 
   const openPanel = () => {
     // Reset the form to the current profile each time it opens.
     setFirstName(profile.firstName)
     setLastName(profile.lastName)
-    setPhone(profile.phone ?? "")
+    setPhone(extractUaNational(profile.phone))
     setEmail(profile.email)
-    setError(null)
-    setSaved(false)
     setOpen(true)
   }
 
   const handleSubmit = async () => {
     // Ignore extra submits while a request is in flight or when nothing changed.
     if (saving || !isDirty) return
+
+    // Validate before touching the server.
+    if (!isValidEmail(email)) {
+      setFeedback({
+        variant: "error",
+        title: "Invalid email",
+        message: "Please enter a valid email address, like name@example.com.",
+      })
+      return
+    }
+    if (!isValidUaNational(phone)) {
+      setFeedback({
+        variant: "error",
+        title: "Invalid phone",
+        message: "Enter a Ukrainian number: +380 and 9 digits, e.g. 67 123 45 67.",
+      })
+      return
+    }
+
     setSaving(true)
-    setError(null)
-    setSaved(false)
     try {
       await onSave({
         firstName: firstName.trim(),
         lastName: lastName.trim(),
-        phone: phone.trim() === "" ? null : phone.trim(),
+        phone: composeUaPhone(phone) || null,
         email: email.trim(),
       })
-      setSaved(true)
+      setOpen(false)
+      setFeedback({
+        variant: "success",
+        title: "Saved",
+        message: "Your profile has been updated.",
+      })
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not save changes.")
+      setFeedback({
+        variant: "error",
+        title: "Could not save",
+        message: err instanceof Error ? err.message : "Please try again.",
+      })
     } finally {
       setSaving(false)
     }
@@ -124,14 +158,18 @@ export function ProfileHeader({ profile, onSave }: ProfileHeaderProps) {
           </div>
           <label className="cabinet-field">
             <span className="cabinet-field__label">Phone</span>
-            <input
-              className="cabinet-field__input"
-              type="tel"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="Not set"
-              autoComplete="tel"
-            />
+            <div className="cabinet-phone">
+              <span className="cabinet-phone__prefix">+380</span>
+              <input
+                className="cabinet-phone__input"
+                type="tel"
+                inputMode="numeric"
+                value={formatUaNational(phone)}
+                onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 9))}
+                placeholder="67 123 45 67"
+                autoComplete="tel-national"
+              />
+            </div>
           </label>
           <label className="cabinet-field">
             <span className="cabinet-field__label">Email</span>
@@ -151,9 +189,6 @@ export function ProfileHeader({ profile, onSave }: ProfileHeaderProps) {
             <span className="cabinet-setting-row__value">None added</span>
           </div>
 
-          {error && <p className="cabinet-profile__error">{error}</p>}
-          {saved && <p className="cabinet-profile__ok">Saved.</p>}
-
           <div className="cabinet-profile__actions">
             <button
               type="button"
@@ -172,6 +207,15 @@ export function ProfileHeader({ profile, onSave }: ProfileHeaderProps) {
             </button>
           </div>
         </form>
+      )}
+
+      {feedback && (
+        <FeedbackDialog
+          variant={feedback.variant}
+          title={feedback.title}
+          message={feedback.message}
+          onClose={() => setFeedback(null)}
+        />
       )}
     </Card>
   )
