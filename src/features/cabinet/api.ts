@@ -1,9 +1,66 @@
 import { apiFetch } from "@/api/client"
+import heroImage from "@/assets/hero.png"
 import type { MeResponse } from "@/features/auth/types"
-import type { CabinetProfile, Reservation } from "./types"
+import type { CabinetProfile, HistoryEntry, Reservation } from "./types"
 
 // "Active" bookings are the ones the user can still act on.
 const ACTIVE_STATUSES = new Set(["pending", "confirmed"])
+
+// Raw receipt shape from GET /api/receipts/my/ (snake_case, decimals as strings).
+type ApiReceiptItem = { name: string; quantity: number; unit_price: string }
+type ApiReceipt = {
+  public_id: string
+  order_number: string
+  restaurant_name: string
+  restaurant_address: string
+  restaurant_phone: string
+  restaurant_image: string | null
+  visited_at: string
+  currency: string
+  table_label: string
+  server_name: string
+  guests: number
+  items: ApiReceiptItem[]
+  subtotal: string
+  tax: string
+  service_charge: string
+  tip: string
+  total: string
+  payment_method: "card" | "cash"
+  payment_status: string
+}
+
+// Load the signed-in user's receipt history from the database.
+export async function fetchMyReceipts(signal?: AbortSignal): Promise<HistoryEntry[]> {
+  const res = await apiFetch("/api/receipts/my/", { signal })
+  if (!res.ok) throw new Error(`${res.status} ${res.statusText}`)
+  const data = (await res.json()) as ApiReceipt[]
+  return data.map((r) => ({
+    id: r.public_id,
+    orderNumber: r.order_number,
+    restaurantName: r.restaurant_name,
+    restaurantImage: r.restaurant_image ?? heroImage,
+    restaurantAddress: r.restaurant_address,
+    restaurantPhone: r.restaurant_phone,
+    date: r.visited_at,
+    currency: r.currency,
+    tableLabel: r.table_label,
+    server: r.server_name,
+    guests: r.guests,
+    items: r.items.map((i) => ({
+      name: i.name,
+      quantity: i.quantity,
+      unitPrice: Number(i.unit_price),
+    })),
+    subtotal: Number(r.subtotal),
+    tax: Number(r.tax),
+    serviceCharge: Number(r.service_charge),
+    tip: Number(r.tip),
+    total: Number(r.total),
+    paymentMethod: r.payment_method,
+    paymentStatus: r.payment_status,
+  }))
+}
 
 // Load the signed-in user's profile for the cabinet header.
 export async function fetchMyProfile(signal?: AbortSignal): Promise<CabinetProfile> {

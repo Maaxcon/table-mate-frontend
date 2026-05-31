@@ -4,12 +4,12 @@ import { useAppDispatch, useAppSelector } from "@/store/hooks"
 import {
   cancelReservation,
   fetchMyProfile,
+  fetchMyReceipts,
   fetchMyReservations,
   filterActiveBookings,
   updateMyProfile,
   type ProfileUpdate,
 } from "../api"
-import { MOCK_HISTORY } from "../data/mockHistory"
 import type { CabinetProfile, HistoryEntry, Reservation } from "../types"
 
 type UseCabinetResult = {
@@ -34,6 +34,7 @@ export function useCabinet(): UseCabinetResult {
 
   const [profile, setProfile] = useState<CabinetProfile | null>(null)
   const [bookings, setBookings] = useState<Reservation[]>([])
+  const [history, setHistory] = useState<HistoryEntry[]>([])
   const [loading, setLoading] = useState(true)
   const [bookingsError, setBookingsError] = useState<string | null>(null)
 
@@ -43,9 +44,10 @@ export function useCabinet(): UseCabinetResult {
 
     async function load() {
       setLoading(true)
-      const [profileResult, bookingsResult] = await Promise.allSettled([
+      const [profileResult, bookingsResult, receiptsResult] = await Promise.allSettled([
         fetchMyProfile(signal),
         fetchMyReservations(signal),
+        fetchMyReceipts(signal),
       ])
 
       if (signal.aborted) return
@@ -70,6 +72,10 @@ export function useCabinet(): UseCabinetResult {
         setBookingsError(null)
       } else {
         setBookingsError("We could not load your bookings.")
+      }
+
+      if (receiptsResult.status === "fulfilled") {
+        setHistory(receiptsResult.value)
       }
 
       setLoading(false)
@@ -106,7 +112,7 @@ export function useCabinet(): UseCabinetResult {
   return {
     profile,
     bookings,
-    history: MOCK_HISTORY,
+    history,
     loading,
     bookingsError,
     cancelBooking,
