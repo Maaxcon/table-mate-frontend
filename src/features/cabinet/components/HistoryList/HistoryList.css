@@ -62,3 +62,15 @@
   flex: 0 0 auto;
   color: var(--color-text-muted);
 }
+
+@media (max-width: 480px) {
+  .history-card {
+    gap: 10px;
+    padding: 12px;
+  }
+
+  /* The whole row is tappable, so the arrow is just noise on small screens. */
+  .history-card__chevron {
+    display: none;
+  }
+}

@@ -40,7 +40,7 @@ export function ProfileHeader({ profile }: ProfileHeaderProps) {
           onClick={() => setSettingsOpen((open) => !open)}
         >
           <LuSettings aria-hidden="true" />
-          <span>Settings</span>
+          <span className="cabinet-profile__settings-text">Settings</span>
         </button>
       </div>
 
