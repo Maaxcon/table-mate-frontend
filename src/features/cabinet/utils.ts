@@ -77,11 +77,13 @@ export function isValidUaNational(digits: string): boolean {
   return digits.length === 0 || digits.length === 9
 }
 
-// "$48.50" using the entry's currency.
+// Currency symbols we render directly; everything else shows the 3-letter code.
+const CURRENCY_SYMBOLS: Record<string, string> = { USD: "$", EUR: "€", GBP: "£", UAH: "₴" }
+
+// Single money formatter used everywhere (screen + PDF) so they always match.
+// Locale-independent: a dot decimal and no surprise NBSP/commas.
 export function formatMoney(amount: number, currency: string): string {
-  try {
-    return new Intl.NumberFormat(undefined, { style: "currency", currency }).format(amount)
-  } catch {
-    return `${amount.toFixed(2)} ${currency}`
-  }
+  const value = amount.toFixed(2)
+  const symbol = CURRENCY_SYMBOLS[currency]
+  return symbol ? `${symbol}${value}` : `${value} ${currency}`
 }

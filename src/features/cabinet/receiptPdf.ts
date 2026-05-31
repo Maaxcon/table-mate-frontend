@@ -1,20 +1,12 @@
 import { jsPDF } from "jspdf"
 import { loadReceiptFont } from "./receiptFont"
 import type { HistoryEntry } from "./types"
-import { formatDateTime } from "./utils"
+import { formatDateTime, formatMoney } from "./utils"
 
 const FONT = "DejaVuSans"
 
-// DejaVu Sans covers these currency symbols; unknown codes show as text.
-const SAFE_SYMBOLS: Record<string, string> = { USD: "$", EUR: "€", GBP: "£", UAH: "₴" }
-
-// Locale-independent money formatting (the PDF font dislikes the NBSP and
-// comma decimals that Intl can produce on some system locales).
-function money(amount: number, currency: string): string {
-  const value = amount.toFixed(2)
-  const symbol = SAFE_SYMBOLS[currency]
-  return symbol ? `${symbol}${value}` : `${value} ${currency}`
-}
+// Same money format as the screen (DejaVu Sans renders $, €, £, ₴).
+const money = formatMoney
 
 // Build a clean, text-based PDF of a receipt and return it as a Blob.
 export async function buildReceiptPdf(
