@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom"
 import { apiFetch } from "@/api/client"
 import { clearAuth } from "@/store/auth/authSlice"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
@@ -20,6 +21,9 @@ function HomePlaceholderPage() {
         {user?.firstName} {user?.lastName}
       </h1>
       <p>Role: {user?.role}</p>
+      <p>
+        <Link to="/cabinet">My cabinet</Link>
+      </p>
       <button onClick={() => void handleLogout()}>Logout</button>
     </main>
   )
