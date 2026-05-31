@@ -18,6 +18,7 @@ type UseCabinetResult = {
   history: HistoryEntry[]
   loading: boolean
   bookingsError: string | null
+  historyError: string | null
   cancelBooking: (publicId: string) => void
   updateProfile: (patch: ProfileUpdate) => Promise<void>
 }
@@ -37,6 +38,7 @@ export function useCabinet(): UseCabinetResult {
   const [history, setHistory] = useState<HistoryEntry[]>([])
   const [loading, setLoading] = useState(true)
   const [bookingsError, setBookingsError] = useState<string | null>(null)
+  const [historyError, setHistoryError] = useState<string | null>(null)
 
   useEffect(() => {
     const controller = new AbortController()
@@ -76,6 +78,9 @@ export function useCabinet(): UseCabinetResult {
 
       if (receiptsResult.status === "fulfilled") {
         setHistory(receiptsResult.value)
+        setHistoryError(null)
+      } else {
+        setHistoryError("We could not load your history.")
       }
 
       setLoading(false)
@@ -115,6 +120,7 @@ export function useCabinet(): UseCabinetResult {
     history,
     loading,
     bookingsError,
+    historyError,
     cancelBooking,
     updateProfile,
   }

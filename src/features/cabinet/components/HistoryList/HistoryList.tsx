@@ -5,11 +5,11 @@ import "./HistoryList.css"
 
 type HistoryListProps = {
   history: HistoryEntry[]
-  // Opening a receipt is a placeholder for the MVP.
+  error: string | null
   onOpenReceipt: (entry: HistoryEntry) => void
 }
 
-export function HistoryList({ history, onOpenReceipt }: HistoryListProps) {
+export function HistoryList({ history, error, onOpenReceipt }: HistoryListProps) {
   // Newest first.
   const sorted = [...history].sort(
     (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
@@ -21,7 +21,9 @@ export function HistoryList({ history, onOpenReceipt }: HistoryListProps) {
         History
       </h2>
 
-      {sorted.length === 0 ? (
+      {error ? (
+        <p className="cabinet-section__empty cabinet-section__empty--error">{error}</p>
+      ) : sorted.length === 0 ? (
         <p className="cabinet-section__empty">No past visits yet.</p>
       ) : (
         <ul className="cabinet-history">

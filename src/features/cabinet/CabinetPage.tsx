@@ -14,8 +14,16 @@ import "./CabinetPage.css"
 function CabinetPage() {
   const navigate = useNavigate()
   const dispatch = useAppDispatch()
-  const { profile, bookings, history, loading, bookingsError, cancelBooking, updateProfile } =
-    useCabinet()
+  const {
+    profile,
+    bookings,
+    history,
+    loading,
+    bookingsError,
+    historyError,
+    cancelBooking,
+    updateProfile,
+  } = useCabinet()
   const [receipt, setReceipt] = useState<HistoryEntry | null>(null)
 
   const handleLogout = async () => {
@@ -77,7 +85,7 @@ function CabinetPage() {
             onModify={handleModify}
             onCancel={handleCancel}
           />
-          <HistoryList history={history} onOpenReceipt={handleOpenReceipt} />
+          <HistoryList history={history} error={historyError} onOpenReceipt={handleOpenReceipt} />
         </>
       ) : (
         <p className="cabinet-page__loading">We could not load your profile.</p>
