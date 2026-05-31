@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { createPortal } from "react-dom"
 import { useNavigate } from "react-router-dom"
 import {
@@ -11,6 +11,7 @@ import {
   LuShare2,
   LuX,
 } from "react-icons/lu"
+import { useFocusTrap } from "@/hooks/useFocusTrap"
 import type { HistoryEntry } from "../../types"
 import { loadReceiptFont } from "../../receiptFont"
 import { buildReceiptPdf } from "../../receiptPdf"
@@ -36,7 +37,7 @@ function canShareFiles(): boolean {
 }
 
 export function ReceiptDialog({ entry, onClose }: ReceiptDialogProps) {
-  const closeRef = useRef<HTMLButtonElement>(null)
+  const dialogRef = useFocusTrap<HTMLDivElement>(onClose)
   const shareMode = useMemo(() => canShareFiles(), [])
   const navigate = useNavigate()
   const [busy, setBusy] = useState(false)
@@ -49,15 +50,9 @@ export function ReceiptDialog({ entry, onClose }: ReceiptDialogProps) {
   }
 
   useEffect(() => {
-    closeRef.current?.focus()
     // Preload the PDF font so saving/sharing later feels instant.
     void loadReceiptFont()
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose()
-    }
-    window.addEventListener("keydown", onKey)
-    return () => window.removeEventListener("keydown", onKey)
-  }, [onClose])
+  }, [])
 
   const itemCount = entry.items.reduce((n, i) => n + i.quantity, 0)
   const money = (amount: number) => formatMoney(amount, entry.currency)
@@ -98,14 +93,22 @@ export function ReceiptDialog({ entry, onClose }: ReceiptDialogProps) {
   // Render to <body> so an ancestor transform can't anchor this fixed overlay.
   return createPortal(
     <div className="receipt-dialog__overlay">
+      <button
+        type="button"
+        className="receipt-dialog__backdrop"
+        aria-label="Close receipt"
+        tabIndex={-1}
+        onClick={onClose}
+      />
       <div
+        ref={dialogRef}
+        tabIndex={-1}
         className="receipt-dialog"
         role="dialog"
         aria-modal="true"
         aria-labelledby="receipt-dialog-title"
       >
         <button
-          ref={closeRef}
           type="button"
           className="receipt-dialog__close"
           onClick={onClose}

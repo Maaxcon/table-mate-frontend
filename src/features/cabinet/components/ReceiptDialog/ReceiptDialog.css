@@ -9,8 +9,19 @@
   animation: receipt-fade 0.15s ease-out;
 }
 
+.receipt-dialog__backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  cursor: default;
+}
+
 .receipt-dialog {
   position: relative;
+  z-index: 1;
   box-sizing: border-box;
   width: 100%;
   max-width: 460px;
