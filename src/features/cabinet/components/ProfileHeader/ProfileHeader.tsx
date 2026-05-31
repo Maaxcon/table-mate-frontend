@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { LuChevronRight, LuCreditCard, LuGlobe, LuSettings } from "react-icons/lu"
+import { LuChevronRight, LuCreditCard, LuMail, LuPhone, LuSettings, LuUser } from "react-icons/lu"
 import Card from "@/components/Card"
 import type { CabinetProfile } from "../../types"
 import { memberSinceYear } from "../../utils"
@@ -46,11 +46,23 @@ export function ProfileHeader({ profile }: ProfileHeaderProps) {
 
       {settingsOpen && (
         <div className="cabinet-profile__settings" id="cabinet-settings">
-          {/* UI only for MVP — these are not wired to the backend yet. */}
+          {/* UI only for MVP — editing is not wired to the backend yet. */}
           <button type="button" className="cabinet-setting-row" disabled>
-            <LuGlobe className="cabinet-setting-row__icon" aria-hidden="true" />
-            <span className="cabinet-setting-row__label">Language</span>
-            <span className="cabinet-setting-row__value">English</span>
+            <LuUser className="cabinet-setting-row__icon" aria-hidden="true" />
+            <span className="cabinet-setting-row__label">Name</span>
+            <span className="cabinet-setting-row__value">{fullName}</span>
+            <LuChevronRight aria-hidden="true" />
+          </button>
+          <button type="button" className="cabinet-setting-row" disabled>
+            <LuPhone className="cabinet-setting-row__icon" aria-hidden="true" />
+            <span className="cabinet-setting-row__label">Phone</span>
+            <span className="cabinet-setting-row__value">{profile.phone ?? "Not set"}</span>
+            <LuChevronRight aria-hidden="true" />
+          </button>
+          <button type="button" className="cabinet-setting-row" disabled>
+            <LuMail className="cabinet-setting-row__icon" aria-hidden="true" />
+            <span className="cabinet-setting-row__label">Email</span>
+            <span className="cabinet-setting-row__value">{profile.email}</span>
             <LuChevronRight aria-hidden="true" />
           </button>
           <button type="button" className="cabinet-setting-row" disabled>
@@ -59,7 +71,7 @@ export function ProfileHeader({ profile }: ProfileHeaderProps) {
             <span className="cabinet-setting-row__value">None added</span>
             <LuChevronRight aria-hidden="true" />
           </button>
-          <p className="cabinet-profile__settings-note">Settings are coming soon.</p>
+          <p className="cabinet-profile__settings-note">Editing is coming soon.</p>
         </div>
       )}
     </Card>
