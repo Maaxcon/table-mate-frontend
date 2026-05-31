@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 import { useNavigate } from "react-router-dom"
 import {
@@ -15,6 +15,7 @@ import type { HistoryEntry } from "../../types"
 import { loadReceiptFont } from "../../receiptFont"
 import { buildReceiptPdf } from "../../receiptPdf"
 import { formatDateTime, formatMoney } from "../../utils"
+import { FeedbackDialog } from "../FeedbackDialog/FeedbackDialog"
 import "./ReceiptDialog.css"
 
 type ReceiptDialogProps = {
@@ -38,6 +39,8 @@ export function ReceiptDialog({ entry, onClose }: ReceiptDialogProps) {
   const closeRef = useRef<HTMLButtonElement>(null)
   const shareMode = useMemo(() => canShareFiles(), [])
   const navigate = useNavigate()
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const openMenu = () => {
     if (!entry.restaurantId) return
@@ -60,28 +63,36 @@ export function ReceiptDialog({ entry, onClose }: ReceiptDialogProps) {
   const money = (amount: number) => formatMoney(amount, entry.currency)
 
   const handleSaveOrShare = async () => {
-    const { blob, filename } = await buildReceiptPdf(entry)
+    if (busy) return
+    setBusy(true)
+    try {
+      const { blob, filename } = await buildReceiptPdf(entry)
 
-    // Mobile: open the native share sheet with the PDF file.
-    if (shareMode) {
-      const file = new File([blob], filename, { type: "application/pdf" })
-      try {
-        await navigator.share({ files: [file], title: filename })
-      } catch {
-        // user cancelled — do nothing
+      // Mobile: open the native share sheet with the PDF file.
+      if (shareMode) {
+        const file = new File([blob], filename, { type: "application/pdf" })
+        try {
+          await navigator.share({ files: [file], title: filename })
+        } catch {
+          // user cancelled the share sheet — not an error
+        }
+        return
       }
-      return
-    }
 
-    // Desktop: download the PDF.
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement("a")
-    link.href = url
-    link.download = filename
-    document.body.appendChild(link)
-    link.click()
-    link.remove()
-    URL.revokeObjectURL(url)
+      // Desktop: download the PDF.
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement("a")
+      link.href = url
+      link.download = filename
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      URL.revokeObjectURL(url)
+    } catch {
+      setError("Could not create the PDF. Please check your connection and try again.")
+    } finally {
+      setBusy(false)
+    }
   }
 
   // Render to <body> so an ancestor transform can't anchor this fixed overlay.
@@ -209,14 +220,24 @@ export function ReceiptDialog({ entry, onClose }: ReceiptDialogProps) {
             type="button"
             className="receipt-dialog__action"
             onClick={() => void handleSaveOrShare()}
+            disabled={busy}
           >
             {shareMode ? <LuShare2 aria-hidden="true" /> : <LuDownload aria-hidden="true" />}
-            {shareMode ? "Share receipt" : "Save PDF"}
+            {busy ? "Preparing…" : shareMode ? "Share receipt" : "Save PDF"}
           </button>
 
           <p className="receipt-dialog__thanks">Thank you for dining with us!</p>
         </div>
       </div>
+
+      {error && (
+        <FeedbackDialog
+          variant="error"
+          title="Something went wrong"
+          message={error}
+          onClose={() => setError(null)}
+        />
+      )}
     </div>,
     document.body,
   )
