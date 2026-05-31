@@ -5,6 +5,7 @@ import { apiFetch } from "@/api/client"
 import { clearAuth } from "@/store/auth/authSlice"
 import { useAppDispatch } from "@/store/hooks"
 import { BookingsList, HistoryList, ProfileHeader } from "./components"
+import { CabinetStats } from "./components/CabinetStats/CabinetStats"
 import { ReceiptDialog } from "./components/ReceiptDialog/ReceiptDialog"
 import { useCabinet } from "./hooks/useCabinet"
 import type { HistoryEntry, Reservation } from "./types"
@@ -69,6 +70,7 @@ function CabinetPage() {
       ) : profile ? (
         <>
           <ProfileHeader profile={profile} onSave={updateProfile} />
+          <CabinetStats history={history} />
           <BookingsList
             bookings={bookings}
             error={bookingsError}

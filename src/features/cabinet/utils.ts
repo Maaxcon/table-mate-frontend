@@ -17,6 +17,38 @@ export function formatDateTime(isoDate: string): string {
   })
 }
 
+import type { HistoryEntry } from "./types"
+
+export type CabinetStats = {
+  visits: number
+  totalSpent: number
+  currency: string
+  favoriteRestaurant: string | null
+}
+
+// Summarize a user's visit history for the stats cards.
+export function computeCabinetStats(history: HistoryEntry[]): CabinetStats {
+  const visits = history.length
+  const totalSpent = history.reduce((sum, h) => sum + h.total, 0)
+  const currency = history[0]?.currency ?? "USD"
+
+  // Favorite = the restaurant visited most often.
+  const counts = new Map<string, number>()
+  for (const h of history) {
+    counts.set(h.restaurantName, (counts.get(h.restaurantName) ?? 0) + 1)
+  }
+  let favoriteRestaurant: string | null = null
+  let best = 0
+  for (const [name, n] of counts) {
+    if (n > best) {
+      best = n
+      favoriteRestaurant = name
+    }
+  }
+
+  return { visits, totalSpent, currency, favoriteRestaurant }
+}
+
 // Basic email shape check: something@something.something.
 export function isValidEmail(value: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())
