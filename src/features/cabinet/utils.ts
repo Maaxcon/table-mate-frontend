@@ -49,11 +49,6 @@ export function computeCabinetStats(history: HistoryEntry[]): CabinetStats {
   return { visits, totalSpent, currency, favoriteRestaurant }
 }
 
-// Basic email shape check: something@something.something.
-export function isValidEmail(value: string): boolean {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())
-}
-
 // Ukrainian numbers are +380 followed by 9 national digits (e.g. 67 123 45 67).
 // We store and edit only those 9 digits; the +380 prefix is fixed in the UI.
 

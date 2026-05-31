@@ -7,7 +7,6 @@ import {
   composeUaPhone,
   extractUaNational,
   formatUaNational,
-  isValidEmail,
   isValidUaNational,
   memberSinceYear,
 } from "../../utils"
@@ -31,7 +30,6 @@ export function ProfileHeader({ profile, onSave }: ProfileHeaderProps) {
   const [lastName, setLastName] = useState(profile.lastName)
   // Only the 9 national digits; the +380 prefix is fixed in the UI.
   const [phone, setPhone] = useState(() => extractUaNational(profile.phone))
-  const [email, setEmail] = useState(profile.email)
   const [saving, setSaving] = useState(false)
   const [feedback, setFeedback] = useState<Feedback | null>(null)
 
@@ -42,15 +40,13 @@ export function ProfileHeader({ profile, onSave }: ProfileHeaderProps) {
   const isDirty =
     firstName.trim() !== profile.firstName ||
     lastName.trim() !== profile.lastName ||
-    phone !== extractUaNational(profile.phone) ||
-    email.trim() !== profile.email
+    phone !== extractUaNational(profile.phone)
 
   const openPanel = () => {
     // Reset the form to the current profile each time it opens.
     setFirstName(profile.firstName)
     setLastName(profile.lastName)
     setPhone(extractUaNational(profile.phone))
-    setEmail(profile.email)
     setOpen(true)
   }
 
@@ -59,14 +55,6 @@ export function ProfileHeader({ profile, onSave }: ProfileHeaderProps) {
     if (saving || !isDirty) return
 
     // Validate before touching the server.
-    if (!isValidEmail(email)) {
-      setFeedback({
-        variant: "error",
-        title: "Invalid email",
-        message: "Please enter a valid email address, like name@example.com.",
-      })
-      return
-    }
     if (!isValidUaNational(phone)) {
       setFeedback({
         variant: "error",
@@ -82,7 +70,6 @@ export function ProfileHeader({ profile, onSave }: ProfileHeaderProps) {
         firstName: firstName.trim(),
         lastName: lastName.trim(),
         phone: composeUaPhone(phone) || null,
-        email: email.trim(),
       })
       setOpen(false)
       setFeedback({
@@ -174,12 +161,16 @@ export function ProfileHeader({ profile, onSave }: ProfileHeaderProps) {
           <label className="cabinet-field">
             <span className="cabinet-field__label">Email</span>
             <input
-              className="cabinet-field__input"
+              className="cabinet-field__input cabinet-field__input--readonly"
               type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              autoComplete="email"
+              value={profile.email}
+              readOnly
+              disabled
+              aria-describedby="cabinet-email-hint"
             />
+            <span className="cabinet-field__hint" id="cabinet-email-hint">
+              Email is linked to your Google account and can’t be changed here.
+            </span>
           </label>
 
           {/* UI only for MVP — not wired to the backend yet. */}

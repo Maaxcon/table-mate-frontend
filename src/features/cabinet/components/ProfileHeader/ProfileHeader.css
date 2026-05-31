@@ -108,6 +108,17 @@
   border-color: var(--color-border-strong);
 }
 
+.cabinet-field__input--readonly {
+  color: var(--color-text-secondary);
+  background: var(--color-bg-surface-subtle);
+  cursor: not-allowed;
+}
+
+.cabinet-field__hint {
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+}
+
 /* Ukrainian phone: fixed "+380" prefix glued to a formatted input. */
 .cabinet-phone {
   box-sizing: border-box;

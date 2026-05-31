@@ -79,12 +79,12 @@ export async function fetchMyProfile(signal?: AbortSignal): Promise<CabinetProfi
   }
 }
 
-// Fields a user may edit about themselves.
+// Fields a user may edit about themselves. Email is intentionally excluded —
+// it is the Google sign-in identity and must not change here.
 export type ProfileUpdate = {
   firstName?: string
   lastName?: string
   phone?: string | null
-  email?: string
 }
 
 // Save profile changes. Returns the updated profile from the server.
@@ -93,7 +93,6 @@ export async function updateMyProfile(patch: ProfileUpdate): Promise<CabinetProf
   if (patch.firstName !== undefined) body.first_name = patch.firstName
   if (patch.lastName !== undefined) body.last_name = patch.lastName
   if (patch.phone !== undefined) body.phone = patch.phone
-  if (patch.email !== undefined) body.email = patch.email
 
   const res = await apiFetch("/api/auth/me/", {
     method: "PATCH",
