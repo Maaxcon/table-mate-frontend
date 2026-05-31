@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useRef } from "react"
 import { createPortal } from "react-dom"
+import { useNavigate } from "react-router-dom"
 import {
   LuBanknote,
+  LuChevronRight,
   LuCreditCard,
   LuDownload,
   LuMapPin,
@@ -35,6 +37,13 @@ function canShareFiles(): boolean {
 export function ReceiptDialog({ entry, onClose }: ReceiptDialogProps) {
   const closeRef = useRef<HTMLButtonElement>(null)
   const shareMode = useMemo(() => canShareFiles(), [])
+  const navigate = useNavigate()
+
+  const openMenu = () => {
+    if (!entry.restaurantId) return
+    onClose()
+    navigate(`/menu/${entry.restaurantId}`)
+  }
 
   useEffect(() => {
     closeRef.current?.focus()
@@ -94,16 +103,20 @@ export function ReceiptDialog({ entry, onClose }: ReceiptDialogProps) {
           <LuX aria-hidden="true" />
         </button>
 
-        <div className="receipt-dialog__cover">
-          <img
-            className="receipt-dialog__cover-img"
-            src={entry.restaurantImage}
-            alt={entry.restaurantName}
-          />
-          <h2 className="receipt-dialog__title" id="receipt-dialog-title">
+        <button
+          type="button"
+          className="receipt-dialog__cover"
+          onClick={openMenu}
+          aria-label={`Open ${entry.restaurantName} menu`}
+        >
+          <img className="receipt-dialog__cover-img" src={entry.restaurantImage} alt="" />
+          <span className="receipt-dialog__title" id="receipt-dialog-title">
             {entry.restaurantName}
-          </h2>
-        </div>
+          </span>
+          <span className="receipt-dialog__cover-cta">
+            View menu <LuChevronRight aria-hidden="true" />
+          </span>
+        </button>
 
         <div className="receipt-dialog__scroll">
           <header className="receipt-dialog__brand">

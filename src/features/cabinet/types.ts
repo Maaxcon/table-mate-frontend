@@ -40,6 +40,8 @@ export type HistoryEntry = {
   id: string
   // Human-friendly receipt/order number, e.g. "TM-2026-0518-014".
   orderNumber: string
+  // Restaurant public_id — used to open the restaurant's menu.
+  restaurantId: string
   restaurantName: string
   restaurantImage: string
   restaurantAddress: string

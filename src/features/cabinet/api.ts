@@ -11,6 +11,7 @@ type ApiReceiptItem = { name: string; quantity: number; unit_price: string }
 type ApiReceipt = {
   public_id: string
   order_number: string
+  restaurant_public_id: string
   restaurant_name: string
   restaurant_address: string
   restaurant_phone: string
@@ -38,6 +39,7 @@ export async function fetchMyReceipts(signal?: AbortSignal): Promise<HistoryEntr
   return data.map((r) => ({
     id: r.public_id,
     orderNumber: r.order_number,
+    restaurantId: r.restaurant_public_id,
     restaurantName: r.restaurant_name,
     restaurantImage: r.restaurant_image ?? heroImage,
     restaurantAddress: r.restaurant_address,
