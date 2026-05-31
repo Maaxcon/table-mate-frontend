@@ -1,0 +1,110 @@
+.cabinet-profile {
+  padding: 20px;
+}
+
+.cabinet-profile__top {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.cabinet-profile__avatar {
+  flex: 0 0 auto;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-bg-page);
+  background: var(--color-border-strong);
+}
+
+.cabinet-profile__identity {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.cabinet-profile__name {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cabinet-profile__since {
+  margin: 2px 0 0;
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+}
+
+.cabinet-profile__settings-btn {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  background: var(--color-bg-surface-subtle);
+  border: 1px solid var(--color-border-default);
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.cabinet-profile__settings-btn:hover {
+  border-color: var(--color-border-strong);
+}
+
+.cabinet-profile__settings {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-border-default);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cabinet-setting-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px;
+  text-align: left;
+  background: var(--color-bg-surface-subtle);
+  border: 1px solid var(--color-border-default);
+  border-radius: 10px;
+  color: var(--color-text-primary);
+  font-size: 0.9rem;
+}
+
+.cabinet-setting-row:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.cabinet-setting-row__icon {
+  flex: 0 0 auto;
+  color: var(--color-text-secondary);
+}
+
+.cabinet-setting-row__label {
+  flex: 1 1 auto;
+  font-weight: 600;
+}
+
+.cabinet-setting-row__value {
+  color: var(--color-text-secondary);
+}
+
+.cabinet-profile__settings-note {
+  margin: 4px 0 0;
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+}
