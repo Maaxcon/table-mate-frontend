@@ -1,7 +1,17 @@
-import { useEffect, useRef } from "react"
+import { useEffect, useMemo, useRef } from "react"
 import { createPortal } from "react-dom"
-import { LuBanknote, LuCreditCard, LuMapPin, LuPhone, LuX } from "react-icons/lu"
+import {
+  LuBanknote,
+  LuCreditCard,
+  LuDownload,
+  LuMapPin,
+  LuPhone,
+  LuShare2,
+  LuX,
+} from "react-icons/lu"
 import type { HistoryEntry } from "../../types"
+import { loadReceiptFont } from "../../receiptFont"
+import { buildReceiptPdf } from "../../receiptPdf"
 import { formatDateTime, formatMoney } from "../../utils"
 import "./ReceiptDialog.css"
 
@@ -10,11 +20,26 @@ type ReceiptDialogProps = {
   onClose: () => void
 }
 
+// Can this device share files (mobile)? If yes we use the native share sheet,
+// otherwise we just download the PDF (desktop).
+function canShareFiles(): boolean {
+  if (typeof navigator === "undefined" || !navigator.canShare) return false
+  try {
+    const probe = new File([new Blob()], "probe.pdf", { type: "application/pdf" })
+    return navigator.canShare({ files: [probe] })
+  } catch {
+    return false
+  }
+}
+
 export function ReceiptDialog({ entry, onClose }: ReceiptDialogProps) {
   const closeRef = useRef<HTMLButtonElement>(null)
+  const shareMode = useMemo(() => canShareFiles(), [])
 
   useEffect(() => {
     closeRef.current?.focus()
+    // Preload the PDF font so saving/sharing later feels instant.
+    void loadReceiptFont()
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose()
     }
@@ -24,6 +49,31 @@ export function ReceiptDialog({ entry, onClose }: ReceiptDialogProps) {
 
   const itemCount = entry.items.reduce((n, i) => n + i.quantity, 0)
   const money = (amount: number) => formatMoney(amount, entry.currency)
+
+  const handleSaveOrShare = async () => {
+    const { blob, filename } = await buildReceiptPdf(entry)
+
+    // Mobile: open the native share sheet with the PDF file.
+    if (shareMode) {
+      const file = new File([blob], filename, { type: "application/pdf" })
+      try {
+        await navigator.share({ files: [file], title: filename })
+      } catch {
+        // user cancelled — do nothing
+      }
+      return
+    }
+
+    // Desktop: download the PDF.
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement("a")
+    link.href = url
+    link.download = filename
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    URL.revokeObjectURL(url)
+  }
 
   // Render to <body> so an ancestor transform can't anchor this fixed overlay.
   return createPortal(
@@ -141,6 +191,15 @@ export function ReceiptDialog({ entry, onClose }: ReceiptDialogProps) {
             </span>
             <span className="receipt-dialog__pay-status">{entry.paymentStatus}</span>
           </div>
+
+          <button
+            type="button"
+            className="receipt-dialog__action"
+            onClick={() => void handleSaveOrShare()}
+          >
+            {shareMode ? <LuShare2 aria-hidden="true" /> : <LuDownload aria-hidden="true" />}
+            {shareMode ? "Share receipt" : "Save PDF"}
+          </button>
 
           <p className="receipt-dialog__thanks">Thank you for dining with us!</p>
         </div>

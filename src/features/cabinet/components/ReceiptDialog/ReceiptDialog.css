@@ -251,8 +251,29 @@
   border: 1px solid var(--color-success-border);
 }
 
+.receipt-dialog__action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  margin-top: 16px;
+  padding: 12px 16px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border-radius: 12px;
+  cursor: pointer;
+  color: var(--color-bg-page);
+  background: var(--color-border-strong);
+  border: 1px solid var(--color-border-strong);
+}
+
+.receipt-dialog__action:hover {
+  opacity: 0.9;
+}
+
 .receipt-dialog__thanks {
-  margin: 18px 0 0;
+  margin: 16px 0 0;
   text-align: center;
   font-size: 0.85rem;
   color: var(--color-text-muted);
