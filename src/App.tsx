@@ -5,7 +5,6 @@ import AuthInitializer from "@/components/AuthInitializer"
 import { ThemeProvider } from "@/context/ThemeContext"
 import CabinetPage from "@/pages/CabinetPage"
 import GreetingPage from "@/pages/GreetingPage"
-import HomePlaceholderPage from "@/pages/HomePlaceholderPage"
 import MenuPage from "@/pages/MenuPage"
 import SelectRestaurantPlaceholderPage from "@/pages/SelectRestaurantPlaceholderPage"
 import { ErrorBoundary } from "@/components/ErrorBoundary"
@@ -47,7 +46,6 @@ function App() {
                 <Route path="/select-restaurant" element={<SelectRestaurantPlaceholderPage />} />
               </Route>
               <Route element={<ProtectedRoute />}>
-                <Route path="/home" element={<HomePlaceholderPage />} />
                 <Route path="/cabinet" element={<CabinetPage />} />
               </Route>
             </Route>
