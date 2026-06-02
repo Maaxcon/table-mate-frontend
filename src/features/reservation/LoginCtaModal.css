@@ -1,0 +1,54 @@
+.login-cta-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.login-cta-modal {
+  background: var(--color-surface);
+  border-radius: 12px;
+  padding: 32px;
+  max-width: 400px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+.login-cta-modal__text {
+  font-size: 16px;
+  color: var(--color-text);
+  margin: 0 0 24px;
+  line-height: 1.5;
+}
+
+.login-cta-modal__actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.login-cta-modal__btn {
+  padding: 10px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.login-cta-modal__btn--login {
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.login-cta-modal__btn--cancel {
+  background: transparent;
+  color: var(--color-text-muted);
+  border: 1px solid var(--color-border);
+}
