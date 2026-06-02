@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "npm run generate:api && tsc -b && vite build",
+    "build": "tsc -b && vite build",
     "smoke": "npm run build",
     "lint": "eslint .",
     "format": "prettier --write .",
@@ -15,9 +15,9 @@
     "generate:api": "openapi-ts"
   },
   "dependencies": {
-    "@hey-api/client-fetch": "^0.13.1",
     "@react-oauth/google": "^0.13.5",
     "@reduxjs/toolkit": "^2.12.0",
+    "jspdf": "^4.2.1",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
     "react-icons": "^5.6.0",
@@ -33,6 +33,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.0",
+    "@hey-api/client-fetch": "^0.13.1",
     "@hey-api/openapi-ts": "^0.97.3",
     "@types/node": "^24.12.2",
     "@types/react": "^19.2.14",
@@ -45,6 +46,7 @@
     "globals": "^17.5.0",
     "husky": "^9.1.7",
     "lint-staged": "^17.0.4",
+    "openapi-typescript": "^7.13.0",
     "playwright": "^1.60.0",
     "prettier": "^3.8.3",
     "typescript": "~5.9.3",

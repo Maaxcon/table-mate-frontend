@@ -87,6 +87,12 @@ export type MenuItem = {
   readonly category: string
   name: string
   description?: string | null
+  readonly ingredients: Array<string>
+  readonly allergens: Array<string>
+  weight_grams?: number | null
+  image?: string | null
+  readonly likes_count: number
+  readonly is_liked: boolean
   price: string
   is_available?: boolean
   sort_order?: number
@@ -310,6 +316,24 @@ export type PaymentStatusEnum =
   | "refunded"
   | "cancelled"
 
+export type PublicRestaurant = {
+  readonly public_id: string
+  readonly name: string
+  readonly address: string
+  readonly phone: string
+  settings: PublicRestaurantSettings | null
+}
+
+export type PublicRestaurantSettings = {
+  readonly currency: string
+  readonly timezone: string
+  readonly working_hours: unknown
+  readonly rating: string | null
+  readonly eta_min_minutes: number
+  readonly eta_max_minutes: number
+  readonly price_band: number
+}
+
 export type Reservation = {
   readonly public_id: string
   readonly restaurant: string
@@ -350,6 +374,10 @@ export type RestaurantSettings = {
   default_tax_rate?: string
   default_service_charge?: string
   working_hours?: unknown
+  rating?: string | null
+  eta_min_minutes?: number
+  eta_max_minutes?: number
+  price_band?: number
   readonly created_at: string
   readonly updated_at: string
 }
@@ -448,6 +476,16 @@ export type Ticket = {
  */
 export type TicketStatusEnum = "incoming" | "active" | "completed" | "bumped"
 
+export type ToggleMenuItemLikeRequest = {
+  guest_token: string
+}
+
+export type ToggleMenuItemLikeResponse = {
+  public_id: string
+  is_liked: boolean
+  likes_count: number
+}
+
 export type TokenRefresh = {
   readonly access: string
   refresh: string
@@ -460,6 +498,7 @@ export type User = {
   last_name?: string
   phone?: string | null
   role?: RoleEnum
+  readonly restaurant_public_id: string | null
   is_active?: boolean
   readonly created_at: string
   readonly updated_at: string
@@ -498,6 +537,8 @@ export type MenuCategoryWritable = {
 export type MenuItemWritable = {
   name: string
   description?: string | null
+  weight_grams?: number | null
+  image?: string | null
   price: string
   is_available?: boolean
   sort_order?: number
@@ -676,6 +717,10 @@ export type RestaurantSettingsWritable = {
   default_tax_rate?: string
   default_service_charge?: string
   working_hours?: unknown
+  rating?: string | null
+  eta_min_minutes?: number
+  eta_max_minutes?: number
+  price_band?: number
 }
 
 export type SessionWritable = {
@@ -1030,6 +1075,27 @@ export type MenuItemsRetrieveResponses = {
 }
 
 export type MenuItemsRetrieveResponse = MenuItemsRetrieveResponses[keyof MenuItemsRetrieveResponses]
+
+export type MenuItemsToggleLikeCreateData = {
+  body: ToggleMenuItemLikeRequest
+  path: {
+    public_id: string
+  }
+  query: {
+    /**
+     * Restaurant public UUID
+     */
+    restaurant: string
+  }
+  url: "/api/menu/items/{public_id}/toggle-like/"
+}
+
+export type MenuItemsToggleLikeCreateResponses = {
+  200: ToggleMenuItemLikeResponse
+}
+
+export type MenuItemsToggleLikeCreateResponse =
+  MenuItemsToggleLikeCreateResponses[keyof MenuItemsToggleLikeCreateResponses]
 
 export type MenuItemsSearchRetrieveData = {
   body?: never
@@ -1474,6 +1540,7 @@ export type RestaurantsRestaurantSettingsListData = {
      * A page number within the paginated result set.
      */
     page?: number
+    price_band?: number
     restaurant?: number
     timezone?: string
   }
@@ -1525,6 +1592,22 @@ export type RestaurantsRestaurantsListResponses = {
 
 export type RestaurantsRestaurantsListResponse =
   RestaurantsRestaurantsListResponses[keyof RestaurantsRestaurantsListResponses]
+
+export type RestaurantsRestaurantsPublicRetrieveData = {
+  body?: never
+  path: {
+    public_id: string
+  }
+  query?: never
+  url: "/api/restaurants/restaurants-public/{public_id}/"
+}
+
+export type RestaurantsRestaurantsPublicRetrieveResponses = {
+  200: PublicRestaurant
+}
+
+export type RestaurantsRestaurantsPublicRetrieveResponse =
+  RestaurantsRestaurantsPublicRetrieveResponses[keyof RestaurantsRestaurantsPublicRetrieveResponses]
 
 export type RestaurantsRestaurantsRetrieveData = {
   body?: never

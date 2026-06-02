@@ -2,7 +2,7 @@ import { useCallback, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import Divider from "@/components/Divider"
 import { AuthHero, GuestAccess, SocialAuthGroup } from "@/features/auth/components"
-import { useGoogleRedirectAuth } from "@/hooks/auth"
+import { useGoogleRedirectAuth } from "@/features/auth/hooks"
 import AuthLayout from "@/layouts/AuthLayout"
 import "./GreetingPage.css"
 

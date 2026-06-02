@@ -74,7 +74,6 @@ function CabinetPage() {
       <Link to="/reservations" className="cabinet-page__reservations-link">
         My reservations
       </Link>
-
       {loading && !profile ? (
         <p className="cabinet-page__loading">Loading your cabinet…</p>
       ) : profile ? (

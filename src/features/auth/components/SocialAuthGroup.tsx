@@ -1,6 +1,6 @@
 import { IconButton } from "@/components/Button"
 import Card from "@/components/Card"
-import type { GoogleFeedbackType } from "@/types/auth"
+import type { GoogleFeedbackType } from "@/features/auth/types"
 import { FcGoogle } from "react-icons/fc"
 import "./SocialAuthGroup.css"
 
