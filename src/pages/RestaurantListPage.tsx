@@ -18,7 +18,7 @@ export function RestaurantListPage() {
 
   useEffect(() => {
     const controller = new AbortController()
-    apiFetch("/api/restaurants/", { signal: controller.signal })
+    apiFetch("/api/restaurants/restaurants-public/", { signal: controller.signal })
       .then(async (res) => {
         if (!res.ok) throw new Error("Failed")
         const data = (await res.json()) as { results?: Restaurant[] }
