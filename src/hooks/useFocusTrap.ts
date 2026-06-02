@@ -3,14 +3,18 @@ import { useEffect, useRef } from "react"
 const FOCUSABLE =
   'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
 
-// Traps Tab focus inside a dialog, focuses it on open, closes on Escape, and
-// restores focus to the previously focused element on close.
+const trapStack: symbol[] = []
+
 export function useFocusTrap<T extends HTMLElement>(onClose: () => void) {
   const ref = useRef<T>(null)
 
   useEffect(() => {
     const node = ref.current
     if (!node) return
+
+    const token = Symbol("focus-trap")
+    trapStack.push(token)
+    const isTopmost = () => trapStack[trapStack.length - 1] === token
 
     const previouslyFocused = document.activeElement as HTMLElement | null
     const visibleFocusables = () =>
@@ -22,6 +26,8 @@ export function useFocusTrap<T extends HTMLElement>(onClose: () => void) {
     ;(visibleFocusables()[0] ?? node).focus()
 
     const onKeyDown = (e: KeyboardEvent) => {
+      // Ignore keys while a dialog is stacked on top of this one.
+      if (!isTopmost()) return
       if (e.key === "Escape") {
         onClose()
         return
@@ -46,6 +52,8 @@ export function useFocusTrap<T extends HTMLElement>(onClose: () => void) {
     document.addEventListener("keydown", onKeyDown)
     return () => {
       document.removeEventListener("keydown", onKeyDown)
+      const i = trapStack.lastIndexOf(token)
+      if (i !== -1) trapStack.splice(i, 1)
       previouslyFocused?.focus?.()
     }
   }, [onClose])
