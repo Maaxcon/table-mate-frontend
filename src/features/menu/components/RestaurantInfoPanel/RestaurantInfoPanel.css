@@ -1,0 +1,87 @@
+.restaurant-info {
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-default);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  font-family: var(--font-family-base);
+}
+
+.restaurant-info__heading {
+  margin: 0 0 4px;
+  font-family: var(--font-family-display);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.restaurant-info__row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.restaurant-info__icon {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  flex-shrink: 0;
+  width: 18px;
+  text-align: center;
+}
+
+.restaurant-info__text {
+  font-size: 0.875rem;
+  color: var(--color-text-primary);
+  line-height: 1.5;
+}
+
+.restaurant-info__text--label {
+  font-weight: 600;
+  font-size: 0.8rem;
+  letter-spacing: 0.02em;
+}
+
+.restaurant-info__link {
+  font-size: 0.875rem;
+  color: var(--color-text-primary);
+  text-decoration: none;
+  line-height: 1.5;
+}
+
+.restaurant-info__link:hover {
+  text-decoration: underline;
+}
+
+.restaurant-info__schedule {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.restaurant-info__row--schedule-title {
+  margin-bottom: 0;
+}
+
+.restaurant-info__table {
+  border-collapse: collapse;
+  width: 100%;
+  padding-left: 28px;
+}
+
+.restaurant-info__day,
+.restaurant-info__time {
+  font-size: 0.8rem;
+  color: var(--color-text-primary);
+  padding: 2px 8px 2px 0;
+  vertical-align: top;
+}
+
+.restaurant-info__day {
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  width: 48px;
+  padding-left: 28px;
+}

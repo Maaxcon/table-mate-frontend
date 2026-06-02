@@ -1,4 +1,5 @@
-import { useEffect } from "react"
+import { useCallback, useEffect } from "react"
+import { useNavigate } from "react-router-dom"
 import Divider from "@/components/Divider"
 import { AuthHero, GuestAccess, SocialAuthGroup } from "@/features/auth/components"
 import { useGoogleRedirectAuth } from "@/hooks/auth"
@@ -6,7 +7,9 @@ import AuthLayout from "@/layouts/AuthLayout"
 import "./GreetingPage.css"
 
 function GreetingPage() {
+  const navigate = useNavigate()
   const { googleFeedback, googleFeedbackType, handleGoogleLogin } = useGoogleRedirectAuth()
+  const handleContinueAsGuest = useCallback(() => navigate("/restaurants"), [navigate])
 
   useEffect(() => {
     const root = document.documentElement
@@ -27,7 +30,7 @@ function GreetingPage() {
           googleFeedback={googleFeedback}
           googleFeedbackType={googleFeedbackType}
         />
-        <GuestAccess />
+        <GuestAccess onContinueAsGuest={handleContinueAsGuest} />
         <Divider className="greeting-page__divider" />
         <p className="greeting-page__footer">Welcome to Cherkasy&apos;s culinary guide.</p>
       </section>

@@ -3,12 +3,15 @@ import { ENV_NOT_CONFIGURED_VALUE, env } from "@/config/env"
 import { GoogleOAuthProvider } from "@react-oauth/google"
 import AuthInitializer from "@/components/AuthInitializer"
 import { ThemeProvider } from "@/context/ThemeContext"
+import { ErrorBoundary } from "@/components/ErrorBoundary"
+import CabinetPage from "@/pages/CabinetPage"
 import GreetingPage from "@/pages/GreetingPage"
-import HomePlaceholderPage from "@/pages/HomePlaceholderPage"
-import { ReservationPage } from "@/features/reservation/ReservationPage"
-import { BookingPage } from "@/pages/BookingPage"
+import MenuPage from "@/pages/MenuPage"
 import SelectRestaurantPlaceholderPage from "@/pages/SelectRestaurantPlaceholderPage"
 import { WaiterOrderPage } from "@/pages/WaiterOrderPage"
+import { RestaurantListPage } from "@/pages/RestaurantListPage"
+import { ReservationPage } from "@/features/reservation/ReservationPage"
+import { BookingPage } from "@/pages/BookingPage"
 import ProtectedRoute from "@/routes/ProtectedRoute"
 import PublicRoute from "@/routes/PublicRoute"
 import StaffContextRoute from "@/routes/StaffContextRoute"
@@ -33,15 +36,31 @@ function App() {
               <Route path="/" element={<GreetingPage />} />
             </Route>
             <Route element={<ThemedLayout />}>
+              <Route path="/restaurants" element={<RestaurantListPage />} />
               <Route path="/waiter-order" element={<WaiterOrderPage />} />
+              <Route
+                path="/menu/:restaurantId"
+                element={
+                  <ErrorBoundary>
+                    <MenuPage />
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="/:public_restaurant_id/book"
+                element={
+                  <ErrorBoundary>
+                    <BookingPage />
+                  </ErrorBoundary>
+                }
+              />
               <Route element={<StaffContextRoute />}>
                 <Route path="/select-restaurant" element={<SelectRestaurantPlaceholderPage />} />
               </Route>
               <Route element={<ProtectedRoute />}>
-                <Route path="/home" element={<HomePlaceholderPage />} />
+                <Route path="/cabinet" element={<CabinetPage />} />
                 <Route path="/reservations" element={<ReservationPage />} />
               </Route>
-              <Route path="/:public_restaurant_id/book" element={<BookingPage />} />
             </Route>
           </Routes>
         </BrowserRouter>
