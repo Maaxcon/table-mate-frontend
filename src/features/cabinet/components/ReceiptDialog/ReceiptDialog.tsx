@@ -171,7 +171,7 @@ export function ReceiptDialog({ entry, onClose }: ReceiptDialogProps) {
 
           <ul className="receipt-dialog__items">
             {entry.items.map((item, index) => (
-              <li className="receipt-line" key={index}>
+              <li className="receipt-line" key={`${item.name}-${index}`}>
                 <span className="receipt-line__qty">{item.quantity}×</span>
                 <span className="receipt-line__name">
                   {item.name}
