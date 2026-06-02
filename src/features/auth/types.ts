@@ -14,6 +14,8 @@ export type MeResponse = {
   email: string
   first_name: string
   last_name: string
+  phone: string | null
   role: UserRole
   restaurant_public_id: string | null
+  created_at: string
 }

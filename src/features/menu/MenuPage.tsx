@@ -174,10 +174,15 @@ function MenuPage() {
           <div className="menu-page__topbar-right">
             {user ? (
               <>
-                <div className="menu-page__avatar" title={`${user.firstName} ${user.lastName}`}>
+                <Link
+                  to="/cabinet"
+                  className="menu-page__avatar"
+                  title={`${user.firstName} ${user.lastName}`}
+                  aria-label="Open my cabinet"
+                >
                   {user.firstName[0]}
                   {user.lastName[0]}
-                </div>
+                </Link>
                 <button className="menu-page__signout" onClick={() => dispatch(clearAuth())}>
                   Вийти
                 </button>

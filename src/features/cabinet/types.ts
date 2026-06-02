@@ -1,0 +1,64 @@
+import type { UserRole } from "@/features/auth/types"
+
+// Profile shown in the cabinet header. Built from GET /api/auth/me/.
+export type CabinetProfile = {
+  firstName: string
+  lastName: string
+  email: string
+  phone: string | null
+  role: UserRole
+  // ISO date string of when the account was created — used for "Member since YYYY".
+  createdAt: string
+}
+
+// Reservation statuses returned by the backend.
+export type ReservationStatus = "pending" | "confirmed" | "cancelled" | "completed"
+
+// One reservation from GET /api/reservations/reservations/my/.
+export type Reservation = {
+  public_id: string
+  table: string | null
+  guest_count: number
+  start_at: string
+  end_at: string
+  status: ReservationStatus
+  notes: string | null
+}
+
+// A single line on a receipt.
+export type ReceiptItem = {
+  name: string
+  quantity: number
+  // Unit price in major currency units.
+  unitPrice: number
+}
+
+// One past visit shown in the History list and the receipt modal.
+// NOTE: there is no customer order-history endpoint yet, so this is filled
+// with seeded mock data for now. The shape mirrors the future Order payload.
+export type HistoryEntry = {
+  id: string
+  // Human-friendly receipt/order number, e.g. "TM-2026-0518-014".
+  orderNumber: string
+  // Restaurant public_id — used to open the restaurant's menu.
+  restaurantId: string
+  restaurantName: string
+  restaurantImage: string
+  restaurantAddress: string
+  restaurantPhone: string
+  // ISO date string of the visit.
+  date: string
+  currency: string
+  tableLabel: string
+  server: string
+  guests: number
+  items: ReceiptItem[]
+  // All amounts are in major currency units.
+  subtotal: number
+  tax: number
+  serviceCharge: number
+  tip: number
+  total: number
+  paymentMethod: "card" | "cash"
+  paymentStatus: string
+}

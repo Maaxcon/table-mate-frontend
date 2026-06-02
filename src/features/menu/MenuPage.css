@@ -167,8 +167,14 @@
   justify-content: center;
   letter-spacing: 0.02em;
   text-transform: uppercase;
-  cursor: default;
+  cursor: pointer;
   flex-shrink: 0;
+  text-decoration: none;
+  transition: transform 0.12s ease;
+}
+
+.menu-page__avatar:hover {
+  transform: scale(1.06);
 }
 
 .menu-page__signin {

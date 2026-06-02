@@ -9,7 +9,7 @@ function PublicRoute() {
     if (user.role === "customer" && user.restaurantId) {
       return <Navigate to={`/menu/${user.restaurantId}`} replace />
     }
-    return <Navigate to="/home" replace />
+    return <Navigate to="/cabinet" replace />
   }
   return <Outlet />
 }
