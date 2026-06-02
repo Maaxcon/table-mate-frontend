@@ -29,8 +29,22 @@ export type CabinetStats = {
 // Summarize a user's visit history for the stats cards.
 export function computeCabinetStats(history: HistoryEntry[]): CabinetStats {
   const visits = history.length
-  const totalSpent = history.reduce((sum, h) => sum + h.total, 0)
-  const currency = history[0]?.currency ?? "USD"
+
+  const spentByCurrency = new Map<string, number>()
+  const countByCurrency = new Map<string, number>()
+  for (const h of history) {
+    spentByCurrency.set(h.currency, (spentByCurrency.get(h.currency) ?? 0) + h.total)
+    countByCurrency.set(h.currency, (countByCurrency.get(h.currency) ?? 0) + 1)
+  }
+  let currency = "USD"
+  let bestCurrencyCount = 0
+  for (const [cur, n] of countByCurrency) {
+    if (n > bestCurrencyCount) {
+      bestCurrencyCount = n
+      currency = cur
+    }
+  }
+  const totalSpent = spentByCurrency.get(currency) ?? 0
 
   // Favorite = the restaurant visited most often.
   const counts = new Map<string, number>()
