@@ -11,6 +11,7 @@ interface RescheduleModalProps {
   currentStart: string
   currentEnd: string
   currentGuests: number
+  tableCapacity: number
   workingHours: Record<string, WorkingHoursDay> | null
   onClose: () => void
   onSuccess: () => void
@@ -19,10 +20,17 @@ interface RescheduleModalProps {
 const MIN_DURATION = 30
 const MAX_DURATION = 480
 
+function localDateKey(d: Date): string {
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, "0")
+  const day = String(d.getDate()).padStart(2, "0")
+  return `${y}-${m}-${day}`
+}
+
 function msToTime(ms: number): string {
   const d = new Date(ms)
-  const h = d.getUTCHours()
-  const m = d.getUTCMinutes()
+  const h = d.getHours()
+  const m = d.getMinutes()
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`
 }
 
@@ -45,6 +53,7 @@ export function RescheduleModal({
   currentStart,
   currentEnd,
   currentGuests,
+  tableCapacity,
   workingHours,
   onClose,
   onSuccess,
@@ -67,14 +76,14 @@ export function RescheduleModal({
   const [availableSlots, setAvailableSlots] = useState<string[] | null>(null)
   const [slotsLoading, setSlotsLoading] = useState(true)
 
-  const dateStr = currentDate
+  const dateStr = localDateKey(parsedDate)
 
   useEffect(() => {
-    fetchAvailableSlots(tablePublicId, dateStr)
+    fetchAvailableSlots(tablePublicId, dateStr, publicId)
       .then((data) => setAvailableSlots(data[dateStr] ?? null))
       .catch(() => setAvailableSlots(null))
       .finally(() => setSlotsLoading(false))
-  }, [tablePublicId, dateStr])
+  }, [tablePublicId, dateStr, publicId])
 
   const DAY_NAMES = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"]
   const dayName = DAY_NAMES[parsedDate.getDay()]
@@ -312,6 +321,7 @@ export function RescheduleModal({
                 type="button"
                 className="book-modal__guest-btn"
                 onClick={() => setGuestCount((g) => g + 1)}
+                disabled={guestCount >= tableCapacity}
               >
                 +
               </button>
@@ -328,7 +338,14 @@ export function RescheduleModal({
                 </div>
                 <div className="book-modal__summary-row">
                   <span>Date</span>
-                  <span>{dateStr}</span>
+                  <span>
+                    {parsedDate.toLocaleDateString("en-US", {
+                      weekday: "short",
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
+                    })}
+                  </span>
                 </div>
                 <div className="book-modal__summary-row">
                   <span>Time</span>

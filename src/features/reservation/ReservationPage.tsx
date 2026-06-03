@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react"
 import type { Table } from "@/types/api/types.gen"
-import type { ReservationWithTable, WorkingHoursDay } from "./api"
-import { fetchMyReservations, fetchRestaurantSettings, fetchTables } from "./api"
+import type { ReservationWithTable, WorkingHoursDay, Zone } from "./api"
+import { fetchMyReservations, fetchRestaurantSettings, fetchTables, fetchZones } from "./api"
 import { ActiveBookings } from "./ActiveBookings"
 import { BookModal } from "./BookModal"
 import { CustomerFloorPlan } from "./CustomerFloorPlan"
@@ -18,6 +18,8 @@ export function ReservationPage({ restaurantId }: ReservationPageProps) {
 
   const [tables, setTables] = useState<Table[]>([])
   const [tablesLoading, setTablesLoading] = useState(true)
+  const [zones, setZones] = useState<Zone[]>([])
+  const [selectedZone, setSelectedZone] = useState<string | null>(null)
 
   const [workingHours, setWorkingHours] = useState<Record<string, WorkingHoursDay> | null>(null)
 
@@ -57,6 +59,22 @@ export function ReservationPage({ restaurantId }: ReservationPageProps) {
     }
   }, [restaurantId])
 
+  const loadZones = useCallback(async () => {
+    if (!restaurantId) {
+      setZones([])
+      setSelectedZone(null)
+      return
+    }
+    try {
+      const data = await fetchZones(restaurantId)
+      setZones(data)
+      setSelectedZone((current) => current ?? data[0]?.public_id ?? null)
+    } catch {
+      setZones([])
+      setSelectedZone(null)
+    }
+  }, [restaurantId])
+
   const loadReservations = useCallback(async () => {
     setReservationsLoading(true)
     try {
@@ -73,9 +91,10 @@ export function ReservationPage({ restaurantId }: ReservationPageProps) {
     /* eslint-disable react-hooks/set-state-in-effect */
     loadTables()
     loadSettings()
+    loadZones()
     loadReservations()
     /* eslint-enable react-hooks/set-state-in-effect */
-  }, [loadTables, loadSettings, loadReservations])
+  }, [loadTables, loadSettings, loadZones, loadReservations])
 
   const handleTableSelect = useCallback((table: Table) => {
     setSelectedTable(table)
@@ -92,6 +111,11 @@ export function ReservationPage({ restaurantId }: ReservationPageProps) {
   const handleRefresh = useCallback(() => {
     loadReservations()
   }, [loadReservations])
+
+  const visibleTables =
+    selectedZone === null
+      ? tables
+      : tables.filter((table) => table.zone?.public_id === selectedZone)
 
   return (
     <div className="rp">
@@ -125,7 +149,10 @@ export function ReservationPage({ restaurantId }: ReservationPageProps) {
             <p className="rp__loading">LOADING...</p>
           ) : (
             <CustomerFloorPlan
-              tables={tables}
+              tables={visibleTables}
+              zones={zones}
+              selectedZone={selectedZone}
+              onZoneChange={setSelectedZone}
               selectedId={selectedTable?.public_id ?? null}
               onSelect={handleTableSelect}
             />
@@ -135,6 +162,7 @@ export function ReservationPage({ restaurantId }: ReservationPageProps) {
           <ActiveBookings
             reservations={reservations}
             loading={reservationsLoading}
+            workingHours={workingHours}
             onRefresh={handleRefresh}
           />
         )}
@@ -142,10 +170,11 @@ export function ReservationPage({ restaurantId }: ReservationPageProps) {
         {!restaurantId && tab === "floor" && null}
       </div>
 
-      {bookModalOpen && selectedTable && (
+      {bookModalOpen && selectedTable && restaurantId && (
         <BookModal
           table={selectedTable}
           workingHours={workingHours}
+          restaurantId={restaurantId}
           onClose={() => {
             setBookModalOpen(false)
             setSelectedTable(null)

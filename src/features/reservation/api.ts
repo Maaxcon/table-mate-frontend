@@ -81,9 +81,11 @@ export async function fetchRestaurantSettings(
 export async function fetchAvailableSlots(
   tableId: string,
   date?: string,
+  exclude?: string,
 ): Promise<Record<string, string[]>> {
   const params = new URLSearchParams({ table: tableId })
   if (date) params.set("date", date)
+  if (exclude) params.set("exclude", exclude)
   const res = await fetch(
     `${env.apiBaseUrl}/api/reservations/reservations/available-slots/?${params}`,
     { credentials: "include" },

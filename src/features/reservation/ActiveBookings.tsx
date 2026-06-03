@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from "react"
-import type { ReservationStatus, ReservationWithTable } from "./api"
+import type { ReservationStatus, ReservationWithTable, WorkingHoursDay } from "./api"
 import { cancelReservation } from "./api"
 import { RescheduleModal } from "./RescheduleModal"
 import "./ActiveBookings.css"
@@ -7,6 +7,7 @@ import "./ActiveBookings.css"
 interface ActiveBookingsProps {
   reservations: ReservationWithTable[]
   loading: boolean
+  workingHours: Record<string, WorkingHoursDay> | null
   onRefresh: () => void
 }
 
@@ -49,7 +50,12 @@ const STATUS_LABELS: Record<ReservationStatus, string> = {
   cancelled: "CANCELLED",
 }
 
-export function ActiveBookings({ reservations, loading, onRefresh }: ActiveBookingsProps) {
+export function ActiveBookings({
+  reservations,
+  loading,
+  workingHours,
+  onRefresh,
+}: ActiveBookingsProps) {
   const [actionId, setActionId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [rescheduleTarget, setRescheduleTarget] = useState<ReservationWithTable | null>(null)
@@ -103,7 +109,8 @@ export function ActiveBookings({ reservations, loading, onRefresh }: ActiveBooki
           currentStart={rescheduleTarget.start_at}
           currentEnd={rescheduleTarget.end_at}
           currentGuests={rescheduleTarget.guest_count}
-          workingHours={null}
+          tableCapacity={rescheduleTarget.table_info?.capacity ?? 10}
+          workingHours={workingHours}
           onClose={() => setRescheduleTarget(null)}
           onSuccess={onRefresh}
         />

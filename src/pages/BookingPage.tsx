@@ -168,6 +168,7 @@ export function BookingPage() {
           <ActiveBookings
             reservations={reservations}
             loading={reservationsLoading}
+            workingHours={workingHours}
             onRefresh={handleRefresh}
           />
         )}
