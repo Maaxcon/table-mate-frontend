@@ -1,5 +1,5 @@
-import { useState } from "react"
-import { LuPlus } from "react-icons/lu"
+import { useMemo, useState } from "react"
+import { LuPlus, LuSearch } from "react-icons/lu"
 import { useEmployees } from "../hooks/useEmployees"
 import AddEmployeeModal from "../components/AddEmployeeModal"
 import EmployeeRow from "../components/EmployeeRow"
@@ -9,6 +9,16 @@ import "../components/staff.css"
 function StaffSection() {
   const { employees, loading, error, reload, applyUpdate } = useEmployees()
   const [adding, setAdding] = useState(false)
+  const [query, setQuery] = useState("")
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase()
+    if (!q) return employees
+    return employees.filter((e) => {
+      const name = `${e.first_name} ${e.last_name}`.toLowerCase()
+      return name.includes(q) || e.email.toLowerCase().includes(q)
+    })
+  }, [employees, query])
 
   return (
     <section className="admin-section">
@@ -32,19 +42,37 @@ function StaffSection() {
       ) : employees.length === 0 ? (
         <p className="admin-section__description">No staff yet.</p>
       ) : (
-        <div className="staff-table">
-          <div className="staff-table__head" aria-hidden="true">
-            <span>Name</span>
-            <span>Email</span>
-            <span>Role</span>
-            <span />
+        <>
+          <div className="staff-search">
+            <LuSearch className="staff-search__icon" aria-hidden="true" />
+            <input
+              className="staff-search__input"
+              type="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search by name or email"
+              aria-label="Search staff"
+            />
           </div>
-          <ul className="staff-list">
-            {employees.map((e) => (
-              <EmployeeRow key={e.public_id} employee={e} onUpdated={applyUpdate} />
-            ))}
-          </ul>
-        </div>
+
+          {filtered.length === 0 ? (
+            <p className="admin-section__description">No staff match “{query.trim()}”.</p>
+          ) : (
+            <div className="staff-table">
+              <div className="staff-table__head" aria-hidden="true">
+                <span>Name</span>
+                <span>Email</span>
+                <span>Role</span>
+                <span />
+              </div>
+              <ul className="staff-list">
+                {filtered.map((e) => (
+                  <EmployeeRow key={e.public_id} employee={e} onUpdated={applyUpdate} />
+                ))}
+              </ul>
+            </div>
+          )}
+        </>
       )}
 
       {adding && <AddEmployeeModal onClose={() => setAdding(false)} onCreated={reload} />}
