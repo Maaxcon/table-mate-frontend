@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { apiFetch } from "@/api/client"
 
 type Paginated<T> = { results: T[] }
@@ -11,6 +11,8 @@ type UseAdminResourceResult<T> = {
   loadError: string | null
   status: SaveStatus
   saveError: string | null
+  /** True when the form differs from the last loaded/saved values. */
+  dirty: boolean
   setField: <K extends keyof T>(key: K, value: T[K]) => void
   submit: () => Promise<void>
 }
@@ -25,6 +27,8 @@ export function useAdminResource<T extends { public_id: string }>(
   basePath: string,
 ): UseAdminResourceResult<T> {
   const [form, setForm] = useState<T | null>(null)
+  // The pristine values to compare against, so we know when there are edits.
+  const [saved, setSaved] = useState<T | null>(null)
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [status, setStatus] = useState<SaveStatus>("idle")
@@ -42,6 +46,7 @@ export function useAdminResource<T extends { public_id: string }>(
         const first = data.results[0]
         if (!first) throw new Error("empty")
         setForm(first)
+        setSaved(first)
       } catch (err) {
         if (err instanceof DOMException && err.name === "AbortError") return
         setLoadError("Could not load this section.")
@@ -72,6 +77,7 @@ export function useAdminResource<T extends { public_id: string }>(
       if (!res.ok) throw new Error("save failed")
       const updated = (await res.json()) as T
       setForm(updated)
+      setSaved(updated)
       setStatus("saved")
     } catch {
       setStatus("error")
@@ -79,5 +85,10 @@ export function useAdminResource<T extends { public_id: string }>(
     }
   }, [basePath, form])
 
-  return { form, loading, loadError, status, saveError, setField, submit }
+  const dirty = useMemo(
+    () => (form && saved ? JSON.stringify(form) !== JSON.stringify(saved) : false),
+    [form, saved],
+  )
+
+  return { form, loading, loadError, status, saveError, dirty, setField, submit }
 }

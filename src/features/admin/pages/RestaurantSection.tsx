@@ -4,7 +4,7 @@ import { useAdminResource } from "../hooks/useAdminResource"
 import type { AdminRestaurant } from "../types"
 
 function RestaurantSection() {
-  const { form, loading, loadError, status, saveError, setField, submit } =
+  const { form, loading, loadError, status, saveError, dirty, setField, submit } =
     useAdminResource<AdminRestaurant>("/api/restaurants/restaurants/")
 
   return (
@@ -15,6 +15,7 @@ function RestaurantSection() {
       loadError={loadError}
       status={status}
       saveError={saveError}
+      dirty={dirty}
       onSubmit={() => void submit()}
     >
       {form && (

@@ -6,7 +6,7 @@ import { useAdminResource } from "../hooks/useAdminResource"
 import type { AdminSettings } from "../types"
 
 function SettingsSection() {
-  const { form, loading, loadError, status, saveError, setField, submit } =
+  const { form, loading, loadError, status, saveError, dirty, setField, submit } =
     useAdminResource<AdminSettings>("/api/restaurants/restaurant-settings/")
 
   return (
@@ -17,6 +17,7 @@ function SettingsSection() {
       loadError={loadError}
       status={status}
       saveError={saveError}
+      dirty={dirty}
       onSubmit={() => void submit()}
     >
       {form && (
