@@ -16,3 +16,15 @@ export type AdminSettings = {
   default_tax_rate: string
   default_service_charge: string
 }
+
+export type EmployeeRole = "admin" | "waiter" | "cook"
+
+export type AdminEmployee = {
+  public_id: string
+  email: string
+  first_name: string
+  last_name: string
+  phone: string | null
+  role: EmployeeRole
+  is_active: boolean
+}
