@@ -11,6 +11,7 @@ type UseEmployeesResult = {
   loading: boolean
   error: string | null
   reload: () => void
+  applyUpdate: (updated: AdminEmployee) => void
 }
 
 /** Loads the staff of the admin's restaurant (scoped by the auth context). */
@@ -21,6 +22,10 @@ export function useEmployees(): UseEmployeesResult {
   const [reloadKey, setReloadKey] = useState(0)
 
   const reload = useCallback(() => setReloadKey((k) => k + 1), [])
+
+  const applyUpdate = useCallback((updated: AdminEmployee) => {
+    setEmployees((prev) => prev.map((e) => (e.public_id === updated.public_id ? updated : e)))
+  }, [])
 
   useEffect(() => {
     const controller = new AbortController()
@@ -46,5 +51,5 @@ export function useEmployees(): UseEmployeesResult {
     return () => controller.abort()
   }, [reloadKey])
 
-  return { employees, loading, error, reload }
+  return { employees, loading, error, reload, applyUpdate }
 }
