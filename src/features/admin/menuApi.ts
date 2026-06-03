@@ -64,3 +64,31 @@ export async function deleteMenu(publicId: string): Promise<void> {
   const res = await apiFetch(`${MENUS_PATH}${publicId}/`, { method: "DELETE" })
   if (!res.ok && res.status !== 204) throw new Error("Could not delete menu.")
 }
+
+export async function createCategory(menuPublicId: string, name: string): Promise<AdminCategory> {
+  const res = await apiFetch(CATEGORIES_PATH, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ menu: menuPublicId, name }),
+  })
+  if (!res.ok) throw new Error(await firstError(res, "Could not create category."))
+  return (await res.json()) as AdminCategory
+}
+
+export async function updateCategory(
+  publicId: string,
+  patch: Partial<Pick<AdminCategory, "name" | "sort_order">>,
+): Promise<AdminCategory> {
+  const res = await apiFetch(`${CATEGORIES_PATH}${publicId}/`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(patch),
+  })
+  if (!res.ok) throw new Error(await firstError(res, "Could not update category."))
+  return (await res.json()) as AdminCategory
+}
+
+export async function deleteCategory(publicId: string): Promise<void> {
+  const res = await apiFetch(`${CATEGORIES_PATH}${publicId}/`, { method: "DELETE" })
+  if (!res.ok && res.status !== 204) throw new Error("Could not delete category.")
+}

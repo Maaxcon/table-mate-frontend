@@ -3,6 +3,8 @@ import { LuPlus } from "react-icons/lu"
 import { useMenuAdmin } from "../hooks/useMenuAdmin"
 import AddMenuModal from "../components/AddMenuModal"
 import MenuToolbar from "../components/MenuToolbar"
+import CategoryRow from "../components/CategoryRow"
+import AddCategoryForm from "../components/AddCategoryForm"
 import "../components/SectionPlaceholder.css"
 import "../components/menu.css"
 
@@ -16,6 +18,7 @@ function MenuSection() {
     loadingCategories,
     error,
     reloadMenus,
+    reloadCategories,
   } = useMenuAdmin()
   const [addingMenu, setAddingMenu] = useState(false)
 
@@ -75,16 +78,24 @@ function MenuSection() {
                 <h2 className="menu-admin__subtitle">Categories</h2>
                 {loadingCategories ? (
                   <p className="admin-section__description">Loading…</p>
-                ) : categories.length === 0 ? (
-                  <p className="admin-section__description">No categories in this menu yet.</p>
                 ) : (
-                  <ul className="menu-admin__list">
-                    {categories.map((c) => (
-                      <li key={c.public_id} className="menu-admin__row">
-                        <span className="menu-admin__row-name">{c.name}</span>
-                      </li>
-                    ))}
-                  </ul>
+                  <>
+                    {categories.length === 0 ? (
+                      <p className="admin-section__description">No categories in this menu yet.</p>
+                    ) : (
+                      <ul className="menu-admin__list">
+                        {categories.map((c) => (
+                          <CategoryRow
+                            key={c.public_id}
+                            category={c}
+                            onChanged={reloadCategories}
+                            onDeleted={reloadCategories}
+                          />
+                        ))}
+                      </ul>
+                    )}
+                    <AddCategoryForm menuId={selectedMenu.public_id} onCreated={reloadCategories} />
+                  </>
                 )}
               </>
             )
