@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { LuTrash2, LuX } from "react-icons/lu"
+import { LuImagePlus, LuTrash2, LuX } from "react-icons/lu"
 import {
   clearItemImage,
   createItem,
@@ -137,7 +137,12 @@ function DishModal({ menuId, categories, item, onClose, onSaved }: DishModalProp
         aria-label="Close"
         onClick={onClose}
       />
-      <div className="admin-modal" role="dialog" aria-modal="true" aria-label="Dish">
+      <div
+        className="admin-modal admin-modal--dish"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Dish"
+      >
         <div className="admin-modal__header">
           <h2 className="admin-modal__title">{editing ? "Edit dish" : "Add dish"}</h2>
           <button type="button" className="admin-modal__close" onClick={onClose} aria-label="Close">
@@ -145,110 +150,116 @@ function DishModal({ menuId, categories, item, onClose, onSaved }: DishModalProp
           </button>
         </div>
 
-        <form className="admin-form" onSubmit={handleSubmit}>
-          <TextField label="Name" value={name} onChange={setName} />
-          <TextField label="Description" value={description} onChange={setDescription} />
-          <div className="admin-form__row">
-            <TextField
-              label="Price"
-              type="number"
-              inputMode="decimal"
-              step="0.01"
-              value={price}
-              onChange={setPrice}
-            />
-            <TextField
-              label="Weight (g)"
-              type="number"
-              value={weight}
-              onChange={setWeight}
-              placeholder="optional"
-            />
-          </div>
-
-          <label className="admin-field">
-            <span className="admin-field__label">Category</span>
-            <select
-              className="admin-field__input"
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-            >
-              <option value="">No category</option>
-              {categories.map((c) => (
-                <option key={c.public_id} value={c.public_id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <label className="admin-field admin-field--check">
-            <input
-              type="checkbox"
-              checked={isAvailable}
-              onChange={(e) => setIsAvailable(e.target.checked)}
-            />
-            <span className="admin-field__label">Available to customers</span>
-          </label>
-
-          <div className="admin-field">
-            <span className="admin-field__label">Allergens</span>
-            <select
-              className="admin-field__input"
-              value=""
-              onChange={(e) => {
-                const value = e.target.value
-                if (value) setAllergens((prev) => [...prev, value])
-              }}
-            >
-              <option value="">Add allergen…</option>
-              {ALLERGEN_OPTIONS.filter((a) => !allergens.includes(a)).map((a) => (
-                <option key={a} value={a}>
-                  {a}
-                </option>
-              ))}
-            </select>
-            {allergens.length > 0 && (
-              <div className="dish-allergens">
-                {allergens.map((a) => (
-                  <span key={a} className="dish-allergen">
-                    {a}
-                    <button
-                      type="button"
-                      className="dish-allergen__remove"
-                      aria-label={`Remove ${a}`}
-                      onClick={() => setAllergens((prev) => prev.filter((x) => x !== a))}
-                    >
-                      <LuX aria-hidden="true" />
-                    </button>
+        <form className="admin-form dish-form" onSubmit={handleSubmit}>
+          <div className="dish-form__grid">
+            <div className="dish-form__photo">
+              <label className="dish-photo">
+                {previewUrl ? (
+                  <img className="dish-photo__img" src={previewUrl} alt="Dish" />
+                ) : (
+                  <span className="dish-photo__empty">
+                    <LuImagePlus aria-hidden="true" />
+                    Add a photo
                   </span>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div className="admin-field">
-            <span className="admin-field__label">Photo</span>
-            <div className="dish-image">
-              {previewUrl ? (
-                <img className="dish-image__preview" src={previewUrl} alt="Dish" />
-              ) : (
-                <div className="dish-image__placeholder">No photo</div>
+                )}
+                <span className="dish-photo__overlay">Change photo</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  hidden
+                  onChange={(e) => handlePickImage(e.target.files?.[0] ?? null)}
+                />
+              </label>
+              {previewUrl && (
+                <button
+                  type="button"
+                  className="menu-admin__btn dish-photo__remove"
+                  onClick={handleRemoveImage}
+                >
+                  Remove photo
+                </button>
               )}
-              <div className="dish-image__controls">
-                <label className="menu-admin__btn dish-image__pick">
-                  {previewUrl ? "Change" : "Upload"}
-                  <input
-                    type="file"
-                    accept="image/*"
-                    hidden
-                    onChange={(e) => handlePickImage(e.target.files?.[0] ?? null)}
-                  />
-                </label>
-                {previewUrl && (
-                  <button type="button" className="menu-admin__btn" onClick={handleRemoveImage}>
-                    Remove
-                  </button>
+            </div>
+
+            <div className="dish-form__fields">
+              <TextField label="Name" value={name} onChange={setName} />
+              <TextField label="Description" value={description} onChange={setDescription} />
+              <div className="admin-form__row">
+                <TextField
+                  label="Price"
+                  type="number"
+                  inputMode="decimal"
+                  step="0.01"
+                  value={price}
+                  onChange={setPrice}
+                />
+                <TextField
+                  label="Weight (g)"
+                  type="number"
+                  value={weight}
+                  onChange={setWeight}
+                  placeholder="optional"
+                />
+              </div>
+
+              <label className="admin-field">
+                <span className="admin-field__label">Category</span>
+                <select
+                  className="admin-field__input"
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                >
+                  <option value="">No category</option>
+                  {categories.map((c) => (
+                    <option key={c.public_id} value={c.public_id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="admin-field admin-field--check">
+                <input
+                  type="checkbox"
+                  checked={isAvailable}
+                  onChange={(e) => setIsAvailable(e.target.checked)}
+                />
+                <span className="admin-field__label">Available to customers</span>
+              </label>
+
+              <div className="admin-field">
+                <span className="admin-field__label">Allergens</span>
+                <select
+                  className="admin-field__input"
+                  value=""
+                  onChange={(e) => {
+                    const value = e.target.value
+                    if (value) setAllergens((prev) => [...prev, value])
+                  }}
+                >
+                  <option value="">Add allergen…</option>
+                  {ALLERGEN_OPTIONS.filter((a) => !allergens.includes(a)).map((a) => (
+                    <option key={a} value={a}>
+                      {a}
+                    </option>
+                  ))}
+                </select>
+                {allergens.length > 0 && (
+                  <div className="dish-allergens">
+                    {allergens.map((a) => (
+                      <span key={a} className="dish-allergen">
+                        {a}
+                        <button
+                          type="button"
+                          className="dish-allergen__remove"
+                          aria-label={`Remove ${a}`}
+                          onClick={() => setAllergens((prev) => prev.filter((x) => x !== a))}
+                        >
+                          <LuX aria-hidden="true" />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
                 )}
               </div>
             </div>
