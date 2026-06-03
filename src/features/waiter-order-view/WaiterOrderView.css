@@ -47,6 +47,37 @@
   letter-spacing: 0.05em;
 }
 
+.waiter-view__zones {
+  display: flex;
+  gap: 6px;
+  padding: 0 24px;
+}
+
+.waiter-view__zone {
+  padding: 6px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 20px;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: 0.78rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+
+.waiter-view__zone:hover {
+  background: var(--color-bg-secondary);
+}
+
+.waiter-view__zone--active {
+  background: var(--color-text);
+  color: var(--color-bg);
+  border-color: var(--color-text);
+}
+
 @media (max-width: 1024px) {
   .waiter-view__layout {
     grid-template-columns: 1fr 260px;

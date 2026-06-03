@@ -34,6 +34,23 @@ export type ReservationWithTable = {
   updated_at: string
 }
 
+export type Zone = {
+  public_id: string
+  name: string
+  sort_order: number
+}
+
+export async function fetchZones(restaurantId?: string): Promise<Zone[]> {
+  let url = "/api/restaurants/zones/"
+  if (restaurantId) {
+    url += `?restaurant=${restaurantId}`
+  }
+  const res = await apiFetch(url)
+  if (!res.ok) throw new Error("Failed to fetch zones")
+  const data = await res.json()
+  return data.results ?? data
+}
+
 export async function fetchTables(restaurantId?: string): Promise<Table[]> {
   let url = "/api/restaurants/tables/"
   if (restaurantId) {

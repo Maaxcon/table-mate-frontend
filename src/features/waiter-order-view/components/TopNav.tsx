@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react"
 import type { FloorTable } from "../data/mockData"
-import { ThemeToggle } from "@/components/ThemeToggle/ThemeToggle"
 import "./TopNav.css"
 
 const TABS = ["FLOOR PLAN", "WAITLIST", "ANALYTICS"]
@@ -70,7 +69,6 @@ export function TopNav({ tables, activeTab, onTabChange }: TopNavProps) {
         </span>
         <span className="top-nav__time">{currentTime}</span>
         <div className="top-nav__avatar" />
-        <ThemeToggle />
       </div>
     </nav>
   )

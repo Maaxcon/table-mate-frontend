@@ -14,6 +14,7 @@ export interface FloorTable {
   position_x: number | null
   position_y: number | null
   active: boolean
+  zone?: { public_id: string; name: string } | null
 
   guest_name?: string
   guest_count?: number

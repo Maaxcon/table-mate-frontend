@@ -1,16 +1,41 @@
 import type { Table } from "@/types/api/types.gen"
+import type { Zone } from "@/features/reservation/api"
 import "./CustomerFloorPlan.css"
 
 interface CustomerFloorPlanProps {
   tables: Table[]
+  zones: Zone[]
+  selectedZone: string | null
+  onZoneChange: (zoneId: string | null) => void
   selectedId: string | null
   onSelect: (table: Table) => void
 }
 
-export function CustomerFloorPlan({ tables, selectedId, onSelect }: CustomerFloorPlanProps) {
+export function CustomerFloorPlan({
+  tables,
+  zones,
+  selectedZone,
+  onZoneChange,
+  selectedId,
+  onSelect,
+}: CustomerFloorPlanProps) {
   return (
     <div className="c-floor-plan">
       <h2 className="c-floor-plan__title">FLOOR PLAN</h2>
+      {zones.length > 1 && (
+        <div className="c-floor-plan__zones">
+          {zones.map((z) => (
+            <button
+              key={z.public_id}
+              type="button"
+              className={`c-floor-plan__zone ${selectedZone === z.public_id ? "c-floor-plan__zone--active" : ""}`}
+              onClick={() => onZoneChange(z.public_id)}
+            >
+              {z.name}
+            </button>
+          ))}
+        </div>
+      )}
       <p className="c-floor-plan__hint">Tap a free table to book</p>
       <div className="c-floor-plan__canvas">
         {tables.map((table) => {

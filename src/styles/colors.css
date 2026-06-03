@@ -3,6 +3,7 @@
   --color-bg-page: #ffffff;
   --color-bg-surface: #ffffff;
   --color-bg-surface-subtle: #f2f2f2;
+  --color-bg-elevated: #ffffff;
   --color-bg-auth: #050505;
   --color-text-primary: #111111;
   --color-text-secondary: #444444;
@@ -10,6 +11,25 @@
   --color-text-subtle: #c6c6c6;
   --color-border-default: #d9d9d9;
   --color-border-strong: #111111;
+  --color-border-light: #cccccc;
+  --color-border-dashed: #888888;
+
+  /* Waiter-order aliases (map to the same values) */
+  --color-bg: var(--color-bg-page);
+  --color-text: var(--color-text-primary);
+  --color-bg-secondary: var(--color-bg-surface-subtle);
+  --color-border: var(--color-border-strong);
+
+  /* Badges (waiter-order) */
+  --badge-filled-bg: var(--color-text-primary);
+  --badge-filled-text: var(--color-bg-page);
+  --badge-outlined-bg: var(--color-bg-page);
+  --badge-outlined-border: var(--color-text-primary);
+  --badge-outlined-text: var(--color-text-primary);
+  --badge-pending-border: var(--color-text-muted);
+  --badge-pending-text: var(--color-text-muted);
+  --badge-served-text: var(--color-text-primary);
+  --badge-voided-text: var(--color-text-muted);
 
   /* Overlays */
   --color-overlay: rgb(0 0 0 / 52%);
@@ -47,6 +67,7 @@
   --color-bg-page: #16171d;
   --color-bg-surface: #1e1f28;
   --color-bg-surface-subtle: #2a2b36;
+  --color-bg-elevated: #1a1a1a;
   --color-bg-auth: #000000;
   --color-text-primary: #f3f4f6;
   --color-text-secondary: #9ca3af;
@@ -54,4 +75,23 @@
   --color-text-subtle: #4b5563;
   --color-border-default: #374151;
   --color-border-strong: #6b7280;
+  --color-border-light: #333333;
+  --color-border-dashed: #6b7280;
+
+  /* Waiter-order aliases (map to the same values) */
+  --color-bg: var(--color-bg-page);
+  --color-text: var(--color-text-primary);
+  --color-bg-secondary: var(--color-bg-surface-subtle);
+  --color-border: var(--color-border-strong);
+
+  /* Badges (waiter-order) */
+  --badge-filled-bg: var(--color-text-primary);
+  --badge-filled-text: var(--color-bg-page);
+  --badge-outlined-bg: var(--color-bg-page);
+  --badge-outlined-border: var(--color-text-primary);
+  --badge-outlined-text: var(--color-text-primary);
+  --badge-pending-border: var(--color-text-muted);
+  --badge-pending-text: var(--color-text-muted);
+  --badge-served-text: var(--color-text-primary);
+  --badge-voided-text: var(--color-text-muted);
 }

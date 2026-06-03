@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useState } from "react"
 import { useParams } from "react-router-dom"
 import type { Table } from "@/types/api/types.gen"
-import type { ReservationWithTable, WorkingHoursDay } from "@/features/reservation/api"
+import type { ReservationWithTable, WorkingHoursDay, Zone } from "@/features/reservation/api"
 import {
   fetchMyReservations,
   fetchRestaurantSettings,
   fetchTables,
+  fetchZones,
 } from "@/features/reservation/api"
 import { ActiveBookings } from "@/features/reservation/ActiveBookings"
 import { BookModal } from "@/features/reservation/BookModal"
@@ -25,6 +26,9 @@ export function BookingPage() {
 
   const [tables, setTables] = useState<Table[]>([])
   const [tablesLoading, setTablesLoading] = useState(true)
+
+  const [zones, setZones] = useState<Zone[]>([])
+  const [selectedZone, setSelectedZone] = useState<string | null>(null)
 
   const [workingHours, setWorkingHours] = useState<Record<string, WorkingHoursDay> | null>(null)
 
@@ -47,6 +51,23 @@ export function BookingPage() {
       setTablesLoading(false)
     }
   }, [public_restaurant_id])
+
+  const loadZones = useCallback(async () => {
+    if (!public_restaurant_id) return
+    try {
+      const data = await fetchZones(public_restaurant_id)
+      setZones(data)
+      if (data.length > 0) setSelectedZone(data[0].public_id)
+    } catch {
+      setZones([])
+    }
+  }, [public_restaurant_id])
+
+  const filteredTables = selectedZone
+    ? tables.filter(
+        (t) => (t as Table & { zone?: { public_id: string } }).zone?.public_id === selectedZone,
+      )
+    : tables
 
   const loadSettings = useCallback(async () => {
     if (!public_restaurant_id) return
@@ -76,8 +97,9 @@ export function BookingPage() {
     loadTables()
     loadSettings()
     loadReservations()
+    loadZones()
     /* eslint-enable react-hooks/set-state-in-effect */
-  }, [loadTables, loadSettings, loadReservations])
+  }, [loadTables, loadSettings, loadReservations, loadZones])
 
   const handleTableSelect = useCallback(
     (table: Table) => {
@@ -133,7 +155,10 @@ export function BookingPage() {
             <p className="bp__loading">LOADING...</p>
           ) : (
             <CustomerFloorPlan
-              tables={tables}
+              tables={filteredTables}
+              zones={zones}
+              selectedZone={selectedZone}
+              onZoneChange={setSelectedZone}
               selectedId={selectedTable?.public_id ?? null}
               onSelect={handleTableSelect}
             />

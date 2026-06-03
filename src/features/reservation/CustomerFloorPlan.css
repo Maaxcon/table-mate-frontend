@@ -138,3 +138,34 @@
 .c-floor-plan__table--round .c-floor-plan__table-number {
   font-size: 1.6rem;
 }
+
+.c-floor-plan__zones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.c-floor-plan__zone {
+  padding: 6px 14px;
+  border: 1px solid var(--color-border-default);
+  border-radius: 20px;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: 0.78rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+
+.c-floor-plan__zone:hover {
+  background: var(--color-bg-surface-subtle);
+}
+
+.c-floor-plan__zone--active {
+  background: var(--color-text-primary);
+  color: var(--color-bg-page);
+  border-color: var(--color-text-primary);
+}
