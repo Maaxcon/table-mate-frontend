@@ -11,6 +11,7 @@ import {
 import type { AdminCategory, AdminMenuItem } from "../types"
 import TextField from "./TextField"
 import ConfirmDialog from "./ConfirmDialog"
+import { ALLERGEN_OPTIONS } from "./allergenOptions"
 import "./adminForm.css"
 import "./modal.css"
 import "./menu.css"
@@ -31,6 +32,7 @@ function DishModal({ menuId, categories, item, onClose, onSaved }: DishModalProp
   const [category, setCategory] = useState<string>(item?.category ?? "")
   const [weight, setWeight] = useState(item?.weight_grams != null ? String(item.weight_grams) : "")
   const [isAvailable, setIsAvailable] = useState(item?.is_available ?? true)
+  const [allergens, setAllergens] = useState<string[]>(item?.allergens ?? [])
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [removeImage, setRemoveImage] = useState(false)
   const [previewUrl, setPreviewUrl] = useState<string | null>(item?.image ?? null)
@@ -78,6 +80,7 @@ function DishModal({ menuId, categories, item, onClose, onSaved }: DishModalProp
       price: price.trim(),
       weight_grams: weight.trim() ? Number(weight) : null,
       is_available: isAvailable,
+      allergens,
     }
     try {
       let publicId: string
@@ -89,6 +92,7 @@ function DishModal({ menuId, categories, item, onClose, onSaved }: DishModalProp
           price: payload.price,
           weight_grams: payload.weight_grams,
           is_available: payload.is_available,
+          allergens: payload.allergens,
         })
         publicId = item.public_id
       } else {
@@ -186,6 +190,42 @@ function DishModal({ menuId, categories, item, onClose, onSaved }: DishModalProp
             />
             <span className="admin-field__label">Available to customers</span>
           </label>
+
+          <div className="admin-field">
+            <span className="admin-field__label">Allergens</span>
+            <select
+              className="admin-field__input"
+              value=""
+              onChange={(e) => {
+                const value = e.target.value
+                if (value) setAllergens((prev) => [...prev, value])
+              }}
+            >
+              <option value="">Add allergen…</option>
+              {ALLERGEN_OPTIONS.filter((a) => !allergens.includes(a)).map((a) => (
+                <option key={a} value={a}>
+                  {a}
+                </option>
+              ))}
+            </select>
+            {allergens.length > 0 && (
+              <div className="dish-allergens">
+                {allergens.map((a) => (
+                  <span key={a} className="dish-allergen">
+                    {a}
+                    <button
+                      type="button"
+                      className="dish-allergen__remove"
+                      aria-label={`Remove ${a}`}
+                      onClick={() => setAllergens((prev) => prev.filter((x) => x !== a))}
+                    >
+                      <LuX aria-hidden="true" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
 
           <div className="admin-field">
             <span className="admin-field__label">Photo</span>

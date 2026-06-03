@@ -1,5 +1,6 @@
 import { useState } from "react"
-import { LuPlus } from "react-icons/lu"
+import { LuPlus, LuExternalLink } from "react-icons/lu"
+import { useAppSelector } from "@/store/hooks"
 import { useMenuAdmin } from "../hooks/useMenuAdmin"
 import AddMenuModal from "../components/AddMenuModal"
 import MenuToolbar from "../components/MenuToolbar"
@@ -31,14 +32,28 @@ function MenuSection() {
     open: false,
     item: null,
   })
+  const restaurantId = useAppSelector((s) => s.auth.user?.restaurantId ?? null)
 
   const selectedMenu = menus.find((m) => m.public_id === selectedMenuId) ?? null
 
   return (
     <section className="admin-section admin-section--wide">
-      <header className="admin-section__header">
-        <h1 className="admin-section__title">Menu</h1>
-        <p className="admin-section__description">Manage menus, categories, and dishes.</p>
+      <header className="admin-section__header menu-admin__page-head">
+        <div>
+          <h1 className="admin-section__title">Menu</h1>
+          <p className="admin-section__description">Manage menus, categories, and dishes.</p>
+        </div>
+        {restaurantId && (
+          <a
+            className="menu-admin__view-btn"
+            href={`/menu/${restaurantId}`}
+            target="_blank"
+            rel="noreferrer"
+          >
+            <LuExternalLink aria-hidden="true" />
+            <span>View menu</span>
+          </a>
+        )}
       </header>
 
       {error && <p className="menu-admin__error">{error}</p>}

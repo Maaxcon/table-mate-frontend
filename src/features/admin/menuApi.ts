@@ -112,6 +112,7 @@ export type ItemInput = {
   price: string
   weight_grams: number | null
   is_available: boolean
+  allergens: string[]
 }
 
 export async function createItem(payload: ItemInput): Promise<AdminMenuItem> {

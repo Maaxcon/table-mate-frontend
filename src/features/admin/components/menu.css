@@ -3,6 +3,35 @@
   max-width: 1100px;
 }
 
+.menu-admin__page-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+/* Opens the customer-facing menu in a new tab for a quick preview. */
+.menu-admin__view-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  padding: 10px 16px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 10px;
+  background: var(--color-bg-surface);
+  color: var(--color-text-primary);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 120ms ease;
+}
+
+.menu-admin__view-btn:hover {
+  background: var(--color-bg-surface-subtle);
+}
+
 .menu-admin__error {
   color: var(--color-error-text);
   font-size: 14px;
@@ -364,4 +393,41 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
+}
+
+.dish-allergens {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.dish-allergen {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 6px 5px 12px;
+  border: 1px solid var(--color-border-default);
+  border-radius: 999px;
+  background: var(--color-bg-surface-subtle);
+  font-size: 13px;
+  color: var(--color-text-primary);
+}
+
+.dish-allergen__remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border: none;
+  border-radius: 999px;
+  background: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.dish-allergen__remove:hover {
+  background: var(--color-bg-surface);
+  color: var(--color-text-primary);
 }
