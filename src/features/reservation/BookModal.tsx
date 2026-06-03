@@ -1,25 +1,37 @@
-import { useCallback, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import type { Table } from "@/types/api/types.gen"
 import type { WorkingHoursDay } from "./api"
-import { checkAvailability, createReservation } from "./api"
+import { checkAvailability, createReservation, fetchAvailableSlots } from "./api"
 import "./BookModal.css"
+
+function localDateKey(d: Date): string {
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, "0")
+  const day = String(d.getDate()).padStart(2, "0")
+  return `${y}-${m}-${day}`
+}
+
+function timeToMinutes(t: string): number {
+  const [h, m] = t.split(":").map(Number)
+  return h * 60 + m
+}
+
+function minutesToTime(minutes: number): string {
+  const h = Math.floor(minutes / 60) % 24
+  const m = minutes % 60
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`
+}
 
 interface BookModalProps {
   table: Table
   workingHours: Record<string, WorkingHoursDay> | null
   restaurantId: string
-  onRefreshTables: () => void
   onClose: () => void
   onSuccess: () => void
 }
 
-const DURATIONS = [
-  { label: "1 h", minutes: 60 },
-  { label: "1.5 h", minutes: 90 },
-  { label: "2 h", minutes: 120 },
-  { label: "2.5 h", minutes: 150 },
-  { label: "3 h", minutes: 180 },
-]
+const MIN_DURATION = 30
+const MAX_DURATION = 480
 
 function generateTimeSlots(date: Date, dayConfig: WorkingHoursDay | undefined): string[] {
   if (!dayConfig) return []
@@ -73,7 +85,6 @@ export function BookModal({
   table,
   workingHours,
   restaurantId,
-  onRefreshTables,
   onClose,
   onSuccess,
 }: BookModalProps) {
@@ -85,10 +96,27 @@ export function BookModal({
 
   const [selectedDate, setSelectedDate] = useState(today)
   const [selectedTime, setSelectedTime] = useState<string | null>(null)
-  const [selectedDuration, setSelectedDuration] = useState(DURATIONS[2]) // default 2h
+  const [durationMinutes, setDurationMinutes] = useState(120)
   const [guestCount, setGuestCount] = useState(2)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<{
+    tableNumber: string
+    date: string
+    time: string
+    endTime: string
+    guests: number
+  } | null>(null)
+
+  const [availableSlots, setAvailableSlots] = useState<Record<string, string[]> | null>(null)
+  const [slotsLoading, setSlotsLoading] = useState(true)
+
+  useEffect(() => {
+    fetchAvailableSlots(table.public_id)
+      .then((data) => setAvailableSlots(data))
+      .catch(() => setAvailableSlots({}))
+      .finally(() => setSlotsLoading(false))
+  }, [table.public_id])
 
   const dates = useMemo(() => {
     const days: Date[] = []
@@ -103,19 +131,52 @@ export function BookModal({
   const dayName = DAY_NAMES[selectedDate.getDay()]
   const dayConfig = workingHours?.[dayName]
 
-  const timeSlots = useMemo(
-    () => generateTimeSlots(selectedDate, dayConfig),
-    [selectedDate, dayConfig],
-  )
+  const dateKey = localDateKey(selectedDate)
+
+  const realSlots = useMemo(() => {
+    if (!availableSlots) return null
+    return availableSlots[dateKey] ?? null
+  }, [availableSlots, dateKey])
+
+  const timeSlots = useMemo(() => {
+    if (realSlots) return realSlots
+    return generateTimeSlots(selectedDate, dayConfig)
+  }, [realSlots, selectedDate, dayConfig])
 
   const endAt = useMemo(() => {
-    if (!selectedTime) return ""
-    const [h, m] = selectedTime.split(":").map(Number)
-    const totalMinutes = h * 60 + m + selectedDuration.minutes
-    const endH = Math.floor(totalMinutes / 60) % 24
-    const endM = totalMinutes % 60
-    return `${String(endH).padStart(2, "0")}:${String(endM).padStart(2, "0")}`
-  }, [selectedTime, selectedDuration])
+    if (!selectedTime || !durationMinutes) return ""
+    return minutesToTime(timeToMinutes(selectedTime) + durationMinutes)
+  }, [selectedTime, durationMinutes])
+
+  const durationError = useMemo(() => {
+    if (!selectedTime || !durationMinutes) return null
+
+    const endMins = timeToMinutes(selectedTime) + durationMinutes
+
+    if (dayConfig) {
+      const closeMins = timeToMinutes(dayConfig.close)
+      const openMins = timeToMinutes(dayConfig.open)
+      const overnight = closeMins <= openMins
+      if (!overnight && endMins > closeMins) {
+        return `End time exceeds closing time (${dayConfig.close})`
+      }
+    }
+
+    if (availableSlots) {
+      const slots = availableSlots[dateKey]
+      if (slots) {
+        const startMins = timeToMinutes(selectedTime)
+        for (let m = startMins; m < endMins; m += 30) {
+          const slotTime = minutesToTime(m)
+          if (!slots.includes(slotTime)) {
+            return "The selected duration is not fully available at this time. Choose a shorter duration or different start time."
+          }
+        }
+      }
+    }
+
+    return null
+  }, [selectedTime, durationMinutes, dayConfig, availableSlots, dateKey])
 
   const handleConfirm = useCallback(async () => {
     if (!selectedTime) return
@@ -123,28 +184,35 @@ export function BookModal({
     setSubmitting(true)
 
     try {
-      const dateStr = selectedDate.toISOString().split("T")[0]
-      const startAt = `${dateStr}T${selectedTime}:00`
-      const endAtStr = `${dateStr}T${endAt}:00`
+      const dateStr = localDateKey(selectedDate)
+      const startISO = new Date(`${dateStr}T${selectedTime}:00`).toISOString()
+      const endISO = new Date(`${dateStr}T${endAt}:00`).toISOString()
 
-      const available = await checkAvailability(startAt, endAtStr, guestCount, restaurantId)
+      const available = await checkAvailability(startISO, endISO, guestCount, restaurantId)
       const isAvailable = available.some((t) => t.public_id === table.public_id)
 
       if (!isAvailable) {
-        setError("This table is no longer available at the selected time. Refreshing table data…")
+        setError(
+          "This table is not available for the selected time. Please choose a different time or date.",
+        )
         setSubmitting(false)
-        onRefreshTables()
         return
       }
 
       await createReservation({
         table: table.public_id,
         guest_count: guestCount,
-        start_at: startAt,
-        end_at: endAtStr,
+        start_at: startISO,
+        end_at: endISO,
       })
 
-      onSuccess()
+      setSuccess({
+        tableNumber: table.table_number,
+        date: dateStr,
+        time: selectedTime,
+        endTime: endAt,
+        guests: guestCount,
+      })
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create reservation")
     } finally {
@@ -157,9 +225,80 @@ export function BookModal({
     guestCount,
     restaurantId,
     table.public_id,
-    onSuccess,
-    onRefreshTables,
+    table.table_number,
   ])
+
+  if (success) {
+    return (
+      <div
+        className="book-overlay"
+        onClick={(e) => {
+          if (e.target === e.currentTarget) {
+            onSuccess()
+            onClose()
+          }
+        }}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === "Escape") {
+            onSuccess()
+            onClose()
+          }
+        }}
+      >
+        <div className="book-modal">
+          <div className="book-modal__header">
+            <h2 className="book-modal__title">BOOKING CONFIRMED</h2>
+            <button
+              className="book-modal__close"
+              onClick={() => {
+                onSuccess()
+                onClose()
+              }}
+              type="button"
+            >
+              &times;
+            </button>
+          </div>
+          <div className="book-modal__body">
+            <div className="book-modal__success-icon">&#10003;</div>
+            <p className="book-modal__success-text">
+              Your reservation at Table {success.tableNumber} has been created.
+            </p>
+            <div className="book-modal__summary">
+              <div className="book-modal__summary-row">
+                <span>Date</span>
+                <span>{success.date}</span>
+              </div>
+              <div className="book-modal__summary-row">
+                <span>Time</span>
+                <span>
+                  {success.time} &ndash; {success.endTime}
+                </span>
+              </div>
+              <div className="book-modal__summary-row">
+                <span>Guests</span>
+                <span>{success.guests}</span>
+              </div>
+            </div>
+          </div>
+          <div className="book-modal__actions">
+            <button
+              className="book-modal__btn book-modal__btn--confirm"
+              onClick={() => {
+                onSuccess()
+                onClose()
+              }}
+              type="button"
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div
@@ -194,20 +333,27 @@ export function BookModal({
                   d.getFullYear() === today.getFullYear() &&
                   d.getMonth() === today.getMonth() &&
                   d.getDate() === today.getDate()
+                const dKey = localDateKey(d)
+                const hasSlots = availableSlots ? (availableSlots[dKey]?.length ?? 0) > 0 : true
+                const isGrayed = availableSlots !== null && !hasSlots
                 return (
                   <button
-                    key={d.toISOString()}
+                    key={dKey}
                     type="button"
                     className={[
                       "book-modal__date-btn",
                       isActive ? "book-modal__date-btn--active" : "",
+                      isGrayed ? "book-modal__date-btn--grayed" : "",
                     ]
                       .filter(Boolean)
                       .join(" ")}
                     onClick={() => {
-                      setSelectedDate(d)
-                      setSelectedTime(null)
+                      if (!isGrayed) {
+                        setSelectedDate(d)
+                        setSelectedTime(null)
+                      }
                     }}
+                    disabled={isGrayed}
                   >
                     <span className="book-modal__date-day">
                       {d.toLocaleDateString("en-US", { weekday: "short" }).toUpperCase()}
@@ -222,7 +368,9 @@ export function BookModal({
 
           <section className="book-modal__section">
             <h3 className="book-modal__section-title">TIME</h3>
-            {!dayConfig ? (
+            {slotsLoading ? (
+              <p className="book-modal__empty">Loading available slots…</p>
+            ) : !dayConfig ? (
               <p className="book-modal__empty">Restaurant closed on this day</p>
             ) : timeSlots.length === 0 ? (
               <p className="book-modal__empty">No available slots</p>
@@ -248,25 +396,18 @@ export function BookModal({
           </section>
 
           <section className="book-modal__section">
-            <h3 className="book-modal__section-title">DURATION</h3>
-            <div className="book-modal__durations">
-              {DURATIONS.map((d) => (
-                <button
-                  key={d.minutes}
-                  type="button"
-                  className={[
-                    "book-modal__duration-btn",
-                    selectedDuration.minutes === d.minutes
-                      ? "book-modal__duration-btn--active"
-                      : "",
-                  ]
-                    .filter(Boolean)
-                    .join(" ")}
-                  onClick={() => setSelectedDuration(d)}
-                >
-                  {d.label}
-                </button>
-              ))}
+            <h3 className="book-modal__section-title">DURATION (minutes)</h3>
+            <div className="book-modal__duration-input">
+              <input
+                type="number"
+                className="book-modal__duration-field"
+                min={MIN_DURATION}
+                max={MAX_DURATION}
+                step={15}
+                value={durationMinutes}
+                onChange={(e) => setDurationMinutes(Math.max(MIN_DURATION, Number(e.target.value)))}
+              />
+              {durationError && <p className="book-modal__hint">{durationError}</p>}
             </div>
           </section>
 
@@ -320,7 +461,7 @@ export function BookModal({
                 </div>
                 <div className="book-modal__summary-row">
                   <span>Duration</span>
-                  <span>{selectedDuration.label}</span>
+                  <span>{durationMinutes} min</span>
                 </div>
                 <div className="book-modal__summary-row">
                   <span>Guests</span>
@@ -344,7 +485,7 @@ export function BookModal({
           <button
             className="book-modal__btn book-modal__btn--confirm"
             onClick={handleConfirm}
-            disabled={!selectedTime || submitting}
+            disabled={!selectedTime || submitting || !!durationError}
             type="button"
           >
             {submitting ? "BOOKING..." : "CONFIRM BOOKING"}

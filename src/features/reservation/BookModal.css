@@ -102,6 +102,29 @@
   background: var(--color-bg-surface-subtle);
 }
 
+.book-modal__date-btn--grayed {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.book-modal__date-btn--grayed:hover {
+  border-color: var(--color-border-default);
+}
+
+.book-modal__success-icon {
+  text-align: center;
+  font-size: 2.5rem;
+  color: var(--color-success, #2e7d32);
+  margin: 8px 0;
+}
+
+.book-modal__success-text {
+  text-align: center;
+  font-size: 0.88rem;
+  color: var(--color-text-primary);
+  margin: 0 0 16px;
+}
+
 .book-modal__date-day {
   font-size: 0.6rem;
   font-weight: 600;
@@ -158,33 +181,22 @@
   color: var(--color-text-muted);
 }
 
-.book-modal__durations {
+.book-modal__duration-input {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: 6px;
 }
 
-.book-modal__duration-btn {
-  padding: 8px 14px;
+.book-modal__duration-field {
+  width: 120px;
+  padding: 8px 12px;
   border: 1px solid var(--color-border-default);
   background: var(--color-bg-surface);
-  cursor: pointer;
   font-family: inherit;
   font-size: 0.82rem;
   font-weight: 600;
   color: var(--color-text-primary);
-  transition:
-    border-color 0.1s,
-    background 0.1s;
-}
-
-.book-modal__duration-btn:hover {
-  border-color: var(--color-border-strong);
-}
-
-.book-modal__duration-btn--active {
-  border-color: var(--color-border-strong);
-  background: var(--color-bg-surface-subtle);
+  font-variant-numeric: tabular-nums;
 }
 
 .book-modal__guests {
@@ -241,6 +253,12 @@
 
 .book-modal__summary-row span:first-child {
   color: var(--color-text-muted);
+}
+
+.book-modal__hint {
+  font-size: 0.72rem;
+  color: var(--color-text-danger, var(--color-text-primary));
+  margin: 0;
 }
 
 .book-modal__error {

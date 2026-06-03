@@ -159,6 +159,12 @@
   color: var(--color-text-primary);
 }
 
+.ab__action--disabled {
+  color: var(--color-text-muted);
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .ab__edit-guests {
   display: flex;
   align-items: center;

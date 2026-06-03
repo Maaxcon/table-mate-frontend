@@ -78,6 +78,20 @@ export async function fetchRestaurantSettings(
   return Array.isArray(results) ? results[0] : results
 }
 
+export async function fetchAvailableSlots(
+  tableId: string,
+  date?: string,
+): Promise<Record<string, string[]>> {
+  const params = new URLSearchParams({ table: tableId })
+  if (date) params.set("date", date)
+  const res = await fetch(
+    `${env.apiBaseUrl}/api/reservations/reservations/available-slots/?${params}`,
+    { credentials: "include" },
+  )
+  if (!res.ok) throw new Error("Failed to fetch available slots")
+  return res.json() as Promise<Record<string, string[]>>
+}
+
 export async function checkAvailability(
   startAt: string,
   endAt: string,
@@ -106,7 +120,12 @@ export async function createReservation(data: {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
   })
-  if (!res.ok) throw new Error("Failed to create reservation")
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}))
+    const detail = (body as { detail?: string | Record<string, string[]> }).detail
+    const message = typeof detail === "string" ? detail : JSON.stringify(detail ?? body)
+    throw new Error(message ?? "Failed to create reservation")
+  }
   return res.json() as Promise<ReservationWithTable>
 }
 
@@ -127,7 +146,10 @@ export async function cancelReservation(publicId: string): Promise<ReservationWi
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ status: "cancelled" }),
   })
-  if (!res.ok) throw new Error("Failed to cancel reservation")
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}))
+    throw new Error((body as { detail?: string }).detail ?? "Failed to cancel reservation")
+  }
   return res.json() as Promise<ReservationWithTable>
 }
 
@@ -144,6 +166,9 @@ export async function modifyReservation(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
   })
-  if (!res.ok) throw new Error("Failed to modify reservation")
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}))
+    throw new Error((body as { detail?: string }).detail ?? "Failed to modify reservation")
+  }
   return res.json() as Promise<ReservationWithTable>
 }

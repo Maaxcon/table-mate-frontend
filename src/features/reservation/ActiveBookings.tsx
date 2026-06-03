@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState } from "react"
 import type { ReservationStatus, ReservationWithTable } from "./api"
-import { cancelReservation, modifyReservation } from "./api"
+import { cancelReservation } from "./api"
+import { RescheduleModal } from "./RescheduleModal"
 import "./ActiveBookings.css"
 
 interface ActiveBookingsProps {
@@ -51,8 +52,7 @@ const STATUS_LABELS: Record<ReservationStatus, string> = {
 export function ActiveBookings({ reservations, loading, onRefresh }: ActiveBookingsProps) {
   const [actionId, setActionId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [editingId, setEditingId] = useState<string | null>(null)
-  const [editGuestCount, setEditGuestCount] = useState(2)
+  const [rescheduleTarget, setRescheduleTarget] = useState<ReservationWithTable | null>(null)
 
   const handleCancel = useCallback(
     async (publicId: string) => {
@@ -68,29 +68,6 @@ export function ActiveBookings({ reservations, loading, onRefresh }: ActiveBooki
       }
     },
     [onRefresh],
-  )
-
-  const startEdit = useCallback((r: ReservationWithTable) => {
-    setEditingId(r.public_id)
-    setEditGuestCount(r.guest_count)
-    setError(null)
-  }, [])
-
-  const handleModify = useCallback(
-    async (publicId: string) => {
-      setError(null)
-      setActionId(publicId)
-      try {
-        await modifyReservation(publicId, { guest_count: editGuestCount })
-        setEditingId(null)
-        onRefresh()
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to modify")
-      } finally {
-        setActionId(null)
-      }
-    },
-    [editGuestCount, onRefresh],
   )
 
   const { byStatus } = useMemo(() => {
@@ -117,12 +94,28 @@ export function ActiveBookings({ reservations, loading, onRefresh }: ActiveBooki
 
       {!hasItems && <p className="ab__empty">No bookings yet.</p>}
 
+      {rescheduleTarget && (
+        <RescheduleModal
+          publicId={rescheduleTarget.public_id}
+          tableNumber={rescheduleTarget.table_info?.table_number ?? rescheduleTarget.table}
+          tablePublicId={rescheduleTarget.table_info?.public_id ?? rescheduleTarget.table}
+          currentDate={rescheduleTarget.start_at}
+          currentStart={rescheduleTarget.start_at}
+          currentEnd={rescheduleTarget.end_at}
+          currentGuests={rescheduleTarget.guest_count}
+          workingHours={null}
+          onClose={() => setRescheduleTarget(null)}
+          onSuccess={onRefresh}
+        />
+      )}
+
       {STATUS_ORDER.map((statusKey) => {
         const items = byStatus[statusKey]
         if (!items) return null
 
         const isCancelled = statusKey === "cancelled"
         const isPast = statusKey === "completed"
+        const canModify = statusKey === "pending" || statusKey === "active"
 
         return (
           <div key={statusKey}>
@@ -131,7 +124,6 @@ export function ActiveBookings({ reservations, loading, onRefresh }: ActiveBooki
               {items.map((r) => {
                 const dt = formatDateTime(r.start_at)
                 const endDt = formatDateTime(r.end_at)
-                const isEditing = editingId === r.public_id
                 const isBusy = actionId === r.public_id
                 const phase = getTemporalPhase(r.start_at, r.end_at)
 
@@ -171,28 +163,7 @@ export function ActiveBookings({ reservations, loading, onRefresh }: ActiveBooki
                       </div>
                       <div className="ab__card-row">
                         <span className="ab__card-label">Guests</span>
-                        {isEditing ? (
-                          <div className="ab__edit-guests">
-                            <button
-                              type="button"
-                              className="ab__edit-btn"
-                              onClick={() => setEditGuestCount((g) => Math.max(1, g - 1))}
-                              disabled={editGuestCount <= 1}
-                            >
-                              &minus;
-                            </button>
-                            <span className="ab__edit-count">{editGuestCount}</span>
-                            <button
-                              type="button"
-                              className="ab__edit-btn"
-                              onClick={() => setEditGuestCount((g) => g + 1)}
-                            >
-                              +
-                            </button>
-                          </div>
-                        ) : (
-                          <span className="ab__card-value">{r.guest_count}</span>
-                        )}
+                        <span className="ab__card-value">{r.guest_count}</span>
                       </div>
                       {phase !== "past" && statusKey === "active" && (
                         <div className="ab__card-row">
@@ -202,47 +173,31 @@ export function ActiveBookings({ reservations, loading, onRefresh }: ActiveBooki
                       )}
                     </div>
 
-                    {(statusKey === "pending" || statusKey === "active") && (
+                    {canModify && (
                       <div className="ab__card-actions">
-                        {isEditing ? (
-                          <>
-                            <button
-                              className="ab__action ab__action--save"
-                              onClick={() => handleModify(r.public_id)}
-                              disabled={isBusy}
-                              type="button"
-                            >
-                              {isBusy ? "SAVING..." : "SAVE"}
-                            </button>
-                            <button
-                              className="ab__action ab__action--cancel"
-                              onClick={() => setEditingId(null)}
-                              disabled={isBusy}
-                              type="button"
-                            >
-                              BACK
-                            </button>
-                          </>
-                        ) : (
-                          <>
-                            <button
-                              className="ab__action ab__action--edit"
-                              onClick={() => startEdit(r)}
-                              disabled={isBusy}
-                              type="button"
-                            >
-                              MODIFY
-                            </button>
-                            <button
-                              className="ab__action ab__action--cancel"
-                              onClick={() => handleCancel(r.public_id)}
-                              disabled={isBusy}
-                              type="button"
-                            >
-                              {isBusy ? "CANCELLING..." : "CANCEL"}
-                            </button>
-                          </>
-                        )}
+                        <button
+                          className="ab__action ab__action--edit"
+                          onClick={() => setRescheduleTarget(r)}
+                          disabled={isBusy}
+                          type="button"
+                        >
+                          MODIFY
+                        </button>
+                        <button
+                          className={[
+                            "ab__action",
+                            statusKey === "active" ? "ab__action--disabled" : "ab__action--cancel",
+                          ]
+                            .filter(Boolean)
+                            .join(" ")}
+                          onClick={() =>
+                            statusKey === "pending" ? handleCancel(r.public_id) : undefined
+                          }
+                          disabled={isBusy || statusKey !== "pending"}
+                          type="button"
+                        >
+                          {isBusy ? "CANCELLING..." : statusKey === "pending" ? "CANCEL" : "ACTIVE"}
+                        </button>
                       </div>
                     )}
                   </div>

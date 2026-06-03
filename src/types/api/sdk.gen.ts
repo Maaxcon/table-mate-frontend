@@ -11,6 +11,8 @@ import type {
   AuthGoogleCreateResponses,
   AuthLogoutCreateData,
   AuthLogoutCreateResponses,
+  AuthMePartialUpdateData,
+  AuthMePartialUpdateResponses,
   AuthMeRetrieveData,
   AuthMeRetrieveResponses,
   AuthRefreshCreateData,
@@ -65,6 +67,8 @@ import type {
   PaymentsPaymentsListResponses,
   PaymentsPaymentsRetrieveData,
   PaymentsPaymentsRetrieveResponses,
+  ReceiptsMyListData,
+  ReceiptsMyListResponses,
   ReservationsReservationsCreateData,
   ReservationsReservationsCreateResponses,
   ReservationsReservationsListData,
@@ -81,6 +85,8 @@ import type {
   RestaurantsRestaurantSettingsRetrieveResponses,
   RestaurantsRestaurantsListData,
   RestaurantsRestaurantsListResponses,
+  RestaurantsRestaurantsPublicListData,
+  RestaurantsRestaurantsPublicListResponses,
   RestaurantsRestaurantsPublicRetrieveData,
   RestaurantsRestaurantsPublicRetrieveResponses,
   RestaurantsRestaurantsRetrieveData,
@@ -89,6 +95,10 @@ import type {
   RestaurantsTablesListResponses,
   RestaurantsTablesRetrieveData,
   RestaurantsTablesRetrieveResponses,
+  RestaurantsZonesListData,
+  RestaurantsZonesListResponses,
+  RestaurantsZonesRetrieveData,
+  RestaurantsZonesRetrieveResponses,
 } from "./types.gen"
 
 export type Options<
@@ -113,14 +123,7 @@ export const authGoogleCreate = <ThrowOnError extends boolean = false>(
   options: Options<AuthGoogleCreateData, ThrowOnError>,
 ) =>
   (options.client ?? client).post<AuthGoogleCreateResponses, AuthGoogleCreateErrors, ThrowOnError>({
-    security: [
-      { scheme: "bearer", type: "http" },
-      {
-        in: "cookie",
-        name: "sessionid",
-        type: "apiKey",
-      },
-    ],
+    security: [{ scheme: "bearer", type: "http" }],
     url: "/api/auth/google/",
     ...options,
     headers: {
@@ -137,14 +140,7 @@ export const authGoogleContextCreate = <ThrowOnError extends boolean = false>(
     AuthGoogleContextCreateErrors,
     ThrowOnError
   >({
-    security: [
-      { scheme: "bearer", type: "http" },
-      {
-        in: "cookie",
-        name: "sessionid",
-        type: "apiKey",
-      },
-    ],
+    security: [{ scheme: "bearer", type: "http" }],
     url: "/api/auth/google/context/",
     ...options,
     headers: {
@@ -157,14 +153,7 @@ export const authLogoutCreate = <ThrowOnError extends boolean = false>(
   options?: Options<AuthLogoutCreateData, ThrowOnError>,
 ) =>
   (options?.client ?? client).post<AuthLogoutCreateResponses, unknown, ThrowOnError>({
-    security: [
-      { scheme: "bearer", type: "http" },
-      {
-        in: "cookie",
-        name: "sessionid",
-        type: "apiKey",
-      },
-    ],
+    security: [{ scheme: "bearer", type: "http" }],
     url: "/api/auth/logout/",
     ...options,
   })
@@ -173,16 +162,22 @@ export const authMeRetrieve = <ThrowOnError extends boolean = false>(
   options?: Options<AuthMeRetrieveData, ThrowOnError>,
 ) =>
   (options?.client ?? client).get<AuthMeRetrieveResponses, unknown, ThrowOnError>({
-    security: [
-      { scheme: "bearer", type: "http" },
-      {
-        in: "cookie",
-        name: "sessionid",
-        type: "apiKey",
-      },
-    ],
+    security: [{ scheme: "bearer", type: "http" }],
     url: "/api/auth/me/",
     ...options,
+  })
+
+export const authMePartialUpdate = <ThrowOnError extends boolean = false>(
+  options?: Options<AuthMePartialUpdateData, ThrowOnError>,
+) =>
+  (options?.client ?? client).patch<AuthMePartialUpdateResponses, unknown, ThrowOnError>({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/auth/me/",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options?.headers,
+    },
   })
 
 /**
@@ -221,14 +216,7 @@ export const editorLayoutsList = <ThrowOnError extends boolean = false>(
   options?: Options<EditorLayoutsListData, ThrowOnError>,
 ) =>
   (options?.client ?? client).get<EditorLayoutsListResponses, unknown, ThrowOnError>({
-    security: [
-      { scheme: "bearer", type: "http" },
-      {
-        in: "cookie",
-        name: "sessionid",
-        type: "apiKey",
-      },
-    ],
+    security: [{ scheme: "bearer", type: "http" }],
     url: "/api/editor/layouts/",
     ...options,
   })
@@ -237,14 +225,7 @@ export const editorLayoutsRetrieve = <ThrowOnError extends boolean = false>(
   options: Options<EditorLayoutsRetrieveData, ThrowOnError>,
 ) =>
   (options.client ?? client).get<EditorLayoutsRetrieveResponses, unknown, ThrowOnError>({
-    security: [
-      { scheme: "bearer", type: "http" },
-      {
-        in: "cookie",
-        name: "sessionid",
-        type: "apiKey",
-      },
-    ],
+    security: [{ scheme: "bearer", type: "http" }],
     url: "/api/editor/layouts/{public_id}/",
     ...options,
   })
@@ -253,14 +234,7 @@ export const editorTablesList = <ThrowOnError extends boolean = false>(
   options?: Options<EditorTablesListData, ThrowOnError>,
 ) =>
   (options?.client ?? client).get<EditorTablesListResponses, unknown, ThrowOnError>({
-    security: [
-      { scheme: "bearer", type: "http" },
-      {
-        in: "cookie",
-        name: "sessionid",
-        type: "apiKey",
-      },
-    ],
+    security: [{ scheme: "bearer", type: "http" }],
     url: "/api/editor/tables/",
     ...options,
   })
@@ -269,14 +243,7 @@ export const editorTablesRetrieve = <ThrowOnError extends boolean = false>(
   options: Options<EditorTablesRetrieveData, ThrowOnError>,
 ) =>
   (options.client ?? client).get<EditorTablesRetrieveResponses, unknown, ThrowOnError>({
-    security: [
-      { scheme: "bearer", type: "http" },
-      {
-        in: "cookie",
-        name: "sessionid",
-        type: "apiKey",
-      },
-    ],
+    security: [{ scheme: "bearer", type: "http" }],
     url: "/api/editor/tables/{public_id}/",
     ...options,
   })
@@ -285,14 +252,7 @@ export const editorTablesPartialUpdate = <ThrowOnError extends boolean = false>(
   options: Options<EditorTablesPartialUpdateData, ThrowOnError>,
 ) =>
   (options.client ?? client).patch<EditorTablesPartialUpdateResponses, unknown, ThrowOnError>({
-    security: [
-      { scheme: "bearer", type: "http" },
-      {
-        in: "cookie",
-        name: "sessionid",
-        type: "apiKey",
-      },
-    ],
+    security: [{ scheme: "bearer", type: "http" }],
     url: "/api/editor/tables/{public_id}/",
     ...options,
     headers: {
@@ -305,14 +265,7 @@ export const editorTablesAvailableList = <ThrowOnError extends boolean = false>(
   options: Options<EditorTablesAvailableListData, ThrowOnError>,
 ) =>
   (options.client ?? client).get<EditorTablesAvailableListResponses, unknown, ThrowOnError>({
-    security: [
-      { scheme: "bearer", type: "http" },
-      {
-        in: "cookie",
-        name: "sessionid",
-        type: "apiKey",
-      },
-    ],
+    security: [{ scheme: "bearer", type: "http" }],
     url: "/api/editor/tables/available/",
     ...options,
   })
@@ -321,14 +274,7 @@ export const menuCategoriesList = <ThrowOnError extends boolean = false>(
   options?: Options<MenuCategoriesListData, ThrowOnError>,
 ) =>
   (options?.client ?? client).get<MenuCategoriesListResponses, unknown, ThrowOnError>({
-    security: [
-      { scheme: "bearer", type: "http" },
-      {
-        in: "cookie",
-        name: "sessionid",
-        type: "apiKey",
-      },
-    ],
+    security: [{ scheme: "bearer", type: "http" }],
     url: "/api/menu/categories/",
     ...options,
   })
@@ -337,14 +283,7 @@ export const menuCategoriesRetrieve = <ThrowOnError extends boolean = false>(
   options: Options<MenuCategoriesRetrieveData, ThrowOnError>,
 ) =>
   (options.client ?? client).get<MenuCategoriesRetrieveResponses, unknown, ThrowOnError>({
-    security: [
-      { scheme: "bearer", type: "http" },
-      {
-        in: "cookie",
-        name: "sessionid",
-        type: "apiKey",
-      },
-    ],
+    security: [{ scheme: "bearer", type: "http" }],
     url: "/api/menu/categories/{public_id}/",
     ...options,
   })
@@ -353,14 +292,7 @@ export const menuItemsList = <ThrowOnError extends boolean = false>(
   options?: Options<MenuItemsListData, ThrowOnError>,
 ) =>
   (options?.client ?? client).get<MenuItemsListResponses, unknown, ThrowOnError>({
-    security: [
-      { scheme: "bearer", type: "http" },
-      {
-        in: "cookie",
-        name: "sessionid",
-        type: "apiKey",
-      },
-    ],
+    security: [{ scheme: "bearer", type: "http" }],
     url: "/api/menu/items/",
     ...options,
   })
@@ -369,14 +301,7 @@ export const menuItemsRetrieve = <ThrowOnError extends boolean = false>(
   options: Options<MenuItemsRetrieveData, ThrowOnError>,
 ) =>
   (options.client ?? client).get<MenuItemsRetrieveResponses, unknown, ThrowOnError>({
-    security: [
-      { scheme: "bearer", type: "http" },
-      {
-        in: "cookie",
-        name: "sessionid",
-        type: "apiKey",
-      },
-    ],
+    security: [{ scheme: "bearer", type: "http" }],
     url: "/api/menu/items/{public_id}/",
     ...options,
   })
@@ -388,14 +313,7 @@ export const menuItemsToggleLikeCreate = <ThrowOnError extends boolean = false>(
   options: Options<MenuItemsToggleLikeCreateData, ThrowOnError>,
 ) =>
   (options.client ?? client).post<MenuItemsToggleLikeCreateResponses, unknown, ThrowOnError>({
-    security: [
-      { scheme: "bearer", type: "http" },
-      {
-        in: "cookie",
-        name: "sessionid",
-        type: "apiKey",
-      },
-    ],
+    security: [{ scheme: "bearer", type: "http" }],
     url: "/api/menu/items/{public_id}/toggle-like/",
     ...options,
     headers: {
@@ -408,14 +326,7 @@ export const menuItemsSearchRetrieve = <ThrowOnError extends boolean = false>(
   options?: Options<MenuItemsSearchRetrieveData, ThrowOnError>,
 ) =>
   (options?.client ?? client).get<MenuItemsSearchRetrieveResponses, unknown, ThrowOnError>({
-    security: [
-      { scheme: "bearer", type: "http" },
-      {
-        in: "cookie",
-        name: "sessionid",
-        type: "apiKey",
-      },
-    ],
+    security: [{ scheme: "bearer", type: "http" }],
     url: "/api/menu/items/search/",
     ...options,
   })
@@ -424,14 +335,7 @@ export const menuMenusList = <ThrowOnError extends boolean = false>(
   options?: Options<MenuMenusListData, ThrowOnError>,
 ) =>
   (options?.client ?? client).get<MenuMenusListResponses, unknown, ThrowOnError>({
-    security: [
-      { scheme: "bearer", type: "http" },
-      {
-        in: "cookie",
-        name: "sessionid",
-        type: "apiKey",
-      },
-    ],
+    security: [{ scheme: "bearer", type: "http" }],
     url: "/api/menu/menus/",
     ...options,
   })
@@ -440,14 +344,7 @@ export const menuMenusRetrieve = <ThrowOnError extends boolean = false>(
   options: Options<MenuMenusRetrieveData, ThrowOnError>,
 ) =>
   (options.client ?? client).get<MenuMenusRetrieveResponses, unknown, ThrowOnError>({
-    security: [
-      { scheme: "bearer", type: "http" },
-      {
-        in: "cookie",
-        name: "sessionid",
-        type: "apiKey",
-      },
-    ],
+    security: [{ scheme: "bearer", type: "http" }],
     url: "/api/menu/menus/{public_id}/",
     ...options,
   })
@@ -456,14 +353,7 @@ export const ordersOrderItemsList = <ThrowOnError extends boolean = false>(
   options?: Options<OrdersOrderItemsListData, ThrowOnError>,
 ) =>
   (options?.client ?? client).get<OrdersOrderItemsListResponses, unknown, ThrowOnError>({
-    security: [
-      { scheme: "bearer", type: "http" },
-      {
-        in: "cookie",
-        name: "sessionid",
-        type: "apiKey",
-      },
-    ],
+    security: [{ scheme: "bearer", type: "http" }],
     url: "/api/orders/order-items/",
     ...options,
   })
@@ -472,14 +362,7 @@ export const ordersOrderItemsRetrieve = <ThrowOnError extends boolean = false>(
   options: Options<OrdersOrderItemsRetrieveData, ThrowOnError>,
 ) =>
   (options.client ?? client).get<OrdersOrderItemsRetrieveResponses, unknown, ThrowOnError>({
-    security: [
-      { scheme: "bearer", type: "http" },
-      {
-        in: "cookie",
-        name: "sessionid",
-        type: "apiKey",
-      },
-    ],
+    security: [{ scheme: "bearer", type: "http" }],
     url: "/api/orders/order-items/{public_id}/",
     ...options,
   })
@@ -488,14 +371,7 @@ export const ordersOrdersList = <ThrowOnError extends boolean = false>(
   options?: Options<OrdersOrdersListData, ThrowOnError>,
 ) =>
   (options?.client ?? client).get<OrdersOrdersListResponses, unknown, ThrowOnError>({
-    security: [
-      { scheme: "bearer", type: "http" },
-      {
-        in: "cookie",
-        name: "sessionid",
-        type: "apiKey",
-      },
-    ],
+    security: [{ scheme: "bearer", type: "http" }],
     url: "/api/orders/orders/",
     ...options,
   })
@@ -504,14 +380,7 @@ export const ordersOrdersRetrieve = <ThrowOnError extends boolean = false>(
   options: Options<OrdersOrdersRetrieveData, ThrowOnError>,
 ) =>
   (options.client ?? client).get<OrdersOrdersRetrieveResponses, unknown, ThrowOnError>({
-    security: [
-      { scheme: "bearer", type: "http" },
-      {
-        in: "cookie",
-        name: "sessionid",
-        type: "apiKey",
-      },
-    ],
+    security: [{ scheme: "bearer", type: "http" }],
     url: "/api/orders/orders/{public_id}/",
     ...options,
   })
@@ -520,14 +389,7 @@ export const ordersSessionsList = <ThrowOnError extends boolean = false>(
   options?: Options<OrdersSessionsListData, ThrowOnError>,
 ) =>
   (options?.client ?? client).get<OrdersSessionsListResponses, unknown, ThrowOnError>({
-    security: [
-      { scheme: "bearer", type: "http" },
-      {
-        in: "cookie",
-        name: "sessionid",
-        type: "apiKey",
-      },
-    ],
+    security: [{ scheme: "bearer", type: "http" }],
     url: "/api/orders/sessions/",
     ...options,
   })
@@ -536,14 +398,7 @@ export const ordersSessionsRetrieve = <ThrowOnError extends boolean = false>(
   options: Options<OrdersSessionsRetrieveData, ThrowOnError>,
 ) =>
   (options.client ?? client).get<OrdersSessionsRetrieveResponses, unknown, ThrowOnError>({
-    security: [
-      { scheme: "bearer", type: "http" },
-      {
-        in: "cookie",
-        name: "sessionid",
-        type: "apiKey",
-      },
-    ],
+    security: [{ scheme: "bearer", type: "http" }],
     url: "/api/orders/sessions/{public_id}/",
     ...options,
   })
@@ -552,14 +407,7 @@ export const ordersTicketsList = <ThrowOnError extends boolean = false>(
   options?: Options<OrdersTicketsListData, ThrowOnError>,
 ) =>
   (options?.client ?? client).get<OrdersTicketsListResponses, unknown, ThrowOnError>({
-    security: [
-      { scheme: "bearer", type: "http" },
-      {
-        in: "cookie",
-        name: "sessionid",
-        type: "apiKey",
-      },
-    ],
+    security: [{ scheme: "bearer", type: "http" }],
     url: "/api/orders/tickets/",
     ...options,
   })
@@ -568,14 +416,7 @@ export const ordersTicketsRetrieve = <ThrowOnError extends boolean = false>(
   options: Options<OrdersTicketsRetrieveData, ThrowOnError>,
 ) =>
   (options.client ?? client).get<OrdersTicketsRetrieveResponses, unknown, ThrowOnError>({
-    security: [
-      { scheme: "bearer", type: "http" },
-      {
-        in: "cookie",
-        name: "sessionid",
-        type: "apiKey",
-      },
-    ],
+    security: [{ scheme: "bearer", type: "http" }],
     url: "/api/orders/tickets/{public_id}/",
     ...options,
   })
@@ -584,14 +425,7 @@ export const paymentsPaymentsList = <ThrowOnError extends boolean = false>(
   options?: Options<PaymentsPaymentsListData, ThrowOnError>,
 ) =>
   (options?.client ?? client).get<PaymentsPaymentsListResponses, unknown, ThrowOnError>({
-    security: [
-      { scheme: "bearer", type: "http" },
-      {
-        in: "cookie",
-        name: "sessionid",
-        type: "apiKey",
-      },
-    ],
+    security: [{ scheme: "bearer", type: "http" }],
     url: "/api/payments/payments/",
     ...options,
   })
@@ -600,15 +434,20 @@ export const paymentsPaymentsRetrieve = <ThrowOnError extends boolean = false>(
   options: Options<PaymentsPaymentsRetrieveData, ThrowOnError>,
 ) =>
   (options.client ?? client).get<PaymentsPaymentsRetrieveResponses, unknown, ThrowOnError>({
-    security: [
-      { scheme: "bearer", type: "http" },
-      {
-        in: "cookie",
-        name: "sessionid",
-        type: "apiKey",
-      },
-    ],
+    security: [{ scheme: "bearer", type: "http" }],
     url: "/api/payments/payments/{public_id}/",
+    ...options,
+  })
+
+/**
+ * The signed-in user's own receipt history, newest first.
+ */
+export const receiptsMyList = <ThrowOnError extends boolean = false>(
+  options?: Options<ReceiptsMyListData, ThrowOnError>,
+) =>
+  (options?.client ?? client).get<ReceiptsMyListResponses, unknown, ThrowOnError>({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/receipts/my/",
     ...options,
   })
 
@@ -616,14 +455,7 @@ export const reservationsReservationsList = <ThrowOnError extends boolean = fals
   options?: Options<ReservationsReservationsListData, ThrowOnError>,
 ) =>
   (options?.client ?? client).get<ReservationsReservationsListResponses, unknown, ThrowOnError>({
-    security: [
-      { scheme: "bearer", type: "http" },
-      {
-        in: "cookie",
-        name: "sessionid",
-        type: "apiKey",
-      },
-    ],
+    security: [{ scheme: "bearer", type: "http" }],
     url: "/api/reservations/reservations/",
     ...options,
   })
@@ -632,14 +464,7 @@ export const reservationsReservationsCreate = <ThrowOnError extends boolean = fa
   options: Options<ReservationsReservationsCreateData, ThrowOnError>,
 ) =>
   (options.client ?? client).post<ReservationsReservationsCreateResponses, unknown, ThrowOnError>({
-    security: [
-      { scheme: "bearer", type: "http" },
-      {
-        in: "cookie",
-        name: "sessionid",
-        type: "apiKey",
-      },
-    ],
+    security: [{ scheme: "bearer", type: "http" }],
     url: "/api/reservations/reservations/",
     ...options,
     headers: {
@@ -652,14 +477,7 @@ export const reservationsReservationsRetrieve = <ThrowOnError extends boolean = 
   options: Options<ReservationsReservationsRetrieveData, ThrowOnError>,
 ) =>
   (options.client ?? client).get<ReservationsReservationsRetrieveResponses, unknown, ThrowOnError>({
-    security: [
-      { scheme: "bearer", type: "http" },
-      {
-        in: "cookie",
-        name: "sessionid",
-        type: "apiKey",
-      },
-    ],
+    security: [{ scheme: "bearer", type: "http" }],
     url: "/api/reservations/reservations/{public_id}/",
     ...options,
   })
@@ -672,14 +490,7 @@ export const reservationsReservationsPartialUpdate = <ThrowOnError extends boole
     unknown,
     ThrowOnError
   >({
-    security: [
-      { scheme: "bearer", type: "http" },
-      {
-        in: "cookie",
-        name: "sessionid",
-        type: "apiKey",
-      },
-    ],
+    security: [{ scheme: "bearer", type: "http" }],
     url: "/api/reservations/reservations/{public_id}/",
     ...options,
     headers: {
@@ -692,14 +503,7 @@ export const reservationsReservationsMyList = <ThrowOnError extends boolean = fa
   options?: Options<ReservationsReservationsMyListData, ThrowOnError>,
 ) =>
   (options?.client ?? client).get<ReservationsReservationsMyListResponses, unknown, ThrowOnError>({
-    security: [
-      { scheme: "bearer", type: "http" },
-      {
-        in: "cookie",
-        name: "sessionid",
-        type: "apiKey",
-      },
-    ],
+    security: [{ scheme: "bearer", type: "http" }],
     url: "/api/reservations/reservations/my/",
     ...options,
   })
@@ -712,14 +516,7 @@ export const restaurantsRestaurantSettingsList = <ThrowOnError extends boolean =
     unknown,
     ThrowOnError
   >({
-    security: [
-      { scheme: "bearer", type: "http" },
-      {
-        in: "cookie",
-        name: "sessionid",
-        type: "apiKey",
-      },
-    ],
+    security: [{ scheme: "bearer", type: "http" }],
     url: "/api/restaurants/restaurant-settings/",
     ...options,
   })
@@ -732,14 +529,7 @@ export const restaurantsRestaurantSettingsRetrieve = <ThrowOnError extends boole
     unknown,
     ThrowOnError
   >({
-    security: [
-      { scheme: "bearer", type: "http" },
-      {
-        in: "cookie",
-        name: "sessionid",
-        type: "apiKey",
-      },
-    ],
+    security: [{ scheme: "bearer", type: "http" }],
     url: "/api/restaurants/restaurant-settings/{public_id}/",
     ...options,
   })
@@ -748,17 +538,21 @@ export const restaurantsRestaurantsList = <ThrowOnError extends boolean = false>
   options?: Options<RestaurantsRestaurantsListData, ThrowOnError>,
 ) =>
   (options?.client ?? client).get<RestaurantsRestaurantsListResponses, unknown, ThrowOnError>({
-    security: [
-      { scheme: "bearer", type: "http" },
-      {
-        in: "cookie",
-        name: "sessionid",
-        type: "apiKey",
-      },
-    ],
+    security: [{ scheme: "bearer", type: "http" }],
     url: "/api/restaurants/restaurants/",
     ...options,
   })
+
+export const restaurantsRestaurantsPublicList = <ThrowOnError extends boolean = false>(
+  options?: Options<RestaurantsRestaurantsPublicListData, ThrowOnError>,
+) =>
+  (options?.client ?? client).get<RestaurantsRestaurantsPublicListResponses, unknown, ThrowOnError>(
+    {
+      security: [{ scheme: "bearer", type: "http" }],
+      url: "/api/restaurants/restaurants-public/",
+      ...options,
+    },
+  )
 
 export const restaurantsRestaurantsPublicRetrieve = <ThrowOnError extends boolean = false>(
   options: Options<RestaurantsRestaurantsPublicRetrieveData, ThrowOnError>,
@@ -768,14 +562,7 @@ export const restaurantsRestaurantsPublicRetrieve = <ThrowOnError extends boolea
     unknown,
     ThrowOnError
   >({
-    security: [
-      { scheme: "bearer", type: "http" },
-      {
-        in: "cookie",
-        name: "sessionid",
-        type: "apiKey",
-      },
-    ],
+    security: [{ scheme: "bearer", type: "http" }],
     url: "/api/restaurants/restaurants-public/{public_id}/",
     ...options,
   })
@@ -784,14 +571,7 @@ export const restaurantsRestaurantsRetrieve = <ThrowOnError extends boolean = fa
   options: Options<RestaurantsRestaurantsRetrieveData, ThrowOnError>,
 ) =>
   (options.client ?? client).get<RestaurantsRestaurantsRetrieveResponses, unknown, ThrowOnError>({
-    security: [
-      { scheme: "bearer", type: "http" },
-      {
-        in: "cookie",
-        name: "sessionid",
-        type: "apiKey",
-      },
-    ],
+    security: [{ scheme: "bearer", type: "http" }],
     url: "/api/restaurants/restaurants/{public_id}/",
     ...options,
   })
@@ -800,14 +580,7 @@ export const restaurantsTablesList = <ThrowOnError extends boolean = false>(
   options?: Options<RestaurantsTablesListData, ThrowOnError>,
 ) =>
   (options?.client ?? client).get<RestaurantsTablesListResponses, unknown, ThrowOnError>({
-    security: [
-      { scheme: "bearer", type: "http" },
-      {
-        in: "cookie",
-        name: "sessionid",
-        type: "apiKey",
-      },
-    ],
+    security: [{ scheme: "bearer", type: "http" }],
     url: "/api/restaurants/tables/",
     ...options,
   })
@@ -816,14 +589,25 @@ export const restaurantsTablesRetrieve = <ThrowOnError extends boolean = false>(
   options: Options<RestaurantsTablesRetrieveData, ThrowOnError>,
 ) =>
   (options.client ?? client).get<RestaurantsTablesRetrieveResponses, unknown, ThrowOnError>({
-    security: [
-      { scheme: "bearer", type: "http" },
-      {
-        in: "cookie",
-        name: "sessionid",
-        type: "apiKey",
-      },
-    ],
+    security: [{ scheme: "bearer", type: "http" }],
     url: "/api/restaurants/tables/{public_id}/",
+    ...options,
+  })
+
+export const restaurantsZonesList = <ThrowOnError extends boolean = false>(
+  options?: Options<RestaurantsZonesListData, ThrowOnError>,
+) =>
+  (options?.client ?? client).get<RestaurantsZonesListResponses, unknown, ThrowOnError>({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/restaurants/zones/",
+    ...options,
+  })
+
+export const restaurantsZonesRetrieve = <ThrowOnError extends boolean = false>(
+  options: Options<RestaurantsZonesRetrieveData, ThrowOnError>,
+) =>
+  (options.client ?? client).get<RestaurantsZonesRetrieveResponses, unknown, ThrowOnError>({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/restaurants/zones/{public_id}/",
     ...options,
   })

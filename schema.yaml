@@ -1,8 +1,8 @@
 openapi: 3.0.3
 info:
-  title: Table Mate API
-  version: 0.1.0
-  description: Table Mate backend API
+  title: TableMate Platform API
+  version: 1.0.0
+  description: Real-time multi-tenant restaurant operational ecosystem backend.
 paths:
   /api/auth/google/:
     post:
@@ -23,7 +23,7 @@ paths:
         required: true
       security:
       - jwtAuth: []
-      - cookieAuth: []
+      - jwt_Auth: []
       - {}
       responses:
         '200':
@@ -53,7 +53,7 @@ paths:
         required: true
       security:
       - jwtAuth: []
-      - cookieAuth: []
+      - jwt_Auth: []
       responses:
         '200':
           content:
@@ -70,7 +70,7 @@ paths:
       - auth
       security:
       - jwtAuth: []
-      - cookieAuth: []
+      - jwt_Auth: []
       - {}
       responses:
         '200':
@@ -82,13 +82,38 @@ paths:
       - auth
       security:
       - jwtAuth: []
-      - cookieAuth: []
+      - jwt_Auth: []
       responses:
         '200':
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/User'
+          description: ''
+    patch:
+      operationId: auth_me_partial_update
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedMeUpdate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedMeUpdate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedMeUpdate'
+      security:
+      - jwtAuth: []
+      - jwt_Auth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MeUpdate'
           description: ''
   /api/auth/refresh/:
     post:
@@ -110,6 +135,8 @@ paths:
             schema:
               $ref: '#/components/schemas/TokenRefresh'
         required: true
+      security:
+      - jwt_Auth: []
       responses:
         '200':
           content:
@@ -137,6 +164,8 @@ paths:
             schema:
               $ref: '#/components/schemas/CustomTokenObtainPair'
         required: true
+      security:
+      - jwt_Auth: []
       responses:
         '200':
           content:
@@ -177,7 +206,7 @@ paths:
       - Editor
       security:
       - jwtAuth: []
-      - cookieAuth: []
+      - jwt_Auth: []
       responses:
         '200':
           content:
@@ -199,7 +228,7 @@ paths:
       - Editor
       security:
       - jwtAuth: []
-      - cookieAuth: []
+      - jwt_Auth: []
       responses:
         '200':
           content:
@@ -259,7 +288,7 @@ paths:
       - Editor
       security:
       - jwtAuth: []
-      - cookieAuth: []
+      - jwt_Auth: []
       responses:
         '200':
           content:
@@ -281,7 +310,7 @@ paths:
       - Editor
       security:
       - jwtAuth: []
-      - cookieAuth: []
+      - jwt_Auth: []
       responses:
         '200':
           content:
@@ -313,7 +342,7 @@ paths:
               $ref: '#/components/schemas/PatchedEditorTable'
       security:
       - jwtAuth: []
-      - cookieAuth: []
+      - jwt_Auth: []
       responses:
         '200':
           content:
@@ -342,6 +371,11 @@ paths:
         schema:
           type: integer
       - in: query
+        name: restaurant
+        schema:
+          type: string
+        description: Restaurant public ID for unauthenticated access
+      - in: query
         name: start_at
         schema:
           type: string
@@ -351,7 +385,7 @@ paths:
       - Editor
       security:
       - jwtAuth: []
-      - cookieAuth: []
+      - jwt_Auth: []
       responses:
         '200':
           content:
@@ -384,7 +418,7 @@ paths:
       - Menu
       security:
       - jwtAuth: []
-      - cookieAuth: []
+      - jwt_Auth: []
       - {}
       responses:
         '200':
@@ -407,7 +441,7 @@ paths:
       - Menu
       security:
       - jwtAuth: []
-      - cookieAuth: []
+      - jwt_Auth: []
       - {}
       responses:
         '200':
@@ -450,7 +484,7 @@ paths:
       - Menu
       security:
       - jwtAuth: []
-      - cookieAuth: []
+      - jwt_Auth: []
       - {}
       responses:
         '200':
@@ -473,7 +507,7 @@ paths:
       - Menu
       security:
       - jwtAuth: []
-      - cookieAuth: []
+      - jwt_Auth: []
       - {}
       responses:
         '200':
@@ -482,6 +516,49 @@ paths:
               schema:
                 $ref: '#/components/schemas/MenuItem'
           description: ''
+  /api/menu/items/{public_id}/toggle-like/:
+    post:
+      operationId: menu_items_toggle_like_create
+      summary: Toggle like on a menu item for an anonymous client token
+      parameters:
+      - in: path
+        name: public_id
+        schema:
+          type: string
+          pattern: ^[0-9a-fA-F-]{36}$
+        required: true
+      - in: query
+        name: restaurant
+        schema:
+          type: string
+          format: uuid
+        description: Restaurant public UUID
+        required: true
+      tags:
+      - Menu
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ToggleMenuItemLikeRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ToggleMenuItemLikeRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ToggleMenuItemLikeRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - jwt_Auth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToggleMenuItemLikeResponse'
+          description: ''
   /api/menu/items/search/:
     get:
       operationId: menu_items_search_retrieve
@@ -489,7 +566,7 @@ paths:
       - Menu
       security:
       - jwtAuth: []
-      - cookieAuth: []
+      - jwt_Auth: []
       - {}
       responses:
         '200':
@@ -518,7 +595,7 @@ paths:
       - Menu
       security:
       - jwtAuth: []
-      - cookieAuth: []
+      - jwt_Auth: []
       - {}
       responses:
         '200':
@@ -541,7 +618,7 @@ paths:
       - Menu
       security:
       - jwtAuth: []
-      - cookieAuth: []
+      - jwt_Auth: []
       - {}
       responses:
         '200':
@@ -610,7 +687,7 @@ paths:
       - Orders
       security:
       - jwtAuth: []
-      - cookieAuth: []
+      - jwt_Auth: []
       responses:
         '200':
           content:
@@ -632,7 +709,7 @@ paths:
       - Orders
       security:
       - jwtAuth: []
-      - cookieAuth: []
+      - jwt_Auth: []
       responses:
         '200':
           content:
@@ -726,7 +803,7 @@ paths:
       - Orders
       security:
       - jwtAuth: []
-      - cookieAuth: []
+      - jwt_Auth: []
       responses:
         '200':
           content:
@@ -748,7 +825,7 @@ paths:
       - Orders
       security:
       - jwtAuth: []
-      - cookieAuth: []
+      - jwt_Auth: []
       responses:
         '200':
           content:
@@ -804,7 +881,7 @@ paths:
       - Orders
       security:
       - jwtAuth: []
-      - cookieAuth: []
+      - jwt_Auth: []
       responses:
         '200':
           content:
@@ -826,7 +903,7 @@ paths:
       - Orders
       security:
       - jwtAuth: []
-      - cookieAuth: []
+      - jwt_Auth: []
       responses:
         '200':
           content:
@@ -876,7 +953,7 @@ paths:
       - Orders
       security:
       - jwtAuth: []
-      - cookieAuth: []
+      - jwt_Auth: []
       responses:
         '200':
           content:
@@ -898,7 +975,7 @@ paths:
       - Orders
       security:
       - jwtAuth: []
-      - cookieAuth: []
+      - jwt_Auth: []
       responses:
         '200':
           content:
@@ -956,7 +1033,7 @@ paths:
       - Payments
       security:
       - jwtAuth: []
-      - cookieAuth: []
+      - jwt_Auth: []
       responses:
         '200':
           content:
@@ -978,13 +1055,38 @@ paths:
       - Payments
       security:
       - jwtAuth: []
-      - cookieAuth: []
+      - jwt_Auth: []
       responses:
         '200':
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Payment'
+          description: ''
+  /api/receipts/my/:
+    get:
+      operationId: receipts_my_list
+      description: The signed-in user's own receipt history, newest first.
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      tags:
+      - Receipts
+      security:
+      - jwtAuth: []
+      - jwt_Auth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Receipt'
           description: ''
   /api/reservations/reservations/:
     get:
@@ -1011,15 +1113,15 @@ paths:
         schema:
           type: string
           enum:
+          - active
           - cancelled
           - completed
-          - confirmed
           - pending
         description: |-
           * `pending` - Pending
-          * `confirmed` - Confirmed
-          * `cancelled` - Cancelled
+          * `active` - Active
           * `completed` - Completed
+          * `cancelled` - Cancelled
       - in: query
         name: table
         schema:
@@ -1028,7 +1130,7 @@ paths:
       - Reservations
       security:
       - jwtAuth: []
-      - cookieAuth: []
+      - jwt_Auth: []
       responses:
         '200':
           content:
@@ -1054,7 +1156,7 @@ paths:
         required: true
       security:
       - jwtAuth: []
-      - cookieAuth: []
+      - jwt_Auth: []
       responses:
         '201':
           content:
@@ -1076,7 +1178,7 @@ paths:
       - Reservations
       security:
       - jwtAuth: []
-      - cookieAuth: []
+      - jwt_Auth: []
       responses:
         '200':
           content:
@@ -1108,7 +1210,7 @@ paths:
               $ref: '#/components/schemas/PatchedReservation'
       security:
       - jwtAuth: []
-      - cookieAuth: []
+      - jwt_Auth: []
       responses:
         '200':
           content:
@@ -1141,15 +1243,15 @@ paths:
         schema:
           type: string
           enum:
+          - active
           - cancelled
           - completed
-          - confirmed
           - pending
         description: |-
           * `pending` - Pending
-          * `confirmed` - Confirmed
-          * `cancelled` - Cancelled
+          * `active` - Active
           * `completed` - Completed
+          * `cancelled` - Cancelled
       - in: query
         name: table
         schema:
@@ -1158,7 +1260,7 @@ paths:
       - Reservations
       security:
       - jwtAuth: []
-      - cookieAuth: []
+      - jwt_Auth: []
       responses:
         '200':
           content:
@@ -1170,14 +1272,6 @@ paths:
     get:
       operationId: restaurants_restaurant_settings_list
       parameters:
-      - in: query
-        name: currency
-        schema:
-          type: string
-      - in: query
-        name: locale
-        schema:
-          type: string
       - name: ordering
         required: false
         in: query
@@ -1190,19 +1284,12 @@ paths:
         description: A page number within the paginated result set.
         schema:
           type: integer
-      - in: query
-        name: restaurant
-        schema:
-          type: integer
-      - in: query
-        name: timezone
-        schema:
-          type: string
       tags:
       - Restaurants
       security:
       - jwtAuth: []
-      - cookieAuth: []
+      - jwt_Auth: []
+      - {}
       responses:
         '200':
           content:
@@ -1224,7 +1311,8 @@ paths:
       - Restaurants
       security:
       - jwtAuth: []
-      - cookieAuth: []
+      - jwt_Auth: []
+      - {}
       responses:
         '200':
           content:
@@ -1252,13 +1340,65 @@ paths:
       - Restaurants
       security:
       - jwtAuth: []
-      - cookieAuth: []
+      - jwt_Auth: []
       responses:
         '200':
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/PaginatedRestaurantList'
+          description: ''
+  /api/restaurants/restaurants-public/:
+    get:
+      operationId: restaurants_restaurants_public_list
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - Restaurants
+      security:
+      - jwtAuth: []
+      - jwt_Auth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedPublicRestaurantList'
+          description: ''
+  /api/restaurants/restaurants-public/{public_id}/:
+    get:
+      operationId: restaurants_restaurants_public_retrieve
+      parameters:
+      - in: path
+        name: public_id
+        schema:
+          type: string
+          pattern: ^[0-9a-fA-F-]{36}$
+        required: true
+      tags:
+      - Restaurants
+      security:
+      - jwtAuth: []
+      - jwt_Auth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicRestaurant'
           description: ''
   /api/restaurants/restaurants/{public_id}/:
     get:
@@ -1274,7 +1414,7 @@ paths:
       - Restaurants
       security:
       - jwtAuth: []
-      - cookieAuth: []
+      - jwt_Auth: []
       responses:
         '200':
           content:
@@ -1312,11 +1452,17 @@ paths:
         description: |-
           * `free` - Free
           * `occupied` - Occupied
+      - in: query
+        name: zone__public_id
+        schema:
+          type: string
+          format: uuid
       tags:
       - Restaurants
       security:
       - jwtAuth: []
-      - cookieAuth: []
+      - jwt_Auth: []
+      - {}
       responses:
         '200':
           content:
@@ -1338,13 +1484,66 @@ paths:
       - Restaurants
       security:
       - jwtAuth: []
-      - cookieAuth: []
+      - jwt_Auth: []
+      - {}
       responses:
         '200':
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Table'
+          description: ''
+  /api/restaurants/zones/:
+    get:
+      operationId: restaurants_zones_list
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - Restaurants
+      security:
+      - jwtAuth: []
+      - jwt_Auth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedZoneList'
+          description: ''
+  /api/restaurants/zones/{public_id}/:
+    get:
+      operationId: restaurants_zones_retrieve
+      parameters:
+      - in: path
+        name: public_id
+        schema:
+          type: string
+          pattern: ^[0-9a-fA-F-]{36}$
+        required: true
+      tags:
+      - Restaurants
+      security:
+      - jwtAuth: []
+      - jwt_Auth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Zone'
           description: ''
 components:
   schemas:
@@ -1505,6 +1704,26 @@ components:
       - restaurant
       - updated_at
       - version
+    MeUpdate:
+      type: object
+      description: |-
+        Fields a user may edit about themselves.
+
+        Deliberately excludes role, is_active and restaurant so a customer cannot
+        escalate their own privileges. Email is NOT editable: it is the Google
+        sign-in identity, so changing it would lock the user out / create a
+        duplicate account on the next login.
+      properties:
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        phone:
+          type: string
+          nullable: true
+          maxLength: 32
     Menu:
       type: object
       properties:
@@ -1600,12 +1819,38 @@ components:
           type: string
           format: uuid
           readOnly: true
+          nullable: true
         name:
           type: string
           maxLength: 255
         description:
           type: string
           nullable: true
+        ingredients:
+          type: array
+          items:
+            type: string
+          readOnly: true
+        allergens:
+          type: array
+          items:
+            type: string
+          readOnly: true
+        weight_grams:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+        image:
+          type: string
+          format: uri
+          nullable: true
+        likes_count:
+          type: integer
+          readOnly: true
+        is_liked:
+          type: boolean
+          readOnly: true
         price:
           type: string
           format: decimal
@@ -1625,8 +1870,12 @@ components:
           format: date-time
           readOnly: true
       required:
+      - allergens
       - category
       - created_at
+      - ingredients
+      - is_liked
+      - likes_count
       - menu
       - name
       - price
@@ -1999,6 +2248,29 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Payment'
+    PaginatedPublicRestaurantList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/PublicRestaurant'
     PaginatedReservationList:
       type: object
       required:
@@ -2137,6 +2409,29 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Ticket'
+    PaginatedZoneList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Zone'
     PatchedEditorTable:
       type: object
       properties:
@@ -2178,6 +2473,26 @@ components:
           type: string
           format: date-time
           readOnly: true
+    PatchedMeUpdate:
+      type: object
+      description: |-
+        Fields a user may edit about themselves.
+
+        Deliberately excludes role, is_active and restaurant so a customer cannot
+        escalate their own privileges. Email is NOT editable: it is the Google
+        sign-in identity, so changing it would lock the user out / create a
+        duplicate account on the next login.
+      properties:
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        phone:
+          type: string
+          nullable: true
+          maxLength: 32
     PatchedReservation:
       type: object
       properties:
@@ -2271,6 +2586,14 @@ components:
       - public_id
       - restaurant
       - updated_at
+    PaymentMethodEnum:
+      enum:
+      - card
+      - cash
+      type: string
+      description: |-
+        * `card` - Card
+        * `cash` - Cash
     PaymentStatusEnum:
       enum:
       - unpaid
@@ -2287,6 +2610,184 @@ components:
         * `settled` - Settled
         * `refunded` - Refunded
         * `cancelled` - Cancelled
+    PublicRestaurant:
+      type: object
+      properties:
+        public_id:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          readOnly: true
+        address:
+          type: string
+          readOnly: true
+        phone:
+          type: string
+          readOnly: true
+        cover_image:
+          type: string
+          format: uri
+          readOnly: true
+          nullable: true
+        telegram_url:
+          type: string
+          format: uri
+          readOnly: true
+        facebook_url:
+          type: string
+          format: uri
+          readOnly: true
+        settings:
+          allOf:
+          - $ref: '#/components/schemas/PublicRestaurantSettings'
+          readOnly: true
+          nullable: true
+      required:
+      - address
+      - cover_image
+      - facebook_url
+      - name
+      - phone
+      - public_id
+      - settings
+      - telegram_url
+    PublicRestaurantSettings:
+      type: object
+      properties:
+        currency:
+          type: string
+          readOnly: true
+        timezone:
+          type: string
+          readOnly: true
+        working_hours:
+          readOnly: true
+        rating:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,1}(?:\.\d{0,2})?$
+          readOnly: true
+          nullable: true
+        eta_min_minutes:
+          type: integer
+          readOnly: true
+        eta_max_minutes:
+          type: integer
+          readOnly: true
+        price_band:
+          type: integer
+          readOnly: true
+      required:
+      - currency
+      - eta_max_minutes
+      - eta_min_minutes
+      - price_band
+      - rating
+      - timezone
+      - working_hours
+    Receipt:
+      type: object
+      properties:
+        public_id:
+          type: string
+          format: uuid
+          readOnly: true
+        order_number:
+          type: string
+          maxLength: 40
+        restaurant_public_id:
+          type: string
+          readOnly: true
+        restaurant_name:
+          type: string
+          readOnly: true
+        restaurant_address:
+          type: string
+          readOnly: true
+        restaurant_phone:
+          type: string
+          readOnly: true
+        restaurant_image:
+          type: string
+          nullable: true
+          readOnly: true
+        visited_at:
+          type: string
+          format: date-time
+        currency:
+          type: string
+          maxLength: 3
+        table_label:
+          type: string
+          maxLength: 40
+        server_name:
+          type: string
+          maxLength: 80
+        guests:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReceiptItem'
+          readOnly: true
+        subtotal:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          readOnly: true
+        tax:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        service_charge:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        tip:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        total:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          readOnly: true
+        payment_method:
+          $ref: '#/components/schemas/PaymentMethodEnum'
+        payment_status:
+          type: string
+          maxLength: 20
+      required:
+      - items
+      - order_number
+      - public_id
+      - restaurant_address
+      - restaurant_image
+      - restaurant_name
+      - restaurant_phone
+      - restaurant_public_id
+      - subtotal
+      - total
+      - visited_at
+    ReceiptItem:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 120
+        quantity:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        unit_price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          nullable: true
     Reservation:
       type: object
       properties:
@@ -2346,15 +2847,15 @@ components:
     ReservationStatus:
       enum:
       - pending
-      - confirmed
-      - cancelled
+      - active
       - completed
+      - cancelled
       type: string
       description: |-
         * `pending` - Pending
-        * `confirmed` - Confirmed
-        * `cancelled` - Cancelled
+        * `active` - Active
         * `completed` - Completed
+        * `cancelled` - Cancelled
     Restaurant:
       type: object
       properties:
@@ -2410,6 +2911,23 @@ components:
           format: decimal
           pattern: ^-?\d{0,1}(?:\.\d{0,4})?$
         working_hours: {}
+        rating:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,1}(?:\.\d{0,2})?$
+          nullable: true
+        eta_min_minutes:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        eta_max_minutes:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        price_band:
+          type: integer
+          maximum: 4
+          minimum: 1
         created_at:
           type: string
           format: date-time
@@ -2554,6 +3072,11 @@ components:
           maximum: 2147483647
           minimum: -2147483648
           nullable: true
+        zone:
+          allOf:
+          - $ref: '#/components/schemas/Zone'
+          readOnly: true
+          nullable: true
         created_at:
           type: string
           format: date-time
@@ -2569,6 +3092,7 @@ components:
       - restaurant
       - table_number
       - updated_at
+      - zone
     TableInfo:
       type: object
       properties:
@@ -2669,6 +3193,29 @@ components:
         * `active` - Active
         * `completed` - Completed
         * `bumped` - Bumped
+    ToggleMenuItemLikeRequest:
+      type: object
+      properties:
+        guest_token:
+          type: string
+          maxLength: 64
+      required:
+      - guest_token
+    ToggleMenuItemLikeResponse:
+      type: object
+      properties:
+        public_id:
+          type: string
+          format: uuid
+        is_liked:
+          type: boolean
+        likes_count:
+          type: integer
+          minimum: 0
+      required:
+      - is_liked
+      - likes_count
+      - public_id
     TokenRefresh:
       type: object
       properties:
@@ -2704,6 +3251,10 @@ components:
           maxLength: 32
         role:
           $ref: '#/components/schemas/RoleEnum'
+        restaurant_public_id:
+          type: string
+          nullable: true
+          readOnly: true
         is_active:
           type: boolean
         created_at:
@@ -2718,12 +3269,26 @@ components:
       - created_at
       - email
       - public_id
+      - restaurant_public_id
       - updated_at
+    Zone:
+      type: object
+      properties:
+        public_id:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          readOnly: true
+        sort_order:
+          type: integer
+          readOnly: true
+      required:
+      - name
+      - public_id
+      - sort_order
   securitySchemes:
-    cookieAuth:
-      type: apiKey
-      in: cookie
-      name: sessionid
     jwtAuth:
       type: http
       scheme: bearer
