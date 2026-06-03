@@ -112,6 +112,8 @@
 @media (max-width: 720px) {
   .admin-layout {
     grid-template-columns: 1fr;
+    /* top bar hugs its content; the page fills the rest (no stretching the menu) */
+    grid-template-rows: auto 1fr;
   }
 
   .admin-layout__sidebar {

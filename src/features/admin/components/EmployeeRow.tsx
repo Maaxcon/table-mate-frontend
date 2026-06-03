@@ -39,30 +39,36 @@ function EmployeeRow({ employee, onUpdated }: EmployeeRowProps) {
         <span className="staff-row__email">{employee.email}</span>
       </div>
 
-      <select
-        className="staff-row__select"
-        value={employee.role}
-        disabled={saving}
-        aria-label={`Role for ${name}`}
-        onChange={(e) => void change({ role: e.target.value as EmployeeRole })}
-      >
-        {ROLES.map((r) => (
-          <option key={r.value} value={r.value}>
-            {r.label}
-          </option>
-        ))}
-      </select>
+      <div className="staff-row__controls">
+        <select
+          className="staff-row__select"
+          value={employee.role}
+          disabled={saving}
+          aria-label={`Role for ${name}`}
+          onChange={(e) => void change({ role: e.target.value as EmployeeRole })}
+        >
+          {ROLES.map((r) => (
+            <option key={r.value} value={r.value}>
+              {r.label}
+            </option>
+          ))}
+        </select>
 
-      <button
-        type="button"
-        className="staff-row__toggle"
-        disabled={saving}
-        onClick={() => void change({ is_active: !employee.is_active })}
-      >
-        {employee.is_active ? "Disable" : "Enable"}
-      </button>
+        <button
+          type="button"
+          className="staff-row__toggle"
+          disabled={saving}
+          onClick={() => void change({ is_active: !employee.is_active })}
+        >
+          {employee.is_active ? "Disable" : "Enable"}
+        </button>
 
-      {error && <span className="staff-row__err">!</span>}
+        {error && (
+          <span className="staff-row__err" role="alert" title="Could not save">
+            !
+          </span>
+        )}
+      </div>
     </li>
   )
 }

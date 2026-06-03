@@ -32,11 +32,19 @@ function StaffSection() {
       ) : employees.length === 0 ? (
         <p className="admin-section__description">No staff yet.</p>
       ) : (
-        <ul className="staff-list">
-          {employees.map((e) => (
-            <EmployeeRow key={e.public_id} employee={e} onUpdated={applyUpdate} />
-          ))}
-        </ul>
+        <div className="staff-table">
+          <div className="staff-table__head" aria-hidden="true">
+            <span>Name</span>
+            <span>Email</span>
+            <span>Role</span>
+            <span />
+          </div>
+          <ul className="staff-list">
+            {employees.map((e) => (
+              <EmployeeRow key={e.public_id} employee={e} onUpdated={applyUpdate} />
+            ))}
+          </ul>
+        </div>
       )}
 
       {adding && <AddEmployeeModal onClose={() => setAdding(false)} onCreated={reload} />}
