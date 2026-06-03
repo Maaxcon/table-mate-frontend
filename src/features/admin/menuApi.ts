@@ -136,3 +136,27 @@ export async function updateItem(
   if (!res.ok) throw new Error(await firstError(res, "Could not save dish."))
   return (await res.json()) as AdminMenuItem
 }
+
+export async function uploadItemImage(publicId: string, file: File): Promise<AdminMenuItem> {
+  const form = new FormData()
+  form.append("image", file)
+  // No Content-Type header — the browser sets the multipart boundary.
+  const res = await apiFetch(`${ITEMS_PATH}${publicId}/`, { method: "PATCH", body: form })
+  if (!res.ok) throw new Error(await firstError(res, "Could not upload image."))
+  return (await res.json()) as AdminMenuItem
+}
+
+export async function clearItemImage(publicId: string): Promise<AdminMenuItem> {
+  const res = await apiFetch(`${ITEMS_PATH}${publicId}/`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ image: null }),
+  })
+  if (!res.ok) throw new Error(await firstError(res, "Could not remove image."))
+  return (await res.json()) as AdminMenuItem
+}
+
+export async function deleteItem(publicId: string): Promise<void> {
+  const res = await apiFetch(`${ITEMS_PATH}${publicId}/`, { method: "DELETE" })
+  if (!res.ok && res.status !== 204) throw new Error("Could not delete dish.")
+}

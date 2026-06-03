@@ -1,10 +1,18 @@
 import { useEffect, useState } from "react"
-import { LuX } from "react-icons/lu"
-import { createItem, updateItem, type ItemInput } from "../menuApi"
+import { LuTrash2, LuX } from "react-icons/lu"
+import {
+  clearItemImage,
+  createItem,
+  deleteItem,
+  updateItem,
+  uploadItemImage,
+  type ItemInput,
+} from "../menuApi"
 import type { AdminCategory, AdminMenuItem } from "../types"
 import TextField from "./TextField"
 import "./adminForm.css"
 import "./modal.css"
+import "./menu.css"
 
 type DishModalProps = {
   menuId: string
@@ -22,8 +30,31 @@ function DishModal({ menuId, categories, item, onClose, onSaved }: DishModalProp
   const [category, setCategory] = useState<string>(item?.category ?? "")
   const [weight, setWeight] = useState(item?.weight_grams != null ? String(item.weight_grams) : "")
   const [isAvailable, setIsAvailable] = useState(item?.is_available ?? true)
+  const [imageFile, setImageFile] = useState<File | null>(null)
+  const [removeImage, setRemoveImage] = useState(false)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(item?.image ?? null)
   const [submitting, setSubmitting] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  const handlePickImage = (file: File | null) => {
+    if (!file) return
+    setImageFile(file)
+    setRemoveImage(false)
+    setPreviewUrl((prev) => {
+      if (prev?.startsWith("blob:")) URL.revokeObjectURL(prev)
+      return URL.createObjectURL(file)
+    })
+  }
+
+  const handleRemoveImage = () => {
+    setPreviewUrl((prev) => {
+      if (prev?.startsWith("blob:")) URL.revokeObjectURL(prev)
+      return null
+    })
+    setImageFile(null)
+    setRemoveImage(true)
+  }
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -47,6 +78,7 @@ function DishModal({ menuId, categories, item, onClose, onSaved }: DishModalProp
       is_available: isAvailable,
     }
     try {
+      let publicId: string
       if (editing) {
         await updateItem(item.public_id, {
           category: payload.category,
@@ -56,14 +88,38 @@ function DishModal({ menuId, categories, item, onClose, onSaved }: DishModalProp
           weight_grams: payload.weight_grams,
           is_available: payload.is_available,
         })
+        publicId = item.public_id
       } else {
-        await createItem(payload)
+        const created = await createItem(payload)
+        publicId = created.public_id
       }
+
+      if (imageFile) {
+        await uploadItemImage(publicId, imageFile)
+      } else if (editing && removeImage) {
+        await clearItemImage(publicId)
+      }
+
       onSaved()
       onClose()
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not save dish.")
       setSubmitting(false)
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!item) return
+    if (!window.confirm(`Delete dish "${item.name}"?`)) return
+    setDeleting(true)
+    setError(null)
+    try {
+      await deleteItem(item.public_id)
+      onSaved()
+      onClose()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not delete dish.")
+      setDeleting(false)
     }
   }
 
@@ -129,16 +185,54 @@ function DishModal({ menuId, categories, item, onClose, onSaved }: DishModalProp
             <span className="admin-field__label">Available to customers</span>
           </label>
 
+          <div className="admin-field">
+            <span className="admin-field__label">Photo</span>
+            <div className="dish-image">
+              {previewUrl ? (
+                <img className="dish-image__preview" src={previewUrl} alt="Dish" />
+              ) : (
+                <div className="dish-image__placeholder">No photo</div>
+              )}
+              <div className="dish-image__controls">
+                <label className="menu-admin__btn dish-image__pick">
+                  {previewUrl ? "Change" : "Upload"}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    hidden
+                    onChange={(e) => handlePickImage(e.target.files?.[0] ?? null)}
+                  />
+                </label>
+                {previewUrl && (
+                  <button type="button" className="menu-admin__btn" onClick={handleRemoveImage}>
+                    Remove
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+
           {error && <p className="admin-form__status admin-form__status--error">{error}</p>}
 
           <div className="admin-form__actions">
             <button
               type="submit"
               className="admin-form__save"
-              disabled={submitting || !name.trim() || !price.trim()}
+              disabled={submitting || deleting || !name.trim() || !price.trim()}
             >
               {submitting ? "Saving…" : "Save"}
             </button>
+            {editing && (
+              <button
+                type="button"
+                className="menu-admin__btn menu-admin__btn--danger dish-delete"
+                onClick={() => void handleDelete()}
+                disabled={submitting || deleting}
+              >
+                <LuTrash2 aria-hidden="true" />
+                <span>{deleting ? "Deleting…" : "Delete"}</span>
+              </button>
+            )}
           </div>
         </form>
       </div>
