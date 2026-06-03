@@ -62,7 +62,7 @@ function MenuToolbar({ menu, onChanged, onDeleted }: MenuToolbarProps) {
       />
       <button
         type="button"
-        className="menu-admin__btn"
+        className="menu-admin__btn menu-admin__btn--primary"
         disabled={busy || !name.trim() || name.trim() === menu.name}
         onClick={handleRename}
       >

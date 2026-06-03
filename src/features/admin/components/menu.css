@@ -77,6 +77,11 @@
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease,
+    color 120ms ease,
+    opacity 120ms ease;
 }
 
 .menu-admin__btn:hover:not(:disabled) {
@@ -86,6 +91,26 @@
 .menu-admin__btn:disabled {
   opacity: 0.6;
   cursor: default;
+}
+
+/* "Save"-style buttons: stand out (solid) when there is something to save,
+   and fall back to a quiet plain button when there is nothing to do. */
+.menu-admin__btn--primary {
+  border-color: var(--color-border-strong);
+  background: var(--color-border-strong);
+  color: var(--color-bg-surface);
+}
+
+.menu-admin__btn--primary:hover:not(:disabled) {
+  background: var(--color-border-strong);
+  opacity: 0.88;
+}
+
+.menu-admin__btn--primary:disabled {
+  border-color: var(--color-border-default);
+  background: var(--color-bg-surface);
+  color: var(--color-text-muted);
+  opacity: 1;
 }
 
 .menu-admin__btn--danger {

@@ -48,7 +48,7 @@ function CategoryRow({ category, onChanged, onDeleted }: CategoryRowProps) {
       />
       <button
         type="button"
-        className="menu-admin__btn"
+        className="menu-admin__btn menu-admin__btn--primary"
         disabled={busy || !name.trim() || name.trim() === category.name}
         onClick={handleRename}
       >

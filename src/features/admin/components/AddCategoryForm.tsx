@@ -38,7 +38,11 @@ function AddCategoryForm({ menuId, onCreated }: AddCategoryFormProps) {
         aria-label="New category name"
         onChange={(e) => setName(e.target.value)}
       />
-      <button type="submit" className="menu-admin__btn" disabled={busy || !name.trim()}>
+      <button
+        type="submit"
+        className="menu-admin__btn menu-admin__btn--primary"
+        disabled={busy || !name.trim()}
+      >
         <LuPlus aria-hidden="true" />
         <span>Add</span>
       </button>
