@@ -84,53 +84,62 @@ function MenuSection() {
             <p className="admin-section__description">No menus yet. Add one to start.</p>
           ) : (
             selectedMenu && (
-              <>
-                <h2 className="menu-admin__subtitle">Categories</h2>
-                {loadingCategories ? (
-                  <p className="admin-section__description">Loading…</p>
-                ) : (
-                  <>
-                    {categories.length === 0 ? (
-                      <p className="admin-section__description">No categories in this menu yet.</p>
-                    ) : (
-                      <ul className="menu-admin__list">
-                        {categories.map((c) => (
-                          <CategoryRow
-                            key={c.public_id}
-                            category={c}
-                            onChanged={reloadCategories}
-                            onDeleted={reloadCategories}
-                          />
-                        ))}
-                      </ul>
-                    )}
-                    <AddCategoryForm menuId={selectedMenu.public_id} onCreated={reloadCategories} />
-                  </>
-                )}
+              <div className="menu-admin__columns">
+                <section className="menu-admin__col">
+                  <h2 className="menu-admin__subtitle">Categories</h2>
+                  {loadingCategories ? (
+                    <p className="admin-section__description">Loading…</p>
+                  ) : (
+                    <>
+                      {categories.length === 0 ? (
+                        <p className="admin-section__description">
+                          No categories in this menu yet.
+                        </p>
+                      ) : (
+                        <ul className="menu-admin__list">
+                          {categories.map((c) => (
+                            <CategoryRow
+                              key={c.public_id}
+                              category={c}
+                              onChanged={reloadCategories}
+                              onDeleted={reloadCategories}
+                            />
+                          ))}
+                        </ul>
+                      )}
+                      <AddCategoryForm
+                        menuId={selectedMenu.public_id}
+                        onCreated={reloadCategories}
+                      />
+                    </>
+                  )}
+                </section>
 
-                <div className="menu-admin__dishes-head">
-                  <h2 className="menu-admin__subtitle">Dishes</h2>
-                  <button
-                    type="button"
-                    className="menu-admin__btn"
-                    onClick={() => setDishModal({ open: true, item: null })}
-                  >
-                    <LuPlus aria-hidden="true" />
-                    <span>Add dish</span>
-                  </button>
-                </div>
-                {loadingItems ? (
-                  <p className="admin-section__description">Loading…</p>
-                ) : items.length === 0 ? (
-                  <p className="admin-section__description">No dishes in this menu yet.</p>
-                ) : (
-                  <DishList
-                    items={items}
-                    categories={categories}
-                    onEdit={(item) => setDishModal({ open: true, item })}
-                  />
-                )}
-              </>
+                <section className="menu-admin__col">
+                  <div className="menu-admin__dishes-head">
+                    <h2 className="menu-admin__subtitle">Dishes</h2>
+                    <button
+                      type="button"
+                      className="menu-admin__btn"
+                      onClick={() => setDishModal({ open: true, item: null })}
+                    >
+                      <LuPlus aria-hidden="true" />
+                      <span>Add dish</span>
+                    </button>
+                  </div>
+                  {loadingItems ? (
+                    <p className="admin-section__description">Loading…</p>
+                  ) : items.length === 0 ? (
+                    <p className="admin-section__description">No dishes in this menu yet.</p>
+                  ) : (
+                    <DishList
+                      items={items}
+                      categories={categories}
+                      onEdit={(item) => setDishModal({ open: true, item })}
+                    />
+                  )}
+                </section>
+              </div>
             )
           )}
         </>

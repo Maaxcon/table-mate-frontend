@@ -125,6 +125,25 @@
   margin: 0 0 14px;
 }
 
+/* Categories (left) beside Dishes (right); both headers line up at the top. */
+.menu-admin__columns {
+  display: grid;
+  grid-template-columns: minmax(0, 360px) minmax(0, 1fr);
+  gap: 32px;
+  align-items: start;
+}
+
+.menu-admin__col {
+  min-width: 0;
+}
+
+@media (max-width: 860px) {
+  .menu-admin__columns {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+}
+
 .menu-admin__list {
   list-style: none;
   margin: 0;
@@ -132,7 +151,6 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
-  max-width: 760px;
 }
 
 .menu-admin__row {
@@ -163,7 +181,6 @@
   align-items: center;
   gap: 8px;
   margin-top: 10px;
-  max-width: 760px;
 }
 
 .menu-admin__add-row .menu-admin__row-input {
@@ -195,8 +212,14 @@
   margin: 0;
   padding: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   gap: 14px;
+}
+
+@media (max-width: 560px) {
+  .menu-admin__dish-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .menu-admin__dish-card {
@@ -285,7 +308,8 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-top: 32px;
+  /* aligns with the "Categories" heading height in the other column */
+  margin-bottom: 14px;
 }
 
 .menu-admin__dishes-head .menu-admin__subtitle {
