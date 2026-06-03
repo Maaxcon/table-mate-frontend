@@ -246,6 +246,10 @@
   filter: brightness(0);
 }
 
+[data-theme="dark"] .menu-page__logo {
+  filter: brightness(0) invert(1);
+}
+
 .menu-page__titlerow {
   display: flex;
   align-items: flex-end;

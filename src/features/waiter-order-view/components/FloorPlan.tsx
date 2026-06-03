@@ -47,7 +47,12 @@ export function FloorPlan({ tables, selectedId, onSelect }: FloorPlanProps) {
               )}
 
               <div className="floor-plan__table-meta">
-                {isFree && <span className="floor-plan__table-available">AVAILABLE</span>}
+                {isFree && (
+                  <>
+                    <span className="floor-plan__table-available">AVAILABLE</span>
+                    <span className="floor-plan__table-capacity">{table.capacity} P</span>
+                  </>
+                )}
                 {isOccupied && (
                   <>
                     <span className="floor-plan__table-name">

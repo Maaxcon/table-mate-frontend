@@ -49,8 +49,35 @@
 
 .waiter-view__zones {
   display: flex;
+  flex-wrap: wrap;
   gap: 6px;
+  margin-top: 12px;
   padding: 0 24px;
+}
+
+.waiter-view__zone {
+  padding: 6px 14px;
+  border: 1px solid var(--color-border-default);
+  border-radius: 20px;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: 0.78rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+
+.waiter-view__zone:hover {
+  background: var(--color-bg-surface-subtle);
+}
+
+.waiter-view__zone--active {
+  background: var(--color-text-primary);
+  color: var(--color-bg-page);
+  border-color: var(--color-text-primary);
 }
 
 .waiter-view__zone {

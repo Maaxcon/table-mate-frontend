@@ -126,6 +126,13 @@
   letter-spacing: 0.05em;
 }
 
+.floor-plan__table-capacity {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  letter-spacing: 0.05em;
+}
+
 .floor-plan__table-name {
   font-size: 0.72rem;
   font-weight: 700;

@@ -1,5 +1,6 @@
 :root,
 [data-theme="light"] {
+  --color-primary: #1976d2;
   --color-bg-page: #ffffff;
   --color-bg-surface: #ffffff;
   --color-bg-surface-subtle: #f2f2f2;
@@ -64,6 +65,7 @@
 }
 
 [data-theme="dark"] {
+  --color-primary: #60a5fa;
   --color-bg-page: #16171d;
   --color-bg-surface: #1e1f28;
   --color-bg-surface-subtle: #2a2b36;
@@ -94,4 +96,35 @@
   --badge-pending-text: var(--color-text-muted);
   --badge-served-text: var(--color-text-primary);
   --badge-voided-text: var(--color-text-muted);
+
+  /* Overlays */
+  --color-overlay: rgb(0 0 0 / 68%);
+  --color-overlay-dim: rgb(0 0 0 / 52%);
+
+  /* Transparent surfaces */
+  --color-bg-frosted: rgb(30 31 40 / 90%);
+  --color-bg-sticky: rgb(22 23 29 / 88%);
+  --color-surface-tint: rgb(0 0 0 / 18%);
+
+  /* Status: success / open */
+  --color-success: #22c55e;
+  --color-success-text: #4ade80;
+  --color-success-border: rgb(74 222 128 / 28%);
+  --color-success-bg: #132b1e;
+
+  /* Status: error / closed */
+  --color-error: #ef4444;
+  --color-error-text: #f87171;
+  --color-error-muted-text: #f87171;
+  --color-error-border: rgb(248 113 113 / 24%);
+  --color-error-bg: #2d1313;
+
+  /* Warning (allergens) */
+  --color-warning-bg: #2d2813;
+  --color-warning-icon: #facc15;
+  --color-warning-label: #fde047;
+  --color-warning-text: #eab308;
+
+  /* Interactive */
+  --color-like: #f87171;
 }

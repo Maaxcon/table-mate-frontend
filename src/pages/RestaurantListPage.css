@@ -15,17 +15,17 @@
   font-size: 24px;
   font-weight: 700;
   margin: 0;
-  color: var(--color-text-primary, #1a1a1a);
+  color: var(--color-text-primary);
 }
 
 .rlp__profile-link {
   font-size: 14px;
   font-weight: 600;
-  color: var(--color-primary, #1976d2);
+  color: var(--color-primary);
   text-decoration: none;
   padding: 8px 16px;
   border-radius: 8px;
-  border: 1px solid var(--color-primary, #1976d2);
+  border: 1px solid var(--color-primary);
 }
 
 .rlp__loading,
@@ -45,8 +45,8 @@
   display: block;
   padding: 20px;
   border-radius: 12px;
-  background: var(--color-surface, #fff);
-  border: 1px solid var(--color-border, #e0e0e0);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-default);
   text-decoration: none;
   transition: box-shadow 0.2s;
 }
