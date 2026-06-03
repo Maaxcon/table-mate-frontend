@@ -28,3 +28,28 @@ export type AdminEmployee = {
   role: EmployeeRole
   is_active: boolean
 }
+
+export type AdminMenu = {
+  public_id: string
+  name: string
+  is_active: boolean
+}
+
+export type AdminCategory = {
+  public_id: string
+  menu: string
+  name: string
+  sort_order: number
+}
+
+export type AdminMenuItem = {
+  public_id: string
+  menu: string
+  category: string | null
+  name: string
+  description: string | null
+  price: string
+  is_available: boolean
+  image: string | null
+  sort_order: number
+}
