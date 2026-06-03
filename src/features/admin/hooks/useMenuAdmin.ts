@@ -36,7 +36,10 @@ export function useMenuAdmin(): UseMenuAdminResult {
       try {
         const list = await fetchMenus(controller.signal)
         setMenus(list)
-        setSelectedMenuId((cur) => cur ?? list[0]?.public_id ?? null)
+        setSelectedMenuId((cur) => {
+          if (cur && list.some((m) => m.public_id === cur)) return cur
+          return list[0]?.public_id ?? null
+        })
         setError(null)
       } catch (err) {
         if (err instanceof DOMException && err.name === "AbortError") return

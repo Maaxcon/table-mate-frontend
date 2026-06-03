@@ -39,6 +39,56 @@
   opacity: 0.7;
 }
 
+.menu-admin__tab--add {
+  border-style: dashed;
+  color: var(--color-text-secondary);
+  background: var(--color-bg-surface);
+}
+
+.menu-admin__tab--add:hover {
+  background: var(--color-bg-surface-subtle);
+}
+
+.menu-admin__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.menu-admin__toolbar-name {
+  flex: 1;
+  min-width: 160px;
+  max-width: 280px;
+}
+
+.menu-admin__btn {
+  padding: 9px 14px;
+  border: 1px solid var(--color-border-default);
+  border-radius: 10px;
+  background: var(--color-bg-surface);
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.menu-admin__btn:hover:not(:disabled) {
+  background: var(--color-bg-surface-subtle);
+}
+
+.menu-admin__btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.menu-admin__btn--danger {
+  display: inline-flex;
+  align-items: center;
+  color: var(--color-error-text);
+}
+
 .menu-admin__subtitle {
   font-size: 16px;
   font-weight: 700;
