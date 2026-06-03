@@ -2,6 +2,7 @@ import { useState } from "react"
 import { LuTrash2 } from "react-icons/lu"
 import { deleteCategory, updateCategory } from "../menuApi"
 import type { AdminCategory } from "../types"
+import ConfirmDialog from "./ConfirmDialog"
 
 type CategoryRowProps = {
   category: AdminCategory
@@ -13,6 +14,7 @@ type CategoryRowProps = {
 function CategoryRow({ category, onChanged, onDeleted }: CategoryRowProps) {
   const [name, setName] = useState(category.name)
   const [busy, setBusy] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
 
   const run = async (action: () => Promise<unknown>, after: () => void) => {
     setBusy(true)
@@ -29,9 +31,9 @@ function CategoryRow({ category, onChanged, onDeleted }: CategoryRowProps) {
     void run(() => updateCategory(category.public_id, { name: name.trim() }), onChanged)
   }
 
-  const handleDelete = () => {
-    const ok = window.confirm(`Delete category "${category.name}"?`)
-    if (ok) void run(() => deleteCategory(category.public_id), onDeleted)
+  const confirmDeleteAction = async () => {
+    await run(() => deleteCategory(category.public_id), onDeleted)
+    setConfirmDelete(false)
   }
 
   return (
@@ -56,11 +58,23 @@ function CategoryRow({ category, onChanged, onDeleted }: CategoryRowProps) {
         type="button"
         className="menu-admin__btn menu-admin__btn--danger"
         disabled={busy}
-        onClick={handleDelete}
+        onClick={() => setConfirmDelete(true)}
         aria-label="Delete category"
       >
         <LuTrash2 aria-hidden="true" />
       </button>
+
+      {confirmDelete && (
+        <ConfirmDialog
+          title="Delete category"
+          message={`Delete category "${category.name}"? This cannot be undone.`}
+          confirmLabel="Delete"
+          tone="danger"
+          busy={busy}
+          onConfirm={() => void confirmDeleteAction()}
+          onClose={() => setConfirmDelete(false)}
+        />
+      )}
     </li>
   )
 }

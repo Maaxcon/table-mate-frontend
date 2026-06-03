@@ -1,5 +1,7 @@
 import AdminSectionForm from "../components/AdminSectionForm"
 import TextField from "../components/TextField"
+import SelectField from "../components/SelectField"
+import { CURRENCY_OPTIONS, LOCALE_OPTIONS, TIMEZONE_OPTIONS } from "../components/settingsOptions"
 import { useAdminResource } from "../hooks/useAdminResource"
 import type { AdminSettings } from "../types"
 
@@ -40,24 +42,24 @@ function SettingsSection() {
             />
           </div>
           <div className="admin-form__row">
-            <TextField
+            <SelectField
               label="Currency"
               value={form.currency}
               onChange={(v) => setField("currency", v)}
-              placeholder="UAH"
+              options={CURRENCY_OPTIONS}
             />
-            <TextField
+            <SelectField
               label="Locale"
               value={form.locale}
               onChange={(v) => setField("locale", v)}
-              placeholder="en"
+              options={LOCALE_OPTIONS}
             />
           </div>
-          <TextField
+          <SelectField
             label="Timezone"
             value={form.timezone}
             onChange={(v) => setField("timezone", v)}
-            placeholder="UTC"
+            options={TIMEZONE_OPTIONS}
           />
         </>
       )}

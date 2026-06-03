@@ -10,6 +10,7 @@ import {
 } from "../menuApi"
 import type { AdminCategory, AdminMenuItem } from "../types"
 import TextField from "./TextField"
+import ConfirmDialog from "./ConfirmDialog"
 import "./adminForm.css"
 import "./modal.css"
 import "./menu.css"
@@ -35,6 +36,7 @@ function DishModal({ menuId, categories, item, onClose, onSaved }: DishModalProp
   const [previewUrl, setPreviewUrl] = useState<string | null>(item?.image ?? null)
   const [submitting, setSubmitting] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const handlePickImage = (file: File | null) => {
@@ -110,7 +112,6 @@ function DishModal({ menuId, categories, item, onClose, onSaved }: DishModalProp
 
   const handleDelete = async () => {
     if (!item) return
-    if (!window.confirm(`Delete dish "${item.name}"?`)) return
     setDeleting(true)
     setError(null)
     try {
@@ -120,6 +121,7 @@ function DishModal({ menuId, categories, item, onClose, onSaved }: DishModalProp
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not delete dish.")
       setDeleting(false)
+      setConfirmDelete(false)
     }
   }
 
@@ -226,7 +228,7 @@ function DishModal({ menuId, categories, item, onClose, onSaved }: DishModalProp
               <button
                 type="button"
                 className="menu-admin__btn menu-admin__btn--danger dish-delete"
-                onClick={() => void handleDelete()}
+                onClick={() => setConfirmDelete(true)}
                 disabled={submitting || deleting}
               >
                 <LuTrash2 aria-hidden="true" />
@@ -236,6 +238,18 @@ function DishModal({ menuId, categories, item, onClose, onSaved }: DishModalProp
           </div>
         </form>
       </div>
+
+      {confirmDelete && item && (
+        <ConfirmDialog
+          title="Delete dish"
+          message={`Delete dish "${item.name}"? This cannot be undone.`}
+          confirmLabel="Delete"
+          tone="danger"
+          busy={deleting}
+          onConfirm={() => void handleDelete()}
+          onClose={() => setConfirmDelete(false)}
+        />
+      )}
     </div>
   )
 }

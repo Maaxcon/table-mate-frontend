@@ -65,3 +65,71 @@
 .admin-modal .admin-form {
   max-width: none;
 }
+
+/* Confirmation dialog — sits above any modal that opened it */
+.admin-confirm__overlay {
+  z-index: 200;
+}
+
+.admin-modal--confirm {
+  max-width: 400px;
+}
+
+.admin-modal__message {
+  margin: 0 0 22px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+}
+
+.admin-modal__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.admin-modal__btn {
+  padding: 9px 18px;
+  border: 1px solid var(--color-border-default);
+  border-radius: 10px;
+  background: var(--color-bg-surface);
+  color: var(--color-text-primary);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease,
+    opacity 120ms ease;
+}
+
+.admin-modal__btn:hover:not(:disabled) {
+  background: var(--color-bg-surface-subtle);
+}
+
+.admin-modal__btn--primary {
+  border-color: var(--color-border-strong);
+  background: var(--color-border-strong);
+  color: var(--color-bg-surface);
+}
+
+.admin-modal__btn--primary:hover:not(:disabled) {
+  background: var(--color-border-strong);
+  opacity: 0.88;
+}
+
+.admin-modal__btn--danger {
+  border-color: var(--color-error);
+  background: var(--color-error);
+  color: #fff;
+}
+
+.admin-modal__btn--danger:hover:not(:disabled) {
+  background: var(--color-error);
+  opacity: 0.9;
+}
+
+.admin-modal__btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}

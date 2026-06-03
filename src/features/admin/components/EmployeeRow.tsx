@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { updateEmployee, type EmployeePatch } from "../api"
 import type { AdminEmployee, EmployeeRole } from "../types"
+import ConfirmDialog from "./ConfirmDialog"
 
 const ROLES: { value: EmployeeRole; label: string }[] = [
   { value: "waiter", label: "Waiter" },
@@ -16,6 +17,7 @@ type EmployeeRowProps = {
 function EmployeeRow({ employee, onUpdated }: EmployeeRowProps) {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(false)
+  const [confirmDisable, setConfirmDisable] = useState(false)
 
   const change = async (patch: EmployeePatch) => {
     setSaving(true)
@@ -23,14 +25,27 @@ function EmployeeRow({ employee, onUpdated }: EmployeeRowProps) {
     try {
       const updated = await updateEmployee(employee.public_id, patch)
       onUpdated(updated)
+      return true
     } catch {
       setError(true)
+      return false
     } finally {
       setSaving(false)
     }
   }
 
   const name = `${employee.first_name} ${employee.last_name}`.trim() || employee.email
+
+  // Enabling is safe and instant; disabling asks for confirmation first.
+  const handleToggle = () => {
+    if (employee.is_active) setConfirmDisable(true)
+    else void change({ is_active: true })
+  }
+
+  const confirmDisableAction = async () => {
+    const ok = await change({ is_active: false })
+    if (ok) setConfirmDisable(false)
+  }
 
   return (
     <li className={`staff-row${employee.is_active ? "" : " staff-row--disabled"}`}>
@@ -58,7 +73,7 @@ function EmployeeRow({ employee, onUpdated }: EmployeeRowProps) {
           type="button"
           className="staff-row__toggle"
           disabled={saving}
-          onClick={() => void change({ is_active: !employee.is_active })}
+          onClick={handleToggle}
         >
           {employee.is_active ? "Disable" : "Enable"}
         </button>
@@ -69,6 +84,18 @@ function EmployeeRow({ employee, onUpdated }: EmployeeRowProps) {
           </span>
         )}
       </div>
+
+      {confirmDisable && (
+        <ConfirmDialog
+          title="Disable employee"
+          message={`Disable ${name}? They will lose access until you enable them again.`}
+          confirmLabel="Disable"
+          tone="danger"
+          busy={saving}
+          onConfirm={() => void confirmDisableAction()}
+          onClose={() => setConfirmDisable(false)}
+        />
+      )}
     </li>
   )
 }
