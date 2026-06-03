@@ -35,7 +35,7 @@ function MenuSection() {
   const selectedMenu = menus.find((m) => m.public_id === selectedMenuId) ?? null
 
   return (
-    <section className="admin-section">
+    <section className="admin-section admin-section--wide">
       <header className="admin-section__header">
         <h1 className="admin-section__title">Menu</h1>
         <p className="admin-section__description">Manage menus, categories, and dishes.</p>

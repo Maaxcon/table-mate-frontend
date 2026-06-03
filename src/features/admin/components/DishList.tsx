@@ -29,22 +29,35 @@ function DishList({ items, categories, onEdit }: DishListProps) {
             <h3 className="menu-admin__group-title">
               {key === UNCATEGORIZED ? "Uncategorized" : (categoryName.get(key) ?? "—")}
             </h3>
-            <ul className="menu-admin__list">
+            <ul className="menu-admin__dish-grid">
               {list.map((item) => (
                 <li key={item.public_id}>
                   <button
                     type="button"
-                    className="menu-admin__row menu-admin__dish-btn"
+                    className="menu-admin__dish-card"
                     onClick={() => onEdit(item)}
                   >
-                    <span className="menu-admin__row-name">{item.name}</span>
-                    <span className="menu-admin__dish-price">{Number(item.price).toFixed(2)}</span>
-                    <span
-                      className={`menu-admin__dish-status${
-                        item.is_available ? "" : " menu-admin__dish-status--off"
-                      }`}
-                    >
-                      {item.is_available ? "Available" : "Hidden"}
+                    {item.image ? (
+                      <img className="menu-admin__dish-img" src={item.image} alt="" />
+                    ) : (
+                      <span className="menu-admin__dish-img menu-admin__dish-img--empty">
+                        No photo
+                      </span>
+                    )}
+                    <span className="menu-admin__dish-body">
+                      <span className="menu-admin__dish-name">{item.name}</span>
+                      <span className="menu-admin__dish-meta">
+                        <span className="menu-admin__dish-price">
+                          {Number(item.price).toFixed(2)}
+                        </span>
+                        <span
+                          className={`menu-admin__dish-status${
+                            item.is_available ? "" : " menu-admin__dish-status--off"
+                          }`}
+                        >
+                          {item.is_available ? "Available" : "Hidden"}
+                        </span>
+                      </span>
                     </span>
                   </button>
                 </li>
