@@ -1,4 +1,7 @@
+import { useState } from "react"
+import { LuPlus } from "react-icons/lu"
 import { useEmployees } from "../hooks/useEmployees"
+import AddEmployeeModal from "../components/AddEmployeeModal"
 import "../components/SectionPlaceholder.css"
 import "../components/staff.css"
 
@@ -9,15 +12,22 @@ const ROLE_LABEL: Record<string, string> = {
 }
 
 function StaffSection() {
-  const { employees, loading, error } = useEmployees()
+  const { employees, loading, error, reload } = useEmployees()
+  const [adding, setAdding] = useState(false)
 
   return (
     <section className="admin-section">
-      <header className="admin-section__header">
-        <h1 className="admin-section__title">Staff</h1>
-        <p className="admin-section__description">
-          Manage employees — change roles and enable or disable access.
-        </p>
+      <header className="admin-section__header staff-header">
+        <div>
+          <h1 className="admin-section__title">Staff</h1>
+          <p className="admin-section__description">
+            Manage employees — change roles and enable or disable access.
+          </p>
+        </div>
+        <button type="button" className="staff-add-btn" onClick={() => setAdding(true)}>
+          <LuPlus aria-hidden="true" />
+          <span>Add employee</span>
+        </button>
       </header>
 
       {loading ? (
@@ -47,6 +57,8 @@ function StaffSection() {
           })}
         </ul>
       )}
+
+      {adding && <AddEmployeeModal onClose={() => setAdding(false)} onCreated={reload} />}
     </section>
   )
 }
