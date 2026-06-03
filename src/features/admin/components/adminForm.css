@@ -47,6 +47,16 @@
   color: var(--color-text-muted);
 }
 
+.admin-field--check {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+
+.admin-field--check .admin-field__label {
+  color: var(--color-text-primary);
+}
+
 .admin-form__actions {
   display: flex;
   align-items: center;

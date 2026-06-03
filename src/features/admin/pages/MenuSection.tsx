@@ -6,6 +6,8 @@ import MenuToolbar from "../components/MenuToolbar"
 import CategoryRow from "../components/CategoryRow"
 import AddCategoryForm from "../components/AddCategoryForm"
 import DishList from "../components/DishList"
+import DishModal from "../components/DishModal"
+import type { AdminMenuItem } from "../types"
 import "../components/SectionPlaceholder.css"
 import "../components/menu.css"
 
@@ -22,8 +24,13 @@ function MenuSection() {
     error,
     reloadMenus,
     reloadCategories,
+    reloadItems,
   } = useMenuAdmin()
   const [addingMenu, setAddingMenu] = useState(false)
+  const [dishModal, setDishModal] = useState<{ open: boolean; item: AdminMenuItem | null }>({
+    open: false,
+    item: null,
+  })
 
   const selectedMenu = menus.find((m) => m.public_id === selectedMenuId) ?? null
 
@@ -101,13 +108,27 @@ function MenuSection() {
                   </>
                 )}
 
-                <h2 className="menu-admin__subtitle">Dishes</h2>
+                <div className="menu-admin__dishes-head">
+                  <h2 className="menu-admin__subtitle">Dishes</h2>
+                  <button
+                    type="button"
+                    className="menu-admin__btn"
+                    onClick={() => setDishModal({ open: true, item: null })}
+                  >
+                    <LuPlus aria-hidden="true" />
+                    <span>Add dish</span>
+                  </button>
+                </div>
                 {loadingItems ? (
                   <p className="admin-section__description">Loading…</p>
                 ) : items.length === 0 ? (
                   <p className="admin-section__description">No dishes in this menu yet.</p>
                 ) : (
-                  <DishList items={items} categories={categories} />
+                  <DishList
+                    items={items}
+                    categories={categories}
+                    onEdit={(item) => setDishModal({ open: true, item })}
+                  />
                 )}
               </>
             )
@@ -122,6 +143,16 @@ function MenuSection() {
             selectMenu(menu.public_id)
             reloadMenus()
           }}
+        />
+      )}
+
+      {dishModal.open && selectedMenu && (
+        <DishModal
+          menuId={selectedMenu.public_id}
+          categories={categories}
+          item={dishModal.item}
+          onClose={() => setDishModal({ open: false, item: null })}
+          onSaved={reloadItems}
         />
       )}
     </section>

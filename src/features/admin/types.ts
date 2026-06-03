@@ -49,6 +49,7 @@ export type AdminMenuItem = {
   name: string
   description: string | null
   price: string
+  weight_grams: number | null
   is_available: boolean
   image: string | null
   sort_order: number

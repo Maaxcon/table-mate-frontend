@@ -3,11 +3,12 @@ import type { AdminCategory, AdminMenuItem } from "../types"
 type DishListProps = {
   items: AdminMenuItem[]
   categories: AdminCategory[]
+  onEdit: (item: AdminMenuItem) => void
 }
 
 const UNCATEGORIZED = "__none__"
 
-function DishList({ items, categories }: DishListProps) {
+function DishList({ items, categories, onEdit }: DishListProps) {
   const categoryName = new Map(categories.map((c) => [c.public_id, c.name]))
 
   // Group items by category, keeping category order, with uncategorized last.
@@ -30,16 +31,22 @@ function DishList({ items, categories }: DishListProps) {
             </h3>
             <ul className="menu-admin__list">
               {list.map((item) => (
-                <li key={item.public_id} className="menu-admin__row">
-                  <span className="menu-admin__row-name">{item.name}</span>
-                  <span className="menu-admin__dish-price">{Number(item.price).toFixed(2)}</span>
-                  <span
-                    className={`menu-admin__dish-status${
-                      item.is_available ? "" : " menu-admin__dish-status--off"
-                    }`}
+                <li key={item.public_id}>
+                  <button
+                    type="button"
+                    className="menu-admin__row menu-admin__dish-btn"
+                    onClick={() => onEdit(item)}
                   >
-                    {item.is_available ? "Available" : "Hidden"}
-                  </span>
+                    <span className="menu-admin__row-name">{item.name}</span>
+                    <span className="menu-admin__dish-price">{Number(item.price).toFixed(2)}</span>
+                    <span
+                      className={`menu-admin__dish-status${
+                        item.is_available ? "" : " menu-admin__dish-status--off"
+                      }`}
+                    >
+                      {item.is_available ? "Available" : "Hidden"}
+                    </span>
+                  </button>
                 </li>
               ))}
             </ul>

@@ -103,3 +103,36 @@ export async function deleteCategory(publicId: string): Promise<void> {
   const res = await apiFetch(`${CATEGORIES_PATH}${publicId}/`, { method: "DELETE" })
   if (!res.ok && res.status !== 204) throw new Error("Could not delete category.")
 }
+
+export type ItemInput = {
+  menu: string
+  category: string | null
+  name: string
+  description: string
+  price: string
+  weight_grams: number | null
+  is_available: boolean
+}
+
+export async function createItem(payload: ItemInput): Promise<AdminMenuItem> {
+  const res = await apiFetch(ITEMS_PATH, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  })
+  if (!res.ok) throw new Error(await firstError(res, "Could not save dish."))
+  return (await res.json()) as AdminMenuItem
+}
+
+export async function updateItem(
+  publicId: string,
+  patch: Partial<Omit<ItemInput, "menu">>,
+): Promise<AdminMenuItem> {
+  const res = await apiFetch(`${ITEMS_PATH}${publicId}/`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(patch),
+  })
+  if (!res.ok) throw new Error(await firstError(res, "Could not save dish."))
+  return (await res.json()) as AdminMenuItem
+}

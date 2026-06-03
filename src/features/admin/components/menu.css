@@ -177,3 +177,28 @@
 .menu-admin__dish-status--off {
   color: var(--color-text-muted);
 }
+
+.menu-admin__dish-btn {
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+}
+
+.menu-admin__dish-btn:hover {
+  background: var(--color-bg-surface-subtle);
+}
+
+.menu-admin__dishes-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  max-width: 560px;
+}
+
+.menu-admin__dishes-head .menu-admin__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
