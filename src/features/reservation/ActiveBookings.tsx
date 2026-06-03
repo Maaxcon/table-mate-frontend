@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState } from "react"
 import type { ReservationStatus, ReservationWithTable, WorkingHoursDay } from "./api"
 import { cancelReservation } from "./api"
+import { CancellationConfirmationModal } from "./CancellationConfirmationModal"
 import { RescheduleModal } from "./RescheduleModal"
 import "./ActiveBookings.css"
 
@@ -41,7 +42,7 @@ const PHASE_LABELS: Record<TemporalPhase, string> = {
   past: "PAST",
 }
 
-const STATUS_ORDER: ReservationStatus[] = ["pending", "active", "completed", "cancelled"]
+const STATUS_ORDER: ReservationStatus[] = ["pending", "active"]
 
 const STATUS_LABELS: Record<ReservationStatus, string> = {
   pending: "PENDING",
@@ -59,22 +60,22 @@ export function ActiveBookings({
   const [actionId, setActionId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [rescheduleTarget, setRescheduleTarget] = useState<ReservationWithTable | null>(null)
+  const [cancelTarget, setCancelTarget] = useState<ReservationWithTable | null>(null)
 
-  const handleCancel = useCallback(
-    async (publicId: string) => {
-      setError(null)
-      setActionId(publicId)
-      try {
-        await cancelReservation(publicId)
-        onRefresh()
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to cancel")
-      } finally {
-        setActionId(null)
-      }
-    },
-    [onRefresh],
-  )
+  const handleCancel = useCallback(async () => {
+    if (!cancelTarget) return
+    setError(null)
+    setActionId(cancelTarget.public_id)
+    try {
+      await cancelReservation(cancelTarget.public_id)
+      setCancelTarget(null)
+      onRefresh()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to cancel")
+    } finally {
+      setActionId(null)
+    }
+  }, [cancelTarget, onRefresh])
 
   const { byStatus } = useMemo(() => {
     const grouped: Record<string, ReservationWithTable[]> = {}
@@ -116,12 +117,18 @@ export function ActiveBookings({
         />
       )}
 
+      {cancelTarget && (
+        <CancellationConfirmationModal
+          isSubmitting={actionId === cancelTarget.public_id}
+          onConfirm={() => void handleCancel()}
+          onClose={() => setCancelTarget(null)}
+        />
+      )}
+
       {STATUS_ORDER.map((statusKey) => {
         const items = byStatus[statusKey]
         if (!items) return null
 
-        const isCancelled = statusKey === "cancelled"
-        const isPast = statusKey === "completed"
         const canModify = statusKey === "pending" || statusKey === "active"
 
         return (
@@ -135,12 +142,7 @@ export function ActiveBookings({
                 const phase = getTemporalPhase(r.start_at, r.end_at)
 
                 return (
-                  <div
-                    key={r.public_id}
-                    className={["ab__card", isCancelled || isPast ? "ab__card--archived" : ""]
-                      .filter(Boolean)
-                      .join(" ")}
-                  >
+                  <div key={r.public_id} className="ab__card">
                     <div className="ab__card-header">
                       <span className="ab__card-table">
                         TABLE {r.table_info?.table_number ?? r.table}
@@ -191,19 +193,12 @@ export function ActiveBookings({
                           MODIFY
                         </button>
                         <button
-                          className={[
-                            "ab__action",
-                            statusKey === "active" ? "ab__action--disabled" : "ab__action--cancel",
-                          ]
-                            .filter(Boolean)
-                            .join(" ")}
-                          onClick={() =>
-                            statusKey === "pending" ? handleCancel(r.public_id) : undefined
-                          }
-                          disabled={isBusy || statusKey !== "pending"}
+                          className={["ab__action", "ab__action--cancel"].filter(Boolean).join(" ")}
+                          onClick={() => setCancelTarget(r)}
+                          disabled={isBusy}
                           type="button"
                         >
-                          {isBusy ? "CANCELLING..." : statusKey === "pending" ? "CANCEL" : "ACTIVE"}
+                          {isBusy ? "CANCELLING..." : "CANCEL"}
                         </button>
                       </div>
                     )}

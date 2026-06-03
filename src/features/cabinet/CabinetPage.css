@@ -43,21 +43,3 @@
   text-align: center;
   color: var(--color-text-secondary);
 }
-
-.cabinet-page__reservations-link {
-  display: block;
-  margin-bottom: 16px;
-  padding: 14px 16px;
-  border-radius: 12px;
-  background: var(--color-primary, #1976d2);
-  color: #fff;
-  font-size: 0.9rem;
-  font-weight: 600;
-  text-decoration: none;
-  text-align: center;
-  transition: opacity 150ms ease;
-}
-
-.cabinet-page__reservations-link:hover {
-  opacity: 0.85;
-}

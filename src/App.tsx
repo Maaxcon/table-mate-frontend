@@ -11,7 +11,6 @@ import SelectRestaurantPlaceholderPage from "@/pages/SelectRestaurantPlaceholder
 import { ErrorBoundary } from "@/components/ErrorBoundary"
 import { WaiterOrderPage } from "@/pages/WaiterOrderPage"
 import { RestaurantListPage } from "@/pages/RestaurantListPage"
-import { ReservationPage } from "@/features/reservation/ReservationPage"
 import { BookingPage } from "@/pages/BookingPage"
 import ProtectedRoute from "@/routes/ProtectedRoute"
 import PublicRoute from "@/routes/PublicRoute"
@@ -61,7 +60,6 @@ function App() {
               </Route>
               <Route element={<ProtectedRoute />}>
                 <Route path="/cabinet" element={<CabinetPage />} />
-                <Route path="/reservations" element={<ReservationPage />} />
               </Route>
             </Route>
           </Routes>

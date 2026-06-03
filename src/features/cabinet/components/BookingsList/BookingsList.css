@@ -48,11 +48,20 @@
 
 .booking-card__main {
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.booking-card__header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 .booking-card__status {
   display: inline-block;
-  margin-bottom: 8px;
   padding: 3px 10px;
   font-size: 0.65rem;
   font-weight: 700;
@@ -64,7 +73,7 @@
   border: 1px solid var(--color-border-default);
 }
 
-.booking-card__status--confirmed {
+.booking-card__status--active {
   background: var(--color-success-bg);
   color: var(--color-success-text);
   border-color: var(--color-success-border);
@@ -83,6 +92,16 @@
   margin: 0;
   font-size: 0.92rem;
   font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.booking-card__restaurant {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  font-size: 0.85rem;
+  font-weight: 700;
   color: var(--color-text-primary);
 }
 
@@ -109,6 +128,11 @@
   border: 1px solid var(--color-border-default);
 }
 
+.booking-card__btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
 .booking-card__btn:hover {
   border-color: var(--color-border-strong);
 }
@@ -117,6 +141,24 @@
   color: var(--color-error-text);
   border-color: var(--color-error-border);
   background: var(--color-error-bg);
+}
+
+.cabinet-bookings__more {
+  width: 100%;
+  margin-top: 12px;
+  padding: 10px 14px;
+  border: 1px solid var(--color-border-default);
+  border-radius: 8px;
+  background: var(--color-bg-surface-subtle);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.cabinet-bookings__more:hover {
+  border-color: var(--color-border-strong);
 }
 
 @media (max-width: 540px) {
