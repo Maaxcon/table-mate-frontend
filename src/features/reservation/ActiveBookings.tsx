@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from "react"
-import type { ReservationWithTable } from "./api"
+import type { ReservationStatus, ReservationWithTable } from "./api"
 import { cancelReservation, modifyReservation } from "./api"
 import "./ActiveBookings.css"
 
@@ -22,7 +22,7 @@ function formatDateTime(iso: string) {
   }
 }
 
-type TemporalPhase = "upcoming" | "in_progress" | "completed"
+type TemporalPhase = "upcoming" | "in_progress" | "past"
 
 function getTemporalPhase(startAt: string, endAt: string): TemporalPhase {
   const now = new Date()
@@ -30,13 +30,22 @@ function getTemporalPhase(startAt: string, endAt: string): TemporalPhase {
   const end = new Date(endAt)
   if (now < start) return "upcoming"
   if (now >= start && now <= end) return "in_progress"
-  return "completed"
+  return "past"
 }
 
 const PHASE_LABELS: Record<TemporalPhase, string> = {
   upcoming: "UPCOMING",
   in_progress: "IN PROGRESS",
+  past: "PAST",
+}
+
+const STATUS_ORDER: ReservationStatus[] = ["pending", "active", "completed", "cancelled"]
+
+const STATUS_LABELS: Record<ReservationStatus, string> = {
+  pending: "PENDING",
+  active: "ACTIVE",
   completed: "COMPLETED",
+  cancelled: "CANCELLED",
 }
 
 export function ActiveBookings({ reservations, loading, onRefresh }: ActiveBookingsProps) {
@@ -84,18 +93,17 @@ export function ActiveBookings({ reservations, loading, onRefresh }: ActiveBooki
     [editGuestCount, onRefresh],
   )
 
-  const { upcoming, inProgress, completed, archived } = useMemo(() => {
-    const active = reservations.filter((r) => r.status === "active")
-    const cancelled = reservations.filter((r) => r.status === "cancelled")
-    return {
-      upcoming: active.filter((r) => getTemporalPhase(r.start_at, r.end_at) === "upcoming"),
-      inProgress: active.filter((r) => getTemporalPhase(r.start_at, r.end_at) === "in_progress"),
-      completed: active.filter((r) => getTemporalPhase(r.start_at, r.end_at) === "completed"),
-      archived: cancelled,
+  const { byStatus } = useMemo(() => {
+    const grouped: Record<string, ReservationWithTable[]> = {}
+    for (const s of STATUS_ORDER) {
+      const bucket = reservations.filter((r) => r.status === s)
+      if (bucket.length === 0) continue
+      grouped[s] = bucket
     }
+    return { byStatus: grouped }
   }, [reservations])
 
-  const hasActive = upcoming.length > 0 || inProgress.length > 0
+  const hasItems = Object.keys(byStatus).length > 0
 
   if (loading) {
     return <div className="ab-loading">LOADING...</div>
@@ -107,225 +115,143 @@ export function ActiveBookings({ reservations, loading, onRefresh }: ActiveBooki
 
       {error && <p className="ab__error">{error}</p>}
 
-      {!hasActive && completed.length === 0 && archived.length === 0 && (
-        <p className="ab__empty">No bookings yet.</p>
-      )}
+      {!hasItems && <p className="ab__empty">No bookings yet.</p>}
 
-      {upcoming.length > 0 && (
-        <div className="ab__list">
-          {upcoming.map((r) => {
-            const dt = formatDateTime(r.start_at)
-            const endDt = formatDateTime(r.end_at)
-            const isEditing = editingId === r.public_id
-            const isBusy = actionId === r.public_id
+      {STATUS_ORDER.map((statusKey) => {
+        const items = byStatus[statusKey]
+        if (!items) return null
 
-            return (
-              <div key={r.public_id} className="ab__card">
-                <div className="ab__card-header">
-                  <span className="ab__card-table">
-                    TABLE {r.table_info?.table_number ?? r.table}
-                  </span>
-                  <span className="ab__card-status ab__card-status--upcoming">
-                    {PHASE_LABELS.upcoming}
-                  </span>
-                </div>
+        const isCancelled = statusKey === "cancelled"
+        const isPast = statusKey === "completed"
 
-                <div className="ab__card-body">
-                  <div className="ab__card-row">
-                    <span className="ab__card-label">Date</span>
-                    <span className="ab__card-value">{dt.date}</span>
-                  </div>
-                  <div className="ab__card-row">
-                    <span className="ab__card-label">Time</span>
-                    <span className="ab__card-value">
-                      {dt.time} &ndash; {endDt.time}
-                    </span>
-                  </div>
-                  <div className="ab__card-row">
-                    <span className="ab__card-label">Guests</span>
-                    {isEditing ? (
-                      <div className="ab__edit-guests">
-                        <button
-                          type="button"
-                          className="ab__edit-btn"
-                          onClick={() => setEditGuestCount((g) => Math.max(1, g - 1))}
-                          disabled={editGuestCount <= 1}
-                        >
-                          &minus;
-                        </button>
-                        <span className="ab__edit-count">{editGuestCount}</span>
-                        <button
-                          type="button"
-                          className="ab__edit-btn"
-                          onClick={() => setEditGuestCount((g) => g + 1)}
-                        >
-                          +
-                        </button>
-                      </div>
-                    ) : (
-                      <span className="ab__card-value">{r.guest_count}</span>
-                    )}
-                  </div>
-                </div>
+        return (
+          <div key={statusKey}>
+            <h3 className="ab__subtitle">{STATUS_LABELS[statusKey]}</h3>
+            <div className="ab__list">
+              {items.map((r) => {
+                const dt = formatDateTime(r.start_at)
+                const endDt = formatDateTime(r.end_at)
+                const isEditing = editingId === r.public_id
+                const isBusy = actionId === r.public_id
+                const phase = getTemporalPhase(r.start_at, r.end_at)
 
-                <div className="ab__card-actions">
-                  {isEditing ? (
-                    <>
-                      <button
-                        className="ab__action ab__action--save"
-                        onClick={() => handleModify(r.public_id)}
-                        disabled={isBusy}
-                        type="button"
+                return (
+                  <div
+                    key={r.public_id}
+                    className={["ab__card", isCancelled || isPast ? "ab__card--archived" : ""]
+                      .filter(Boolean)
+                      .join(" ")}
+                  >
+                    <div className="ab__card-header">
+                      <span className="ab__card-table">
+                        TABLE {r.table_info?.table_number ?? r.table}
+                      </span>
+                      <span
+                        className={[
+                          "ab__card-status",
+                          `ab__card-status--${statusKey === "cancelled" ? "archived" : statusKey}`,
+                        ]
+                          .filter(Boolean)
+                          .join(" ")}
                       >
-                        {isBusy ? "SAVING..." : "SAVE"}
-                      </button>
-                      <button
-                        className="ab__action ab__action--cancel"
-                        onClick={() => setEditingId(null)}
-                        disabled={isBusy}
-                        type="button"
-                      >
-                        BACK
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      <button
-                        className="ab__action ab__action--edit"
-                        onClick={() => startEdit(r)}
-                        disabled={isBusy}
-                        type="button"
-                      >
-                        MODIFY
-                      </button>
-                      <button
-                        className="ab__action ab__action--cancel"
-                        onClick={() => handleCancel(r.public_id)}
-                        disabled={isBusy}
-                        type="button"
-                      >
-                        {isBusy ? "CANCELLING..." : "CANCEL"}
-                      </button>
-                    </>
-                  )}
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      )}
-
-      {inProgress.length > 0 && (
-        <>
-          <h3 className="ab__subtitle">IN PROGRESS</h3>
-          <div className="ab__list">
-            {inProgress.map((r) => {
-              const dt = formatDateTime(r.start_at)
-              const endDt = formatDateTime(r.end_at)
-              return (
-                <div key={r.public_id} className="ab__card">
-                  <div className="ab__card-header">
-                    <span className="ab__card-table">
-                      TABLE {r.table_info?.table_number ?? r.table}
-                    </span>
-                    <span className="ab__card-status ab__card-status--in-progress">
-                      {PHASE_LABELS.in_progress}
-                    </span>
-                  </div>
-                  <div className="ab__card-body">
-                    <div className="ab__card-row">
-                      <span className="ab__card-label">Date</span>
-                      <span className="ab__card-value">{dt.date}</span>
-                    </div>
-                    <div className="ab__card-row">
-                      <span className="ab__card-label">Time</span>
-                      <span className="ab__card-value">
-                        {dt.time} &ndash; {endDt.time}
+                        {STATUS_LABELS[statusKey]}
                       </span>
                     </div>
-                    <div className="ab__card-row">
-                      <span className="ab__card-label">Guests</span>
-                      <span className="ab__card-value">{r.guest_count}</span>
-                    </div>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        </>
-      )}
 
-      {completed.length > 0 && (
-        <>
-          <h3 className="ab__subtitle">COMPLETED</h3>
-          <div className="ab__list">
-            {completed.map((r) => {
-              const dt = formatDateTime(r.start_at)
-              return (
-                <div key={r.public_id} className="ab__card ab__card--archived">
-                  <div className="ab__card-header">
-                    <span className="ab__card-table">
-                      TABLE {r.table_info?.table_number ?? r.table}
-                    </span>
-                    <span className="ab__card-status ab__card-status--completed">
-                      {PHASE_LABELS.completed}
-                    </span>
-                  </div>
-                  <div className="ab__card-body">
-                    <div className="ab__card-row">
-                      <span className="ab__card-label">Date</span>
-                      <span className="ab__card-value">{dt.date}</span>
+                    <div className="ab__card-body">
+                      <div className="ab__card-row">
+                        <span className="ab__card-label">Date</span>
+                        <span className="ab__card-value">{dt.date}</span>
+                      </div>
+                      <div className="ab__card-row">
+                        <span className="ab__card-label">Time</span>
+                        <span className="ab__card-value">
+                          {dt.time} &ndash; {endDt.time}
+                        </span>
+                      </div>
+                      <div className="ab__card-row">
+                        <span className="ab__card-label">Guests</span>
+                        {isEditing ? (
+                          <div className="ab__edit-guests">
+                            <button
+                              type="button"
+                              className="ab__edit-btn"
+                              onClick={() => setEditGuestCount((g) => Math.max(1, g - 1))}
+                              disabled={editGuestCount <= 1}
+                            >
+                              &minus;
+                            </button>
+                            <span className="ab__edit-count">{editGuestCount}</span>
+                            <button
+                              type="button"
+                              className="ab__edit-btn"
+                              onClick={() => setEditGuestCount((g) => g + 1)}
+                            >
+                              +
+                            </button>
+                          </div>
+                        ) : (
+                          <span className="ab__card-value">{r.guest_count}</span>
+                        )}
+                      </div>
+                      {phase !== "past" && statusKey === "active" && (
+                        <div className="ab__card-row">
+                          <span className="ab__card-label">Phase</span>
+                          <span className="ab__card-value">{PHASE_LABELS[phase]}</span>
+                        </div>
+                      )}
                     </div>
-                    <div className="ab__card-row">
-                      <span className="ab__card-label">Time</span>
-                      <span className="ab__card-value">{dt.time}</span>
-                    </div>
-                    <div className="ab__card-row">
-                      <span className="ab__card-label">Guests</span>
-                      <span className="ab__card-value">{r.guest_count}</span>
-                    </div>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        </>
-      )}
 
-      {archived.length > 0 && (
-        <>
-          <h3 className="ab__subtitle">CANCELLED</h3>
-          <div className="ab__list">
-            {archived.map((r) => {
-              const dt = formatDateTime(r.start_at)
-              return (
-                <div key={r.public_id} className="ab__card ab__card--archived">
-                  <div className="ab__card-header">
-                    <span className="ab__card-table">
-                      TABLE {r.table_info?.table_number ?? r.table}
-                    </span>
-                    <span className="ab__card-status ab__card-status--archived">CANCELLED</span>
+                    {(statusKey === "pending" || statusKey === "active") && (
+                      <div className="ab__card-actions">
+                        {isEditing ? (
+                          <>
+                            <button
+                              className="ab__action ab__action--save"
+                              onClick={() => handleModify(r.public_id)}
+                              disabled={isBusy}
+                              type="button"
+                            >
+                              {isBusy ? "SAVING..." : "SAVE"}
+                            </button>
+                            <button
+                              className="ab__action ab__action--cancel"
+                              onClick={() => setEditingId(null)}
+                              disabled={isBusy}
+                              type="button"
+                            >
+                              BACK
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <button
+                              className="ab__action ab__action--edit"
+                              onClick={() => startEdit(r)}
+                              disabled={isBusy}
+                              type="button"
+                            >
+                              MODIFY
+                            </button>
+                            <button
+                              className="ab__action ab__action--cancel"
+                              onClick={() => handleCancel(r.public_id)}
+                              disabled={isBusy}
+                              type="button"
+                            >
+                              {isBusy ? "CANCELLING..." : "CANCEL"}
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    )}
                   </div>
-                  <div className="ab__card-body">
-                    <div className="ab__card-row">
-                      <span className="ab__card-label">Date</span>
-                      <span className="ab__card-value">{dt.date}</span>
-                    </div>
-                    <div className="ab__card-row">
-                      <span className="ab__card-label">Time</span>
-                      <span className="ab__card-value">{dt.time}</span>
-                    </div>
-                    <div className="ab__card-row">
-                      <span className="ab__card-label">Guests</span>
-                      <span className="ab__card-value">{r.guest_count}</span>
-                    </div>
-                  </div>
-                </div>
-              )
-            })}
+                )
+              })}
+            </div>
           </div>
-        </>
-      )}
+        )
+      })}
     </div>
   )
 }

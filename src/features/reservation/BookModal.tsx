@@ -8,9 +8,18 @@ interface BookModalProps {
   table: Table
   workingHours: Record<string, WorkingHoursDay> | null
   restaurantId: string
+  onRefreshTables: () => void
   onClose: () => void
   onSuccess: () => void
 }
+
+const DURATIONS = [
+  { label: "1 h", minutes: 60 },
+  { label: "1.5 h", minutes: 90 },
+  { label: "2 h", minutes: 120 },
+  { label: "2.5 h", minutes: 150 },
+  { label: "3 h", minutes: 180 },
+]
 
 function generateTimeSlots(date: Date, dayConfig: WorkingHoursDay | undefined): string[] {
   if (!dayConfig) return []
@@ -64,6 +73,7 @@ export function BookModal({
   table,
   workingHours,
   restaurantId,
+  onRefreshTables,
   onClose,
   onSuccess,
 }: BookModalProps) {
@@ -75,6 +85,7 @@ export function BookModal({
 
   const [selectedDate, setSelectedDate] = useState(today)
   const [selectedTime, setSelectedTime] = useState<string | null>(null)
+  const [selectedDuration, setSelectedDuration] = useState(DURATIONS[2]) // default 2h
   const [guestCount, setGuestCount] = useState(2)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -100,9 +111,11 @@ export function BookModal({
   const endAt = useMemo(() => {
     if (!selectedTime) return ""
     const [h, m] = selectedTime.split(":").map(Number)
-    const endH = h + 2
-    return `${String(endH).padStart(2, "0")}:${String(m).padStart(2, "0")}`
-  }, [selectedTime])
+    const totalMinutes = h * 60 + m + selectedDuration.minutes
+    const endH = Math.floor(totalMinutes / 60) % 24
+    const endM = totalMinutes % 60
+    return `${String(endH).padStart(2, "0")}:${String(endM).padStart(2, "0")}`
+  }, [selectedTime, selectedDuration])
 
   const handleConfirm = useCallback(async () => {
     if (!selectedTime) return
@@ -118,8 +131,9 @@ export function BookModal({
       const isAvailable = available.some((t) => t.public_id === table.public_id)
 
       if (!isAvailable) {
-        setError("This table is no longer available at the selected time.")
+        setError("This table is no longer available at the selected time. Refreshing table data…")
         setSubmitting(false)
+        onRefreshTables()
         return
       }
 
@@ -136,7 +150,16 @@ export function BookModal({
     } finally {
       setSubmitting(false)
     }
-  }, [selectedTime, selectedDate, endAt, guestCount, table.public_id, onSuccess])
+  }, [
+    selectedTime,
+    selectedDate,
+    endAt,
+    guestCount,
+    restaurantId,
+    table.public_id,
+    onSuccess,
+    onRefreshTables,
+  ])
 
   return (
     <div
@@ -225,6 +248,29 @@ export function BookModal({
           </section>
 
           <section className="book-modal__section">
+            <h3 className="book-modal__section-title">DURATION</h3>
+            <div className="book-modal__durations">
+              {DURATIONS.map((d) => (
+                <button
+                  key={d.minutes}
+                  type="button"
+                  className={[
+                    "book-modal__duration-btn",
+                    selectedDuration.minutes === d.minutes
+                      ? "book-modal__duration-btn--active"
+                      : "",
+                  ]
+                    .filter(Boolean)
+                    .join(" ")}
+                  onClick={() => setSelectedDuration(d)}
+                >
+                  {d.label}
+                </button>
+              ))}
+            </div>
+          </section>
+
+          <section className="book-modal__section">
             <h3 className="book-modal__section-title">GUESTS</h3>
             <div className="book-modal__guests">
               <button
@@ -271,6 +317,10 @@ export function BookModal({
                   <span>
                     {selectedTime} &ndash; {endAt}
                   </span>
+                </div>
+                <div className="book-modal__summary-row">
+                  <span>Duration</span>
+                  <span>{selectedDuration.label}</span>
                 </div>
                 <div className="book-modal__summary-row">
                   <span>Guests</span>

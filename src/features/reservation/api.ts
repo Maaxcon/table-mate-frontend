@@ -14,6 +14,8 @@ export type RestaurantSettingsData = {
   working_hours: Record<string, WorkingHoursDay> | null
 }
 
+export type ReservationStatus = "pending" | "active" | "completed" | "cancelled"
+
 export type ReservationWithTable = {
   public_id: string
   restaurant: string
@@ -28,7 +30,7 @@ export type ReservationWithTable = {
   guest_count: number
   start_at: string
   end_at: string
-  status: "active" | "cancelled"
+  status: ReservationStatus
   notes: string | null
   created_at: string
   updated_at: string
