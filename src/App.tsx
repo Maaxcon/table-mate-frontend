@@ -3,6 +3,7 @@ import { ENV_NOT_CONFIGURED_VALUE, env } from "@/config/env"
 import { GoogleOAuthProvider } from "@react-oauth/google"
 import AuthInitializer from "@/components/AuthInitializer"
 import { ThemeProvider } from "@/context/ThemeContext"
+import { ThemeToggle } from "@/components/ThemeToggle/ThemeToggle"
 import CabinetPage from "@/pages/CabinetPage"
 import GreetingPage from "@/pages/GreetingPage"
 import MenuPage from "@/pages/MenuPage"
@@ -21,6 +22,7 @@ const clientId = env.googleClientId !== ENV_NOT_CONFIGURED_VALUE ? env.googleCli
 function ThemedLayout() {
   return (
     <ThemeProvider>
+      <ThemeToggle className="theme-toggle--global" />
       <Outlet />
     </ThemeProvider>
   )
