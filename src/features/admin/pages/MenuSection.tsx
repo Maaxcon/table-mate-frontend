@@ -5,6 +5,7 @@ import AddMenuModal from "../components/AddMenuModal"
 import MenuToolbar from "../components/MenuToolbar"
 import CategoryRow from "../components/CategoryRow"
 import AddCategoryForm from "../components/AddCategoryForm"
+import DishList from "../components/DishList"
 import "../components/SectionPlaceholder.css"
 import "../components/menu.css"
 
@@ -14,8 +15,10 @@ function MenuSection() {
     selectedMenuId,
     selectMenu,
     categories,
+    items,
     loadingMenus,
     loadingCategories,
+    loadingItems,
     error,
     reloadMenus,
     reloadCategories,
@@ -96,6 +99,15 @@ function MenuSection() {
                     )}
                     <AddCategoryForm menuId={selectedMenu.public_id} onCreated={reloadCategories} />
                   </>
+                )}
+
+                <h2 className="menu-admin__subtitle">Dishes</h2>
+                {loadingItems ? (
+                  <p className="admin-section__description">Loading…</p>
+                ) : items.length === 0 ? (
+                  <p className="admin-section__description">No dishes in this menu yet.</p>
+                ) : (
+                  <DishList items={items} categories={categories} />
                 )}
               </>
             )

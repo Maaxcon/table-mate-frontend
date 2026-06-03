@@ -1,8 +1,9 @@
 import { apiFetch } from "@/api/client"
-import type { AdminCategory, AdminMenu } from "./types"
+import type { AdminCategory, AdminMenu, AdminMenuItem } from "./types"
 
 const MENUS_PATH = "/api/menu/admin/menus/"
 const CATEGORIES_PATH = "/api/menu/admin/categories/"
+const ITEMS_PATH = "/api/menu/admin/items/"
 
 type Paginated<T> = { results: T[] }
 
@@ -22,6 +23,16 @@ export async function fetchCategories(
   })
   if (!res.ok) throw new Error("Could not load categories.")
   const data = (await res.json()) as Paginated<AdminCategory>
+  return data.results
+}
+
+export async function fetchItems(
+  menuPublicId: string,
+  signal?: AbortSignal,
+): Promise<AdminMenuItem[]> {
+  const res = await apiFetch(`${ITEMS_PATH}?menu=${menuPublicId}&ordering=sort_order`, { signal })
+  if (!res.ok) throw new Error("Could not load dishes.")
+  const data = (await res.json()) as Paginated<AdminMenuItem>
   return data.results
 }
 

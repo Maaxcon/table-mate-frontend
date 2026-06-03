@@ -145,3 +145,35 @@
   align-items: center;
   gap: 4px;
 }
+
+.menu-admin__dishes {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 560px;
+}
+
+.menu-admin__group-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  margin: 0 0 8px;
+}
+
+.menu-admin__dish-price {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.menu-admin__dish-status {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-success-text);
+  min-width: 70px;
+  text-align: right;
+}
+
+.menu-admin__dish-status--off {
+  color: var(--color-text-muted);
+}
