@@ -177,6 +177,7 @@ export function BookingPage() {
         <BookModal
           table={selectedTable}
           workingHours={workingHours}
+          restaurantId={public_restaurant_id ?? ""}
           onClose={() => {
             setBookModalOpen(false)
             setSelectedTable(null)

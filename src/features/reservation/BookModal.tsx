@@ -7,6 +7,7 @@ import "./BookModal.css"
 interface BookModalProps {
   table: Table
   workingHours: Record<string, WorkingHoursDay> | null
+  restaurantId: string
   onClose: () => void
   onSuccess: () => void
 }
@@ -59,7 +60,13 @@ function generateTimeSlots(date: Date, dayConfig: WorkingHoursDay | undefined): 
 
 const DAY_NAMES = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"]
 
-export function BookModal({ table, workingHours, onClose, onSuccess }: BookModalProps) {
+export function BookModal({
+  table,
+  workingHours,
+  restaurantId,
+  onClose,
+  onSuccess,
+}: BookModalProps) {
   const today = useMemo(() => {
     const d = new Date()
     d.setHours(0, 0, 0, 0)
@@ -107,7 +114,7 @@ export function BookModal({ table, workingHours, onClose, onSuccess }: BookModal
       const startAt = `${dateStr}T${selectedTime}:00`
       const endAtStr = `${dateStr}T${endAt}:00`
 
-      const available = await checkAvailability(startAt, endAtStr, guestCount)
+      const available = await checkAvailability(startAt, endAtStr, guestCount, restaurantId)
       const isAvailable = available.some((t) => t.public_id === table.public_id)
 
       if (!isAvailable) {
