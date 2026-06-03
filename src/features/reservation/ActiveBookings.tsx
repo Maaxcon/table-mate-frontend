@@ -106,6 +106,7 @@ export function ActiveBookings({
           publicId={rescheduleTarget.public_id}
           tableNumber={rescheduleTarget.table_info?.table_number ?? rescheduleTarget.table}
           tablePublicId={rescheduleTarget.table_info?.public_id ?? rescheduleTarget.table}
+          restaurantId={rescheduleTarget.restaurant}
           currentDate={rescheduleTarget.start_at}
           currentStart={rescheduleTarget.start_at}
           currentEnd={rescheduleTarget.end_at}

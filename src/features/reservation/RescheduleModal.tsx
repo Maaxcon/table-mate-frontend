@@ -12,6 +12,7 @@ interface RescheduleModalProps {
   currentEnd: string
   currentGuests: number
   tableCapacity: number
+  restaurantId?: string
   workingHours: Record<string, WorkingHoursDay> | null
   onClose: () => void
   onSuccess: () => void
@@ -54,10 +55,25 @@ export function RescheduleModal({
   currentEnd,
   currentGuests,
   tableCapacity,
+  restaurantId,
   workingHours,
   onClose,
   onSuccess,
 }: RescheduleModalProps) {
+  const [internalWorkingHours, setInternalWorkingHours] = useState<Record<
+    string,
+    WorkingHoursDay
+  > | null>(null)
+
+  useEffect(() => {
+    if (!workingHours && restaurantId) {
+      import("./api")
+        .then((m) => m.fetchRestaurantSettings(restaurantId))
+        .then((settings) => setInternalWorkingHours(settings.working_hours))
+        .catch(() => setInternalWorkingHours(null))
+    }
+  }, [workingHours, restaurantId])
+
   const currentStartTime = msToTime(new Date(currentStart).getTime())
   const currentEndTime = msToTime(new Date(currentEnd).getTime())
   const currentDurationMinutes = timeToMinutes(currentEndTime) - timeToMinutes(currentStartTime)
@@ -87,7 +103,7 @@ export function RescheduleModal({
 
   const DAY_NAMES = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"]
   const dayName = DAY_NAMES[parsedDate.getDay()]
-  const dayConfig = workingHours?.[dayName]
+  const dayConfig = workingHours?.[dayName] || internalWorkingHours?.[dayName]
 
   const timeSlots = useMemo(() => {
     if (availableSlots) return availableSlots

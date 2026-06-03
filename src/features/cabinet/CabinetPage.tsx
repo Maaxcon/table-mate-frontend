@@ -112,6 +112,7 @@ function CabinetPage() {
           publicId={modifyTarget.public_id}
           tableNumber={modifyTarget.table_info?.table_number ?? modifyTarget.table ?? ""}
           tablePublicId={modifyTarget.table_info?.public_id ?? modifyTarget.table ?? ""}
+          restaurantId={modifyTarget.restaurant_info?.public_id ?? modifyTarget.restaurant}
           currentDate={modifyTarget.start_at}
           currentStart={modifyTarget.start_at}
           currentEnd={modifyTarget.end_at}
