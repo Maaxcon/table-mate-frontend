@@ -17,6 +17,7 @@
 
 .admin-search__input {
   width: 100%;
+  box-sizing: border-box;
   padding: 10px 12px 10px 36px;
   border: 1px solid var(--color-border-default);
   border-radius: 10px;
