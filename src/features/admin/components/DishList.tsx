@@ -1,14 +1,20 @@
+import { DndContext, closestCenter, type DragEndEvent } from "@dnd-kit/core"
+import { SortableContext, rectSortingStrategy } from "@dnd-kit/sortable"
 import type { AdminCategory, AdminMenuItem } from "../types"
+import { useDndSensors } from "./useDndSensors"
+import DishCard from "./DishCard"
 
 type DishListProps = {
   items: AdminMenuItem[]
   categories: AdminCategory[]
   onEdit: (item: AdminMenuItem) => void
+  onReorder: (activeId: string, overId: string) => void
 }
 
 const UNCATEGORIZED = "__none__"
 
-function DishList({ items, categories, onEdit }: DishListProps) {
+function DishList({ items, categories, onEdit, onReorder }: DishListProps) {
+  const sensors = useDndSensors()
   const categoryName = new Map(categories.map((c) => [c.public_id, c.name]))
 
   // Group items by category, keeping category order, with uncategorized last.
@@ -20,6 +26,10 @@ function DishList({ items, categories, onEdit }: DishListProps) {
     groups.get(key)!.push(item)
   }
 
+  const handleDragEnd = ({ active, over }: DragEndEvent) => {
+    if (over && active.id !== over.id) onReorder(String(active.id), String(over.id))
+  }
+
   return (
     <div className="menu-admin__dishes">
       {[...groups.entries()]
@@ -29,40 +39,20 @@ function DishList({ items, categories, onEdit }: DishListProps) {
             <h3 className="menu-admin__group-title">
               {key === UNCATEGORIZED ? "Uncategorized" : (categoryName.get(key) ?? "—")}
             </h3>
-            <ul className="menu-admin__dish-grid">
-              {list.map((item) => (
-                <li key={item.public_id}>
-                  <button
-                    type="button"
-                    className="menu-admin__dish-card"
-                    onClick={() => onEdit(item)}
-                  >
-                    {item.image ? (
-                      <img className="menu-admin__dish-img" src={item.image} alt="" />
-                    ) : (
-                      <span className="menu-admin__dish-img menu-admin__dish-img--empty">
-                        No photo
-                      </span>
-                    )}
-                    <span className="menu-admin__dish-body">
-                      <span className="menu-admin__dish-name">{item.name}</span>
-                      <span className="menu-admin__dish-meta">
-                        <span className="menu-admin__dish-price">
-                          {Number(item.price).toFixed(2)}
-                        </span>
-                        <span
-                          className={`menu-admin__dish-status${
-                            item.is_available ? "" : " menu-admin__dish-status--off"
-                          }`}
-                        >
-                          {item.is_available ? "Available" : "Hidden"}
-                        </span>
-                      </span>
-                    </span>
-                  </button>
-                </li>
-              ))}
-            </ul>
+            {/* A separate context per group keeps dragging within its category. */}
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext items={list.map((i) => i.public_id)} strategy={rectSortingStrategy}>
+                <ul className="menu-admin__dish-grid">
+                  {list.map((item) => (
+                    <DishCard key={item.public_id} item={item} onEdit={onEdit} />
+                  ))}
+                </ul>
+              </SortableContext>
+            </DndContext>
           </div>
         ))}
     </div>

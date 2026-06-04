@@ -1,5 +1,7 @@
 import { useState } from "react"
-import { LuTrash2 } from "react-icons/lu"
+import { LuGripVertical, LuTrash2 } from "react-icons/lu"
+import { useSortable } from "@dnd-kit/sortable"
+import { CSS } from "@dnd-kit/utilities"
 import { deleteCategory, updateCategory } from "../menuApi"
 import type { AdminCategory } from "../types"
 import ConfirmDialog from "./ConfirmDialog"
@@ -12,6 +14,9 @@ type CategoryRowProps = {
 
 // Relies on a `key={category.public_id}` in the parent to re-init the input.
 function CategoryRow({ category, onChanged, onDeleted }: CategoryRowProps) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: category.public_id,
+  })
   const [name, setName] = useState(category.name)
   const [busy, setBusy] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
@@ -37,7 +42,25 @@ function CategoryRow({ category, onChanged, onDeleted }: CategoryRowProps) {
   }
 
   return (
-    <li className="menu-admin__row">
+    <li
+      ref={setNodeRef}
+      className="menu-admin__row"
+      style={{
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.5 : undefined,
+        zIndex: isDragging ? 2 : undefined,
+      }}
+    >
+      <button
+        type="button"
+        className="menu-admin__drag"
+        aria-label={`Drag to reorder category ${category.name}`}
+        {...attributes}
+        {...listeners}
+      >
+        <LuGripVertical aria-hidden="true" />
+      </button>
       <input
         className="admin-field__input menu-admin__row-input"
         value={name}

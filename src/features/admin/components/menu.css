@@ -254,20 +254,61 @@
 .menu-admin__dish-card {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 8px;
   width: 100%;
   padding: 12px;
   border: 1px solid var(--color-border-default);
   border-radius: 14px;
   background: var(--color-bg-surface);
-  text-align: left;
-  cursor: pointer;
-  font: inherit;
   transition: border-color 120ms ease;
 }
 
 .menu-admin__dish-card:hover {
   border-color: var(--color-border-strong);
+}
+
+/* The clickable info area inside the card (opens the editor). */
+.menu-admin__dish-main {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+
+/* Drag handle for reordering categories and dishes. */
+.menu-admin__drag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 28px;
+  align-self: stretch;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--color-text-muted);
+  cursor: grab;
+  touch-action: none;
+}
+
+.menu-admin__drag:hover {
+  color: var(--color-text-primary);
+}
+
+.menu-admin__drag:active {
+  cursor: grabbing;
+}
+
+.menu-admin__drag svg {
+  width: 18px;
+  height: 18px;
 }
 
 .menu-admin__dish-img {

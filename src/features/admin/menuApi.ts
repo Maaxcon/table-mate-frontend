@@ -139,6 +139,24 @@ export async function updateItem(
   return (await res.json()) as AdminMenuItem
 }
 
+export async function setItemSortOrder(publicId: string, sortOrder: number): Promise<void> {
+  const res = await apiFetch(`${ITEMS_PATH}${publicId}/`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ sort_order: sortOrder }),
+  })
+  if (!res.ok) throw new Error(await firstError(res, "Could not reorder dishes."))
+}
+
+export async function setCategorySortOrder(publicId: string, sortOrder: number): Promise<void> {
+  const res = await apiFetch(`${CATEGORIES_PATH}${publicId}/`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ sort_order: sortOrder }),
+  })
+  if (!res.ok) throw new Error(await firstError(res, "Could not reorder categories."))
+}
+
 export async function uploadItemImage(publicId: string, file: File): Promise<AdminMenuItem> {
   const form = new FormData()
   form.append("image", file)

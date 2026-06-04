@@ -1,7 +1,10 @@
 import { useState } from "react"
 import { LuPlus, LuExternalLink } from "react-icons/lu"
+import { DndContext, closestCenter, type DragEndEvent } from "@dnd-kit/core"
+import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable"
 import { useAppSelector } from "@/store/hooks"
 import { useMenuAdmin } from "../hooks/useMenuAdmin"
+import { useDndSensors } from "../components/useDndSensors"
 import AddMenuModal from "../components/AddMenuModal"
 import MenuToolbar from "../components/MenuToolbar"
 import CategoryRow from "../components/CategoryRow"
@@ -26,6 +29,8 @@ function MenuSection() {
     reloadMenus,
     reloadCategories,
     reloadItems,
+    reorderCategory,
+    reorderItem,
   } = useMenuAdmin()
   const [addingMenu, setAddingMenu] = useState(false)
   const [dishModal, setDishModal] = useState<{ open: boolean; item: AdminMenuItem | null }>({
@@ -33,6 +38,11 @@ function MenuSection() {
     item: null,
   })
   const restaurantId = useAppSelector((s) => s.auth.user?.restaurantId ?? null)
+  const sensors = useDndSensors()
+
+  const handleCategoryDragEnd = ({ active, over }: DragEndEvent) => {
+    if (over && active.id !== over.id) reorderCategory(String(active.id), String(over.id))
+  }
 
   const selectedMenu = menus.find((m) => m.public_id === selectedMenuId) ?? null
 
@@ -111,16 +121,27 @@ function MenuSection() {
                           No categories in this menu yet.
                         </p>
                       ) : (
-                        <ul className="menu-admin__list">
-                          {categories.map((c) => (
-                            <CategoryRow
-                              key={c.public_id}
-                              category={c}
-                              onChanged={reloadCategories}
-                              onDeleted={reloadCategories}
-                            />
-                          ))}
-                        </ul>
+                        <DndContext
+                          sensors={sensors}
+                          collisionDetection={closestCenter}
+                          onDragEnd={handleCategoryDragEnd}
+                        >
+                          <SortableContext
+                            items={categories.map((c) => c.public_id)}
+                            strategy={verticalListSortingStrategy}
+                          >
+                            <ul className="menu-admin__list">
+                              {categories.map((c) => (
+                                <CategoryRow
+                                  key={c.public_id}
+                                  category={c}
+                                  onChanged={reloadCategories}
+                                  onDeleted={reloadCategories}
+                                />
+                              ))}
+                            </ul>
+                          </SortableContext>
+                        </DndContext>
                       )}
                       <AddCategoryForm
                         menuId={selectedMenu.public_id}
@@ -151,6 +172,7 @@ function MenuSection() {
                       items={items}
                       categories={categories}
                       onEdit={(item) => setDishModal({ open: true, item })}
+                      onReorder={reorderItem}
                     />
                   )}
                 </section>

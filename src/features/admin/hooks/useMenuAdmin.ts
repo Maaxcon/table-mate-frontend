@@ -1,6 +1,54 @@
 import { useCallback, useEffect, useState } from "react"
-import { fetchCategories, fetchItems, fetchMenus } from "../menuApi"
+import { arrayMove } from "@dnd-kit/sortable"
+import {
+  fetchCategories,
+  fetchItems,
+  fetchMenus,
+  setCategorySortOrder,
+  setItemSortOrder,
+} from "../menuApi"
 import type { AdminCategory, AdminMenu, AdminMenuItem } from "../types"
+
+const UNCATEGORIZED = "__none__"
+
+/** Moves `activeId` to `overId`'s slot within their shared category group, then
+ * renumbers sort_order across the whole list (categories order first,
+ * uncategorized last). Returns null for cross-group or invalid moves. */
+function reorderItemsByIds(
+  items: AdminMenuItem[],
+  categories: AdminCategory[],
+  activeId: string,
+  overId: string,
+): AdminMenuItem[] | null {
+  const groups = new Map<string, AdminMenuItem[]>()
+  for (const item of items) {
+    const key = item.category ?? UNCATEGORIZED
+    if (!groups.has(key)) groups.set(key, [])
+    groups.get(key)!.push(item)
+  }
+
+  const active = items.find((i) => i.public_id === activeId)
+  const over = items.find((i) => i.public_id === overId)
+  if (!active || !over) return null
+  const groupKey = active.category ?? UNCATEGORIZED
+  if ((over.category ?? UNCATEGORIZED) !== groupKey) return null // within-group only
+  const group = groups.get(groupKey)!
+  const oldIndex = group.findIndex((i) => i.public_id === activeId)
+  const newIndex = group.findIndex((i) => i.public_id === overId)
+  if (oldIndex < 0 || newIndex < 0 || oldIndex === newIndex) return null
+  groups.set(groupKey, arrayMove(group, oldIndex, newIndex))
+
+  const orderedKeys = [
+    ...categories.map((c) => c.public_id),
+    ...[...groups.keys()].filter(
+      (k) => k !== UNCATEGORIZED && !categories.some((c) => c.public_id === k),
+    ),
+    UNCATEGORIZED,
+  ]
+  const ordered: AdminMenuItem[] = []
+  for (const key of orderedKeys) ordered.push(...(groups.get(key) ?? []))
+  return ordered.map((item, i) => ({ ...item, sort_order: i }))
+}
 
 type UseMenuAdminResult = {
   menus: AdminMenu[]
@@ -15,6 +63,8 @@ type UseMenuAdminResult = {
   reloadMenus: () => void
   reloadCategories: () => void
   reloadItems: () => void
+  reorderCategory: (activeId: string, overId: string) => void
+  reorderItem: (activeId: string, overId: string) => void
 }
 
 /** Loads the restaurant's menus, tracks the selected menu, and loads its categories. */
@@ -35,6 +85,46 @@ export function useMenuAdmin(): UseMenuAdminResult {
   const reloadCategories = useCallback(() => setCategoriesKey((k) => k + 1), [])
   const reloadItems = useCallback(() => setItemsKey((k) => k + 1), [])
   const selectMenu = useCallback((publicId: string) => setSelectedMenuId(publicId), [])
+
+  const reorderCategory = useCallback(
+    (activeId: string, overId: string) => {
+      if (activeId === overId) return
+      const oldIndex = categories.findIndex((c) => c.public_id === activeId)
+      const newIndex = categories.findIndex((c) => c.public_id === overId)
+      if (oldIndex < 0 || newIndex < 0) return
+
+      const renumbered = arrayMove(categories, oldIndex, newIndex).map((c, i) => ({
+        ...c,
+        sort_order: i,
+      }))
+      const changed = renumbered.filter(
+        (c) => categories.find((o) => o.public_id === c.public_id)?.sort_order !== c.sort_order,
+      )
+
+      setCategories(renumbered) // optimistic
+      void Promise.all(changed.map((c) => setCategorySortOrder(c.public_id, c.sort_order))).catch(
+        () => reloadCategories(), // revert to server truth on failure
+      )
+    },
+    [categories, reloadCategories],
+  )
+
+  const reorderItem = useCallback(
+    (activeId: string, overId: string) => {
+      const reordered = reorderItemsByIds(items, categories, activeId, overId)
+      if (!reordered) return
+
+      const changed = reordered.filter(
+        (it) => items.find((o) => o.public_id === it.public_id)?.sort_order !== it.sort_order,
+      )
+
+      setItems(reordered) // optimistic
+      void Promise.all(changed.map((it) => setItemSortOrder(it.public_id, it.sort_order))).catch(
+        () => reloadItems(),
+      )
+    },
+    [items, categories, reloadItems],
+  )
 
   useEffect(() => {
     const controller = new AbortController()
@@ -116,5 +206,7 @@ export function useMenuAdmin(): UseMenuAdminResult {
     reloadMenus,
     reloadCategories,
     reloadItems,
+    reorderCategory,
+    reorderItem,
   }
 }
