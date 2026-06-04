@@ -15,7 +15,8 @@
   pointer-events: none;
 }
 
-.admin-search__input {
+/* The selector beats the reset's `input[type="search"] { box-sizing: content-box }`. */
+.admin-search .admin-search__input {
   width: 100%;
   box-sizing: border-box;
   padding: 10px 12px 10px 36px;
