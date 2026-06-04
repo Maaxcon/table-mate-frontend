@@ -179,6 +179,12 @@ export async function clearItemImage(publicId: string): Promise<AdminMenuItem> {
   return (await res.json()) as AdminMenuItem
 }
 
+export async function duplicateItem(publicId: string): Promise<AdminMenuItem> {
+  const res = await apiFetch(`${ITEMS_PATH}${publicId}/duplicate/`, { method: "POST" })
+  if (!res.ok) throw new Error(await firstError(res, "Could not duplicate dish."))
+  return (await res.json()) as AdminMenuItem
+}
+
 export async function deleteItem(publicId: string): Promise<void> {
   const res = await apiFetch(`${ITEMS_PATH}${publicId}/`, { method: "DELETE" })
   if (!res.ok && res.status !== 204) throw new Error("Could not delete dish.")

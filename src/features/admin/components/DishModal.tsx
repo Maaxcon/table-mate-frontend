@@ -4,6 +4,7 @@ import {
   clearItemImage,
   createItem,
   deleteItem,
+  duplicateItem,
   updateItem,
   uploadItemImage,
   type ItemInput,
@@ -148,35 +149,14 @@ function DishModal({ menuId, categories, item, onClose, onSaved }: DishModalProp
     }
   }
 
+  // Duplicates the saved dish on the server (photo included). Unsaved edits in
+  // the open form are not part of the copy — duplicate acts on the stored item.
   const handleDuplicate = async () => {
+    if (!item) return
     setDuplicating(true)
     setError(null)
     try {
-      const created = await createItem({
-        menu: menuId,
-        category: category || null,
-        name: `${name.trim()} (copy)`,
-        description: description.trim(),
-        price: price.trim(),
-        weight_grams: weight.trim() ? Number(weight) : null,
-        is_available: isAvailable,
-        ingredients,
-        allergens,
-      })
-      // Best-effort photo copy — failure here must not fail the duplicate.
-      try {
-        if (imageFile) {
-          await uploadItemImage(created.public_id, imageFile)
-        } else if (previewUrl && !previewUrl.startsWith("blob:")) {
-          const resp = await fetch(previewUrl)
-          if (resp.ok) {
-            const blob = await resp.blob()
-            await uploadItemImage(created.public_id, new File([blob], "dish", { type: blob.type }))
-          }
-        }
-      } catch {
-        // ignore image copy errors
-      }
+      await duplicateItem(item.public_id)
       toast.success("Dish duplicated")
       onSaved()
       onClose()
