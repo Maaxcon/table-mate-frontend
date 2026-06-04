@@ -10,37 +10,28 @@ export type AdminOverview = {
   staffActive: number
 }
 
-type ListResponse = { count?: number; results?: { is_active?: boolean }[] }
-
-// Admin lists use PageNumberPagination, so the `count` field gives exact totals.
-async function getList(path: string, signal?: AbortSignal): Promise<Required<ListResponse>> {
-  const res = await apiFetch(path, { signal })
-  if (!res.ok) throw new Error("Could not load overview.")
-  const data = (await res.json()) as ListResponse
-  return { count: data.count ?? data.results?.length ?? 0, results: data.results ?? [] }
+type OverviewResponse = {
+  menus_total: number
+  menus_active: number
+  dishes_total: number
+  dishes_hidden: number
+  categories_total: number
+  staff_total: number
+  staff_active: number
 }
 
-async function getCount(path: string, signal?: AbortSignal): Promise<number> {
-  return (await getList(path, signal)).count
-}
-
+// One backend call returns exact counts (scoped to the admin's restaurant).
 export async function fetchOverview(signal?: AbortSignal): Promise<AdminOverview> {
-  const [menus, employees, dishesTotal, dishesHidden, categoriesTotal] = await Promise.all([
-    getList("/api/menu/admin/menus/", signal),
-    getList("/api/restaurants/employees/", signal),
-    getCount("/api/menu/admin/items/", signal),
-    getCount("/api/menu/admin/items/?is_available=false", signal),
-    getCount("/api/menu/admin/categories/", signal),
-  ])
-
+  const res = await apiFetch("/api/restaurants/admin/overview/", { signal })
+  if (!res.ok) throw new Error("Could not load overview.")
+  const d = (await res.json()) as Partial<OverviewResponse>
   return {
-    menusTotal: menus.count,
-    // Menus and staff are few, so counting the first page of results is exact.
-    menusActive: menus.results.filter((m) => m.is_active).length,
-    dishesTotal,
-    dishesHidden,
-    categoriesTotal,
-    staffTotal: employees.count,
-    staffActive: employees.results.filter((e) => e.is_active).length,
+    menusTotal: d.menus_total ?? 0,
+    menusActive: d.menus_active ?? 0,
+    dishesTotal: d.dishes_total ?? 0,
+    dishesHidden: d.dishes_hidden ?? 0,
+    categoriesTotal: d.categories_total ?? 0,
+    staffTotal: d.staff_total ?? 0,
+    staffActive: d.staff_active ?? 0,
   }
 }
