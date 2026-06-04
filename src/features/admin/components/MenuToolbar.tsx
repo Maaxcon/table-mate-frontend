@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { LuTrash2 } from "react-icons/lu"
+import { LuPencil, LuTrash2 } from "react-icons/lu"
 import { deleteMenu, updateMenu } from "../menuApi"
 import type { AdminMenu } from "../types"
 import ConfirmDialog from "./ConfirmDialog"
@@ -10,13 +10,14 @@ type MenuToolbarProps = {
   onDeleted: () => void
 }
 
-// Relies on a `key={menu.public_id}` in the parent to re-init the name input
-// when the selected menu changes.
+// Relies on a `key={menu.public_id}` in the parent to re-init state when the
+// selected menu changes.
 function MenuToolbar({ menu, onChanged, onDeleted }: MenuToolbarProps) {
-  const [name, setName] = useState(menu.name)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [confirm, setConfirm] = useState<null | "delete" | "hide">(null)
+  const [renaming, setRenaming] = useState(false)
+  const [name, setName] = useState(menu.name)
 
   const run = async (action: () => Promise<unknown>, after: () => void) => {
     setBusy(true)
@@ -31,9 +32,23 @@ function MenuToolbar({ menu, onChanged, onDeleted }: MenuToolbarProps) {
     }
   }
 
-  const handleRename = () => {
-    if (!name.trim() || name.trim() === menu.name) return
-    void run(() => updateMenu(menu.public_id, { name: name.trim() }), onChanged)
+  const openRename = () => {
+    setName(menu.name)
+    setRenaming(true)
+  }
+
+  const submitRename = () => {
+    if (!name.trim() || name.trim() === menu.name) {
+      setRenaming(false)
+      return
+    }
+    void run(
+      () => updateMenu(menu.public_id, { name: name.trim() }),
+      () => {
+        setRenaming(false)
+        onChanged()
+      },
+    )
   }
 
   // Showing a menu is harmless; hiding it from customers asks first.
@@ -53,20 +68,9 @@ function MenuToolbar({ menu, onChanged, onDeleted }: MenuToolbarProps) {
 
   return (
     <div className="menu-admin__toolbar">
-      <input
-        className="admin-field__input menu-admin__toolbar-name"
-        value={name}
-        disabled={busy}
-        aria-label="Menu name"
-        onChange={(e) => setName(e.target.value)}
-      />
-      <button
-        type="button"
-        className="menu-admin__btn menu-admin__btn--primary"
-        disabled={busy || !name.trim() || name.trim() === menu.name}
-        onClick={handleRename}
-      >
-        Rename
+      <button type="button" className="menu-admin__btn" disabled={busy} onClick={openRename}>
+        <LuPencil aria-hidden="true" />
+        <span>Rename</span>
       </button>
       <button type="button" className="menu-admin__btn" disabled={busy} onClick={handleToggle}>
         {menu.is_active ? "Hide" : "Show"}
@@ -81,6 +85,63 @@ function MenuToolbar({ menu, onChanged, onDeleted }: MenuToolbarProps) {
         <LuTrash2 aria-hidden="true" />
       </button>
       {error && <span className="menu-admin__error">{error}</span>}
+
+      {renaming && (
+        <div className="admin-modal__overlay admin-confirm__overlay">
+          <button
+            type="button"
+            className="admin-modal__backdrop"
+            aria-label="Cancel"
+            onClick={() => {
+              if (!busy) setRenaming(false)
+            }}
+          />
+          <div
+            className="admin-modal admin-modal--confirm"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Rename menu"
+          >
+            <div className="admin-modal__header">
+              <h2 className="admin-modal__title">Rename menu</h2>
+            </div>
+            <form
+              className="admin-form"
+              onSubmit={(e) => {
+                e.preventDefault()
+                submitRename()
+              }}
+            >
+              <label className="admin-field">
+                <span className="admin-field__label">Menu name</span>
+                <input
+                  className="admin-field__input"
+                  value={name}
+                  disabled={busy}
+                  onChange={(e) => setName(e.target.value)}
+                />
+              </label>
+              <div className="admin-modal__actions">
+                <button
+                  type="button"
+                  className="admin-modal__btn"
+                  disabled={busy}
+                  onClick={() => setRenaming(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="admin-modal__btn admin-modal__btn--primary"
+                  disabled={busy || !name.trim()}
+                >
+                  {busy ? "…" : "Save"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {confirm === "delete" && (
         <ConfirmDialog

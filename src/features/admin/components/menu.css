@@ -43,6 +43,7 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  flex-shrink: 0;
   padding: 11px 20px;
   border: 1px solid var(--color-border-default);
   border-radius: 999px;
@@ -93,6 +94,10 @@
 }
 
 .menu-admin__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   padding: 9px 14px;
   border: 1px solid var(--color-border-default);
   border-radius: 10px;
@@ -244,13 +249,27 @@
   .menu-admin__dish-grid {
     grid-template-columns: 1fr;
   }
+
+  /* Keep the menu switcher to a single, swipeable row instead of wrapping. */
+  .menu-admin__menus {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    margin: 0 -16px 20px;
+    padding: 2px 16px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .menu-admin__tab {
+    padding: 9px 16px;
+    font-size: 14px;
+  }
 }
 
 .menu-admin__dish-card {
   display: flex;
   align-items: center;
   gap: 8px;
-  width: 100%;
+  min-width: 0;
   padding: 12px;
   border: 1px solid var(--color-border-default);
   border-radius: 14px;
