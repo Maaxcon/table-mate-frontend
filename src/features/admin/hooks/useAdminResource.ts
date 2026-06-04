@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { apiFetch } from "@/api/client"
+import { useUnsavedChanges } from "../components/unsavedChanges"
 
 type Paginated<T> = { results: T[] }
 
@@ -100,6 +101,13 @@ export function useAdminResource<T extends { public_id: string }>(
     window.addEventListener("beforeunload", handler)
     return () => window.removeEventListener("beforeunload", handler)
   }, [dirty])
+
+  // Report dirty state so AdminLayout can guard in-app navigation.
+  const { setDirty } = useUnsavedChanges()
+  useEffect(() => {
+    setDirty(dirty)
+    return () => setDirty(false)
+  }, [dirty, setDirty])
 
   return { form, loading, loadError, status, saveError, dirty, setField, submit }
 }
