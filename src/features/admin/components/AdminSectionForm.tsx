@@ -12,6 +12,7 @@ type AdminSectionFormProps = {
   status: SaveStatus
   saveError: string | null
   dirty: boolean
+  saveDisabled?: boolean
   onSubmit: () => void
   children: ReactNode
 }
@@ -24,6 +25,7 @@ function AdminSectionForm({
   status,
   saveError,
   dirty,
+  saveDisabled = false,
   onSubmit,
   children,
 }: AdminSectionFormProps) {
@@ -57,7 +59,7 @@ function AdminSectionForm({
             <button
               type="submit"
               className="admin-form__save"
-              disabled={status === "saving" || !dirty}
+              disabled={status === "saving" || !dirty || saveDisabled}
             >
               {status === "saving" ? "Saving…" : "Save"}
             </button>

@@ -1,15 +1,6 @@
 import type { WeekDay, WorkingHours } from "../types"
+import { WEEK_DAYS, dayInvalid, hasInvalidWorkingHours } from "./workingHours"
 import "./hours.css"
-
-const DAYS: { key: WeekDay; label: string }[] = [
-  { key: "mon", label: "Monday" },
-  { key: "tue", label: "Tuesday" },
-  { key: "wed", label: "Wednesday" },
-  { key: "thu", label: "Thursday" },
-  { key: "fri", label: "Friday" },
-  { key: "sat", label: "Saturday" },
-  { key: "sun", label: "Sunday" },
-]
 
 type WorkingHoursEditorProps = {
   value: WorkingHours
@@ -27,13 +18,17 @@ function WorkingHoursEditor({ value, onChange }: WorkingHoursEditorProps) {
     onChange(next)
   }
 
+  const anyInvalid = hasInvalidWorkingHours(value)
+
   return (
     <div className="admin-field">
       <span className="admin-field__label">Working hours</span>
       <div className="hours-editor">
-        {DAYS.map(({ key, label }) => {
+        {WEEK_DAYS.map(({ key, label }) => {
           const day = value[key]
           const isOpen = day != null
+          const invalid = dayInvalid(day)
+          const timeClass = `hours-row__time${invalid ? " hours-row__time--error" : ""}`
           return (
             <div className="hours-row" key={key}>
               <label className="hours-row__toggle">
@@ -51,17 +46,19 @@ function WorkingHoursEditor({ value, onChange }: WorkingHoursEditorProps) {
                 <div className="hours-row__times">
                   <input
                     type="time"
-                    className="hours-row__time"
+                    className={timeClass}
                     value={day.open}
                     aria-label={`${label} opening time`}
+                    aria-invalid={invalid}
                     onChange={(e) => setDay(key, e.target.value, day.close)}
                   />
                   <span className="hours-row__dash">–</span>
                   <input
                     type="time"
-                    className="hours-row__time"
+                    className={timeClass}
                     value={day.close}
                     aria-label={`${label} closing time`}
+                    aria-invalid={invalid}
                     onChange={(e) => setDay(key, day.open, e.target.value)}
                   />
                 </div>
@@ -72,9 +69,16 @@ function WorkingHoursEditor({ value, onChange }: WorkingHoursEditorProps) {
           )
         })}
       </div>
-      <span className="admin-field__hint">
-        Used to show customers whether you are open. Overnight hours are allowed (e.g. 18:00–02:00).
-      </span>
+      {anyInvalid ? (
+        <span className="admin-field__hint hours-editor__error">
+          Each open day needs both times set, and open and close can’t be the same.
+        </span>
+      ) : (
+        <span className="admin-field__hint">
+          Used to show customers whether you are open. Overnight hours are allowed (e.g.
+          18:00–02:00).
+        </span>
+      )}
     </div>
   )
 }

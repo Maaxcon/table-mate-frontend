@@ -5,6 +5,7 @@ export type AdminRestaurant = {
   phone: string
   telegram_url: string
   facebook_url: string
+  working_hours: WorkingHours
 }
 
 export type WorkingHoursDay = { open: string; close: string }
@@ -19,7 +20,6 @@ export type AdminSettings = {
   locale: string
   default_tax_rate: string
   default_service_charge: string
-  working_hours: WorkingHours
 }
 
 export type EmployeeRole = "admin" | "waiter" | "cook"
