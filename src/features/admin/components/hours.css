@@ -24,6 +24,8 @@
   display: inline-flex;
   align-items: center;
   gap: 10px;
+  flex: 1;
+  min-width: 0;
   cursor: pointer;
 }
 
@@ -33,19 +35,41 @@
   color: var(--color-text-primary);
 }
 
+/* Keep the time block a fixed size so it lines up across every row. */
 .hours-row__times {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-shrink: 0;
 }
 
 .hours-row__time {
+  width: 120px;
   padding: 7px 10px;
   border: 1px solid var(--color-border-default);
   border-radius: 8px;
   background: var(--color-bg-surface);
   color: var(--color-text-primary);
   font-size: 14px;
+}
+
+/* Narrow screens: the times don't fit beside the day, so drop them below. */
+@media (max-width: 480px) {
+  .hours-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .hours-row__times {
+    width: 100%;
+  }
+
+  .hours-row__time {
+    flex: 1;
+    width: auto;
+    min-width: 0;
+  }
 }
 
 .hours-row__time:focus {
