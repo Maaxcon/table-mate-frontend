@@ -6,7 +6,6 @@ import {
   DAY_NAMES,
   generateTimeSlots,
   localDateKey,
-  MAX_DURATION,
   MIN_DURATION,
   minutesToTime,
   timeToMinutes,
@@ -342,7 +341,6 @@ export function BookModal({
                 type="number"
                 className="book-modal__duration-field"
                 min={MIN_DURATION}
-                max={MAX_DURATION}
                 step={15}
                 value={durationMinutes}
                 onChange={(e) => setDurationMinutes(Math.max(MIN_DURATION, Number(e.target.value)))}

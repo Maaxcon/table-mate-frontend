@@ -1,7 +1,6 @@
 import type { WorkingHoursDay } from "./api"
 
 export const MIN_DURATION = 30
-export const MAX_DURATION = 480
 
 export const DAY_NAMES = [
   "sunday",
