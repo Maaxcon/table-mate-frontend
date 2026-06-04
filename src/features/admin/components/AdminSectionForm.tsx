@@ -1,5 +1,6 @@
-import type { FormEvent, ReactNode } from "react"
+import { useEffect, type FormEvent, type ReactNode } from "react"
 import type { SaveStatus } from "../hooks/useAdminResource"
+import { useToast } from "./toastContext"
 import "./SectionPlaceholder.css"
 import "./adminForm.css"
 
@@ -26,6 +27,13 @@ function AdminSectionForm({
   onSubmit,
   children,
 }: AdminSectionFormProps) {
+  const toast = useToast()
+
+  useEffect(() => {
+    if (status === "saved") toast.success("Changes saved")
+    else if (status === "error") toast.error(saveError ?? "Could not save changes.")
+  }, [status, saveError, toast])
+
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
     onSubmit()
@@ -53,12 +61,6 @@ function AdminSectionForm({
             >
               {status === "saving" ? "Saving…" : "Save"}
             </button>
-            {status === "saved" && (
-              <span className="admin-form__status admin-form__status--saved">Saved ✓</span>
-            )}
-            {status === "error" && (
-              <span className="admin-form__status admin-form__status--error">{saveError}</span>
-            )}
           </div>
         </form>
       )}

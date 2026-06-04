@@ -10,6 +10,7 @@ import {
 import { apiFetch } from "@/api/client"
 import { clearAuth } from "@/store/auth/authSlice"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
+import { ToastProvider } from "./components/toast"
 import "./AdminLayout.css"
 
 const NAV_ITEMS = [
@@ -34,56 +35,58 @@ function AdminLayout() {
   }
 
   return (
-    <div className="admin-layout">
-      <aside className="admin-layout__sidebar">
-        <div className="admin-layout__brand">
-          <button
-            type="button"
-            className="admin-layout__icon-btn"
-            onClick={() => navigate("/cabinet")}
-            aria-label="Back to cabinet"
-          >
-            <LuArrowLeft aria-hidden="true" />
-          </button>
-          <span className="admin-layout__brand-name">Admin</span>
-        </div>
-
-        <nav className="admin-layout__nav">
-          {NAV_ITEMS.map(({ to, label, icon: Icon }) => (
-            <NavLink
-              key={to}
-              to={to}
-              className={({ isActive }) =>
-                `admin-layout__nav-link${isActive ? " admin-layout__nav-link--active" : ""}`
-              }
+    <ToastProvider>
+      <div className="admin-layout">
+        <aside className="admin-layout__sidebar">
+          <div className="admin-layout__brand">
+            <button
+              type="button"
+              className="admin-layout__icon-btn"
+              onClick={() => navigate("/cabinet")}
+              aria-label="Back to cabinet"
             >
-              <Icon aria-hidden="true" className="admin-layout__nav-icon" />
-              <span>{label}</span>
-            </NavLink>
-          ))}
-        </nav>
+              <LuArrowLeft aria-hidden="true" />
+            </button>
+            <span className="admin-layout__brand-name">Admin</span>
+          </div>
 
-        <div className="admin-layout__footer">
-          {user && (
-            <span className="admin-layout__user" title={user.email}>
-              {user.firstName || user.email}
-            </span>
-          )}
-          <button
-            type="button"
-            className="admin-layout__icon-btn"
-            onClick={() => void handleLogout()}
-            aria-label="Log out"
-          >
-            <LuLogOut aria-hidden="true" />
-          </button>
-        </div>
-      </aside>
+          <nav className="admin-layout__nav">
+            {NAV_ITEMS.map(({ to, label, icon: Icon }) => (
+              <NavLink
+                key={to}
+                to={to}
+                className={({ isActive }) =>
+                  `admin-layout__nav-link${isActive ? " admin-layout__nav-link--active" : ""}`
+                }
+              >
+                <Icon aria-hidden="true" className="admin-layout__nav-icon" />
+                <span>{label}</span>
+              </NavLink>
+            ))}
+          </nav>
 
-      <main className="admin-layout__content">
-        <Outlet />
-      </main>
-    </div>
+          <div className="admin-layout__footer">
+            {user && (
+              <span className="admin-layout__user" title={user.email}>
+                {user.firstName || user.email}
+              </span>
+            )}
+            <button
+              type="button"
+              className="admin-layout__icon-btn"
+              onClick={() => void handleLogout()}
+              aria-label="Log out"
+            >
+              <LuLogOut aria-hidden="true" />
+            </button>
+          </div>
+        </aside>
+
+        <main className="admin-layout__content">
+          <Outlet />
+        </main>
+      </div>
+    </ToastProvider>
   )
 }
 

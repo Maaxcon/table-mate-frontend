@@ -11,6 +11,7 @@ import {
 import type { AdminCategory, AdminMenuItem } from "../types"
 import TextField from "./TextField"
 import ConfirmDialog from "./ConfirmDialog"
+import { useToast } from "./toastContext"
 import { ALLERGEN_OPTIONS } from "./allergenOptions"
 import "./adminForm.css"
 import "./modal.css"
@@ -26,6 +27,7 @@ type DishModalProps = {
 
 function DishModal({ menuId, categories, item, onClose, onSaved }: DishModalProps) {
   const editing = item !== null
+  const toast = useToast()
   const [name, setName] = useState(item?.name ?? "")
   const [description, setDescription] = useState(item?.description ?? "")
   const [price, setPrice] = useState(item?.price ?? "")
@@ -136,6 +138,7 @@ function DishModal({ menuId, categories, item, onClose, onSaved }: DishModalProp
         await clearItemImage(publicId)
       }
 
+      toast.success(editing ? "Dish updated" : "Dish added")
       onSaved()
       onClose()
     } catch (err) {
@@ -150,6 +153,7 @@ function DishModal({ menuId, categories, item, onClose, onSaved }: DishModalProp
     setError(null)
     try {
       await deleteItem(item.public_id)
+      toast.success("Dish deleted")
       onSaved()
       onClose()
     } catch (err) {
