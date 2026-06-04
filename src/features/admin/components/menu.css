@@ -456,6 +456,16 @@
   gap: 6px;
 }
 
+.dish-ingredient-add {
+  display: flex;
+  gap: 8px;
+}
+
+.dish-ingredient-add .admin-field__input {
+  flex: 1;
+  min-width: 0;
+}
+
 .dish-allergens {
   display: flex;
   flex-wrap: wrap;

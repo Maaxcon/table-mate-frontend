@@ -32,6 +32,8 @@ function DishModal({ menuId, categories, item, onClose, onSaved }: DishModalProp
   const [category, setCategory] = useState<string>(item?.category ?? "")
   const [weight, setWeight] = useState(item?.weight_grams != null ? String(item.weight_grams) : "")
   const [isAvailable, setIsAvailable] = useState(item?.is_available ?? true)
+  const [ingredients, setIngredients] = useState<string[]>(item?.ingredients ?? [])
+  const [ingredientInput, setIngredientInput] = useState("")
   const [allergens, setAllergens] = useState<string[]>(item?.allergens ?? [])
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [removeImage, setRemoveImage] = useState(false)
@@ -49,6 +51,13 @@ function DishModal({ menuId, categories, item, onClose, onSaved }: DishModalProp
       if (prev?.startsWith("blob:")) URL.revokeObjectURL(prev)
       return URL.createObjectURL(file)
     })
+  }
+
+  const addIngredient = () => {
+    const value = ingredientInput.trim()
+    if (!value) return
+    setIngredients((prev) => (prev.includes(value) ? prev : [...prev, value]))
+    setIngredientInput("")
   }
 
   const handleRemoveImage = () => {
@@ -80,6 +89,7 @@ function DishModal({ menuId, categories, item, onClose, onSaved }: DishModalProp
       price: price.trim(),
       weight_grams: weight.trim() ? Number(weight) : null,
       is_available: isAvailable,
+      ingredients,
       allergens,
     }
     try {
@@ -92,6 +102,7 @@ function DishModal({ menuId, categories, item, onClose, onSaved }: DishModalProp
           price: payload.price,
           weight_grams: payload.weight_grams,
           is_available: payload.is_available,
+          ingredients: payload.ingredients,
           allergens: payload.allergens,
         })
         publicId = item.public_id
@@ -226,6 +237,49 @@ function DishModal({ menuId, categories, item, onClose, onSaved }: DishModalProp
                 />
                 <span className="admin-field__label">Available to customers</span>
               </label>
+
+              <div className="admin-field">
+                <span className="admin-field__label">Ingredients</span>
+                <div className="dish-ingredient-add">
+                  <input
+                    className="admin-field__input"
+                    value={ingredientInput}
+                    placeholder="Type an ingredient, press Enter"
+                    onChange={(e) => setIngredientInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault()
+                        addIngredient()
+                      }
+                    }}
+                  />
+                  <button
+                    type="button"
+                    className="menu-admin__btn menu-admin__btn--primary"
+                    onClick={addIngredient}
+                    disabled={!ingredientInput.trim()}
+                  >
+                    Add
+                  </button>
+                </div>
+                {ingredients.length > 0 && (
+                  <div className="dish-allergens">
+                    {ingredients.map((ing) => (
+                      <span key={ing} className="dish-allergen">
+                        {ing}
+                        <button
+                          type="button"
+                          className="dish-allergen__remove"
+                          aria-label={`Remove ${ing}`}
+                          onClick={() => setIngredients((prev) => prev.filter((x) => x !== ing))}
+                        >
+                          <LuX aria-hidden="true" />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
 
               <div className="admin-field">
                 <span className="admin-field__label">Allergens</span>

@@ -51,6 +51,7 @@ export type AdminMenuItem = {
   price: string
   weight_grams: number | null
   is_available: boolean
+  ingredients: string[]
   allergens: string[]
   image: string | null
   sort_order: number
