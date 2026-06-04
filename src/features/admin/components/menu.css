@@ -373,6 +373,21 @@
   color: var(--color-text-primary);
 }
 
+.menu-admin__dish-weight {
+  flex-shrink: 0;
+  font-size: 13px;
+  white-space: nowrap;
+  color: var(--color-text-muted);
+}
+
+.menu-admin__dish-allergens {
+  overflow: hidden;
+  font-size: 12px;
+  color: var(--color-text-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .menu-admin__dish-status {
   font-size: 12px;
   font-weight: 600;

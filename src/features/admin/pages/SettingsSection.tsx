@@ -2,6 +2,7 @@ import AdminSectionForm from "../components/AdminSectionForm"
 import TextField from "../components/TextField"
 import SelectField from "../components/SelectField"
 import { CURRENCY_OPTIONS, LOCALE_OPTIONS, TIMEZONE_OPTIONS } from "../components/settingsOptions"
+import { getCurrencySymbol } from "@/features/menu/utils"
 import { useAdminResource } from "../hooks/useAdminResource"
 import type { AdminSettings } from "../types"
 
@@ -48,6 +49,7 @@ function SettingsSection() {
               value={form.currency}
               onChange={(v) => setField("currency", v)}
               options={CURRENCY_OPTIONS}
+              hint={`Prices show as ${getCurrencySymbol(form.currency)} 180`}
             />
             <SelectField
               label="Locale"

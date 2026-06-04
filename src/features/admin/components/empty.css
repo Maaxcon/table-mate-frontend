@@ -1,0 +1,24 @@
+.admin-empty__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 16px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 10px;
+  background: var(--color-border-strong);
+  color: var(--color-bg-surface);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    opacity 120ms ease,
+    transform 120ms ease;
+}
+
+.admin-empty__btn:hover {
+  opacity: 0.88;
+}
+
+.admin-empty__btn:active {
+  transform: translateY(1px);
+}

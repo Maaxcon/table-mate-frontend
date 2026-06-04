@@ -47,6 +47,9 @@ function DishCard({ item, onEdit, disabled = false }: DishCardProps) {
           <span className="menu-admin__dish-name">{item.name}</span>
           <span className="menu-admin__dish-meta">
             <span className="menu-admin__dish-price">{Number(item.price).toFixed(2)}</span>
+            {item.weight_grams != null && (
+              <span className="menu-admin__dish-weight">{item.weight_grams} g</span>
+            )}
             <span
               className={`menu-admin__dish-status${
                 item.is_available ? "" : " menu-admin__dish-status--off"
@@ -55,6 +58,9 @@ function DishCard({ item, onEdit, disabled = false }: DishCardProps) {
               {item.is_available ? "Available" : "Hidden"}
             </span>
           </span>
+          {item.allergens.length > 0 && (
+            <span className="menu-admin__dish-allergens">⚠ {item.allergens.join(", ")}</span>
+          )}
         </span>
       </button>
     </li>

@@ -6,6 +6,7 @@ import { useAppSelector } from "@/store/hooks"
 import { useMenuAdmin } from "../hooks/useMenuAdmin"
 import { useDndSensors } from "../components/useDndSensors"
 import SearchBox from "../components/SearchBox"
+import EmptyState from "../components/EmptyState"
 import AddMenuModal from "../components/AddMenuModal"
 import MenuToolbar from "../components/MenuToolbar"
 import CategoryRow from "../components/CategoryRow"
@@ -114,7 +115,11 @@ function MenuSection() {
           )}
 
           {menus.length === 0 ? (
-            <p className="admin-section__description">No menus yet. Add one to start.</p>
+            <EmptyState
+              message="No menus yet. Add one to start."
+              actionLabel="Add menu"
+              onAction={() => setAddingMenu(true)}
+            />
           ) : (
             selectedMenu && (
               <div className="menu-admin__columns">
@@ -174,7 +179,11 @@ function MenuSection() {
                   {loadingItems ? (
                     <p className="admin-section__description">Loading…</p>
                   ) : items.length === 0 ? (
-                    <p className="admin-section__description">No dishes in this menu yet.</p>
+                    <EmptyState
+                      message="No dishes in this menu yet."
+                      actionLabel="Add dish"
+                      onAction={() => setDishModal({ open: true, item: null })}
+                    />
                   ) : (
                     <>
                       <SearchBox
