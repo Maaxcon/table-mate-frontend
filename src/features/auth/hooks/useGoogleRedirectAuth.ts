@@ -77,7 +77,6 @@ function useGoogleRedirectAuth(): UseGoogleRedirectAuthResult {
           headers: { "Content-Type": "application/json" },
           credentials: "include",
           body: JSON.stringify({ code, redirect_uri: window.location.origin }),
-          credentials: "include",
           signal: controller.signal,
         })
 
