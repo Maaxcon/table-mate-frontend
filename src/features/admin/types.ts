@@ -1,3 +1,7 @@
+import type { WeekDay, WorkingHours, WorkingHoursDay } from "@/types/workingHours"
+
+export type { WeekDay, WorkingHours, WorkingHoursDay }
+
 export type AdminRestaurant = {
   public_id: string
   name: string
@@ -7,10 +11,6 @@ export type AdminRestaurant = {
   facebook_url: string
   working_hours: WorkingHours
 }
-
-export type WorkingHoursDay = { open: string; close: string }
-export type WeekDay = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun"
-export type WorkingHours = Partial<Record<WeekDay, WorkingHoursDay>>
 
 // DRF serializes DecimalField as a string (e.g. "0.2000").
 export type AdminSettings = {

@@ -1,4 +1,5 @@
 import { ENV_NOT_CONFIGURED_VALUE, env } from "@/config/env"
+import type { WorkingHours, WorkingHoursDay } from "@/types/workingHours"
 import type { MenuCategory, MenuItem, PaginatedResponse } from "./types"
 
 function buildUrl(path: string, params: Record<string, string | undefined>): string {
@@ -136,10 +137,8 @@ export function toggleItemLike(
   )
 }
 
-export type WorkingHoursDay = { open: string; close: string }
-export type WorkingHours = Partial<
-  Record<"mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun", WorkingHoursDay>
->
+// Re-exported from the shared module so existing `./api` importers keep working.
+export type { WorkingHours, WorkingHoursDay }
 
 export type PublicRestaurantSettings = {
   currency: string

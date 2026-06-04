@@ -179,6 +179,12 @@ export async function clearItemImage(publicId: string): Promise<AdminMenuItem> {
   return (await res.json()) as AdminMenuItem
 }
 
+export async function fetchAllergens(signal?: AbortSignal): Promise<string[]> {
+  const res = await apiFetch("/api/menu/allergens/", { signal })
+  if (!res.ok) throw new Error("Could not load allergens.")
+  return (await res.json()) as string[]
+}
+
 export async function duplicateItem(publicId: string): Promise<AdminMenuItem> {
   const res = await apiFetch(`${ITEMS_PATH}${publicId}/duplicate/`, { method: "POST" })
   if (!res.ok) throw new Error(await firstError(res, "Could not duplicate dish."))

@@ -13,7 +13,7 @@ import type { AdminCategory, AdminMenuItem } from "../types"
 import TextField from "./TextField"
 import ConfirmDialog from "./ConfirmDialog"
 import { useToast } from "./toastContext"
-import { ALLERGEN_OPTIONS } from "./allergenOptions"
+import { useAllergens } from "../hooks/useAllergens"
 import "./adminForm.css"
 import "./modal.css"
 import "./menu.css"
@@ -29,6 +29,7 @@ type DishModalProps = {
 function DishModal({ menuId, categories, item, onClose, onSaved }: DishModalProps) {
   const editing = item !== null
   const toast = useToast()
+  const allergenOptions = useAllergens()
   const [name, setName] = useState(item?.name ?? "")
   const [description, setDescription] = useState(item?.description ?? "")
   const [price, setPrice] = useState(item?.price ?? "")
@@ -339,11 +340,13 @@ function DishModal({ menuId, categories, item, onClose, onSaved }: DishModalProp
                   }}
                 >
                   <option value="">Add allergen…</option>
-                  {ALLERGEN_OPTIONS.filter((a) => !allergens.includes(a)).map((a) => (
-                    <option key={a} value={a}>
-                      {a}
-                    </option>
-                  ))}
+                  {allergenOptions
+                    .filter((a) => !allergens.includes(a))
+                    .map((a) => (
+                      <option key={a} value={a}>
+                        {a}
+                      </option>
+                    ))}
                 </select>
                 {allergens.length > 0 && (
                   <div className="dish-allergens">
