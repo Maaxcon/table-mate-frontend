@@ -9,11 +9,20 @@ type DishListProps = {
   categories: AdminCategory[]
   onEdit: (item: AdminMenuItem) => void
   onReorder: (activeId: string, overId: string) => void
+  // Dragging is turned off while a search filters the list (reordering a subset
+  // would be confusing and wouldn't reflect the real order).
+  reorderDisabled?: boolean
 }
 
 const UNCATEGORIZED = "__none__"
 
-function DishList({ items, categories, onEdit, onReorder }: DishListProps) {
+function DishList({
+  items,
+  categories,
+  onEdit,
+  onReorder,
+  reorderDisabled = false,
+}: DishListProps) {
   const sensors = useDndSensors()
   const categoryName = new Map(categories.map((c) => [c.public_id, c.name]))
 
@@ -48,7 +57,12 @@ function DishList({ items, categories, onEdit, onReorder }: DishListProps) {
               <SortableContext items={list.map((i) => i.public_id)} strategy={rectSortingStrategy}>
                 <ul className="menu-admin__dish-grid">
                   {list.map((item) => (
-                    <DishCard key={item.public_id} item={item} onEdit={onEdit} />
+                    <DishCard
+                      key={item.public_id}
+                      item={item}
+                      onEdit={onEdit}
+                      disabled={reorderDisabled}
+                    />
                   ))}
                 </ul>
               </SortableContext>

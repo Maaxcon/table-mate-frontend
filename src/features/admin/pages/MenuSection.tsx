@@ -193,6 +193,7 @@ function MenuSection() {
                           categories={categories}
                           onEdit={(item) => setDishModal({ open: true, item })}
                           onReorder={reorderItem}
+                          reorderDisabled={dishQuery.trim() !== ""}
                         />
                       )}
                     </>

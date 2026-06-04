@@ -6,11 +6,13 @@ import type { AdminMenuItem } from "../types"
 type DishCardProps = {
   item: AdminMenuItem
   onEdit: (item: AdminMenuItem) => void
+  disabled?: boolean
 }
 
-function DishCard({ item, onEdit }: DishCardProps) {
+function DishCard({ item, onEdit, disabled = false }: DishCardProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: item.public_id,
+    disabled,
   })
 
   return (
@@ -24,15 +26,17 @@ function DishCard({ item, onEdit }: DishCardProps) {
         zIndex: isDragging ? 2 : undefined,
       }}
     >
-      <button
-        type="button"
-        className="menu-admin__drag"
-        aria-label={`Drag to reorder ${item.name}`}
-        {...attributes}
-        {...listeners}
-      >
-        <LuGripVertical aria-hidden="true" />
-      </button>
+      {!disabled && (
+        <button
+          type="button"
+          className="menu-admin__drag"
+          aria-label={`Drag to reorder ${item.name}`}
+          {...attributes}
+          {...listeners}
+        >
+          <LuGripVertical aria-hidden="true" />
+        </button>
+      )}
       <button type="button" className="menu-admin__dish-main" onClick={() => onEdit(item)}>
         {item.image ? (
           <img className="menu-admin__dish-img" src={item.image} alt="" />
