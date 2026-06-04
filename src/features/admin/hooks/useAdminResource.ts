@@ -90,5 +90,16 @@ export function useAdminResource<T extends { public_id: string }>(
     [form, saved],
   )
 
+  // Warn before the tab is closed or reloaded while there are unsaved edits.
+  useEffect(() => {
+    if (!dirty) return
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault()
+      e.returnValue = ""
+    }
+    window.addEventListener("beforeunload", handler)
+    return () => window.removeEventListener("beforeunload", handler)
+  }, [dirty])
+
   return { form, loading, loadError, status, saveError, dirty, setField, submit }
 }

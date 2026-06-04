@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { LuImagePlus, LuTrash2, LuX } from "react-icons/lu"
 import {
   clearItemImage,
@@ -41,7 +41,26 @@ function DishModal({ menuId, categories, item, onClose, onSaved }: DishModalProp
   const [submitting, setSubmitting] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [confirmDiscard, setConfirmDiscard] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  const dirty =
+    name !== (item?.name ?? "") ||
+    description !== (item?.description ?? "") ||
+    price !== (item?.price ?? "") ||
+    category !== (item?.category ?? "") ||
+    weight !== (item?.weight_grams != null ? String(item.weight_grams) : "") ||
+    isAvailable !== (item?.is_available ?? true) ||
+    JSON.stringify(ingredients) !== JSON.stringify(item?.ingredients ?? []) ||
+    JSON.stringify(allergens) !== JSON.stringify(item?.allergens ?? []) ||
+    imageFile !== null ||
+    removeImage
+
+  // Closing with unsaved edits asks for confirmation first.
+  const requestClose = useCallback(() => {
+    if (dirty) setConfirmDiscard(true)
+    else onClose()
+  }, [dirty, onClose])
 
   const handlePickImage = (file: File | null) => {
     if (!file) return
@@ -71,11 +90,11 @@ function DishModal({ menuId, categories, item, onClose, onSaved }: DishModalProp
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose()
+      if (e.key === "Escape") requestClose()
     }
     window.addEventListener("keydown", onKey)
     return () => window.removeEventListener("keydown", onKey)
-  }, [onClose])
+  }, [requestClose])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -146,7 +165,7 @@ function DishModal({ menuId, categories, item, onClose, onSaved }: DishModalProp
         type="button"
         className="admin-modal__backdrop"
         aria-label="Close"
-        onClick={onClose}
+        onClick={requestClose}
       />
       <div
         className="admin-modal admin-modal--dish"
@@ -156,7 +175,12 @@ function DishModal({ menuId, categories, item, onClose, onSaved }: DishModalProp
       >
         <div className="admin-modal__header">
           <h2 className="admin-modal__title">{editing ? "Edit dish" : "Add dish"}</h2>
-          <button type="button" className="admin-modal__close" onClick={onClose} aria-label="Close">
+          <button
+            type="button"
+            className="admin-modal__close"
+            onClick={requestClose}
+            aria-label="Close"
+          >
             <LuX aria-hidden="true" />
           </button>
         </div>
@@ -353,6 +377,17 @@ function DishModal({ menuId, categories, item, onClose, onSaved }: DishModalProp
           busy={deleting}
           onConfirm={() => void handleDelete()}
           onClose={() => setConfirmDelete(false)}
+        />
+      )}
+
+      {confirmDiscard && (
+        <ConfirmDialog
+          title="Discard changes?"
+          message="You have unsaved changes. Close without saving?"
+          confirmLabel="Discard"
+          tone="danger"
+          onConfirm={onClose}
+          onClose={() => setConfirmDiscard(false)}
         />
       )}
     </div>
