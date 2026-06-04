@@ -19,6 +19,12 @@ export function CustomerFloorPlan({
   selectedId,
   onSelect,
 }: CustomerFloorPlanProps) {
+  const statusLabel: Record<string, string> = {
+    free: "FREE",
+    reserved: "RESERVED",
+    occupied: "OCCUPIED",
+  }
+
   return (
     <div className="c-floor-plan">
       <h2 className="c-floor-plan__title">FLOOR PLAN</h2>
@@ -36,12 +42,8 @@ export function CustomerFloorPlan({
           ))}
         </div>
       )}
-      <p className="c-floor-plan__hint">Tap a free table to book</p>
       <div className="c-floor-plan__canvas">
         {tables.map((table) => {
-          const isFree = table.status === "free"
-          const isOccupied = table.status === "occupied"
-
           return (
             <button
               key={table.public_id}
@@ -51,7 +53,6 @@ export function CustomerFloorPlan({
                 `c-floor-plan__table--${table.status}`,
                 `c-floor-plan__table--${table.shape}`,
                 selectedId === table.public_id ? "c-floor-plan__table--selected" : "",
-                isOccupied ? "c-floor-plan__table--disabled" : "",
               ]
                 .filter(Boolean)
                 .join(" ")}
@@ -59,16 +60,18 @@ export function CustomerFloorPlan({
                 left: table.position_x ?? undefined,
                 top: table.position_y ?? undefined,
               }}
-              onClick={() => isFree && onSelect(table)}
-              disabled={!isFree}
+              onClick={() => onSelect(table)}
             >
-              <span className="c-floor-plan__table-badge">{isOccupied ? "OCCUPIED" : "FREE"}</span>
+              <span
+                className={`c-floor-plan__table-badge c-floor-plan__table-badge--${table.status}`}
+              >
+                {statusLabel[table.status] ?? table.status.toUpperCase()}
+              </span>
 
               <span className="c-floor-plan__table-number">{table.table_number}</span>
 
               <div className="c-floor-plan__table-meta">
                 <span className="c-floor-plan__table-capacity">{table.capacity} P</span>
-                {isFree && <span className="c-floor-plan__table-available">AVAILABLE</span>}
               </div>
             </button>
           )

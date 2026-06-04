@@ -1268,10 +1268,11 @@ export interface components {
     TableShape: "rectangle" | "round" | "square" | "booth"
     /**
      * @description * `free` - Free
+     *     * `reserved` - Reserved
      *     * `occupied` - Occupied
      * @enum {string}
      */
-    TableStatus: "free" | "occupied"
+    TableStatus: "free" | "reserved" | "occupied"
     Ticket: {
       /** Format: uuid */
       readonly public_id: string

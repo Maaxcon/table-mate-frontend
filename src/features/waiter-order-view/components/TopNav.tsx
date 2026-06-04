@@ -28,6 +28,7 @@ function useCurrentTime(): string {
 
 export function TopNav({ tables, activeTab, onTabChange }: TopNavProps) {
   const occupiedCount = tables.filter((t) => t.status === "occupied").length
+  const reservedCount = tables.filter((t) => t.status === "reserved").length
   const freeCount = tables.filter((t) => t.status === "free").length
   const currentTime = useCurrentTime()
 
@@ -62,6 +63,10 @@ export function TopNav({ tables, activeTab, onTabChange }: TopNavProps) {
         <span className="top-nav__stat">
           <span className="top-nav__stat-icon top-nav__stat-icon--filled" />
           OCCUPIED: {occupiedCount}
+        </span>
+        <span className="top-nav__stat">
+          <span className="top-nav__stat-icon top-nav__stat-icon--reserved" />
+          RESERVED: {reservedCount}
         </span>
         <span className="top-nav__stat">
           <span className="top-nav__stat-icon" />

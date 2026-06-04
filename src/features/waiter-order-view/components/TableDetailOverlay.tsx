@@ -18,9 +18,11 @@ export function TableDetailOverlay({
   onClose,
 }: TableDetailOverlayProps) {
   const isOccupied = table.status === "occupied"
+  const isReserved = table.status === "reserved"
   const [activeOverlayTab, setActiveOverlayTab] = useState<"order" | "reservations">(
-    isOccupied ? "order" : "reservations",
+    isOccupied || isReserved ? "reservations" : "reservations",
   )
+
   const guestSlots = detail ? [...new Set(detail.items.map((i) => i.guest_slot))].sort() : []
   const nearestReservation =
     tableReservations.length > 0
@@ -61,11 +63,13 @@ export function TableDetailOverlay({
             </button>
           </div>
           <p className="overlay__subtitle">
-            {isOccupied && detail
-              ? `Current Party: ${detail.guest_name} • ${detail.guest_count} Guests • Duration: ${detail.duration}`
-              : nearestReservation
-                ? `Capacity: ${table.capacity} • Next: ${nearestReservation.name} at ${getTimeFromDatetime(nearestReservation.start_at)}`
-                : `Capacity: ${table.capacity} • Available`}
+            {isReserved
+              ? `Reserved ${nearestReservation ? `• ${nearestReservation.name} at ${getTimeFromDatetime(nearestReservation.start_at)}` : ""}`
+              : isOccupied && detail
+                ? `Current Party: ${detail.guest_name} • ${detail.guest_count} Guests • Duration: ${detail.duration}`
+                : nearestReservation
+                  ? `Capacity: ${table.capacity} • Next: ${nearestReservation.name} at ${getTimeFromDatetime(nearestReservation.start_at)}`
+                  : `Capacity: ${table.capacity} • Available`}
           </p>
         </div>
 

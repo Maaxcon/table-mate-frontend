@@ -530,9 +530,10 @@ export type TableShape = "rectangle" | "round" | "square" | "booth"
 
 /**
  * * `free` - Free
+ * * `reserved` - Reserved
  * * `occupied` - Occupied
  */
-export type TableStatus = "free" | "occupied"
+export type TableStatus = "free" | "reserved" | "occupied"
 
 export type Ticket = {
   readonly public_id: string
