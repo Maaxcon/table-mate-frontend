@@ -90,7 +90,7 @@ export function ActiveBookings({
   const hasItems = Object.keys(byStatus).length > 0
 
   if (loading) {
-    return <div className="ab-loading">LOADING...</div>
+    return <div className="ab__loading">LOADING...</div>
   }
 
   return (
