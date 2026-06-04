@@ -1,6 +1,7 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom"
 import {
   LuArrowLeft,
+  LuLayoutDashboard,
   LuLogOut,
   LuSettings,
   LuStore,
@@ -14,6 +15,7 @@ import { ToastProvider } from "./components/toast"
 import "./AdminLayout.css"
 
 const NAV_ITEMS = [
+  { to: "/admin/overview", label: "Overview", icon: LuLayoutDashboard },
   { to: "/admin/restaurant", label: "Restaurant", icon: LuStore },
   { to: "/admin/settings", label: "Settings", icon: LuSettings },
   { to: "/admin/staff", label: "Staff", icon: LuUsers },

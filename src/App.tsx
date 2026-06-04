@@ -13,6 +13,7 @@ import { WaiterOrderPage } from "@/pages/WaiterOrderPage"
 import { RestaurantListPage } from "@/pages/RestaurantListPage"
 import { BookingPage } from "@/pages/BookingPage"
 import AdminLayout from "@/features/admin/AdminLayout"
+import OverviewSection from "@/features/admin/pages/OverviewSection"
 import RestaurantSection from "@/features/admin/pages/RestaurantSection"
 import SettingsSection from "@/features/admin/pages/SettingsSection"
 import StaffSection from "@/features/admin/pages/StaffSection"
@@ -69,7 +70,8 @@ function App() {
               </Route>
               <Route element={<AdminRoute />}>
                 <Route path="/admin" element={<AdminLayout />}>
-                  <Route index element={<Navigate to="restaurant" replace />} />
+                  <Route index element={<Navigate to="overview" replace />} />
+                  <Route path="overview" element={<OverviewSection />} />
                   <Route path="restaurant" element={<RestaurantSection />} />
                   <Route path="settings" element={<SettingsSection />} />
                   <Route path="staff" element={<StaffSection />} />
