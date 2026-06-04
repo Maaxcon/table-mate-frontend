@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { LuPlus } from "react-icons/lu"
 import { createCategory } from "../menuApi"
+import { useToast } from "./toastContext"
 
 type AddCategoryFormProps = {
   menuId: string
@@ -8,6 +9,7 @@ type AddCategoryFormProps = {
 }
 
 function AddCategoryForm({ menuId, onCreated }: AddCategoryFormProps) {
+  const toast = useToast()
   const [name, setName] = useState("")
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -19,6 +21,7 @@ function AddCategoryForm({ menuId, onCreated }: AddCategoryFormProps) {
     setError(null)
     try {
       await createCategory(menuId, name.trim())
+      toast.success("Category added")
       setName("")
       onCreated()
     } catch (err) {

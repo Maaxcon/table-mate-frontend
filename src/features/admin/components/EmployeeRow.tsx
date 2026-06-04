@@ -2,6 +2,7 @@ import { useState } from "react"
 import { updateEmployee, type EmployeePatch } from "../api"
 import type { AdminEmployee, EmployeeRole } from "../types"
 import ConfirmDialog from "./ConfirmDialog"
+import { useToast } from "./toastContext"
 
 const ROLES: { value: EmployeeRole; label: string }[] = [
   { value: "waiter", label: "Waiter" },
@@ -15,19 +16,19 @@ type EmployeeRowProps = {
 }
 
 function EmployeeRow({ employee, onUpdated }: EmployeeRowProps) {
+  const toast = useToast()
   const [saving, setSaving] = useState(false)
-  const [error, setError] = useState(false)
   const [confirmDisable, setConfirmDisable] = useState(false)
 
-  const change = async (patch: EmployeePatch) => {
+  const change = async (patch: EmployeePatch, successMsg: string) => {
     setSaving(true)
-    setError(false)
     try {
       const updated = await updateEmployee(employee.public_id, patch)
       onUpdated(updated)
+      toast.success(successMsg)
       return true
-    } catch {
-      setError(true)
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not update employee.")
       return false
     } finally {
       setSaving(false)
@@ -39,11 +40,11 @@ function EmployeeRow({ employee, onUpdated }: EmployeeRowProps) {
   // Enabling is safe and instant; disabling asks for confirmation first.
   const handleToggle = () => {
     if (employee.is_active) setConfirmDisable(true)
-    else void change({ is_active: true })
+    else void change({ is_active: true }, "Employee enabled")
   }
 
   const confirmDisableAction = async () => {
-    const ok = await change({ is_active: false })
+    const ok = await change({ is_active: false }, "Employee disabled")
     if (ok) setConfirmDisable(false)
   }
 
@@ -60,7 +61,7 @@ function EmployeeRow({ employee, onUpdated }: EmployeeRowProps) {
           value={employee.role}
           disabled={saving}
           aria-label={`Role for ${name}`}
-          onChange={(e) => void change({ role: e.target.value as EmployeeRole })}
+          onChange={(e) => void change({ role: e.target.value as EmployeeRole }, "Role updated")}
         >
           {ROLES.map((r) => (
             <option key={r.value} value={r.value}>
@@ -77,12 +78,6 @@ function EmployeeRow({ employee, onUpdated }: EmployeeRowProps) {
         >
           {employee.is_active ? "Disable" : "Enable"}
         </button>
-
-        {error && (
-          <span className="staff-row__err" role="alert" title="Could not save">
-            !
-          </span>
-        )}
       </div>
 
       {confirmDisable && (

@@ -3,6 +3,7 @@ import { LuX } from "react-icons/lu"
 import { createMenu } from "../menuApi"
 import type { AdminMenu } from "../types"
 import TextField from "./TextField"
+import { useToast } from "./toastContext"
 import "./adminForm.css"
 import "./modal.css"
 
@@ -12,6 +13,7 @@ type AddMenuModalProps = {
 }
 
 function AddMenuModal({ onClose, onCreated }: AddMenuModalProps) {
+  const toast = useToast()
   const [name, setName] = useState("")
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -30,6 +32,7 @@ function AddMenuModal({ onClose, onCreated }: AddMenuModalProps) {
     setError(null)
     try {
       const menu = await createMenu(name.trim())
+      toast.success("Menu added")
       onCreated(menu)
       onClose()
     } catch (err) {

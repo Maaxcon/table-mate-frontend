@@ -7,6 +7,7 @@ import {
   setCategorySortOrder,
   setItemSortOrder,
 } from "../menuApi"
+import { useToast } from "../components/toastContext"
 import type { AdminCategory, AdminMenu, AdminMenuItem } from "../types"
 
 const UNCATEGORIZED = "__none__"
@@ -81,6 +82,8 @@ export function useMenuAdmin(): UseMenuAdminResult {
   const [categoriesKey, setCategoriesKey] = useState(0)
   const [itemsKey, setItemsKey] = useState(0)
 
+  const toast = useToast()
+
   const reloadMenus = useCallback(() => setMenusKey((k) => k + 1), [])
   const reloadCategories = useCallback(() => setCategoriesKey((k) => k + 1), [])
   const reloadItems = useCallback(() => setItemsKey((k) => k + 1), [])
@@ -103,10 +106,13 @@ export function useMenuAdmin(): UseMenuAdminResult {
 
       setCategories(renumbered) // optimistic
       void Promise.all(changed.map((c) => setCategorySortOrder(c.public_id, c.sort_order))).catch(
-        () => reloadCategories(), // revert to server truth on failure
+        () => {
+          toast.error("Could not reorder categories. Reverted.")
+          reloadCategories() // revert to server truth on failure
+        },
       )
     },
-    [categories, reloadCategories],
+    [categories, reloadCategories, toast],
   )
 
   const reorderItem = useCallback(
@@ -120,10 +126,13 @@ export function useMenuAdmin(): UseMenuAdminResult {
 
       setItems(reordered) // optimistic
       void Promise.all(changed.map((it) => setItemSortOrder(it.public_id, it.sort_order))).catch(
-        () => reloadItems(),
+        () => {
+          toast.error("Could not reorder dishes. Reverted.")
+          reloadItems()
+        },
       )
     },
-    [items, categories, reloadItems],
+    [items, categories, reloadItems, toast],
   )
 
   useEffect(() => {

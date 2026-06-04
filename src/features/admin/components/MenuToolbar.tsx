@@ -3,6 +3,7 @@ import { LuPencil, LuTrash2 } from "react-icons/lu"
 import { deleteMenu, updateMenu } from "../menuApi"
 import type { AdminMenu } from "../types"
 import ConfirmDialog from "./ConfirmDialog"
+import { useToast } from "./toastContext"
 
 type MenuToolbarProps = {
   menu: AdminMenu
@@ -13,20 +14,20 @@ type MenuToolbarProps = {
 // Relies on a `key={menu.public_id}` in the parent to re-init state when the
 // selected menu changes.
 function MenuToolbar({ menu, onChanged, onDeleted }: MenuToolbarProps) {
+  const toast = useToast()
   const [busy, setBusy] = useState(false)
-  const [error, setError] = useState<string | null>(null)
   const [confirm, setConfirm] = useState<null | "delete" | "hide">(null)
   const [renaming, setRenaming] = useState(false)
   const [name, setName] = useState(menu.name)
 
-  const run = async (action: () => Promise<unknown>, after: () => void) => {
+  const run = async (action: () => Promise<unknown>, after: () => void, successMsg: string) => {
     setBusy(true)
-    setError(null)
     try {
       await action()
       after()
+      toast.success(successMsg)
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Action failed.")
+      toast.error(err instanceof Error ? err.message : "Action failed.")
     } finally {
       setBusy(false)
     }
@@ -48,20 +49,21 @@ function MenuToolbar({ menu, onChanged, onDeleted }: MenuToolbarProps) {
         setRenaming(false)
         onChanged()
       },
+      "Menu renamed",
     )
   }
 
   // Showing a menu is harmless; hiding it from customers asks first.
   const handleToggle = () => {
     if (menu.is_active) setConfirm("hide")
-    else void run(() => updateMenu(menu.public_id, { is_active: true }), onChanged)
+    else void run(() => updateMenu(menu.public_id, { is_active: true }), onChanged, "Menu shown")
   }
 
   const confirmAction = async () => {
     if (confirm === "delete") {
-      await run(() => deleteMenu(menu.public_id), onDeleted)
+      await run(() => deleteMenu(menu.public_id), onDeleted, "Menu deleted")
     } else if (confirm === "hide") {
-      await run(() => updateMenu(menu.public_id, { is_active: false }), onChanged)
+      await run(() => updateMenu(menu.public_id, { is_active: false }), onChanged, "Menu hidden")
     }
     setConfirm(null)
   }
@@ -84,7 +86,6 @@ function MenuToolbar({ menu, onChanged, onDeleted }: MenuToolbarProps) {
       >
         <LuTrash2 aria-hidden="true" />
       </button>
-      {error && <span className="menu-admin__error">{error}</span>}
 
       {renaming && (
         <div className="admin-modal__overlay admin-confirm__overlay">

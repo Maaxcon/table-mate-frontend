@@ -3,6 +3,7 @@ import { LuX } from "react-icons/lu"
 import { createEmployee } from "../api"
 import type { EmployeeRole } from "../types"
 import TextField from "./TextField"
+import { useToast } from "./toastContext"
 import "./adminForm.css"
 import "./modal.css"
 
@@ -18,6 +19,7 @@ const ROLES: { value: EmployeeRole; label: string }[] = [
 ]
 
 function AddEmployeeModal({ onClose, onCreated }: AddEmployeeModalProps) {
+  const toast = useToast()
   const [email, setEmail] = useState("")
   const [firstName, setFirstName] = useState("")
   const [lastName, setLastName] = useState("")
@@ -46,6 +48,7 @@ function AddEmployeeModal({ onClose, onCreated }: AddEmployeeModalProps) {
         phone: phone.trim(),
         role,
       })
+      toast.success("Employee added")
       onCreated()
       onClose()
     } catch (err) {

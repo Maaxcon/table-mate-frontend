@@ -5,6 +5,7 @@ import { CSS } from "@dnd-kit/utilities"
 import { deleteCategory, updateCategory } from "../menuApi"
 import type { AdminCategory } from "../types"
 import ConfirmDialog from "./ConfirmDialog"
+import { useToast } from "./toastContext"
 
 type CategoryRowProps = {
   category: AdminCategory
@@ -17,15 +18,19 @@ function CategoryRow({ category, onChanged, onDeleted }: CategoryRowProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: category.public_id,
   })
+  const toast = useToast()
   const [name, setName] = useState(category.name)
   const [busy, setBusy] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
 
-  const run = async (action: () => Promise<unknown>, after: () => void) => {
+  const run = async (action: () => Promise<unknown>, after: () => void, successMsg: string) => {
     setBusy(true)
     try {
       await action()
       after()
+      toast.success(successMsg)
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Action failed.")
     } finally {
       setBusy(false)
     }
@@ -33,11 +38,15 @@ function CategoryRow({ category, onChanged, onDeleted }: CategoryRowProps) {
 
   const handleRename = () => {
     if (!name.trim() || name.trim() === category.name) return
-    void run(() => updateCategory(category.public_id, { name: name.trim() }), onChanged)
+    void run(
+      () => updateCategory(category.public_id, { name: name.trim() }),
+      onChanged,
+      "Category renamed",
+    )
   }
 
   const confirmDeleteAction = async () => {
-    await run(() => deleteCategory(category.public_id), onDeleted)
+    await run(() => deleteCategory(category.public_id), onDeleted, "Category deleted")
     setConfirmDelete(false)
   }
 
