@@ -7,6 +7,10 @@ export type AdminRestaurant = {
   facebook_url: string
 }
 
+export type WorkingHoursDay = { open: string; close: string }
+export type WeekDay = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun"
+export type WorkingHours = Partial<Record<WeekDay, WorkingHoursDay>>
+
 // DRF serializes DecimalField as a string (e.g. "0.2000").
 export type AdminSettings = {
   public_id: string
@@ -15,6 +19,7 @@ export type AdminSettings = {
   locale: string
   default_tax_rate: string
   default_service_charge: string
+  working_hours: WorkingHours
 }
 
 export type EmployeeRole = "admin" | "waiter" | "cook"

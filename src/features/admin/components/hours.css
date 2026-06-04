@@ -1,0 +1,63 @@
+.hours-editor {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--color-border-default);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.hours-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 48px;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--color-border-default);
+}
+
+.hours-row:last-child {
+  border-bottom: none;
+}
+
+.hours-row__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.hours-row__day {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.hours-row__times {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.hours-row__time {
+  padding: 7px 10px;
+  border: 1px solid var(--color-border-default);
+  border-radius: 8px;
+  background: var(--color-bg-surface);
+  color: var(--color-text-primary);
+  font-size: 14px;
+}
+
+.hours-row__time:focus {
+  outline: none;
+  border-color: var(--color-border-strong);
+}
+
+.hours-row__dash {
+  color: var(--color-text-muted);
+}
+
+.hours-row__closed {
+  font-size: 13px;
+  color: var(--color-text-muted);
+}

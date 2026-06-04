@@ -1,6 +1,7 @@
 import AdminSectionForm from "../components/AdminSectionForm"
 import TextField from "../components/TextField"
 import SelectField from "../components/SelectField"
+import WorkingHoursEditor from "../components/WorkingHoursEditor"
 import { CURRENCY_OPTIONS, LOCALE_OPTIONS, TIMEZONE_OPTIONS } from "../components/settingsOptions"
 import { useAdminResource } from "../hooks/useAdminResource"
 import type { AdminSettings } from "../types"
@@ -61,6 +62,10 @@ function SettingsSection() {
             value={form.timezone}
             onChange={(v) => setField("timezone", v)}
             options={TIMEZONE_OPTIONS}
+          />
+          <WorkingHoursEditor
+            value={form.working_hours ?? {}}
+            onChange={(wh) => setField("working_hours", wh)}
           />
         </>
       )}
