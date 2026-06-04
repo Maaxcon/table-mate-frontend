@@ -1,6 +1,15 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
 import type { WorkingHoursDay } from "./api"
 import { fetchAvailableSlots, modifyReservation } from "./api"
+import {
+  DAY_NAMES,
+  generateTimeSlots,
+  localDateKey,
+  MAX_DURATION,
+  MIN_DURATION,
+  minutesToTime,
+  timeToMinutes,
+} from "./utils"
 import "./BookModal.css"
 
 interface RescheduleModalProps {
@@ -18,31 +27,10 @@ interface RescheduleModalProps {
   onSuccess: () => void
 }
 
-const MIN_DURATION = 30
-const MAX_DURATION = 480
-
-function localDateKey(d: Date): string {
-  const y = d.getFullYear()
-  const m = String(d.getMonth() + 1).padStart(2, "0")
-  const day = String(d.getDate()).padStart(2, "0")
-  return `${y}-${m}-${day}`
-}
-
 function msToTime(ms: number): string {
   const d = new Date(ms)
   const h = d.getHours()
   const m = d.getMinutes()
-  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`
-}
-
-function timeToMinutes(t: string): number {
-  const [h, m] = t.split(":").map(Number)
-  return h * 60 + m
-}
-
-function minutesToTime(minutes: number): string {
-  const h = Math.floor(minutes / 60) % 24
-  const m = minutes % 60
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`
 }
 
@@ -101,36 +89,13 @@ export function RescheduleModal({
       .finally(() => setSlotsLoading(false))
   }, [tablePublicId, dateStr, publicId])
 
-  const DAY_NAMES = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"]
   const dayName = DAY_NAMES[parsedDate.getDay()]
   const dayConfig = workingHours?.[dayName] || internalWorkingHours?.[dayName]
 
   const timeSlots = useMemo(() => {
     if (availableSlots) return availableSlots
-    if (!dayConfig) return []
-    const slots: string[] = []
-    const [openH, openM] = dayConfig.open.split(":").map(Number)
-    const [closeH, closeM] = dayConfig.close.split(":").map(Number)
-    const openTotal = openH * 60 + openM
-    const closeTotal = closeH * 60 + closeM
-    const overnight = closeTotal <= openTotal
-    const endBase = overnight ? closeTotal + 24 * 60 : closeTotal
-
-    const now = new Date()
-    const isToday =
-      parsedDate.getFullYear() === now.getFullYear() &&
-      parsedDate.getMonth() === now.getMonth() &&
-      parsedDate.getDate() === now.getDate()
-
-    let minute = openTotal
-    while (minute < endBase) {
-      if (!isToday || minute > now.getHours() * 60 + now.getMinutes()) {
-        slots.push(minutesToTime(minute))
-      }
-      minute += 30
-    }
-    return slots
-  }, [availableSlots, dayConfig, parsedDate])
+    return generateTimeSlots(parsedDate, dayConfig)
+  }, [availableSlots, parsedDate, dayConfig])
 
   const endAt = useMemo(() => {
     if (!selectedTime) return ""
