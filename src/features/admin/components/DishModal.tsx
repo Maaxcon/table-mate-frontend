@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react"
-import { LuImagePlus, LuTrash2, LuX } from "react-icons/lu"
+import { LuCopy, LuImagePlus, LuTrash2, LuX } from "react-icons/lu"
 import {
   clearItemImage,
   createItem,
@@ -42,6 +42,7 @@ function DishModal({ menuId, categories, item, onClose, onSaved }: DishModalProp
   const [previewUrl, setPreviewUrl] = useState<string | null>(item?.image ?? null)
   const [submitting, setSubmitting] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [duplicating, setDuplicating] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [confirmDiscard, setConfirmDiscard] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -144,6 +145,44 @@ function DishModal({ menuId, categories, item, onClose, onSaved }: DishModalProp
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not save dish.")
       setSubmitting(false)
+    }
+  }
+
+  const handleDuplicate = async () => {
+    setDuplicating(true)
+    setError(null)
+    try {
+      const created = await createItem({
+        menu: menuId,
+        category: category || null,
+        name: `${name.trim()} (copy)`,
+        description: description.trim(),
+        price: price.trim(),
+        weight_grams: weight.trim() ? Number(weight) : null,
+        is_available: isAvailable,
+        ingredients,
+        allergens,
+      })
+      // Best-effort photo copy — failure here must not fail the duplicate.
+      try {
+        if (imageFile) {
+          await uploadItemImage(created.public_id, imageFile)
+        } else if (previewUrl && !previewUrl.startsWith("blob:")) {
+          const resp = await fetch(previewUrl)
+          if (resp.ok) {
+            const blob = await resp.blob()
+            await uploadItemImage(created.public_id, new File([blob], "dish", { type: blob.type }))
+          }
+        }
+      } catch {
+        // ignore image copy errors
+      }
+      toast.success("Dish duplicated")
+      onSaved()
+      onClose()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not duplicate dish.")
+      setDuplicating(false)
     }
   }
 
@@ -353,16 +392,27 @@ function DishModal({ menuId, categories, item, onClose, onSaved }: DishModalProp
             <button
               type="submit"
               className="admin-form__save"
-              disabled={submitting || deleting || !name.trim() || !price.trim()}
+              disabled={submitting || deleting || duplicating || !name.trim() || !price.trim()}
             >
               {submitting ? "Saving…" : "Save"}
             </button>
             {editing && (
               <button
                 type="button"
+                className="menu-admin__btn dish-duplicate"
+                onClick={() => void handleDuplicate()}
+                disabled={submitting || deleting || duplicating || !name.trim() || !price.trim()}
+              >
+                <LuCopy aria-hidden="true" />
+                <span>{duplicating ? "Duplicating…" : "Duplicate"}</span>
+              </button>
+            )}
+            {editing && (
+              <button
+                type="button"
                 className="menu-admin__btn menu-admin__btn--danger dish-delete"
                 onClick={() => setConfirmDelete(true)}
-                disabled={submitting || deleting}
+                disabled={submitting || deleting || duplicating}
               >
                 <LuTrash2 aria-hidden="true" />
                 <span>{deleting ? "Deleting…" : "Delete"}</span>
