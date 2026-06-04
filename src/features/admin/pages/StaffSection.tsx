@@ -1,8 +1,9 @@
 import { useMemo, useState } from "react"
-import { LuPlus, LuSearch } from "react-icons/lu"
+import { LuPlus } from "react-icons/lu"
 import { useEmployees } from "../hooks/useEmployees"
 import AddEmployeeModal from "../components/AddEmployeeModal"
 import EmployeeRow from "../components/EmployeeRow"
+import SearchBox from "../components/SearchBox"
 import "../components/SectionPlaceholder.css"
 import "../components/staff.css"
 
@@ -43,17 +44,12 @@ function StaffSection() {
         <p className="admin-section__description">No staff yet.</p>
       ) : (
         <>
-          <div className="staff-search">
-            <LuSearch className="staff-search__icon" aria-hidden="true" />
-            <input
-              className="staff-search__input"
-              type="search"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search by name or email"
-              aria-label="Search staff"
-            />
-          </div>
+          <SearchBox
+            value={query}
+            onChange={setQuery}
+            placeholder="Search by name or email"
+            ariaLabel="Search staff"
+          />
 
           {filtered.length === 0 ? (
             <p className="admin-section__description">No staff match “{query.trim()}”.</p>

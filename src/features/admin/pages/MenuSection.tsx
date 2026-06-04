@@ -1,10 +1,11 @@
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { LuPlus, LuExternalLink } from "react-icons/lu"
 import { DndContext, closestCenter, type DragEndEvent } from "@dnd-kit/core"
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable"
 import { useAppSelector } from "@/store/hooks"
 import { useMenuAdmin } from "../hooks/useMenuAdmin"
 import { useDndSensors } from "../components/useDndSensors"
+import SearchBox from "../components/SearchBox"
 import AddMenuModal from "../components/AddMenuModal"
 import MenuToolbar from "../components/MenuToolbar"
 import CategoryRow from "../components/CategoryRow"
@@ -39,6 +40,13 @@ function MenuSection() {
   })
   const restaurantId = useAppSelector((s) => s.auth.user?.restaurantId ?? null)
   const sensors = useDndSensors()
+  const [dishQuery, setDishQuery] = useState("")
+
+  const filteredItems = useMemo(() => {
+    const q = dishQuery.trim().toLowerCase()
+    if (!q) return items
+    return items.filter((it) => it.name.toLowerCase().includes(q))
+  }, [items, dishQuery])
 
   const handleCategoryDragEnd = ({ active, over }: DragEndEvent) => {
     if (over && active.id !== over.id) reorderCategory(String(active.id), String(over.id))
@@ -168,12 +176,26 @@ function MenuSection() {
                   ) : items.length === 0 ? (
                     <p className="admin-section__description">No dishes in this menu yet.</p>
                   ) : (
-                    <DishList
-                      items={items}
-                      categories={categories}
-                      onEdit={(item) => setDishModal({ open: true, item })}
-                      onReorder={reorderItem}
-                    />
+                    <>
+                      <SearchBox
+                        value={dishQuery}
+                        onChange={setDishQuery}
+                        placeholder="Search dishes"
+                        ariaLabel="Search dishes"
+                      />
+                      {filteredItems.length === 0 ? (
+                        <p className="admin-section__description">
+                          No dishes match “{dishQuery.trim()}”.
+                        </p>
+                      ) : (
+                        <DishList
+                          items={filteredItems}
+                          categories={categories}
+                          onEdit={(item) => setDishModal({ open: true, item })}
+                          onReorder={reorderItem}
+                        />
+                      )}
+                    </>
                   )}
                 </section>
               </div>
