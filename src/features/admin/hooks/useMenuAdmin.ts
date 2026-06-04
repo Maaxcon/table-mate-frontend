@@ -4,8 +4,8 @@ import {
   fetchCategories,
   fetchItems,
   fetchMenus,
-  setCategorySortOrder,
-  setItemSortOrder,
+  reorderCategories,
+  reorderItems,
 } from "../menuApi"
 import { useToast } from "../components/toastContext"
 import type { AdminCategory, AdminMenu, AdminMenuItem } from "../types"
@@ -105,12 +105,14 @@ export function useMenuAdmin(): UseMenuAdminResult {
       )
 
       setCategories(renumbered) // optimistic
-      void Promise.all(changed.map((c) => setCategorySortOrder(c.public_id, c.sort_order))).catch(
-        () => {
+      if (changed.length > 0) {
+        void reorderCategories(
+          changed.map((c) => ({ public_id: c.public_id, sort_order: c.sort_order })),
+        ).catch(() => {
           toast.error("Could not reorder categories. Reverted.")
           reloadCategories() // revert to server truth on failure
-        },
-      )
+        })
+      }
     },
     [categories, reloadCategories, toast],
   )
@@ -125,12 +127,14 @@ export function useMenuAdmin(): UseMenuAdminResult {
       )
 
       setItems(reordered) // optimistic
-      void Promise.all(changed.map((it) => setItemSortOrder(it.public_id, it.sort_order))).catch(
-        () => {
+      if (changed.length > 0) {
+        void reorderItems(
+          changed.map((it) => ({ public_id: it.public_id, sort_order: it.sort_order })),
+        ).catch(() => {
           toast.error("Could not reorder dishes. Reverted.")
           reloadItems()
-        },
-      )
+        })
+      }
     },
     [items, categories, reloadItems, toast],
   )

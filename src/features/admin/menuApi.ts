@@ -139,22 +139,25 @@ export async function updateItem(
   return (await res.json()) as AdminMenuItem
 }
 
-export async function setItemSortOrder(publicId: string, sortOrder: number): Promise<void> {
-  const res = await apiFetch(`${ITEMS_PATH}${publicId}/`, {
-    method: "PATCH",
+export type ReorderEntry = { public_id: string; sort_order: number }
+
+// One atomic request reorders many items at once (PATCH-per-item is gone).
+export async function reorderItems(order: ReorderEntry[]): Promise<void> {
+  const res = await apiFetch(`${ITEMS_PATH}reorder/`, {
+    method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ sort_order: sortOrder }),
+    body: JSON.stringify(order),
   })
-  if (!res.ok) throw new Error(await firstError(res, "Could not reorder dishes."))
+  if (!res.ok && res.status !== 204) throw new Error("Could not reorder dishes.")
 }
 
-export async function setCategorySortOrder(publicId: string, sortOrder: number): Promise<void> {
-  const res = await apiFetch(`${CATEGORIES_PATH}${publicId}/`, {
-    method: "PATCH",
+export async function reorderCategories(order: ReorderEntry[]): Promise<void> {
+  const res = await apiFetch(`${CATEGORIES_PATH}reorder/`, {
+    method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ sort_order: sortOrder }),
+    body: JSON.stringify(order),
   })
-  if (!res.ok) throw new Error(await firstError(res, "Could not reorder categories."))
+  if (!res.ok && res.status !== 204) throw new Error("Could not reorder categories.")
 }
 
 export async function uploadItemImage(publicId: string, file: File): Promise<AdminMenuItem> {
