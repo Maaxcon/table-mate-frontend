@@ -576,6 +576,31 @@
   opacity: 1;
 }
 
+/* Covers the photo with a spinner while the new image uploads on save. */
+.dish-photo__loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-overlay);
+}
+
+.dish-photo__spinner {
+  width: 28px;
+  height: 28px;
+  border: 3px solid rgba(255, 255, 255, 0.4);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: dish-photo-spin 0.7s linear infinite;
+}
+
+@keyframes dish-photo-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .dish-photo__remove {
   width: 100%;
   justify-content: center;

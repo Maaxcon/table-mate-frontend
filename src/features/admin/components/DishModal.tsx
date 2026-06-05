@@ -44,6 +44,7 @@ function DishModal({ menuId, categories, item, onClose, onSaved }: DishModalProp
   const [removeImage, setRemoveImage] = useState(false)
   const [previewUrl, setPreviewUrl] = useState<string | null>(item?.image ?? null)
   const [submitting, setSubmitting] = useState(false)
+  const [uploadingImage, setUploadingImage] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [duplicating, setDuplicating] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
@@ -168,8 +169,10 @@ function DishModal({ menuId, categories, item, onClose, onSaved }: DishModalProp
       }
 
       if (imageFile) {
+        setUploadingImage(true)
         await uploadItemImage(publicId, imageFile)
       } else if (editing && removeImage) {
+        setUploadingImage(true)
         await clearItemImage(publicId)
       }
 
@@ -179,6 +182,7 @@ function DishModal({ menuId, categories, item, onClose, onSaved }: DishModalProp
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not save dish.")
       setSubmitting(false)
+      setUploadingImage(false)
     }
   }
 
@@ -255,6 +259,11 @@ function DishModal({ menuId, categories, item, onClose, onSaved }: DishModalProp
                   </span>
                 )}
                 <span className="dish-photo__overlay">Change photo</span>
+                {uploadingImage && (
+                  <span className="dish-photo__loading" aria-label="Uploading photo">
+                    <span className="dish-photo__spinner" aria-hidden="true" />
+                  </span>
+                )}
                 <input
                   type="file"
                   accept="image/*"
