@@ -6,38 +6,75 @@ import {
   fetchMenus,
   reorderCategories,
   reorderItems,
+  updateItem,
 } from "../menuApi"
 import { useToast } from "../components/toastContext"
 import type { AdminCategory, AdminMenu, AdminMenuItem } from "../types"
 
 const UNCATEGORIZED = "__none__"
+// A drop on an empty category targets the group itself, not an item in it.
+export const GROUP_DROP_PREFIX = "group:"
 
-/** Moves `activeId` to `overId`'s slot within their shared category group, then
- * renumbers sort_order across the whole list (categories order first,
- * uncategorized last). Returns null for cross-group or invalid moves. */
-function reorderItemsByIds(
+/** Moves `activeId` next to `overId` (an item) or into `overId`'s category
+ * (a "group:<key>" drop target), possibly across categories, then renumbers
+ * sort_order across the whole list (categories order first, uncategorized last).
+ * The moved item's `category` is updated to its new group. Returns null for
+ * invalid moves or no-ops. */
+function moveItemsByIds(
   items: AdminMenuItem[],
   categories: AdminCategory[],
   activeId: string,
   overId: string,
 ): AdminMenuItem[] | null {
+  const active = items.find((i) => i.public_id === activeId)
+  if (!active) return null
+
+  // Resolve the target category and, when dropping on a card, the card to land on.
+  let targetKey: string
+  let overItemId: string | null = null
+  if (overId.startsWith(GROUP_DROP_PREFIX)) {
+    targetKey = overId.slice(GROUP_DROP_PREFIX.length)
+  } else {
+    const over = items.find((i) => i.public_id === overId)
+    if (!over) return null
+    targetKey = over.category ?? UNCATEGORIZED
+    overItemId = overId
+  }
+  if (overItemId === activeId) return null
+
   const groups = new Map<string, AdminMenuItem[]>()
+  for (const c of categories) groups.set(c.public_id, [])
   for (const item of items) {
     const key = item.category ?? UNCATEGORIZED
     if (!groups.has(key)) groups.set(key, [])
     groups.get(key)!.push(item)
   }
+  if (!groups.has(targetKey)) groups.set(targetKey, [])
 
-  const active = items.find((i) => i.public_id === activeId)
-  const over = items.find((i) => i.public_id === overId)
-  if (!active || !over) return null
-  const groupKey = active.category ?? UNCATEGORIZED
-  if ((over.category ?? UNCATEGORIZED) !== groupKey) return null // within-group only
-  const group = groups.get(groupKey)!
-  const oldIndex = group.findIndex((i) => i.public_id === activeId)
-  const newIndex = group.findIndex((i) => i.public_id === overId)
-  if (oldIndex < 0 || newIndex < 0 || oldIndex === newIndex) return null
-  groups.set(groupKey, arrayMove(group, oldIndex, newIndex))
+  const sourceKey = active.category ?? UNCATEGORIZED
+  const source = groups.get(sourceKey)!
+  const fromIndex = source.findIndex((i) => i.public_id === activeId)
+  if (fromIndex < 0) return null
+
+  // Same-group reorder: move in place; cross-group: pull out then insert.
+  if (sourceKey === targetKey) {
+    const toIndex = overItemId
+      ? source.findIndex((i) => i.public_id === overItemId)
+      : source.length - 1
+    if (toIndex < 0 || toIndex === fromIndex) return null
+    groups.set(targetKey, arrayMove(source, fromIndex, toIndex))
+  } else {
+    source.splice(fromIndex, 1)
+    const target = groups.get(targetKey)!
+    const insertAt = overItemId
+      ? Math.max(
+          0,
+          target.findIndex((i) => i.public_id === overItemId),
+        )
+      : target.length
+    const moved = { ...active, category: targetKey === UNCATEGORIZED ? null : targetKey }
+    target.splice(insertAt, 0, moved)
+  }
 
   const orderedKeys = [
     ...categories.map((c) => c.public_id),
@@ -119,22 +156,35 @@ export function useMenuAdmin(): UseMenuAdminResult {
 
   const reorderItem = useCallback(
     (activeId: string, overId: string) => {
-      const reordered = reorderItemsByIds(items, categories, activeId, overId)
+      const reordered = moveItemsByIds(items, categories, activeId, overId)
       if (!reordered) return
 
+      const movedOld = items.find((i) => i.public_id === activeId)
+      const movedNew = reordered.find((i) => i.public_id === activeId)
+      const categoryChanged = (movedOld?.category ?? null) !== (movedNew?.category ?? null)
       const changed = reordered.filter(
         (it) => items.find((o) => o.public_id === it.public_id)?.sort_order !== it.sort_order,
       )
+      if (changed.length === 0 && !categoryChanged) return
 
       setItems(reordered) // optimistic
-      if (changed.length > 0) {
-        void reorderItems(
-          changed.map((it) => ({ public_id: it.public_id, sort_order: it.sort_order })),
-        ).catch(() => {
-          toast.error("Could not reorder dishes. Reverted.")
-          reloadItems()
-        })
+
+      // The reorder endpoint only sets sort_order, so a category move is a
+      // separate PATCH first, then the order is renumbered for the whole list.
+      const persist = async () => {
+        if (categoryChanged && movedNew) {
+          await updateItem(activeId, { category: movedNew.category })
+        }
+        if (changed.length > 0) {
+          await reorderItems(
+            changed.map((it) => ({ public_id: it.public_id, sort_order: it.sort_order })),
+          )
+        }
       }
+      void persist().catch(() => {
+        toast.error("Could not move dish. Reverted.")
+        reloadItems()
+      })
     },
     [items, categories, reloadItems, toast],
   )

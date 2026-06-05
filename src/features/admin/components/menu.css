@@ -235,6 +235,32 @@
   margin: 0 0 12px;
 }
 
+/* Highlights a category while a dish is dragged over it. */
+.menu-admin__group-drop {
+  border: 1px dashed transparent;
+  border-radius: 12px;
+  transition:
+    border-color 0.12s,
+    background-color 0.12s;
+}
+
+.menu-admin__group-drop.is-over {
+  border-color: var(--color-border-strong);
+  background: var(--color-bg-muted, rgba(0, 0, 0, 0.03));
+}
+
+/* Placeholder shown inside an empty category so it reads as a drop target. */
+.menu-admin__group-empty {
+  list-style: none;
+  grid-column: 1 / -1;
+  padding: 18px;
+  border: 1px dashed var(--color-border-default);
+  border-radius: 10px;
+  color: var(--color-text-muted);
+  font-size: 13px;
+  text-align: center;
+}
+
 /* Dishes spread across the page as a responsive grid of cards. */
 .menu-admin__dish-grid {
   list-style: none;
