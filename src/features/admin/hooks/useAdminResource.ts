@@ -1,8 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
-import { apiFetch } from "@/api/client"
+import { apiFetch, type Paginated } from "@/api/client"
 import { useUnsavedChanges } from "../components/unsavedChanges"
-
-type Paginated<T> = { results: T[] }
 
 export type SaveStatus = "idle" | "saving" | "saved" | "error"
 

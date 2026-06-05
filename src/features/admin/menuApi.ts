@@ -1,11 +1,9 @@
-import { apiFetch, firstError } from "@/api/client"
+import { apiFetch, firstError, type Paginated } from "@/api/client"
 import type { AdminCategory, AdminMenu, AdminMenuItem } from "./types"
 
 const MENUS_PATH = "/api/menu/admin/menus/"
 const CATEGORIES_PATH = "/api/menu/admin/categories/"
 const ITEMS_PATH = "/api/menu/admin/items/"
-
-type Paginated<T> = { results: T[] }
 
 export async function fetchMenus(signal?: AbortSignal): Promise<AdminMenu[]> {
   const res = await apiFetch(MENUS_PATH, { signal })

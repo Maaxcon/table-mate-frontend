@@ -97,6 +97,14 @@ async function apiFetch(path: string, init: RequestInit = {}): Promise<Response>
   }
 }
 
+/** DRF's paginated list response. */
+export type Paginated<T> = {
+  count: number
+  next: string | null
+  previous: string | null
+  results: T[]
+}
+
 /** Reads the first field error DRF returns, e.g. {"email": ["already exists"]}. */
 export async function firstError(res: Response, fallback: string): Promise<string> {
   try {

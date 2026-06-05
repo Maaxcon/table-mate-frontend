@@ -22,10 +22,3 @@ export type MenuItem = {
   is_available: boolean
   sort_order: number
 }
-
-export type PaginatedResponse<T> = {
-  count: number
-  next: string | null
-  previous: string | null
-  results: T[]
-}

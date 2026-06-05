@@ -1,10 +1,8 @@
 import { useCallback, useEffect, useState } from "react"
-import { apiFetch } from "@/api/client"
+import { apiFetch, type Paginated } from "@/api/client"
 import type { AdminEmployee } from "../types"
 
 const BASE_PATH = "/api/restaurants/employees/"
-
-type Paginated<T> = { results: T[] }
 
 type UseEmployeesResult = {
   employees: AdminEmployee[]
