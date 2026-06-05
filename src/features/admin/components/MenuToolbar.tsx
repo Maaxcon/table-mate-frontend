@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { LuPencil, LuTrash2 } from "react-icons/lu"
 import { deleteMenu, updateMenu } from "../menuApi"
 import type { AdminMenu } from "../types"
@@ -21,6 +21,16 @@ function MenuToolbar({ menu, onChanged, onDeleted }: MenuToolbarProps) {
   const [renaming, setRenaming] = useState(false)
   const [name, setName] = useState(menu.name)
   const renameRef = useModalFocus<HTMLDivElement>(renaming)
+
+  // Esc closes the rename popup (but not mid-save).
+  useEffect(() => {
+    if (!renaming) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && !busy) setRenaming(false)
+    }
+    window.addEventListener("keydown", onKey)
+    return () => window.removeEventListener("keydown", onKey)
+  }, [renaming, busy])
 
   const run = async (action: () => Promise<unknown>, after: () => void, successMsg: string) => {
     setBusy(true)

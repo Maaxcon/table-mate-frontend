@@ -35,7 +35,11 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       {children}
       <div className="toast-stack" role="region" aria-live="polite" aria-label="Notifications">
         {toasts.map((t) => (
-          <div key={t.id} className={`toast toast--${t.type}`} role="status">
+          <div
+            key={t.id}
+            className={`toast toast--${t.type}`}
+            role={t.type === "error" ? "alert" : "status"}
+          >
             <span className="toast__icon" aria-hidden="true">
               {t.type === "success" ? <LuCircleCheck /> : <LuCircleAlert />}
             </span>
