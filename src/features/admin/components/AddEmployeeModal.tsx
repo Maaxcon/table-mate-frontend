@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { createEmployee } from "../api"
+import { createEmployee } from "../staffApi"
 import type { EmployeeRole } from "../types"
 import Modal from "./Modal"
 import TextField from "./TextField"

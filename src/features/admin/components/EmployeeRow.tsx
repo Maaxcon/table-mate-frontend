@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { updateEmployee, type EmployeePatch } from "../api"
+import { updateEmployee, type EmployeePatch } from "../staffApi"
 import type { AdminEmployee, EmployeeRole } from "../types"
 import ConfirmDialog from "./ConfirmDialog"
 import { useToast } from "./toastContext"
