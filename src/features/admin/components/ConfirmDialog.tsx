@@ -1,5 +1,4 @@
-import { useEffect } from "react"
-import { useModalFocus } from "../hooks/useModalFocus"
+import Modal from "./Modal"
 import "./modal.css"
 
 type ConfirmDialogProps = {
@@ -24,56 +23,35 @@ function ConfirmDialog({
   onConfirm,
   onClose,
 }: ConfirmDialogProps) {
-  const dialogRef = useModalFocus()
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && !busy) onClose()
-    }
-    window.addEventListener("keydown", onKey)
-    return () => window.removeEventListener("keydown", onKey)
-  }, [onClose, busy])
-
   return (
-    <div className="admin-modal__overlay admin-confirm__overlay">
-      <button
-        type="button"
-        className="admin-modal__backdrop"
-        aria-label="Cancel"
-        onClick={() => {
-          if (!busy) onClose()
-        }}
-      />
-      <div
-        ref={dialogRef}
-        className="admin-modal admin-modal--confirm"
-        role="alertdialog"
-        aria-modal="true"
-        aria-label={title}
-      >
-        <div className="admin-modal__header">
-          <h2 className="admin-modal__title">{title}</h2>
-        </div>
+    <Modal
+      title={title}
+      onClose={onClose}
+      role="alertdialog"
+      showClose={false}
+      closeDisabled={busy}
+      overlayClassName="admin-confirm__overlay"
+      className="admin-modal--confirm"
+      backdropLabel="Cancel"
+    >
+      <p className="admin-modal__message">{message}</p>
 
-        <p className="admin-modal__message">{message}</p>
-
-        <div className="admin-modal__actions">
-          <button type="button" className="admin-modal__btn" onClick={onClose} disabled={busy}>
-            {cancelLabel}
-          </button>
-          <button
-            type="button"
-            className={`admin-modal__btn ${
-              tone === "danger" ? "admin-modal__btn--danger" : "admin-modal__btn--primary"
-            }`}
-            onClick={onConfirm}
-            disabled={busy}
-          >
-            {busy ? "…" : confirmLabel}
-          </button>
-        </div>
+      <div className="admin-modal__actions">
+        <button type="button" className="admin-modal__btn" onClick={onClose} disabled={busy}>
+          {cancelLabel}
+        </button>
+        <button
+          type="button"
+          className={`admin-modal__btn ${
+            tone === "danger" ? "admin-modal__btn--danger" : "admin-modal__btn--primary"
+          }`}
+          onClick={onConfirm}
+          disabled={busy}
+        >
+          {busy ? "…" : confirmLabel}
+        </button>
       </div>
-    </div>
+    </Modal>
   )
 }
 

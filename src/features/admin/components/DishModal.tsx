@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useMemo, useState } from "react"
 import { LuCopy, LuImagePlus, LuTrash2, LuX } from "react-icons/lu"
 import {
   clearItemImage,
@@ -12,9 +12,9 @@ import {
 import type { AdminCategory, AdminMenuItem } from "../types"
 import TextField from "./TextField"
 import ConfirmDialog from "./ConfirmDialog"
+import Modal from "./Modal"
 import { useToast } from "./toastContext"
 import { useAllergens } from "../hooks/useAllergens"
-import { useModalFocus } from "../hooks/useModalFocus"
 import "./adminForm.css"
 import "./modal.css"
 import "./menu.css"
@@ -50,8 +50,6 @@ function DishModal({ menuId, categories, item, onClose, onSaved }: DishModalProp
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [confirmDiscard, setConfirmDiscard] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  // Suspend the focus trap while a nested confirm dialog is open so it can take over.
-  const dialogRef = useModalFocus<HTMLDivElement>(!confirmDelete && !confirmDiscard)
   // Show field errors only after the user leaves a field or tries to save.
   const [touched, setTouched] = useState<{ price: boolean; weight: boolean }>({
     price: false,
@@ -123,14 +121,6 @@ function DishModal({ menuId, categories, item, onClose, onSaved }: DishModalProp
     setImageFile(null)
     setRemoveImage(true)
   }
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") requestClose()
-    }
-    window.addEventListener("keydown", onKey)
-    return () => window.removeEventListener("keydown", onKey)
-  }, [requestClose])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -220,32 +210,14 @@ function DishModal({ menuId, categories, item, onClose, onSaved }: DishModalProp
   }
 
   return (
-    <div className="admin-modal__overlay">
-      <button
-        type="button"
-        className="admin-modal__backdrop"
-        aria-label="Close"
-        onClick={requestClose}
-      />
-      <div
-        ref={dialogRef}
-        className="admin-modal admin-modal--dish"
-        role="dialog"
-        aria-modal="true"
-        aria-label="Dish"
+    <>
+      <Modal
+        title={editing ? "Edit dish" : "Add dish"}
+        ariaLabel="Dish"
+        onClose={requestClose}
+        className="admin-modal--dish"
+        active={!confirmDelete && !confirmDiscard}
       >
-        <div className="admin-modal__header">
-          <h2 className="admin-modal__title">{editing ? "Edit dish" : "Add dish"}</h2>
-          <button
-            type="button"
-            className="admin-modal__close"
-            onClick={requestClose}
-            aria-label="Close"
-          >
-            <LuX aria-hidden="true" />
-          </button>
-        </div>
-
         <form className="admin-form dish-form" onSubmit={handleSubmit}>
           <div className="dish-form__grid">
             <div className="dish-form__photo">
@@ -449,7 +421,7 @@ function DishModal({ menuId, categories, item, onClose, onSaved }: DishModalProp
             )}
           </div>
         </form>
-      </div>
+      </Modal>
 
       {confirmDelete && item && (
         <ConfirmDialog
@@ -473,7 +445,7 @@ function DishModal({ menuId, categories, item, onClose, onSaved }: DishModalProp
           onClose={() => setConfirmDiscard(false)}
         />
       )}
-    </div>
+    </>
   )
 }
 

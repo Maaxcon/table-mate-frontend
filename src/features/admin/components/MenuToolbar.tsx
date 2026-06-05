@@ -1,10 +1,10 @@
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { LuPencil, LuTrash2 } from "react-icons/lu"
 import { deleteMenu, updateMenu } from "../menuApi"
 import type { AdminMenu } from "../types"
 import ConfirmDialog from "./ConfirmDialog"
+import Modal from "./Modal"
 import { useToast } from "./toastContext"
-import { useModalFocus } from "../hooks/useModalFocus"
 
 type MenuToolbarProps = {
   menu: AdminMenu
@@ -20,17 +20,6 @@ function MenuToolbar({ menu, onChanged, onDeleted }: MenuToolbarProps) {
   const [confirm, setConfirm] = useState<null | "delete" | "hide">(null)
   const [renaming, setRenaming] = useState(false)
   const [name, setName] = useState(menu.name)
-  const renameRef = useModalFocus<HTMLDivElement>(renaming)
-
-  // Esc closes the rename popup (but not mid-save).
-  useEffect(() => {
-    if (!renaming) return
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && !busy) setRenaming(false)
-    }
-    window.addEventListener("keydown", onKey)
-    return () => window.removeEventListener("keydown", onKey)
-  }, [renaming, busy])
 
   const run = async (action: () => Promise<unknown>, after: () => void, successMsg: string) => {
     setBusy(true)
@@ -100,61 +89,50 @@ function MenuToolbar({ menu, onChanged, onDeleted }: MenuToolbarProps) {
       </button>
 
       {renaming && (
-        <div className="admin-modal__overlay admin-confirm__overlay">
-          <button
-            type="button"
-            className="admin-modal__backdrop"
-            aria-label="Cancel"
-            onClick={() => {
-              if (!busy) setRenaming(false)
+        <Modal
+          title="Rename menu"
+          onClose={() => setRenaming(false)}
+          showClose={false}
+          closeDisabled={busy}
+          overlayClassName="admin-confirm__overlay"
+          className="admin-modal--confirm"
+          backdropLabel="Cancel"
+        >
+          <form
+            className="admin-form"
+            onSubmit={(e) => {
+              e.preventDefault()
+              submitRename()
             }}
-          />
-          <div
-            ref={renameRef}
-            className="admin-modal admin-modal--confirm"
-            role="dialog"
-            aria-modal="true"
-            aria-label="Rename menu"
           >
-            <div className="admin-modal__header">
-              <h2 className="admin-modal__title">Rename menu</h2>
+            <label className="admin-field">
+              <span className="admin-field__label">Menu name</span>
+              <input
+                className="admin-field__input"
+                value={name}
+                disabled={busy}
+                onChange={(e) => setName(e.target.value)}
+              />
+            </label>
+            <div className="admin-modal__actions">
+              <button
+                type="button"
+                className="admin-modal__btn"
+                disabled={busy}
+                onClick={() => setRenaming(false)}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="admin-modal__btn admin-modal__btn--primary"
+                disabled={busy || !name.trim()}
+              >
+                {busy ? "…" : "Save"}
+              </button>
             </div>
-            <form
-              className="admin-form"
-              onSubmit={(e) => {
-                e.preventDefault()
-                submitRename()
-              }}
-            >
-              <label className="admin-field">
-                <span className="admin-field__label">Menu name</span>
-                <input
-                  className="admin-field__input"
-                  value={name}
-                  disabled={busy}
-                  onChange={(e) => setName(e.target.value)}
-                />
-              </label>
-              <div className="admin-modal__actions">
-                <button
-                  type="button"
-                  className="admin-modal__btn"
-                  disabled={busy}
-                  onClick={() => setRenaming(false)}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="admin-modal__btn admin-modal__btn--primary"
-                  disabled={busy || !name.trim()}
-                >
-                  {busy ? "…" : "Save"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+          </form>
+        </Modal>
       )}
 
       {confirm === "delete" && (
