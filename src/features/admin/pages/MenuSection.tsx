@@ -55,7 +55,10 @@ function MenuSection() {
   const filteredItems = useMemo(() => {
     const q = dishQuery.trim().toLowerCase()
     if (!q) return items
-    return items.filter((it) => it.name.toLowerCase().includes(q))
+    // Search across name, description, and ingredients.
+    return items.filter((it) =>
+      [it.name, it.description ?? "", ...it.ingredients].join(" ").toLowerCase().includes(q),
+    )
   }, [items, dishQuery])
 
   // Selection acts only on the dishes currently in view (respects search).
@@ -228,7 +231,7 @@ function MenuSection() {
                       <SearchBox
                         value={dishQuery}
                         onChange={setDishQuery}
-                        placeholder="Search dishes"
+                        placeholder="Search by name, description, ingredient"
                         ariaLabel="Search dishes"
                       />
                       {filteredItems.length === 0 ? (
