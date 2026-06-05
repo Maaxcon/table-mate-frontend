@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useMemo, useState } from "react"
 import { arrayMove } from "@dnd-kit/sortable"
 import {
   bulkItemAction,
@@ -11,6 +11,7 @@ import {
 } from "../menuApi"
 import { useToast } from "../components/toastContext"
 import type { AdminCategory, AdminMenu, AdminMenuItem } from "../types"
+import { useResource } from "./useResource"
 
 const UNCATEGORIZED = "__none__"
 // A drop on an empty category targets the group itself, not an item in it.
@@ -111,23 +112,64 @@ type UseMenuAdminResult = {
 
 /** Loads the restaurant's menus, tracks the selected menu, and loads its categories. */
 export function useMenuAdmin(): UseMenuAdminResult {
-  const [menus, setMenus] = useState<AdminMenu[]>([])
   const [selectedMenuId, setSelectedMenuId] = useState<string | null>(null)
-  const [categories, setCategories] = useState<AdminCategory[]>([])
-  const [items, setItems] = useState<AdminMenuItem[]>([])
-  const [loadingMenus, setLoadingMenus] = useState(true)
-  const [loadingCategories, setLoadingCategories] = useState(false)
-  const [loadingItems, setLoadingItems] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [menusKey, setMenusKey] = useState(0)
-  const [categoriesKey, setCategoriesKey] = useState(0)
-  const [itemsKey, setItemsKey] = useState(0)
-
   const toast = useToast()
 
-  const reloadMenus = useCallback(() => setMenusKey((k) => k + 1), [])
-  const reloadCategories = useCallback(() => setCategoriesKey((k) => k + 1), [])
-  const reloadItems = useCallback(() => setItemsKey((k) => k + 1), [])
+  const menusRes = useResource<AdminMenu[]>(fetchMenus, {
+    errorMessage: "Could not load menus.",
+    // Keep the current selection if it still exists, else pick the first menu.
+    onSuccess: (list) =>
+      setSelectedMenuId((cur) =>
+        cur && list.some((m) => m.public_id === cur) ? cur : (list[0]?.public_id ?? null),
+      ),
+  })
+
+  const loadCategories = useCallback(
+    (signal: AbortSignal) => fetchCategories(selectedMenuId as string, signal),
+    [selectedMenuId],
+  )
+  const categoriesRes = useResource<AdminCategory[]>(loadCategories, {
+    enabled: selectedMenuId !== null,
+    errorMessage: "Could not load categories.",
+  })
+
+  const loadItems = useCallback(
+    (signal: AbortSignal) => fetchItems(selectedMenuId as string, signal),
+    [selectedMenuId],
+  )
+  const itemsRes = useResource<AdminMenuItem[]>(loadItems, {
+    enabled: selectedMenuId !== null,
+    errorMessage: "Could not load dishes.",
+  })
+
+  const { data: categoriesData, setData: setCategoriesData } = categoriesRes
+  const { data: itemsData, setData: setItemsData } = itemsRes
+
+  const menus = menusRes.data ?? []
+  // Memoized so they keep a stable identity for the callbacks' dependency arrays.
+  const categories = useMemo(() => categoriesData ?? [], [categoriesData])
+  const items = useMemo(() => itemsData ?? [], [itemsData])
+  const loadingMenus = menusRes.loading
+  const loadingCategories = categoriesRes.loading
+  const loadingItems = itemsRes.loading
+  const error = menusRes.error ?? categoriesRes.error ?? itemsRes.error
+  const reloadMenus = menusRes.reload
+  const reloadCategories = categoriesRes.reload
+  const reloadItems = itemsRes.reload
+
+  // Adapters so the optimistic updates below keep their non-null array signature.
+  // (setData from useState is stable, so these stay memoized.)
+  const setCategories = useCallback(
+    (update: AdminCategory[] | ((prev: AdminCategory[]) => AdminCategory[])) =>
+      setCategoriesData((prev) => (typeof update === "function" ? update(prev ?? []) : update)),
+    [setCategoriesData],
+  )
+  const setItems = useCallback(
+    (update: AdminMenuItem[] | ((prev: AdminMenuItem[]) => AdminMenuItem[])) =>
+      setItemsData((prev) => (typeof update === "function" ? update(prev ?? []) : update)),
+    [setItemsData],
+  )
+
   const selectMenu = useCallback((publicId: string) => setSelectedMenuId(publicId), [])
 
   const reorderCategory = useCallback(
@@ -155,7 +197,7 @@ export function useMenuAdmin(): UseMenuAdminResult {
         })
       }
     },
-    [categories, reloadCategories, toast],
+    [categories, reloadCategories, setCategories, toast],
   )
 
   const reorderItem = useCallback(
@@ -190,7 +232,7 @@ export function useMenuAdmin(): UseMenuAdminResult {
         reloadItems()
       })
     },
-    [items, categories, reloadItems, toast],
+    [items, categories, reloadItems, setItems, toast],
   )
 
   const bulkSetAvailable = useCallback(
@@ -207,7 +249,7 @@ export function useMenuAdmin(): UseMenuAdminResult {
           reloadItems()
         })
     },
-    [reloadItems, toast],
+    [reloadItems, setItems, toast],
   )
 
   const bulkSetCategory = useCallback(
@@ -222,7 +264,7 @@ export function useMenuAdmin(): UseMenuAdminResult {
           reloadItems()
         })
     },
-    [reloadItems, toast],
+    [reloadItems, setItems, toast],
   )
 
   const bulkDelete = useCallback(
@@ -237,75 +279,8 @@ export function useMenuAdmin(): UseMenuAdminResult {
           reloadItems()
         })
     },
-    [reloadItems, toast],
+    [reloadItems, setItems, toast],
   )
-
-  useEffect(() => {
-    const controller = new AbortController()
-    async function load() {
-      setLoadingMenus(true)
-      try {
-        const list = await fetchMenus(controller.signal)
-        setMenus(list)
-        setSelectedMenuId((cur) => {
-          if (cur && list.some((m) => m.public_id === cur)) return cur
-          return list[0]?.public_id ?? null
-        })
-        setError(null)
-      } catch (err) {
-        if (err instanceof DOMException && err.name === "AbortError") return
-        setError("Could not load menus.")
-      } finally {
-        if (!controller.signal.aborted) setLoadingMenus(false)
-      }
-    }
-    void load()
-    return () => controller.abort()
-  }, [menusKey])
-
-  useEffect(() => {
-    const controller = new AbortController()
-    async function load() {
-      if (!selectedMenuId) {
-        setCategories([])
-        return
-      }
-      setLoadingCategories(true)
-      try {
-        const list = await fetchCategories(selectedMenuId, controller.signal)
-        setCategories(list)
-      } catch (err) {
-        if (err instanceof DOMException && err.name === "AbortError") return
-        setError("Could not load categories.")
-      } finally {
-        if (!controller.signal.aborted) setLoadingCategories(false)
-      }
-    }
-    void load()
-    return () => controller.abort()
-  }, [selectedMenuId, categoriesKey])
-
-  useEffect(() => {
-    const controller = new AbortController()
-    async function load() {
-      if (!selectedMenuId) {
-        setItems([])
-        return
-      }
-      setLoadingItems(true)
-      try {
-        const list = await fetchItems(selectedMenuId, controller.signal)
-        setItems(list)
-      } catch (err) {
-        if (err instanceof DOMException && err.name === "AbortError") return
-        setError("Could not load dishes.")
-      } finally {
-        if (!controller.signal.aborted) setLoadingItems(false)
-      }
-    }
-    void load()
-    return () => controller.abort()
-  }, [selectedMenuId, itemsKey])
 
   return {
     menus,
