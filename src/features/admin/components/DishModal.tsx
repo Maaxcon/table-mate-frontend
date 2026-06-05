@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react"
+import { useMemo, useState } from "react"
 import { LuCopy, LuImagePlus, LuTrash2, LuX } from "react-icons/lu"
 import {
   clearItemImage,
@@ -12,9 +12,11 @@ import {
 import type { AdminCategory, AdminMenuItem } from "../types"
 import TextField from "./TextField"
 import ConfirmDialog from "./ConfirmDialog"
+import DiscardChangesDialog from "./DiscardChangesDialog"
 import Modal from "./Modal"
 import { useToast } from "./toastContext"
 import { useAllergens } from "../hooks/useAllergens"
+import { useUnsavedGuard } from "../hooks/useUnsavedGuard"
 import "./adminForm.css"
 import "./modal.css"
 import "./menu.css"
@@ -48,7 +50,6 @@ function DishModal({ menuId, categories, item, onClose, onSaved }: DishModalProp
   const [deleting, setDeleting] = useState(false)
   const [duplicating, setDuplicating] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
-  const [confirmDiscard, setConfirmDiscard] = useState(false)
   const [error, setError] = useState<string | null>(null)
   // Show field errors only after the user leaves a field or tries to save.
   const [touched, setTouched] = useState<{ price: boolean; weight: boolean }>({
@@ -91,10 +92,7 @@ function DishModal({ menuId, categories, item, onClose, onSaved }: DishModalProp
     removeImage
 
   // Closing with unsaved edits asks for confirmation first.
-  const requestClose = useCallback(() => {
-    if (dirty) setConfirmDiscard(true)
-    else onClose()
-  }, [dirty, onClose])
+  const guard = useUnsavedGuard(dirty, onClose)
 
   const handlePickImage = (file: File | null) => {
     if (!file) return
@@ -214,9 +212,9 @@ function DishModal({ menuId, categories, item, onClose, onSaved }: DishModalProp
       <Modal
         title={editing ? "Edit dish" : "Add dish"}
         ariaLabel="Dish"
-        onClose={requestClose}
+        onClose={guard.requestClose}
         className="admin-modal--dish"
-        active={!confirmDelete && !confirmDiscard}
+        active={!confirmDelete && !guard.confirming}
       >
         <form className="admin-form dish-form" onSubmit={handleSubmit}>
           <div className="dish-form__grid">
@@ -435,15 +433,8 @@ function DishModal({ menuId, categories, item, onClose, onSaved }: DishModalProp
         />
       )}
 
-      {confirmDiscard && (
-        <ConfirmDialog
-          title="Discard changes?"
-          message="You have unsaved changes. Close without saving?"
-          confirmLabel="Discard"
-          tone="danger"
-          onConfirm={onClose}
-          onClose={() => setConfirmDiscard(false)}
-        />
+      {guard.confirming && (
+        <DiscardChangesDialog onConfirm={guard.discard} onClose={guard.keepEditing} />
       )}
     </>
   )

@@ -3,7 +3,9 @@ import { createMenu } from "../menuApi"
 import type { AdminMenu } from "../types"
 import Modal from "./Modal"
 import TextField from "./TextField"
+import DiscardChangesDialog from "./DiscardChangesDialog"
 import { useToast } from "./toastContext"
+import { useUnsavedGuard } from "../hooks/useUnsavedGuard"
 import "./adminForm.css"
 
 type AddMenuModalProps = {
@@ -16,6 +18,7 @@ function AddMenuModal({ onClose, onCreated }: AddMenuModalProps) {
   const [name, setName] = useState("")
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const guard = useUnsavedGuard(name.trim() !== "", onClose)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -33,17 +36,27 @@ function AddMenuModal({ onClose, onCreated }: AddMenuModalProps) {
   }
 
   return (
-    <Modal title="Add menu" onClose={onClose}>
-      <form className="admin-form" onSubmit={handleSubmit}>
-        <TextField label="Name" value={name} onChange={setName} placeholder="Lunch menu" />
-        {error && <p className="admin-form__status admin-form__status--error">{error}</p>}
-        <div className="admin-form__actions">
-          <button type="submit" className="admin-form__save" disabled={submitting || !name.trim()}>
-            {submitting ? "Adding…" : "Add menu"}
-          </button>
-        </div>
-      </form>
-    </Modal>
+    <>
+      <Modal title="Add menu" onClose={guard.requestClose} active={!guard.confirming}>
+        <form className="admin-form" onSubmit={handleSubmit}>
+          <TextField label="Name" value={name} onChange={setName} placeholder="Lunch menu" />
+          {error && <p className="admin-form__status admin-form__status--error">{error}</p>}
+          <div className="admin-form__actions">
+            <button
+              type="submit"
+              className="admin-form__save"
+              disabled={submitting || !name.trim()}
+            >
+              {submitting ? "Adding…" : "Add menu"}
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      {guard.confirming && (
+        <DiscardChangesDialog onConfirm={guard.discard} onClose={guard.keepEditing} />
+      )}
+    </>
   )
 }
 
