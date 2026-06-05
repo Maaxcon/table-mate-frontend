@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
-import { apiFetch, type Paginated } from "@/api/client"
+import { api } from "@/api/client"
 import { useUnsavedChanges } from "../components/unsavedChanges"
 
 export type SaveStatus = "idle" | "saving" | "saved" | "error"
@@ -39,10 +39,8 @@ export function useAdminResource<T extends { public_id: string }>(
 
     async function load() {
       try {
-        const res = await apiFetch(basePath, { signal })
-        if (!res.ok) throw new Error("load failed")
-        const data = (await res.json()) as Paginated<T>
-        const first = data.results[0]
+        const list = await api.getList<T>(basePath, { signal })
+        const first = list[0]
         if (!first) throw new Error("empty")
         setForm(first)
         setSaved(first)
@@ -68,13 +66,7 @@ export function useAdminResource<T extends { public_id: string }>(
     setStatus("saving")
     setSaveError(null)
     try {
-      const res = await apiFetch(`${basePath}${form.public_id}/`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      })
-      if (!res.ok) throw new Error("save failed")
-      const updated = (await res.json()) as T
+      const updated = await api.patch<T>(`${basePath}${form.public_id}/`, form)
       setForm(updated)
       setSaved(updated)
       setStatus("saved")

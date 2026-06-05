@@ -1,4 +1,4 @@
-import { apiFetch } from "@/api/client"
+import { api } from "@/api/client"
 
 export type AdminOverview = {
   menusTotal: number
@@ -22,9 +22,10 @@ type OverviewResponse = {
 
 // One backend call returns exact counts (scoped to the admin's restaurant).
 export async function fetchOverview(signal?: AbortSignal): Promise<AdminOverview> {
-  const res = await apiFetch("/api/restaurants/admin/overview/", { signal })
-  if (!res.ok) throw new Error("Could not load overview.")
-  const d = (await res.json()) as Partial<OverviewResponse>
+  const d = await api.get<Partial<OverviewResponse>>("/api/restaurants/admin/overview/", {
+    signal,
+    errorMessage: "Could not load overview.",
+  })
   return {
     menusTotal: d.menus_total ?? 0,
     menusActive: d.menus_active ?? 0,

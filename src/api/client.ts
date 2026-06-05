@@ -118,4 +118,60 @@ export async function firstError(res: Response, fallback: string): Promise<strin
   return fallback
 }
 
+type Query = Record<string, string | number | boolean | undefined>
+
+type RequestOptions = {
+  /** Query-string params; undefined values are skipped. */
+  query?: Query
+  signal?: AbortSignal
+  /** Fallback message when the response has no field error. */
+  errorMessage?: string
+}
+
+function withQuery(path: string, query?: Query): string {
+  if (!query) return path
+  const qs = new URLSearchParams()
+  for (const [key, value] of Object.entries(query)) {
+    if (value !== undefined) qs.set(key, String(value))
+  }
+  const s = qs.toString()
+  return s ? `${path}?${s}` : path
+}
+
+async function request<T>(
+  method: string,
+  path: string,
+  body?: unknown,
+  { query, signal, errorMessage = "Request failed." }: RequestOptions = {},
+): Promise<T> {
+  const init: RequestInit = { method, signal }
+  if (body instanceof FormData) {
+    init.body = body // browser sets the multipart boundary
+  } else if (body !== undefined) {
+    init.headers = { "Content-Type": "application/json" }
+    init.body = JSON.stringify(body)
+  }
+  const res = await apiFetch(withQuery(path, query), init)
+  if (!res.ok) throw new Error(await firstError(res, errorMessage))
+  // 204 (and other empty bodies) decode to undefined.
+  const text = await res.text()
+  return (text ? JSON.parse(text) : undefined) as T
+}
+
+/**
+ * Thin typed wrapper over apiFetch: builds the query string, JSON-encodes the
+ * body (FormData passes through), parses DRF errors, and returns parsed JSON.
+ * `getList` unwraps a paginated response to its `results` array.
+ */
+export const api = {
+  get: <T>(path: string, opts?: RequestOptions) => request<T>("GET", path, undefined, opts),
+  getList: async <T>(path: string, opts?: RequestOptions): Promise<T[]> =>
+    (await request<Paginated<T>>("GET", path, undefined, opts)).results,
+  post: <T>(path: string, body?: unknown, opts?: RequestOptions) =>
+    request<T>("POST", path, body, opts),
+  patch: <T>(path: string, body?: unknown, opts?: RequestOptions) =>
+    request<T>("PATCH", path, body, opts),
+  del: (path: string, opts?: RequestOptions) => request<void>("DELETE", path, undefined, opts),
+}
+
 export { apiFetch, ensureSession }

@@ -1,5 +1,5 @@
 import { useCallback } from "react"
-import { apiFetch, type Paginated } from "@/api/client"
+import { api } from "@/api/client"
 import type { AdminEmployee } from "../types"
 import { useResource } from "./useResource"
 
@@ -15,12 +15,11 @@ type UseEmployeesResult = {
 
 /** Loads the staff of the admin's restaurant (scoped by the auth context). */
 export function useEmployees(): UseEmployeesResult {
-  const fetcher = useCallback(async (signal: AbortSignal) => {
-    const res = await apiFetch(BASE_PATH, { signal })
-    if (!res.ok) throw new Error("load failed")
-    const data = (await res.json()) as Paginated<AdminEmployee>
-    return data.results
-  }, [])
+  const fetcher = useCallback(
+    (signal: AbortSignal) =>
+      api.getList<AdminEmployee>(BASE_PATH, { signal, errorMessage: "Could not load staff." }),
+    [],
+  )
 
   const { data, loading, error, reload, setData } = useResource<AdminEmployee[]>(fetcher, {
     errorMessage: "Could not load staff.",

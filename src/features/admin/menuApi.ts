@@ -1,93 +1,69 @@
-import { apiFetch, firstError, type Paginated } from "@/api/client"
+import { api } from "@/api/client"
 import type { AdminCategory, AdminMenu, AdminMenuItem } from "./types"
 
 const MENUS_PATH = "/api/menu/admin/menus/"
 const CATEGORIES_PATH = "/api/menu/admin/categories/"
 const ITEMS_PATH = "/api/menu/admin/items/"
 
-export async function fetchMenus(signal?: AbortSignal): Promise<AdminMenu[]> {
-  const res = await apiFetch(MENUS_PATH, { signal })
-  if (!res.ok) throw new Error("Could not load menus.")
-  const data = (await res.json()) as Paginated<AdminMenu>
-  return data.results
+export function fetchMenus(signal?: AbortSignal): Promise<AdminMenu[]> {
+  return api.getList<AdminMenu>(MENUS_PATH, { signal, errorMessage: "Could not load menus." })
 }
 
-export async function fetchCategories(
+export function fetchCategories(
   menuPublicId: string,
   signal?: AbortSignal,
 ): Promise<AdminCategory[]> {
-  const res = await apiFetch(`${CATEGORIES_PATH}?menu=${menuPublicId}&ordering=sort_order`, {
+  return api.getList<AdminCategory>(CATEGORIES_PATH, {
+    query: { menu: menuPublicId, ordering: "sort_order" },
     signal,
+    errorMessage: "Could not load categories.",
   })
-  if (!res.ok) throw new Error("Could not load categories.")
-  const data = (await res.json()) as Paginated<AdminCategory>
-  return data.results
 }
 
-export async function fetchItems(
-  menuPublicId: string,
-  signal?: AbortSignal,
-): Promise<AdminMenuItem[]> {
-  const res = await apiFetch(`${ITEMS_PATH}?menu=${menuPublicId}&ordering=sort_order`, { signal })
-  if (!res.ok) throw new Error("Could not load dishes.")
-  const data = (await res.json()) as Paginated<AdminMenuItem>
-  return data.results
-}
-
-export async function createMenu(name: string): Promise<AdminMenu> {
-  const res = await apiFetch(MENUS_PATH, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ name }),
+export function fetchItems(menuPublicId: string, signal?: AbortSignal): Promise<AdminMenuItem[]> {
+  return api.getList<AdminMenuItem>(ITEMS_PATH, {
+    query: { menu: menuPublicId, ordering: "sort_order" },
+    signal,
+    errorMessage: "Could not load dishes.",
   })
-  if (!res.ok) throw new Error(await firstError(res, "Could not create menu."))
-  return (await res.json()) as AdminMenu
 }
 
-export async function updateMenu(
+export function createMenu(name: string): Promise<AdminMenu> {
+  return api.post<AdminMenu>(MENUS_PATH, { name }, { errorMessage: "Could not create menu." })
+}
+
+export function updateMenu(
   publicId: string,
   patch: Partial<Pick<AdminMenu, "name" | "is_active">>,
 ): Promise<AdminMenu> {
-  const res = await apiFetch(`${MENUS_PATH}${publicId}/`, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(patch),
+  return api.patch<AdminMenu>(`${MENUS_PATH}${publicId}/`, patch, {
+    errorMessage: "Could not update menu.",
   })
-  if (!res.ok) throw new Error(await firstError(res, "Could not update menu."))
-  return (await res.json()) as AdminMenu
 }
 
-export async function deleteMenu(publicId: string): Promise<void> {
-  const res = await apiFetch(`${MENUS_PATH}${publicId}/`, { method: "DELETE" })
-  if (!res.ok && res.status !== 204) throw new Error("Could not delete menu.")
+export function deleteMenu(publicId: string): Promise<void> {
+  return api.del(`${MENUS_PATH}${publicId}/`, { errorMessage: "Could not delete menu." })
 }
 
-export async function createCategory(menuPublicId: string, name: string): Promise<AdminCategory> {
-  const res = await apiFetch(CATEGORIES_PATH, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ menu: menuPublicId, name }),
-  })
-  if (!res.ok) throw new Error(await firstError(res, "Could not create category."))
-  return (await res.json()) as AdminCategory
+export function createCategory(menuPublicId: string, name: string): Promise<AdminCategory> {
+  return api.post<AdminCategory>(
+    CATEGORIES_PATH,
+    { menu: menuPublicId, name },
+    { errorMessage: "Could not create category." },
+  )
 }
 
-export async function updateCategory(
+export function updateCategory(
   publicId: string,
   patch: Partial<Pick<AdminCategory, "name" | "sort_order">>,
 ): Promise<AdminCategory> {
-  const res = await apiFetch(`${CATEGORIES_PATH}${publicId}/`, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(patch),
+  return api.patch<AdminCategory>(`${CATEGORIES_PATH}${publicId}/`, patch, {
+    errorMessage: "Could not update category.",
   })
-  if (!res.ok) throw new Error(await firstError(res, "Could not update category."))
-  return (await res.json()) as AdminCategory
 }
 
-export async function deleteCategory(publicId: string): Promise<void> {
-  const res = await apiFetch(`${CATEGORIES_PATH}${publicId}/`, { method: "DELETE" })
-  if (!res.ok && res.status !== 204) throw new Error("Could not delete category.")
+export function deleteCategory(publicId: string): Promise<void> {
+  return api.del(`${CATEGORIES_PATH}${publicId}/`, { errorMessage: "Could not delete category." })
 }
 
 export type ItemInput = {
@@ -102,39 +78,26 @@ export type ItemInput = {
   allergens: string[]
 }
 
-export async function createItem(payload: ItemInput): Promise<AdminMenuItem> {
-  const res = await apiFetch(ITEMS_PATH, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  })
-  if (!res.ok) throw new Error(await firstError(res, "Could not save dish."))
-  return (await res.json()) as AdminMenuItem
+export function createItem(payload: ItemInput): Promise<AdminMenuItem> {
+  return api.post<AdminMenuItem>(ITEMS_PATH, payload, { errorMessage: "Could not save dish." })
 }
 
-export async function updateItem(
+export function updateItem(
   publicId: string,
   patch: Partial<Omit<ItemInput, "menu">>,
 ): Promise<AdminMenuItem> {
-  const res = await apiFetch(`${ITEMS_PATH}${publicId}/`, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(patch),
+  return api.patch<AdminMenuItem>(`${ITEMS_PATH}${publicId}/`, patch, {
+    errorMessage: "Could not save dish.",
   })
-  if (!res.ok) throw new Error(await firstError(res, "Could not save dish."))
-  return (await res.json()) as AdminMenuItem
 }
 
 export type ReorderEntry = { public_id: string; sort_order: number }
 
 // One atomic request reorders many items at once (PATCH-per-item is gone).
-export async function reorderItems(order: ReorderEntry[]): Promise<void> {
-  const res = await apiFetch(`${ITEMS_PATH}reorder/`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(order),
+export function reorderItems(order: ReorderEntry[]): Promise<void> {
+  return api.post<void>(`${ITEMS_PATH}reorder/`, order, {
+    errorMessage: "Could not reorder dishes.",
   })
-  if (!res.ok && res.status !== 204) throw new Error("Could not reorder dishes.")
 }
 
 export type BulkItemAction =
@@ -143,56 +106,47 @@ export type BulkItemAction =
   | { action: "delete"; ids: string[] }
 
 // One request applies hide/show, category change, or delete to many dishes.
-export async function bulkItemAction(payload: BulkItemAction): Promise<void> {
-  const res = await apiFetch(`${ITEMS_PATH}bulk/`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
+export function bulkItemAction(payload: BulkItemAction): Promise<void> {
+  return api.post<void>(`${ITEMS_PATH}bulk/`, payload, {
+    errorMessage: "Could not update dishes.",
   })
-  if (!res.ok) throw new Error(await firstError(res, "Could not update dishes."))
 }
 
-export async function reorderCategories(order: ReorderEntry[]): Promise<void> {
-  const res = await apiFetch(`${CATEGORIES_PATH}reorder/`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(order),
+export function reorderCategories(order: ReorderEntry[]): Promise<void> {
+  return api.post<void>(`${CATEGORIES_PATH}reorder/`, order, {
+    errorMessage: "Could not reorder categories.",
   })
-  if (!res.ok && res.status !== 204) throw new Error("Could not reorder categories.")
 }
 
-export async function uploadItemImage(publicId: string, file: File): Promise<AdminMenuItem> {
+export function uploadItemImage(publicId: string, file: File): Promise<AdminMenuItem> {
   const form = new FormData()
   form.append("image", file)
-  // No Content-Type header — the browser sets the multipart boundary.
-  const res = await apiFetch(`${ITEMS_PATH}${publicId}/`, { method: "PATCH", body: form })
-  if (!res.ok) throw new Error(await firstError(res, "Could not upload image."))
-  return (await res.json()) as AdminMenuItem
-}
-
-export async function clearItemImage(publicId: string): Promise<AdminMenuItem> {
-  const res = await apiFetch(`${ITEMS_PATH}${publicId}/`, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ image: null }),
+  return api.patch<AdminMenuItem>(`${ITEMS_PATH}${publicId}/`, form, {
+    errorMessage: "Could not upload image.",
   })
-  if (!res.ok) throw new Error(await firstError(res, "Could not remove image."))
-  return (await res.json()) as AdminMenuItem
 }
 
-export async function fetchAllergens(signal?: AbortSignal): Promise<string[]> {
-  const res = await apiFetch("/api/menu/allergens/", { signal })
-  if (!res.ok) throw new Error("Could not load allergens.")
-  return (await res.json()) as string[]
+export function clearItemImage(publicId: string): Promise<AdminMenuItem> {
+  return api.patch<AdminMenuItem>(
+    `${ITEMS_PATH}${publicId}/`,
+    { image: null },
+    { errorMessage: "Could not remove image." },
+  )
 }
 
-export async function duplicateItem(publicId: string): Promise<AdminMenuItem> {
-  const res = await apiFetch(`${ITEMS_PATH}${publicId}/duplicate/`, { method: "POST" })
-  if (!res.ok) throw new Error(await firstError(res, "Could not duplicate dish."))
-  return (await res.json()) as AdminMenuItem
+export function fetchAllergens(signal?: AbortSignal): Promise<string[]> {
+  return api.get<string[]>("/api/menu/allergens/", {
+    signal,
+    errorMessage: "Could not load allergens.",
+  })
 }
 
-export async function deleteItem(publicId: string): Promise<void> {
-  const res = await apiFetch(`${ITEMS_PATH}${publicId}/`, { method: "DELETE" })
-  if (!res.ok && res.status !== 204) throw new Error("Could not delete dish.")
+export function duplicateItem(publicId: string): Promise<AdminMenuItem> {
+  return api.post<AdminMenuItem>(`${ITEMS_PATH}${publicId}/duplicate/`, undefined, {
+    errorMessage: "Could not duplicate dish.",
+  })
+}
+
+export function deleteItem(publicId: string): Promise<void> {
+  return api.del(`${ITEMS_PATH}${publicId}/`, { errorMessage: "Could not delete dish." })
 }
