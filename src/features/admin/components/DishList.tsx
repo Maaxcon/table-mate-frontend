@@ -14,6 +14,8 @@ type DishListProps = {
   // Dragging is turned off while a search filters the list (reordering a subset
   // would be confusing and wouldn't reflect the real order).
   reorderDisabled?: boolean
+  selectedIds: Set<string>
+  onToggleSelect: (publicId: string) => void
 }
 
 const UNCATEGORIZED = "__none__"
@@ -35,6 +37,8 @@ function DishList({
   onEdit,
   onReorder,
   reorderDisabled = false,
+  selectedIds,
+  onToggleSelect,
 }: DishListProps) {
   const sensors = useDndSensors()
   const categoryName = new Map(categories.map((c) => [c.public_id, c.name]))
@@ -76,6 +80,8 @@ function DishList({
                       item={item}
                       onEdit={onEdit}
                       disabled={reorderDisabled}
+                      selected={selectedIds.has(item.public_id)}
+                      onToggleSelect={onToggleSelect}
                     />
                   ))}
                   {list.length === 0 && (

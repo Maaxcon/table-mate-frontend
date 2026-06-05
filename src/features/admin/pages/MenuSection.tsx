@@ -13,9 +13,13 @@ import CategoryRow from "../components/CategoryRow"
 import AddCategoryForm from "../components/AddCategoryForm"
 import DishList from "../components/DishList"
 import DishModal from "../components/DishModal"
+import ConfirmDialog from "../components/ConfirmDialog"
 import type { AdminMenuItem } from "../types"
 import "../components/SectionPlaceholder.css"
 import "../components/menu.css"
+
+// Sentinel for the "No category" option in the bulk-move dropdown.
+const UNCATEGORIZED = "__none__"
 
 function MenuSection() {
   const {
@@ -33,6 +37,9 @@ function MenuSection() {
     reloadItems,
     reorderCategory,
     reorderItem,
+    bulkSetAvailable,
+    bulkSetCategory,
+    bulkDelete,
   } = useMenuAdmin()
   const [addingMenu, setAddingMenu] = useState(false)
   const [dishModal, setDishModal] = useState<{ open: boolean; item: AdminMenuItem | null }>({
@@ -42,12 +49,41 @@ function MenuSection() {
   const restaurantId = useAppSelector((s) => s.auth.user?.restaurantId ?? null)
   const sensors = useDndSensors()
   const [dishQuery, setDishQuery] = useState("")
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [confirmBulkDelete, setConfirmBulkDelete] = useState(false)
 
   const filteredItems = useMemo(() => {
     const q = dishQuery.trim().toLowerCase()
     if (!q) return items
     return items.filter((it) => it.name.toLowerCase().includes(q))
   }, [items, dishQuery])
+
+  // Selection acts only on the dishes currently in view (respects search).
+  const selectedVisibleIds = useMemo(
+    () => filteredItems.filter((it) => selectedIds.has(it.public_id)).map((it) => it.public_id),
+    [filteredItems, selectedIds],
+  )
+  const allSelected = filteredItems.length > 0 && selectedVisibleIds.length === filteredItems.length
+
+  const clearSelection = () => setSelectedIds(new Set())
+
+  const toggleSelect = (publicId: string) =>
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(publicId)) next.delete(publicId)
+      else next.add(publicId)
+      return next
+    })
+
+  const toggleSelectAll = () => {
+    if (allSelected) clearSelection()
+    else setSelectedIds(new Set(filteredItems.map((it) => it.public_id)))
+  }
+
+  const runBulk = (fn: () => void) => {
+    fn()
+    clearSelection()
+  }
 
   const handleCategoryDragEnd = ({ active, over }: DragEndEvent) => {
     if (over && active.id !== over.id) reorderCategory(String(active.id), String(over.id))
@@ -89,7 +125,10 @@ function MenuSection() {
                 className={`menu-admin__tab${
                   m.public_id === selectedMenuId ? " menu-admin__tab--active" : ""
                 }`}
-                onClick={() => selectMenu(m.public_id)}
+                onClick={() => {
+                  selectMenu(m.public_id)
+                  clearSelection()
+                }}
               >
                 {m.name}
                 {!m.is_active && <span className="menu-admin__tab-badge">hidden</span>}
@@ -197,13 +236,92 @@ function MenuSection() {
                           No dishes match “{dishQuery.trim()}”.
                         </p>
                       ) : (
-                        <DishList
-                          items={filteredItems}
-                          categories={categories}
-                          onEdit={(item) => setDishModal({ open: true, item })}
-                          onReorder={reorderItem}
-                          reorderDisabled={dishQuery.trim() !== ""}
-                        />
+                        <>
+                          <div className="menu-admin__select-bar">
+                            <label className="menu-admin__select-all">
+                              <input
+                                type="checkbox"
+                                checked={allSelected}
+                                onChange={toggleSelectAll}
+                              />
+                              <span>
+                                {selectedVisibleIds.length > 0
+                                  ? `${selectedVisibleIds.length} selected`
+                                  : "Select all"}
+                              </span>
+                            </label>
+
+                            {selectedVisibleIds.length > 0 && (
+                              <div className="menu-admin__bulk-actions">
+                                <button
+                                  type="button"
+                                  className="menu-admin__btn"
+                                  onClick={() =>
+                                    runBulk(() => bulkSetAvailable(selectedVisibleIds, true))
+                                  }
+                                >
+                                  Show
+                                </button>
+                                <button
+                                  type="button"
+                                  className="menu-admin__btn"
+                                  onClick={() =>
+                                    runBulk(() => bulkSetAvailable(selectedVisibleIds, false))
+                                  }
+                                >
+                                  Hide
+                                </button>
+                                <select
+                                  className="admin-field__input menu-admin__bulk-move"
+                                  value=""
+                                  aria-label="Move selected dishes to category"
+                                  onChange={(e) => {
+                                    const value = e.target.value
+                                    if (!value) return
+                                    runBulk(() =>
+                                      bulkSetCategory(
+                                        selectedVisibleIds,
+                                        value === UNCATEGORIZED ? null : value,
+                                      ),
+                                    )
+                                  }}
+                                >
+                                  <option value="">Move to…</option>
+                                  <option value={UNCATEGORIZED}>No category</option>
+                                  {categories.map((c) => (
+                                    <option key={c.public_id} value={c.public_id}>
+                                      {c.name}
+                                    </option>
+                                  ))}
+                                </select>
+                                <button
+                                  type="button"
+                                  className="menu-admin__btn menu-admin__btn--danger"
+                                  onClick={() => setConfirmBulkDelete(true)}
+                                >
+                                  Delete
+                                </button>
+                                <button
+                                  type="button"
+                                  className="menu-admin__btn"
+                                  onClick={clearSelection}
+                                >
+                                  Clear
+                                </button>
+                              </div>
+                            )}
+                          </div>
+
+                          <DishList
+                            items={filteredItems}
+                            categories={categories}
+                            onEdit={(item) => setDishModal({ open: true, item })}
+                            onReorder={reorderItem}
+                            reorderDisabled={dishQuery.trim() !== ""}
+                            selectedIds={selectedIds}
+                            onToggleSelect={toggleSelect}
+                          />
+                        </>
                       )}
                     </>
                   )}
@@ -231,6 +349,22 @@ function MenuSection() {
           item={dishModal.item}
           onClose={() => setDishModal({ open: false, item: null })}
           onSaved={reloadItems}
+        />
+      )}
+
+      {confirmBulkDelete && (
+        <ConfirmDialog
+          title="Delete dishes"
+          message={`Delete ${selectedVisibleIds.length} selected dish${
+            selectedVisibleIds.length === 1 ? "" : "es"
+          }? This cannot be undone.`}
+          confirmLabel="Delete"
+          tone="danger"
+          onConfirm={() => {
+            setConfirmBulkDelete(false)
+            runBulk(() => bulkDelete(selectedVisibleIds))
+          }}
+          onClose={() => setConfirmBulkDelete(false)}
         />
       )}
     </section>

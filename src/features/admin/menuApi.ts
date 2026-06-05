@@ -151,6 +151,21 @@ export async function reorderItems(order: ReorderEntry[]): Promise<void> {
   if (!res.ok && res.status !== 204) throw new Error("Could not reorder dishes.")
 }
 
+export type BulkItemAction =
+  | { action: "set_available"; ids: string[]; is_available: boolean }
+  | { action: "set_category"; ids: string[]; category: string | null }
+  | { action: "delete"; ids: string[] }
+
+// One request applies hide/show, category change, or delete to many dishes.
+export async function bulkItemAction(payload: BulkItemAction): Promise<void> {
+  const res = await apiFetch(`${ITEMS_PATH}bulk/`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  })
+  if (!res.ok) throw new Error(await firstError(res, "Could not update dishes."))
+}
+
 export async function reorderCategories(order: ReorderEntry[]): Promise<void> {
   const res = await apiFetch(`${CATEGORIES_PATH}reorder/`, {
     method: "POST",

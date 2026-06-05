@@ -235,6 +235,51 @@
   margin: 0 0 12px;
 }
 
+/* Row above the dish grid: select-all on the left, bulk actions on the right. */
+.menu-admin__select-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.menu-admin__select-all {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+
+.menu-admin__bulk-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.menu-admin__bulk-move {
+  padding: 9px 12px;
+  font-size: 14px;
+}
+
+/* Per-card selection checkbox. */
+.menu-admin__dish-select {
+  flex-shrink: 0;
+  width: 17px;
+  height: 17px;
+  cursor: pointer;
+}
+
+.menu-admin__dish-card--selected {
+  border-color: var(--color-border-strong);
+  background: var(--color-bg-surface-subtle);
+}
+
 /* Highlights a category while a dish is dragged over it. */
 .menu-admin__group-drop {
   border: 1px dashed transparent;

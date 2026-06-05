@@ -7,9 +7,17 @@ type DishCardProps = {
   item: AdminMenuItem
   onEdit: (item: AdminMenuItem) => void
   disabled?: boolean
+  selected?: boolean
+  onToggleSelect?: (publicId: string) => void
 }
 
-function DishCard({ item, onEdit, disabled = false }: DishCardProps) {
+function DishCard({
+  item,
+  onEdit,
+  disabled = false,
+  selected = false,
+  onToggleSelect,
+}: DishCardProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: item.public_id,
     disabled,
@@ -18,7 +26,7 @@ function DishCard({ item, onEdit, disabled = false }: DishCardProps) {
   return (
     <li
       ref={setNodeRef}
-      className="menu-admin__dish-card"
+      className={`menu-admin__dish-card${selected ? " menu-admin__dish-card--selected" : ""}`}
       style={{
         transform: CSS.Transform.toString(transform),
         transition,
@@ -26,6 +34,15 @@ function DishCard({ item, onEdit, disabled = false }: DishCardProps) {
         zIndex: isDragging ? 2 : undefined,
       }}
     >
+      {onToggleSelect && (
+        <input
+          type="checkbox"
+          className="menu-admin__dish-select"
+          checked={selected}
+          onChange={() => onToggleSelect(item.public_id)}
+          aria-label={`Select ${item.name}`}
+        />
+      )}
       {!disabled && (
         <button
           type="button"

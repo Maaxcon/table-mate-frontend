@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react"
 import { arrayMove } from "@dnd-kit/sortable"
 import {
+  bulkItemAction,
   fetchCategories,
   fetchItems,
   fetchMenus,
@@ -103,6 +104,9 @@ type UseMenuAdminResult = {
   reloadItems: () => void
   reorderCategory: (activeId: string, overId: string) => void
   reorderItem: (activeId: string, overId: string) => void
+  bulkSetAvailable: (ids: string[], isAvailable: boolean) => void
+  bulkSetCategory: (ids: string[], category: string | null) => void
+  bulkDelete: (ids: string[]) => void
 }
 
 /** Loads the restaurant's menus, tracks the selected menu, and loads its categories. */
@@ -189,6 +193,53 @@ export function useMenuAdmin(): UseMenuAdminResult {
     [items, categories, reloadItems, toast],
   )
 
+  const bulkSetAvailable = useCallback(
+    (ids: string[], isAvailable: boolean) => {
+      if (ids.length === 0) return
+      const idSet = new Set(ids)
+      setItems((prev) =>
+        prev.map((it) => (idSet.has(it.public_id) ? { ...it, is_available: isAvailable } : it)),
+      )
+      void bulkItemAction({ action: "set_available", ids, is_available: isAvailable })
+        .then(() => toast.success(isAvailable ? "Dishes shown" : "Dishes hidden"))
+        .catch(() => {
+          toast.error("Could not update dishes. Reverted.")
+          reloadItems()
+        })
+    },
+    [reloadItems, toast],
+  )
+
+  const bulkSetCategory = useCallback(
+    (ids: string[], category: string | null) => {
+      if (ids.length === 0) return
+      const idSet = new Set(ids)
+      setItems((prev) => prev.map((it) => (idSet.has(it.public_id) ? { ...it, category } : it)))
+      void bulkItemAction({ action: "set_category", ids, category })
+        .then(() => toast.success("Dishes moved"))
+        .catch(() => {
+          toast.error("Could not move dishes. Reverted.")
+          reloadItems()
+        })
+    },
+    [reloadItems, toast],
+  )
+
+  const bulkDelete = useCallback(
+    (ids: string[]) => {
+      if (ids.length === 0) return
+      const idSet = new Set(ids)
+      setItems((prev) => prev.filter((it) => !idSet.has(it.public_id)))
+      void bulkItemAction({ action: "delete", ids })
+        .then(() => toast.success("Dishes deleted"))
+        .catch(() => {
+          toast.error("Could not delete dishes. Reverted.")
+          reloadItems()
+        })
+    },
+    [reloadItems, toast],
+  )
+
   useEffect(() => {
     const controller = new AbortController()
     async function load() {
@@ -271,5 +322,8 @@ export function useMenuAdmin(): UseMenuAdminResult {
     reloadItems,
     reorderCategory,
     reorderItem,
+    bulkSetAvailable,
+    bulkSetCategory,
+    bulkDelete,
   }
 }
