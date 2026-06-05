@@ -14,6 +14,7 @@ import TextField from "./TextField"
 import ConfirmDialog from "./ConfirmDialog"
 import { useToast } from "./toastContext"
 import { useAllergens } from "../hooks/useAllergens"
+import { useModalFocus } from "../hooks/useModalFocus"
 import "./adminForm.css"
 import "./modal.css"
 import "./menu.css"
@@ -48,6 +49,8 @@ function DishModal({ menuId, categories, item, onClose, onSaved }: DishModalProp
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [confirmDiscard, setConfirmDiscard] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  // Suspend the focus trap while a nested confirm dialog is open so it can take over.
+  const dialogRef = useModalFocus<HTMLDivElement>(!confirmDelete && !confirmDiscard)
 
   const dirty =
     name !== (item?.name ?? "") ||
@@ -192,6 +195,7 @@ function DishModal({ menuId, categories, item, onClose, onSaved }: DishModalProp
         onClick={requestClose}
       />
       <div
+        ref={dialogRef}
         className="admin-modal admin-modal--dish"
         role="dialog"
         aria-modal="true"

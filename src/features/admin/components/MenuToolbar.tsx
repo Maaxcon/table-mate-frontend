@@ -4,6 +4,7 @@ import { deleteMenu, updateMenu } from "../menuApi"
 import type { AdminMenu } from "../types"
 import ConfirmDialog from "./ConfirmDialog"
 import { useToast } from "./toastContext"
+import { useModalFocus } from "../hooks/useModalFocus"
 
 type MenuToolbarProps = {
   menu: AdminMenu
@@ -19,6 +20,7 @@ function MenuToolbar({ menu, onChanged, onDeleted }: MenuToolbarProps) {
   const [confirm, setConfirm] = useState<null | "delete" | "hide">(null)
   const [renaming, setRenaming] = useState(false)
   const [name, setName] = useState(menu.name)
+  const renameRef = useModalFocus<HTMLDivElement>(renaming)
 
   const run = async (action: () => Promise<unknown>, after: () => void, successMsg: string) => {
     setBusy(true)
@@ -98,6 +100,7 @@ function MenuToolbar({ menu, onChanged, onDeleted }: MenuToolbarProps) {
             }}
           />
           <div
+            ref={renameRef}
             className="admin-modal admin-modal--confirm"
             role="dialog"
             aria-modal="true"

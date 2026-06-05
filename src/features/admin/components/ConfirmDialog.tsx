@@ -1,4 +1,5 @@
 import { useEffect } from "react"
+import { useModalFocus } from "../hooks/useModalFocus"
 import "./modal.css"
 
 type ConfirmDialogProps = {
@@ -23,6 +24,8 @@ function ConfirmDialog({
   onConfirm,
   onClose,
 }: ConfirmDialogProps) {
+  const dialogRef = useModalFocus()
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape" && !busy) onClose()
@@ -42,6 +45,7 @@ function ConfirmDialog({
         }}
       />
       <div
+        ref={dialogRef}
         className="admin-modal admin-modal--confirm"
         role="alertdialog"
         aria-modal="true"

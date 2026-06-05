@@ -4,6 +4,7 @@ import { createEmployee } from "../api"
 import type { EmployeeRole } from "../types"
 import TextField from "./TextField"
 import { useToast } from "./toastContext"
+import { useModalFocus } from "../hooks/useModalFocus"
 import "./adminForm.css"
 import "./modal.css"
 
@@ -20,6 +21,7 @@ const ROLES: { value: EmployeeRole; label: string }[] = [
 
 function AddEmployeeModal({ onClose, onCreated }: AddEmployeeModalProps) {
   const toast = useToast()
+  const dialogRef = useModalFocus()
   const [email, setEmail] = useState("")
   const [firstName, setFirstName] = useState("")
   const [lastName, setLastName] = useState("")
@@ -65,7 +67,13 @@ function AddEmployeeModal({ onClose, onCreated }: AddEmployeeModalProps) {
         aria-label="Close"
         onClick={onClose}
       />
-      <div className="admin-modal" role="dialog" aria-modal="true" aria-label="Add employee">
+      <div
+        ref={dialogRef}
+        className="admin-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Add employee"
+      >
         <div className="admin-modal__header">
           <h2 className="admin-modal__title">Add employee</h2>
           <button type="button" className="admin-modal__close" onClick={onClose} aria-label="Close">

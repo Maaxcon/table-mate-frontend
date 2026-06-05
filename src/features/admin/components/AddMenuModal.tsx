@@ -4,6 +4,7 @@ import { createMenu } from "../menuApi"
 import type { AdminMenu } from "../types"
 import TextField from "./TextField"
 import { useToast } from "./toastContext"
+import { useModalFocus } from "../hooks/useModalFocus"
 import "./adminForm.css"
 import "./modal.css"
 
@@ -14,6 +15,7 @@ type AddMenuModalProps = {
 
 function AddMenuModal({ onClose, onCreated }: AddMenuModalProps) {
   const toast = useToast()
+  const dialogRef = useModalFocus()
   const [name, setName] = useState("")
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -49,7 +51,13 @@ function AddMenuModal({ onClose, onCreated }: AddMenuModalProps) {
         aria-label="Close"
         onClick={onClose}
       />
-      <div className="admin-modal" role="dialog" aria-modal="true" aria-label="Add menu">
+      <div
+        ref={dialogRef}
+        className="admin-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Add menu"
+      >
         <div className="admin-modal__header">
           <h2 className="admin-modal__title">Add menu</h2>
           <button type="button" className="admin-modal__close" onClick={onClose} aria-label="Close">
