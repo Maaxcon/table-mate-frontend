@@ -1,4 +1,7 @@
 import { api } from "@/api/client"
+// The snake_case server shape comes from the generated types; this module maps
+// it to a camelCase view model for the dashboard.
+import type { AdminOverview as OverviewResponse } from "@/types/api/types.gen"
 
 export type AdminOverview = {
   menusTotal: number
@@ -8,16 +11,6 @@ export type AdminOverview = {
   categoriesTotal: number
   staffTotal: number
   staffActive: number
-}
-
-type OverviewResponse = {
-  menus_total: number
-  menus_active: number
-  dishes_total: number
-  dishes_hidden: number
-  categories_total: number
-  staff_total: number
-  staff_active: number
 }
 
 // One backend call returns exact counts (scoped to the admin's restaurant).

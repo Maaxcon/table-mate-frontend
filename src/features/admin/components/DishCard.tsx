@@ -75,7 +75,7 @@ function DishCard({
               {item.is_available ? "Available" : "Hidden"}
             </span>
           </span>
-          {item.allergens.length > 0 && (
+          {item.allergens && item.allergens.length > 0 && (
             <span className="menu-admin__dish-allergens">⚠ {item.allergens.join(", ")}</span>
           )}
         </span>

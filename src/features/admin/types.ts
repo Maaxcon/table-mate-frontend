@@ -1,7 +1,21 @@
 import type { WeekDay, WorkingHours, WorkingHoursDay } from "@/types/workingHours"
+import type { AdminMenu, AdminMenuCategory, AdminMenuItem, Employee } from "@/types/api/types.gen"
 
 export type { WeekDay, WorkingHours, WorkingHoursDay }
 
+// Re-exported from the generated OpenAPI types so they can't drift from the API.
+export type { AdminMenu, AdminMenuItem }
+export type AdminCategory = AdminMenuCategory
+export type AdminEmployee = Employee
+
+// The admin UI only assigns these three roles (the API's RoleEnum also has
+// "customer", which staff management never sets).
+export type EmployeeRole = "admin" | "waiter" | "cook"
+
+// Kept hand-written: the generated Restaurant/RestaurantSettings components do
+// not expose the admin edit fields cleanly (working_hours is an untyped
+// `unknown`, and the Restaurant component omits the social/hours fields). These
+// can move onto generated types once the backend schema types those fields.
 export type AdminRestaurant = {
   public_id: string
   name: string
@@ -20,44 +34,4 @@ export type AdminSettings = {
   locale: string
   default_tax_rate: string
   default_service_charge: string
-}
-
-export type EmployeeRole = "admin" | "waiter" | "cook"
-
-export type AdminEmployee = {
-  public_id: string
-  email: string
-  first_name: string
-  last_name: string
-  phone: string | null
-  role: EmployeeRole
-  is_active: boolean
-}
-
-export type AdminMenu = {
-  public_id: string
-  name: string
-  is_active: boolean
-}
-
-export type AdminCategory = {
-  public_id: string
-  menu: string
-  name: string
-  sort_order: number
-}
-
-export type AdminMenuItem = {
-  public_id: string
-  menu: string
-  category: string | null
-  name: string
-  description: string | null
-  price: string
-  weight_grams: number | null
-  is_available: boolean
-  ingredients: string[]
-  allergens: string[]
-  image: string | null
-  sort_order: number
 }

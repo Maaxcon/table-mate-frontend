@@ -57,7 +57,10 @@ function MenuSection() {
     if (!q) return items
     // Search across name, description, and ingredients.
     return items.filter((it) =>
-      [it.name, it.description ?? "", ...it.ingredients].join(" ").toLowerCase().includes(q),
+      [it.name, it.description ?? "", ...(it.ingredients ?? [])]
+        .join(" ")
+        .toLowerCase()
+        .includes(q),
     )
   }, [items, dishQuery])
 

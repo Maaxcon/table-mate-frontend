@@ -187,7 +187,7 @@ function useCart(restaurantId: string, guestToken?: string): UseCartResult {
     )
       .then((items) => {
         const availableItems = items.filter(
-          (item): item is MenuItem => item !== null && item.is_available,
+          (item): item is MenuItem => item !== null && item.is_available === true,
         )
         dispatch({ type: "HYDRATE_ITEMS", requestedIds, items: availableItems })
       })

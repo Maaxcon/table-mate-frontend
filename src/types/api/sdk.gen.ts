@@ -31,6 +31,52 @@ import type {
   EditorTablesPartialUpdateResponses,
   EditorTablesRetrieveData,
   EditorTablesRetrieveResponses,
+  MenuAdminCategoriesCreateData,
+  MenuAdminCategoriesCreateResponses,
+  MenuAdminCategoriesDestroyData,
+  MenuAdminCategoriesDestroyResponses,
+  MenuAdminCategoriesListData,
+  MenuAdminCategoriesListResponses,
+  MenuAdminCategoriesPartialUpdateData,
+  MenuAdminCategoriesPartialUpdateResponses,
+  MenuAdminCategoriesReorderCreateData,
+  MenuAdminCategoriesReorderCreateResponses,
+  MenuAdminCategoriesRetrieveData,
+  MenuAdminCategoriesRetrieveResponses,
+  MenuAdminCategoriesUpdateData,
+  MenuAdminCategoriesUpdateResponses,
+  MenuAdminItemsBulkCreateData,
+  MenuAdminItemsBulkCreateResponses,
+  MenuAdminItemsCreateData,
+  MenuAdminItemsCreateResponses,
+  MenuAdminItemsDestroyData,
+  MenuAdminItemsDestroyResponses,
+  MenuAdminItemsDuplicateCreateData,
+  MenuAdminItemsDuplicateCreateResponses,
+  MenuAdminItemsListData,
+  MenuAdminItemsListResponses,
+  MenuAdminItemsPartialUpdateData,
+  MenuAdminItemsPartialUpdateResponses,
+  MenuAdminItemsReorderCreateData,
+  MenuAdminItemsReorderCreateResponses,
+  MenuAdminItemsRetrieveData,
+  MenuAdminItemsRetrieveResponses,
+  MenuAdminItemsUpdateData,
+  MenuAdminItemsUpdateResponses,
+  MenuAdminMenusCreateData,
+  MenuAdminMenusCreateResponses,
+  MenuAdminMenusDestroyData,
+  MenuAdminMenusDestroyResponses,
+  MenuAdminMenusListData,
+  MenuAdminMenusListResponses,
+  MenuAdminMenusPartialUpdateData,
+  MenuAdminMenusPartialUpdateResponses,
+  MenuAdminMenusRetrieveData,
+  MenuAdminMenusRetrieveResponses,
+  MenuAdminMenusUpdateData,
+  MenuAdminMenusUpdateResponses,
+  MenuAllergensListData,
+  MenuAllergensListResponses,
   MenuCategoriesListData,
   MenuCategoriesListResponses,
   MenuCategoriesRetrieveData,
@@ -47,36 +93,20 @@ import type {
   MenuMenusListResponses,
   MenuMenusRetrieveData,
   MenuMenusRetrieveResponses,
-  OrdersOrderItemsCreateData,
-  OrdersOrderItemsCreateResponses,
   OrdersOrderItemsListData,
   OrdersOrderItemsListResponses,
-  OrdersOrderItemsPartialUpdateData,
-  OrdersOrderItemsPartialUpdateResponses,
   OrdersOrderItemsRetrieveData,
   OrdersOrderItemsRetrieveResponses,
-  OrdersOrdersCreateData,
-  OrdersOrdersCreateResponses,
   OrdersOrdersListData,
   OrdersOrdersListResponses,
-  OrdersOrdersPartialUpdateData,
-  OrdersOrdersPartialUpdateResponses,
   OrdersOrdersRetrieveData,
   OrdersOrdersRetrieveResponses,
-  OrdersSessionsCreateData,
-  OrdersSessionsCreateResponses,
   OrdersSessionsListData,
   OrdersSessionsListResponses,
-  OrdersSessionsPartialUpdateData,
-  OrdersSessionsPartialUpdateResponses,
   OrdersSessionsRetrieveData,
   OrdersSessionsRetrieveResponses,
-  OrdersTicketsCreateData,
-  OrdersTicketsCreateResponses,
   OrdersTicketsListData,
   OrdersTicketsListResponses,
-  OrdersTicketsPartialUpdateData,
-  OrdersTicketsPartialUpdateResponses,
   OrdersTicketsRetrieveData,
   OrdersTicketsRetrieveResponses,
   PaymentsPaymentsListData,
@@ -85,8 +115,6 @@ import type {
   PaymentsPaymentsRetrieveResponses,
   ReceiptsMyListData,
   ReceiptsMyListResponses,
-  ReservationsReservationsAvailableSlotsRetrieveData,
-  ReservationsReservationsAvailableSlotsRetrieveResponses,
   ReservationsReservationsCreateData,
   ReservationsReservationsCreateResponses,
   ReservationsReservationsListData,
@@ -97,14 +125,26 @@ import type {
   ReservationsReservationsPartialUpdateResponses,
   ReservationsReservationsRetrieveData,
   ReservationsReservationsRetrieveResponses,
+  RestaurantsAdminOverviewRetrieveData,
+  RestaurantsAdminOverviewRetrieveResponses,
+  RestaurantsEmployeesCreateData,
+  RestaurantsEmployeesCreateResponses,
+  RestaurantsEmployeesListData,
+  RestaurantsEmployeesListResponses,
+  RestaurantsEmployeesPartialUpdateData,
+  RestaurantsEmployeesPartialUpdateResponses,
+  RestaurantsEmployeesRetrieveData,
+  RestaurantsEmployeesRetrieveResponses,
   RestaurantsRestaurantSettingsListData,
   RestaurantsRestaurantSettingsListResponses,
+  RestaurantsRestaurantSettingsPartialUpdateData,
+  RestaurantsRestaurantSettingsPartialUpdateResponses,
   RestaurantsRestaurantSettingsRetrieveData,
   RestaurantsRestaurantSettingsRetrieveResponses,
   RestaurantsRestaurantsListData,
   RestaurantsRestaurantsListResponses,
-  RestaurantsRestaurantsPublicListData,
-  RestaurantsRestaurantsPublicListResponses,
+  RestaurantsRestaurantsPartialUpdateData,
+  RestaurantsRestaurantsPartialUpdateResponses,
   RestaurantsRestaurantsPublicRetrieveData,
   RestaurantsRestaurantsPublicRetrieveResponses,
   RestaurantsRestaurantsRetrieveData,
@@ -113,10 +153,6 @@ import type {
   RestaurantsTablesListResponses,
   RestaurantsTablesRetrieveData,
   RestaurantsTablesRetrieveResponses,
-  RestaurantsZonesListData,
-  RestaurantsZonesListResponses,
-  RestaurantsZonesRetrieveData,
-  RestaurantsZonesRetrieveResponses,
 } from "./types.gen"
 
 export type Options<
@@ -151,9 +187,9 @@ export const authGoogleCreate = <ThrowOnError extends boolean = false>(
   })
 
 export const authGoogleContextCreate = <ThrowOnError extends boolean = false>(
-  options: Options<AuthGoogleContextCreateData, ThrowOnError>,
+  options?: Options<AuthGoogleContextCreateData, ThrowOnError>,
 ) =>
-  (options.client ?? client).post<
+  (options?.client ?? client).post<
     AuthGoogleContextCreateResponses,
     AuthGoogleContextCreateErrors,
     ThrowOnError
@@ -163,7 +199,7 @@ export const authGoogleContextCreate = <ThrowOnError extends boolean = false>(
     ...options,
     headers: {
       "Content-Type": "application/json",
-      ...options.headers,
+      ...options?.headers,
     },
   })
 
@@ -288,6 +324,277 @@ export const editorTablesAvailableList = <ThrowOnError extends boolean = false>(
     ...options,
   })
 
+export const menuAdminCategoriesList = <ThrowOnError extends boolean = false>(
+  options?: Options<MenuAdminCategoriesListData, ThrowOnError>,
+) =>
+  (options?.client ?? client).get<MenuAdminCategoriesListResponses, unknown, ThrowOnError>({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/menu/admin/categories/",
+    ...options,
+  })
+
+export const menuAdminCategoriesCreate = <ThrowOnError extends boolean = false>(
+  options: Options<MenuAdminCategoriesCreateData, ThrowOnError>,
+) =>
+  (options.client ?? client).post<MenuAdminCategoriesCreateResponses, unknown, ThrowOnError>({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/menu/admin/categories/",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  })
+
+export const menuAdminCategoriesDestroy = <ThrowOnError extends boolean = false>(
+  options: Options<MenuAdminCategoriesDestroyData, ThrowOnError>,
+) =>
+  (options.client ?? client).delete<MenuAdminCategoriesDestroyResponses, unknown, ThrowOnError>({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/menu/admin/categories/{public_id}/",
+    ...options,
+  })
+
+export const menuAdminCategoriesRetrieve = <ThrowOnError extends boolean = false>(
+  options: Options<MenuAdminCategoriesRetrieveData, ThrowOnError>,
+) =>
+  (options.client ?? client).get<MenuAdminCategoriesRetrieveResponses, unknown, ThrowOnError>({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/menu/admin/categories/{public_id}/",
+    ...options,
+  })
+
+export const menuAdminCategoriesPartialUpdate = <ThrowOnError extends boolean = false>(
+  options: Options<MenuAdminCategoriesPartialUpdateData, ThrowOnError>,
+) =>
+  (options.client ?? client).patch<
+    MenuAdminCategoriesPartialUpdateResponses,
+    unknown,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/menu/admin/categories/{public_id}/",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  })
+
+export const menuAdminCategoriesUpdate = <ThrowOnError extends boolean = false>(
+  options: Options<MenuAdminCategoriesUpdateData, ThrowOnError>,
+) =>
+  (options.client ?? client).put<MenuAdminCategoriesUpdateResponses, unknown, ThrowOnError>({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/menu/admin/categories/{public_id}/",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  })
+
+export const menuAdminCategoriesReorderCreate = <ThrowOnError extends boolean = false>(
+  options: Options<MenuAdminCategoriesReorderCreateData, ThrowOnError>,
+) =>
+  (options.client ?? client).post<MenuAdminCategoriesReorderCreateResponses, unknown, ThrowOnError>(
+    {
+      security: [{ scheme: "bearer", type: "http" }],
+      url: "/api/menu/admin/categories/reorder/",
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        ...options.headers,
+      },
+    },
+  )
+
+export const menuAdminItemsList = <ThrowOnError extends boolean = false>(
+  options?: Options<MenuAdminItemsListData, ThrowOnError>,
+) =>
+  (options?.client ?? client).get<MenuAdminItemsListResponses, unknown, ThrowOnError>({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/menu/admin/items/",
+    ...options,
+  })
+
+export const menuAdminItemsCreate = <ThrowOnError extends boolean = false>(
+  options: Options<MenuAdminItemsCreateData, ThrowOnError>,
+) =>
+  (options.client ?? client).post<MenuAdminItemsCreateResponses, unknown, ThrowOnError>({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/menu/admin/items/",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  })
+
+export const menuAdminItemsDestroy = <ThrowOnError extends boolean = false>(
+  options: Options<MenuAdminItemsDestroyData, ThrowOnError>,
+) =>
+  (options.client ?? client).delete<MenuAdminItemsDestroyResponses, unknown, ThrowOnError>({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/menu/admin/items/{public_id}/",
+    ...options,
+  })
+
+export const menuAdminItemsRetrieve = <ThrowOnError extends boolean = false>(
+  options: Options<MenuAdminItemsRetrieveData, ThrowOnError>,
+) =>
+  (options.client ?? client).get<MenuAdminItemsRetrieveResponses, unknown, ThrowOnError>({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/menu/admin/items/{public_id}/",
+    ...options,
+  })
+
+export const menuAdminItemsPartialUpdate = <ThrowOnError extends boolean = false>(
+  options: Options<MenuAdminItemsPartialUpdateData, ThrowOnError>,
+) =>
+  (options.client ?? client).patch<MenuAdminItemsPartialUpdateResponses, unknown, ThrowOnError>({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/menu/admin/items/{public_id}/",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  })
+
+export const menuAdminItemsUpdate = <ThrowOnError extends boolean = false>(
+  options: Options<MenuAdminItemsUpdateData, ThrowOnError>,
+) =>
+  (options.client ?? client).put<MenuAdminItemsUpdateResponses, unknown, ThrowOnError>({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/menu/admin/items/{public_id}/",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  })
+
+/**
+ * Server-side copy of a dish, including its image file.
+ */
+export const menuAdminItemsDuplicateCreate = <ThrowOnError extends boolean = false>(
+  options: Options<MenuAdminItemsDuplicateCreateData, ThrowOnError>,
+) =>
+  (options.client ?? client).post<MenuAdminItemsDuplicateCreateResponses, unknown, ThrowOnError>({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/menu/admin/items/{public_id}/duplicate/",
+    ...options,
+  })
+
+/**
+ * Hide/show, set the category of, or delete several dishes at once.
+ * Only items in the admin's restaurant are touched; unknown ids are ignored.
+ */
+export const menuAdminItemsBulkCreate = <ThrowOnError extends boolean = false>(
+  options: Options<MenuAdminItemsBulkCreateData, ThrowOnError>,
+) =>
+  (options.client ?? client).post<MenuAdminItemsBulkCreateResponses, unknown, ThrowOnError>({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/menu/admin/items/bulk/",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  })
+
+export const menuAdminItemsReorderCreate = <ThrowOnError extends boolean = false>(
+  options: Options<MenuAdminItemsReorderCreateData, ThrowOnError>,
+) =>
+  (options.client ?? client).post<MenuAdminItemsReorderCreateResponses, unknown, ThrowOnError>({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/menu/admin/items/reorder/",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  })
+
+export const menuAdminMenusList = <ThrowOnError extends boolean = false>(
+  options?: Options<MenuAdminMenusListData, ThrowOnError>,
+) =>
+  (options?.client ?? client).get<MenuAdminMenusListResponses, unknown, ThrowOnError>({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/menu/admin/menus/",
+    ...options,
+  })
+
+export const menuAdminMenusCreate = <ThrowOnError extends boolean = false>(
+  options: Options<MenuAdminMenusCreateData, ThrowOnError>,
+) =>
+  (options.client ?? client).post<MenuAdminMenusCreateResponses, unknown, ThrowOnError>({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/menu/admin/menus/",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  })
+
+export const menuAdminMenusDestroy = <ThrowOnError extends boolean = false>(
+  options: Options<MenuAdminMenusDestroyData, ThrowOnError>,
+) =>
+  (options.client ?? client).delete<MenuAdminMenusDestroyResponses, unknown, ThrowOnError>({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/menu/admin/menus/{public_id}/",
+    ...options,
+  })
+
+export const menuAdminMenusRetrieve = <ThrowOnError extends boolean = false>(
+  options: Options<MenuAdminMenusRetrieveData, ThrowOnError>,
+) =>
+  (options.client ?? client).get<MenuAdminMenusRetrieveResponses, unknown, ThrowOnError>({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/menu/admin/menus/{public_id}/",
+    ...options,
+  })
+
+export const menuAdminMenusPartialUpdate = <ThrowOnError extends boolean = false>(
+  options: Options<MenuAdminMenusPartialUpdateData, ThrowOnError>,
+) =>
+  (options.client ?? client).patch<MenuAdminMenusPartialUpdateResponses, unknown, ThrowOnError>({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/menu/admin/menus/{public_id}/",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  })
+
+export const menuAdminMenusUpdate = <ThrowOnError extends boolean = false>(
+  options: Options<MenuAdminMenusUpdateData, ThrowOnError>,
+) =>
+  (options.client ?? client).put<MenuAdminMenusUpdateResponses, unknown, ThrowOnError>({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/menu/admin/menus/{public_id}/",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  })
+
+/**
+ * The allowed allergen vocabulary — the single source of truth for clients.
+ */
+export const menuAllergensList = <ThrowOnError extends boolean = false>(
+  options?: Options<MenuAllergensListData, ThrowOnError>,
+) =>
+  (options?.client ?? client).get<MenuAllergensListResponses, unknown, ThrowOnError>({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/menu/allergens/",
+    ...options,
+  })
+
 export const menuCategoriesList = <ThrowOnError extends boolean = false>(
   options?: Options<MenuCategoriesListData, ThrowOnError>,
 ) =>
@@ -376,19 +683,6 @@ export const ordersOrderItemsList = <ThrowOnError extends boolean = false>(
     ...options,
   })
 
-export const ordersOrderItemsCreate = <ThrowOnError extends boolean = false>(
-  options: Options<OrdersOrderItemsCreateData, ThrowOnError>,
-) =>
-  (options.client ?? client).post<OrdersOrderItemsCreateResponses, unknown, ThrowOnError>({
-    security: [{ scheme: "bearer", type: "http" }],
-    url: "/api/orders/order-items/",
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...options.headers,
-    },
-  })
-
 export const ordersOrderItemsRetrieve = <ThrowOnError extends boolean = false>(
   options: Options<OrdersOrderItemsRetrieveData, ThrowOnError>,
 ) =>
@@ -396,19 +690,6 @@ export const ordersOrderItemsRetrieve = <ThrowOnError extends boolean = false>(
     security: [{ scheme: "bearer", type: "http" }],
     url: "/api/orders/order-items/{public_id}/",
     ...options,
-  })
-
-export const ordersOrderItemsPartialUpdate = <ThrowOnError extends boolean = false>(
-  options: Options<OrdersOrderItemsPartialUpdateData, ThrowOnError>,
-) =>
-  (options.client ?? client).patch<OrdersOrderItemsPartialUpdateResponses, unknown, ThrowOnError>({
-    security: [{ scheme: "bearer", type: "http" }],
-    url: "/api/orders/order-items/{public_id}/",
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...options.headers,
-    },
   })
 
 export const ordersOrdersList = <ThrowOnError extends boolean = false>(
@@ -420,19 +701,6 @@ export const ordersOrdersList = <ThrowOnError extends boolean = false>(
     ...options,
   })
 
-export const ordersOrdersCreate = <ThrowOnError extends boolean = false>(
-  options: Options<OrdersOrdersCreateData, ThrowOnError>,
-) =>
-  (options.client ?? client).post<OrdersOrdersCreateResponses, unknown, ThrowOnError>({
-    security: [{ scheme: "bearer", type: "http" }],
-    url: "/api/orders/orders/",
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...options.headers,
-    },
-  })
-
 export const ordersOrdersRetrieve = <ThrowOnError extends boolean = false>(
   options: Options<OrdersOrdersRetrieveData, ThrowOnError>,
 ) =>
@@ -440,19 +708,6 @@ export const ordersOrdersRetrieve = <ThrowOnError extends boolean = false>(
     security: [{ scheme: "bearer", type: "http" }],
     url: "/api/orders/orders/{public_id}/",
     ...options,
-  })
-
-export const ordersOrdersPartialUpdate = <ThrowOnError extends boolean = false>(
-  options: Options<OrdersOrdersPartialUpdateData, ThrowOnError>,
-) =>
-  (options.client ?? client).patch<OrdersOrdersPartialUpdateResponses, unknown, ThrowOnError>({
-    security: [{ scheme: "bearer", type: "http" }],
-    url: "/api/orders/orders/{public_id}/",
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...options.headers,
-    },
   })
 
 export const ordersSessionsList = <ThrowOnError extends boolean = false>(
@@ -464,19 +719,6 @@ export const ordersSessionsList = <ThrowOnError extends boolean = false>(
     ...options,
   })
 
-export const ordersSessionsCreate = <ThrowOnError extends boolean = false>(
-  options: Options<OrdersSessionsCreateData, ThrowOnError>,
-) =>
-  (options.client ?? client).post<OrdersSessionsCreateResponses, unknown, ThrowOnError>({
-    security: [{ scheme: "bearer", type: "http" }],
-    url: "/api/orders/sessions/",
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...options.headers,
-    },
-  })
-
 export const ordersSessionsRetrieve = <ThrowOnError extends boolean = false>(
   options: Options<OrdersSessionsRetrieveData, ThrowOnError>,
 ) =>
@@ -484,19 +726,6 @@ export const ordersSessionsRetrieve = <ThrowOnError extends boolean = false>(
     security: [{ scheme: "bearer", type: "http" }],
     url: "/api/orders/sessions/{public_id}/",
     ...options,
-  })
-
-export const ordersSessionsPartialUpdate = <ThrowOnError extends boolean = false>(
-  options: Options<OrdersSessionsPartialUpdateData, ThrowOnError>,
-) =>
-  (options.client ?? client).patch<OrdersSessionsPartialUpdateResponses, unknown, ThrowOnError>({
-    security: [{ scheme: "bearer", type: "http" }],
-    url: "/api/orders/sessions/{public_id}/",
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...options.headers,
-    },
   })
 
 export const ordersTicketsList = <ThrowOnError extends boolean = false>(
@@ -508,19 +737,6 @@ export const ordersTicketsList = <ThrowOnError extends boolean = false>(
     ...options,
   })
 
-export const ordersTicketsCreate = <ThrowOnError extends boolean = false>(
-  options: Options<OrdersTicketsCreateData, ThrowOnError>,
-) =>
-  (options.client ?? client).post<OrdersTicketsCreateResponses, unknown, ThrowOnError>({
-    security: [{ scheme: "bearer", type: "http" }],
-    url: "/api/orders/tickets/",
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...options.headers,
-    },
-  })
-
 export const ordersTicketsRetrieve = <ThrowOnError extends boolean = false>(
   options: Options<OrdersTicketsRetrieveData, ThrowOnError>,
 ) =>
@@ -528,19 +744,6 @@ export const ordersTicketsRetrieve = <ThrowOnError extends boolean = false>(
     security: [{ scheme: "bearer", type: "http" }],
     url: "/api/orders/tickets/{public_id}/",
     ...options,
-  })
-
-export const ordersTicketsPartialUpdate = <ThrowOnError extends boolean = false>(
-  options: Options<OrdersTicketsPartialUpdateData, ThrowOnError>,
-) =>
-  (options.client ?? client).patch<OrdersTicketsPartialUpdateResponses, unknown, ThrowOnError>({
-    security: [{ scheme: "bearer", type: "http" }],
-    url: "/api/orders/tickets/{public_id}/",
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...options.headers,
-    },
   })
 
 export const paymentsPaymentsList = <ThrowOnError extends boolean = false>(
@@ -621,26 +824,6 @@ export const reservationsReservationsPartialUpdate = <ThrowOnError extends boole
     },
   })
 
-/**
- * Available time slots for a table
- *
- * Returns available 30-min time slots for a table. If date is provided, returns slots for that date only. Otherwise returns slots for the next 14 days.
- */
-export const reservationsReservationsAvailableSlotsRetrieve = <
-  ThrowOnError extends boolean = false,
->(
-  options?: Options<ReservationsReservationsAvailableSlotsRetrieveData, ThrowOnError>,
-) =>
-  (options?.client ?? client).get<
-    ReservationsReservationsAvailableSlotsRetrieveResponses,
-    unknown,
-    ThrowOnError
-  >({
-    security: [{ scheme: "bearer", type: "http" }],
-    url: "/api/reservations/reservations/available-slots/",
-    ...options,
-  })
-
 export const reservationsReservationsMyList = <ThrowOnError extends boolean = false>(
   options?: Options<ReservationsReservationsMyListData, ThrowOnError>,
 ) =>
@@ -648,6 +831,68 @@ export const reservationsReservationsMyList = <ThrowOnError extends boolean = fa
     security: [{ scheme: "bearer", type: "http" }],
     url: "/api/reservations/reservations/my/",
     ...options,
+  })
+
+/**
+ * Aggregate counts for the admin dashboard, in one request.
+ */
+export const restaurantsAdminOverviewRetrieve = <ThrowOnError extends boolean = false>(
+  options?: Options<RestaurantsAdminOverviewRetrieveData, ThrowOnError>,
+) =>
+  (options?.client ?? client).get<RestaurantsAdminOverviewRetrieveResponses, unknown, ThrowOnError>(
+    {
+      security: [{ scheme: "bearer", type: "http" }],
+      url: "/api/restaurants/admin/overview/",
+      ...options,
+    },
+  )
+
+export const restaurantsEmployeesList = <ThrowOnError extends boolean = false>(
+  options?: Options<RestaurantsEmployeesListData, ThrowOnError>,
+) =>
+  (options?.client ?? client).get<RestaurantsEmployeesListResponses, unknown, ThrowOnError>({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/restaurants/employees/",
+    ...options,
+  })
+
+export const restaurantsEmployeesCreate = <ThrowOnError extends boolean = false>(
+  options: Options<RestaurantsEmployeesCreateData, ThrowOnError>,
+) =>
+  (options.client ?? client).post<RestaurantsEmployeesCreateResponses, unknown, ThrowOnError>({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/restaurants/employees/",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  })
+
+export const restaurantsEmployeesRetrieve = <ThrowOnError extends boolean = false>(
+  options: Options<RestaurantsEmployeesRetrieveData, ThrowOnError>,
+) =>
+  (options.client ?? client).get<RestaurantsEmployeesRetrieveResponses, unknown, ThrowOnError>({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/restaurants/employees/{public_id}/",
+    ...options,
+  })
+
+export const restaurantsEmployeesPartialUpdate = <ThrowOnError extends boolean = false>(
+  options: Options<RestaurantsEmployeesPartialUpdateData, ThrowOnError>,
+) =>
+  (options.client ?? client).patch<
+    RestaurantsEmployeesPartialUpdateResponses,
+    unknown,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/restaurants/employees/{public_id}/",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
   })
 
 export const restaurantsRestaurantSettingsList = <ThrowOnError extends boolean = false>(
@@ -676,6 +921,23 @@ export const restaurantsRestaurantSettingsRetrieve = <ThrowOnError extends boole
     ...options,
   })
 
+export const restaurantsRestaurantSettingsPartialUpdate = <ThrowOnError extends boolean = false>(
+  options: Options<RestaurantsRestaurantSettingsPartialUpdateData, ThrowOnError>,
+) =>
+  (options.client ?? client).patch<
+    RestaurantsRestaurantSettingsPartialUpdateResponses,
+    unknown,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/restaurants/restaurant-settings/{public_id}/",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  })
+
 export const restaurantsRestaurantsList = <ThrowOnError extends boolean = false>(
   options?: Options<RestaurantsRestaurantsListData, ThrowOnError>,
 ) =>
@@ -684,17 +946,6 @@ export const restaurantsRestaurantsList = <ThrowOnError extends boolean = false>
     url: "/api/restaurants/restaurants/",
     ...options,
   })
-
-export const restaurantsRestaurantsPublicList = <ThrowOnError extends boolean = false>(
-  options?: Options<RestaurantsRestaurantsPublicListData, ThrowOnError>,
-) =>
-  (options?.client ?? client).get<RestaurantsRestaurantsPublicListResponses, unknown, ThrowOnError>(
-    {
-      security: [{ scheme: "bearer", type: "http" }],
-      url: "/api/restaurants/restaurants-public/",
-      ...options,
-    },
-  )
 
 export const restaurantsRestaurantsPublicRetrieve = <ThrowOnError extends boolean = false>(
   options: Options<RestaurantsRestaurantsPublicRetrieveData, ThrowOnError>,
@@ -718,6 +969,23 @@ export const restaurantsRestaurantsRetrieve = <ThrowOnError extends boolean = fa
     ...options,
   })
 
+export const restaurantsRestaurantsPartialUpdate = <ThrowOnError extends boolean = false>(
+  options: Options<RestaurantsRestaurantsPartialUpdateData, ThrowOnError>,
+) =>
+  (options.client ?? client).patch<
+    RestaurantsRestaurantsPartialUpdateResponses,
+    unknown,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/restaurants/restaurants/{public_id}/",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  })
+
 export const restaurantsTablesList = <ThrowOnError extends boolean = false>(
   options?: Options<RestaurantsTablesListData, ThrowOnError>,
 ) =>
@@ -733,23 +1001,5 @@ export const restaurantsTablesRetrieve = <ThrowOnError extends boolean = false>(
   (options.client ?? client).get<RestaurantsTablesRetrieveResponses, unknown, ThrowOnError>({
     security: [{ scheme: "bearer", type: "http" }],
     url: "/api/restaurants/tables/{public_id}/",
-    ...options,
-  })
-
-export const restaurantsZonesList = <ThrowOnError extends boolean = false>(
-  options?: Options<RestaurantsZonesListData, ThrowOnError>,
-) =>
-  (options?.client ?? client).get<RestaurantsZonesListResponses, unknown, ThrowOnError>({
-    security: [{ scheme: "bearer", type: "http" }],
-    url: "/api/restaurants/zones/",
-    ...options,
-  })
-
-export const restaurantsZonesRetrieve = <ThrowOnError extends boolean = false>(
-  options: Options<RestaurantsZonesRetrieveData, ThrowOnError>,
-) =>
-  (options.client ?? client).get<RestaurantsZonesRetrieveResponses, unknown, ThrowOnError>({
-    security: [{ scheme: "bearer", type: "http" }],
-    url: "/api/restaurants/zones/{public_id}/",
     ...options,
   })

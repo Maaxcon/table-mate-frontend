@@ -190,7 +190,7 @@ export function useMenuAdmin(): UseMenuAdminResult {
       setCategories(renumbered) // optimistic
       if (changed.length > 0) {
         void reorderCategories(
-          changed.map((c) => ({ public_id: c.public_id, sort_order: c.sort_order })),
+          changed.map((c) => ({ public_id: c.public_id, sort_order: c.sort_order ?? 0 })),
         ).catch(() => {
           toast.error("Could not reorder categories. Reverted.")
           reloadCategories() // revert to server truth on failure
@@ -223,7 +223,7 @@ export function useMenuAdmin(): UseMenuAdminResult {
         }
         if (changed.length > 0) {
           await reorderItems(
-            changed.map((it) => ({ public_id: it.public_id, sort_order: it.sort_order })),
+            changed.map((it) => ({ public_id: it.public_id, sort_order: it.sort_order ?? 0 })),
           )
         }
       }
