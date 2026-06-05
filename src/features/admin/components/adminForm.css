@@ -47,6 +47,16 @@
   color: var(--color-text-muted);
 }
 
+.admin-field__input--error,
+.admin-field__input--error:focus {
+  border-color: var(--color-error-text);
+}
+
+.admin-field__error {
+  font-size: 12px;
+  color: var(--color-error-text);
+}
+
 .admin-field--check {
   flex-direction: row;
   align-items: center;

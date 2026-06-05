@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { LuCopy, LuImagePlus, LuTrash2, LuX } from "react-icons/lu"
 import {
   clearItemImage,
@@ -51,6 +51,33 @@ function DishModal({ menuId, categories, item, onClose, onSaved }: DishModalProp
   const [error, setError] = useState<string | null>(null)
   // Suspend the focus trap while a nested confirm dialog is open so it can take over.
   const dialogRef = useModalFocus<HTMLDivElement>(!confirmDelete && !confirmDiscard)
+  // Show field errors only after the user leaves a field or tries to save.
+  const [touched, setTouched] = useState<{ price: boolean; weight: boolean }>({
+    price: false,
+    weight: false,
+  })
+  const [submitted, setSubmitted] = useState(false)
+
+  const priceError = useMemo(() => {
+    const v = price.trim()
+    if (!v) return "Price is required."
+    const n = Number(v)
+    if (!Number.isFinite(n)) return "Enter a valid number."
+    if (n <= 0) return "Price must be greater than 0."
+    return null
+  }, [price])
+
+  // Weight is optional, but if filled it must be a positive number.
+  const weightError = useMemo(() => {
+    const v = weight.trim()
+    if (!v) return null
+    const n = Number(v)
+    if (!Number.isFinite(n)) return "Enter a valid number."
+    if (n <= 0) return "Weight must be greater than 0."
+    return null
+  }, [weight])
+
+  const invalid = priceError != null || weightError != null
 
   const dirty =
     name !== (item?.name ?? "") ||
@@ -106,6 +133,8 @@ function DishModal({ menuId, categories, item, onClose, onSaved }: DishModalProp
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setSubmitted(true)
+    if (invalid) return
     setSubmitting(true)
     setError(null)
     const payload: ItemInput = {
@@ -255,6 +284,8 @@ function DishModal({ menuId, categories, item, onClose, onSaved }: DishModalProp
                   step="0.01"
                   value={price}
                   onChange={setPrice}
+                  onBlur={() => setTouched((t) => ({ ...t, price: true }))}
+                  error={touched.price || submitted ? (priceError ?? undefined) : undefined}
                 />
                 <TextField
                   label="Weight (g)"
@@ -262,6 +293,8 @@ function DishModal({ menuId, categories, item, onClose, onSaved }: DishModalProp
                   value={weight}
                   onChange={setWeight}
                   placeholder="optional"
+                  onBlur={() => setTouched((t) => ({ ...t, weight: true }))}
+                  error={touched.weight || submitted ? (weightError ?? undefined) : undefined}
                 />
               </div>
 
@@ -379,7 +412,7 @@ function DishModal({ menuId, categories, item, onClose, onSaved }: DishModalProp
             <button
               type="submit"
               className="admin-form__save"
-              disabled={submitting || deleting || duplicating || !name.trim() || !price.trim()}
+              disabled={submitting || deleting || duplicating || !name.trim() || invalid}
             >
               {submitting ? "Saving…" : "Save"}
             </button>
