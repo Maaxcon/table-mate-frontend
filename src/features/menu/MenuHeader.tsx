@@ -1,0 +1,102 @@
+import { Fragment, type ReactElement } from "react"
+import { Link } from "react-router-dom"
+import logo from "@/assets/logo.png"
+import type { AuthUser } from "@/store/auth/authSlice"
+import type { PublicRestaurantSettings } from "./api"
+import { getCurrencySymbol, isRestaurantOpenNow } from "./utils"
+
+type MenuHeaderProps = {
+  name: string | null
+  coverImage: string | null
+  settings: PublicRestaurantSettings | null
+  user: AuthUser | null
+  onSignOut: () => void
+}
+
+/** Top bar (brand + auth) and the restaurant hero with its meta pills. */
+function MenuHeader({ name, coverImage, settings, user, onSignOut }: MenuHeaderProps) {
+  const currencySymbol = settings ? getCurrencySymbol(settings.currency) : ""
+  const priceBand = settings
+    ? currencySymbol.repeat(Math.max(1, Math.min(4, settings.price_band)))
+    : null
+  const rating = settings?.rating ?? null
+  const etaMin = settings?.eta_min_minutes ?? null
+  const etaMax = settings?.eta_max_minutes ?? null
+  const openNow = settings ? isRestaurantOpenNow(settings.working_hours, settings.timezone) : null
+
+  const pills = [
+    openNow !== null ? (
+      <span
+        key="open"
+        className={`menu-page__hero-pill${openNow ? " menu-page__hero-pill--open" : " menu-page__hero-pill--closed"}`}
+      >
+        {openNow ? "Open now" : "Closed now"}
+      </span>
+    ) : null,
+    priceBand !== null ? (
+      <span key="price-band" className="menu-page__hero-pill">
+        {priceBand}
+      </span>
+    ) : null,
+    rating !== null ? (
+      <span key="rating" className="menu-page__hero-pill">
+        {Number(rating).toFixed(1)} ★
+      </span>
+    ) : null,
+    etaMin !== null && etaMax !== null ? (
+      <span key="eta" className="menu-page__hero-pill">{`${etaMin}-${etaMax} min`}</span>
+    ) : null,
+  ].filter((pill): pill is ReactElement => pill !== null)
+
+  return (
+    <header className="menu-page__header">
+      <div className="menu-page__topbar">
+        <div className="menu-page__brand">
+          <img src={logo} alt="TableMate" className="menu-page__logo" />
+        </div>
+        <div className="menu-page__topbar-right">
+          {user ? (
+            <>
+              <Link
+                to="/cabinet"
+                className="menu-page__avatar"
+                title={`${user.firstName} ${user.lastName}`}
+                aria-label="Open my cabinet"
+              >
+                {user.firstName[0]}
+                {user.lastName[0]}
+              </Link>
+              <button className="menu-page__signout" onClick={onSignOut}>
+                Вийти
+              </button>
+            </>
+          ) : (
+            <Link to="/" className="menu-page__signin">
+              Увійти
+            </Link>
+          )}
+        </div>
+      </div>
+      <div
+        className={`menu-page__hero${coverImage ? " menu-page__hero--has-cover" : ""}`}
+        style={
+          coverImage ? ({ "--hero-cover": `url(${coverImage})` } as React.CSSProperties) : undefined
+        }
+      >
+        <p className="menu-page__label">Menu</p>
+        <h1 className="menu-page__title">{name}</h1>
+        <p className="menu-page__hero-description">Fresh dishes, fast ordering, cozy taste.</p>
+        <div className="menu-page__hero-meta">
+          {pills.map((pill, i) => (
+            <Fragment key={pill.key}>
+              {i > 0 && <span className="menu-page__hero-dot">·</span>}
+              {pill}
+            </Fragment>
+          ))}
+        </div>
+      </div>
+    </header>
+  )
+}
+
+export default MenuHeader

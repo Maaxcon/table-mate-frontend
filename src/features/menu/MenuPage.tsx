@@ -1,32 +1,31 @@
-import { Fragment, type ReactElement, useEffect, useMemo, useRef, useState } from "react"
-import { Link, useParams } from "react-router-dom"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useParams } from "react-router-dom"
 import { LuArrowDownUp, LuShoppingCart } from "react-icons/lu"
-import { FaTelegram, FaFacebook } from "react-icons/fa"
-import logo from "@/assets/logo.png"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
 import { clearAuth } from "@/store/auth/authSlice"
-import { toggleItemLike } from "@/features/menu/api"
 import {
   CartDrawer,
   CategoryRail,
   MenuEmptyState,
-  MenuItemCard,
   MenuItemModal,
   MenuSkeleton,
   RestaurantInfoPanel,
 } from "@/features/menu/components"
 import { getGuestToken } from "@/features/menu/guestToken"
 import { useCart } from "@/features/menu/hooks/useCart"
+import { useItemLikes } from "@/features/menu/hooks/useItemLikes"
 import { useMenuPage } from "@/features/menu/hooks/useMenuPage"
-import { formatAmount, getCurrencySymbol, isRestaurantOpenNow } from "@/features/menu/utils"
+import { formatAmount, getCurrencySymbol } from "@/features/menu/utils"
 import type { MenuItem } from "@/features/menu/types"
+import MenuHeader from "./MenuHeader"
+import MenuFooter from "./MenuFooter"
+import MenuItemGrid from "./MenuItemGrid"
 import "./MenuPage.css"
 
 function MenuPage() {
   const { restaurantId } = useParams<{ restaurantId: string }>()
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null)
   const [cartOpen, setCartOpen] = useState(false)
-  const [likePendingMap, setLikePendingMap] = useState<Record<string, boolean>>({})
   const [scrollActiveCategory, setScrollActiveCategory] = useState<string | null>(null)
   const sectionRefs = useRef<Map<string, HTMLElement>>(new Map())
   const user = useAppSelector((s) => s.auth.user)
@@ -69,6 +68,24 @@ function MenuPage() {
     error,
   } = useMenuPage(restaurantId ?? "", guestToken)
 
+  // Reflect a like in both the grid and the open modal.
+  const handleLiked = useCallback(
+    (publicId: string, isLiked: boolean, likesCount: number) => {
+      setItemLikeState(publicId, isLiked, likesCount)
+      setSelectedItem((prev) =>
+        prev && prev.public_id === publicId
+          ? { ...prev, is_liked: isLiked, likes_count: likesCount }
+          : prev,
+      )
+    },
+    [setItemLikeState],
+  )
+  const { isPending: isLikePending, toggleLike } = useItemLikes(
+    restaurantId ?? "",
+    guestToken,
+    handleLiked,
+  )
+
   const showAllGrouped = activeCategory === null && !searchQuery
 
   const groupedItems = useMemo(() => {
@@ -80,6 +97,12 @@ function MenuPage() {
     }
     return map
   }, [showAllGrouped, categories, items])
+
+  // Cart quantity by item id, so cards don't each scan the cart.
+  const cartQuantities = useMemo(
+    () => new Map(cartItems.map((c) => [c.item.public_id, c.quantity])),
+    [cartItems],
+  )
 
   useEffect(() => {
     if (!groupedItems) return
@@ -113,18 +136,18 @@ function MenuPage() {
   }
 
   const railActiveCategory = showAllGrouped ? scrollActiveCategory : activeCategory
-
   const currencySymbol = restaurantSettings ? getCurrencySymbol(restaurantSettings.currency) : ""
-  const priceBand = restaurantSettings
-    ? currencySymbol.repeat(Math.max(1, Math.min(4, restaurantSettings.price_band)))
-    : null
-  const rating = restaurantSettings?.rating ?? null
-  const etaMin = restaurantSettings?.eta_min_minutes ?? null
-  const etaMax = restaurantSettings?.eta_max_minutes ?? null
-  const openNow = restaurantSettings
-    ? isRestaurantOpenNow(restaurantSettings.working_hours, restaurantSettings.timezone)
-    : null
   const totalPriceLabel = formatAmount(totalPrice)
+
+  const gridHandlers = {
+    currencySymbol,
+    cartQuantities,
+    isLikePending,
+    onSelect: setSelectedItem,
+    onAddToCart: addItem,
+    onToggleLike: toggleLike,
+    onSetQuantity: setQuantity,
+  }
 
   if (!restaurantId || restaurantNotFound) {
     return (
@@ -142,106 +165,22 @@ function MenuPage() {
     )
   }
 
-  const handleToggleLike = async (item: MenuItem) => {
-    if (likePendingMap[item.public_id]) return
-    setLikePendingMap((prev) => ({ ...prev, [item.public_id]: true }))
-    try {
-      const updated = await toggleItemLike(restaurantId, item.public_id, guestToken)
-      setItemLikeState(item.public_id, updated.is_liked, updated.likes_count)
-      setSelectedItem((prev) =>
-        prev && prev.public_id === item.public_id
-          ? {
-              ...prev,
-              is_liked: updated.is_liked,
-              likes_count: updated.likes_count,
-            }
-          : prev,
-      )
-    } catch {
-      // Like failed (network/server error) — keep current state, just stop the spinner.
-    } finally {
-      setLikePendingMap((prev) => ({ ...prev, [item.public_id]: false }))
-    }
-  }
+  const loadMoreButton = hasMore ? (
+    <button className="menu-page__load-more" onClick={loadMore} disabled={loadingMore}>
+      {loadingMore ? "Loading..." : "Load more"}
+    </button>
+  ) : null
 
   return (
     <main className={`menu-page${totalCount > 0 ? " menu-page--has-cart-bar" : ""}`}>
-      <header className="menu-page__header">
-        <div className="menu-page__topbar">
-          <div className="menu-page__brand">
-            <img src={logo} alt="TableMate" className="menu-page__logo" />
-          </div>
-          <div className="menu-page__topbar-right">
-            <Link to={`/${restaurantId}/book`} className="menu-page__book-btn">
-              Book the table
-            </Link>
-            {user ? (
-              <>
-                <Link
-                  to="/cabinet"
-                  className="menu-page__avatar"
-                  title={`${user.firstName} ${user.lastName}`}
-                  aria-label="Open my cabinet"
-                >
-                  {user.firstName[0]}
-                  {user.lastName[0]}
-                </Link>
-                <button className="menu-page__signout" onClick={() => dispatch(clearAuth())}>
-                  Вийти
-                </button>
-              </>
-            ) : (
-              <Link to="/" className="menu-page__signin">
-                Увійти
-              </Link>
-            )}
-          </div>
-        </div>
-        <div
-          className={`menu-page__hero${restaurantCoverImage ? " menu-page__hero--has-cover" : ""}`}
-          style={
-            restaurantCoverImage
-              ? ({ "--hero-cover": `url(${restaurantCoverImage})` } as React.CSSProperties)
-              : undefined
-          }
-        >
-          <p className="menu-page__label">Menu</p>
-          <h1 className="menu-page__title">{restaurantName}</h1>
-          <p className="menu-page__hero-description">Fresh dishes, fast ordering, cozy taste.</p>
-          <div className="menu-page__hero-meta">
-            {[
-              openNow !== null ? (
-                <span
-                  key="open"
-                  className={`menu-page__hero-pill${openNow ? " menu-page__hero-pill--open" : " menu-page__hero-pill--closed"}`}
-                >
-                  {openNow ? "Open now" : "Closed now"}
-                </span>
-              ) : null,
-              priceBand !== null ? (
-                <span key="price-band" className="menu-page__hero-pill">
-                  {priceBand}
-                </span>
-              ) : null,
-              rating !== null ? (
-                <span key="rating" className="menu-page__hero-pill">
-                  {Number(rating).toFixed(1)} ★
-                </span>
-              ) : null,
-              etaMin !== null && etaMax !== null ? (
-                <span key="eta" className="menu-page__hero-pill">{`${etaMin}-${etaMax} min`}</span>
-              ) : null,
-            ]
-              .filter((pill): pill is ReactElement => pill !== null)
-              .map((pill, i) => (
-                <Fragment key={pill.key}>
-                  {i > 0 && <span className="menu-page__hero-dot">·</span>}
-                  {pill}
-                </Fragment>
-              ))}
-          </div>
-        </div>
-      </header>
+      <MenuHeader
+        name={restaurantName}
+        coverImage={restaurantCoverImage}
+        settings={restaurantSettings}
+        user={user}
+        onSignOut={() => dispatch(clearAuth())}
+      />
+
 
       <div className="menu-page__sticky-controls">
         <div className="menu-page__searchrow">
@@ -324,57 +263,16 @@ function MenuPage() {
                     }}
                   >
                     <h2 className="menu-page__category-heading">{cat.name}</h2>
-                    <div className="menu-page__grid">
-                      {catItems.map((item) => (
-                        <MenuItemCard
-                          key={item.public_id}
-                          item={item}
-                          currencySymbol={currencySymbol}
-                          onClick={setSelectedItem}
-                          onAddToCart={addItem}
-                          onToggleLike={handleToggleLike}
-                          onSetQuantity={setQuantity}
-                          likePending={Boolean(likePendingMap[item.public_id])}
-                          cartQuantity={
-                            cartItems.find((c) => c.item.public_id === item.public_id)?.quantity ??
-                            0
-                          }
-                        />
-                      ))}
-                    </div>
+                    <MenuItemGrid items={catItems} {...gridHandlers} />
                   </section>
                 )
               })}
-              {hasMore && (
-                <button className="menu-page__load-more" onClick={loadMore} disabled={loadingMore}>
-                  {loadingMore ? "Loading..." : "Load more"}
-                </button>
-              )}
+              {loadMoreButton}
             </>
           ) : (
             <>
-              <div className="menu-page__grid">
-                {items.map((item) => (
-                  <MenuItemCard
-                    key={item.public_id}
-                    item={item}
-                    currencySymbol={currencySymbol}
-                    onClick={setSelectedItem}
-                    onAddToCart={addItem}
-                    onToggleLike={handleToggleLike}
-                    onSetQuantity={setQuantity}
-                    likePending={Boolean(likePendingMap[item.public_id])}
-                    cartQuantity={
-                      cartItems.find((c) => c.item.public_id === item.public_id)?.quantity ?? 0
-                    }
-                  />
-                ))}
-              </div>
-              {hasMore && (
-                <button className="menu-page__load-more" onClick={loadMore} disabled={loadingMore}>
-                  {loadingMore ? "Loading..." : "Load more"}
-                </button>
-              )}
+              <MenuItemGrid items={items} {...gridHandlers} />
+              {loadMoreButton}
             </>
           )}
         </div>
@@ -417,37 +315,7 @@ function MenuPage() {
         />
       )}
 
-      {(restaurantTelegramUrl || restaurantFacebookUrl) && (
-        <footer className="menu-page__footer">
-          <span className="menu-page__footer-label">Ми в соцмережах</span>
-          <div className="menu-page__footer-links">
-            {restaurantTelegramUrl && (
-              <a
-                className="menu-page__footer-link menu-page__footer-link--telegram"
-                href={restaurantTelegramUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Telegram"
-              >
-                <FaTelegram size={20} />
-                <span>Telegram</span>
-              </a>
-            )}
-            {restaurantFacebookUrl && (
-              <a
-                className="menu-page__footer-link menu-page__footer-link--facebook"
-                href={restaurantFacebookUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Facebook"
-              >
-                <FaFacebook size={20} />
-                <span>Facebook</span>
-              </a>
-            )}
-          </div>
-        </footer>
-      )}
+      <MenuFooter telegramUrl={restaurantTelegramUrl} facebookUrl={restaurantFacebookUrl} />
     </main>
   )
 }
