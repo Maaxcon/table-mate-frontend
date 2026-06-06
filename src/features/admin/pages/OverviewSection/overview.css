@@ -203,6 +203,29 @@
   color: #16a34a;
 }
 
+/* Insights charts */
+.overview-charts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+  max-width: 920px;
+  margin-bottom: 4px;
+}
+
+.overview-chart {
+  padding: 18px;
+  border: 1px solid var(--color-border-default);
+  border-radius: 16px;
+  background: var(--color-bg-surface);
+}
+
+.overview-chart__title {
+  margin: 0 0 14px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
 .overview-actions {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));

@@ -135,6 +135,8 @@ import type {
   RestaurantsEmployeesPartialUpdateResponses,
   RestaurantsEmployeesRetrieveData,
   RestaurantsEmployeesRetrieveResponses,
+  RestaurantsRestaurantsCoverPartialUpdateData,
+  RestaurantsRestaurantsCoverPartialUpdateResponses,
   RestaurantsRestaurantSettingsListData,
   RestaurantsRestaurantSettingsListResponses,
   RestaurantsRestaurantSettingsPartialUpdateData,
@@ -984,6 +986,23 @@ export const restaurantsRestaurantsPartialUpdate = <ThrowOnError extends boolean
       "Content-Type": "application/json",
       ...options.headers,
     },
+  })
+
+/**
+ * Upload a new cover image (multipart `cover_image`), or clear it by
+ * sending `cover_image` empty/null.
+ */
+export const restaurantsRestaurantsCoverPartialUpdate = <ThrowOnError extends boolean = false>(
+  options: Options<RestaurantsRestaurantsCoverPartialUpdateData, ThrowOnError>,
+) =>
+  (options.client ?? client).patch<
+    RestaurantsRestaurantsCoverPartialUpdateResponses,
+    unknown,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/restaurants/restaurants/{public_id}/cover/",
+    ...options,
   })
 
 export const restaurantsTablesList = <ThrowOnError extends boolean = false>(

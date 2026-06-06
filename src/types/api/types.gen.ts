@@ -52,6 +52,7 @@ export type AdminMenuItem = {
   price: string
   is_available?: boolean
   sort_order?: number
+  readonly likes_count: number
   readonly created_at: string
   readonly updated_at: string
 }
@@ -441,6 +442,7 @@ export type PatchedAdminMenuItem = {
   price?: string
   is_available?: boolean
   sort_order?: number
+  readonly likes_count?: number
   readonly created_at?: string
   readonly updated_at?: string
 }
@@ -504,6 +506,7 @@ export type PatchedRestaurant = {
   phone?: string
   telegram_url?: string
   facebook_url?: string
+  readonly cover_image?: string | null
   readonly created_at?: string
   readonly updated_at?: string
 }
@@ -647,6 +650,7 @@ export type Restaurant = {
   phone?: string
   telegram_url?: string
   facebook_url?: string
+  readonly cover_image: string | null
   readonly created_at: string
   readonly updated_at: string
 }
@@ -2609,6 +2613,22 @@ export type RestaurantsRestaurantsPartialUpdateResponses = {
 
 export type RestaurantsRestaurantsPartialUpdateResponse =
   RestaurantsRestaurantsPartialUpdateResponses[keyof RestaurantsRestaurantsPartialUpdateResponses]
+
+export type RestaurantsRestaurantsCoverPartialUpdateData = {
+  body?: never
+  path: {
+    public_id: string
+  }
+  query?: never
+  url: "/api/restaurants/restaurants/{public_id}/cover/"
+}
+
+export type RestaurantsRestaurantsCoverPartialUpdateResponses = {
+  200: Restaurant
+}
+
+export type RestaurantsRestaurantsCoverPartialUpdateResponse =
+  RestaurantsRestaurantsCoverPartialUpdateResponses[keyof RestaurantsRestaurantsCoverPartialUpdateResponses]
 
 export type RestaurantsTablesListData = {
   body?: never

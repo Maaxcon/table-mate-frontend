@@ -1,4 +1,4 @@
-import { useCallback } from "react"
+import { useCallback, useMemo } from "react"
 import { Link } from "react-router-dom"
 import type { IconType } from "react-icons"
 import {
@@ -17,8 +17,15 @@ import { useAppSelector } from "@/store/hooks"
 import { fetchRestaurant, type PublicRestaurant } from "@/features/menu/api"
 import { isRestaurantOpenNow } from "@/features/menu/utils"
 import { useAdminOverview } from "../../hooks/useAdminOverview"
-import { useMenuHealth } from "../../hooks/useMenuHealth"
+import { useMenuData } from "../../hooks/useMenuData"
 import { useResource } from "../../hooks/useResource"
+import BarChart from "../../components/BarChart"
+import {
+  deriveDishesByCategory,
+  derivePriceBuckets,
+  deriveIssues,
+  deriveTopLiked,
+} from "./insights"
 import "../../components/styles/SectionPlaceholder.css"
 import "./overview.css"
 
@@ -90,7 +97,14 @@ function OverviewSection() {
   const settings = restaurant?.settings ?? null
   const openNow = settings ? isRestaurantOpenNow(settings.working_hours, settings.timezone) : null
 
-  const { issues } = useMenuHealth()
+  const { data: menuData } = useMenuData()
+  const issues = useMemo(() => (menuData ? deriveIssues(menuData) : null), [menuData])
+  const dishesByCategory = useMemo(
+    () => (menuData ? deriveDishesByCategory(menuData) : []),
+    [menuData],
+  )
+  const priceBuckets = useMemo(() => (menuData ? derivePriceBuckets(menuData) : []), [menuData])
+  const topLiked = useMemo(() => (menuData ? deriveTopLiked(menuData) : []), [menuData])
 
   return (
     <section className="admin-section admin-section--wide">
@@ -174,6 +188,26 @@ function OverviewSection() {
                   ))}
                 </ul>
               )}
+            </>
+          )}
+
+          {menuData && (
+            <>
+              <h2 className="overview-subtitle">Insights</h2>
+              <div className="overview-charts">
+                <div className="overview-chart">
+                  <h3 className="overview-chart__title">Dishes by category</h3>
+                  <BarChart data={dishesByCategory} emptyText="No dishes yet" />
+                </div>
+                <div className="overview-chart">
+                  <h3 className="overview-chart__title">Price distribution</h3>
+                  <BarChart data={priceBuckets} emptyText="No priced dishes yet" />
+                </div>
+                <div className="overview-chart">
+                  <h3 className="overview-chart__title">Most liked dishes</h3>
+                  <BarChart data={topLiked} emptyText="No likes yet" />
+                </div>
+              </div>
             </>
           )}
 
