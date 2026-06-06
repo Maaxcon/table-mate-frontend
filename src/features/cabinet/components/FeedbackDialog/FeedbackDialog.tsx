@@ -13,7 +13,7 @@ type FeedbackDialogProps = {
 export function FeedbackDialog({ variant, title, message, onClose }: FeedbackDialogProps) {
   // Focus trap + Escape; this is an alert dialog, so it is dismissed only via
   // its OK button or Escape (no backdrop click).
-  const dialogRef = useFocusTrap<HTMLDivElement>(onClose)
+  const dialogRef = useFocusTrap<HTMLDivElement>({ onEscape: onClose })
 
   // Render outside the cabinet card: an ancestor `transform` (the card's hover
   // animation) would otherwise anchor this fixed overlay to the card and make

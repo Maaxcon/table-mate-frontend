@@ -37,7 +37,7 @@ function canShareFiles(): boolean {
 }
 
 export function ReceiptDialog({ entry, onClose }: ReceiptDialogProps) {
-  const dialogRef = useFocusTrap<HTMLDivElement>(onClose)
+  const dialogRef = useFocusTrap<HTMLDivElement>({ onEscape: onClose })
   const shareMode = useMemo(() => canShareFiles(), [])
   const navigate = useNavigate()
   const [busy, setBusy] = useState(false)

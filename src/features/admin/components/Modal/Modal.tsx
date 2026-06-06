@@ -1,6 +1,6 @@
-import { useEffect, type ReactNode } from "react"
+import { type ReactNode } from "react"
 import { LuX } from "react-icons/lu"
-import { useModalFocus } from "../../hooks/useModalFocus"
+import { useFocusTrap } from "@/hooks/useFocusTrap"
 import "../styles/modal.css"
 
 type ModalProps = {
@@ -44,16 +44,13 @@ function Modal({
   overlayClassName,
   backdropLabel = "Close",
 }: ModalProps) {
-  const dialogRef = useModalFocus<HTMLDivElement>(active)
-
-  useEffect(() => {
-    if (!active || closeDisabled) return
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose()
-    }
-    window.addEventListener("keydown", onKey)
-    return () => window.removeEventListener("keydown", onKey)
-  }, [active, closeDisabled, onClose])
+  // Focus trap + Esc-to-close, both suspended when another modal is stacked on
+  // top (active=false) or an action is running (closeDisabled).
+  const dialogRef = useFocusTrap<HTMLDivElement>({
+    active,
+    preferFields: true,
+    onEscape: closeDisabled ? undefined : onClose,
+  })
 
   const requestClose = () => {
     if (!closeDisabled) onClose()
