@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react"
-import { LuCopy, LuImagePlus, LuTrash2, LuX } from "react-icons/lu"
+import { LuCopy, LuTrash2 } from "react-icons/lu"
 import {
   clearItemImage,
   createItem,
@@ -14,6 +14,9 @@ import TextField from "../TextField"
 import ConfirmDialog from "../ConfirmDialog"
 import DiscardChangesDialog from "../DiscardChangesDialog"
 import Modal from "../Modal"
+import DishPhotoField from "./DishPhotoField"
+import IngredientsField from "./IngredientsField"
+import AllergensField from "./AllergensField"
 import { useToast } from "../../hooks/toastContext"
 import { useAllergens } from "../../hooks/useAllergens"
 import { useUnsavedGuard } from "../../hooks/useUnsavedGuard"
@@ -40,7 +43,6 @@ function DishModal({ menuId, categories, item, onClose, onSaved }: DishModalProp
   const [weight, setWeight] = useState(item?.weight_grams != null ? String(item.weight_grams) : "")
   const [isAvailable, setIsAvailable] = useState(item?.is_available ?? true)
   const [ingredients, setIngredients] = useState<string[]>(item?.ingredients ?? [])
-  const [ingredientInput, setIngredientInput] = useState("")
   const [allergens, setAllergens] = useState<string[]>(item?.allergens ?? [])
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [removeImage, setRemoveImage] = useState(false)
@@ -102,13 +104,6 @@ function DishModal({ menuId, categories, item, onClose, onSaved }: DishModalProp
       if (prev?.startsWith("blob:")) URL.revokeObjectURL(prev)
       return URL.createObjectURL(file)
     })
-  }
-
-  const addIngredient = () => {
-    const value = ingredientInput.trim()
-    if (!value) return
-    setIngredients((prev) => (prev.includes(value) ? prev : [...prev, value]))
-    setIngredientInput("")
   }
 
   const handleRemoveImage = () => {
@@ -218,39 +213,12 @@ function DishModal({ menuId, categories, item, onClose, onSaved }: DishModalProp
       >
         <form className="admin-form dish-form" onSubmit={handleSubmit}>
           <div className="dish-form__grid">
-            <div className="dish-form__photo">
-              <label className="dish-photo">
-                {previewUrl ? (
-                  <img className="dish-photo__img" src={previewUrl} alt="Dish" />
-                ) : (
-                  <span className="dish-photo__empty">
-                    <LuImagePlus aria-hidden="true" />
-                    Add a photo
-                  </span>
-                )}
-                <span className="dish-photo__overlay">Change photo</span>
-                {uploadingImage && (
-                  <span className="dish-photo__loading" aria-label="Uploading photo">
-                    <span className="dish-photo__spinner" aria-hidden="true" />
-                  </span>
-                )}
-                <input
-                  type="file"
-                  accept="image/*"
-                  hidden
-                  onChange={(e) => handlePickImage(e.target.files?.[0] ?? null)}
-                />
-              </label>
-              {previewUrl && (
-                <button
-                  type="button"
-                  className="menu-admin__btn dish-photo__remove"
-                  onClick={handleRemoveImage}
-                >
-                  Remove photo
-                </button>
-              )}
-            </div>
+            <DishPhotoField
+              previewUrl={previewUrl}
+              uploading={uploadingImage}
+              onPick={handlePickImage}
+              onRemove={handleRemoveImage}
+            />
 
             <div className="dish-form__fields">
               <TextField label="Name" value={name} onChange={setName} />
@@ -302,86 +270,8 @@ function DishModal({ menuId, categories, item, onClose, onSaved }: DishModalProp
                 <span className="admin-field__label">Available to customers</span>
               </label>
 
-              <div className="admin-field">
-                <span className="admin-field__label">Ingredients</span>
-                <div className="dish-ingredient-add">
-                  <input
-                    className="admin-field__input"
-                    value={ingredientInput}
-                    placeholder="Type an ingredient, press Enter"
-                    onChange={(e) => setIngredientInput(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        e.preventDefault()
-                        addIngredient()
-                      }
-                    }}
-                  />
-                  <button
-                    type="button"
-                    className="menu-admin__btn menu-admin__btn--primary"
-                    onClick={addIngredient}
-                    disabled={!ingredientInput.trim()}
-                  >
-                    Add
-                  </button>
-                </div>
-                {ingredients.length > 0 && (
-                  <div className="dish-allergens">
-                    {ingredients.map((ing) => (
-                      <span key={ing} className="dish-allergen">
-                        {ing}
-                        <button
-                          type="button"
-                          className="dish-allergen__remove"
-                          aria-label={`Remove ${ing}`}
-                          onClick={() => setIngredients((prev) => prev.filter((x) => x !== ing))}
-                        >
-                          <LuX aria-hidden="true" />
-                        </button>
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              <div className="admin-field">
-                <span className="admin-field__label">Allergens</span>
-                <select
-                  className="admin-field__input"
-                  value=""
-                  onChange={(e) => {
-                    const value = e.target.value
-                    if (value) setAllergens((prev) => [...prev, value])
-                  }}
-                >
-                  <option value="">Add allergen…</option>
-                  {allergenOptions
-                    .filter((a) => !allergens.includes(a))
-                    .map((a) => (
-                      <option key={a} value={a}>
-                        {a}
-                      </option>
-                    ))}
-                </select>
-                {allergens.length > 0 && (
-                  <div className="dish-allergens">
-                    {allergens.map((a) => (
-                      <span key={a} className="dish-allergen">
-                        {a}
-                        <button
-                          type="button"
-                          className="dish-allergen__remove"
-                          aria-label={`Remove ${a}`}
-                          onClick={() => setAllergens((prev) => prev.filter((x) => x !== a))}
-                        >
-                          <LuX aria-hidden="true" />
-                        </button>
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
+              <IngredientsField value={ingredients} onChange={setIngredients} />
+              <AllergensField value={allergens} options={allergenOptions} onChange={setAllergens} />
             </div>
           </div>
 
