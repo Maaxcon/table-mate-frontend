@@ -24,6 +24,8 @@ export type AdminRestaurant = {
   telegram_url: string
   facebook_url: string
   working_hours: WorkingHours
+  // Read-only here; uploaded via the dedicated cover endpoint.
+  cover_image: string | null
 }
 
 // DRF serializes DecimalField as a string (e.g. "0.2000").

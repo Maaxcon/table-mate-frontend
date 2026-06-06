@@ -1,5 +1,6 @@
 import AdminSectionForm from "../../components/AdminSectionForm"
 import TextField from "../../components/TextField"
+import RestaurantCover from "../../components/RestaurantCover"
 import WorkingHoursEditor from "../../components/WorkingHoursEditor"
 import { hasInvalidWorkingHours } from "../../constants/workingHours"
 import { useAdminResource } from "../../hooks/useAdminResource"
@@ -25,6 +26,7 @@ function RestaurantSection() {
     >
       {form && (
         <>
+          <RestaurantCover restaurantId={form.public_id} initialCover={form.cover_image ?? null} />
           <TextField label="Name" value={form.name} onChange={(v) => setField("name", v)} />
           <TextField
             label="Address"
