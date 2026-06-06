@@ -261,6 +261,8 @@ export type {
   PaymentWritable,
   PublicRestaurant,
   PublicRestaurantSettings,
+  PublicRestaurantSettingsWritable,
+  PublicRestaurantWritable,
   Receipt,
   ReceiptItem,
   ReceiptsMyListData,
@@ -352,4 +354,6 @@ export type {
   TokenRefresh,
   User,
   UserWritable,
+  WorkingHours,
+  WorkingHoursDay,
 } from "./types.gen"

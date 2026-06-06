@@ -1,5 +1,12 @@
 import type { WeekDay, WorkingHours, WorkingHoursDay } from "@/types/workingHours"
-import type { AdminMenu, AdminMenuCategory, AdminMenuItem, Employee } from "@/types/api/types.gen"
+import type {
+  AdminMenu,
+  AdminMenuCategory,
+  AdminMenuItem,
+  Employee,
+  Restaurant,
+  RestaurantSettings,
+} from "@/types/api/types.gen"
 
 export type { WeekDay, WorkingHours, WorkingHoursDay }
 
@@ -12,28 +19,16 @@ export type AdminEmployee = Employee
 // "customer", which staff management never sets).
 export type EmployeeRole = "admin" | "waiter" | "cook"
 
-// Kept hand-written: the generated Restaurant/RestaurantSettings components do
-// not expose the admin edit fields cleanly (working_hours is an untyped
-// `unknown`, and the Restaurant component omits the social/hours fields). These
-// can move onto generated types once the backend schema types those fields.
-export type AdminRestaurant = {
-  public_id: string
-  name: string
-  address: string
-  phone: string
-  telegram_url: string
-  facebook_url: string
-  working_hours: WorkingHours
-  // Read-only here; uploaded via the dedicated cover endpoint.
-  cover_image: string | null
-}
+// Derived from generated types. working_hours is added on top because it is
+// write-only on the Restaurant serializer (read via to_representation), so the
+// generated read schema omits it; we keep it on the shared frontend type the
+// hours editor uses.
+export type AdminRestaurant = Pick<
+  Restaurant,
+  "public_id" | "name" | "address" | "phone" | "telegram_url" | "facebook_url" | "cover_image"
+> & { working_hours: WorkingHours }
 
-// DRF serializes DecimalField as a string (e.g. "0.2000").
-export type AdminSettings = {
-  public_id: string
-  timezone: string
-  currency: string
-  locale: string
-  default_tax_rate: string
-  default_service_charge: string
-}
+export type AdminSettings = Pick<
+  RestaurantSettings,
+  "public_id" | "timezone" | "currency" | "locale" | "default_tax_rate" | "default_service_charge"
+>

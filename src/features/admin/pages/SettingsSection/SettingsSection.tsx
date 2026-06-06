@@ -20,8 +20,8 @@ function SettingsSection() {
   const { form, loading, loadError, status, saveError, dirty, setField, submit } =
     useAdminResource<AdminSettings>("/api/restaurants/restaurant-settings/")
 
-  const taxError = form ? rateError(form.default_tax_rate) : undefined
-  const serviceError = form ? rateError(form.default_service_charge) : undefined
+  const taxError = form ? rateError(form.default_tax_rate ?? "") : undefined
+  const serviceError = form ? rateError(form.default_service_charge ?? "") : undefined
 
   return (
     <AdminSectionForm
@@ -43,7 +43,7 @@ function SettingsSection() {
               type="number"
               inputMode="decimal"
               step="0.0001"
-              value={form.default_tax_rate}
+              value={form.default_tax_rate ?? ""}
               onChange={(v) => setField("default_tax_rate", v)}
               hint="Decimal, e.g. 0.20 = 20%"
               error={taxError}
@@ -53,7 +53,7 @@ function SettingsSection() {
               type="number"
               inputMode="decimal"
               step="0.0001"
-              value={form.default_service_charge}
+              value={form.default_service_charge ?? ""}
               onChange={(v) => setField("default_service_charge", v)}
               hint="Decimal, e.g. 0.10 = 10%"
               error={serviceError}
@@ -65,18 +65,18 @@ function SettingsSection() {
               value={form.currency}
               onChange={(v) => setField("currency", v)}
               options={CURRENCY_OPTIONS}
-              hint={`Prices show as ${formatCurrency(180, form.currency, form.locale)}`}
+              hint={`Prices show as ${formatCurrency(180, form.currency, form.locale ?? "")}`}
             />
             <SelectField
               label="Locale"
-              value={form.locale}
+              value={form.locale ?? ""}
               onChange={(v) => setField("locale", v)}
               options={LOCALE_OPTIONS}
             />
           </div>
           <SelectField
             label="Timezone"
-            value={form.timezone}
+            value={form.timezone ?? ""}
             onChange={(v) => setField("timezone", v)}
             options={TIMEZONE_OPTIONS}
           />

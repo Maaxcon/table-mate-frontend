@@ -36,21 +36,21 @@ function RestaurantSection() {
           <TextField
             label="Phone"
             type="tel"
-            value={form.phone}
+            value={form.phone ?? ""}
             onChange={(v) => setField("phone", v)}
             placeholder="+380..."
           />
           <TextField
             label="Telegram"
             type="url"
-            value={form.telegram_url}
+            value={form.telegram_url ?? ""}
             onChange={(v) => setField("telegram_url", v)}
             placeholder="https://t.me/..."
           />
           <TextField
             label="Facebook"
             type="url"
-            value={form.facebook_url}
+            value={form.facebook_url ?? ""}
             onChange={(v) => setField("facebook_url", v)}
             placeholder="https://facebook.com/..."
           />

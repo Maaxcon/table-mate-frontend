@@ -519,7 +519,7 @@ export type PatchedRestaurantSettings = {
   locale?: string
   default_tax_rate?: string
   default_service_charge?: string
-  working_hours?: unknown
+  working_hours?: WorkingHours
   rating?: string | null
   eta_min_minutes?: number
   eta_max_minutes?: number
@@ -577,7 +577,7 @@ export type PublicRestaurant = {
 export type PublicRestaurantSettings = {
   readonly currency: string
   readonly timezone: string
-  readonly working_hours: unknown
+  working_hours: WorkingHours
   readonly rating: string | null
   readonly eta_min_minutes: number
   readonly eta_max_minutes: number
@@ -663,7 +663,7 @@ export type RestaurantSettings = {
   locale?: string
   default_tax_rate?: string
   default_service_charge?: string
-  working_hours?: unknown
+  working_hours?: WorkingHours
   rating?: string | null
   eta_min_minutes?: number
   eta_max_minutes?: number
@@ -785,6 +785,25 @@ export type User = {
   is_active?: boolean
   readonly created_at: string
   readonly updated_at: string
+}
+
+/**
+ * Schema shape for the working_hours JSON: optional mon–sun, each open/close.
+ * Used only to type the OpenAPI schema; validation stays in validate_working_hours.
+ */
+export type WorkingHours = {
+  mon?: WorkingHoursDay
+  tue?: WorkingHoursDay
+  wed?: WorkingHoursDay
+  thu?: WorkingHoursDay
+  fri?: WorkingHoursDay
+  sat?: WorkingHoursDay
+  sun?: WorkingHoursDay
+}
+
+export type WorkingHoursDay = {
+  open: string
+  close: string
 }
 
 /**
@@ -1100,7 +1119,7 @@ export type PatchedRestaurantWritable = {
   phone?: string
   telegram_url?: string
   facebook_url?: string
-  working_hours?: unknown
+  working_hours?: WorkingHours
 }
 
 export type PatchedRestaurantSettingsWritable = {
@@ -1109,7 +1128,7 @@ export type PatchedRestaurantSettingsWritable = {
   locale?: string
   default_tax_rate?: string
   default_service_charge?: string
-  working_hours?: unknown
+  working_hours?: WorkingHours
   rating?: string | null
   eta_min_minutes?: number
   eta_max_minutes?: number
@@ -1122,6 +1141,14 @@ export type PaymentWritable = {
   amount: string
   currency: string
   status?: PaymentStatusEnum
+}
+
+export type PublicRestaurantWritable = {
+  [key: string]: unknown
+}
+
+export type PublicRestaurantSettingsWritable = {
+  [key: string]: unknown
 }
 
 export type ReceiptWritable = {
@@ -1152,7 +1179,7 @@ export type RestaurantWritable = {
   phone?: string
   telegram_url?: string
   facebook_url?: string
-  working_hours?: unknown
+  working_hours?: WorkingHours
 }
 
 export type RestaurantSettingsWritable = {
@@ -1161,7 +1188,7 @@ export type RestaurantSettingsWritable = {
   locale?: string
   default_tax_rate?: string
   default_service_charge?: string
-  working_hours?: unknown
+  working_hours?: WorkingHours
   rating?: string | null
   eta_min_minutes?: number
   eta_max_minutes?: number
