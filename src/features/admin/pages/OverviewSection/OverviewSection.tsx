@@ -4,6 +4,8 @@ import type { IconType } from "react-icons"
 import {
   LuArrowRight,
   LuBookOpen,
+  LuCircleAlert,
+  LuCircleCheck,
   LuExternalLink,
   LuLayers,
   LuPlus,
@@ -15,6 +17,7 @@ import { useAppSelector } from "@/store/hooks"
 import { fetchRestaurant, type PublicRestaurant } from "@/features/menu/api"
 import { isRestaurantOpenNow } from "@/features/menu/utils"
 import { useAdminOverview } from "../../hooks/useAdminOverview"
+import { useMenuHealth } from "../../hooks/useMenuHealth"
 import { useResource } from "../../hooks/useResource"
 import "../../components/styles/SectionPlaceholder.css"
 import "./overview.css"
@@ -87,6 +90,8 @@ function OverviewSection() {
   const settings = restaurant?.settings ?? null
   const openNow = settings ? isRestaurantOpenNow(settings.working_hours, settings.timezone) : null
 
+  const { issues } = useMenuHealth()
+
   return (
     <section className="admin-section admin-section--wide">
       <header className="admin-section__header">
@@ -144,6 +149,33 @@ function OverviewSection() {
               sub={`of ${data.staffTotal} total`}
             />
           </div>
+
+          {issues !== null && (
+            <>
+              <h2 className="overview-subtitle">Needs attention</h2>
+              {issues.length === 0 ? (
+                <p className="overview-allgood">
+                  <LuCircleCheck aria-hidden="true" />
+                  Everything looks good — nothing needs fixing.
+                </p>
+              ) : (
+                <ul className="overview-issues">
+                  {issues.map((issue) => (
+                    <li key={issue.id}>
+                      <Link className="overview-issue" to={issue.to}>
+                        <LuCircleAlert className="overview-issue__icon" aria-hidden="true" />
+                        <span className="overview-issue__label">{issue.label}</span>
+                        <span className="overview-issue__fix">
+                          Fix
+                          <LuArrowRight aria-hidden="true" />
+                        </span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </>
+          )}
 
           <h2 className="overview-subtitle">Quick actions</h2>
           <div className="overview-actions">
