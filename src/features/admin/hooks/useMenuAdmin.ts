@@ -8,8 +8,8 @@ import {
   reorderCategories,
   reorderItems,
   updateItem,
-} from "../menuApi"
-import { useToast } from "../components/toastContext"
+} from "../api/menu"
+import { useToast } from "./toastContext"
 import type { AdminCategory, AdminMenu, AdminMenuItem } from "../types"
 import { useResource } from "./useResource"
 

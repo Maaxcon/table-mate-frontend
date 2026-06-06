@@ -1,4 +1,4 @@
-import { fetchOverview, type AdminOverview } from "../overviewApi"
+import { fetchOverview, type AdminOverview } from "../api/overview"
 import { useResource } from "./useResource"
 
 type UseAdminOverviewResult = {

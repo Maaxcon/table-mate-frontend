@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
-import { fetchAllergens } from "../menuApi"
-import { ALLERGEN_OPTIONS } from "../components/allergenOptions"
+import { fetchAllergens } from "../api/menu"
+import { ALLERGEN_OPTIONS } from "../constants/allergenOptions"
 
 // The backend (apps/menu/allergens.py) is the source of truth; the static list
 // is only a fallback used before the fetch resolves or if it fails.

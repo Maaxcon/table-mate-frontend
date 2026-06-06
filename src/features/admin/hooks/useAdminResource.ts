@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { api } from "@/api/client"
-import { useUnsavedChanges } from "../components/unsavedChanges"
+import { useUnsavedChanges } from "./unsavedChanges"
 
 export type SaveStatus = "idle" | "saving" | "saved" | "error"
 

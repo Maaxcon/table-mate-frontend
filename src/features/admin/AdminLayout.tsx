@@ -14,7 +14,7 @@ import { clearAuth } from "@/store/auth/authSlice"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
 import { ToastProvider } from "./components/toast"
 import ConfirmDialog from "./components/ConfirmDialog"
-import { UnsavedChangesContext } from "./components/unsavedChanges"
+import { UnsavedChangesContext } from "./hooks/unsavedChanges"
 import "./AdminLayout.css"
 
 const NAV_ITEMS = [
