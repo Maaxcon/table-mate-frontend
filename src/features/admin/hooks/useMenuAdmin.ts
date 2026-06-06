@@ -242,8 +242,9 @@ export function useMenuAdmin(): UseMenuAdminResult {
       setItems((prev) =>
         prev.map((it) => (idSet.has(it.public_id) ? { ...it, is_available: isAvailable } : it)),
       )
+      const noun = ids.length === 1 ? "Dish" : "Dishes"
       void bulkItemAction({ action: "set_available", ids, is_available: isAvailable })
-        .then(() => toast.success(isAvailable ? "Dishes shown" : "Dishes hidden"))
+        .then(() => toast.success(isAvailable ? `${noun} shown` : `${noun} hidden`))
         .catch(() => {
           toast.error("Could not update dishes. Reverted.")
           reloadItems()

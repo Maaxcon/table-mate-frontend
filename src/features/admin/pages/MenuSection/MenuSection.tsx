@@ -322,6 +322,9 @@ function MenuSection() {
                             items={filteredItems}
                             categories={categories}
                             onEdit={(item) => setDishModal({ open: true, item })}
+                            onToggleAvailable={(item) =>
+                              bulkSetAvailable([item.public_id], !item.is_available)
+                            }
                             onReorder={reorderItem}
                             reorderDisabled={dishQuery.trim() !== ""}
                             selectedIds={selectedIds}

@@ -10,6 +10,7 @@ type DishListProps = {
   items: AdminMenuItem[]
   categories: AdminCategory[]
   onEdit: (item: AdminMenuItem) => void
+  onToggleAvailable: (item: AdminMenuItem) => void
   onReorder: (activeId: string, overId: string) => void
   // Dragging is turned off while a search filters the list (reordering a subset
   // would be confusing and wouldn't reflect the real order).
@@ -35,6 +36,7 @@ function DishList({
   items,
   categories,
   onEdit,
+  onToggleAvailable,
   onReorder,
   reorderDisabled = false,
   selectedIds,
@@ -79,6 +81,7 @@ function DishList({
                       key={item.public_id}
                       item={item}
                       onEdit={onEdit}
+                      onToggleAvailable={onToggleAvailable}
                       disabled={reorderDisabled}
                       selected={selectedIds.has(item.public_id)}
                       onToggleSelect={onToggleSelect}

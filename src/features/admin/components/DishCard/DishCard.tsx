@@ -1,4 +1,4 @@
-import { LuGripVertical } from "react-icons/lu"
+import { LuEye, LuEyeOff, LuGripVertical } from "react-icons/lu"
 import { useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
 import type { AdminMenuItem } from "../../types"
@@ -6,6 +6,7 @@ import type { AdminMenuItem } from "../../types"
 type DishCardProps = {
   item: AdminMenuItem
   onEdit: (item: AdminMenuItem) => void
+  onToggleAvailable: (item: AdminMenuItem) => void
   disabled?: boolean
   selected?: boolean
   onToggleSelect?: (publicId: string) => void
@@ -14,6 +15,7 @@ type DishCardProps = {
 function DishCard({
   item,
   onEdit,
+  onToggleAvailable,
   disabled = false,
   selected = false,
   onToggleSelect,
@@ -67,17 +69,23 @@ function DishCard({
             {item.weight_grams != null && (
               <span className="menu-admin__dish-weight">{item.weight_grams} g</span>
             )}
-            <span
-              className={`menu-admin__dish-status${
-                item.is_available ? "" : " menu-admin__dish-status--off"
-              }`}
-            >
-              {item.is_available ? "Available" : "Hidden"}
-            </span>
           </span>
           {item.allergens && item.allergens.length > 0 && (
             <span className="menu-admin__dish-allergens">⚠ {item.allergens.join(", ")}</span>
           )}
+        </span>
+      </button>
+      <button
+        type="button"
+        className={`menu-admin__avail${item.is_available ? "" : " menu-admin__avail--off"}`}
+        onClick={() => onToggleAvailable(item)}
+        aria-pressed={item.is_available}
+        aria-label={item.is_available ? `Hide ${item.name} from customers` : `Show ${item.name}`}
+        title={item.is_available ? "Available — click to hide" : "Hidden — click to show"}
+      >
+        {item.is_available ? <LuEye aria-hidden="true" /> : <LuEyeOff aria-hidden="true" />}
+        <span className="menu-admin__avail-label">
+          {item.is_available ? "Available" : "Hidden"}
         </span>
       </button>
     </li>
