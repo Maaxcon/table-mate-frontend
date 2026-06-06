@@ -17,7 +17,7 @@ type UseEmployeesResult = {
 export function useEmployees(): UseEmployeesResult {
   const fetcher = useCallback(
     (signal: AbortSignal) =>
-      api.getList<AdminEmployee>(BASE_PATH, { signal, errorMessage: "Could not load staff." }),
+      api.getAllList<AdminEmployee>(BASE_PATH, { signal, errorMessage: "Could not load staff." }),
     [],
   )
 

@@ -6,14 +6,14 @@ const CATEGORIES_PATH = "/api/menu/admin/categories/"
 const ITEMS_PATH = "/api/menu/admin/items/"
 
 export function fetchMenus(signal?: AbortSignal): Promise<AdminMenu[]> {
-  return api.getList<AdminMenu>(MENUS_PATH, { signal, errorMessage: "Could not load menus." })
+  return api.getAllList<AdminMenu>(MENUS_PATH, { signal, errorMessage: "Could not load menus." })
 }
 
 export function fetchCategories(
   menuPublicId: string,
   signal?: AbortSignal,
 ): Promise<AdminCategory[]> {
-  return api.getList<AdminCategory>(CATEGORIES_PATH, {
+  return api.getAllList<AdminCategory>(CATEGORIES_PATH, {
     query: { menu: menuPublicId, ordering: "sort_order" },
     signal,
     errorMessage: "Could not load categories.",
@@ -21,7 +21,7 @@ export function fetchCategories(
 }
 
 export function fetchItems(menuPublicId: string, signal?: AbortSignal): Promise<AdminMenuItem[]> {
-  return api.getList<AdminMenuItem>(ITEMS_PATH, {
+  return api.getAllList<AdminMenuItem>(ITEMS_PATH, {
     query: { menu: menuPublicId, ordering: "sort_order" },
     signal,
     errorMessage: "Could not load dishes.",

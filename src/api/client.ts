@@ -158,15 +158,31 @@ async function request<T>(
   return (text ? JSON.parse(text) : undefined) as T
 }
 
+// Safety cap so a misbehaving "next" can't loop forever (100 pages × 20 = 2000).
+const MAX_PAGES = 100
+
 /**
  * Thin typed wrapper over apiFetch: builds the query string, JSON-encodes the
  * body (FormData passes through), parses DRF errors, and returns parsed JSON.
- * `getList` unwraps a paginated response to its `results` array.
+ * `getList` returns the first page; `getAllList` follows pagination to the end.
  */
 export const api = {
   get: <T>(path: string, opts?: RequestOptions) => request<T>("GET", path, undefined, opts),
   getList: async <T>(path: string, opts?: RequestOptions): Promise<T[]> =>
     (await request<Paginated<T>>("GET", path, undefined, opts)).results,
+  /** Fetches every page of a paginated endpoint and concatenates the results. */
+  getAllList: async <T>(path: string, opts?: RequestOptions): Promise<T[]> => {
+    const all: T[] = []
+    for (let page = 1; page <= MAX_PAGES; page += 1) {
+      const data = await request<Paginated<T>>("GET", path, undefined, {
+        ...opts,
+        query: { ...opts?.query, page },
+      })
+      all.push(...data.results)
+      if (!data.next) break
+    }
+    return all
+  },
   post: <T>(path: string, body?: unknown, opts?: RequestOptions) =>
     request<T>("POST", path, body, opts),
   patch: <T>(path: string, body?: unknown, opts?: RequestOptions) =>
