@@ -6,9 +6,22 @@ import { formatCurrency } from "@/features/menu/utils"
 import { useAdminResource } from "../../hooks/useAdminResource"
 import type { AdminSettings } from "../../types"
 
+// Tax/service are stored as decimals, so they must be a number from 0 to 1.
+function rateError(value: string): string | undefined {
+  const v = value.trim()
+  if (!v) return "Required"
+  const n = Number(v)
+  if (!Number.isFinite(n)) return "Enter a number"
+  if (n < 0 || n > 1) return "Must be between 0 and 1 (e.g. 0.2 = 20%)"
+  return undefined
+}
+
 function SettingsSection() {
   const { form, loading, loadError, status, saveError, dirty, setField, submit } =
     useAdminResource<AdminSettings>("/api/restaurants/restaurant-settings/")
+
+  const taxError = form ? rateError(form.default_tax_rate) : undefined
+  const serviceError = form ? rateError(form.default_service_charge) : undefined
 
   return (
     <AdminSectionForm
@@ -19,6 +32,7 @@ function SettingsSection() {
       status={status}
       saveError={saveError}
       dirty={dirty}
+      saveDisabled={taxError != null || serviceError != null}
       onSubmit={() => void submit()}
     >
       {form && (
@@ -32,6 +46,7 @@ function SettingsSection() {
               value={form.default_tax_rate}
               onChange={(v) => setField("default_tax_rate", v)}
               hint="Decimal, e.g. 0.20 = 20%"
+              error={taxError}
             />
             <TextField
               label="Service charge"
@@ -41,6 +56,7 @@ function SettingsSection() {
               value={form.default_service_charge}
               onChange={(v) => setField("default_service_charge", v)}
               hint="Decimal, e.g. 0.10 = 10%"
+              error={serviceError}
             />
           </div>
           <div className="admin-form__row">
