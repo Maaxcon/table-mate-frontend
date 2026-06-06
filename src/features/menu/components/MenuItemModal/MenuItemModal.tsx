@@ -14,6 +14,7 @@ import {
   LuFlame,
 } from "react-icons/lu"
 import type { MenuItem } from "@/features/menu/types"
+import { useFocusTrap } from "@/hooks/useFocusTrap"
 import { formatPrice } from "../../utils"
 import "./MenuItemModal.css"
 
@@ -49,8 +50,9 @@ type MenuItemModalProps = {
 
 function MenuItemModal({ item, currencySymbol, onClose, onAddToCart }: MenuItemModalProps) {
   const [added, setAdded] = useState(false)
-  const closeButtonRef = useRef<HTMLButtonElement | null>(null)
   const closeTimerRef = useRef<number | null>(null)
+  // Focus trap + Esc-to-close + focus restore (focuses the close button first).
+  const dialogRef = useFocusTrap<HTMLDivElement>({ onEscape: onClose })
   const hasWeight = item.weight_grams != null && item.weight_grams > 0
 
   const handleAdd = () => {
@@ -66,22 +68,12 @@ function MenuItemModal({ item, currencySymbol, onClose, onAddToCart }: MenuItemM
     }, 900)
   }
 
+  // Clear the auto-close timer if the modal unmounts first.
   useEffect(() => {
-    closeButtonRef.current?.focus()
     return () => {
-      if (closeTimerRef.current != null) {
-        window.clearTimeout(closeTimerRef.current)
-      }
+      if (closeTimerRef.current != null) window.clearTimeout(closeTimerRef.current)
     }
   }, [])
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose()
-    }
-    document.addEventListener("keydown", onKey)
-    return () => document.removeEventListener("keydown", onKey)
-  }, [onClose])
 
   return (
     <div
@@ -92,17 +84,13 @@ function MenuItemModal({ item, currencySymbol, onClose, onAddToCart }: MenuItemM
       }}
     >
       <div
+        ref={dialogRef}
         className={`menu-modal${!item.image ? " menu-modal--no-image" : ""}`}
         role="dialog"
         aria-modal="true"
         aria-labelledby="menu-modal-heading"
       >
-        <button
-          ref={closeButtonRef}
-          className="menu-modal__close"
-          onClick={onClose}
-          aria-label="Close"
-        >
+        <button className="menu-modal__close" onClick={onClose} aria-label="Close">
           ✕
         </button>
 
