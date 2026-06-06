@@ -1,4 +1,5 @@
 import { FaTelegram, FaFacebook } from "react-icons/fa"
+import { menuStrings } from "./strings"
 
 type MenuFooterProps = {
   telegramUrl: string
@@ -10,7 +11,7 @@ function MenuFooter({ telegramUrl, facebookUrl }: MenuFooterProps) {
   if (!telegramUrl && !facebookUrl) return null
   return (
     <footer className="menu-page__footer">
-      <span className="menu-page__footer-label">Ми в соцмережах</span>
+      <span className="menu-page__footer-label">{menuStrings.footer.social}</span>
       <div className="menu-page__footer-links">
         {telegramUrl && (
           <a

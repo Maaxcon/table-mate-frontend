@@ -1,6 +1,7 @@
 import { LuHeart, LuMinus, LuPlus } from "react-icons/lu"
 import type { MenuItem } from "@/features/menu/types"
 import { formatPrice } from "../../utils"
+import { menuStrings } from "../../strings"
 import "./MenuItemCard.css"
 
 type MenuItemCardProps = {
@@ -89,7 +90,7 @@ function MenuItemCard({
                 <button
                   className="menu-item-card__stepper-btn"
                   onClick={handleDecrement}
-                  aria-label="Зменшити кількість"
+                  aria-label={menuStrings.card.decrease}
                 >
                   <LuMinus size={12} strokeWidth={2.6} />
                 </button>
@@ -97,7 +98,7 @@ function MenuItemCard({
                 <button
                   className="menu-item-card__stepper-btn"
                   onClick={handleIncrement}
-                  aria-label="Збільшити кількість"
+                  aria-label={menuStrings.card.increase}
                 >
                   <LuPlus size={12} strokeWidth={2.6} />
                 </button>
@@ -106,27 +107,38 @@ function MenuItemCard({
               <button
                 className="menu-item-card__add"
                 onClick={handleAdd}
-                aria-label={`Додати ${item.name} до кошика`}
+                aria-label={menuStrings.card.addToCart(item.name)}
               >
                 <LuPlus size={22} strokeWidth={3} />
               </button>
             )
           ) : (
-            <span className="menu-item-card__unavailable-dot" aria-label="Недоступно" />
+            <span
+              className="menu-item-card__unavailable-dot"
+              aria-label={menuStrings.card.unavailable}
+            />
           )}
         </div>
 
         <div className="menu-item-card__footer-bottom">
-          {hasWeight && <span className="menu-item-card__meta-text">{item.weight_grams} г</span>}
+          {hasWeight && item.weight_grams != null && (
+            <span className="menu-item-card__meta-text">
+              {menuStrings.weightGrams(item.weight_grams)}
+            </span>
+          )}
           {hasWeight && <span className="menu-item-card__meta-dot">·</span>}
           <button
             className={`menu-item-card__like${item.is_liked ? " menu-item-card__like--active" : ""}`}
             onClick={handleToggleLike}
             disabled={likePending}
-            aria-label={item.is_liked ? `Прибрати лайк з ${item.name}` : `Лайкнути ${item.name}`}
+            aria-label={
+              item.is_liked ? menuStrings.card.unlike(item.name) : menuStrings.card.like(item.name)
+            }
           >
             <LuHeart className="menu-item-card__like-icon" size={12} />
-            <span className="menu-item-card__like-count">{item.likes_count} likes</span>
+            <span className="menu-item-card__like-count">
+              {menuStrings.card.likes(item.likes_count)}
+            </span>
           </button>
         </div>
       </div>

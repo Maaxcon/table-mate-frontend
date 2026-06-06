@@ -1,15 +1,8 @@
 import type { PublicRestaurantSettings, WorkingHours } from "../../api"
+import { menuStrings } from "../../strings"
 import "./RestaurantInfoPanel.css"
 
-const DAY_LABELS: Record<keyof WorkingHours, string> = {
-  mon: "Пн",
-  tue: "Вт",
-  wed: "Ср",
-  thu: "Чт",
-  fri: "Пт",
-  sat: "Сб",
-  sun: "Нд",
-}
+const DAY_LABELS = menuStrings.dayShort
 
 const DAY_ORDER: Array<keyof WorkingHours> = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
 
@@ -55,7 +48,7 @@ export function RestaurantInfoPanel({ address, phone, settings }: Props) {
 
   return (
     <aside className="restaurant-info">
-      <h2 className="restaurant-info__heading">Про заклад</h2>
+      <h2 className="restaurant-info__heading">{menuStrings.info.heading}</h2>
 
       {address && (
         <div className="restaurant-info__row">
@@ -84,7 +77,7 @@ export function RestaurantInfoPanel({ address, phone, settings }: Props) {
               🕐
             </span>
             <span className="restaurant-info__text restaurant-info__text--label">
-              Графік роботи
+              {menuStrings.info.hours}
             </span>
           </div>
           <table className="restaurant-info__table">
@@ -105,7 +98,9 @@ export function RestaurantInfoPanel({ address, phone, settings }: Props) {
           <span className="restaurant-info__icon" aria-hidden="true">
             💳
           </span>
-          <span className="restaurant-info__text">Валюта: {settings.currency}</span>
+          <span className="restaurant-info__text">
+            {menuStrings.info.currency(settings.currency)}
+          </span>
         </div>
       )}
     </aside>

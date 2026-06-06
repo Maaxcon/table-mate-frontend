@@ -20,6 +20,7 @@ import type { MenuItem } from "@/features/menu/types"
 import MenuHeader from "./MenuHeader"
 import MenuFooter from "./MenuFooter"
 import MenuItemGrid from "./MenuItemGrid"
+import { menuStrings } from "./strings"
 import "./MenuPage.css"
 
 function MenuPage() {
@@ -167,7 +168,7 @@ function MenuPage() {
 
   const loadMoreButton = hasMore ? (
     <button className="menu-page__load-more" onClick={loadMore} disabled={loadingMore}>
-      {loadingMore ? "Loading..." : "Load more"}
+      {loadingMore ? menuStrings.grid.loadingMore : menuStrings.grid.loadMore}
     </button>
   ) : null
 
@@ -187,7 +188,7 @@ function MenuPage() {
           <input
             className="menu-page__search"
             type="search"
-            placeholder="Search dishes..."
+            placeholder={menuStrings.controls.searchPlaceholder}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -202,24 +203,28 @@ function MenuPage() {
                     : "sort_order",
               )
             }
-            aria-label="Сортування"
+            aria-label={menuStrings.controls.sortAria}
             title={
               sortOrder === "sort_order"
-                ? "За замовчуванням"
+                ? menuStrings.controls.sortTitleDefault
                 : sortOrder === "price"
-                  ? "Ціна: від низької"
-                  : "Ціна: від високої"
+                  ? menuStrings.controls.sortTitlePriceAsc
+                  : menuStrings.controls.sortTitlePriceDesc
             }
           >
             <LuArrowDownUp size={16} />
             <span className="menu-page__sort-label">
-              {sortOrder === "price" ? "↑ Ціна" : sortOrder === "-price" ? "↓ Ціна" : "Сорт."}
+              {sortOrder === "price"
+                ? menuStrings.controls.sortLabelPriceAsc
+                : sortOrder === "-price"
+                  ? menuStrings.controls.sortLabelPriceDesc
+                  : menuStrings.controls.sortLabelDefault}
             </span>
           </button>
           <button
             className="menu-page__cart-btn"
             onClick={() => setCartOpen(true)}
-            aria-label="Кошик"
+            aria-label={menuStrings.controls.cartAria}
           >
             <LuShoppingCart size={18} />
             {totalCount > 0 && <span className="menu-page__cart-badge">{totalCount}</span>}
@@ -244,7 +249,7 @@ function MenuPage() {
           ) : items.length === 0 ? (
             <MenuEmptyState
               message={
-                searchQuery ? `No results for "${searchQuery}".` : "No items in this category."
+                searchQuery ? menuStrings.grid.noResults(searchQuery) : menuStrings.grid.noItems
               }
             />
           ) : showAllGrouped && groupedItems ? (
@@ -297,10 +302,10 @@ function MenuPage() {
         <button
           className="menu-page__cart-bar"
           onClick={() => setCartOpen(true)}
-          aria-label="Відкрити кошик"
+          aria-label={menuStrings.cartBar.openAria}
         >
           <span className="menu-page__cart-bar-summary">{`${totalCount} items · ${totalPriceLabel} ${currencySymbol}`}</span>
-          <span className="menu-page__cart-bar-action">Переглянути кошик</span>
+          <span className="menu-page__cart-bar-action">{menuStrings.cartBar.action}</span>
         </button>
       )}
 

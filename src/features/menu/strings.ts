@@ -1,0 +1,92 @@
+import type { WeekDay } from "@/types/workingHours"
+
+// Central UI strings for the customer menu. One place to translate later (no
+// i18n library yet). Note: allergen names and category-keyword matching live
+// with their data, not here, because they're matched against backend values.
+export const menuStrings = {
+  header: {
+    signIn: "Увійти",
+    signOut: "Вийти",
+    openCabinet: "Open my cabinet",
+  },
+  hero: {
+    label: "Menu",
+    tagline: "Fresh dishes, fast ordering, cozy taste.",
+    openNow: "Open now",
+    closedNow: "Closed now",
+  },
+  controls: {
+    searchPlaceholder: "Search dishes...",
+    sortAria: "Сортування",
+    sortTitleDefault: "За замовчуванням",
+    sortTitlePriceAsc: "Ціна: від низької",
+    sortTitlePriceDesc: "Ціна: від високої",
+    sortLabelDefault: "Сорт.",
+    sortLabelPriceAsc: "↑ Ціна",
+    sortLabelPriceDesc: "↓ Ціна",
+    cartAria: "Кошик",
+  },
+  grid: {
+    loadMore: "Load more",
+    loadingMore: "Loading...",
+    noResults: (query: string) => `No results for "${query}".`,
+    noItems: "No items in this category.",
+  },
+  cartBar: {
+    openAria: "Відкрити кошик",
+    action: "Переглянути кошик",
+  },
+  footer: {
+    social: "Ми в соцмережах",
+  },
+  card: {
+    decrease: "Зменшити кількість",
+    increase: "Збільшити кількість",
+    addToCart: (name: string) => `Додати ${name} до кошика`,
+    unavailable: "Недоступно",
+    like: (name: string) => `Лайкнути ${name}`,
+    unlike: (name: string) => `Прибрати лайк з ${name}`,
+    likes: (count: number) => `${count} likes`,
+  },
+  cart: {
+    title: "Кошик",
+    close: "Закрити",
+    confirmTitle: "Підтвердити замовлення?",
+    positions: (n: number) => `${n} позицій`,
+    confirmYes: "Так, замовити",
+    confirmNo: "Скасувати",
+    confirmedTitle: "Замовлення прийнято!",
+    confirmedSub: "Офіціант отримав ваше замовлення",
+    receiptLabel: "Ваше замовлення",
+    total: "Разом",
+    emptyTitle: "Кошик порожній",
+    emptySub: "Додайте страви з меню",
+    perUnit: "/ шт",
+    decrease: "Зменшити",
+    increase: "Збільшити",
+    checkout: "Оформити замовлення",
+  },
+  item: {
+    ingredients: "Склад",
+    allergens: "Алергени",
+    added: "Додано",
+    addToCart: "До кошика",
+    unavailable: "Недоступно",
+    close: "Close",
+  },
+  info: {
+    heading: "Про заклад",
+    hours: "Графік роботи",
+    currency: (code: string) => `Валюта: ${code}`,
+  },
+  weightGrams: (grams: number) => `${grams} г`,
+  dayShort: {
+    mon: "Пн",
+    tue: "Вт",
+    wed: "Ср",
+    thu: "Чт",
+    fri: "Пт",
+    sat: "Сб",
+    sun: "Нд",
+  } satisfies Record<WeekDay, string>,
+}

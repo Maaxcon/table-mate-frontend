@@ -4,6 +4,7 @@ import logo from "@/assets/logo.png"
 import type { AuthUser } from "@/store/auth/authSlice"
 import type { PublicRestaurantSettings } from "./api"
 import { getCurrencySymbol, isRestaurantOpenNow } from "./utils"
+import { menuStrings } from "./strings"
 
 type MenuHeaderProps = {
   name: string | null
@@ -30,7 +31,7 @@ function MenuHeader({ name, coverImage, settings, user, onSignOut }: MenuHeaderP
         key="open"
         className={`menu-page__hero-pill${openNow ? " menu-page__hero-pill--open" : " menu-page__hero-pill--closed"}`}
       >
-        {openNow ? "Open now" : "Closed now"}
+        {openNow ? menuStrings.hero.openNow : menuStrings.hero.closedNow}
       </span>
     ) : null,
     priceBand !== null ? (
@@ -61,18 +62,18 @@ function MenuHeader({ name, coverImage, settings, user, onSignOut }: MenuHeaderP
                 to="/cabinet"
                 className="menu-page__avatar"
                 title={`${user.firstName} ${user.lastName}`}
-                aria-label="Open my cabinet"
+                aria-label={menuStrings.header.openCabinet}
               >
                 {user.firstName[0]}
                 {user.lastName[0]}
               </Link>
               <button className="menu-page__signout" onClick={onSignOut}>
-                Вийти
+                {menuStrings.header.signOut}
               </button>
             </>
           ) : (
             <Link to="/" className="menu-page__signin">
-              Увійти
+              {menuStrings.header.signIn}
             </Link>
           )}
         </div>
@@ -83,9 +84,9 @@ function MenuHeader({ name, coverImage, settings, user, onSignOut }: MenuHeaderP
           coverImage ? ({ "--hero-cover": `url(${coverImage})` } as React.CSSProperties) : undefined
         }
       >
-        <p className="menu-page__label">Menu</p>
+        <p className="menu-page__label">{menuStrings.hero.label}</p>
         <h1 className="menu-page__title">{name}</h1>
-        <p className="menu-page__hero-description">Fresh dishes, fast ordering, cozy taste.</p>
+        <p className="menu-page__hero-description">{menuStrings.hero.tagline}</p>
         <div className="menu-page__hero-meta">
           {pills.map((pill, i) => (
             <Fragment key={pill.key}>
