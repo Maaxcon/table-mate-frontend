@@ -21,6 +21,8 @@ import "../../components/styles/menu.css"
 // Sentinel for the "No category" option in the bulk-move dropdown.
 const UNCATEGORIZED = "__none__"
 
+type SortBy = "manual" | "name" | "price-asc" | "price-desc"
+
 function MenuSection() {
   const {
     menus,
@@ -49,20 +51,29 @@ function MenuSection() {
   const restaurantId = useAppSelector((s) => s.auth.user?.restaurantId ?? null)
   const sensors = useDndSensors()
   const [dishQuery, setDishQuery] = useState("")
+  const [sortBy, setSortBy] = useState<SortBy>("manual")
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [confirmBulkDelete, setConfirmBulkDelete] = useState(false)
 
   const filteredItems = useMemo(() => {
     const q = dishQuery.trim().toLowerCase()
-    if (!q) return items
-    // Search across name, description, and ingredients.
-    return items.filter((it) =>
-      [it.name, it.description ?? "", ...(it.ingredients ?? [])]
-        .join(" ")
-        .toLowerCase()
-        .includes(q),
-    )
-  }, [items, dishQuery])
+    const base =
+      q === ""
+        ? items
+        : // Search across name, description, and ingredients.
+          items.filter((it) =>
+            [it.name, it.description ?? "", ...(it.ingredients ?? [])]
+              .join(" ")
+              .toLowerCase()
+              .includes(q),
+          )
+    if (sortBy === "manual") return base
+    const sorted = [...base]
+    if (sortBy === "name") sorted.sort((a, b) => a.name.localeCompare(b.name))
+    else if (sortBy === "price-asc") sorted.sort((a, b) => Number(a.price) - Number(b.price))
+    else if (sortBy === "price-desc") sorted.sort((a, b) => Number(b.price) - Number(a.price))
+    return sorted
+  }, [items, dishQuery, sortBy])
 
   // Selection acts only on the dishes currently in view (respects search).
   const selectedVisibleIds = useMemo(
@@ -231,12 +242,25 @@ function MenuSection() {
                     />
                   ) : (
                     <>
-                      <SearchBox
-                        value={dishQuery}
-                        onChange={setDishQuery}
-                        placeholder="Search by name, description, ingredient"
-                        ariaLabel="Search dishes"
-                      />
+                      <div className="menu-admin__dishes-toolbar">
+                        <SearchBox
+                          value={dishQuery}
+                          onChange={setDishQuery}
+                          placeholder="Search by name, description, ingredient"
+                          ariaLabel="Search dishes"
+                        />
+                        <select
+                          className="admin-field__input menu-admin__sort"
+                          value={sortBy}
+                          aria-label="Sort dishes"
+                          onChange={(e) => setSortBy(e.target.value as SortBy)}
+                        >
+                          <option value="manual">Manual order</option>
+                          <option value="name">Name (A–Z)</option>
+                          <option value="price-asc">Price (low–high)</option>
+                          <option value="price-desc">Price (high–low)</option>
+                        </select>
+                      </div>
                       {filteredItems.length === 0 ? (
                         <p className="admin-section__description">
                           No dishes match “{dishQuery.trim()}”.
@@ -326,7 +350,7 @@ function MenuSection() {
                               bulkSetAvailable([item.public_id], !item.is_available)
                             }
                             onReorder={reorderItem}
-                            reorderDisabled={dishQuery.trim() !== ""}
+                            reorderDisabled={dishQuery.trim() !== "" || sortBy !== "manual"}
                             selectedIds={selectedIds}
                             onToggleSelect={toggleSelect}
                           />

@@ -511,6 +511,33 @@
   border: 0;
 }
 
+/* Search + sort controls above the dish grid. */
+.menu-admin__dishes-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.menu-admin__dishes-toolbar > :first-child {
+  flex: 1;
+  min-width: 180px;
+}
+
+/* The search box has its own bottom margin; the toolbar handles spacing. */
+.menu-admin__dishes-toolbar .admin-search {
+  margin-bottom: 0;
+}
+
+.menu-admin__sort {
+  flex-shrink: 0;
+  width: auto;
+  padding: 9px 12px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
 .menu-admin__dishes-head {
   display: flex;
   align-items: center;
