@@ -1,3 +1,4 @@
+import { useCallback } from "react"
 import { Link } from "react-router-dom"
 import type { IconType } from "react-icons"
 import {
@@ -11,7 +12,10 @@ import {
   LuUtensilsCrossed,
 } from "react-icons/lu"
 import { useAppSelector } from "@/store/hooks"
+import { fetchRestaurant, type PublicRestaurant } from "@/features/menu/api"
+import { isRestaurantOpenNow } from "@/features/menu/utils"
 import { useAdminOverview } from "../../hooks/useAdminOverview"
+import { useResource } from "../../hooks/useResource"
 import "../../components/styles/SectionPlaceholder.css"
 import "./overview.css"
 
@@ -74,12 +78,29 @@ function OverviewSection() {
   const restaurantId = user?.restaurantId ?? null
   const firstName = user?.firstName?.trim()
 
+  // Pull working hours + timezone from the public restaurant endpoint to show
+  // whether the restaurant is open right now.
+  const loadRestaurant = useCallback(() => fetchRestaurant(restaurantId as string), [restaurantId])
+  const { data: restaurant } = useResource<PublicRestaurant>(loadRestaurant, {
+    enabled: restaurantId !== null,
+  })
+  const settings = restaurant?.settings ?? null
+  const openNow = settings ? isRestaurantOpenNow(settings.working_hours, settings.timezone) : null
+
   return (
     <section className="admin-section admin-section--wide">
       <header className="admin-section__header">
-        <h1 className="admin-section__title">
-          {firstName ? `Welcome back, ${firstName}` : "Overview"}
-        </h1>
+        <div className="overview-titlebar">
+          <h1 className="admin-section__title">
+            {firstName ? `Welcome back, ${firstName}` : "Overview"}
+          </h1>
+          {openNow !== null && (
+            <span className={`overview-status overview-status--${openNow ? "open" : "closed"}`}>
+              <span className="overview-status__dot" aria-hidden="true" />
+              {openNow ? "Open now" : "Closed"}
+            </span>
+          )}
+        </div>
         <p className="admin-section__description">A quick snapshot of your restaurant.</p>
       </header>
 
