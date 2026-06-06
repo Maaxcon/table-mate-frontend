@@ -272,15 +272,31 @@ export function useMenuAdmin(): UseMenuAdminResult {
     (ids: string[]) => {
       if (ids.length === 0) return
       const idSet = new Set(ids)
-      setItems((prev) => prev.filter((it) => !idSet.has(it.public_id)))
-      void bulkItemAction({ action: "delete", ids })
-        .then(() => toast.success("Dishes deleted"))
-        .catch(() => {
+      // Remove from the UI right away, but defer the real delete so it can be
+      // undone. The API call only fires once the undo window has passed.
+      const snapshot = items
+      setItems(items.filter((it) => !idSet.has(it.public_id)))
+
+      let undone = false
+      const timer = setTimeout(() => {
+        if (undone) return
+        void bulkItemAction({ action: "delete", ids }).catch(() => {
           toast.error("Could not delete dishes. Reverted.")
           reloadItems()
         })
+      }, 5000)
+
+      toast.action(
+        ids.length === 1 ? "Dish deleted" : `${ids.length} dishes deleted`,
+        "Undo",
+        () => {
+          undone = true
+          clearTimeout(timer)
+          setItems(snapshot)
+        },
+      )
     },
-    [reloadItems, setItems, toast],
+    [items, reloadItems, setItems, toast],
   )
 
   return {
