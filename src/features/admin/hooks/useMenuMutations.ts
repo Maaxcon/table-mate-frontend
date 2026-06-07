@@ -123,8 +123,6 @@ export function useMenuMutations({
 }: UseMenuMutationsArgs): MenuMutations {
   const toast = useToast()
 
-  // Deferred deletes still waiting out their undo window. On unmount we flush
-  // them (fire the API now) instead of dropping the user's delete on the floor.
   const pendingDeletes = useRef<Set<{ timer: ReturnType<typeof setTimeout>; flush: () => void }>>(
     new Set(),
   )
@@ -239,15 +237,11 @@ export function useMenuMutations({
     (ids: string[]) => {
       if (ids.length === 0) return
       const idSet = new Set(ids)
-      // Remove from the UI right away, but defer the real delete so it can be
-      // undone. The API call only fires once the undo window has passed.
       const snapshot = items
       setItems(items.filter((it) => !idSet.has(it.public_id)))
 
       let settled = false
 
-      // Fires the real delete once. `silent` skips UI updates (used on unmount,
-      // when there's no live component to revert into or toast from).
       const fireDelete = (silent: boolean) => {
         if (settled) return
         settled = true
@@ -271,24 +265,20 @@ export function useMenuMutations({
           settled = true
           clearTimeout(timer)
           pendingDeletes.current.delete(entry)
-          // Re-insert the removed rows in their original slots, keeping any edits
-          // made to the surviving items during the undo window (instead of
-          // overwriting the whole list with the stale snapshot).
           setItems((prev) => {
             const current = new Map(prev.map((it) => [it.public_id, it]))
             const merged: AdminMenuItem[] = []
             for (const row of snapshot) {
               if (idSet.has(row.public_id)) {
-                merged.push(row) // restore the deleted row
+                merged.push(row)
               } else {
                 const live = current.get(row.public_id)
                 if (live) {
-                  merged.push(live) // keep concurrent edits
+                  merged.push(live)
                   current.delete(row.public_id)
                 }
               }
             }
-            // Items added during the window that weren't in the snapshot.
             for (const it of prev) if (current.has(it.public_id)) merged.push(it)
             return merged
           })

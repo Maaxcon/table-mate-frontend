@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { LuCopy, LuTrash2 } from "react-icons/lu"
 import {
   clearItemImage,
@@ -114,6 +114,12 @@ function DishModal({ menuId, categories, item, onClose, onSaved }: DishModalProp
     setImageFile(null)
     setRemoveImage(true)
   }
+
+  useEffect(() => {
+    return () => {
+      if (previewUrl?.startsWith("blob:")) URL.revokeObjectURL(previewUrl)
+    }
+  }, [previewUrl])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
