@@ -65,8 +65,13 @@ export function useAdminResource<T extends { public_id: string }>(
     if (!form) return
     setStatus("saving")
     setSaveError(null)
+    // Send only the edited fields, not public_id or read-only data from the GET.
+    const changed = {} as Partial<T>
+    for (const key of Object.keys(form) as (keyof T)[]) {
+      if (JSON.stringify(form[key]) !== JSON.stringify(saved?.[key])) changed[key] = form[key]
+    }
     try {
-      const updated = await api.patch<T>(`${basePath}${form.public_id}/`, form)
+      const updated = await api.patch<T>(`${basePath}${form.public_id}/`, changed)
       setForm(updated)
       setSaved(updated)
       setStatus("saved")
@@ -74,7 +79,14 @@ export function useAdminResource<T extends { public_id: string }>(
       setStatus("error")
       setSaveError("Could not save changes. Please try again.")
     }
-  }, [basePath, form])
+  }, [basePath, form, saved])
+
+  // Clear the "Saved ✓" state after a moment so it doesn't linger.
+  useEffect(() => {
+    if (status !== "saved") return
+    const timer = window.setTimeout(() => setStatus("idle"), 2000)
+    return () => window.clearTimeout(timer)
+  }, [status])
 
   const dirty = useMemo(
     () => (form && saved ? JSON.stringify(form) !== JSON.stringify(saved) : false),
