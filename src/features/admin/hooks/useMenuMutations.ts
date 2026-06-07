@@ -1,4 +1,4 @@
-import { useCallback } from "react"
+import { useCallback, useEffect, useRef } from "react"
 import { arrayMove } from "@dnd-kit/sortable"
 import {
   bulkItemAction,
@@ -123,6 +123,22 @@ export function useMenuMutations({
 }: UseMenuMutationsArgs): MenuMutations {
   const toast = useToast()
 
+  // Deferred deletes still waiting out their undo window. On unmount we flush
+  // them (fire the API now) instead of dropping the user's delete on the floor.
+  const pendingDeletes = useRef<Set<{ timer: ReturnType<typeof setTimeout>; flush: () => void }>>(
+    new Set(),
+  )
+  useEffect(() => {
+    const pending = pendingDeletes.current
+    return () => {
+      for (const entry of pending) {
+        clearTimeout(entry.timer)
+        entry.flush()
+      }
+      pending.clear()
+    }
+  }, [])
+
   const reorderCategory = useCallback(
     (activeId: string, overId: string) => {
       if (activeId === overId) return
@@ -228,22 +244,54 @@ export function useMenuMutations({
       const snapshot = items
       setItems(items.filter((it) => !idSet.has(it.public_id)))
 
-      let undone = false
-      const timer = setTimeout(() => {
-        if (undone) return
+      let settled = false
+
+      // Fires the real delete once. `silent` skips UI updates (used on unmount,
+      // when there's no live component to revert into or toast from).
+      const fireDelete = (silent: boolean) => {
+        if (settled) return
+        settled = true
+        pendingDeletes.current.delete(entry)
         void bulkItemAction({ action: "delete", ids }).catch(() => {
+          if (silent) return
           toast.error("Could not delete dishes. Reverted.")
           reloadItems()
         })
-      }, 5000)
+      }
+
+      const timer = setTimeout(() => fireDelete(false), 5000)
+      const entry = { timer, flush: () => fireDelete(true) }
+      pendingDeletes.current.add(entry)
 
       toast.action(
         ids.length === 1 ? "Dish deleted" : `${ids.length} dishes deleted`,
         "Undo",
         () => {
-          undone = true
+          if (settled) return
+          settled = true
           clearTimeout(timer)
-          setItems(snapshot)
+          pendingDeletes.current.delete(entry)
+          // Re-insert the removed rows in their original slots, keeping any edits
+          // made to the surviving items during the undo window (instead of
+          // overwriting the whole list with the stale snapshot).
+          setItems((prev) => {
+            const current = new Map(prev.map((it) => [it.public_id, it]))
+            const merged: AdminMenuItem[] = []
+            for (const row of snapshot) {
+              if (idSet.has(row.public_id)) {
+                merged.push(row) // restore the deleted row
+              } else {
+                const live = current.get(row.public_id)
+                if (live) {
+                  merged.push(live) // keep concurrent edits
+                  current.delete(row.public_id)
+                }
+              }
+            }
+            // Items added during the window that weren't in the snapshot.
+            for (const it of prev) if (current.has(it.public_id)) merged.push(it)
+            return merged
+          })
         },
       )
     },
