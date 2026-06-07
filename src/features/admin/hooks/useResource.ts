@@ -49,6 +49,9 @@ export function useResource<T>(
         setLoading(false)
         return
       }
+      // Clear stale data so a changed fetcher (e.g. switching menus) doesn't
+      // keep showing the previous result while the new one loads.
+      setData(null)
       setLoading(true)
       try {
         const result = await fetcher(controller.signal)
