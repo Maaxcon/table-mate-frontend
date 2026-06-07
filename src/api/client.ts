@@ -161,6 +161,12 @@ async function request<T>(
 // Safety cap so a misbehaving "next" can't loop forever (100 pages × 20 = 2000).
 const MAX_PAGES = 100
 
+// Accept both DRF's paginated shape and a plain array (pagination disabled, or a
+// custom action that returns a bare list), so callers don't crash on `.results`.
+function pageResults<T>(data: Paginated<T> | T[]): T[] {
+  return Array.isArray(data) ? data : data.results
+}
+
 /**
  * Thin typed wrapper over apiFetch: builds the query string, JSON-encodes the
  * body (FormData passes through), parses DRF errors, and returns parsed JSON.
@@ -169,17 +175,18 @@ const MAX_PAGES = 100
 export const api = {
   get: <T>(path: string, opts?: RequestOptions) => request<T>("GET", path, undefined, opts),
   getList: async <T>(path: string, opts?: RequestOptions): Promise<T[]> =>
-    (await request<Paginated<T>>("GET", path, undefined, opts)).results,
+    pageResults(await request<Paginated<T> | T[]>("GET", path, undefined, opts)),
   /** Fetches every page of a paginated endpoint and concatenates the results. */
   getAllList: async <T>(path: string, opts?: RequestOptions): Promise<T[]> => {
     const all: T[] = []
     for (let page = 1; page <= MAX_PAGES; page += 1) {
-      const data = await request<Paginated<T>>("GET", path, undefined, {
+      const data = await request<Paginated<T> | T[]>("GET", path, undefined, {
         ...opts,
         query: { ...opts?.query, page },
       })
-      all.push(...data.results)
-      if (!data.next) break
+      all.push(...pageResults(data))
+      // A plain array has no "next", so we stop after the first response.
+      if (Array.isArray(data) || !data.next) break
     }
     return all
   },
