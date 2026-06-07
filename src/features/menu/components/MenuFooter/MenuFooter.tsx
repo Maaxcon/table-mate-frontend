@@ -1,5 +1,5 @@
 import { FaTelegram, FaFacebook } from "react-icons/fa"
-import { menuStrings } from "./strings"
+import { menuStrings } from "../../strings"
 
 type MenuFooterProps = {
   telegramUrl: string

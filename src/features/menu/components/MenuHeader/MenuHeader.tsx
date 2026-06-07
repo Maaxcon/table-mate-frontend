@@ -2,9 +2,9 @@ import { Fragment, type ReactElement } from "react"
 import { Link } from "react-router-dom"
 import logo from "@/assets/logo.png"
 import type { AuthUser } from "@/store/auth/authSlice"
-import type { PublicRestaurantSettings } from "./api"
-import { getCurrencySymbol, isRestaurantOpenNow } from "./utils"
-import { menuStrings } from "./strings"
+import type { PublicRestaurantSettings } from "../../api"
+import { getCurrencySymbol, isRestaurantOpenNow } from "../../utils"
+import { menuStrings } from "../../strings"
 
 type MenuHeaderProps = {
   name: string | null

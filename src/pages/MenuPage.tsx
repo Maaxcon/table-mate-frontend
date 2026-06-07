@@ -1,1 +1,1 @@
-export { default } from "@/features/menu/MenuPage"
+export { default } from "@/features/menu/pages/MenuPage"

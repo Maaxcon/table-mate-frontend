@@ -7,6 +7,9 @@ import {
   CartDrawer,
   CategoryRail,
   MenuEmptyState,
+  MenuFooter,
+  MenuHeader,
+  MenuItemGrid,
   MenuItemModal,
   MenuSkeleton,
   RestaurantInfoPanel,
@@ -17,10 +20,7 @@ import { useItemLikes } from "@/features/menu/hooks/useItemLikes"
 import { useMenuPage } from "@/features/menu/hooks/useMenuPage"
 import { formatAmount, getCurrencySymbol } from "@/features/menu/utils"
 import type { MenuItem } from "@/features/menu/types"
-import MenuHeader from "./MenuHeader"
-import MenuFooter from "./MenuFooter"
-import MenuItemGrid from "./MenuItemGrid"
-import { menuStrings } from "./strings"
+import { menuStrings } from "@/features/menu/strings"
 import "./MenuPage.css"
 
 function MenuPage() {

@@ -1,5 +1,5 @@
-import { MenuItemCard } from "./components"
-import type { MenuItem } from "./types"
+import MenuItemCard from "../MenuItemCard"
+import type { MenuItem } from "../../types"
 
 type MenuItemGridProps = {
   items: MenuItem[]
