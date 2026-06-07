@@ -1,4 +1,3 @@
-import { jsPDF } from "jspdf"
 import { loadReceiptFont } from "./receiptFont"
 import type { HistoryEntry } from "./types"
 import { formatDateTime, formatMoney } from "./utils"
@@ -12,6 +11,9 @@ const money = formatMoney
 export async function buildReceiptPdf(
   entry: HistoryEntry,
 ): Promise<{ blob: Blob; filename: string }> {
+  // Load jsPDF on demand so it (and its transitive html2canvas) stays out of
+  // the main bundle — it is only needed when a user downloads a receipt.
+  const { jsPDF } = await import("jspdf")
   const doc = new jsPDF({ unit: "mm", format: "a5" })
 
   // Embed a Cyrillic-capable font so Ukrainian text renders correctly.
