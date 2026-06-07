@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState, type ReactNode } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react"
 import { LuCircleAlert, LuCircleCheck, LuInfo, LuX } from "react-icons/lu"
 import { ToastContext } from "@/features/admin/hooks/toastContext"
 import "./toast.css"
@@ -19,7 +19,15 @@ const ICONS: Record<ToastType, typeof LuCircleCheck> = {
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([])
 
+  // Auto-dismiss timer per toast id, so they can be cleared on remove and unmount.
+  const timers = useRef(new Map<number, number>())
+
   const remove = useCallback((id: number) => {
+    const timer = timers.current.get(id)
+    if (timer !== undefined) {
+      window.clearTimeout(timer)
+      timers.current.delete(id)
+    }
     setToasts((prev) => prev.filter((t) => t.id !== id))
   }, [])
 
@@ -27,10 +35,16 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     (type: ToastType, message: string, opts?: { action?: ToastAction; duration?: number }) => {
       const id = Date.now() + Math.random()
       setToasts((prev) => [...prev, { id, type, message, action: opts?.action }])
-      window.setTimeout(() => remove(id), opts?.duration ?? DISMISS_MS)
+      const timer = window.setTimeout(() => remove(id), opts?.duration ?? DISMISS_MS)
+      timers.current.set(id, timer)
     },
     [remove],
   )
+
+  useEffect(() => {
+    const map = timers.current
+    return () => map.forEach((timer) => window.clearTimeout(timer))
+  }, [])
 
   const success = useCallback((message: string) => push("success", message), [push])
   const error = useCallback((message: string) => push("error", message), [push])
