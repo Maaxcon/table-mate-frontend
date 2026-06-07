@@ -12,11 +12,11 @@ import {
   LuX,
 } from "react-icons/lu"
 import { useFocusTrap } from "@/hooks/useFocusTrap"
-import type { HistoryEntry } from "../../types"
-import { loadReceiptFont } from "../../receiptFont"
-import { buildReceiptPdf } from "../../receiptPdf"
-import { formatDateTime, formatMoney } from "../../utils"
-import { FeedbackDialog } from "../FeedbackDialog/FeedbackDialog"
+import type { HistoryEntry } from "@/features/cabinet/types"
+import { loadReceiptFont } from "@/features/cabinet/receiptFont"
+import { buildReceiptPdf } from "@/features/cabinet/receiptPdf"
+import { formatDateTime, formatMoney } from "@/features/cabinet/utils"
+import { FeedbackDialog } from "@/features/cabinet/components/FeedbackDialog/FeedbackDialog"
 import "./ReceiptDialog.css"
 
 type ReceiptDialogProps = {

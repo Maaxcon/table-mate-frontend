@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react"
-import { toggleItemLike } from "../api"
-import type { MenuItem } from "../types"
+import { toggleItemLike } from "@/features/menu/api"
+import type { MenuItem } from "@/features/menu/types"
 
 /**
  * Handles like toggling for menu items: tracks per-item pending state, calls the

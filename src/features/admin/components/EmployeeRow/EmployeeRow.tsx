@@ -1,8 +1,8 @@
 import { useState } from "react"
-import { updateEmployee, type EmployeePatch } from "../../api/staff"
-import type { AdminEmployee, EmployeeRole } from "../../types"
-import ConfirmDialog from "../ConfirmDialog"
-import { useToast } from "../../hooks/toastContext"
+import { updateEmployee, type EmployeePatch } from "@/features/admin/api/staff"
+import type { AdminEmployee, EmployeeRole } from "@/features/admin/types"
+import ConfirmDialog from "@/features/admin/components/ConfirmDialog"
+import { useToast } from "@/features/admin/hooks/toastContext"
 
 const ROLES: { value: EmployeeRole; label: string }[] = [
   { value: "waiter", label: "Waiter" },

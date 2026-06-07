@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from "react"
-import { fetchCategories, fetchItems, fetchMenus } from "../api/menu"
-import type { AdminCategory, AdminMenu, AdminMenuItem } from "../types"
+import { fetchCategories, fetchItems, fetchMenus } from "@/features/admin/api/menu"
+import type { AdminCategory, AdminMenu, AdminMenuItem } from "@/features/admin/types"
 import { useResource } from "./useResource"
 import { useMenuMutations, type MenuMutations } from "./useMenuMutations"
 

@@ -1,5 +1,9 @@
-import type { WeekDay, WorkingHours } from "../../types"
-import { WEEK_DAYS, dayInvalid, hasInvalidWorkingHours } from "../../constants/workingHours"
+import type { WeekDay, WorkingHours } from "@/features/admin/types"
+import {
+  WEEK_DAYS,
+  dayInvalid,
+  hasInvalidWorkingHours,
+} from "@/features/admin/constants/workingHours"
 import "./hours.css"
 
 type WorkingHoursEditorProps = {

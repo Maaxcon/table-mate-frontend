@@ -1,10 +1,10 @@
 import { useState } from "react"
 import { LuPencil, LuTrash2 } from "react-icons/lu"
-import { deleteMenu, updateMenu } from "../../api/menu"
-import type { AdminMenu } from "../../types"
-import ConfirmDialog from "../ConfirmDialog"
-import Modal from "../Modal"
-import { useToast } from "../../hooks/toastContext"
+import { deleteMenu, updateMenu } from "@/features/admin/api/menu"
+import type { AdminMenu } from "@/features/admin/types"
+import ConfirmDialog from "@/features/admin/components/ConfirmDialog"
+import Modal from "@/features/admin/components/Modal"
+import { useToast } from "@/features/admin/hooks/toastContext"
 
 type MenuToolbarProps = {
   menu: AdminMenu

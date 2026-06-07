@@ -1,5 +1,5 @@
 import { api } from "@/api/client"
-import type { AdminCategory, AdminMenu, AdminMenuItem } from "../types"
+import type { AdminCategory, AdminMenu, AdminMenuItem } from "@/features/admin/types"
 
 const MENUS_PATH = "/api/menu/admin/menus/"
 const CATEGORIES_PATH = "/api/menu/admin/categories/"

@@ -1,7 +1,7 @@
 import { useRef, useState } from "react"
 import { LuImagePlus, LuTrash2 } from "react-icons/lu"
-import { clearRestaurantCover, uploadRestaurantCover } from "../../api/restaurant"
-import { useToast } from "../../hooks/toastContext"
+import { clearRestaurantCover, uploadRestaurantCover } from "@/features/admin/api/restaurant"
+import { useToast } from "@/features/admin/hooks/toastContext"
 import "./RestaurantCover.css"
 
 type RestaurantCoverProps = {

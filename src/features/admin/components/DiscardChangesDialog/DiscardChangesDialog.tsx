@@ -1,4 +1,4 @@
-import ConfirmDialog from "../ConfirmDialog"
+import ConfirmDialog from "@/features/admin/components/ConfirmDialog"
 
 type DiscardChangesDialogProps = {
   onConfirm: () => void

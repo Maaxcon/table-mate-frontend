@@ -1,10 +1,10 @@
 import type { ReactNode } from "react"
 import { DndContext, closestCorners, useDroppable, type DragEndEvent } from "@dnd-kit/core"
 import { SortableContext, rectSortingStrategy } from "@dnd-kit/sortable"
-import type { AdminCategory, AdminMenuItem } from "../../types"
-import { GROUP_DROP_PREFIX } from "../../hooks/useMenuMutations"
-import { useDndSensors } from "../../hooks/useDndSensors"
-import DishCard from "../DishCard"
+import type { AdminCategory, AdminMenuItem } from "@/features/admin/types"
+import { GROUP_DROP_PREFIX } from "@/features/admin/hooks/useMenuMutations"
+import { useDndSensors } from "@/features/admin/hooks/useDndSensors"
+import DishCard from "@/features/admin/components/DishCard"
 
 type DishListProps = {
   items: AdminMenuItem[]

@@ -1,5 +1,5 @@
 import { api } from "@/api/client"
-import type { AdminEmployee, EmployeeRole } from "../types"
+import type { AdminEmployee, EmployeeRole } from "@/features/admin/types"
 
 const EMPLOYEES_PATH = "/api/restaurants/employees/"
 

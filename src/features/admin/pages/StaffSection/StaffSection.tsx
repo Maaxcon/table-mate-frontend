@@ -1,10 +1,10 @@
 import { useMemo, useState } from "react"
 import { LuPlus } from "react-icons/lu"
-import { useEmployees } from "../../hooks/useEmployees"
-import AddEmployeeModal from "../../components/AddEmployeeModal"
-import EmployeeRow from "../../components/EmployeeRow"
-import SearchBox from "../../components/SearchBox"
-import "../../components/styles/SectionPlaceholder.css"
+import { useEmployees } from "@/features/admin/hooks/useEmployees"
+import AddEmployeeModal from "@/features/admin/components/AddEmployeeModal"
+import EmployeeRow from "@/features/admin/components/EmployeeRow"
+import SearchBox from "@/features/admin/components/SearchBox"
+import "@/features/admin/components/styles/SectionPlaceholder.css"
 import "./staff.css"
 
 function StaffSection() {

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
-import { fetchRestaurant } from "../api"
-import type { PublicRestaurantSettings } from "../api"
+import { fetchRestaurant } from "@/features/menu/api"
+import type { PublicRestaurantSettings } from "@/features/menu/api"
 
 export type RestaurantInfo = {
   name: string | null

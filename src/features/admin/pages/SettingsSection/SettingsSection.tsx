@@ -1,10 +1,14 @@
-import AdminSectionForm from "../../components/AdminSectionForm"
-import TextField from "../../components/TextField"
-import SelectField from "../../components/SelectField"
-import { CURRENCY_OPTIONS, LOCALE_OPTIONS, TIMEZONE_OPTIONS } from "../../constants/settingsOptions"
+import AdminSectionForm from "@/features/admin/components/AdminSectionForm"
+import TextField from "@/features/admin/components/TextField"
+import SelectField from "@/features/admin/components/SelectField"
+import {
+  CURRENCY_OPTIONS,
+  LOCALE_OPTIONS,
+  TIMEZONE_OPTIONS,
+} from "@/features/admin/constants/settingsOptions"
 import { formatCurrency } from "@/features/menu/utils"
-import { useAdminResource } from "../../hooks/useAdminResource"
-import type { AdminSettings } from "../../types"
+import { useAdminResource } from "@/features/admin/hooks/useAdminResource"
+import type { AdminSettings } from "@/features/admin/types"
 
 // Tax/service are stored as decimals, so they must be a number from 0 to 1.
 function rateError(value: string): string | undefined {

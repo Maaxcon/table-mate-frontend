@@ -8,21 +8,21 @@ import {
   updateItem,
   uploadItemImage,
   type ItemInput,
-} from "../../api/menu"
-import type { AdminCategory, AdminMenuItem } from "../../types"
-import TextField from "../TextField"
-import ConfirmDialog from "../ConfirmDialog"
-import DiscardChangesDialog from "../DiscardChangesDialog"
-import Modal from "../Modal"
+} from "@/features/admin/api/menu"
+import type { AdminCategory, AdminMenuItem } from "@/features/admin/types"
+import TextField from "@/features/admin/components/TextField"
+import ConfirmDialog from "@/features/admin/components/ConfirmDialog"
+import DiscardChangesDialog from "@/features/admin/components/DiscardChangesDialog"
+import Modal from "@/features/admin/components/Modal"
 import DishPhotoField from "./DishPhotoField"
 import IngredientsField from "./IngredientsField"
 import AllergensField from "./AllergensField"
-import { useToast } from "../../hooks/toastContext"
-import { useAllergens } from "../../hooks/useAllergens"
-import { useUnsavedGuard } from "../../hooks/useUnsavedGuard"
-import "../styles/adminForm.css"
-import "../styles/modal.css"
-import "../styles/menu.css"
+import { useToast } from "@/features/admin/hooks/toastContext"
+import { useAllergens } from "@/features/admin/hooks/useAllergens"
+import { useUnsavedGuard } from "@/features/admin/hooks/useUnsavedGuard"
+import "@/features/admin/components/styles/adminForm.css"
+import "@/features/admin/components/styles/modal.css"
+import "@/features/admin/components/styles/menu.css"
 
 type DishModalProps = {
   menuId: string

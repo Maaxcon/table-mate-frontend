@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useReducer } from "react"
-import { fetchItem } from "../api"
-import type { MenuItem } from "../types"
+import { fetchItem } from "@/features/menu/api"
+import type { MenuItem } from "@/features/menu/types"
 
 export type CartItem = { item: MenuItem; quantity: number }
 type CartLine = { publicId: string; quantity: number }

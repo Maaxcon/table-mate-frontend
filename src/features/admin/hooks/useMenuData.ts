@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
-import { fetchCategories, fetchItems, fetchMenus } from "../api/menu"
-import type { AdminCategory, AdminMenu, AdminMenuItem } from "../types"
+import { fetchCategories, fetchItems, fetchMenus } from "@/features/admin/api/menu"
+import type { AdminCategory, AdminMenu, AdminMenuItem } from "@/features/admin/types"
 
 export type MenuData = {
   menus: AdminMenu[]

@@ -1,5 +1,5 @@
 import type { ReactNode } from "react"
-import "../styles/SectionPlaceholder.css"
+import "@/features/admin/components/styles/SectionPlaceholder.css"
 
 type SectionPlaceholderProps = {
   title: string

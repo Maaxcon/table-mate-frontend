@@ -1,5 +1,5 @@
-import type { PublicRestaurantSettings, WorkingHours } from "../../api"
-import { menuStrings } from "../../strings"
+import type { PublicRestaurantSettings, WorkingHours } from "@/features/menu/api"
+import { menuStrings } from "@/features/menu/strings"
 import "./RestaurantInfoPanel.css"
 
 const DAY_LABELS = menuStrings.dayShort

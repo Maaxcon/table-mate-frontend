@@ -1,7 +1,7 @@
 import { type ReactNode } from "react"
 import { LuX } from "react-icons/lu"
 import { useFocusTrap } from "@/hooks/useFocusTrap"
-import "../styles/modal.css"
+import "@/features/admin/components/styles/modal.css"
 
 type ModalProps = {
   title: string

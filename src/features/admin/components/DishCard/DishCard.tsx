@@ -1,7 +1,7 @@
 import { LuEye, LuEyeOff, LuGripVertical } from "react-icons/lu"
 import { useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
-import type { AdminMenuItem } from "../../types"
+import type { AdminMenuItem } from "@/features/admin/types"
 
 type DishCardProps = {
   item: AdminMenuItem

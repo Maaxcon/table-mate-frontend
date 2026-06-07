@@ -1,16 +1,16 @@
 import { useState } from "react"
 import { LuCreditCard, LuSettings } from "react-icons/lu"
 import Card from "@/components/Card"
-import type { ProfileUpdate } from "../../api"
-import type { CabinetProfile } from "../../types"
+import type { ProfileUpdate } from "@/features/cabinet/api"
+import type { CabinetProfile } from "@/features/cabinet/types"
 import {
   composeUaPhone,
   extractUaNational,
   formatUaNational,
   isValidUaNational,
   memberSinceYear,
-} from "../../utils"
-import { FeedbackDialog } from "../FeedbackDialog/FeedbackDialog"
+} from "@/features/cabinet/utils"
+import { FeedbackDialog } from "@/features/cabinet/components/FeedbackDialog/FeedbackDialog"
 import "./ProfileHeader.css"
 
 type Feedback = { variant: "success" | "error"; title: string; message?: string }

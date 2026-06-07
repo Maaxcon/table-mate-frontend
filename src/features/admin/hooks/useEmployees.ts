@@ -1,6 +1,6 @@
 import { useCallback } from "react"
 import { api } from "@/api/client"
-import type { AdminEmployee } from "../types"
+import type { AdminEmployee } from "@/features/admin/types"
 import { useResource } from "./useResource"
 
 const BASE_PATH = "/api/restaurants/employees/"

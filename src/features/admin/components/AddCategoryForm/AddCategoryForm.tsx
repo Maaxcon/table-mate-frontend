@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { LuPlus } from "react-icons/lu"
-import { createCategory } from "../../api/menu"
-import { useToast } from "../../hooks/toastContext"
+import { createCategory } from "@/features/admin/api/menu"
+import { useToast } from "@/features/admin/hooks/toastContext"
 
 type AddCategoryFormProps = {
   menuId: string

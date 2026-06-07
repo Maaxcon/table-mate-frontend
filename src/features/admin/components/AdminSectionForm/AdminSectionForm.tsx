@@ -1,8 +1,8 @@
 import { useEffect, type FormEvent, type ReactNode } from "react"
-import type { SaveStatus } from "../../hooks/useAdminResource"
-import { useToast } from "../../hooks/toastContext"
-import "../styles/SectionPlaceholder.css"
-import "../styles/adminForm.css"
+import type { SaveStatus } from "@/features/admin/hooks/useAdminResource"
+import { useToast } from "@/features/admin/hooks/toastContext"
+import "@/features/admin/components/styles/SectionPlaceholder.css"
+import "@/features/admin/components/styles/adminForm.css"
 
 type AdminSectionFormProps = {
   title: string

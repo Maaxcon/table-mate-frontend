@@ -1,5 +1,5 @@
 import { api } from "@/api/client"
-import type { AdminRestaurant } from "../types"
+import type { AdminRestaurant } from "@/features/admin/types"
 
 const coverPath = (publicId: string) => `/api/restaurants/restaurants/${publicId}/cover/`
 

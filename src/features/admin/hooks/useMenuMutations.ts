@@ -1,7 +1,12 @@
 import { useCallback } from "react"
 import { arrayMove } from "@dnd-kit/sortable"
-import { bulkItemAction, reorderCategories, reorderItems, updateItem } from "../api/menu"
-import type { AdminCategory, AdminMenuItem } from "../types"
+import {
+  bulkItemAction,
+  reorderCategories,
+  reorderItems,
+  updateItem,
+} from "@/features/admin/api/menu"
+import type { AdminCategory, AdminMenuItem } from "@/features/admin/types"
 import { useToast } from "./toastContext"
 
 const UNCATEGORIZED = "__none__"

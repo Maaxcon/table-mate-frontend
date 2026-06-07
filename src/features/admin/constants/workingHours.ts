@@ -1,4 +1,4 @@
-import type { WeekDay, WorkingHours, WorkingHoursDay } from "../types"
+import type { WeekDay, WorkingHours, WorkingHoursDay } from "@/features/admin/types"
 
 export const WEEK_DAYS: { key: WeekDay; label: string }[] = [
   { key: "mon", label: "Monday" },

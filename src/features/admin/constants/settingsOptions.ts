@@ -1,4 +1,4 @@
-import type { SelectOption } from "../components/SelectField"
+import type { SelectOption } from "@/features/admin/components/SelectField"
 
 // Short, fixed lists tuned for a Ukraine-based restaurant.
 // SelectField still shows a saved value even if it is outside these lists.

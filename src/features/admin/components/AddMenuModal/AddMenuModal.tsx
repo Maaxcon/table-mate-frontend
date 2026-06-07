@@ -1,12 +1,12 @@
 import { useState } from "react"
-import { createMenu } from "../../api/menu"
-import type { AdminMenu } from "../../types"
-import Modal from "../Modal"
-import TextField from "../TextField"
-import DiscardChangesDialog from "../DiscardChangesDialog"
-import { useToast } from "../../hooks/toastContext"
-import { useUnsavedGuard } from "../../hooks/useUnsavedGuard"
-import "../styles/adminForm.css"
+import { createMenu } from "@/features/admin/api/menu"
+import type { AdminMenu } from "@/features/admin/types"
+import Modal from "@/features/admin/components/Modal"
+import TextField from "@/features/admin/components/TextField"
+import DiscardChangesDialog from "@/features/admin/components/DiscardChangesDialog"
+import { useToast } from "@/features/admin/hooks/toastContext"
+import { useUnsavedGuard } from "@/features/admin/hooks/useUnsavedGuard"
+import "@/features/admin/components/styles/adminForm.css"
 
 type AddMenuModalProps = {
   onClose: () => void

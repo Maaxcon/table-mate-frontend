@@ -1,5 +1,5 @@
 import { LuPlus } from "react-icons/lu"
-import "../styles/SectionPlaceholder.css"
+import "@/features/admin/components/styles/SectionPlaceholder.css"
 import "./empty.css"
 
 type EmptyStateProps = {

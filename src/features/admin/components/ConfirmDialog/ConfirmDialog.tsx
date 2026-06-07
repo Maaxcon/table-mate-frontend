@@ -1,5 +1,5 @@
-import Modal from "../Modal"
-import "../styles/modal.css"
+import Modal from "@/features/admin/components/Modal"
+import "@/features/admin/components/styles/modal.css"
 
 type ConfirmDialogProps = {
   title: string

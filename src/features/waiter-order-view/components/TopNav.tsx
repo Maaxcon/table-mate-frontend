@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import type { FloorTable } from "../data/mockData"
+import type { FloorTable } from "@/features/waiter-order-view/data/mockData"
 import "./TopNav.css"
 
 const TABS = ["FLOOR PLAN", "WAITLIST", "ANALYTICS"]

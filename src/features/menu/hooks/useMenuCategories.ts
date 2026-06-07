@@ -1,6 +1,6 @@
 import { useEffect, useReducer } from "react"
-import { fetchCategories } from "../api"
-import type { MenuCategory } from "../types"
+import { fetchCategories } from "@/features/menu/api"
+import type { MenuCategory } from "@/features/menu/types"
 
 type State = {
   categories: MenuCategory[]

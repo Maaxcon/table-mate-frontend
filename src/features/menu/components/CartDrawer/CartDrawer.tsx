@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react"
 import { LuCheck, LuMinus, LuPlus, LuShoppingCart, LuTrash2, LuX } from "react-icons/lu"
-import type { CartItem } from "../../hooks/useCart"
-import { formatAmount } from "../../utils"
-import { menuStrings } from "../../strings"
+import type { CartItem } from "@/features/menu/hooks/useCart"
+import { formatAmount } from "@/features/menu/utils"
+import { menuStrings } from "@/features/menu/strings"
 import "./CartDrawer.css"
 
 type Props = {

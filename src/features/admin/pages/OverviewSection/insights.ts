@@ -1,4 +1,4 @@
-import type { MenuData } from "../../hooks/useMenuData"
+import type { MenuData } from "@/features/admin/hooks/useMenuData"
 
 export type AttentionIssue = { id: string; label: string; to: string }
 export type ChartDatum = { label: string; value: number }

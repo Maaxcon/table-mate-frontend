@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState, type ReactNode } from "react"
 import { LuCircleAlert, LuCircleCheck, LuInfo, LuX } from "react-icons/lu"
-import { ToastContext } from "../../hooks/toastContext"
+import { ToastContext } from "@/features/admin/hooks/toastContext"
 import "./toast.css"
 
 type ToastType = "success" | "error" | "info"

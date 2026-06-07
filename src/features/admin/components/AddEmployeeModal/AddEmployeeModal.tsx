@@ -1,12 +1,12 @@
 import { useState } from "react"
-import { createEmployee } from "../../api/staff"
-import type { EmployeeRole } from "../../types"
-import Modal from "../Modal"
-import TextField from "../TextField"
-import DiscardChangesDialog from "../DiscardChangesDialog"
-import { useToast } from "../../hooks/toastContext"
-import { useUnsavedGuard } from "../../hooks/useUnsavedGuard"
-import "../styles/adminForm.css"
+import { createEmployee } from "@/features/admin/api/staff"
+import type { EmployeeRole } from "@/features/admin/types"
+import Modal from "@/features/admin/components/Modal"
+import TextField from "@/features/admin/components/TextField"
+import DiscardChangesDialog from "@/features/admin/components/DiscardChangesDialog"
+import { useToast } from "@/features/admin/hooks/toastContext"
+import { useUnsavedGuard } from "@/features/admin/hooks/useUnsavedGuard"
+import "@/features/admin/components/styles/adminForm.css"
 
 type AddEmployeeModalProps = {
   onClose: () => void

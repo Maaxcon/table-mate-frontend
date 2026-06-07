@@ -1,4 +1,4 @@
-import type { AdminCategory } from "../../types"
+import type { AdminCategory } from "@/features/admin/types"
 
 // Sentinel for the "No category" option in the move dropdown.
 const UNCATEGORIZED = "__none__"

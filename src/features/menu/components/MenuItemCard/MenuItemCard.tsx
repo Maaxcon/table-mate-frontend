@@ -1,7 +1,7 @@
 import { LuHeart, LuMinus, LuPlus } from "react-icons/lu"
 import type { MenuItem } from "@/features/menu/types"
-import { formatPrice } from "../../utils"
-import { menuStrings } from "../../strings"
+import { formatPrice } from "@/features/menu/utils"
+import { menuStrings } from "@/features/menu/strings"
 import "./MenuItemCard.css"
 
 type MenuItemCardProps = {

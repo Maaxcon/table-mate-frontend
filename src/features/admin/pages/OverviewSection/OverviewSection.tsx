@@ -16,17 +16,17 @@ import {
 import { useAppSelector } from "@/store/hooks"
 import { fetchRestaurant, type PublicRestaurant } from "@/features/menu/api"
 import { isRestaurantOpenNow } from "@/features/menu/utils"
-import { useAdminOverview } from "../../hooks/useAdminOverview"
-import { useMenuData } from "../../hooks/useMenuData"
-import { useResource } from "../../hooks/useResource"
-import BarChart from "../../components/BarChart"
+import { useAdminOverview } from "@/features/admin/hooks/useAdminOverview"
+import { useMenuData } from "@/features/admin/hooks/useMenuData"
+import { useResource } from "@/features/admin/hooks/useResource"
+import BarChart from "@/features/admin/components/BarChart"
 import {
   deriveDishesByCategory,
   derivePriceBuckets,
   deriveIssues,
   deriveTopLiked,
 } from "./insights"
-import "../../components/styles/SectionPlaceholder.css"
+import "@/features/admin/components/styles/SectionPlaceholder.css"
 import "./overview.css"
 
 type StatCardProps = {

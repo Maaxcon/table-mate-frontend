@@ -2,10 +2,10 @@ import { useState } from "react"
 import { LuGripVertical, LuTrash2 } from "react-icons/lu"
 import { useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
-import { deleteCategory, updateCategory } from "../../api/menu"
-import type { AdminCategory } from "../../types"
-import ConfirmDialog from "../ConfirmDialog"
-import { useToast } from "../../hooks/toastContext"
+import { deleteCategory, updateCategory } from "@/features/admin/api/menu"
+import type { AdminCategory } from "@/features/admin/types"
+import ConfirmDialog from "@/features/admin/components/ConfirmDialog"
+import { useToast } from "@/features/admin/hooks/toastContext"
 
 type CategoryRowProps = {
   category: AdminCategory

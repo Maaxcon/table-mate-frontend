@@ -15,8 +15,8 @@ import {
 } from "react-icons/lu"
 import type { MenuItem } from "@/features/menu/types"
 import { useFocusTrap } from "@/hooks/useFocusTrap"
-import { formatPrice } from "../../utils"
-import { menuStrings } from "../../strings"
+import { formatPrice } from "@/features/menu/utils"
+import { menuStrings } from "@/features/menu/strings"
 import "./MenuItemModal.css"
 
 type AllergenInfo = { icon: ReactElement; color: string }

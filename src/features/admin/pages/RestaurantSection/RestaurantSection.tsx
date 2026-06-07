@@ -1,10 +1,10 @@
-import AdminSectionForm from "../../components/AdminSectionForm"
-import TextField from "../../components/TextField"
-import RestaurantCover from "../../components/RestaurantCover"
-import WorkingHoursEditor from "../../components/WorkingHoursEditor"
-import { hasInvalidWorkingHours } from "../../constants/workingHours"
-import { useAdminResource } from "../../hooks/useAdminResource"
-import type { AdminRestaurant } from "../../types"
+import AdminSectionForm from "@/features/admin/components/AdminSectionForm"
+import TextField from "@/features/admin/components/TextField"
+import RestaurantCover from "@/features/admin/components/RestaurantCover"
+import WorkingHoursEditor from "@/features/admin/components/WorkingHoursEditor"
+import { hasInvalidWorkingHours } from "@/features/admin/constants/workingHours"
+import { useAdminResource } from "@/features/admin/hooks/useAdminResource"
+import type { AdminRestaurant } from "@/features/admin/types"
 
 function RestaurantSection() {
   const { form, loading, loadError, status, saveError, dirty, setField, submit } =
