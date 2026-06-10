@@ -80,6 +80,7 @@
 
 .rc__cell--empty {
   cursor: default;
+  color: var(--color-text-muted);
 }
 
 .rc__cell--empty:hover {

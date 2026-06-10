@@ -94,14 +94,29 @@ export function ReservationCalendar({ reservations, history, loading }: Props) {
     return new Date(min.getFullYear(), min.getMonth(), 1)
   }, [hasHistory, history])
 
+  const futureReservationMonths = useMemo(() => {
+    const months = reservations
+      .filter((r) => new Date(r.start_at) > today)
+      .map((r) => {
+        const d = new Date(r.start_at)
+        return new Date(d.getFullYear(), d.getMonth(), 1).getTime()
+      })
+    if (months.length === 0) return []
+    const unique = [...new Set(months)].sort()
+    return unique
+  }, [reservations, today])
+
   const maxAllowedDate = useMemo(() => {
+    if (futureReservationMonths.length > 0) {
+      return new Date(futureReservationMonths[futureReservationMonths.length - 1])
+    }
     if (!hasHistory) {
       const d = new Date(today)
       d.setDate(d.getDate() + 14)
       return d
     }
     return new Date(today.getFullYear(), today.getMonth() + 2, 1)
-  }, [hasHistory, today])
+  }, [futureReservationMonths, hasHistory, today])
 
   const [cursor, setCursor] = useState(() => new Date(today.getFullYear(), today.getMonth(), 1))
 
