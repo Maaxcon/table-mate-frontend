@@ -24,10 +24,13 @@ export function useMenuData(): { data: MenuData | null; loading: boolean } {
       try {
         const menus = await fetchMenus(controller.signal)
         const groups = await Promise.all(
-          menus.map(async (m) => ({
-            categories: await fetchCategories(m.public_id, controller.signal),
-            items: await fetchItems(m.public_id, controller.signal),
-          })),
+          menus.map(async (m) => {
+            const [categories, items] = await Promise.all([
+              fetchCategories(m.public_id, controller.signal),
+              fetchItems(m.public_id, controller.signal),
+            ])
+            return { categories, items }
+          }),
         )
         setData({
           menus,
