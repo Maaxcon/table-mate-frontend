@@ -11,11 +11,19 @@ type MenuHeaderProps = {
   coverImage: string | null
   settings: PublicRestaurantSettings | null
   user: AuthUser | null
+  restaurantId: string | null
   onSignOut: () => void
 }
 
 /** Top bar (brand + auth) and the restaurant hero with its meta pills. */
-function MenuHeader({ name, coverImage, settings, user, onSignOut }: MenuHeaderProps) {
+function MenuHeader({
+  name,
+  coverImage,
+  settings,
+  user,
+  restaurantId,
+  onSignOut,
+}: MenuHeaderProps) {
   const currencySymbol = settings ? getCurrencySymbol(settings.currency) : ""
   const priceBand = settings
     ? currencySymbol.repeat(Math.max(1, Math.min(4, settings.price_band)))
@@ -56,6 +64,11 @@ function MenuHeader({ name, coverImage, settings, user, onSignOut }: MenuHeaderP
           <img src={logo} alt="TableMate" className="menu-page__logo" />
         </div>
         <div className="menu-page__topbar-right">
+          {restaurantId && (
+            <Link to={`/${restaurantId}/book`} className="menu-page__book-btn">
+              {menuStrings.header.book}
+            </Link>
+          )}
           {user ? (
             <>
               <Link

@@ -179,9 +179,9 @@ function MenuPage() {
         coverImage={restaurantCoverImage}
         settings={restaurantSettings}
         user={user}
+        restaurantId={restaurantId}
         onSignOut={() => dispatch(clearAuth())}
       />
-
 
       <div className="menu-page__sticky-controls">
         <div className="menu-page__searchrow">

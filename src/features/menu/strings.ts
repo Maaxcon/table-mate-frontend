@@ -8,6 +8,7 @@ export const menuStrings = {
     signIn: "Увійти",
     signOut: "Вийти",
     openCabinet: "Open my cabinet",
+    book: "Book the table",
   },
   hero: {
     label: "Menu",
