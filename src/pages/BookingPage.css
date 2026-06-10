@@ -1,0 +1,38 @@
+.bp {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 24px 16px;
+}
+
+.bp__tabs {
+  display: flex;
+  gap: 0;
+  margin-bottom: 24px;
+  border-bottom: 2px solid var(--color-border, #e0e0e0);
+}
+
+.bp__tab {
+  padding: 10px 24px;
+  border: none;
+  background: none;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-muted, #888);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition:
+    color 0.2s,
+    border-color 0.2s;
+}
+
+.bp__tab--active {
+  color: var(--color-primary, #1976d2);
+  border-bottom-color: var(--color-primary, #1976d2);
+}
+
+.bp__loading {
+  text-align: center;
+  color: var(--color-text-muted, #888);
+  padding: 48px 0;
+}

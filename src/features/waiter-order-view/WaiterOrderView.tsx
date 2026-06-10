@@ -1,39 +1,303 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { TopNav } from "./components/TopNav"
 import { FloorPlan } from "./components/FloorPlan"
 import { ReservationSidebar } from "./components/ReservationSidebar"
 import { TableDetailOverlay } from "./components/TableDetailOverlay"
-import { FLOOR_TABLES, RESERVATIONS, OVERLAY_DETAILS, type FloorTable } from "./data/mockData"
-import "@/assets/colors.css"
+import type { FloorTable, ReservationItem, OverlayDetail, OverlayOrderItem } from "./data/mockData"
+import { apiFetch } from "@/api/client"
 import "./WaiterOrderView.css"
 
-export function WaiterOrderView() {
+interface TableApiResponse {
+  public_id: string
+  table_number: string
+  capacity: number
+  shape: string
+  status: string
+  active: boolean
+  position_x: number | null
+  position_y: number | null
+  zone?: { public_id: string; name: string } | null
+}
+
+interface ZoneApiResponse {
+  public_id: string
+  name: string
+  sort_order: number
+}
+
+interface WaiterOrderViewProps {
+  restaurantId: string
+}
+
+function mapTableToFloorTable(t: TableApiResponse): FloorTable {
+  return {
+    public_id: t.public_id,
+    table_number: t.table_number,
+    capacity: t.capacity,
+    shape: t.shape as FloorTable["shape"],
+    status: t.status as FloorTable["status"],
+    position_x: t.position_x,
+    position_y: t.position_y,
+    active: t.active,
+    zone: t.zone ?? null,
+  }
+}
+
+export function WaiterOrderView({ restaurantId }: WaiterOrderViewProps) {
   const [activeTab, setActiveTab] = useState("FLOOR PLAN")
   const [selectedTableId, setSelectedTableId] = useState<string | null>(null)
+  const [tables, setTables] = useState<FloorTable[]>([])
+  const [zones, setZones] = useState<ZoneApiResponse[]>([])
+  const [selectedZoneId, setSelectedZoneId] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  const [reservations, setReservations] = useState<ReservationItem[]>([])
+  const [overlayDetail, setOverlayDetail] = useState<OverlayDetail | null>(null)
+  const [overlayLoading, setOverlayLoading] = useState(false)
+
+  useEffect(() => {
+    const controller = new AbortController()
+    Promise.all([
+      apiFetch(`/api/restaurants/tables/?restaurant=${restaurantId}`, {
+        signal: controller.signal,
+      }),
+      apiFetch(`/api/restaurants/zones/?restaurant=${restaurantId}`, { signal: controller.signal }),
+    ])
+      .then(async ([tablesRes, zonesRes]) => {
+        if (!tablesRes.ok) throw new Error("Failed to load tables")
+        const tablesData = (await tablesRes.json()) as { results?: TableApiResponse[] }
+        const items = tablesData.results ?? []
+        setTables(items.map(mapTableToFloorTable))
+        if (zonesRes.ok) {
+          const zonesData = (await zonesRes.json()) as { results?: ZoneApiResponse[] }
+          const zonesList = zonesData.results ?? []
+          setZones(zonesList)
+          if (zonesList.length > 0) setSelectedZoneId(zonesList[0].public_id)
+        }
+      })
+      .catch((err) => {
+        if (err instanceof DOMException && err.name === "AbortError") return
+        setError(err instanceof Error ? err.message : "Failed to load data")
+      })
+      .finally(() => setLoading(false))
+    return () => controller.abort()
+  }, [restaurantId])
+
+  useEffect(() => {
+    const controller = new AbortController()
+    apiFetch(`/api/reservations/reservations/?restaurant=${restaurantId}`, {
+      signal: controller.signal,
+    })
+      .then(async (res) => {
+        if (!res.ok) return
+        const data = (await res.json()) as {
+          results?: Array<{
+            public_id: string
+            start_at: string
+            table_info: { table_number: string } | null
+            guest_count: number
+            status: string
+            notes?: string | null
+            customer_name?: string
+          }>
+        }
+        const items = data.results ?? []
+        setReservations(
+          items
+            .filter((r) => r.status !== "cancelled")
+            .map((r) => ({
+              public_id: r.public_id,
+              start_at: r.start_at,
+              table: r.table_info?.table_number ?? "",
+              guest_count: r.guest_count,
+              status: r.status as ReservationItem["status"],
+              notes: r.notes,
+              name: r.customer_name ?? "Guest",
+            })),
+        )
+      })
+      .catch(() => {})
+    return () => controller.abort()
+  }, [restaurantId])
+
+  const buildOverlayDetail = async (
+    tablePublicId: string,
+    currentTables: FloorTable[],
+    currentReservations: ReservationItem[],
+  ) => {
+    setOverlayLoading(true)
+    setOverlayDetail(null)
+
+    try {
+      const sessionRes = await apiFetch(`/api/orders/sessions/`)
+      if (!sessionRes.ok) {
+        setOverlayLoading(false)
+        return
+      }
+      const sessionData = (await sessionRes.json()) as {
+        results?: Array<{
+          public_id: string
+          table: string
+          guest_count: number
+          started_at: string
+          status: string
+        }>
+      }
+      const allSessions = sessionData.results ?? []
+      const session = allSessions.find((s) => s.table === tablePublicId)
+      if (!session) {
+        setOverlayLoading(false)
+        return
+      }
+      const startedAt = new Date(session.started_at)
+      const durationMinutes = Math.round((Date.now() - startedAt.getTime()) / 60000)
+      const duration =
+        durationMinutes > 60
+          ? `${Math.floor(durationMinutes / 60)}h${durationMinutes % 60}m`
+          : `${durationMinutes}m`
+
+      const orderRes = await apiFetch(`/api/orders/orders/`)
+      let orderItems: OverlayOrderItem[] = []
+      let order: {
+        public_id: string
+        currency: string
+        total_amount: string
+        tax_total: string
+        discount_total?: string
+        service_charge?: string
+      } | null = null
+
+      if (orderRes.ok) {
+        const orderData = (await orderRes.json()) as {
+          results?: Array<{
+            public_id: string
+            session: string
+            currency: string
+            total_amount: string
+            tax_total: string
+            discount_total?: string
+            service_charge?: string
+          }>
+        }
+        const orderList = orderData.results ?? []
+        order = orderList.find((o) => o.session === session.public_id) ?? null
+
+        if (order) {
+          const oiRes = await apiFetch(`/api/orders/order-items/`)
+          if (oiRes.ok) {
+            const oiData = (await oiRes.json()) as {
+              results?: Array<{
+                public_id: string
+                order: string
+                guest_slot: number
+                quantity: number
+                status: string
+                is_wasted: boolean
+                void_reason?: number | null
+                unit_price: string
+              }>
+            }
+            const oiList = oiData.results ?? []
+            orderItems = oiList
+              .filter((oi) => oi.order === order!.public_id)
+              .map((oi) => ({
+                public_id: oi.public_id,
+                guest_slot: oi.guest_slot,
+                quantity: oi.quantity,
+                name: oi.public_id,
+                unit_price: oi.unit_price,
+                status: oi.status as OverlayOrderItem["status"],
+                is_wasted: oi.is_wasted,
+                void_reason: oi.void_reason,
+              }))
+          }
+        }
+      }
+
+      if (!order) {
+        setOverlayLoading(false)
+        return
+      }
+
+      const selTable = currentTables.find((t) => t.public_id === tablePublicId)
+      const resForTable = currentReservations.find((r) => r.table === selTable?.table_number)
+
+      setOverlayDetail({
+        public_id: order.public_id,
+        table_number: selTable?.table_number ?? "",
+        guest_name: resForTable?.name ?? "Guest",
+        guest_count: session.guest_count,
+        duration,
+        currency: order.currency,
+        items: orderItems,
+        subtotal: order.total_amount,
+        tax_total: order.tax_total,
+        total_amount: order.total_amount,
+        discount_total: order.discount_total,
+        service_charge: order.service_charge,
+      })
+    } finally {
+      setOverlayLoading(false)
+    }
+  }
+
+  const filteredTables = selectedZoneId
+    ? tables.filter((t) => t.zone?.public_id === selectedZoneId)
+    : tables
 
   const selectedTable = selectedTableId
-    ? (FLOOR_TABLES.find((t) => t.public_id === selectedTableId) ?? null)
+    ? (filteredTables.find((t) => t.public_id === selectedTableId) ?? null)
     : null
-  const selectedDetail = selectedTableId ? (OVERLAY_DETAILS[selectedTableId] ?? null) : null
+
   const selectedTableReservations = selectedTable
-    ? RESERVATIONS.filter((r) => r.table === `T-${selectedTable.table_number}`)
+    ? reservations.filter((r) => r.table === selectedTable.table_number)
     : []
 
   const handleTableSelect = (table: FloorTable) => {
     setSelectedTableId(table.public_id)
+    buildOverlayDetail(table.public_id, tables, reservations)
   }
 
   const showFloorPlan = activeTab === "FLOOR PLAN"
 
+  if (loading)
+    return (
+      <div className="waiter-view">
+        <p className="waiter-view__message">Loading floor plan…</p>
+      </div>
+    )
+  if (error)
+    return (
+      <div className="waiter-view">
+        <p className="waiter-view__message waiter-view__message--error">{error}</p>
+      </div>
+    )
+
   return (
     <div className="waiter-view">
-      <TopNav tables={FLOOR_TABLES} activeTab={activeTab} onTabChange={setActiveTab} />
+      <TopNav tables={tables} activeTab={activeTab} onTabChange={setActiveTab} />
+
+      {zones.length > 1 && (
+        <div className="waiter-view__zones">
+          {zones.map((z) => (
+            <button
+              key={z.public_id}
+              type="button"
+              className={`waiter-view__zone ${selectedZoneId === z.public_id ? "waiter-view__zone--active" : ""}`}
+              onClick={() => setSelectedZoneId(z.public_id)}
+            >
+              {z.name}
+            </button>
+          ))}
+        </div>
+      )}
 
       <div className="waiter-view__layout">
         <div className="waiter-view__main">
           {showFloorPlan ? (
             <FloorPlan
-              tables={FLOOR_TABLES}
+              tables={filteredTables}
               selectedId={selectedTableId}
               onSelect={handleTableSelect}
             />
@@ -44,15 +308,18 @@ export function WaiterOrderView() {
           )}
         </div>
 
-        {showFloorPlan && <ReservationSidebar reservations={RESERVATIONS} />}
+        {showFloorPlan && <ReservationSidebar reservations={reservations} />}
       </div>
 
-      {selectedTable && (
+      {selectedTable && overlayDetail && !overlayLoading && (
         <TableDetailOverlay
           table={selectedTable}
-          detail={selectedDetail}
+          detail={overlayDetail}
           tableReservations={selectedTableReservations}
-          onClose={() => setSelectedTableId(null)}
+          onClose={() => {
+            setSelectedTableId(null)
+            setOverlayDetail(null)
+          }}
         />
       )}
     </div>

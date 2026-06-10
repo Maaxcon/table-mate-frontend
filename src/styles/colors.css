@@ -1,8 +1,10 @@
 :root,
 [data-theme="light"] {
+  --color-primary: #1976d2;
   --color-bg-page: #ffffff;
   --color-bg-surface: #ffffff;
   --color-bg-surface-subtle: #f2f2f2;
+  --color-bg-elevated: #ffffff;
   --color-bg-auth: #050505;
   --color-text-primary: #111111;
   --color-text-secondary: #444444;
@@ -10,6 +12,25 @@
   --color-text-subtle: #c6c6c6;
   --color-border-default: #d9d9d9;
   --color-border-strong: #111111;
+  --color-border-light: #cccccc;
+  --color-border-dashed: #888888;
+
+  /* Waiter-order aliases (map to the same values) */
+  --color-bg: var(--color-bg-page);
+  --color-text: var(--color-text-primary);
+  --color-bg-secondary: var(--color-bg-surface-subtle);
+  --color-border: var(--color-border-strong);
+
+  /* Badges (waiter-order) */
+  --badge-filled-bg: var(--color-text-primary);
+  --badge-filled-text: var(--color-bg-page);
+  --badge-outlined-bg: var(--color-bg-page);
+  --badge-outlined-border: var(--color-text-primary);
+  --badge-outlined-text: var(--color-text-primary);
+  --badge-pending-border: var(--color-text-muted);
+  --badge-pending-text: var(--color-text-muted);
+  --badge-served-text: var(--color-text-primary);
+  --badge-voided-text: var(--color-text-muted);
 
   /* Overlays */
   --color-overlay: rgb(0 0 0 / 52%);
@@ -44,9 +65,11 @@
 }
 
 [data-theme="dark"] {
+  --color-primary: #60a5fa;
   --color-bg-page: #16171d;
   --color-bg-surface: #1e1f28;
   --color-bg-surface-subtle: #2a2b36;
+  --color-bg-elevated: #1a1a1a;
   --color-bg-auth: #000000;
   --color-text-primary: #f3f4f6;
   --color-text-secondary: #9ca3af;
@@ -54,4 +77,54 @@
   --color-text-subtle: #4b5563;
   --color-border-default: #374151;
   --color-border-strong: #6b7280;
+  --color-border-light: #333333;
+  --color-border-dashed: #6b7280;
+
+  /* Waiter-order aliases (map to the same values) */
+  --color-bg: var(--color-bg-page);
+  --color-text: var(--color-text-primary);
+  --color-bg-secondary: var(--color-bg-surface-subtle);
+  --color-border: var(--color-border-strong);
+
+  /* Badges (waiter-order) */
+  --badge-filled-bg: var(--color-text-primary);
+  --badge-filled-text: var(--color-bg-page);
+  --badge-outlined-bg: var(--color-bg-page);
+  --badge-outlined-border: var(--color-text-primary);
+  --badge-outlined-text: var(--color-text-primary);
+  --badge-pending-border: var(--color-text-muted);
+  --badge-pending-text: var(--color-text-muted);
+  --badge-served-text: var(--color-text-primary);
+  --badge-voided-text: var(--color-text-muted);
+
+  /* Overlays */
+  --color-overlay: rgb(0 0 0 / 68%);
+  --color-overlay-dim: rgb(0 0 0 / 52%);
+
+  /* Transparent surfaces */
+  --color-bg-frosted: rgb(30 31 40 / 90%);
+  --color-bg-sticky: rgb(22 23 29 / 88%);
+  --color-surface-tint: rgb(0 0 0 / 18%);
+
+  /* Status: success / open */
+  --color-success: #22c55e;
+  --color-success-text: #4ade80;
+  --color-success-border: rgb(74 222 128 / 28%);
+  --color-success-bg: #132b1e;
+
+  /* Status: error / closed */
+  --color-error: #ef4444;
+  --color-error-text: #f87171;
+  --color-error-muted-text: #f87171;
+  --color-error-border: rgb(248 113 113 / 24%);
+  --color-error-bg: #2d1313;
+
+  /* Warning (allergens) */
+  --color-warning-bg: #2d2813;
+  --color-warning-icon: #facc15;
+  --color-warning-label: #fde047;
+  --color-warning-text: #eab308;
+
+  /* Interactive */
+  --color-like: #f87171;
 }

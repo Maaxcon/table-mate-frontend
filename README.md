@@ -20,6 +20,25 @@ npm install
 npm run dev
 ```
 
+## Regenerating the API Client
+
+The typed API client in `src/types/api/` is generated from the OpenAPI schema.
+
+### Workflow
+
+1. Make sure the latest `schema.yaml` is at the project root.
+2. Run the generator:
+
+   ```bash
+   npm run generate:api
+   ```
+
+   This reads `schema.yaml` and outputs the client + types into `src/types/api/`.
+
+3. Commit both the updated `schema.yaml` and the regenerated `src/types/api/` together so they stay in sync.
+
+> The generated files are checked into version control so CI can detect drift. If the schema changes and the generated files aren't updated, `git diff --exit-code -- src/types/api/` will fail in CI.
+
 ## Quality Gates
 
 ```bash

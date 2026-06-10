@@ -172,6 +172,9 @@ function MenuPage() {
             <img src={logo} alt="TableMate" className="menu-page__logo" />
           </div>
           <div className="menu-page__topbar-right">
+            <Link to={`/${restaurantId}/book`} className="menu-page__book-btn">
+              Book the table
+            </Link>
             {user ? (
               <>
                 <Link

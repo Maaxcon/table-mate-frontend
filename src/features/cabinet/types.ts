@@ -12,12 +12,23 @@ export type CabinetProfile = {
 }
 
 // Reservation statuses returned by the backend.
-export type ReservationStatus = "pending" | "confirmed" | "cancelled" | "completed"
+export type ReservationStatus = "pending" | "active" | "cancelled" | "completed"
 
 // One reservation from GET /api/reservations/reservations/my/.
 export type Reservation = {
   public_id: string
   table: string | null
+  table_info?: {
+    public_id: string
+    table_number: string
+    capacity: number
+    shape: string
+  }
+  restaurant: string
+  restaurant_info?: {
+    public_id: string
+    name: string
+  }
   guest_count: number
   start_at: string
   end_at: string

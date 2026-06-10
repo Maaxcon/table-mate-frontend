@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react"
 import type { FloorTable } from "../data/mockData"
-import { ThemeToggle } from "@/components/ThemeToggle/ThemeToggle"
 import "./TopNav.css"
 
 const TABS = ["FLOOR PLAN", "WAITLIST", "ANALYTICS"]
@@ -29,6 +28,7 @@ function useCurrentTime(): string {
 
 export function TopNav({ tables, activeTab, onTabChange }: TopNavProps) {
   const occupiedCount = tables.filter((t) => t.status === "occupied").length
+  const reservedCount = tables.filter((t) => t.status === "reserved").length
   const freeCount = tables.filter((t) => t.status === "free").length
   const currentTime = useCurrentTime()
 
@@ -65,12 +65,15 @@ export function TopNav({ tables, activeTab, onTabChange }: TopNavProps) {
           OCCUPIED: {occupiedCount}
         </span>
         <span className="top-nav__stat">
+          <span className="top-nav__stat-icon top-nav__stat-icon--reserved" />
+          RESERVED: {reservedCount}
+        </span>
+        <span className="top-nav__stat">
           <span className="top-nav__stat-icon" />
           FREE: {freeCount}
         </span>
         <span className="top-nav__time">{currentTime}</span>
         <div className="top-nav__avatar" />
-        <ThemeToggle />
       </div>
     </nav>
   )

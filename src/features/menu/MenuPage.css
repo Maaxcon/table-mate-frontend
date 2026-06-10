@@ -177,6 +177,24 @@
   transform: scale(1.06);
 }
 
+.menu-page__book-btn {
+  padding: 10px 16px;
+  border: none;
+  border-radius: 12px;
+  background: var(--color-primary, #1976d2);
+  color: #fff;
+  font-family: var(--font-family-base);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: opacity 150ms ease;
+}
+
+.menu-page__book-btn:hover {
+  opacity: 0.85;
+}
+
 .menu-page__signin {
   padding: 10px 16px;
   border: 1px solid var(--color-border-strong);
@@ -226,6 +244,10 @@
   width: auto;
   object-fit: contain;
   filter: brightness(0);
+}
+
+[data-theme="dark"] .menu-page__logo {
+  filter: brightness(0) invert(1);
 }
 
 .menu-page__titlerow {

@@ -4,7 +4,7 @@ import type { MeResponse } from "@/features/auth/types"
 import type { CabinetProfile, HistoryEntry, Reservation } from "./types"
 
 // "Active" bookings are the ones the user can still act on.
-const ACTIVE_STATUSES = new Set(["pending", "confirmed"])
+const ACTIVE_STATUSES = new Set(["pending", "active"])
 
 // Raw receipt shape from GET /api/receipts/my/ (snake_case, decimals as strings).
 type ApiReceiptItem = { name: string; quantity: number; unit_price: string }
@@ -130,8 +130,22 @@ async function extractError(res: Response): Promise<string> {
 }
 
 // Load the signed-in customer's own reservations.
-export async function fetchMyReservations(signal?: AbortSignal): Promise<Reservation[]> {
-  const res = await apiFetch("/api/reservations/reservations/my/", { signal })
+type FetchMyReservationsOptions = {
+  limit?: number
+  offset?: number
+  signal?: AbortSignal
+}
+
+export async function fetchMyReservations(
+  options: FetchMyReservationsOptions = {},
+): Promise<Reservation[]> {
+  const params = new URLSearchParams()
+  if (options.limit !== undefined) params.set("limit", String(options.limit))
+  if (options.offset !== undefined) params.set("offset", String(options.offset))
+  const query = params.toString()
+  const res = await apiFetch(`/api/reservations/reservations/my/${query ? `?${query}` : ""}`, {
+    signal: options.signal,
+  })
   if (!res.ok) throw new Error(`${res.status} ${res.statusText}`)
   return (await res.json()) as Reservation[]
 }
@@ -141,12 +155,11 @@ export function filterActiveBookings(reservations: Reservation[]): Reservation[]
   return reservations.filter((r) => ACTIVE_STATUSES.has(r.status))
 }
 
-// Cancel a booking.
-// TODO(backend): there is no customer cancel endpoint yet (reservation `status`
-// is read-only in the serializer). When it exists, call it here, e.g.
-//   await apiFetch(`/api/reservations/reservations/${publicId}/cancel/`, { method: "POST" })
-// For now this is a no-op so the UI can update its local state optimistically.
 export async function cancelReservation(publicId: string): Promise<void> {
-  void publicId
-  return Promise.resolve()
+  const res = await apiFetch(`/api/reservations/reservations/${publicId}/`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ status: "cancelled" }),
+  })
+  if (!res.ok) throw new Error(await extractError(res))
 }
