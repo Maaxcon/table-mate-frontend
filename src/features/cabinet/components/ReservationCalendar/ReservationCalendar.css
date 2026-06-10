@@ -1,0 +1,172 @@
+.rc {
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-default);
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 16px;
+}
+
+.rc__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.rc__title {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--color-text-primary);
+}
+
+.rc__nav {
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border-default);
+  background: var(--color-bg-surface);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.rc__nav:hover {
+  background: var(--color-bg-surface-subtle);
+}
+
+.rc__day-names {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  margin-bottom: 4px;
+}
+
+.rc__day-name {
+  text-align: center;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  padding: 4px 0;
+}
+
+.rc__grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.rc__cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  aspect-ratio: 1;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  cursor: pointer;
+  color: var(--color-text-primary);
+  font-size: 0.8rem;
+  padding: 2px;
+  transition: background 0.15s;
+}
+
+.rc__cell:hover {
+  background: var(--color-bg-surface-subtle);
+}
+
+.rc__cell--empty {
+  cursor: default;
+}
+
+.rc__cell--empty:hover {
+  background: transparent;
+}
+
+.rc__cell--today .rc__day {
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.rc__cell--selected {
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.rc__cell--selected:hover {
+  background: var(--color-primary);
+}
+
+.rc__cell--has-events .rc__day {
+  font-weight: 600;
+}
+
+.rc__dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--color-primary);
+}
+
+.rc__cell--selected .rc__dot {
+  background: #fff;
+}
+
+.rc__details {
+  padding: 0 4px;
+}
+
+.rc__details-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin: 0 0 12px;
+}
+
+.rc__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rc__item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  border: 1px solid var(--color-border-default);
+  border-radius: 10px;
+  background: var(--color-bg-surface);
+  font-size: 0.82rem;
+  color: var(--color-text-secondary);
+}
+
+.rc__item-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.rc__item-row--muted {
+  color: var(--color-text-muted);
+}
+
+.cabinet-section__loading {
+  padding: 20px 0;
+  text-align: center;
+  color: var(--color-text-secondary);
+  font-size: 0.85rem;
+}
+
+.cabinet-section__empty {
+  padding: 20px 0;
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+}

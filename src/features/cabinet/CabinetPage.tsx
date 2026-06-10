@@ -6,7 +6,14 @@ import { CancellationConfirmationModal } from "@/features/reservation/Cancellati
 import { RescheduleModal } from "@/features/reservation/RescheduleModal"
 import { clearAuth } from "@/store/auth/authSlice"
 import { useAppDispatch } from "@/store/hooks"
-import { BookingsList, CabinetStats, HistoryList, ProfileHeader, ReceiptDialog } from "./components"
+import {
+  BookingsList,
+  CabinetStats,
+  HistoryList,
+  ProfileHeader,
+  ReceiptDialog,
+  ReservationCalendar,
+} from "./components"
 import { useCabinet } from "./hooks/useCabinet"
 import type { HistoryEntry, Reservation } from "./types"
 import "./CabinetPage.css"
@@ -91,6 +98,7 @@ function CabinetPage() {
         <>
           <ProfileHeader profile={profile} onSave={updateProfile} />
           <CabinetStats history={history} />
+          <ReservationCalendar reservations={bookings} />
           <BookingsList
             bookings={bookings}
             error={bookingsError}
