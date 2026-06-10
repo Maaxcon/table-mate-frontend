@@ -47,20 +47,36 @@ import type {
   MenuMenusListResponses,
   MenuMenusRetrieveData,
   MenuMenusRetrieveResponses,
+  OrdersOrderItemsCreateData,
+  OrdersOrderItemsCreateResponses,
   OrdersOrderItemsListData,
   OrdersOrderItemsListResponses,
+  OrdersOrderItemsPartialUpdateData,
+  OrdersOrderItemsPartialUpdateResponses,
   OrdersOrderItemsRetrieveData,
   OrdersOrderItemsRetrieveResponses,
+  OrdersOrdersCreateData,
+  OrdersOrdersCreateResponses,
   OrdersOrdersListData,
   OrdersOrdersListResponses,
+  OrdersOrdersPartialUpdateData,
+  OrdersOrdersPartialUpdateResponses,
   OrdersOrdersRetrieveData,
   OrdersOrdersRetrieveResponses,
+  OrdersSessionsCreateData,
+  OrdersSessionsCreateResponses,
   OrdersSessionsListData,
   OrdersSessionsListResponses,
+  OrdersSessionsPartialUpdateData,
+  OrdersSessionsPartialUpdateResponses,
   OrdersSessionsRetrieveData,
   OrdersSessionsRetrieveResponses,
+  OrdersTicketsCreateData,
+  OrdersTicketsCreateResponses,
   OrdersTicketsListData,
   OrdersTicketsListResponses,
+  OrdersTicketsPartialUpdateData,
+  OrdersTicketsPartialUpdateResponses,
   OrdersTicketsRetrieveData,
   OrdersTicketsRetrieveResponses,
   PaymentsPaymentsListData,
@@ -69,6 +85,8 @@ import type {
   PaymentsPaymentsRetrieveResponses,
   ReceiptsMyListData,
   ReceiptsMyListResponses,
+  ReservationsReservationsAvailableSlotsRetrieveData,
+  ReservationsReservationsAvailableSlotsRetrieveResponses,
   ReservationsReservationsCreateData,
   ReservationsReservationsCreateResponses,
   ReservationsReservationsListData,
@@ -358,6 +376,19 @@ export const ordersOrderItemsList = <ThrowOnError extends boolean = false>(
     ...options,
   })
 
+export const ordersOrderItemsCreate = <ThrowOnError extends boolean = false>(
+  options: Options<OrdersOrderItemsCreateData, ThrowOnError>,
+) =>
+  (options.client ?? client).post<OrdersOrderItemsCreateResponses, unknown, ThrowOnError>({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/orders/order-items/",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  })
+
 export const ordersOrderItemsRetrieve = <ThrowOnError extends boolean = false>(
   options: Options<OrdersOrderItemsRetrieveData, ThrowOnError>,
 ) =>
@@ -365,6 +396,19 @@ export const ordersOrderItemsRetrieve = <ThrowOnError extends boolean = false>(
     security: [{ scheme: "bearer", type: "http" }],
     url: "/api/orders/order-items/{public_id}/",
     ...options,
+  })
+
+export const ordersOrderItemsPartialUpdate = <ThrowOnError extends boolean = false>(
+  options: Options<OrdersOrderItemsPartialUpdateData, ThrowOnError>,
+) =>
+  (options.client ?? client).patch<OrdersOrderItemsPartialUpdateResponses, unknown, ThrowOnError>({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/orders/order-items/{public_id}/",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
   })
 
 export const ordersOrdersList = <ThrowOnError extends boolean = false>(
@@ -376,6 +420,19 @@ export const ordersOrdersList = <ThrowOnError extends boolean = false>(
     ...options,
   })
 
+export const ordersOrdersCreate = <ThrowOnError extends boolean = false>(
+  options: Options<OrdersOrdersCreateData, ThrowOnError>,
+) =>
+  (options.client ?? client).post<OrdersOrdersCreateResponses, unknown, ThrowOnError>({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/orders/orders/",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  })
+
 export const ordersOrdersRetrieve = <ThrowOnError extends boolean = false>(
   options: Options<OrdersOrdersRetrieveData, ThrowOnError>,
 ) =>
@@ -383,6 +440,19 @@ export const ordersOrdersRetrieve = <ThrowOnError extends boolean = false>(
     security: [{ scheme: "bearer", type: "http" }],
     url: "/api/orders/orders/{public_id}/",
     ...options,
+  })
+
+export const ordersOrdersPartialUpdate = <ThrowOnError extends boolean = false>(
+  options: Options<OrdersOrdersPartialUpdateData, ThrowOnError>,
+) =>
+  (options.client ?? client).patch<OrdersOrdersPartialUpdateResponses, unknown, ThrowOnError>({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/orders/orders/{public_id}/",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
   })
 
 export const ordersSessionsList = <ThrowOnError extends boolean = false>(
@@ -394,6 +464,19 @@ export const ordersSessionsList = <ThrowOnError extends boolean = false>(
     ...options,
   })
 
+export const ordersSessionsCreate = <ThrowOnError extends boolean = false>(
+  options: Options<OrdersSessionsCreateData, ThrowOnError>,
+) =>
+  (options.client ?? client).post<OrdersSessionsCreateResponses, unknown, ThrowOnError>({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/orders/sessions/",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  })
+
 export const ordersSessionsRetrieve = <ThrowOnError extends boolean = false>(
   options: Options<OrdersSessionsRetrieveData, ThrowOnError>,
 ) =>
@@ -401,6 +484,19 @@ export const ordersSessionsRetrieve = <ThrowOnError extends boolean = false>(
     security: [{ scheme: "bearer", type: "http" }],
     url: "/api/orders/sessions/{public_id}/",
     ...options,
+  })
+
+export const ordersSessionsPartialUpdate = <ThrowOnError extends boolean = false>(
+  options: Options<OrdersSessionsPartialUpdateData, ThrowOnError>,
+) =>
+  (options.client ?? client).patch<OrdersSessionsPartialUpdateResponses, unknown, ThrowOnError>({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/orders/sessions/{public_id}/",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
   })
 
 export const ordersTicketsList = <ThrowOnError extends boolean = false>(
@@ -412,6 +508,19 @@ export const ordersTicketsList = <ThrowOnError extends boolean = false>(
     ...options,
   })
 
+export const ordersTicketsCreate = <ThrowOnError extends boolean = false>(
+  options: Options<OrdersTicketsCreateData, ThrowOnError>,
+) =>
+  (options.client ?? client).post<OrdersTicketsCreateResponses, unknown, ThrowOnError>({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/orders/tickets/",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  })
+
 export const ordersTicketsRetrieve = <ThrowOnError extends boolean = false>(
   options: Options<OrdersTicketsRetrieveData, ThrowOnError>,
 ) =>
@@ -419,6 +528,19 @@ export const ordersTicketsRetrieve = <ThrowOnError extends boolean = false>(
     security: [{ scheme: "bearer", type: "http" }],
     url: "/api/orders/tickets/{public_id}/",
     ...options,
+  })
+
+export const ordersTicketsPartialUpdate = <ThrowOnError extends boolean = false>(
+  options: Options<OrdersTicketsPartialUpdateData, ThrowOnError>,
+) =>
+  (options.client ?? client).patch<OrdersTicketsPartialUpdateResponses, unknown, ThrowOnError>({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/orders/tickets/{public_id}/",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
   })
 
 export const paymentsPaymentsList = <ThrowOnError extends boolean = false>(
@@ -497,6 +619,26 @@ export const reservationsReservationsPartialUpdate = <ThrowOnError extends boole
       "Content-Type": "application/json",
       ...options.headers,
     },
+  })
+
+/**
+ * Available time slots for a table
+ *
+ * Returns available 30-min time slots for a table. If date is provided, returns slots for that date only. Otherwise returns slots for the next 14 days.
+ */
+export const reservationsReservationsAvailableSlotsRetrieve = <
+  ThrowOnError extends boolean = false,
+>(
+  options?: Options<ReservationsReservationsAvailableSlotsRetrieveData, ThrowOnError>,
+) =>
+  (options?.client ?? client).get<
+    ReservationsReservationsAvailableSlotsRetrieveResponses,
+    unknown,
+    ThrowOnError
+  >({
+    security: [{ scheme: "bearer", type: "http" }],
+    url: "/api/reservations/reservations/available-slots/",
+    ...options,
   })
 
 export const reservationsReservationsMyList = <ThrowOnError extends boolean = false>(
