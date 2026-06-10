@@ -59,6 +59,9 @@ function DishModal({ menuId, categories, item, onClose, onSaved }: DishModalProp
     weight: false,
   })
   const [submitted, setSubmitted] = useState(false)
+  // Set once the dish is created, so a retry after an image-upload failure
+  // updates that dish instead of creating a second one.
+  const [createdId, setCreatedId] = useState<string | null>(null)
 
   const priceError = useMemo(() => {
     const v = price.trim()
@@ -139,9 +142,11 @@ function DishModal({ menuId, categories, item, onClose, onSaved }: DishModalProp
       allergens,
     }
     try {
+      // item from props, or a dish created on an earlier (failed) attempt.
+      const existingId = item?.public_id ?? createdId
       let publicId: string
-      if (editing) {
-        await updateItem(item.public_id, {
+      if (existingId) {
+        await updateItem(existingId, {
           category: payload.category,
           name: payload.name,
           description: payload.description,
@@ -151,16 +156,17 @@ function DishModal({ menuId, categories, item, onClose, onSaved }: DishModalProp
           ingredients: payload.ingredients,
           allergens: payload.allergens,
         })
-        publicId = item.public_id
+        publicId = existingId
       } else {
         const created = await createItem(payload)
+        setCreatedId(created.public_id)
         publicId = created.public_id
       }
 
       if (imageFile) {
         setUploadingImage(true)
         await uploadItemImage(publicId, imageFile)
-      } else if (editing && removeImage) {
+      } else if (existingId && removeImage) {
         setUploadingImage(true)
         await clearItemImage(publicId)
       }
