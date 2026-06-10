@@ -83,10 +83,8 @@ function AdminLayout() {
                     `admin-layout__nav-link${isActive ? " admin-layout__nav-link--active" : ""}`
                   }
                   onClick={(e) => {
-                    if (dirty) {
-                      e.preventDefault()
-                      setPending(() => () => navigate(to))
-                    }
+                    e.preventDefault()
+                    guarded(() => navigate(to))
                   }}
                 >
                   <Icon aria-hidden="true" className="admin-layout__nav-icon" />
