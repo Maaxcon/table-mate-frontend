@@ -1,11 +1,15 @@
 import { Navigate, Outlet } from "react-router-dom"
 import { useAppSelector } from "@/store/hooks"
+import type { UserRole } from "@/features/auth/types"
 
-function ProtectedRoute() {
+type ProtectedRouteProps = {
+  allowedRoles?: UserRole[]
+}
+
+function ProtectedRoute({ allowedRoles }: ProtectedRouteProps) {
   const user = useAppSelector((state) => state.auth.user)
-  const staffContextPending = useAppSelector((state) => state.auth.staffContextPending)
-  if (staffContextPending) return <Navigate to="/select-restaurant" replace />
   if (!user) return <Navigate to="/" replace />
+  if (allowedRoles && !allowedRoles.includes(user.role)) return <Navigate to="/" replace />
   return <Outlet />
 }
 
