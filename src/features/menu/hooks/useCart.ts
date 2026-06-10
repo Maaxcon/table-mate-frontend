@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useReducer } from "react"
-import { fetchItem } from "../api"
-import type { MenuItem } from "../types"
+import { fetchItem } from "@/features/menu/api"
+import type { MenuItem } from "@/features/menu/types"
 
 export type CartItem = { item: MenuItem; quantity: number }
 type CartLine = { publicId: string; quantity: number }
@@ -187,7 +187,7 @@ function useCart(restaurantId: string, guestToken?: string): UseCartResult {
     )
       .then((items) => {
         const availableItems = items.filter(
-          (item): item is MenuItem => item !== null && item.is_available,
+          (item): item is MenuItem => item !== null && item.is_available === true,
         )
         dispatch({ type: "HYDRATE_ITEMS", requestedIds, items: availableItems })
       })

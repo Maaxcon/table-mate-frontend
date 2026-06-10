@@ -1,0 +1,736 @@
+.menu-admin__page-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+/* Opens the customer-facing menu in a new tab for a quick preview. */
+.menu-admin__view-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  padding: 10px 16px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 10px;
+  background: var(--color-bg-surface);
+  color: var(--color-text-primary);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 120ms ease;
+}
+
+.menu-admin__view-btn:hover {
+  background: var(--color-bg-surface-subtle);
+}
+
+.menu-admin__error {
+  color: var(--color-error-text);
+  font-size: 14px;
+}
+
+.menu-admin__menus {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.menu-admin__tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  padding: 11px 20px;
+  border: 1px solid var(--color-border-default);
+  border-radius: 999px;
+  background: var(--color-bg-surface);
+  color: var(--color-text-secondary);
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.menu-admin__tab:hover {
+  background: var(--color-bg-surface-subtle);
+}
+
+.menu-admin__tab--active {
+  border-color: var(--color-border-strong);
+  background: var(--color-border-strong);
+  color: var(--color-bg-surface);
+  font-weight: 600;
+}
+
+.menu-admin__tab-badge {
+  font-size: 11px;
+  opacity: 0.7;
+}
+
+.menu-admin__tab--add {
+  border-style: dashed;
+  color: var(--color-text-secondary);
+  background: var(--color-bg-surface);
+}
+
+.menu-admin__tab--add:hover {
+  background: var(--color-bg-surface-subtle);
+}
+
+.menu-admin__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.menu-admin__toolbar-name {
+  flex: 1;
+  min-width: 160px;
+  max-width: 280px;
+}
+
+.menu-admin__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 9px 14px;
+  border: 1px solid var(--color-border-default);
+  border-radius: 10px;
+  background: var(--color-bg-surface);
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease,
+    color 120ms ease,
+    opacity 120ms ease;
+}
+
+.menu-admin__btn:hover:not(:disabled) {
+  background: var(--color-bg-surface-subtle);
+}
+
+.menu-admin__btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+/* "Save"-style buttons: stand out (solid) when there is something to save,
+   and fall back to a quiet plain button when there is nothing to do. */
+.menu-admin__btn--primary {
+  border-color: var(--color-border-strong);
+  background: var(--color-border-strong);
+  color: var(--color-bg-surface);
+}
+
+.menu-admin__btn--primary:hover:not(:disabled) {
+  background: var(--color-border-strong);
+  opacity: 0.88;
+}
+
+.menu-admin__btn--primary:disabled {
+  border-color: var(--color-border-default);
+  background: var(--color-bg-surface);
+  color: var(--color-text-muted);
+  opacity: 1;
+}
+
+.menu-admin__btn--danger {
+  display: inline-flex;
+  align-items: center;
+  color: var(--color-error-text);
+}
+
+.menu-admin__subtitle {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0 0 14px;
+}
+
+/* Categories (left) beside Dishes (right); both headers line up at the top. */
+.menu-admin__columns {
+  display: grid;
+  grid-template-columns: minmax(0, 360px) minmax(0, 1fr);
+  gap: 32px;
+  align-items: start;
+}
+
+.menu-admin__col {
+  min-width: 0;
+}
+
+@media (max-width: 860px) {
+  .menu-admin__columns {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+}
+
+.menu-admin__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.menu-admin__row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--color-border-default);
+  border-radius: 12px;
+  background: var(--color-bg-surface);
+}
+
+.menu-admin__row-name {
+  flex: 1;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.menu-admin__row-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.menu-admin__add-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.menu-admin__add-row .menu-admin__row-input {
+  flex: 1;
+}
+
+.menu-admin__add-row .menu-admin__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.menu-admin__dishes {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.menu-admin__group-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  margin: 0 0 12px;
+}
+
+/* Row above the dish grid: select-all on the left, bulk actions on the right. */
+.menu-admin__select-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.menu-admin__select-all {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+
+.menu-admin__bulk-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.menu-admin__bulk-move {
+  padding: 9px 12px;
+  font-size: 14px;
+}
+
+/* Per-card selection checkbox. */
+.menu-admin__dish-select {
+  flex-shrink: 0;
+  width: 17px;
+  height: 17px;
+  cursor: pointer;
+}
+
+.menu-admin__dish-card--selected {
+  border-color: var(--color-border-strong);
+  background: var(--color-bg-surface-subtle);
+}
+
+/* Highlights a category while a dish is dragged over it. */
+.menu-admin__group-drop {
+  border: 1px dashed transparent;
+  border-radius: 12px;
+  transition:
+    border-color 0.12s,
+    background-color 0.12s;
+}
+
+.menu-admin__group-drop.is-over {
+  border-color: var(--color-border-strong);
+  background: var(--color-bg-muted, rgba(0, 0, 0, 0.03));
+}
+
+/* Placeholder shown inside an empty category so it reads as a drop target. */
+.menu-admin__group-empty {
+  list-style: none;
+  grid-column: 1 / -1;
+  padding: 18px;
+  border: 1px dashed var(--color-border-default);
+  border-radius: 10px;
+  color: var(--color-text-muted);
+  font-size: 13px;
+  text-align: center;
+}
+
+/* Dishes spread across the page as a responsive grid of cards. */
+.menu-admin__dish-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 14px;
+}
+
+@media (max-width: 560px) {
+  .menu-admin__dish-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Keep the menu switcher to a single, swipeable row instead of wrapping. */
+  .menu-admin__menus {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    margin: 0 -16px 20px;
+    padding: 2px 16px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .menu-admin__tab {
+    padding: 9px 16px;
+    font-size: 14px;
+  }
+}
+
+.menu-admin__dish-card {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--color-border-default);
+  border-radius: 14px;
+  background: var(--color-bg-surface);
+  transition: border-color 120ms ease;
+}
+
+.menu-admin__dish-card:hover {
+  border-color: var(--color-border-strong);
+}
+
+/* The clickable info area inside the card (opens the editor). */
+.menu-admin__dish-main {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+
+/* Drag handle for reordering categories and dishes. */
+.menu-admin__drag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 28px;
+  align-self: stretch;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--color-text-muted);
+  cursor: grab;
+  touch-action: none;
+}
+
+.menu-admin__drag:hover {
+  color: var(--color-text-primary);
+}
+
+.menu-admin__drag:active {
+  cursor: grabbing;
+}
+
+.menu-admin__drag svg {
+  width: 18px;
+  height: 18px;
+}
+
+.menu-admin__dish-img {
+  width: 72px;
+  height: 72px;
+  flex-shrink: 0;
+  border-radius: 12px;
+  object-fit: cover;
+  border: 1px solid var(--color-border-default);
+}
+
+.menu-admin__dish-img--empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  text-align: center;
+  color: var(--color-text-muted);
+  background: var(--color-bg-surface-subtle);
+}
+
+.menu-admin__dish-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.menu-admin__dish-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.menu-admin__dish-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.menu-admin__dish-price {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.menu-admin__dish-weight {
+  flex-shrink: 0;
+  font-size: 13px;
+  white-space: nowrap;
+  color: var(--color-text-muted);
+}
+
+.menu-admin__dish-allergens {
+  overflow: hidden;
+  font-size: 12px;
+  color: var(--color-text-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Compact inline availability toggle on the right of the dish card.
+   Icon-only to stay out of the way of the name/price; state shown by icon +
+   color, with the text kept for screen readers only. */
+.menu-admin__avail {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  cursor: pointer;
+  color: var(--color-success-text);
+  background: var(--color-success-bg);
+  transition:
+    background-color 120ms ease,
+    color 120ms ease,
+    border-color 120ms ease;
+}
+
+.menu-admin__avail svg {
+  width: 16px;
+  height: 16px;
+}
+
+.menu-admin__avail:hover {
+  border-color: color-mix(in srgb, var(--color-success-text) 35%, transparent);
+}
+
+.menu-admin__avail--off {
+  color: var(--color-text-muted);
+  background: var(--color-bg-surface-subtle);
+}
+
+.menu-admin__avail--off:hover {
+  border-color: var(--color-border-strong);
+}
+
+/* Visually hidden — the button's aria-label conveys the state to AT. */
+.menu-admin__avail-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Search + sort controls above the dish grid. */
+.menu-admin__dishes-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.menu-admin__dishes-toolbar > :first-child {
+  flex: 1;
+  min-width: 180px;
+}
+
+/* The search box has its own bottom margin; the toolbar handles spacing. */
+.menu-admin__dishes-toolbar .admin-search {
+  margin-bottom: 0;
+}
+
+.menu-admin__sort {
+  flex-shrink: 0;
+  width: auto;
+  padding: 9px 12px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.menu-admin__dishes-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  /* aligns with the "Categories" heading height in the other column */
+  margin-bottom: 14px;
+}
+
+.menu-admin__dishes-head .menu-admin__subtitle {
+  margin-bottom: 0;
+}
+
+.menu-admin__dishes-head .menu-admin__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Dish editor: wider modal, photo on the left, fields on the right. */
+.admin-modal--dish {
+  max-width: 760px;
+}
+
+.dish-form__grid {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+.dish-form__photo {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.dish-form__fields {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+/* The whole photo frame is clickable to upload/replace. */
+.dish-photo {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid var(--color-border-default);
+  background: var(--color-bg-surface-subtle);
+  cursor: pointer;
+}
+
+.dish-photo__img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.dish-photo__empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 2px dashed var(--color-border-default);
+  border-radius: 16px;
+  color: var(--color-text-muted);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.dish-photo__empty svg {
+  width: 28px;
+  height: 28px;
+}
+
+.dish-photo__overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-overlay);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+
+.dish-photo:hover .dish-photo__overlay,
+.dish-photo:focus-within .dish-photo__overlay {
+  opacity: 1;
+}
+
+/* Covers the photo with a spinner while the new image uploads on save. */
+.dish-photo__loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-overlay);
+}
+
+.dish-photo__spinner {
+  width: 28px;
+  height: 28px;
+  border: 3px solid rgba(255, 255, 255, 0.4);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: dish-photo-spin 0.7s linear infinite;
+}
+
+@keyframes dish-photo-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.dish-photo__remove {
+  width: 100%;
+  justify-content: center;
+}
+
+@media (max-width: 640px) {
+  .dish-form__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dish-form__photo {
+    max-width: 260px;
+  }
+}
+
+.dish-delete,
+.dish-duplicate {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dish-ingredient-add {
+  display: flex;
+  gap: 8px;
+}
+
+.dish-ingredient-add .admin-field__input {
+  flex: 1;
+  min-width: 0;
+}
+
+.dish-allergens {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.dish-allergen {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 6px 5px 12px;
+  border: 1px solid var(--color-border-default);
+  border-radius: 999px;
+  background: var(--color-bg-surface-subtle);
+  font-size: 13px;
+  color: var(--color-text-primary);
+}
+
+.dish-allergen__remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border: none;
+  border-radius: 999px;
+  background: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.dish-allergen__remove:hover {
+  background: var(--color-bg-surface);
+  color: var(--color-text-primary);
+}

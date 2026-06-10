@@ -12,11 +12,11 @@ import {
   LuX,
 } from "react-icons/lu"
 import { useFocusTrap } from "@/hooks/useFocusTrap"
-import type { HistoryEntry } from "../../types"
-import { loadReceiptFont } from "../../receiptFont"
-import { buildReceiptPdf } from "../../receiptPdf"
-import { formatDateTime, formatMoney } from "../../utils"
-import { FeedbackDialog } from "../FeedbackDialog/FeedbackDialog"
+import type { HistoryEntry } from "@/features/cabinet/types"
+import { loadReceiptFont } from "@/features/cabinet/receiptFont"
+import { buildReceiptPdf } from "@/features/cabinet/receiptPdf"
+import { formatDateTime, formatMoney } from "@/features/cabinet/utils"
+import { FeedbackDialog } from "@/features/cabinet/components/FeedbackDialog/FeedbackDialog"
 import "./ReceiptDialog.css"
 
 type ReceiptDialogProps = {
@@ -37,7 +37,7 @@ function canShareFiles(): boolean {
 }
 
 export function ReceiptDialog({ entry, onClose }: ReceiptDialogProps) {
-  const dialogRef = useFocusTrap<HTMLDivElement>(onClose)
+  const dialogRef = useFocusTrap<HTMLDivElement>({ onEscape: onClose })
   const shareMode = useMemo(() => canShareFiles(), [])
   const navigate = useNavigate()
   const [busy, setBusy] = useState(false)

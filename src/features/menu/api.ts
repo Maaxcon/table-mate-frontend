@@ -1,5 +1,7 @@
 import { ENV_NOT_CONFIGURED_VALUE, env } from "@/config/env"
-import type { MenuCategory, MenuItem, PaginatedResponse } from "./types"
+import type { Paginated } from "@/api/client"
+import type { WorkingHours, WorkingHoursDay } from "@/types/workingHours"
+import type { MenuCategory, MenuItem } from "./types"
 
 function buildUrl(path: string, params: Record<string, string | undefined>): string {
   if (env.apiBaseUrl === ENV_NOT_CONFIGURED_VALUE) {
@@ -39,7 +41,7 @@ async function menuPost<T>(
 export function fetchCategories(
   restaurantId: string,
   signal?: AbortSignal,
-): Promise<PaginatedResponse<MenuCategory>> {
+): Promise<Paginated<MenuCategory>> {
   return menuGet(
     "/api/menu/categories/",
     { restaurant: restaurantId, ordering: "sort_order" },
@@ -65,7 +67,7 @@ export function fetchItems({
   guestToken,
   signal,
   sortOrder = "sort_order",
-}: FetchItemsParams): Promise<PaginatedResponse<MenuItem>> {
+}: FetchItemsParams): Promise<Paginated<MenuItem>> {
   return menuGet(
     "/api/menu/items/",
     {
@@ -103,7 +105,7 @@ export function searchItems(
   guestToken?: string,
   signal?: AbortSignal,
   page?: number,
-): Promise<PaginatedResponse<MenuItem>> {
+): Promise<Paginated<MenuItem>> {
   return menuGet(
     "/api/menu/items/search/",
     {
@@ -136,10 +138,8 @@ export function toggleItemLike(
   )
 }
 
-export type WorkingHoursDay = { open: string; close: string }
-export type WorkingHours = Partial<
-  Record<"mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun", WorkingHoursDay>
->
+// Re-exported from the shared module so existing `./api` importers keep working.
+export type { WorkingHours, WorkingHoursDay }
 
 export type PublicRestaurantSettings = {
   currency: string

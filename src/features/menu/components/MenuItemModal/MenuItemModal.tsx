@@ -14,7 +14,9 @@ import {
   LuFlame,
 } from "react-icons/lu"
 import type { MenuItem } from "@/features/menu/types"
-import { formatPrice } from "../../utils"
+import { useFocusTrap } from "@/hooks/useFocusTrap"
+import { formatPrice } from "@/features/menu/utils"
+import { menuStrings } from "@/features/menu/strings"
 import "./MenuItemModal.css"
 
 type AllergenInfo = { icon: ReactElement; color: string }
@@ -49,8 +51,9 @@ type MenuItemModalProps = {
 
 function MenuItemModal({ item, currencySymbol, onClose, onAddToCart }: MenuItemModalProps) {
   const [added, setAdded] = useState(false)
-  const closeButtonRef = useRef<HTMLButtonElement | null>(null)
   const closeTimerRef = useRef<number | null>(null)
+  // Focus trap + Esc-to-close + focus restore (focuses the close button first).
+  const dialogRef = useFocusTrap<HTMLDivElement>({ onEscape: onClose })
   const hasWeight = item.weight_grams != null && item.weight_grams > 0
 
   const handleAdd = () => {
@@ -66,22 +69,12 @@ function MenuItemModal({ item, currencySymbol, onClose, onAddToCart }: MenuItemM
     }, 900)
   }
 
+  // Clear the auto-close timer if the modal unmounts first.
   useEffect(() => {
-    closeButtonRef.current?.focus()
     return () => {
-      if (closeTimerRef.current != null) {
-        window.clearTimeout(closeTimerRef.current)
-      }
+      if (closeTimerRef.current != null) window.clearTimeout(closeTimerRef.current)
     }
   }, [])
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose()
-    }
-    document.addEventListener("keydown", onKey)
-    return () => document.removeEventListener("keydown", onKey)
-  }, [onClose])
 
   return (
     <div
@@ -92,17 +85,13 @@ function MenuItemModal({ item, currencySymbol, onClose, onAddToCart }: MenuItemM
       }}
     >
       <div
+        ref={dialogRef}
         className={`menu-modal${!item.image ? " menu-modal--no-image" : ""}`}
         role="dialog"
         aria-modal="true"
         aria-labelledby="menu-modal-heading"
       >
-        <button
-          ref={closeButtonRef}
-          className="menu-modal__close"
-          onClick={onClose}
-          aria-label="Close"
-        >
+        <button className="menu-modal__close" onClick={onClose} aria-label={menuStrings.item.close}>
           ✕
         </button>
 
@@ -129,7 +118,7 @@ function MenuItemModal({ item, currencySymbol, onClose, onAddToCart }: MenuItemM
 
           {item.ingredients.length > 0 && (
             <div className="menu-modal__ingredients">
-              <p className="menu-modal__section-label">Склад</p>
+              <p className="menu-modal__section-label">{menuStrings.item.ingredients}</p>
               <ul className="menu-modal__ingredients-list">
                 {item.ingredients.map((ing) => (
                   <li key={ing} className="menu-modal__ingredient-chip">
@@ -142,7 +131,7 @@ function MenuItemModal({ item, currencySymbol, onClose, onAddToCart }: MenuItemM
 
           {item.allergens.length > 0 && (
             <div className="menu-modal__allergens">
-              <p className="menu-modal__section-label">Алергени</p>
+              <p className="menu-modal__section-label">{menuStrings.item.allergens}</p>
               <div className="menu-modal__allergen-list">
                 {item.allergens.map((allergen) => {
                   const { icon, color } = getAllergenInfo(allergen)
@@ -166,7 +155,11 @@ function MenuItemModal({ item, currencySymbol, onClose, onAddToCart }: MenuItemM
             <span className="menu-modal__price">
               {formatPrice(item.price)} {currencySymbol}
             </span>
-            {hasWeight && <span className="menu-modal__weight">{item.weight_grams} г</span>}
+            {hasWeight && item.weight_grams != null && (
+              <span className="menu-modal__weight">
+                {menuStrings.weightGrams(item.weight_grams)}
+              </span>
+            )}
           </div>
           {item.is_available ? (
             <button
@@ -174,10 +167,12 @@ function MenuItemModal({ item, currencySymbol, onClose, onAddToCart }: MenuItemM
               onClick={handleAdd}
             >
               {added ? <LuCheck size={16} /> : <LuShoppingCart size={16} />}
-              {added ? "Додано" : "До кошика"}
+              {added ? menuStrings.item.added : menuStrings.item.addToCart}
             </button>
           ) : (
-            <span className="menu-modal__badge menu-modal__badge--unavailable">Недоступно</span>
+            <span className="menu-modal__badge menu-modal__badge--unavailable">
+              {menuStrings.item.unavailable}
+            </span>
           )}
         </div>
       </div>

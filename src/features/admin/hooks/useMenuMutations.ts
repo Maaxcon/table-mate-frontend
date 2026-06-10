@@ -1,0 +1,292 @@
+import { useCallback, useEffect, useRef } from "react"
+import { arrayMove } from "@dnd-kit/sortable"
+import {
+  bulkItemAction,
+  reorderCategories,
+  reorderItems,
+  updateItem,
+} from "@/features/admin/api/menu"
+import type { AdminCategory, AdminMenuItem } from "@/features/admin/types"
+import { useToast } from "./toastContext"
+
+const UNCATEGORIZED = "__none__"
+// A drop on an empty category targets the group itself, not an item in it.
+export const GROUP_DROP_PREFIX = "group:"
+
+/** Moves `activeId` next to `overId` (an item) or into `overId`'s category
+ * (a "group:<key>" drop target), possibly across categories, then renumbers
+ * sort_order across the whole list (categories order first, uncategorized last).
+ * The moved item's `category` is updated to its new group. Returns null for
+ * invalid moves or no-ops. */
+function moveItemsByIds(
+  items: AdminMenuItem[],
+  categories: AdminCategory[],
+  activeId: string,
+  overId: string,
+): AdminMenuItem[] | null {
+  const active = items.find((i) => i.public_id === activeId)
+  if (!active) return null
+
+  // Resolve the target category and, when dropping on a card, the card to land on.
+  let targetKey: string
+  let overItemId: string | null = null
+  if (overId.startsWith(GROUP_DROP_PREFIX)) {
+    targetKey = overId.slice(GROUP_DROP_PREFIX.length)
+  } else {
+    const over = items.find((i) => i.public_id === overId)
+    if (!over) return null
+    targetKey = over.category ?? UNCATEGORIZED
+    overItemId = overId
+  }
+  if (overItemId === activeId) return null
+
+  const groups = new Map<string, AdminMenuItem[]>()
+  for (const c of categories) groups.set(c.public_id, [])
+  for (const item of items) {
+    const key = item.category ?? UNCATEGORIZED
+    if (!groups.has(key)) groups.set(key, [])
+    groups.get(key)!.push(item)
+  }
+  if (!groups.has(targetKey)) groups.set(targetKey, [])
+
+  const sourceKey = active.category ?? UNCATEGORIZED
+  const source = groups.get(sourceKey)!
+  const fromIndex = source.findIndex((i) => i.public_id === activeId)
+  if (fromIndex < 0) return null
+
+  // Same-group reorder: move in place; cross-group: pull out then insert.
+  if (sourceKey === targetKey) {
+    const toIndex = overItemId
+      ? source.findIndex((i) => i.public_id === overItemId)
+      : source.length - 1
+    if (toIndex < 0 || toIndex === fromIndex) return null
+    groups.set(targetKey, arrayMove(source, fromIndex, toIndex))
+  } else {
+    source.splice(fromIndex, 1)
+    const target = groups.get(targetKey)!
+    const insertAt = overItemId
+      ? Math.max(
+          0,
+          target.findIndex((i) => i.public_id === overItemId),
+        )
+      : target.length
+    const moved = { ...active, category: targetKey === UNCATEGORIZED ? null : targetKey }
+    target.splice(insertAt, 0, moved)
+  }
+
+  const orderedKeys = [
+    ...categories.map((c) => c.public_id),
+    ...[...groups.keys()].filter(
+      (k) => k !== UNCATEGORIZED && !categories.some((c) => c.public_id === k),
+    ),
+    UNCATEGORIZED,
+  ]
+  const ordered: AdminMenuItem[] = []
+  for (const key of orderedKeys) ordered.push(...(groups.get(key) ?? []))
+  return ordered.map((item, i) => ({ ...item, sort_order: i }))
+}
+
+type SetItems = (update: AdminMenuItem[] | ((prev: AdminMenuItem[]) => AdminMenuItem[])) => void
+type SetCategories = (
+  update: AdminCategory[] | ((prev: AdminCategory[]) => AdminCategory[]),
+) => void
+
+type UseMenuMutationsArgs = {
+  categories: AdminCategory[]
+  items: AdminMenuItem[]
+  setCategories: SetCategories
+  setItems: SetItems
+  reloadCategories: () => void
+  reloadItems: () => void
+}
+
+export type MenuMutations = {
+  reorderCategory: (activeId: string, overId: string) => void
+  reorderItem: (activeId: string, overId: string) => void
+  bulkSetAvailable: (ids: string[], isAvailable: boolean) => void
+  bulkSetCategory: (ids: string[], category: string | null) => void
+  bulkDelete: (ids: string[]) => void
+}
+
+/**
+ * Optimistic write operations for the menu admin (drag reorder, cross-category
+ * move, and bulk hide/show/move/delete). Each updates the local list first, then
+ * persists; on failure it reverts via the matching `reload*`.
+ */
+export function useMenuMutations({
+  categories,
+  items,
+  setCategories,
+  setItems,
+  reloadCategories,
+  reloadItems,
+}: UseMenuMutationsArgs): MenuMutations {
+  const toast = useToast()
+
+  const pendingDeletes = useRef<Set<{ timer: ReturnType<typeof setTimeout>; flush: () => void }>>(
+    new Set(),
+  )
+  useEffect(() => {
+    const pending = pendingDeletes.current
+    return () => {
+      for (const entry of pending) {
+        clearTimeout(entry.timer)
+        entry.flush()
+      }
+      pending.clear()
+    }
+  }, [])
+
+  const reorderCategory = useCallback(
+    (activeId: string, overId: string) => {
+      if (activeId === overId) return
+      const oldIndex = categories.findIndex((c) => c.public_id === activeId)
+      const newIndex = categories.findIndex((c) => c.public_id === overId)
+      if (oldIndex < 0 || newIndex < 0) return
+
+      const renumbered = arrayMove(categories, oldIndex, newIndex).map((c, i) => ({
+        ...c,
+        sort_order: i,
+      }))
+      const changed = renumbered.filter(
+        (c) => categories.find((o) => o.public_id === c.public_id)?.sort_order !== c.sort_order,
+      )
+
+      setCategories(renumbered) // optimistic
+      if (changed.length > 0) {
+        void reorderCategories(
+          changed.map((c) => ({ public_id: c.public_id, sort_order: c.sort_order ?? 0 })),
+        ).catch(() => {
+          toast.error("Could not reorder categories. Reverted.")
+          reloadCategories() // revert to server truth on failure
+        })
+      }
+    },
+    [categories, reloadCategories, setCategories, toast],
+  )
+
+  const reorderItem = useCallback(
+    (activeId: string, overId: string) => {
+      const reordered = moveItemsByIds(items, categories, activeId, overId)
+      if (!reordered) return
+
+      const movedOld = items.find((i) => i.public_id === activeId)
+      const movedNew = reordered.find((i) => i.public_id === activeId)
+      const categoryChanged = (movedOld?.category ?? null) !== (movedNew?.category ?? null)
+      const changed = reordered.filter(
+        (it) => items.find((o) => o.public_id === it.public_id)?.sort_order !== it.sort_order,
+      )
+      if (changed.length === 0 && !categoryChanged) return
+
+      setItems(reordered) // optimistic
+
+      // The reorder endpoint only sets sort_order, so a category move is a
+      // separate PATCH first, then the order is renumbered for the whole list.
+      const persist = async () => {
+        if (categoryChanged && movedNew) {
+          await updateItem(activeId, { category: movedNew.category })
+        }
+        if (changed.length > 0) {
+          await reorderItems(
+            changed.map((it) => ({ public_id: it.public_id, sort_order: it.sort_order ?? 0 })),
+          )
+        }
+      }
+      void persist().catch(() => {
+        toast.error("Could not move dish. Reverted.")
+        reloadItems()
+      })
+    },
+    [items, categories, reloadItems, setItems, toast],
+  )
+
+  const bulkSetAvailable = useCallback(
+    (ids: string[], isAvailable: boolean) => {
+      if (ids.length === 0) return
+      const idSet = new Set(ids)
+      setItems((prev) =>
+        prev.map((it) => (idSet.has(it.public_id) ? { ...it, is_available: isAvailable } : it)),
+      )
+      const noun = ids.length === 1 ? "Dish" : "Dishes"
+      void bulkItemAction({ action: "set_available", ids, is_available: isAvailable })
+        .then(() => toast.success(isAvailable ? `${noun} shown` : `${noun} hidden`))
+        .catch(() => {
+          toast.error("Could not update dishes. Reverted.")
+          reloadItems()
+        })
+    },
+    [reloadItems, setItems, toast],
+  )
+
+  const bulkSetCategory = useCallback(
+    (ids: string[], category: string | null) => {
+      if (ids.length === 0) return
+      const idSet = new Set(ids)
+      setItems((prev) => prev.map((it) => (idSet.has(it.public_id) ? { ...it, category } : it)))
+      void bulkItemAction({ action: "set_category", ids, category })
+        .then(() => toast.success("Dishes moved"))
+        .catch(() => {
+          toast.error("Could not move dishes. Reverted.")
+          reloadItems()
+        })
+    },
+    [reloadItems, setItems, toast],
+  )
+
+  const bulkDelete = useCallback(
+    (ids: string[]) => {
+      if (ids.length === 0) return
+      const idSet = new Set(ids)
+      const snapshot = items
+      setItems(items.filter((it) => !idSet.has(it.public_id)))
+
+      let settled = false
+
+      const fireDelete = (silent: boolean) => {
+        if (settled) return
+        settled = true
+        pendingDeletes.current.delete(entry)
+        void bulkItemAction({ action: "delete", ids }).catch(() => {
+          if (silent) return
+          toast.error("Could not delete dishes. Reverted.")
+          reloadItems()
+        })
+      }
+
+      const timer = setTimeout(() => fireDelete(false), 5000)
+      const entry = { timer, flush: () => fireDelete(true) }
+      pendingDeletes.current.add(entry)
+
+      toast.action(
+        ids.length === 1 ? "Dish deleted" : `${ids.length} dishes deleted`,
+        "Undo",
+        () => {
+          if (settled) return
+          settled = true
+          clearTimeout(timer)
+          pendingDeletes.current.delete(entry)
+          setItems((prev) => {
+            const current = new Map(prev.map((it) => [it.public_id, it]))
+            const merged: AdminMenuItem[] = []
+            for (const row of snapshot) {
+              if (idSet.has(row.public_id)) {
+                merged.push(row)
+              } else {
+                const live = current.get(row.public_id)
+                if (live) {
+                  merged.push(live)
+                  current.delete(row.public_id)
+                }
+              }
+            }
+            for (const it of prev) if (current.has(it.public_id)) merged.push(it)
+            return merged
+          })
+        },
+      )
+    },
+    [items, reloadItems, setItems, toast],
+  )
+
+  return { reorderCategory, reorderItem, bulkSetAvailable, bulkSetCategory, bulkDelete }
+}

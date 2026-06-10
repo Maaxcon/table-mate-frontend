@@ -5,6 +5,92 @@ export type ClientOptions = {
 }
 
 /**
+ * * `set_available` - set_available
+ * * `set_category` - set_category
+ * * `delete` - delete
+ */
+export type ActionEnum = "set_available" | "set_category" | "delete"
+
+/**
+ * Writable menu serializer for the admin panel.
+ */
+export type AdminMenu = {
+  readonly public_id: string
+  name: string
+  is_active?: boolean
+  readonly created_at: string
+  readonly updated_at: string
+}
+
+/**
+ * Writable category serializer. The menu is referenced by its public id and
+ * must belong to the admin's restaurant (validated in the view's queryset).
+ */
+export type AdminMenuCategory = {
+  readonly public_id: string
+  menu: string
+  name: string
+  sort_order?: number
+  readonly created_at: string
+  readonly updated_at: string
+}
+
+/**
+ * Writable menu item serializer for the admin panel. Menu and category are
+ * referenced by public id and limited to the admin's restaurant in the view.
+ */
+export type AdminMenuItem = {
+  readonly public_id: string
+  menu: string
+  category?: string | null
+  name: string
+  description?: string | null
+  ingredients?: Array<string>
+  allergens?: Array<string>
+  weight_grams?: number | null
+  image?: string | null
+  price: string
+  is_available?: boolean
+  sort_order?: number
+  readonly likes_count: number
+  readonly created_at: string
+  readonly updated_at: string
+}
+
+/**
+ * Counts for the admin dashboard, scoped to the admin's restaurant.
+ */
+export type AdminOverview = {
+  menus_total: number
+  menus_active: number
+  dishes_total: number
+  dishes_hidden: number
+  categories_total: number
+  staff_total: number
+  staff_active: number
+}
+
+export type BookingSettings = {
+  readonly currency: string
+  readonly timezone: string
+  readonly working_hours: unknown
+}
+
+/**
+ * A bulk operation over several menu items, selected by public id.
+ *
+ * - ``set_available`` needs ``is_available``
+ * - ``set_category`` needs ``category`` (may be null to clear it)
+ * - ``delete`` needs nothing else
+ */
+export type BulkItemAction = {
+  ids: Array<string>
+  action: ActionEnum
+  is_available?: boolean
+  category?: string | null
+}
+
+/**
  * * `staff` - Staff
  * * `customer` - Customer
  * * `system` - System
@@ -31,6 +117,26 @@ export type EditorTable = {
   readonly updated_at: string
 }
 
+export type Employee = {
+  readonly public_id: string
+  readonly email: string
+  first_name?: string
+  last_name?: string
+  phone?: string | null
+  role?: RoleEnum
+  is_active?: boolean
+}
+
+export type EmployeeCreate = {
+  readonly public_id: string
+  email: string
+  first_name?: string
+  last_name?: string
+  phone?: string | null
+  role?: RoleEnum
+  readonly is_active: boolean
+}
+
 export type GoogleAuth = {
   code: string
   redirect_uri: string
@@ -42,7 +148,8 @@ export type GoogleAuthResponse = {
 }
 
 export type GoogleContext = {
-  restaurant_id: number
+  restaurant_id?: number
+  restaurant_public_id?: string
 }
 
 export type GoogleContextResponse = {
@@ -174,11 +281,46 @@ export type OrderItemStatusEnum = "pending" | "in_progress" | "ready" | "served"
  */
 export type OrderStatusEnum = "draft" | "submitted" | "completed" | "cancelled"
 
+export type PaginatedAdminMenuCategoryList = {
+  count: number
+  next?: string | null
+  previous?: string | null
+  results: Array<AdminMenuCategory>
+}
+
+export type PaginatedAdminMenuItemList = {
+  count: number
+  next?: string | null
+  previous?: string | null
+  results: Array<AdminMenuItem>
+}
+
+export type PaginatedAdminMenuList = {
+  count: number
+  next?: string | null
+  previous?: string | null
+  results: Array<AdminMenu>
+}
+
+export type PaginatedBookingSettingsList = {
+  count: number
+  next?: string | null
+  previous?: string | null
+  results: Array<BookingSettings>
+}
+
 export type PaginatedEditorTableList = {
   count: number
   next?: string | null
   previous?: string | null
   results: Array<EditorTable>
+}
+
+export type PaginatedEmployeeList = {
+  count: number
+  next?: string | null
+  previous?: string | null
+  results: Array<Employee>
 }
 
 export type PaginatedLayoutList = {
@@ -251,13 +393,6 @@ export type PaginatedRestaurantList = {
   results: Array<Restaurant>
 }
 
-export type PaginatedRestaurantSettingsList = {
-  count: number
-  next?: string | null
-  previous?: string | null
-  results: Array<RestaurantSettings>
-}
-
 export type PaginatedSessionList = {
   count: number
   next?: string | null
@@ -286,6 +421,52 @@ export type PaginatedZoneList = {
   results: Array<Zone>
 }
 
+/**
+ * Writable menu serializer for the admin panel.
+ */
+export type PatchedAdminMenu = {
+  readonly public_id?: string
+  name?: string
+  is_active?: boolean
+  readonly created_at?: string
+  readonly updated_at?: string
+}
+
+/**
+ * Writable category serializer. The menu is referenced by its public id and
+ * must belong to the admin's restaurant (validated in the view's queryset).
+ */
+export type PatchedAdminMenuCategory = {
+  readonly public_id?: string
+  menu?: string
+  name?: string
+  sort_order?: number
+  readonly created_at?: string
+  readonly updated_at?: string
+}
+
+/**
+ * Writable menu item serializer for the admin panel. Menu and category are
+ * referenced by public id and limited to the admin's restaurant in the view.
+ */
+export type PatchedAdminMenuItem = {
+  readonly public_id?: string
+  menu?: string
+  category?: string | null
+  name?: string
+  description?: string | null
+  ingredients?: Array<string>
+  allergens?: Array<string>
+  weight_grams?: number | null
+  image?: string | null
+  price?: string
+  is_available?: boolean
+  sort_order?: number
+  readonly likes_count?: number
+  readonly created_at?: string
+  readonly updated_at?: string
+}
+
 export type PatchedEditorTable = {
   readonly public_id?: string
   readonly restaurant?: string
@@ -298,6 +479,16 @@ export type PatchedEditorTable = {
   position_y?: number | null
   readonly created_at?: string
   readonly updated_at?: string
+}
+
+export type PatchedEmployee = {
+  readonly public_id?: string
+  readonly email?: string
+  first_name?: string
+  last_name?: string
+  phone?: string | null
+  role?: RoleEnum
+  is_active?: boolean
 }
 
 /**
@@ -370,6 +561,35 @@ export type PatchedReservation = {
   end_at?: string
   status?: ReservationStatus
   notes?: string | null
+  readonly created_at?: string
+  readonly updated_at?: string
+}
+
+export type PatchedRestaurant = {
+  readonly public_id?: string
+  name?: string
+  address?: string
+  phone?: string
+  telegram_url?: string
+  facebook_url?: string
+  readonly cover_image?: string | null
+  readonly created_at?: string
+  readonly updated_at?: string
+}
+
+export type PatchedRestaurantSettings = {
+  readonly public_id?: string
+  readonly restaurant?: string
+  timezone?: string
+  currency?: string
+  locale?: string
+  default_tax_rate?: string
+  default_service_charge?: string
+  working_hours?: WorkingHours
+  readonly rating?: string | null
+  eta_min_minutes?: number
+  eta_max_minutes?: number
+  price_band?: number
   readonly created_at?: string
   readonly updated_at?: string
 }
@@ -453,7 +673,7 @@ export type PublicRestaurant = {
 export type PublicRestaurantSettings = {
   readonly currency: string
   readonly timezone: string
-  readonly working_hours: unknown
+  working_hours: WorkingHours
   readonly rating: string | null
   readonly eta_min_minutes: number
   readonly eta_max_minutes: number
@@ -489,6 +709,14 @@ export type ReceiptItem = {
   unit_price?: string | null
 }
 
+/**
+ * One {public_id, sort_order} pair for a bulk reorder request.
+ */
+export type ReorderEntry = {
+  public_id: string
+  sort_order: number
+}
+
 export type Reservation = {
   readonly public_id: string
   readonly restaurant: string
@@ -518,6 +746,10 @@ export type Restaurant = {
   readonly public_id: string
   name: string
   address: string
+  phone?: string
+  telegram_url?: string
+  facebook_url?: string
+  readonly cover_image: string | null
   readonly created_at: string
   readonly updated_at: string
 }
@@ -535,8 +767,8 @@ export type RestaurantSettings = {
   locale?: string
   default_tax_rate?: string
   default_service_charge?: string
-  working_hours?: unknown
-  rating?: string | null
+  working_hours?: WorkingHours
+  readonly rating: string | null
   eta_min_minutes?: number
   eta_max_minutes?: number
   price_band?: number
@@ -668,10 +900,65 @@ export type User = {
   readonly updated_at: string
 }
 
+/**
+ * Schema shape for the working_hours JSON: optional mon–sun, each open/close.
+ * Used only to type the OpenAPI schema; validation stays in validate_working_hours.
+ */
+export type WorkingHours = {
+  mon?: WorkingHoursDay
+  tue?: WorkingHoursDay
+  wed?: WorkingHoursDay
+  thu?: WorkingHoursDay
+  fri?: WorkingHoursDay
+  sat?: WorkingHoursDay
+  sun?: WorkingHoursDay
+}
+
+export type WorkingHoursDay = {
+  open: string
+  close: string
+}
+
 export type Zone = {
   readonly public_id: string
   readonly name: string
   readonly sort_order: number
+}
+
+/**
+ * Writable menu serializer for the admin panel.
+ */
+export type AdminMenuWritable = {
+  name: string
+  is_active?: boolean
+}
+
+/**
+ * Writable category serializer. The menu is referenced by its public id and
+ * must belong to the admin's restaurant (validated in the view's queryset).
+ */
+export type AdminMenuCategoryWritable = {
+  menu: string
+  name: string
+  sort_order?: number
+}
+
+/**
+ * Writable menu item serializer for the admin panel. Menu and category are
+ * referenced by public id and limited to the admin's restaurant in the view.
+ */
+export type AdminMenuItemWritable = {
+  menu: string
+  category?: string | null
+  name: string
+  description?: string | null
+  ingredients?: Array<string>
+  allergens?: Array<string>
+  weight_grams?: number | null
+  image?: string | null
+  price: string
+  is_available?: boolean
+  sort_order?: number
 }
 
 export type CustomTokenObtainPairWritable = {
@@ -686,6 +973,22 @@ export type EditorTableWritable = {
   active?: boolean
   position_x?: number | null
   position_y?: number | null
+}
+
+export type EmployeeWritable = {
+  first_name?: string
+  last_name?: string
+  phone?: string | null
+  role?: RoleEnum
+  is_active?: boolean
+}
+
+export type EmployeeCreateWritable = {
+  email: string
+  first_name?: string
+  last_name?: string
+  phone?: string | null
+  role?: RoleEnum
 }
 
 export type LayoutWritable = {
@@ -747,11 +1050,46 @@ export type OrderItemWritable = {
   is_wasted?: boolean
 }
 
+export type PaginatedAdminMenuCategoryListWritable = {
+  count: number
+  next?: string | null
+  previous?: string | null
+  results: Array<AdminMenuCategoryWritable>
+}
+
+export type PaginatedAdminMenuItemListWritable = {
+  count: number
+  next?: string | null
+  previous?: string | null
+  results: Array<AdminMenuItemWritable>
+}
+
+export type PaginatedAdminMenuListWritable = {
+  count: number
+  next?: string | null
+  previous?: string | null
+  results: Array<AdminMenuWritable>
+}
+
+export type PaginatedBookingSettingsListWritable = {
+  count: number
+  next?: string | null
+  previous?: string | null
+  results: Array<unknown>
+}
+
 export type PaginatedEditorTableListWritable = {
   count: number
   next?: string | null
   previous?: string | null
   results: Array<EditorTableWritable>
+}
+
+export type PaginatedEmployeeListWritable = {
+  count: number
+  next?: string | null
+  previous?: string | null
+  results: Array<EmployeeWritable>
 }
 
 export type PaginatedLayoutListWritable = {
@@ -807,7 +1145,7 @@ export type PaginatedPublicRestaurantListWritable = {
   count: number
   next?: string | null
   previous?: string | null
-  results: Array<unknown>
+  results: Array<PublicRestaurantWritable>
 }
 
 export type PaginatedReservationListWritable = {
@@ -822,13 +1160,6 @@ export type PaginatedRestaurantListWritable = {
   next?: string | null
   previous?: string | null
   results: Array<RestaurantWritable>
-}
-
-export type PaginatedRestaurantSettingsListWritable = {
-  count: number
-  next?: string | null
-  previous?: string | null
-  results: Array<RestaurantSettingsWritable>
 }
 
 export type PaginatedSessionListWritable = {
@@ -859,12 +1190,56 @@ export type PaginatedZoneListWritable = {
   results: Array<unknown>
 }
 
+/**
+ * Writable menu serializer for the admin panel.
+ */
+export type PatchedAdminMenuWritable = {
+  name?: string
+  is_active?: boolean
+}
+
+/**
+ * Writable category serializer. The menu is referenced by its public id and
+ * must belong to the admin's restaurant (validated in the view's queryset).
+ */
+export type PatchedAdminMenuCategoryWritable = {
+  menu?: string
+  name?: string
+  sort_order?: number
+}
+
+/**
+ * Writable menu item serializer for the admin panel. Menu and category are
+ * referenced by public id and limited to the admin's restaurant in the view.
+ */
+export type PatchedAdminMenuItemWritable = {
+  menu?: string
+  category?: string | null
+  name?: string
+  description?: string | null
+  ingredients?: Array<string>
+  allergens?: Array<string>
+  weight_grams?: number | null
+  image?: string | null
+  price?: string
+  is_available?: boolean
+  sort_order?: number
+}
+
 export type PatchedEditorTableWritable = {
   status?: TableStatus
   shape?: TableShape
   active?: boolean
   position_x?: number | null
   position_y?: number | null
+}
+
+export type PatchedEmployeeWritable = {
+  first_name?: string
+  last_name?: string
+  phone?: string | null
+  role?: RoleEnum
+  is_active?: boolean
 }
 
 export type PatchedOrderWritable = {
@@ -909,6 +1284,27 @@ export type PatchedReservationWritable = {
   notes?: string | null
 }
 
+export type PatchedRestaurantWritable = {
+  name?: string
+  address?: string
+  phone?: string
+  telegram_url?: string
+  facebook_url?: string
+  working_hours?: WorkingHours
+}
+
+export type PatchedRestaurantSettingsWritable = {
+  timezone?: string
+  currency?: string
+  locale?: string
+  default_tax_rate?: string
+  default_service_charge?: string
+  working_hours?: WorkingHours
+  eta_min_minutes?: number
+  eta_max_minutes?: number
+  price_band?: number
+}
+
 export type PatchedSessionWritable = {
   table?: string
   reservation?: string | null
@@ -938,6 +1334,14 @@ export type PaymentWritable = {
   status?: PaymentStatusEnum
 }
 
+export type PublicRestaurantWritable = {
+  [key: string]: unknown
+}
+
+export type PublicRestaurantSettingsWritable = {
+  [key: string]: unknown
+}
+
 export type ReceiptWritable = {
   order_number: string
   visited_at: string
@@ -964,6 +1368,10 @@ export type ReservationWritable = {
 export type RestaurantWritable = {
   name: string
   address: string
+  phone?: string
+  telegram_url?: string
+  facebook_url?: string
+  working_hours?: WorkingHours
 }
 
 export type RestaurantInfoWritable = {
@@ -976,8 +1384,7 @@ export type RestaurantSettingsWritable = {
   locale?: string
   default_tax_rate?: string
   default_service_charge?: string
-  working_hours?: unknown
-  rating?: string | null
+  working_hours?: WorkingHours
   eta_min_minutes?: number
   eta_max_minutes?: number
   price_band?: number
@@ -1050,7 +1457,7 @@ export type AuthGoogleCreateResponses = {
 export type AuthGoogleCreateResponse = AuthGoogleCreateResponses[keyof AuthGoogleCreateResponses]
 
 export type AuthGoogleContextCreateData = {
-  body: GoogleContext
+  body?: GoogleContext
   path?: never
   query?: never
   url: "/api/auth/google/context/"
@@ -1061,6 +1468,10 @@ export type AuthGoogleContextCreateErrors = {
    * User is not a member of this restaurant.
    */
   400: unknown
+  /**
+   * Restaurant not found.
+   */
+  404: unknown
 }
 
 export type AuthGoogleContextCreateResponses = {
@@ -1282,6 +1693,401 @@ export type EditorTablesAvailableListResponses = {
 
 export type EditorTablesAvailableListResponse =
   EditorTablesAvailableListResponses[keyof EditorTablesAvailableListResponses]
+
+export type MenuAdminCategoriesListData = {
+  body?: never
+  path?: never
+  query?: {
+    menu?: string
+    /**
+     * Which field to use when ordering the results.
+     */
+    ordering?: string
+    /**
+     * A page number within the paginated result set.
+     */
+    page?: number
+  }
+  url: "/api/menu/admin/categories/"
+}
+
+export type MenuAdminCategoriesListResponses = {
+  200: PaginatedAdminMenuCategoryList
+}
+
+export type MenuAdminCategoriesListResponse =
+  MenuAdminCategoriesListResponses[keyof MenuAdminCategoriesListResponses]
+
+export type MenuAdminCategoriesCreateData = {
+  body: AdminMenuCategoryWritable
+  path?: never
+  query?: never
+  url: "/api/menu/admin/categories/"
+}
+
+export type MenuAdminCategoriesCreateResponses = {
+  201: AdminMenuCategory
+}
+
+export type MenuAdminCategoriesCreateResponse =
+  MenuAdminCategoriesCreateResponses[keyof MenuAdminCategoriesCreateResponses]
+
+export type MenuAdminCategoriesDestroyData = {
+  body?: never
+  path: {
+    public_id: string
+  }
+  query?: never
+  url: "/api/menu/admin/categories/{public_id}/"
+}
+
+export type MenuAdminCategoriesDestroyResponses = {
+  /**
+   * No response body
+   */
+  204: void
+}
+
+export type MenuAdminCategoriesDestroyResponse =
+  MenuAdminCategoriesDestroyResponses[keyof MenuAdminCategoriesDestroyResponses]
+
+export type MenuAdminCategoriesRetrieveData = {
+  body?: never
+  path: {
+    public_id: string
+  }
+  query?: never
+  url: "/api/menu/admin/categories/{public_id}/"
+}
+
+export type MenuAdminCategoriesRetrieveResponses = {
+  200: AdminMenuCategory
+}
+
+export type MenuAdminCategoriesRetrieveResponse =
+  MenuAdminCategoriesRetrieveResponses[keyof MenuAdminCategoriesRetrieveResponses]
+
+export type MenuAdminCategoriesPartialUpdateData = {
+  body?: PatchedAdminMenuCategoryWritable
+  path: {
+    public_id: string
+  }
+  query?: never
+  url: "/api/menu/admin/categories/{public_id}/"
+}
+
+export type MenuAdminCategoriesPartialUpdateResponses = {
+  200: AdminMenuCategory
+}
+
+export type MenuAdminCategoriesPartialUpdateResponse =
+  MenuAdminCategoriesPartialUpdateResponses[keyof MenuAdminCategoriesPartialUpdateResponses]
+
+export type MenuAdminCategoriesUpdateData = {
+  body: AdminMenuCategoryWritable
+  path: {
+    public_id: string
+  }
+  query?: never
+  url: "/api/menu/admin/categories/{public_id}/"
+}
+
+export type MenuAdminCategoriesUpdateResponses = {
+  200: AdminMenuCategory
+}
+
+export type MenuAdminCategoriesUpdateResponse =
+  MenuAdminCategoriesUpdateResponses[keyof MenuAdminCategoriesUpdateResponses]
+
+export type MenuAdminCategoriesReorderCreateData = {
+  body: Array<ReorderEntry>
+  path?: never
+  query?: never
+  url: "/api/menu/admin/categories/reorder/"
+}
+
+export type MenuAdminCategoriesReorderCreateResponses = {
+  /**
+   * No response body
+   */
+  204: void
+}
+
+export type MenuAdminCategoriesReorderCreateResponse =
+  MenuAdminCategoriesReorderCreateResponses[keyof MenuAdminCategoriesReorderCreateResponses]
+
+export type MenuAdminItemsListData = {
+  body?: never
+  path?: never
+  query?: {
+    category?: string
+    is_available?: boolean
+    menu?: string
+    /**
+     * Which field to use when ordering the results.
+     */
+    ordering?: string
+    /**
+     * A page number within the paginated result set.
+     */
+    page?: number
+  }
+  url: "/api/menu/admin/items/"
+}
+
+export type MenuAdminItemsListResponses = {
+  200: PaginatedAdminMenuItemList
+}
+
+export type MenuAdminItemsListResponse =
+  MenuAdminItemsListResponses[keyof MenuAdminItemsListResponses]
+
+export type MenuAdminItemsCreateData = {
+  body: AdminMenuItemWritable
+  path?: never
+  query?: never
+  url: "/api/menu/admin/items/"
+}
+
+export type MenuAdminItemsCreateResponses = {
+  201: AdminMenuItem
+}
+
+export type MenuAdminItemsCreateResponse =
+  MenuAdminItemsCreateResponses[keyof MenuAdminItemsCreateResponses]
+
+export type MenuAdminItemsDestroyData = {
+  body?: never
+  path: {
+    public_id: string
+  }
+  query?: never
+  url: "/api/menu/admin/items/{public_id}/"
+}
+
+export type MenuAdminItemsDestroyResponses = {
+  /**
+   * No response body
+   */
+  204: void
+}
+
+export type MenuAdminItemsDestroyResponse =
+  MenuAdminItemsDestroyResponses[keyof MenuAdminItemsDestroyResponses]
+
+export type MenuAdminItemsRetrieveData = {
+  body?: never
+  path: {
+    public_id: string
+  }
+  query?: never
+  url: "/api/menu/admin/items/{public_id}/"
+}
+
+export type MenuAdminItemsRetrieveResponses = {
+  200: AdminMenuItem
+}
+
+export type MenuAdminItemsRetrieveResponse =
+  MenuAdminItemsRetrieveResponses[keyof MenuAdminItemsRetrieveResponses]
+
+export type MenuAdminItemsPartialUpdateData = {
+  body?: PatchedAdminMenuItemWritable
+  path: {
+    public_id: string
+  }
+  query?: never
+  url: "/api/menu/admin/items/{public_id}/"
+}
+
+export type MenuAdminItemsPartialUpdateResponses = {
+  200: AdminMenuItem
+}
+
+export type MenuAdminItemsPartialUpdateResponse =
+  MenuAdminItemsPartialUpdateResponses[keyof MenuAdminItemsPartialUpdateResponses]
+
+export type MenuAdminItemsUpdateData = {
+  body: AdminMenuItemWritable
+  path: {
+    public_id: string
+  }
+  query?: never
+  url: "/api/menu/admin/items/{public_id}/"
+}
+
+export type MenuAdminItemsUpdateResponses = {
+  200: AdminMenuItem
+}
+
+export type MenuAdminItemsUpdateResponse =
+  MenuAdminItemsUpdateResponses[keyof MenuAdminItemsUpdateResponses]
+
+export type MenuAdminItemsDuplicateCreateData = {
+  body?: never
+  path: {
+    public_id: string
+  }
+  query?: never
+  url: "/api/menu/admin/items/{public_id}/duplicate/"
+}
+
+export type MenuAdminItemsDuplicateCreateResponses = {
+  201: AdminMenuItem
+}
+
+export type MenuAdminItemsDuplicateCreateResponse =
+  MenuAdminItemsDuplicateCreateResponses[keyof MenuAdminItemsDuplicateCreateResponses]
+
+export type MenuAdminItemsBulkCreateData = {
+  body: BulkItemAction
+  path?: never
+  query?: never
+  url: "/api/menu/admin/items/bulk/"
+}
+
+export type MenuAdminItemsBulkCreateResponses = {
+  200: {
+    [key: string]: unknown
+  }
+}
+
+export type MenuAdminItemsBulkCreateResponse =
+  MenuAdminItemsBulkCreateResponses[keyof MenuAdminItemsBulkCreateResponses]
+
+export type MenuAdminItemsReorderCreateData = {
+  body: Array<ReorderEntry>
+  path?: never
+  query?: never
+  url: "/api/menu/admin/items/reorder/"
+}
+
+export type MenuAdminItemsReorderCreateResponses = {
+  /**
+   * No response body
+   */
+  204: void
+}
+
+export type MenuAdminItemsReorderCreateResponse =
+  MenuAdminItemsReorderCreateResponses[keyof MenuAdminItemsReorderCreateResponses]
+
+export type MenuAdminMenusListData = {
+  body?: never
+  path?: never
+  query?: {
+    /**
+     * Which field to use when ordering the results.
+     */
+    ordering?: string
+    /**
+     * A page number within the paginated result set.
+     */
+    page?: number
+  }
+  url: "/api/menu/admin/menus/"
+}
+
+export type MenuAdminMenusListResponses = {
+  200: PaginatedAdminMenuList
+}
+
+export type MenuAdminMenusListResponse =
+  MenuAdminMenusListResponses[keyof MenuAdminMenusListResponses]
+
+export type MenuAdminMenusCreateData = {
+  body: AdminMenuWritable
+  path?: never
+  query?: never
+  url: "/api/menu/admin/menus/"
+}
+
+export type MenuAdminMenusCreateResponses = {
+  201: AdminMenu
+}
+
+export type MenuAdminMenusCreateResponse =
+  MenuAdminMenusCreateResponses[keyof MenuAdminMenusCreateResponses]
+
+export type MenuAdminMenusDestroyData = {
+  body?: never
+  path: {
+    public_id: string
+  }
+  query?: never
+  url: "/api/menu/admin/menus/{public_id}/"
+}
+
+export type MenuAdminMenusDestroyResponses = {
+  /**
+   * No response body
+   */
+  204: void
+}
+
+export type MenuAdminMenusDestroyResponse =
+  MenuAdminMenusDestroyResponses[keyof MenuAdminMenusDestroyResponses]
+
+export type MenuAdminMenusRetrieveData = {
+  body?: never
+  path: {
+    public_id: string
+  }
+  query?: never
+  url: "/api/menu/admin/menus/{public_id}/"
+}
+
+export type MenuAdminMenusRetrieveResponses = {
+  200: AdminMenu
+}
+
+export type MenuAdminMenusRetrieveResponse =
+  MenuAdminMenusRetrieveResponses[keyof MenuAdminMenusRetrieveResponses]
+
+export type MenuAdminMenusPartialUpdateData = {
+  body?: PatchedAdminMenuWritable
+  path: {
+    public_id: string
+  }
+  query?: never
+  url: "/api/menu/admin/menus/{public_id}/"
+}
+
+export type MenuAdminMenusPartialUpdateResponses = {
+  200: AdminMenu
+}
+
+export type MenuAdminMenusPartialUpdateResponse =
+  MenuAdminMenusPartialUpdateResponses[keyof MenuAdminMenusPartialUpdateResponses]
+
+export type MenuAdminMenusUpdateData = {
+  body: AdminMenuWritable
+  path: {
+    public_id: string
+  }
+  query?: never
+  url: "/api/menu/admin/menus/{public_id}/"
+}
+
+export type MenuAdminMenusUpdateResponses = {
+  200: AdminMenu
+}
+
+export type MenuAdminMenusUpdateResponse =
+  MenuAdminMenusUpdateResponses[keyof MenuAdminMenusUpdateResponses]
+
+export type MenuAllergensListData = {
+  body?: never
+  path?: never
+  query?: never
+  url: "/api/menu/allergens/"
+}
+
+export type MenuAllergensListResponses = {
+  200: Array<string>
+}
+
+export type MenuAllergensListResponse = MenuAllergensListResponses[keyof MenuAllergensListResponses]
 
 export type MenuCategoriesListData = {
   body?: never
@@ -1965,6 +2771,97 @@ export type ReservationsReservationsMyListResponses = {
 export type ReservationsReservationsMyListResponse =
   ReservationsReservationsMyListResponses[keyof ReservationsReservationsMyListResponses]
 
+export type RestaurantsAdminOverviewRetrieveData = {
+  body?: never
+  path?: never
+  query?: never
+  url: "/api/restaurants/admin/overview/"
+}
+
+export type RestaurantsAdminOverviewRetrieveResponses = {
+  200: AdminOverview
+}
+
+export type RestaurantsAdminOverviewRetrieveResponse =
+  RestaurantsAdminOverviewRetrieveResponses[keyof RestaurantsAdminOverviewRetrieveResponses]
+
+export type RestaurantsEmployeesListData = {
+  body?: never
+  path?: never
+  query?: {
+    is_active?: boolean
+    /**
+     * Which field to use when ordering the results.
+     */
+    ordering?: string
+    /**
+     * A page number within the paginated result set.
+     */
+    page?: number
+    /**
+     * * `admin` - Admin
+     * * `waiter` - Waiter
+     * * `cook` - Cook
+     * * `customer` - Customer
+     */
+    role?: "admin" | "cook" | "customer" | "waiter"
+  }
+  url: "/api/restaurants/employees/"
+}
+
+export type RestaurantsEmployeesListResponses = {
+  200: PaginatedEmployeeList
+}
+
+export type RestaurantsEmployeesListResponse =
+  RestaurantsEmployeesListResponses[keyof RestaurantsEmployeesListResponses]
+
+export type RestaurantsEmployeesCreateData = {
+  body: EmployeeCreateWritable
+  path?: never
+  query?: never
+  url: "/api/restaurants/employees/"
+}
+
+export type RestaurantsEmployeesCreateResponses = {
+  201: EmployeeCreate
+}
+
+export type RestaurantsEmployeesCreateResponse =
+  RestaurantsEmployeesCreateResponses[keyof RestaurantsEmployeesCreateResponses]
+
+export type RestaurantsEmployeesRetrieveData = {
+  body?: never
+  path: {
+    public_id: string
+  }
+  query?: never
+  url: "/api/restaurants/employees/{public_id}/"
+}
+
+export type RestaurantsEmployeesRetrieveResponses = {
+  200: Employee
+}
+
+export type RestaurantsEmployeesRetrieveResponse =
+  RestaurantsEmployeesRetrieveResponses[keyof RestaurantsEmployeesRetrieveResponses]
+
+export type RestaurantsEmployeesPartialUpdateData = {
+  body?: PatchedEmployeeWritable
+  path: {
+    public_id: string
+  }
+  query?: never
+  url: "/api/restaurants/employees/{public_id}/"
+}
+
+export type RestaurantsEmployeesPartialUpdateResponses = {
+  200: Employee
+}
+
+export type RestaurantsEmployeesPartialUpdateResponse =
+  RestaurantsEmployeesPartialUpdateResponses[keyof RestaurantsEmployeesPartialUpdateResponses]
+
 export type RestaurantsRestaurantSettingsListData = {
   body?: never
   path?: never
@@ -1982,7 +2879,7 @@ export type RestaurantsRestaurantSettingsListData = {
 }
 
 export type RestaurantsRestaurantSettingsListResponses = {
-  200: PaginatedRestaurantSettingsList
+  200: PaginatedBookingSettingsList
 }
 
 export type RestaurantsRestaurantSettingsListResponse =
@@ -1998,11 +2895,27 @@ export type RestaurantsRestaurantSettingsRetrieveData = {
 }
 
 export type RestaurantsRestaurantSettingsRetrieveResponses = {
-  200: RestaurantSettings
+  200: BookingSettings
 }
 
 export type RestaurantsRestaurantSettingsRetrieveResponse =
   RestaurantsRestaurantSettingsRetrieveResponses[keyof RestaurantsRestaurantSettingsRetrieveResponses]
+
+export type RestaurantsRestaurantSettingsPartialUpdateData = {
+  body?: PatchedRestaurantSettingsWritable
+  path: {
+    public_id: string
+  }
+  query?: never
+  url: "/api/restaurants/restaurant-settings/{public_id}/"
+}
+
+export type RestaurantsRestaurantSettingsPartialUpdateResponses = {
+  200: RestaurantSettings
+}
+
+export type RestaurantsRestaurantSettingsPartialUpdateResponse =
+  RestaurantsRestaurantSettingsPartialUpdateResponses[keyof RestaurantsRestaurantSettingsPartialUpdateResponses]
 
 export type RestaurantsRestaurantsListData = {
   body?: never
@@ -2081,6 +2994,38 @@ export type RestaurantsRestaurantsRetrieveResponses = {
 
 export type RestaurantsRestaurantsRetrieveResponse =
   RestaurantsRestaurantsRetrieveResponses[keyof RestaurantsRestaurantsRetrieveResponses]
+
+export type RestaurantsRestaurantsPartialUpdateData = {
+  body?: PatchedRestaurantWritable
+  path: {
+    public_id: string
+  }
+  query?: never
+  url: "/api/restaurants/restaurants/{public_id}/"
+}
+
+export type RestaurantsRestaurantsPartialUpdateResponses = {
+  200: Restaurant
+}
+
+export type RestaurantsRestaurantsPartialUpdateResponse =
+  RestaurantsRestaurantsPartialUpdateResponses[keyof RestaurantsRestaurantsPartialUpdateResponses]
+
+export type RestaurantsRestaurantsCoverPartialUpdateData = {
+  body?: never
+  path: {
+    public_id: string
+  }
+  query?: never
+  url: "/api/restaurants/restaurants/{public_id}/cover/"
+}
+
+export type RestaurantsRestaurantsCoverPartialUpdateResponses = {
+  200: Restaurant
+}
+
+export type RestaurantsRestaurantsCoverPartialUpdateResponse =
+  RestaurantsRestaurantsCoverPartialUpdateResponses[keyof RestaurantsRestaurantsCoverPartialUpdateResponses]
 
 export type RestaurantsTablesListData = {
   body?: never

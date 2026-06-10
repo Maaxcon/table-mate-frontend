@@ -1,6 +1,10 @@
 import { useState } from "react"
-import { getTimeFromDatetime } from "../data/mockData"
-import type { FloorTable, ReservationItem, OverlayDetail } from "../data/mockData"
+import { getTimeFromDatetime } from "@/features/waiter-order-view/data/mockData"
+import type {
+  FloorTable,
+  ReservationItem,
+  OverlayDetail,
+} from "@/features/waiter-order-view/data/mockData"
 import { OrderItemRow } from "./OrderItemRow"
 import "./TableDetailOverlay.css"
 

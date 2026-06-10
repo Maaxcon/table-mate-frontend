@@ -1,6 +1,6 @@
 import { LuChevronRight, LuReceipt } from "react-icons/lu"
-import type { HistoryEntry } from "../../types"
-import { formatDateTime, formatMoney } from "../../utils"
+import type { HistoryEntry } from "@/features/cabinet/types"
+import { formatDateTime, formatMoney } from "@/features/cabinet/utils"
 import "./HistoryList.css"
 
 type HistoryListProps = {

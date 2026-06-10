@@ -1,4 +1,4 @@
-import type { FloorTable } from "../data/mockData"
+import type { FloorTable } from "@/features/waiter-order-view/data/mockData"
 import "./FloorPlan.css"
 
 interface FloorPlanProps {

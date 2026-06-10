@@ -9,8 +9,8 @@ import {
   filterActiveBookings,
   updateMyProfile,
   type ProfileUpdate,
-} from "../api"
-import type { CabinetProfile, HistoryEntry, Reservation } from "../types"
+} from "@/features/cabinet/api"
+import type { CabinetProfile, HistoryEntry, Reservation } from "@/features/cabinet/types"
 
 type UseCabinetResult = {
   profile: CabinetProfile | null

@@ -148,7 +148,7 @@ export function BookModal({
 
       setSuccess({
         tableNumber: table.table_number,
-        date: dateStr,
+        date: localDateKey(selectedDate),
         time: selectedTime,
         endTime: endAt,
         guests: guestCount,

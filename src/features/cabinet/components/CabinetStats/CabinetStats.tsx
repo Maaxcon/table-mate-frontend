@@ -1,6 +1,6 @@
 import { LuHeart, LuStore, LuWallet } from "react-icons/lu"
-import type { HistoryEntry } from "../../types"
-import { computeCabinetStats, formatMoney } from "../../utils"
+import type { HistoryEntry } from "@/features/cabinet/types"
+import { computeCabinetStats, formatMoney } from "@/features/cabinet/utils"
 import "./CabinetStats.css"
 
 type CabinetStatsProps = {

@@ -1,5 +1,5 @@
 import { LuCalendarClock, LuMapPin, LuTable2, LuUsers } from "react-icons/lu"
-import type { Reservation } from "../../types"
+import type { Reservation } from "@/features/cabinet/types"
 import "./BookingsList.css"
 
 type BookingsListProps = {
