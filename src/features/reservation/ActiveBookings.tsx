@@ -148,14 +148,7 @@ export function ActiveBookings({
                       <span className="ab__card-table">
                         TABLE {r.table_info?.table_number ?? r.table}
                       </span>
-                      <span
-                        className={[
-                          "ab__card-status",
-                          `ab__card-status--${statusKey === "cancelled" ? "archived" : statusKey}`,
-                        ]
-                          .filter(Boolean)
-                          .join(" ")}
-                      >
+                      <span className={`ab__card-status ab__card-status--${statusKey}`}>
                         {STATUS_LABELS[statusKey]}
                       </span>
                     </div>
