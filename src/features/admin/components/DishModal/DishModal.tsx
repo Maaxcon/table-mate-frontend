@@ -302,7 +302,7 @@ function DishModal({ menuId, categories, item, onClose, onSaved }: DishModalProp
                 type="button"
                 className="menu-admin__btn dish-duplicate"
                 onClick={() => void handleDuplicate()}
-                disabled={submitting || deleting || duplicating || !name.trim() || !price.trim()}
+                disabled={submitting || deleting || duplicating}
               >
                 <LuCopy aria-hidden="true" />
                 <span>{duplicating ? "Duplicating…" : "Duplicate"}</span>
