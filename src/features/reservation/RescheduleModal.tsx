@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
 import type { WorkingHoursDay } from "./api"
-import { fetchAvailableSlots, modifyReservation } from "./api"
+import { fetchAvailableSlots, fetchRestaurantSettings, modifyReservation } from "./api"
 import {
   DAY_NAMES,
   generateTimeSlots,
@@ -54,8 +54,7 @@ export function RescheduleModal({
 
   useEffect(() => {
     if (!workingHours && restaurantId) {
-      import("./api")
-        .then((m) => m.fetchRestaurantSettings(restaurantId))
+      fetchRestaurantSettings(restaurantId)
         .then((settings) => setInternalWorkingHours(settings.working_hours))
         .catch(() => setInternalWorkingHours(null))
     }
