@@ -1,5 +1,4 @@
 import { apiFetch } from "@/api/client"
-import { env } from "@/config/env"
 import type { Table } from "@/types/api/types.gen"
 
 export type WorkingHoursDay = {
@@ -86,10 +85,7 @@ export async function fetchAvailableSlots(
   const params = new URLSearchParams({ table: tableId })
   if (date) params.set("date", date)
   if (exclude) params.set("exclude", exclude)
-  const res = await fetch(
-    `${env.apiBaseUrl}/api/reservations/reservations/available-slots/?${params}`,
-    { credentials: "include" },
-  )
+  const res = await apiFetch(`/api/reservations/reservations/available-slots/?${params}`)
   if (!res.ok) throw new Error("Failed to fetch available slots")
   return res.json() as Promise<Record<string, string[]>>
 }
@@ -103,9 +99,7 @@ export async function checkAvailability(
   const params = new URLSearchParams({ start_at: startAt, end_at: endAt })
   if (guestCount !== undefined) params.set("guest_count", String(guestCount))
   if (restaurantId) params.set("restaurant", restaurantId)
-  const res = await fetch(`${env.apiBaseUrl}/api/editor/tables/available/?${params}`, {
-    credentials: "include",
-  })
+  const res = await apiFetch(`/api/editor/tables/available/?${params}`)
   if (!res.ok) throw new Error("Failed to check availability")
   const data = await res.json()
   return data.results ?? data
