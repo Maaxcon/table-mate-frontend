@@ -1,19 +1,16 @@
-import { useSearchParams } from "react-router-dom"
+import { useAppSelector } from "@/store/hooks"
 import { WaiterOrderView } from "@/features/waiter-order-view/WaiterOrderView"
 
 export function WaiterOrderPage() {
-  const [searchParams] = useSearchParams()
-  const restaurantId = searchParams.get("restaurant") ?? ""
+  const user = useAppSelector((state) => state.auth.user)
 
-  if (!restaurantId) {
+  if (!user) {
     return (
       <main className="waiter-view">
-        <p className="waiter-view__message">
-          No restaurant specified. Use <code>?restaurant=PUBLIC_ID</code>.
-        </p>
+        <p className="waiter-view__message">You must be logged in to access this page.</p>
       </main>
     )
   }
 
-  return <WaiterOrderView restaurantId={restaurantId} />
+  return <WaiterOrderView />
 }

@@ -25,10 +25,6 @@ interface ZoneApiResponse {
   sort_order: number
 }
 
-interface WaiterOrderViewProps {
-  restaurantId: string
-}
-
 function mapTableToFloorTable(t: TableApiResponse): FloorTable {
   return {
     public_id: t.public_id,
@@ -43,7 +39,7 @@ function mapTableToFloorTable(t: TableApiResponse): FloorTable {
   }
 }
 
-export function WaiterOrderView({ restaurantId }: WaiterOrderViewProps) {
+export function WaiterOrderView() {
   const [activeTab, setActiveTab] = useState("FLOOR PLAN")
   const [selectedTableId, setSelectedTableId] = useState<string | null>(null)
   const [tables, setTables] = useState<FloorTable[]>([])
@@ -59,10 +55,10 @@ export function WaiterOrderView({ restaurantId }: WaiterOrderViewProps) {
   useEffect(() => {
     const controller = new AbortController()
     Promise.all([
-      apiFetch(`/api/restaurants/tables/?restaurant=${restaurantId}`, {
+      apiFetch(`/api/restaurants/tables/`, {
         signal: controller.signal,
       }),
-      apiFetch(`/api/restaurants/zones/?restaurant=${restaurantId}`, { signal: controller.signal }),
+      apiFetch(`/api/restaurants/zones/`, { signal: controller.signal }),
     ])
       .then(async ([tablesRes, zonesRes]) => {
         if (!tablesRes.ok) throw new Error("Failed to load tables")
@@ -82,11 +78,11 @@ export function WaiterOrderView({ restaurantId }: WaiterOrderViewProps) {
       })
       .finally(() => setLoading(false))
     return () => controller.abort()
-  }, [restaurantId])
+  }, [])
 
   useEffect(() => {
     const controller = new AbortController()
-    apiFetch(`/api/reservations/reservations/?restaurant=${restaurantId}`, {
+    apiFetch(`/api/reservations/reservations/`, {
       signal: controller.signal,
     })
       .then(async (res) => {
@@ -119,7 +115,7 @@ export function WaiterOrderView({ restaurantId }: WaiterOrderViewProps) {
       })
       .catch(() => {})
     return () => controller.abort()
-  }, [restaurantId])
+  }, [])
 
   const buildOverlayDetail = async (
     tablePublicId: string,
