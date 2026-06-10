@@ -12,11 +12,10 @@ export function uploadRestaurantCover(publicId: string, file: File): Promise<Adm
   })
 }
 
-// Sending no file clears the cover.
 export function clearRestaurantCover(publicId: string): Promise<AdminRestaurant> {
   return api.patch<AdminRestaurant>(
     coverPath(publicId),
-    {},
+    { cover_image: null },
     { errorMessage: "Could not remove cover image." },
   )
 }
