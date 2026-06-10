@@ -134,8 +134,10 @@ export function RescheduleModal({
     setSubmitting(true)
 
     try {
-      const startISO = new Date(`${dateStr}T${selectedTime}:00`).toISOString()
-      const endISO = new Date(`${dateStr}T${endAt}:00`).toISOString()
+      const startDt = new Date(`${dateStr}T${selectedTime}:00`)
+      const endDt = new Date(startDt.getTime() + durationMinutes * 60000)
+      const startISO = startDt.toISOString()
+      const endISO = endDt.toISOString()
 
       await modifyReservation(publicId, {
         start_at: startISO,

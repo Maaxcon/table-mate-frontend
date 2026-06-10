@@ -123,9 +123,10 @@ export function BookModal({
     setSubmitting(true)
 
     try {
-      const dateStr = localDateKey(selectedDate)
-      const startISO = new Date(`${dateStr}T${selectedTime}:00`).toISOString()
-      const endISO = new Date(`${dateStr}T${endAt}:00`).toISOString()
+      const startDt = new Date(`${localDateKey(selectedDate)}T${selectedTime}:00`)
+      const endDt = new Date(startDt.getTime() + durationMinutes * 60000)
+      const startISO = startDt.toISOString()
+      const endISO = endDt.toISOString()
 
       const available = await checkAvailability(startISO, endISO, guestCount, restaurantId)
       const isAvailable = available.some((t) => t.public_id === table.public_id)
