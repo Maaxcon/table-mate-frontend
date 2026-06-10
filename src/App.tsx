@@ -7,14 +7,13 @@ import { ThemeToggle } from "@/components/ThemeToggle/ThemeToggle"
 import CabinetPage from "@/pages/CabinetPage"
 import GreetingPage from "@/pages/GreetingPage"
 import MenuPage from "@/pages/MenuPage"
-import SelectRestaurantPlaceholderPage from "@/pages/SelectRestaurantPlaceholderPage"
+import StaffOrdersPage from "@/pages/StaffOrdersPage"
 import { ErrorBoundary } from "@/components/ErrorBoundary"
 import { WaiterOrderPage } from "@/pages/WaiterOrderPage"
 import { RestaurantListPage } from "@/pages/RestaurantListPage"
 import { BookingPage } from "@/pages/BookingPage"
 import ProtectedRoute from "@/routes/ProtectedRoute"
 import PublicRoute from "@/routes/PublicRoute"
-import StaffContextRoute from "@/routes/StaffContextRoute"
 
 const clientId = env.googleClientId !== ENV_NOT_CONFIGURED_VALUE ? env.googleClientId : ""
 
@@ -37,8 +36,8 @@ function App() {
               <Route path="/" element={<GreetingPage />} />
             </Route>
             <Route element={<ThemedLayout />}>
+              {/* Public routes */}
               <Route path="/restaurants" element={<RestaurantListPage />} />
-              <Route path="/waiter-order" element={<WaiterOrderPage />} />
               <Route
                 path="/menu/:restaurantId"
                 element={
@@ -55,9 +54,14 @@ function App() {
                   </ErrorBoundary>
                 }
               />
-              <Route element={<StaffContextRoute />}>
-                <Route path="/select-restaurant" element={<SelectRestaurantPlaceholderPage />} />
+
+              {/* Protected staff routes */}
+              <Route element={<ProtectedRoute allowedRoles={["admin", "waiter", "cook"]} />}>
+                <Route path="/waiter-order" element={<WaiterOrderPage />} />
+                <Route path="/staff/orders" element={<StaffOrdersPage />} />
               </Route>
+
+              {/* Protected customer / general routes */}
               <Route element={<ProtectedRoute />}>
                 <Route path="/cabinet" element={<CabinetPage />} />
               </Route>
