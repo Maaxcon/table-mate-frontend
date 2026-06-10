@@ -54,8 +54,9 @@ export function useCabinet(): UseCabinetResult {
       offset,
       signal,
     })
-    fetchedCountRef.current = offset + page.length
     const visible = filterActiveBookings(page).slice(0, BOOKINGS_PAGE_SIZE)
+    fetchedCountRef.current = offset + visible.length
+
     setBookings((prev) => (offset === 0 ? visible : [...prev, ...visible]))
     setBookingsHasMore(page.length > BOOKINGS_PAGE_SIZE)
     setBookingsError(null)
