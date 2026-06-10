@@ -24,6 +24,7 @@ function CabinetPage() {
   const {
     profile,
     bookings,
+    allReservations,
     history,
     loading,
     bookingsError,
@@ -98,7 +99,7 @@ function CabinetPage() {
         <>
           <ProfileHeader profile={profile} onSave={updateProfile} />
           <CabinetStats history={history} />
-          <ReservationCalendar reservations={bookings} />
+          <ReservationCalendar reservations={allReservations} history={history} />
           <BookingsList
             bookings={bookings}
             error={bookingsError}

@@ -15,6 +15,7 @@ import type { CabinetProfile, HistoryEntry, Reservation } from "../types"
 type UseCabinetResult = {
   profile: CabinetProfile | null
   bookings: Reservation[]
+  allReservations: Reservation[]
   history: HistoryEntry[]
   loading: boolean
   bookingsError: string | null
@@ -41,6 +42,7 @@ export function useCabinet(): UseCabinetResult {
 
   const [profile, setProfile] = useState<CabinetProfile | null>(null)
   const [bookings, setBookings] = useState<Reservation[]>([])
+  const [allReservations, setAllReservations] = useState<Reservation[]>([])
   const [history, setHistory] = useState<HistoryEntry[]>([])
   const [loading, setLoading] = useState(true)
   const [bookingsError, setBookingsError] = useState<string | null>(null)
@@ -66,11 +68,13 @@ export function useCabinet(): UseCabinetResult {
 
     async function load() {
       setLoading(true)
-      const [profileResult, bookingsResult, receiptsResult] = await Promise.allSettled([
-        fetchMyProfile(signal),
-        fetchMyReservations({ limit: BOOKINGS_PAGE_SIZE + 1, offset: 0, signal }),
-        fetchMyReceipts(signal),
-      ])
+      const [profileResult, bookingsResult, allReservationsResult, receiptsResult] =
+        await Promise.allSettled([
+          fetchMyProfile(signal),
+          fetchMyReservations({ limit: BOOKINGS_PAGE_SIZE + 1, offset: 0, signal }),
+          fetchMyReservations({ limit: 9999, offset: 0, signal }),
+          fetchMyReceipts(signal),
+        ])
 
       if (signal.aborted) return
 
@@ -87,6 +91,10 @@ export function useCabinet(): UseCabinetResult {
           role: fallbackUser.role,
           createdAt: "",
         })
+      }
+
+      if (allReservationsResult.status === "fulfilled") {
+        setAllReservations(allReservationsResult.value)
       }
 
       if (bookingsResult.status === "fulfilled") {
@@ -158,6 +166,7 @@ export function useCabinet(): UseCabinetResult {
   return {
     profile,
     bookings,
+    allReservations,
     history,
     loading,
     bookingsError,
