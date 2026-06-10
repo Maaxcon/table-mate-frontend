@@ -44,13 +44,14 @@ export function CustomerFloorPlan({
       )}
       <div className="c-floor-plan__canvas">
         {tables.map((table) => {
+          const status = table.status ?? "free"
           return (
             <button
               key={table.public_id}
               type="button"
               className={[
                 "c-floor-plan__table",
-                `c-floor-plan__table--${table.status}`,
+                `c-floor-plan__table--${status}`,
                 `c-floor-plan__table--${table.shape}`,
                 selectedId === table.public_id ? "c-floor-plan__table--selected" : "",
               ]
@@ -62,10 +63,8 @@ export function CustomerFloorPlan({
               }}
               onClick={() => onSelect(table)}
             >
-              <span
-                className={`c-floor-plan__table-badge c-floor-plan__table-badge--${table.status}`}
-              >
-                {statusLabel[table.status] ?? table.status.toUpperCase()}
+              <span className={`c-floor-plan__table-badge c-floor-plan__table-badge--${status}`}>
+                {statusLabel[status] ?? status.toUpperCase()}
               </span>
 
               <span className="c-floor-plan__table-number">{table.table_number}</span>
