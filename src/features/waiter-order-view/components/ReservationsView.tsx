@@ -1,5 +1,5 @@
-import { getTimeFromDatetime } from "../data/mockData"
-import type { ReservationItem } from "../data/mockData"
+import { getTimeFromDatetime } from "../data/waiterTypes"
+import type { ReservationItem } from "../data/waiterTypes"
 import "./ReservationsView.css"
 
 interface ReservationsViewProps {

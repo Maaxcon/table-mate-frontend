@@ -1,5 +1,5 @@
-import type { ReservationItem } from "../data/mockData"
-import { getTimeFromDatetime } from "../data/mockData"
+import type { ReservationItem } from "../data/waiterTypes"
+import { getTimeFromDatetime } from "../data/waiterTypes"
 import "./ReservationSidebar.css"
 
 interface ReservationSidebarProps {
