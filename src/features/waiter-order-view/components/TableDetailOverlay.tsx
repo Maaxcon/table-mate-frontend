@@ -1,6 +1,11 @@
 import { useState } from "react"
-import { getTimeFromDatetime } from "../data/mockData"
-import type { FloorTable, ReservationItem, OverlayDetail } from "../data/mockData"
+import { getTimeFromDatetime } from "../data/waiterTypes"
+import type {
+  FloorTable,
+  ReservationItem,
+  OverlayDetail,
+  VisualTableStatus,
+} from "../data/waiterTypes"
 import { OrderItemRow } from "./OrderItemRow"
 import "./TableDetailOverlay.css"
 
@@ -8,6 +13,8 @@ interface TableDetailOverlayProps {
   table: FloorTable
   detail: OverlayDetail | null
   tableReservations: ReservationItem[]
+  visualStatus: VisualTableStatus
+  loading: boolean
   onClose: () => void
 }
 
@@ -15,10 +22,12 @@ export function TableDetailOverlay({
   table,
   detail,
   tableReservations,
+  visualStatus,
+  loading,
   onClose,
 }: TableDetailOverlayProps) {
-  const isOccupied = table.status === "occupied"
-  const isReserved = table.status === "reserved"
+  const isOccupied = visualStatus === "occupied"
+  const isReserved = visualStatus === "reserved"
   const [activeOverlayTab, setActiveOverlayTab] = useState<"order" | "reservations">(
     isOccupied || isReserved ? "reservations" : "reservations",
   )
@@ -92,57 +101,65 @@ export function TableDetailOverlay({
           </button>
         </div>
 
-        {activeOverlayTab === "order" && detail && (
+        {loading && <p className="overlay__loading">Loading order details…</p>}
+
+        {activeOverlayTab === "order" && !loading && (
           <>
-            <div className="overlay__actions">
-              <button type="button" className="overlay__action-btn">
-                ADD ITEM
-              </button>
-              <button type="button" className="overlay__action-btn">
-                MOVE TABLE
-              </button>
-              <button type="button" className="overlay__action-btn">
-                CLOSE CHECK
-              </button>
-            </div>
+            {detail ? (
+              <>
+                <div className="overlay__actions">
+                  <button type="button" className="overlay__action-btn">
+                    ADD ITEM
+                  </button>
+                  <button type="button" className="overlay__action-btn">
+                    MOVE TABLE
+                  </button>
+                  <button type="button" className="overlay__action-btn">
+                    CLOSE CHECK
+                  </button>
+                </div>
 
-            <div className="overlay__divider" />
+                <div className="overlay__divider" />
 
-            <div className="overlay__body">
-              {guestSlots.map((slot) => {
-                const slotItems = detail.items.filter((i) => i.guest_slot === slot)
-                return (
-                  <div key={slot} className="overlay__slot">
-                    <h3 className="overlay__slot-title">GUEST {slot}</h3>
-                    {slotItems.map((item) => (
-                      <OrderItemRow key={item.public_id} item={item} />
-                    ))}
+                <div className="overlay__body">
+                  {guestSlots.map((slot) => {
+                    const slotItems = detail.items.filter((i) => i.guest_slot === slot)
+                    return (
+                      <div key={slot} className="overlay__slot">
+                        <h3 className="overlay__slot-title">GUEST {slot}</h3>
+                        {slotItems.map((item) => (
+                          <OrderItemRow key={item.public_id} item={item} />
+                        ))}
+                      </div>
+                    )
+                  })}
+                </div>
+
+                <div className="overlay__divider" />
+
+                <div className="overlay__footer">
+                  <div className="overlay__total-row">
+                    <span className="overlay__total-label">SUBTOTAL</span>
+                    <span className="overlay__total-value">&euro;{detail.subtotal}</span>
                   </div>
-                )
-              })}
-            </div>
-
-            <div className="overlay__divider" />
-
-            <div className="overlay__footer">
-              <div className="overlay__total-row">
-                <span className="overlay__total-label">SUBTOTAL</span>
-                <span className="overlay__total-value">&euro;{detail.subtotal}</span>
-              </div>
-              <div className="overlay__total-row">
-                <span className="overlay__total-label">TAX</span>
-                <span className="overlay__total-value">&euro;{detail.tax_total}</span>
-              </div>
-              <div className="overlay__total-row overlay__total-row--final">
-                <span className="overlay__total-label overlay__total-label--large">TOTAL</span>
-                <span className="overlay__total-value overlay__total-value--large">
-                  &euro;{detail.total_amount}
-                </span>
-              </div>
-              <button type="button" className="overlay__cta">
-                PROCESS PAYMENT
-              </button>
-            </div>
+                  <div className="overlay__total-row">
+                    <span className="overlay__total-label">TAX</span>
+                    <span className="overlay__total-value">&euro;{detail.tax_total}</span>
+                  </div>
+                  <div className="overlay__total-row overlay__total-row--final">
+                    <span className="overlay__total-label overlay__total-label--large">TOTAL</span>
+                    <span className="overlay__total-value overlay__total-value--large">
+                      &euro;{detail.total_amount}
+                    </span>
+                  </div>
+                  <button type="button" className="overlay__cta">
+                    PROCESS PAYMENT
+                  </button>
+                </div>
+              </>
+            ) : (
+              <p className="overlay__empty">No active order for this table.</p>
+            )}
           </>
         )}
 

@@ -3,7 +3,14 @@ import { TopNav } from "./components/TopNav"
 import { FloorPlan } from "./components/FloorPlan"
 import { ReservationSidebar } from "./components/ReservationSidebar"
 import { TableDetailOverlay } from "./components/TableDetailOverlay"
-import type { FloorTable, ReservationItem, OverlayDetail, OverlayOrderItem } from "./data/mockData"
+import type {
+  FloorTable,
+  ReservationItem,
+  OverlayDetail,
+  OverlayOrderItem,
+  UpcomingReservation,
+} from "./data/waiterTypes"
+import { getTableVisualStatus } from "./data/waiterTypes"
 import { apiFetch } from "@/api/client"
 import "./WaiterOrderView.css"
 
@@ -49,22 +56,27 @@ export function WaiterOrderView() {
   const [error, setError] = useState<string | null>(null)
 
   const [reservations, setReservations] = useState<ReservationItem[]>([])
+  const [layoutReservations, setLayoutReservations] = useState<UpcomingReservation[]>([])
   const [overlayDetail, setOverlayDetail] = useState<OverlayDetail | null>(null)
   const [overlayLoading, setOverlayLoading] = useState(false)
 
   useEffect(() => {
     const controller = new AbortController()
     Promise.all([
-      apiFetch(`/api/restaurants/tables/`, {
+      apiFetch(`/api/restaurants/tables/layout/`, {
         signal: controller.signal,
       }),
       apiFetch(`/api/restaurants/zones/`, { signal: controller.signal }),
     ])
-      .then(async ([tablesRes, zonesRes]) => {
-        if (!tablesRes.ok) throw new Error("Failed to load tables")
-        const tablesData = (await tablesRes.json()) as { results?: TableApiResponse[] }
-        const items = tablesData.results ?? []
+      .then(async ([layoutRes, zonesRes]) => {
+        if (!layoutRes.ok) throw new Error("Failed to load tables")
+        const layoutData = (await layoutRes.json()) as {
+          tables: TableApiResponse[]
+          upcoming_reservations: Array<{ public_id: string; table_id: string; start_at: string }>
+        }
+        const items = layoutData.tables ?? []
         setTables(items.map(mapTableToFloorTable))
+        setLayoutReservations(layoutData.upcoming_reservations ?? [])
         if (zonesRes.ok) {
           const zonesData = (await zonesRes.json()) as { results?: ZoneApiResponse[] }
           const zonesList = zonesData.results ?? []
@@ -192,6 +204,7 @@ export function WaiterOrderView() {
                 is_wasted: boolean
                 void_reason?: number | null
                 unit_price: string
+                menu_item_name?: string
               }>
             }
             const oiList = oiData.results ?? []
@@ -201,7 +214,7 @@ export function WaiterOrderView() {
                 public_id: oi.public_id,
                 guest_slot: oi.guest_slot,
                 quantity: oi.quantity,
-                name: oi.public_id,
+                name: oi.menu_item_name ?? oi.public_id,
                 unit_price: oi.unit_price,
                 status: oi.status as OverlayOrderItem["status"],
                 is_wasted: oi.is_wasted,
@@ -252,10 +265,29 @@ export function WaiterOrderView() {
 
   const handleTableSelect = (table: FloorTable) => {
     setSelectedTableId(table.public_id)
-    buildOverlayDetail(table.public_id, tables, reservations)
+    if (table.status === "occupied") {
+      buildOverlayDetail(table.public_id, tables, reservations)
+    } else {
+      setOverlayDetail(null)
+      setOverlayLoading(false)
+    }
   }
 
   const showFloorPlan = activeTab === "FLOOR PLAN"
+
+  const now = new Date()
+  const visualOccupiedCount = tables.filter(
+    (t) => getTableVisualStatus(t, layoutReservations, now) === "occupied",
+  ).length
+  const visualReservedCount = tables.filter(
+    (t) => getTableVisualStatus(t, layoutReservations, now) === "reserved",
+  ).length
+  const visualFreeCount = tables.filter(
+    (t) => getTableVisualStatus(t, layoutReservations, now) === "free",
+  ).length
+  const selectedTableVisualStatus = selectedTable
+    ? getTableVisualStatus(selectedTable, layoutReservations, now)
+    : "free"
 
   if (loading)
     return (
@@ -272,7 +304,13 @@ export function WaiterOrderView() {
 
   return (
     <div className="waiter-view">
-      <TopNav tables={tables} activeTab={activeTab} onTabChange={setActiveTab} />
+      <TopNav
+        occupiedCount={visualOccupiedCount}
+        reservedCount={visualReservedCount}
+        freeCount={visualFreeCount}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+      />
 
       {zones.length > 1 && (
         <div className="waiter-view__zones">
@@ -295,6 +333,7 @@ export function WaiterOrderView() {
             <FloorPlan
               tables={filteredTables}
               selectedId={selectedTableId}
+              upcomingReservations={layoutReservations}
               onSelect={handleTableSelect}
             />
           ) : (
@@ -307,11 +346,13 @@ export function WaiterOrderView() {
         {showFloorPlan && <ReservationSidebar reservations={reservations} />}
       </div>
 
-      {selectedTable && overlayDetail && !overlayLoading && (
+      {selectedTable && (
         <TableDetailOverlay
           table={selectedTable}
           detail={overlayDetail}
           tableReservations={selectedTableReservations}
+          visualStatus={selectedTableVisualStatus}
+          loading={overlayLoading}
           onClose={() => {
             setSelectedTableId(null)
             setOverlayDetail(null)
