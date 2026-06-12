@@ -1,29 +1,70 @@
 import { useEffect, useState } from "react"
-import { LuCheck, LuMinus, LuPlus, LuShoppingCart, LuTrash2, LuX } from "react-icons/lu"
-import type { CartItem } from "@/features/menu/hooks/useCart"
+import {
+  LuCheck,
+  LuMinus,
+  LuPlus,
+  LuShoppingCart,
+  LuTrash2,
+  LuWifi,
+  LuWifiOff,
+  LuX,
+} from "react-icons/lu"
+import type { CartItemWithDetails } from "@/features/menu/hooks/useCart"
 import { formatAmount } from "@/features/menu/utils"
 import { menuStrings } from "@/features/menu/strings"
 import "./CartDrawer.css"
 
 type Props = {
-  items: CartItem[]
+  items: CartItemWithDetails[]
   totalPrice: number
   currencySymbol: string
-  onSetQuantity: (publicId: string, quantity: number) => void
+  isConnected: boolean
+  error: string | null
+  errorItemId: string | null
+  displayName: string
+  guestSlot: number | null
+  onSetQuantity: (itemId: string, quantity: number) => void
+  onRemoveItem: (itemId: string) => void
   onClose: () => void
-  onClear?: () => void
+  onClearError: () => void
+  onRetry?: () => void
+}
+
+function getGuestLabel(
+  guestSlot: number | null,
+  deviceId: string | null,
+  _displayName: string,
+  currentGuestSlot: number | null,
+): string {
+  if (guestSlot != null) {
+    if (currentGuestSlot != null && guestSlot === currentGuestSlot) {
+      return menuStrings.cart.you
+    }
+    return menuStrings.cart.guest(menuStrings.cart.guestPrefix + " " + guestSlot)
+  }
+  if (deviceId != null) {
+    return menuStrings.cart.guest(deviceId.slice(0, 8))
+  }
+  return menuStrings.cart.guest("—")
 }
 
 export function CartDrawer({
   items,
   totalPrice,
   currencySymbol,
+  isConnected,
+  error,
+  errorItemId,
+  displayName,
+  guestSlot: currentGuestSlot,
   onSetQuantity,
+  onRemoveItem,
   onClose,
-  onClear,
+  onClearError,
+  onRetry,
 }: Props) {
   const [step, setStep] = useState<"cart" | "confirming" | "confirmed">("cart")
-  const [confirmedItems, setConfirmedItems] = useState<CartItem[]>([])
+  const [confirmedItems, setConfirmedItems] = useState<CartItemWithDetails[]>([])
   const [confirmedTotal, setConfirmedTotal] = useState(0)
 
   useEffect(() => {
@@ -34,14 +75,22 @@ export function CartDrawer({
     return () => document.removeEventListener("keydown", onKey)
   }, [onClose])
 
+  useEffect(() => {
+    if (error) {
+      const timer = setTimeout(onClearError, 5000)
+      return () => clearTimeout(timer)
+    }
+  }, [error, onClearError])
+
   const handleConfirm = () => {
     setConfirmedItems([...items])
     setConfirmedTotal(totalPrice)
     setStep("confirmed")
-    onClear?.()
   }
 
   const totalCount = items.reduce((s, i) => s + i.quantity, 0)
+
+  const groupedItems = groupItemsByGuest(items)
 
   return (
     <div
@@ -52,27 +101,49 @@ export function CartDrawer({
       }}
     >
       <aside className="cart-drawer" aria-label={menuStrings.cart.title}>
+        {/* ── Header ── */}
         <div className="cart-drawer__header">
           <div className="cart-drawer__title-row">
             <LuShoppingCart size={18} />
             <h2 className="cart-drawer__title">{menuStrings.cart.title}</h2>
             {totalCount > 0 && <span className="cart-drawer__count">{totalCount}</span>}
           </div>
-          <button
-            className="cart-drawer__close"
-            onClick={onClose}
-            aria-label={menuStrings.cart.close}
-          >
-            <LuX size={16} />
-          </button>
+          <div className="cart-drawer__header-right">
+            <span
+              className={`cart-drawer__status ${isConnected ? "cart-drawer__status--connected" : "cart-drawer__status--disconnected"}`}
+              title={isConnected ? menuStrings.cart.connected : menuStrings.cart.disconnected}
+            >
+              {isConnected ? <LuWifi size={12} /> : <LuWifiOff size={12} />}
+            </span>
+            <button
+              className="cart-drawer__close"
+              onClick={onClose}
+              aria-label={menuStrings.cart.close}
+            >
+              <LuX size={16} />
+            </button>
+          </div>
         </div>
 
+        {/* ── Error toast ── */}
+        {error && (
+          <div className="cart-drawer__toast" role="alert">
+            <span className="cart-drawer__toast-text">{error}</span>
+            {onRetry && (
+              <button className="cart-drawer__toast-action" onClick={onRetry}>
+                {menuStrings.cart.retry}
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* ── Body ── */}
         {step === "confirming" ? (
+          /* ── Confirm dialog ── */
           <div className="cart-drawer__confirm-dialog">
             <p className="cart-drawer__confirm-dialog-title">{menuStrings.cart.confirmTitle}</p>
             <p className="cart-drawer__confirm-dialog-sub">
-              {menuStrings.cart.positions(items.reduce((s, i) => s + i.quantity, 0))} ·{" "}
-              {formatAmount(totalPrice)} {currencySymbol}
+              {menuStrings.cart.positions(totalCount)} · {formatAmount(totalPrice)} {currencySymbol}
             </p>
             <div className="cart-drawer__confirm-dialog-btns">
               <button className="cart-drawer__confirm-dialog-yes" onClick={handleConfirm}>
@@ -84,6 +155,7 @@ export function CartDrawer({
             </div>
           </div>
         ) : step === "confirmed" ? (
+          /* ── Confirmed ── */
           <div className="cart-drawer__confirm">
             <div className="cart-drawer__confirm-icon">
               <LuCheck size={52} strokeWidth={1.4} />
@@ -94,14 +166,15 @@ export function CartDrawer({
             <div className="cart-drawer__receipt">
               <p className="cart-drawer__receipt-label">{menuStrings.cart.receiptLabel}</p>
               <ul className="cart-drawer__receipt-list">
-                {confirmedItems.map(({ item, quantity }) => (
-                  <li key={item.public_id} className="cart-drawer__receipt-row">
+                {confirmedItems.map((ci) => (
+                  <li key={ci.id} className="cart-drawer__receipt-row">
                     <span className="cart-drawer__receipt-name">
-                      {item.name}
-                      <span className="cart-drawer__receipt-qty"> × {quantity}</span>
+                      {ci.item?.name ?? "—"}
+                      <span className="cart-drawer__receipt-qty"> × {ci.quantity}</span>
                     </span>
                     <span className="cart-drawer__receipt-price">
-                      {formatAmount((parseFloat(item.price) || 0) * quantity)} {currencySymbol}
+                      {formatAmount((parseFloat(ci.item?.price ?? "0") || 0) * ci.quantity)}{" "}
+                      {currencySymbol}
                     </span>
                   </li>
                 ))}
@@ -119,60 +192,79 @@ export function CartDrawer({
             </button>
           </div>
         ) : items.length === 0 ? (
+          /* ── Empty ── */
           <div className="cart-drawer__empty">
             <LuShoppingCart size={48} strokeWidth={1.2} />
             <p className="cart-drawer__empty-title">{menuStrings.cart.emptyTitle}</p>
             <p className="cart-drawer__empty-sub">{menuStrings.cart.emptySub}</p>
           </div>
         ) : (
+          /* ── Item list grouped by guest ── */
           <>
-            <ul className="cart-drawer__list">
-              {items.map(({ item, quantity }) => (
-                <li key={item.public_id} className="cart-drawer__item">
-                  {item.image ? (
-                    <img
-                      className="cart-drawer__item-img"
-                      src={item.image}
-                      alt={item.name}
-                      loading="lazy"
-                    />
-                  ) : (
-                    <div className="cart-drawer__item-img-placeholder" />
-                  )}
-
-                  <div className="cart-drawer__item-body">
-                    <span className="cart-drawer__item-name">{item.name}</span>
-                    <span className="cart-drawer__item-unit-price">
-                      {formatAmount(parseFloat(item.price) || 0)} {currencySymbol}{" "}
-                      {menuStrings.cart.perUnit}
-                    </span>
-                  </div>
-
-                  <div className="cart-drawer__item-right">
-                    <span className="cart-drawer__item-total">
-                      {formatAmount((parseFloat(item.price) || 0) * quantity)} {currencySymbol}
-                    </span>
-                    <div className="cart-drawer__stepper">
-                      <button
-                        className="cart-drawer__stepper-btn"
-                        onClick={() => onSetQuantity(item.public_id, quantity - 1)}
-                        aria-label={menuStrings.cart.decrease}
+            <div className="cart-drawer__list">
+              {groupedItems.map((group) => (
+                <div key={group.key} className="cart-drawer__group">
+                  <span className="cart-drawer__group-label">
+                    {getGuestLabel(group.guestSlot, group.deviceId, displayName, currentGuestSlot)}
+                  </span>
+                  <ul className="cart-drawer__group-list">
+                    {group.items.map((ci) => (
+                      <li
+                        key={ci.id}
+                        className={`cart-drawer__item${ci.id === errorItemId ? " cart-drawer__item--error" : ""}`}
                       >
-                        {quantity === 1 ? <LuTrash2 size={12} /> : <LuMinus size={12} />}
-                      </button>
-                      <span className="cart-drawer__qty">{quantity}</span>
-                      <button
-                        className="cart-drawer__stepper-btn"
-                        onClick={() => onSetQuantity(item.public_id, quantity + 1)}
-                        aria-label={menuStrings.cart.increase}
-                      >
-                        <LuPlus size={12} />
-                      </button>
-                    </div>
-                  </div>
-                </li>
+                        {ci.item?.image ? (
+                          <img
+                            className="cart-drawer__item-img"
+                            src={ci.item.image}
+                            alt={ci.item.name}
+                            loading="lazy"
+                          />
+                        ) : (
+                          <div className="cart-drawer__item-img-placeholder" />
+                        )}
+
+                        <div className="cart-drawer__item-body">
+                          <span className="cart-drawer__item-name">{ci.item?.name ?? "—"}</span>
+                          <span className="cart-drawer__item-unit-price">
+                            {formatAmount(parseFloat(ci.item?.price ?? "0") || 0)} {currencySymbol}{" "}
+                            {menuStrings.cart.perUnit}
+                          </span>
+                        </div>
+
+                        <div className="cart-drawer__item-right">
+                          <span className="cart-drawer__item-total">
+                            {formatAmount((parseFloat(ci.item?.price ?? "0") || 0) * ci.quantity)}{" "}
+                            {currencySymbol}
+                          </span>
+                          <div className="cart-drawer__stepper">
+                            <button
+                              className="cart-drawer__stepper-btn"
+                              onClick={() =>
+                                ci.quantity === 1
+                                  ? onRemoveItem(ci.id)
+                                  : onSetQuantity(ci.id, ci.quantity - 1)
+                              }
+                              aria-label={menuStrings.cart.decrease}
+                            >
+                              {ci.quantity === 1 ? <LuTrash2 size={12} /> : <LuMinus size={12} />}
+                            </button>
+                            <span className="cart-drawer__qty">{ci.quantity}</span>
+                            <button
+                              className="cart-drawer__stepper-btn"
+                              onClick={() => onSetQuantity(ci.id, ci.quantity + 1)}
+                              aria-label={menuStrings.cart.increase}
+                            >
+                              <LuPlus size={12} />
+                            </button>
+                          </div>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               ))}
-            </ul>
+            </div>
 
             <div className="cart-drawer__footer">
               <div className="cart-drawer__total-row">
@@ -190,4 +282,33 @@ export function CartDrawer({
       </aside>
     </div>
   )
+}
+
+type ItemGroup = {
+  key: string
+  guestSlot: number | null
+  deviceId: string | null
+  items: CartItemWithDetails[]
+}
+
+function groupItemsByGuest(items: CartItemWithDetails[]): ItemGroup[] {
+  const groups = new Map<string, ItemGroup>()
+
+  for (const item of items) {
+    const key =
+      item.guestSlot != null
+        ? `slot-${item.guestSlot}`
+        : item.deviceId
+          ? `dev-${item.deviceId}`
+          : "ungrouped"
+
+    let group = groups.get(key)
+    if (!group) {
+      group = { key, guestSlot: item.guestSlot, deviceId: item.deviceId, items: [] }
+      groups.set(key, group)
+    }
+    group.items.push(item)
+  }
+
+  return Array.from(groups.values())
 }

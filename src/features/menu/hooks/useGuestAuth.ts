@@ -1,0 +1,182 @@
+import { useCallback, useEffect, useReducer, useRef } from "react"
+import { guestInit } from "@/features/menu/api"
+import { getGuestToken } from "@/features/menu/guestToken"
+
+const DISPLAY_NAME_KEY = "tablemate.cart.display_name.v1"
+const GUEST_SLOT_KEY = "tablemate.cart.guest_slot.v1"
+
+type AuthStatus = "init" | "loading" | "ready" | "error"
+
+type UseGuestAuthOptions = {
+  reservationId?: string | null
+  cartSessionId?: string | null
+}
+
+type UseGuestAuthResult = {
+  deviceId: string
+  guestJwt: string | null
+  cartSessionId: string | null
+  displayName: string
+  guestSlot: number | null
+  status: AuthStatus
+  error: string | null
+  setDisplayName: (name: string) => void
+  setGuestSlot: (slot: number) => void
+  initialize: () => void
+}
+
+type AuthState = {
+  guestJwt: string | null
+  cartSessionId: string | null
+  status: AuthStatus
+  error: string | null
+}
+
+type AuthAction =
+  | { type: "LOADING" }
+  | { type: "READY"; jwt: string; sessionId: string | null }
+  | { type: "ERROR"; error: string }
+
+function authReducer(state: AuthState, action: AuthAction): AuthState {
+  switch (action.type) {
+    case "LOADING":
+      return { ...state, status: "loading", error: null }
+    case "READY":
+      return {
+        ...state,
+        status: "ready",
+        guestJwt: action.jwt,
+        cartSessionId: action.sessionId,
+        error: null,
+      }
+    case "ERROR":
+      return { ...state, status: "error", error: action.error }
+  }
+}
+
+function loadDisplayName(): string {
+  try {
+    return localStorage.getItem(DISPLAY_NAME_KEY) ?? ""
+  } catch {
+    return ""
+  }
+}
+
+function loadGuestSlot(): number | null {
+  try {
+    const raw = localStorage.getItem(GUEST_SLOT_KEY)
+    return raw ? Number(raw) : null
+  } catch {
+    return null
+  }
+}
+
+function deriveSlotFromDevice(deviceId: string): number {
+  const hex = deviceId.replace(/[^0-9a-f]/gi, "")
+  const slice = hex.slice(-3) || hex
+  const value = parseInt(slice, 16)
+  if (Number.isNaN(value)) return 1
+  return (value % 90) + 10
+}
+
+export function useGuestAuth({
+  reservationId,
+  cartSessionId: initialCartSessionId,
+}: UseGuestAuthOptions = {}): UseGuestAuthResult {
+  const deviceId = getGuestToken()
+  const [authState, dispatch] = useReducer(authReducer, {
+    guestJwt: null,
+    cartSessionId: initialCartSessionId ?? null,
+    status: reservationId ? "init" : "ready",
+    error: null,
+  })
+  const [displayName, setDisplayNameState] = useReducer(
+    (_prev: string, next: string) => next,
+    loadDisplayName(),
+  )
+  const [guestSlot, setGuestSlotState] = useReducer(
+    (_prev: number | null, next: number) => next,
+    loadGuestSlot(),
+  )
+  const initializing = useRef(false)
+
+  const setDisplayName = useCallback((name: string) => {
+    setDisplayNameState(name)
+    try {
+      localStorage.setItem(DISPLAY_NAME_KEY, name)
+    } catch {
+      // ignore
+    }
+  }, [])
+
+  const setGuestSlot = useCallback((slot: number) => {
+    setGuestSlotState(slot)
+    try {
+      localStorage.setItem(GUEST_SLOT_KEY, String(slot))
+    } catch {
+      // ignore
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!deviceId) return
+    if (guestSlot == null || guestSlot <= 1) {
+      setGuestSlot(deriveSlotFromDevice(deviceId))
+    }
+  }, [guestSlot, deviceId, setGuestSlot])
+
+  const initialize = useCallback(() => {
+    if (!reservationId || initializing.current) return
+    initializing.current = true
+    dispatch({ type: "LOADING" })
+
+    guestInit(deviceId, reservationId)
+      .then((resp) => {
+        const payload = parseGuestJwt(resp.access)
+        dispatch({
+          type: "READY",
+          jwt: resp.access,
+          sessionId: payload?.cart_session_id ?? null,
+        })
+      })
+      .catch((err: Error) => {
+        const msg =
+          err.message === "NO_ACTIVE_SESSION"
+            ? "No active cart session found. Please ask a staff member to open your table."
+            : err.message
+        dispatch({ type: "ERROR", error: msg })
+      })
+      .finally(() => {
+        initializing.current = false
+      })
+  }, [deviceId, reservationId])
+
+  useEffect(() => {
+    initialize()
+  }, [initialize])
+
+  return {
+    deviceId,
+    guestJwt: authState.guestJwt,
+    cartSessionId: authState.cartSessionId,
+    displayName,
+    guestSlot,
+    status: authState.status,
+    error: authState.error,
+    setDisplayName,
+    setGuestSlot,
+    initialize,
+  }
+}
+
+function parseGuestJwt(
+  token: string,
+): { is_guest: boolean; device_id?: string; cart_session_id?: string } | null {
+  try {
+    const payload = token.split(".")[1]
+    if (!payload) return null
+    return JSON.parse(atob(payload))
+  } catch {
+    return null
+  }
+}

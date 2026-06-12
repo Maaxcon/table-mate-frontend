@@ -3,6 +3,8 @@ import type { WeekDay } from "@/types/workingHours"
 // Central UI strings for the customer menu. One place to translate later (no
 // i18n library yet). Note: allergen names and category-keyword matching live
 // with their data, not here, because they're matched against backend values.
+export type GuestInfo = { name: string; slot: number }
+
 export const menuStrings = {
   header: {
     signIn: "Увійти",
@@ -66,6 +68,24 @@ export const menuStrings = {
     decrease: "Зменшити",
     increase: "Збільшити",
     checkout: "Оформити замовлення",
+    groupedBy: "Замовлення",
+    guest: (name: string) => `${name}`,
+    you: "Ви",
+    errorAdd: "Не вдалося додати страву",
+    errorUpdate: "Не вдалося оновити кількість",
+    errorRemove: "Не вдалося видалити страву",
+    unavailable: (name: string) => `"${name}" більше недоступна`,
+    retry: "Спробувати знову",
+    connecting: "Підключення...",
+    connected: "Підключено",
+    disconnected: "Відключено",
+    lobbyTitle: "Ласкаво просимо!",
+    lobbySubtitle: "Як до вас звертатися?",
+    lobbyPlaceholder: "Ваше ім'я",
+    lobbyJoin: "Приєднатися",
+    lobbySkipped: "Пропустити",
+    guestPrefix: "Гість",
+    slotLabel: (slot: number) => `Гість ${slot}`,
   },
   item: {
     ingredients: "Склад",
