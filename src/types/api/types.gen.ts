@@ -365,10 +365,12 @@ export type PatchedReservation = {
   table_info?: TableInfo
   restaurant_info?: RestaurantInfo
   readonly customer_name?: string
+  type?: ReservationType
   guest_count?: number
   start_at?: string
   end_at?: string
   status?: ReservationStatus
+  created_by_staff?: boolean
   notes?: string | null
   readonly created_at?: string
   readonly updated_at?: string
@@ -378,15 +380,15 @@ export type PatchedSession = {
   readonly public_id?: string
   readonly restaurant?: string
   table?: string
-  reservation?: string | null
+  reservation?: string
   readonly opened_by?: string
   guest_count?: number
   status?: SessionStatusEnum
   currency?: string
-  running_total?: string
-  final_total?: string
-  started_at?: string
-  closed_at?: string | null
+  subtotal?: string
+  tax?: string
+  total?: string
+  opened_at?: string
   readonly created_at?: string
   readonly updated_at?: string
 }
@@ -497,14 +499,22 @@ export type Reservation = {
   table_info: TableInfo
   restaurant_info: RestaurantInfo
   readonly customer_name: string
+  type?: ReservationType
   guest_count: number
   start_at: string
   end_at: string
   status?: ReservationStatus
+  created_by_staff?: boolean
   notes?: string | null
   readonly created_at: string
   readonly updated_at: string
 }
+
+/**
+ * * `pre_booked` - Pre-booked
+ * * `walk_in` - Walk-in
+ */
+export type ReservationType = "pre_booked" | "walk_in"
 
 /**
  * * `pending` - Pending
@@ -556,15 +566,15 @@ export type Session = {
   readonly public_id: string
   readonly restaurant: string
   table: string
-  reservation?: string | null
+  reservation: string
   readonly opened_by: string
   guest_count: number
   status?: SessionStatusEnum
   currency: string
-  running_total?: string
-  final_total?: string
-  started_at: string
-  closed_at?: string | null
+  subtotal?: string
+  tax?: string
+  total?: string
+  opened_at: string
   readonly created_at: string
   readonly updated_at: string
 }
@@ -572,9 +582,9 @@ export type Session = {
 /**
  * * `open` - Open
  * * `closed` - Closed
- * * `cancelled` - Cancelled
+ * * `voided` - Voided
  */
-export type SessionStatusEnum = "open" | "closed" | "cancelled"
+export type SessionStatusEnum = "open" | "closed" | "voided"
 
 /**
  * * `waiter_manual` - Waiter manual
@@ -587,7 +597,7 @@ export type Table = {
   readonly restaurant: string
   table_number: string
   capacity: number
-  status?: TableStatus
+  readonly is_occupied?: boolean
   shape?: TableShape
   active?: boolean
   position_x?: number | null
@@ -614,10 +624,9 @@ export type TableShape = "rectangle" | "round" | "square" | "booth"
 
 /**
  * * `free` - Free
- * * `reserved` - Reserved
  * * `occupied` - Occupied
  */
-export type TableStatus = "free" | "reserved" | "occupied"
+export type TableStatus = "free" | "occupied"
 
 export type Ticket = {
   readonly public_id: string
@@ -681,7 +690,6 @@ export type CustomTokenObtainPairWritable = {
 }
 
 export type EditorTableWritable = {
-  status?: TableStatus
   shape?: TableShape
   active?: boolean
   position_x?: number | null
@@ -860,7 +868,6 @@ export type PaginatedZoneListWritable = {
 }
 
 export type PatchedEditorTableWritable = {
-  status?: TableStatus
   shape?: TableShape
   active?: boolean
   position_x?: number | null
@@ -911,14 +918,14 @@ export type PatchedReservationWritable = {
 
 export type PatchedSessionWritable = {
   table?: string
-  reservation?: string | null
+  reservation?: string
   guest_count?: number
   status?: SessionStatusEnum
   currency?: string
-  running_total?: string
-  final_total?: string
-  started_at?: string
-  closed_at?: string | null
+  subtotal?: string
+  tax?: string
+  total?: string
+  opened_at?: string
 }
 
 export type PatchedTicketWritable = {
@@ -985,20 +992,19 @@ export type RestaurantSettingsWritable = {
 
 export type SessionWritable = {
   table: string
-  reservation?: string | null
+  reservation: string
   guest_count: number
   status?: SessionStatusEnum
   currency: string
-  running_total?: string
-  final_total?: string
-  started_at: string
-  closed_at?: string | null
+  subtotal?: string
+  tax?: string
+  total?: string
+  opened_at: string
 }
 
 export type TableWritable = {
   table_number: string
   capacity: number
-  status?: TableStatus
   shape?: TableShape
   active?: boolean
   position_x?: number | null

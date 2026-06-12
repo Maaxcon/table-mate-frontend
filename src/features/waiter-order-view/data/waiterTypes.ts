@@ -6,7 +6,7 @@ export type FloorTable = Pick<
   | "table_number"
   | "capacity"
   | "shape"
-  | "status"
+  | "is_occupied"
   | "position_x"
   | "position_y"
   | "active"
@@ -75,15 +75,13 @@ export function getTableVisualStatus(
   upcomingReservations: UpcomingReservation[],
   currentTime: Date,
 ): VisualTableStatus {
-  if (table.status === "occupied") return "occupied"
-  if (table.status === "free") {
-    const hasImminentReservation = upcomingReservations.some(
-      (r) =>
-        r.table_id === table.public_id &&
-        new Date(r.start_at).getTime() - currentTime.getTime() <= FIFTEEN_MINUTES_MS &&
-        new Date(r.start_at).getTime() > currentTime.getTime(),
-    )
-    if (hasImminentReservation) return "reserved"
-  }
+  if (table.is_occupied) return "occupied"
+  const hasImminentReservation = upcomingReservations.some(
+    (r) =>
+      r.table_id === table.public_id &&
+      new Date(r.start_at).getTime() - currentTime.getTime() <= FIFTEEN_MINUTES_MS &&
+      new Date(r.start_at).getTime() > currentTime.getTime(),
+  )
+  if (hasImminentReservation) return "reserved"
   return "free"
 }

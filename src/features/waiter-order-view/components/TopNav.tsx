@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react"
-import type { FloorTable } from "../data/mockData"
 import "./TopNav.css"
 
 const TABS = ["FLOOR PLAN", "WAITLIST", "ANALYTICS"]
 
 interface TopNavProps {
-  tables: FloorTable[]
+  occupiedCount: number
+  reservedCount: number
+  freeCount: number
   activeTab: string
   onTabChange: (tab: string) => void
 }
@@ -26,10 +27,13 @@ function useCurrentTime(): string {
   return time
 }
 
-export function TopNav({ tables, activeTab, onTabChange }: TopNavProps) {
-  const occupiedCount = tables.filter((t) => t.status === "occupied").length
-  const reservedCount = tables.filter((t) => t.status === "reserved").length
-  const freeCount = tables.filter((t) => t.status === "free").length
+export function TopNav({
+  occupiedCount,
+  reservedCount,
+  freeCount,
+  activeTab,
+  onTabChange,
+}: TopNavProps) {
   const currentTime = useCurrentTime()
 
   return (

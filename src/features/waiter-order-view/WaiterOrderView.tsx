@@ -19,7 +19,7 @@ interface TableApiResponse {
   table_number: string
   capacity: number
   shape: string
-  status: string
+  is_occupied: boolean
   active: boolean
   position_x: number | null
   position_y: number | null
@@ -38,7 +38,7 @@ function mapTableToFloorTable(t: TableApiResponse): FloorTable {
     table_number: t.table_number,
     capacity: t.capacity,
     shape: t.shape as FloorTable["shape"],
-    status: t.status as FloorTable["status"],
+    is_occupied: t.is_occupied,
     position_x: t.position_x,
     position_y: t.position_y,
     active: t.active,
@@ -138,7 +138,7 @@ export function WaiterOrderView() {
     setOverlayDetail(null)
 
     try {
-      const sessionRes = await apiFetch(`/api/orders/sessions/`)
+      const sessionRes = await apiFetch(`/api/orders/sessions/?table__public_id=${tablePublicId}`)
       if (!sessionRes.ok) {
         setOverlayLoading(false)
         return
@@ -148,24 +148,23 @@ export function WaiterOrderView() {
           public_id: string
           table: string
           guest_count: number
-          started_at: string
+          opened_at: string
           status: string
         }>
       }
-      const allSessions = sessionData.results ?? []
-      const session = allSessions.find((s) => s.table === tablePublicId)
+      const session = (sessionData.results ?? [])[0]
       if (!session) {
         setOverlayLoading(false)
         return
       }
-      const startedAt = new Date(session.started_at)
-      const durationMinutes = Math.round((Date.now() - startedAt.getTime()) / 60000)
+      const openedAt = new Date(session.opened_at)
+      const durationMinutes = Math.round((Date.now() - openedAt.getTime()) / 60000)
       const duration =
         durationMinutes > 60
           ? `${Math.floor(durationMinutes / 60)}h${durationMinutes % 60}m`
           : `${durationMinutes}m`
 
-      const orderRes = await apiFetch(`/api/orders/orders/`)
+      const orderRes = await apiFetch(`/api/orders/orders/?session__public_id=${session.public_id}`)
       let orderItems: OverlayOrderItem[] = []
       let order: {
         public_id: string
@@ -188,16 +187,16 @@ export function WaiterOrderView() {
             service_charge?: string
           }>
         }
-        const orderList = orderData.results ?? []
-        order = orderList.find((o) => o.session === session.public_id) ?? null
+        order = (orderData.results ?? [])[0] ?? null
 
         if (order) {
-          const oiRes = await apiFetch(`/api/orders/order-items/`)
+          const oiRes = await apiFetch(
+            `/api/orders/order-items/?order__public_id=${order.public_id}`,
+          )
           if (oiRes.ok) {
             const oiData = (await oiRes.json()) as {
               results?: Array<{
                 public_id: string
-                order: string
                 guest_slot: number
                 quantity: number
                 status: string
@@ -207,19 +206,16 @@ export function WaiterOrderView() {
                 menu_item_name?: string
               }>
             }
-            const oiList = oiData.results ?? []
-            orderItems = oiList
-              .filter((oi) => oi.order === order!.public_id)
-              .map((oi) => ({
-                public_id: oi.public_id,
-                guest_slot: oi.guest_slot,
-                quantity: oi.quantity,
-                name: oi.menu_item_name ?? oi.public_id,
-                unit_price: oi.unit_price,
-                status: oi.status as OverlayOrderItem["status"],
-                is_wasted: oi.is_wasted,
-                void_reason: oi.void_reason,
-              }))
+            orderItems = (oiData.results ?? []).map((oi) => ({
+              public_id: oi.public_id,
+              guest_slot: oi.guest_slot,
+              quantity: oi.quantity,
+              name: oi.menu_item_name ?? oi.public_id,
+              unit_price: oi.unit_price,
+              status: oi.status as OverlayOrderItem["status"],
+              is_wasted: oi.is_wasted,
+              void_reason: oi.void_reason,
+            }))
           }
         }
       }
@@ -232,6 +228,15 @@ export function WaiterOrderView() {
       const selTable = currentTables.find((t) => t.public_id === tablePublicId)
       const resForTable = currentReservations.find((r) => r.table === selTable?.table_number)
 
+      const rawSubtotal = orderItems.reduce(
+        (sum, item) => sum + parseFloat(item.unit_price) * item.quantity,
+        0,
+      )
+      const rawTax = parseFloat(order.tax_total)
+      const rawDiscount = parseFloat(order.discount_total || "0")
+      const rawServiceCharge = parseFloat(order.service_charge || "0")
+      const rawTotal = rawSubtotal + rawTax - rawDiscount + rawServiceCharge
+
       setOverlayDetail({
         public_id: order.public_id,
         table_number: selTable?.table_number ?? "",
@@ -240,9 +245,9 @@ export function WaiterOrderView() {
         duration,
         currency: order.currency,
         items: orderItems,
-        subtotal: order.total_amount,
+        subtotal: rawSubtotal.toFixed(2),
         tax_total: order.tax_total,
-        total_amount: order.total_amount,
+        total_amount: rawTotal.toFixed(2),
         discount_total: order.discount_total,
         service_charge: order.service_charge,
       })
@@ -265,7 +270,7 @@ export function WaiterOrderView() {
 
   const handleTableSelect = (table: FloorTable) => {
     setSelectedTableId(table.public_id)
-    if (table.status === "occupied") {
+    if (table.is_occupied) {
       buildOverlayDetail(table.public_id, tables, reservations)
     } else {
       setOverlayDetail(null)
