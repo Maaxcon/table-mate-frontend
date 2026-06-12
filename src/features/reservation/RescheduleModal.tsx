@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
 import type { WorkingHoursDay } from "./api"
-import { fetchAvailableSlots, modifyReservation } from "./api"
+import { fetchAvailableSlots, fetchRestaurantSettings, modifyReservation } from "./api"
 import {
   DAY_NAMES,
   generateTimeSlots,
@@ -54,8 +54,7 @@ export function RescheduleModal({
 
   useEffect(() => {
     if (!workingHours && restaurantId) {
-      import("./api")
-        .then((m) => m.fetchRestaurantSettings(restaurantId))
+      fetchRestaurantSettings(restaurantId)
         .then((settings) => setInternalWorkingHours(settings.working_hours))
         .catch(() => setInternalWorkingHours(null))
     }
@@ -134,8 +133,10 @@ export function RescheduleModal({
     setSubmitting(true)
 
     try {
-      const startISO = new Date(`${dateStr}T${selectedTime}:00`).toISOString()
-      const endISO = new Date(`${dateStr}T${endAt}:00`).toISOString()
+      const startDt = new Date(`${dateStr}T${selectedTime}:00`)
+      const endDt = new Date(startDt.getTime() + durationMinutes * 60000)
+      const startISO = startDt.toISOString()
+      const endISO = endDt.toISOString()
 
       await modifyReservation(publicId, {
         start_at: startISO,

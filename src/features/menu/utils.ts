@@ -106,3 +106,14 @@ export function getCurrencySymbol(code: string): string {
   if (normalized === "GBP") return "£"
   return "$"
 }
+
+/** Formats an amount in the given currency and locale (e.g. "$180.00" or
+ * "180,00 €"), so both the symbol and the number style follow the locale.
+ * Falls back to a plain symbol if the locale/currency pair is unsupported. */
+export function formatCurrency(amount: number, currency: string, locale: string): string {
+  try {
+    return new Intl.NumberFormat(locale, { style: "currency", currency }).format(amount)
+  } catch {
+    return `${getCurrencySymbol(currency)} ${formatAmount(amount)}`
+  }
+}

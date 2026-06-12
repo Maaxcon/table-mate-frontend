@@ -1,0 +1,100 @@
+.select-restaurant {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: var(--color-bg-page);
+  color: var(--color-text-primary);
+}
+
+.select-restaurant__card {
+  width: 100%;
+  max-width: 380px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 32px 24px;
+  border: 1px solid var(--color-border-default);
+  border-radius: 16px;
+  background: var(--color-bg-surface);
+  text-align: center;
+}
+
+.select-restaurant__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: var(--color-bg-surface-subtle);
+  font-size: 24px;
+  color: var(--color-text-primary);
+}
+
+.select-restaurant__title {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.select-restaurant__hint {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+.select-restaurant__error {
+  font-size: 14px;
+  color: var(--color-error-text);
+  margin: 0;
+}
+
+.select-restaurant__option {
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 12px;
+  background: var(--color-bg-surface);
+  color: var(--color-text-primary);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.select-restaurant__option:hover:not(:disabled) {
+  background: var(--color-bg-surface-subtle);
+}
+
+.select-restaurant__btn {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid var(--color-border-default);
+  border-radius: 12px;
+  background: var(--color-bg-surface);
+  color: var(--color-text-primary);
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.select-restaurant__btn:hover {
+  background: var(--color-bg-surface-subtle);
+}
+
+.select-restaurant__link {
+  border: none;
+  background: none;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.select-restaurant__option:disabled,
+.select-restaurant__link:disabled {
+  opacity: 0.6;
+  cursor: default;
+}

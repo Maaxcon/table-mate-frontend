@@ -64,9 +64,7 @@ export function BookingPage() {
   }, [public_restaurant_id])
 
   const filteredTables = selectedZone
-    ? tables.filter(
-        (t) => (t as Table & { zone?: { public_id: string } }).zone?.public_id === selectedZone,
-      )
+    ? tables.filter((t) => t.zone?.public_id === selectedZone)
     : tables
 
   const loadSettings = useCallback(async () => {

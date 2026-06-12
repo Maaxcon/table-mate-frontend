@@ -9,8 +9,8 @@ import {
   filterActiveBookings,
   updateMyProfile,
   type ProfileUpdate,
-} from "../api"
-import type { CabinetProfile, HistoryEntry, Reservation } from "../types"
+} from "@/features/cabinet/api"
+import type { CabinetProfile, HistoryEntry, Reservation } from "@/features/cabinet/types"
 
 type UseCabinetResult = {
   profile: CabinetProfile | null
@@ -32,8 +32,6 @@ const BOOKINGS_PAGE_SIZE = 5
 
 export function useCabinet(): UseCabinetResult {
   const dispatch = useAppDispatch()
-  // The store already holds the signed-in user; use it as an instant fallback
-  // for the header while the full profile (with "member since") loads.
   const storeUser = useAppSelector((s) => s.auth.user)
   const storeUserRef = useRef(storeUser)
   useEffect(() => {
@@ -50,6 +48,8 @@ export function useCabinet(): UseCabinetResult {
   const [bookingsHasMore, setBookingsHasMore] = useState(false)
   const [bookingsActionId, setBookingsActionId] = useState<string | null>(null)
 
+  const fetchedCountRef = useRef(0)
+
   const loadBookingsPage = useCallback(async (offset: number, signal?: AbortSignal) => {
     const page = await fetchMyReservations({
       limit: BOOKINGS_PAGE_SIZE + 1,
@@ -57,6 +57,8 @@ export function useCabinet(): UseCabinetResult {
       signal,
     })
     const visible = filterActiveBookings(page).slice(0, BOOKINGS_PAGE_SIZE)
+    fetchedCountRef.current = offset + visible.length
+
     setBookings((prev) => (offset === 0 ? visible : [...prev, ...visible]))
     setBookingsHasMore(page.length > BOOKINGS_PAGE_SIZE)
     setBookingsError(null)
@@ -82,7 +84,6 @@ export function useCabinet(): UseCabinetResult {
       if (profileResult.status === "fulfilled") {
         setProfile(profileResult.value)
       } else if (fallbackUser) {
-        // Fall back to the store user; createdAt is unknown here.
         setProfile({
           firstName: fallbackUser.firstName,
           lastName: fallbackUser.lastName,
@@ -98,6 +99,7 @@ export function useCabinet(): UseCabinetResult {
       }
 
       if (bookingsResult.status === "fulfilled") {
+        fetchedCountRef.current = bookingsResult.value.length
         setBookings(filterActiveBookings(bookingsResult.value).slice(0, BOOKINGS_PAGE_SIZE))
         setBookingsHasMore(bookingsResult.value.length > BOOKINGS_PAGE_SIZE)
         setBookingsError(null)
@@ -125,11 +127,11 @@ export function useCabinet(): UseCabinetResult {
 
   const loadMoreBookings = useCallback(async () => {
     try {
-      await loadBookingsPage(bookings.length)
+      await loadBookingsPage(fetchedCountRef.current)
     } catch {
       setBookingsError("We could not load more bookings.")
     }
-  }, [bookings.length, loadBookingsPage])
+  }, [loadBookingsPage])
 
   const cancelBooking = useCallback(async (publicId: string) => {
     setBookingsActionId(publicId)
@@ -149,7 +151,6 @@ export function useCabinet(): UseCabinetResult {
     async (patch: ProfileUpdate) => {
       const updated = await updateMyProfile(patch)
       setProfile(updated)
-      // Keep the Redux user in sync so the rest of the app shows the new data.
       dispatch(
         setUser({
           email: updated.email,

@@ -42,7 +42,7 @@ export function CustomerFloorPlan({
     table_number: t.table_number,
     capacity: t.capacity,
     shape: t.shape ?? "rectangle",
-    status: t.status ?? "free",
+    is_occupied: t.is_occupied ?? false,
     position_x: t.position_x ?? null,
     position_y: t.position_y ?? null,
     active: t.active ?? true,

@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react"
 import { LuCheck, LuMinus, LuPlus, LuShoppingCart, LuTrash2, LuX } from "react-icons/lu"
-import type { CartItem } from "../../hooks/useCart"
-import { formatAmount } from "../../utils"
+import type { CartItem } from "@/features/menu/hooks/useCart"
+import { formatAmount } from "@/features/menu/utils"
+import { menuStrings } from "@/features/menu/strings"
 import "./CartDrawer.css"
 
 type Props = {
@@ -50,31 +51,35 @@ export function CartDrawer({
         if (e.target === e.currentTarget) onClose()
       }}
     >
-      <aside className="cart-drawer" aria-label="Кошик">
+      <aside className="cart-drawer" aria-label={menuStrings.cart.title}>
         <div className="cart-drawer__header">
           <div className="cart-drawer__title-row">
             <LuShoppingCart size={18} />
-            <h2 className="cart-drawer__title">Кошик</h2>
+            <h2 className="cart-drawer__title">{menuStrings.cart.title}</h2>
             {totalCount > 0 && <span className="cart-drawer__count">{totalCount}</span>}
           </div>
-          <button className="cart-drawer__close" onClick={onClose} aria-label="Закрити">
+          <button
+            className="cart-drawer__close"
+            onClick={onClose}
+            aria-label={menuStrings.cart.close}
+          >
             <LuX size={16} />
           </button>
         </div>
 
         {step === "confirming" ? (
           <div className="cart-drawer__confirm-dialog">
-            <p className="cart-drawer__confirm-dialog-title">Підтвердити замовлення?</p>
+            <p className="cart-drawer__confirm-dialog-title">{menuStrings.cart.confirmTitle}</p>
             <p className="cart-drawer__confirm-dialog-sub">
-              {items.reduce((s, i) => s + i.quantity, 0)} позицій · {formatAmount(totalPrice)}{" "}
-              {currencySymbol}
+              {menuStrings.cart.positions(items.reduce((s, i) => s + i.quantity, 0))} ·{" "}
+              {formatAmount(totalPrice)} {currencySymbol}
             </p>
             <div className="cart-drawer__confirm-dialog-btns">
               <button className="cart-drawer__confirm-dialog-yes" onClick={handleConfirm}>
-                Так, замовити
+                {menuStrings.cart.confirmYes}
               </button>
               <button className="cart-drawer__confirm-dialog-no" onClick={() => setStep("cart")}>
-                Скасувати
+                {menuStrings.cart.confirmNo}
               </button>
             </div>
           </div>
@@ -83,11 +88,11 @@ export function CartDrawer({
             <div className="cart-drawer__confirm-icon">
               <LuCheck size={52} strokeWidth={1.4} />
             </div>
-            <h3 className="cart-drawer__confirm-title">Замовлення прийнято!</h3>
-            <p className="cart-drawer__confirm-sub">Офіціант отримав ваше замовлення</p>
+            <h3 className="cart-drawer__confirm-title">{menuStrings.cart.confirmedTitle}</h3>
+            <p className="cart-drawer__confirm-sub">{menuStrings.cart.confirmedSub}</p>
 
             <div className="cart-drawer__receipt">
-              <p className="cart-drawer__receipt-label">Ваше замовлення</p>
+              <p className="cart-drawer__receipt-label">{menuStrings.cart.receiptLabel}</p>
               <ul className="cart-drawer__receipt-list">
                 {confirmedItems.map(({ item, quantity }) => (
                   <li key={item.public_id} className="cart-drawer__receipt-row">
@@ -102,7 +107,7 @@ export function CartDrawer({
                 ))}
               </ul>
               <div className="cart-drawer__receipt-total">
-                <span>Разом</span>
+                <span>{menuStrings.cart.total}</span>
                 <span>
                   {formatAmount(confirmedTotal)} {currencySymbol}
                 </span>
@@ -110,14 +115,14 @@ export function CartDrawer({
             </div>
 
             <button className="cart-drawer__confirm-btn" onClick={onClose}>
-              Закрити
+              {menuStrings.cart.close}
             </button>
           </div>
         ) : items.length === 0 ? (
           <div className="cart-drawer__empty">
             <LuShoppingCart size={48} strokeWidth={1.2} />
-            <p className="cart-drawer__empty-title">Кошик порожній</p>
-            <p className="cart-drawer__empty-sub">Додайте страви з меню</p>
+            <p className="cart-drawer__empty-title">{menuStrings.cart.emptyTitle}</p>
+            <p className="cart-drawer__empty-sub">{menuStrings.cart.emptySub}</p>
           </div>
         ) : (
           <>
@@ -138,7 +143,8 @@ export function CartDrawer({
                   <div className="cart-drawer__item-body">
                     <span className="cart-drawer__item-name">{item.name}</span>
                     <span className="cart-drawer__item-unit-price">
-                      {formatAmount(parseFloat(item.price) || 0)} {currencySymbol} / шт
+                      {formatAmount(parseFloat(item.price) || 0)} {currencySymbol}{" "}
+                      {menuStrings.cart.perUnit}
                     </span>
                   </div>
 
@@ -150,7 +156,7 @@ export function CartDrawer({
                       <button
                         className="cart-drawer__stepper-btn"
                         onClick={() => onSetQuantity(item.public_id, quantity - 1)}
-                        aria-label="Зменшити"
+                        aria-label={menuStrings.cart.decrease}
                       >
                         {quantity === 1 ? <LuTrash2 size={12} /> : <LuMinus size={12} />}
                       </button>
@@ -158,7 +164,7 @@ export function CartDrawer({
                       <button
                         className="cart-drawer__stepper-btn"
                         onClick={() => onSetQuantity(item.public_id, quantity + 1)}
-                        aria-label="Збільшити"
+                        aria-label={menuStrings.cart.increase}
                       >
                         <LuPlus size={12} />
                       </button>
@@ -170,13 +176,13 @@ export function CartDrawer({
 
             <div className="cart-drawer__footer">
               <div className="cart-drawer__total-row">
-                <span className="cart-drawer__total-label">Разом</span>
+                <span className="cart-drawer__total-label">{menuStrings.cart.total}</span>
                 <span className="cart-drawer__total-value">
                   {formatAmount(totalPrice)} {currencySymbol}
                 </span>
               </div>
               <button className="cart-drawer__order" onClick={() => setStep("confirming")}>
-                Оформити замовлення
+                {menuStrings.cart.checkout}
               </button>
             </div>
           </>
