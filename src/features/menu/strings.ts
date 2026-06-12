@@ -74,6 +74,7 @@ export const menuStrings = {
     errorAdd: "Не вдалося додати страву",
     errorUpdate: "Не вдалося оновити кількість",
     errorRemove: "Не вдалося видалити страву",
+    errorFetch: "Не вдалося завантажити кошик",
     unavailable: (name: string) => `"${name}" більше недоступна`,
     retry: "Спробувати знову",
     connecting: "Підключення...",
@@ -86,6 +87,7 @@ export const menuStrings = {
     lobbySkipped: "Пропустити",
     guestPrefix: "Гість",
     slotLabel: (slot: number) => `Гість ${slot}`,
+    unknownItem: "Страва",
   },
   item: {
     ingredients: "Склад",

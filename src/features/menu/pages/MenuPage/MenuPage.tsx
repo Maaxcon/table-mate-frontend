@@ -431,6 +431,7 @@ function MenuPage() {
           errorItemId={errorItemId}
           displayName={guestAuth.displayName}
           guestSlot={guestAuth.guestSlot}
+          deviceId={guestAuth.deviceId}
           onSetQuantity={handleSetQuantity}
           onRemoveItem={removeItem}
           onClose={() => setCartOpen(false)}

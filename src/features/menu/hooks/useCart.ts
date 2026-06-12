@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useReducer, useRef } from "react"
 import { addCartItem, deleteCartItem, fetchCartItems, updateCartItem } from "@/features/menu/api"
 import type { CartItemResponse, MenuItem } from "@/features/menu/types"
+import { menuStrings } from "@/features/menu/strings"
 
 export type CartItemWithDetails = {
   id: string
@@ -115,6 +116,35 @@ const initialState: State = {
   errorItemId: null,
 }
 
+const MENU_ITEM_UNAVAILABLE = "menu_item_unavailable"
+
+function isUnavailableError(err: unknown): boolean {
+  if (!(err instanceof Error) || !err.message) return false
+  return err.message.toLowerCase().includes(MENU_ITEM_UNAVAILABLE)
+}
+
+function getUnavailableMessage(
+  menuItemId: string | undefined,
+  itemsById: Record<string, MenuItem>,
+): string {
+  if (!menuItemId) {
+    return menuStrings.cart.unavailable(menuStrings.cart.unknownItem)
+  }
+  const name = itemsById[menuItemId]?.name ?? menuStrings.cart.unknownItem
+  return menuStrings.cart.unavailable(name)
+}
+
+function resolveCartError(
+  err: unknown,
+  fallback: string,
+  info: { menuItemId?: string; itemsById: Record<string, MenuItem> },
+): string {
+  if (isUnavailableError(err)) {
+    return getUnavailableMessage(info.menuItemId, info.itemsById)
+  }
+  return err instanceof Error ? err.message : fallback
+}
+
 function buildDetails(
   items: CartItemResponse[],
   itemsById: Record<string, MenuItem>,
@@ -141,6 +171,16 @@ export function useCart({
   const [state, dispatch] = useReducer(reducer, initialState)
   const initialFetchDone = useRef(false)
 
+  const findMenuItemIdByCartItem = useCallback(
+    (cartItemId: string): string | undefined =>
+      state.items.find((ci) => ci.public_id === cartItemId)?.menu_item,
+    [state.items],
+  )
+
+  useEffect(() => {
+    initialFetchDone.current = false
+  }, [cartSessionId, guestJwt])
+
   const refetch = useCallback(async () => {
     if (!cartSessionId || !guestJwt) return
     dispatch({ type: "SET_LOADING", loading: true })
@@ -150,8 +190,10 @@ export function useCart({
     } catch (err) {
       dispatch({
         type: "SET_ERROR",
-        error: err instanceof Error ? err.message : "Failed to fetch cart",
+        error: err instanceof Error ? err.message : menuStrings.cart.errorFetch,
       })
+    } finally {
+      dispatch({ type: "SET_LOADING", loading: false })
     }
   }, [cartSessionId, guestJwt])
 
@@ -193,18 +235,22 @@ export function useCart({
         dispatch({ type: "ROLLBACK" })
         dispatch({
           type: "SET_ERROR",
-          error: err instanceof Error ? err.message : "Failed to add item",
+          error: resolveCartError(err, menuStrings.cart.errorAdd, {
+            menuItemId,
+            itemsById,
+          }),
           itemId: tempItem.public_id,
         })
       }
     },
-    [cartSessionId, guestJwt, refetch],
+    [cartSessionId, guestJwt, refetch, itemsById],
   )
 
   const setQuantity = useCallback(
     async (itemId: string, quantity: number) => {
       if (!cartSessionId || !guestJwt) return
       dispatch({ type: "SAVE_SNAPSHOT" })
+      const menuItemIdForError = findMenuItemIdByCartItem(itemId)
 
       if (quantity <= 0) {
         dispatch({ type: "OPTIMISTIC_REMOVE", itemId })
@@ -215,7 +261,10 @@ export function useCart({
           dispatch({ type: "ROLLBACK" })
           dispatch({
             type: "SET_ERROR",
-            error: err instanceof Error ? err.message : "Failed to remove item",
+            error: resolveCartError(err, menuStrings.cart.errorRemove, {
+              menuItemId: menuItemIdForError,
+              itemsById,
+            }),
             itemId,
           })
         }
@@ -235,12 +284,15 @@ export function useCart({
         dispatch({ type: "ROLLBACK" })
         dispatch({
           type: "SET_ERROR",
-          error: err instanceof Error ? err.message : "Failed to update item",
+          error: resolveCartError(err, menuStrings.cart.errorUpdate, {
+            menuItemId: menuItemIdForError,
+            itemsById,
+          }),
           itemId,
         })
       }
     },
-    [cartSessionId, guestJwt, refetch],
+    [cartSessionId, guestJwt, refetch, itemsById, findMenuItemIdByCartItem],
   )
 
   const removeItem = useCallback(
@@ -248,6 +300,7 @@ export function useCart({
       if (!cartSessionId || !guestJwt) return
       dispatch({ type: "SAVE_SNAPSHOT" })
       dispatch({ type: "OPTIMISTIC_REMOVE", itemId })
+      const menuItemIdForError = findMenuItemIdByCartItem(itemId)
 
       try {
         await deleteCartItem(cartSessionId, itemId, guestJwt)
@@ -256,12 +309,15 @@ export function useCart({
         dispatch({ type: "ROLLBACK" })
         dispatch({
           type: "SET_ERROR",
-          error: err instanceof Error ? err.message : "Failed to remove item",
+          error: resolveCartError(err, menuStrings.cart.errorRemove, {
+            menuItemId: menuItemIdForError,
+            itemsById,
+          }),
           itemId,
         })
       }
     },
-    [cartSessionId, guestJwt, refetch],
+    [cartSessionId, guestJwt, refetch, itemsById, findMenuItemIdByCartItem],
   )
 
   const clearError = useCallback(() => {

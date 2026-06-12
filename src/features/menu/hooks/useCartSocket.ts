@@ -31,6 +31,7 @@ export function useCartSocket({
   const onCartUpdatedRef = useRef(onCartUpdated)
   const mountedRef = useRef(true)
   const connectRef = useRef<() => void>(() => {})
+  const shouldSyncRef = useRef(false)
 
   useEffect(() => {
     onCartUpdatedRef.current = onCartUpdated
@@ -77,6 +78,10 @@ export function useCartSocket({
       }
       attemptRef.current = 0
       setIsConnected(true)
+      if (shouldSyncRef.current) {
+        shouldSyncRef.current = false
+        onCartUpdatedRef.current()
+      }
     }
 
     ws.onclose = (event) => {
@@ -85,9 +90,11 @@ export function useCartSocket({
       wsRef.current = null
 
       if (event.code === 4001 || event.code === 4003) {
+        shouldSyncRef.current = false
         return
       }
 
+      shouldSyncRef.current = true
       attemptRef.current += 1
       const delay = Math.min(BASE_DELAY_MS * Math.pow(2, attemptRef.current - 1), MAX_DELAY_MS)
       reconnectTimeoutRef.current = setTimeout(() => {
@@ -126,6 +133,7 @@ export function useCartSocket({
 
   const reconnect = useCallback(() => {
     attemptRef.current = 0
+    shouldSyncRef.current = true
     connectRef.current()
   }, [])
 

@@ -23,6 +23,7 @@ type Props = {
   errorItemId: string | null
   displayName: string
   guestSlot: number | null
+  deviceId: string
   onSetQuantity: (itemId: string, quantity: number) => void
   onRemoveItem: (itemId: string) => void
   onClose: () => void
@@ -30,22 +31,34 @@ type Props = {
   onRetry?: () => void
 }
 
-function getGuestLabel(
-  guestSlot: number | null,
-  deviceId: string | null,
-  _displayName: string,
+function getGroupLabel(
+  group: ItemGroup,
+  displayName: string,
   currentGuestSlot: number | null,
+  currentDeviceId: string,
 ): string {
-  if (guestSlot != null) {
-    if (currentGuestSlot != null && guestSlot === currentGuestSlot) {
-      return menuStrings.cart.you
-    }
-    return menuStrings.cart.guest(menuStrings.cart.guestPrefix + " " + guestSlot)
+  if (group.addedBy) {
+    return group.addedBy
   }
-  if (deviceId != null) {
-    return menuStrings.cart.guest(deviceId.slice(0, 8))
+
+  const matchesSlot =
+    currentGuestSlot != null && group.guestSlot != null && group.guestSlot === currentGuestSlot
+  const matchesDevice = currentDeviceId && group.deviceId && group.deviceId === currentDeviceId
+
+  if (matchesSlot || matchesDevice) {
+    return displayName ? `${menuStrings.cart.you} · ${displayName}` : menuStrings.cart.you
   }
-  return menuStrings.cart.guest("—")
+
+  if (group.guestSlot != null) {
+    return menuStrings.cart.slotLabel(group.guestSlot)
+  }
+
+  if (group.deviceId) {
+    const suffix = group.deviceId.slice(0, 6).toUpperCase()
+    return menuStrings.cart.guest(`#${suffix}`)
+  }
+
+  return menuStrings.cart.groupedBy
 }
 
 export function CartDrawer({
@@ -57,6 +70,7 @@ export function CartDrawer({
   errorItemId,
   displayName,
   guestSlot: currentGuestSlot,
+  deviceId,
   onSetQuantity,
   onRemoveItem,
   onClose,
@@ -205,7 +219,7 @@ export function CartDrawer({
               {groupedItems.map((group) => (
                 <div key={group.key} className="cart-drawer__group">
                   <span className="cart-drawer__group-label">
-                    {getGuestLabel(group.guestSlot, group.deviceId, displayName, currentGuestSlot)}
+                    {getGroupLabel(group, displayName, currentGuestSlot, deviceId)}
                   </span>
                   <ul className="cart-drawer__group-list">
                     {group.items.map((ci) => (
@@ -288,6 +302,7 @@ type ItemGroup = {
   key: string
   guestSlot: number | null
   deviceId: string | null
+  addedBy: string | null
   items: CartItemWithDetails[]
 }
 
@@ -295,8 +310,9 @@ function groupItemsByGuest(items: CartItemWithDetails[]): ItemGroup[] {
   const groups = new Map<string, ItemGroup>()
 
   for (const item of items) {
-    const key =
-      item.guestSlot != null
+    const key = item.addedBy
+      ? `user-${item.addedBy}`
+      : item.guestSlot != null
         ? `slot-${item.guestSlot}`
         : item.deviceId
           ? `dev-${item.deviceId}`
@@ -304,7 +320,13 @@ function groupItemsByGuest(items: CartItemWithDetails[]): ItemGroup[] {
 
     let group = groups.get(key)
     if (!group) {
-      group = { key, guestSlot: item.guestSlot, deviceId: item.deviceId, items: [] }
+      group = {
+        key,
+        guestSlot: item.guestSlot,
+        deviceId: item.deviceId,
+        addedBy: item.addedBy,
+        items: [],
+      }
       groups.set(key, group)
     }
     group.items.push(item)
