@@ -1,14 +1,17 @@
 import { ENV_NOT_CONFIGURED_VALUE, env } from "@/config/env"
 import { firstError, type Paginated } from "@/api/client"
-import type { WorkingHours, WorkingHoursDay } from "@/types/workingHours"
+import { CART_API, MENU_API } from "./constants"
 import type {
   AddCartItemRequest,
   CartItemResponse,
   CartSession,
   CreateCartSessionRequest,
+  FetchItemsParams,
   GuestInitResponse,
   MenuCategory,
   MenuItem,
+  PublicRestaurant,
+  ToggleLikeResponse,
   UpdateCartItemRequest,
 } from "./types"
 
@@ -51,22 +54,7 @@ export function fetchCategories(
   restaurantId: string,
   signal?: AbortSignal,
 ): Promise<Paginated<MenuCategory>> {
-  return menuGet(
-    "/api/menu/categories/",
-    { restaurant: restaurantId, ordering: "sort_order" },
-    signal,
-  )
-}
-
-export type SortOrder = "sort_order" | "price" | "-price"
-
-export type FetchItemsParams = {
-  restaurantId: string
-  categoryId?: string
-  page?: number
-  guestToken?: string
-  signal?: AbortSignal
-  sortOrder?: SortOrder
+  return menuGet(MENU_API.categories, { restaurant: restaurantId, ordering: "sort_order" }, signal)
 }
 
 export function fetchItems({
@@ -78,7 +66,7 @@ export function fetchItems({
   sortOrder = "sort_order",
 }: FetchItemsParams): Promise<Paginated<MenuItem>> {
   return menuGet(
-    "/api/menu/items/",
+    MENU_API.items,
     {
       restaurant: restaurantId,
       guest_token: guestToken,
@@ -97,7 +85,7 @@ export async function fetchItem(
   signal?: AbortSignal,
 ): Promise<MenuItem | null> {
   const res = await fetch(
-    buildUrl(`/api/menu/items/${itemPublicId}/`, {
+    buildUrl(MENU_API.item(itemPublicId), {
       restaurant: restaurantId,
       guest_token: guestToken,
     }),
@@ -116,7 +104,7 @@ export function searchItems(
   page?: number,
 ): Promise<Paginated<MenuItem>> {
   return menuGet(
-    "/api/menu/items/search/",
+    MENU_API.itemsSearch,
     {
       restaurant: restaurantId,
       q: query,
@@ -127,19 +115,13 @@ export function searchItems(
   )
 }
 
-export type ToggleLikeResponse = {
-  public_id: string
-  is_liked: boolean
-  likes_count: number
-}
-
 export function toggleItemLike(
   restaurantId: string,
   itemPublicId: string,
   guestToken: string,
 ): Promise<ToggleLikeResponse> {
   return menuPost(
-    `/api/menu/items/${itemPublicId}/toggle-like/`,
+    MENU_API.toggleLike(itemPublicId),
     { restaurant: restaurantId },
     {
       guest_token: guestToken,
@@ -147,32 +129,8 @@ export function toggleItemLike(
   )
 }
 
-// Re-exported from the shared module so existing `./api` importers keep working.
-export type { WorkingHours, WorkingHoursDay }
-
-export type PublicRestaurantSettings = {
-  currency: string
-  timezone: string
-  working_hours: WorkingHours
-  rating: string | null
-  eta_min_minutes: number
-  eta_max_minutes: number
-  price_band: number
-}
-
-export type PublicRestaurant = {
-  public_id: string
-  name: string
-  address: string
-  phone: string
-  cover_image: string | null
-  telegram_url: string
-  facebook_url: string
-  settings: PublicRestaurantSettings | null
-}
-
 export function fetchRestaurant(restaurantId: string): Promise<PublicRestaurant> {
-  return menuGet(`/api/restaurants/restaurants-public/${restaurantId}/`, {})
+  return menuGet(MENU_API.restaurantPublic(restaurantId), {})
 }
 
 // ── Cart API ────────────────────────────────────────────
@@ -213,7 +171,7 @@ export function guestInit(deviceId: string, reservationId: string): Promise<Gues
   if (env.apiBaseUrl === ENV_NOT_CONFIGURED_VALUE) {
     throw new Error("VITE_API_BASE_URL is not configured")
   }
-  return fetch(`${env.apiBaseUrl}/api/auth/guest-init/`, {
+  return fetch(`${env.apiBaseUrl}${CART_API.guestInit}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ device_id: deviceId, reservation_id: reservationId }),
@@ -233,7 +191,7 @@ export function createCartSession(
   body: CreateCartSessionRequest,
   jwt: string,
 ): Promise<CartSession> {
-  return authFetch<CartSession>("/api/orders/cart/sessions/", jwt, {
+  return authFetch<CartSession>(CART_API.sessions, jwt, {
     method: "POST",
     body: JSON.stringify(body),
   })
@@ -241,7 +199,7 @@ export function createCartSession(
 
 export function fetchCartItems(sessionId: string, jwt: string): Promise<CartItemResponse[]> {
   return authFetch<{ count: number; results: CartItemResponse[] }>(
-    `/api/orders/cart/sessions/${sessionId}/items/`,
+    CART_API.items(sessionId),
     jwt,
   ).then((r) => r.results)
 }
@@ -251,7 +209,7 @@ export function addCartItem(
   body: AddCartItemRequest,
   jwt: string,
 ): Promise<CartItemResponse> {
-  return authFetch<CartItemResponse>(`/api/orders/cart/sessions/${sessionId}/items/`, jwt, {
+  return authFetch<CartItemResponse>(CART_API.items(sessionId), jwt, {
     method: "POST",
     body: JSON.stringify(body),
   })
@@ -263,15 +221,14 @@ export function updateCartItem(
   body: UpdateCartItemRequest,
   jwt: string,
 ): Promise<CartItemResponse> {
-  return authFetch<CartItemResponse>(
-    `/api/orders/cart/sessions/${sessionId}/items/${itemId}/`,
-    jwt,
-    { method: "PATCH", body: JSON.stringify(body) },
-  )
+  return authFetch<CartItemResponse>(CART_API.item(sessionId, itemId), jwt, {
+    method: "PATCH",
+    body: JSON.stringify(body),
+  })
 }
 
 export function deleteCartItem(sessionId: string, itemId: string, jwt: string): Promise<void> {
-  return authFetch<void>(`/api/orders/cart/sessions/${sessionId}/items/${itemId}/`, jwt, {
+  return authFetch<void>(CART_API.item(sessionId, itemId), jwt, {
     method: "DELETE",
   })
 }
