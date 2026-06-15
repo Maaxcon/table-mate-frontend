@@ -49,14 +49,13 @@ export function TableDetailOverlay({
   } | null>(null)
 
   const guestSlots = detail ? [...new Set(detail.items.map((i) => i.guest_slot))].sort() : []
-  const nearestReservation =
-    tableReservations.length > 0
-      ? [...tableReservations].sort(
-          (a, b) => new Date(a.start_at).getTime() - new Date(b.start_at).getTime(),
-        )[0]
-      : null
+  const sortedReservations = [...tableReservations].sort(
+    (a, b) => new Date(a.start_at).getTime() - new Date(b.start_at).getTime(),
+  )
+  const activeReservation =
+    tableReservations.find((r) => r.status === "active") ?? sortedReservations[0] ?? null
 
-  const activeReservationId = nearestReservation?.public_id
+  const activeReservationId = activeReservation?.public_id
   const currentGuestCount = detail?.guest_count ?? 0
 
   const availableTablesWithInfo = allTables
@@ -162,11 +161,11 @@ export function TableDetailOverlay({
             {loading
               ? ""
               : isReserved
-                ? `Reserved ${nearestReservation ? `• ${nearestReservation.name} at ${getTimeFromDatetime(nearestReservation.start_at)}` : ""}`
+                ? `Reserved ${activeReservation ? `• ${activeReservation.name} at ${getTimeFromDatetime(activeReservation.start_at)}` : ""}`
                 : isOccupied && detail
                   ? `Current Party: ${detail.guest_name} • ${detail.guest_count} Guests • Duration: ${detail.duration}`
-                  : nearestReservation
-                    ? `Capacity: ${table.capacity} • Next: ${nearestReservation.name} at ${getTimeFromDatetime(nearestReservation.start_at)}`
+                  : activeReservation
+                    ? `Capacity: ${table.capacity} • Next: ${activeReservation.name} at ${getTimeFromDatetime(activeReservation.start_at)}`
                     : `Capacity: ${table.capacity} • Available`}
           </p>
         </div>
