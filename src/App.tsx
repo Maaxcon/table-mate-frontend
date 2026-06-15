@@ -8,7 +8,6 @@ import CabinetPage from "@/pages/CabinetPage"
 import GreetingPage from "@/pages/GreetingPage"
 import MenuPage from "@/pages/MenuPage"
 import StaffOrdersPage from "@/pages/StaffOrdersPage"
-import SelectRestaurantPage from "@/features/auth/SelectRestaurantPage"
 import { ErrorBoundary } from "@/components/ErrorBoundary"
 import { WaiterOrderPage } from "@/pages/WaiterOrderPage"
 import { RestaurantListPage } from "@/pages/RestaurantListPage"
@@ -22,7 +21,6 @@ import MenuSection from "@/features/admin/pages/MenuSection"
 import AdminRoute from "@/routes/AdminRoute"
 import ProtectedRoute from "@/routes/ProtectedRoute"
 import PublicRoute from "@/routes/PublicRoute"
-import StaffContextRoute from "@/routes/StaffContextRoute"
 
 const clientId = env.googleClientId !== ENV_NOT_CONFIGURED_VALUE ? env.googleClientId : ""
 
@@ -68,10 +66,6 @@ function App() {
               <Route element={<ProtectedRoute allowedRoles={["admin", "waiter", "cook"]} />}>
                 <Route path="/waiter-order" element={<WaiterOrderPage />} />
                 <Route path="/staff/orders" element={<StaffOrdersPage />} />
-              </Route>
-
-              <Route element={<StaffContextRoute />}>
-                <Route path="/select-restaurant" element={<SelectRestaurantPage />} />
               </Route>
 
               {/* Protected customer / general routes */}
