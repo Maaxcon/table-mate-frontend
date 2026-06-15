@@ -14,7 +14,6 @@ import {
   MenuSkeleton,
   RestaurantInfoPanel,
 } from "@/features/menu/components"
-import { getGuestToken } from "@/features/menu/guestToken"
 import { useCart } from "@/features/menu/hooks/useCart"
 import { useCartSocket } from "@/features/menu/hooks/useCartSocket"
 import { useGuestAuth } from "@/features/menu/hooks/useGuestAuth"
@@ -37,7 +36,6 @@ function MenuPage() {
   const sectionRefs = useRef<Map<string, HTMLElement>>(new Map())
   const user = useAppSelector((s) => s.auth.user)
   const dispatch = useAppDispatch()
-  const deviceId = useMemo(() => getGuestToken(), [])
 
   const guestAuth = useGuestAuth({
     reservationId,
@@ -69,7 +67,7 @@ function MenuPage() {
     setSortOrder,
     setItemLikeState,
     error,
-  } = useMenuPage(restaurantId ?? "", deviceId)
+  } = useMenuPage(restaurantId ?? "", guestAuth.deviceId)
 
   const itemsById = useMemo(() => {
     const map: Record<string, MenuItem> = {}
@@ -136,7 +134,7 @@ function MenuPage() {
   )
   const { isPending: isLikePending, toggleLike } = useItemLikes(
     restaurantId ?? "",
-    deviceId,
+    guestAuth.deviceId,
     handleLiked,
   )
 
