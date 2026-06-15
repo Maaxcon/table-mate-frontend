@@ -68,7 +68,13 @@ export function RescheduleModal({
 
   const parsedDate = useMemo(() => new Date(currentDate), [currentDate])
 
-  const [selectedTime, setSelectedTime] = useState<string | null>(currentStartTime)
+  const initialSnappedTime = useMemo(() => {
+    const mins = timeToMinutes(currentStartTime)
+    const snapped = Math.round(mins / 30) * 30
+    return minutesToTime(snapped)
+  }, [currentStartTime])
+
+  const [selectedTime, setSelectedTime] = useState<string | null>(initialSnappedTime)
   const [durationMinutes, setDurationMinutes] = useState(
     Math.max(MIN_DURATION, currentDurationMinutes),
   )

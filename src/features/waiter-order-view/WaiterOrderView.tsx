@@ -246,6 +246,7 @@ export function WaiterOrderView() {
           results?: Array<{
             public_id: string
             start_at: string
+            end_at: string
             table_info: { table_number: string } | null
             guest_count: number
             status: string
@@ -257,6 +258,7 @@ export function WaiterOrderView() {
         return (data.results ?? []).map((r) => ({
           public_id: r.public_id,
           start_at: r.start_at,
+          end_at: r.end_at,
           table: r.table_info?.table_number ?? "",
           guest_count: r.guest_count,
           status: r.status as "pending" | "active",
@@ -606,7 +608,7 @@ export function WaiterOrderView() {
           }
           currentDate={editingReservation.start_at}
           currentStart={editingReservation.start_at}
-          currentEnd={editingReservation.start_at}
+          currentEnd={editingReservation.end_at}
           currentGuests={editingReservation.guest_count}
           tableCapacity={
             tables.find((t) => t.table_number === editingReservation.table)?.capacity ?? 10

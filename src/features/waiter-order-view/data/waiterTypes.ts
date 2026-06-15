@@ -39,7 +39,7 @@ export type VisualTableStatus = "free" | "occupied" | "reserved"
 
 export type ReservationItem = Pick<
   Reservation,
-  "public_id" | "start_at" | "guest_count" | "notes"
+  "public_id" | "start_at" | "end_at" | "guest_count" | "notes"
 > & {
   table: string
   name: string
