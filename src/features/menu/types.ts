@@ -82,8 +82,6 @@ export type GuestInitResponse = {
   access: string
 }
 
-// Guest joins a cart via a reservation or, for walk-in QR scans, a table.
-// The server requires at least one of the two.
 export type GuestInitTarget = {
   reservationId?: string | null
   tableId?: string | null

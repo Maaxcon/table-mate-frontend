@@ -57,7 +57,6 @@ function loadDisplayName(): string {
   try {
     return localStorage.getItem(DISPLAY_NAME_KEY) ?? ""
   } catch {
-    // localStorage can be unavailable (private mode / disabled) — start blank.
     return ""
   }
 }
@@ -85,7 +84,7 @@ export function useGuestAuth({
     try {
       localStorage.setItem(DISPLAY_NAME_KEY, name)
     } catch {
-      // Persisting the name is best-effort; ignore storage failures.
+      // ignore
     }
   }, [])
 

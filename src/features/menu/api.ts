@@ -189,7 +189,6 @@ export function guestInit(deviceId: string, target: GuestInitTarget): Promise<Gu
   })
 }
 
-// Safety cap so a misbehaving "next" can't loop forever (100 pages × 20 = 2000).
 const MAX_CART_PAGES = 100
 
 export async function fetchCartItems(sessionId: string, jwt: string): Promise<CartItemResponse[]> {

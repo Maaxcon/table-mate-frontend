@@ -105,6 +105,7 @@ type UseCartResult = {
   setQuantity: (itemId: string, quantity: number) => Promise<void>
   removeItem: (itemId: string) => Promise<void>
   refetch: () => Promise<void>
+  syncFromServer: () => Promise<void>
   clearError: () => void
 }
 
@@ -171,8 +172,6 @@ export function useCart({
   const [state, dispatch] = useReducer(reducer, initialState)
   const initialFetchDone = useRef(false)
 
-  // Run mutations one at a time so the single snapshot slot is never captured
-  // mid-flight by an overlapping action (rapid add/+/- taps).
   const mutationChain = useRef<Promise<void>>(Promise.resolve())
   const runExclusive = useCallback((task: () => Promise<void>): Promise<void> => {
     const next = mutationChain.current.then(task, task)
@@ -210,6 +209,8 @@ export function useCart({
       dispatch({ type: "SET_LOADING", loading: false })
     }
   }, [cartSessionId, guestJwt])
+
+  const syncFromServer = useCallback(() => runExclusive(refetch), [runExclusive, refetch])
 
   useEffect(() => {
     if (!cartSessionId || !guestJwt || !reserved) return
@@ -362,6 +363,7 @@ export function useCart({
     setQuantity,
     removeItem,
     refetch,
+    syncFromServer,
     clearError,
   }
 }

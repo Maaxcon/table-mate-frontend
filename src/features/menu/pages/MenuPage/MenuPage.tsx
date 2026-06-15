@@ -88,7 +88,7 @@ function MenuPage() {
     addItem,
     setQuantity,
     removeItem,
-    refetch,
+    syncFromServer,
     clearError,
   } = useCart({
     cartSessionId: guestAuth.cartSessionId,
@@ -98,8 +98,8 @@ function MenuPage() {
   })
 
   const handleCartUpdated = useCallback(() => {
-    refetch()
-  }, [refetch])
+    syncFromServer()
+  }, [syncFromServer])
 
   const { isConnected } = useCartSocket({
     cartSessionId: guestAuth.cartSessionId,
@@ -196,7 +196,6 @@ function MenuPage() {
     [addItem, guestAuth.guestJwt],
   )
 
-  // The server assigns the slot per device; read ours back from the cart.
   const guestSlot = cartItems.find((ci) => ci.deviceId === guestAuth.deviceId)?.guestSlot ?? null
 
   const handleSetQuantity = useCallback(
@@ -441,7 +440,7 @@ function MenuPage() {
           onRemoveItem={removeItem}
           onClose={() => setCartOpen(false)}
           onClearError={clearError}
-          onRetry={refetch}
+          onRetry={syncFromServer}
         />
       )}
 
