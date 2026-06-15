@@ -80,11 +80,16 @@ export async function fetchRestaurantSettings(
 export async function fetchAvailableSlots(
   tableId: string,
   date?: string,
-  exclude?: string,
+  exclude?: string | string[],
 ): Promise<Record<string, string[]>> {
   const params = new URLSearchParams({ table: tableId })
   if (date) params.set("date", date)
-  if (exclude) params.set("exclude", exclude)
+  if (exclude) {
+    const ids = Array.isArray(exclude) ? exclude : [exclude]
+    for (const id of ids) {
+      params.append("exclude", id)
+    }
+  }
   const res = await apiFetch(`/api/reservations/reservations/available-slots/?${params}`)
   if (!res.ok) throw new Error("Failed to fetch available slots")
   return res.json() as Promise<Record<string, string[]>>
