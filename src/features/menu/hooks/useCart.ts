@@ -104,7 +104,6 @@ type UseCartResult = {
   addItem: (menuItemId: string) => Promise<void>
   setQuantity: (itemId: string, quantity: number) => Promise<void>
   removeItem: (itemId: string) => Promise<void>
-  refetch: () => Promise<void>
   syncFromServer: () => Promise<void>
   clearError: () => void
 }
@@ -361,7 +360,6 @@ export function useCart({
     addItem,
     setQuantity,
     removeItem,
-    refetch,
     syncFromServer,
     clearError,
   }

@@ -9,7 +9,6 @@ type UseCartSocketOptions = {
 
 type UseCartSocketResult = {
   isConnected: boolean
-  reconnect: () => void
 }
 
 const BASE_DELAY_MS = 1000
@@ -133,11 +132,5 @@ export function useCartSocket({
     }
   }, [connect, cleanup])
 
-  const reconnect = useCallback(() => {
-    attemptRef.current = 0
-    shouldSyncRef.current = true
-    connectRef.current()
-  }, [])
-
-  return { isConnected, reconnect }
+  return { isConnected }
 }
