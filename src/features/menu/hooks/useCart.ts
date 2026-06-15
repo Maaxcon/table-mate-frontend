@@ -180,10 +180,15 @@ export function useCart({
     return next
   }, [])
 
+  const itemsRef = useRef(state.items)
+  useEffect(() => {
+    itemsRef.current = state.items
+  }, [state.items])
+
   const findMenuItemIdByCartItem = useCallback(
     (cartItemId: string): string | undefined =>
-      state.items.find((ci) => ci.public_id === cartItemId)?.menu_item,
-    [state.items],
+      itemsRef.current.find((ci) => ci.public_id === cartItemId)?.menu_item,
+    [],
   )
 
   useEffect(() => {
