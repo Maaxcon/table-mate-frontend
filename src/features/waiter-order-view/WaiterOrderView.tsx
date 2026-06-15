@@ -10,6 +10,7 @@ import type {
   OverlayOrderItem,
   UpcomingReservation,
   TableReservationInfo,
+  TableSessionInfo,
 } from "./data/waiterTypes"
 import { getTableVisualStatus } from "./data/waiterTypes"
 import { useHallSubscription } from "./hooks/useHallSubscription"
@@ -17,6 +18,9 @@ import type {
   HallTableStatusChangedEvent,
   HallNewReservationEvent,
 } from "./hooks/useHallSubscription"
+import { BookModal } from "@/features/reservation/BookModal"
+import { RescheduleModal } from "@/features/reservation/RescheduleModal"
+import { cancelReservation } from "@/features/reservation/api"
 import { apiFetch } from "@/api/client"
 import "./WaiterOrderView.css"
 
@@ -65,6 +69,10 @@ export function WaiterOrderView() {
   const [layoutReservations, setLayoutReservations] = useState<UpcomingReservation[]>([])
   const [overlayDetail, setOverlayDetail] = useState<OverlayDetail | null>(null)
   const [overlayLoading, setOverlayLoading] = useState(false)
+
+  const [showBookModal, setShowBookModal] = useState(false)
+  const [editingReservation, setEditingReservation] = useState<ReservationItem | null>(null)
+  const [sidebarActionLoading, setSidebarActionLoading] = useState(false)
 
   const enrichTablesWithSessionData = useCallback(
     async (tablesData: FloorTable[], signal?: AbortSignal): Promise<FloorTable[]> => {
@@ -277,6 +285,25 @@ export function WaiterOrderView() {
   useEffect(() => {
     loadData() // eslint-disable-line react-hooks/set-state-in-effect
   }, [loadData])
+
+  const handleCancelReservation = useCallback(
+    async (reservationId: string) => {
+      setSidebarActionLoading(true)
+      try {
+        await cancelReservation(reservationId)
+        await loadData()
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to cancel reservation")
+      } finally {
+        setSidebarActionLoading(false)
+      }
+    },
+    [loadData],
+  )
+
+  const handleModifyReservation = useCallback((reservation: ReservationItem) => {
+    setEditingReservation(reservation)
+  }, [])
 
   const buildOverlayDetail = async (
     tablePublicId: string,
@@ -499,7 +526,15 @@ export function WaiterOrderView() {
           )}
         </div>
 
-        {showFloorPlan && <ReservationSidebar reservations={reservations} />}
+        {showFloorPlan && (
+          <ReservationSidebar
+            reservations={reservations}
+            onAdd={() => setShowBookModal(true)}
+            onCancel={handleCancelReservation}
+            onModify={handleModifyReservation}
+            actionLoading={sidebarActionLoading}
+          />
+        )}
       </div>
 
       {selectedTable && (
@@ -516,6 +551,42 @@ export function WaiterOrderView() {
             setOverlayDetail(null)
           }}
           onRefresh={loadData}
+        />
+      )}
+
+      {showBookModal && tables.length > 0 && (
+        <BookModal
+          table={tables[0]}
+          workingHours={null}
+          restaurantId={""}
+          onClose={() => setShowBookModal(false)}
+          onSuccess={() => {
+            setShowBookModal(false)
+            loadData()
+          }}
+        />
+      )}
+
+      {editingReservation && (
+        <RescheduleModal
+          publicId={editingReservation.public_id}
+          tableNumber={editingReservation.table}
+          tablePublicId={
+            tables.find((t) => t.table_number === editingReservation.table)?.public_id ?? ""
+          }
+          currentDate={editingReservation.start_at}
+          currentStart={editingReservation.start_at}
+          currentEnd={editingReservation.start_at}
+          currentGuests={editingReservation.guest_count}
+          tableCapacity={
+            tables.find((t) => t.table_number === editingReservation.table)?.capacity ?? 10
+          }
+          workingHours={null}
+          onClose={() => setEditingReservation(null)}
+          onSuccess={() => {
+            setEditingReservation(null)
+            loadData()
+          }}
         />
       )}
     </div>
