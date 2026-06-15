@@ -138,7 +138,9 @@ export function WaiterOrderView() {
     setOverlayDetail(null)
 
     try {
-      const sessionRes = await apiFetch(`/api/orders/sessions/?table__public_id=${tablePublicId}`)
+      const sessionRes = await apiFetch(
+        `/api/orders/sessions/?table__public_id=${tablePublicId}&status=open`,
+      )
       if (!sessionRes.ok) {
         setOverlayLoading(false)
         return
