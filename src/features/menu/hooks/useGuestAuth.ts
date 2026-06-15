@@ -175,7 +175,8 @@ function parseGuestJwt(
   try {
     const payload = token.split(".")[1]
     if (!payload) return null
-    return JSON.parse(atob(payload))
+    const base64 = payload.replace(/-/g, "+").replace(/_/g, "/")
+    return JSON.parse(atob(base64))
   } catch {
     return null
   }
