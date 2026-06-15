@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { TopNav } from "./components/TopNav"
 import { FloorPlan } from "./components/FloorPlan"
 import { ReservationSidebar } from "./components/ReservationSidebar"
@@ -9,8 +9,14 @@ import type {
   OverlayDetail,
   OverlayOrderItem,
   UpcomingReservation,
+  TableReservationInfo,
 } from "./data/waiterTypes"
 import { getTableVisualStatus } from "./data/waiterTypes"
+import { useHallSubscription } from "./hooks/useHallSubscription"
+import type {
+  HallTableStatusChangedEvent,
+  HallNewReservationEvent,
+} from "./hooks/useHallSubscription"
 import { apiFetch } from "@/api/client"
 import "./WaiterOrderView.css"
 
@@ -60,46 +66,112 @@ export function WaiterOrderView() {
   const [overlayDetail, setOverlayDetail] = useState<OverlayDetail | null>(null)
   const [overlayLoading, setOverlayLoading] = useState(false)
 
-  useEffect(() => {
-    const controller = new AbortController()
-    Promise.all([
-      apiFetch(`/api/restaurants/tables/layout/`, {
-        signal: controller.signal,
+  const enrichTablesWithSessionData = useCallback(
+    async (tablesData: FloorTable[], signal?: AbortSignal): Promise<FloorTable[]> => {
+      const occupiedTables = tablesData.filter((t) => t.is_occupied)
+      if (occupiedTables.length === 0) return tablesData
+
+      const enrichedTables = [...tablesData]
+
+      await Promise.all(
+        occupiedTables.map(async (table) => {
+          try {
+            const sessionRes = await apiFetch(
+              `/api/orders/sessions/?table__public_id=${table.public_id}&status=open`,
+              { signal },
+            )
+            if (!sessionRes.ok) return
+
+            const sessionData = (await sessionRes.json()) as {
+              results?: Array<{
+                public_id: string
+                opened_at: string
+                guest_count: number
+              }>
+            }
+            const session = (sessionData.results ?? [])[0]
+            if (!session) return
+
+            const idx = enrichedTables.findIndex((t) => t.public_id === table.public_id)
+            if (idx !== -1) {
+              enrichedTables[idx] = {
+                ...enrichedTables[idx],
+                activeSession: {
+                  public_id: session.public_id,
+                  opened_at: session.opened_at,
+                  guest_count: session.guest_count,
+                },
+              }
+            }
+          } catch {
+            // Skip failed enrichment for this table
+          }
+        }),
+      )
+
+      return enrichedTables
+    },
+    [],
+  )
+
+  const handleTableStatusChanged = useCallback((event: HallTableStatusChangedEvent) => {
+    setTables((prev) =>
+      prev.map((t) => {
+        if (t.public_id !== event.table_id) return t
+        const isOccupied = event.current_status === "occupied"
+        return {
+          ...t,
+          is_occupied: isOccupied,
+          activeSession: isOccupied ? t.activeSession : null,
+          activeReservation: isOccupied ? null : t.activeReservation,
+        }
       }),
-      apiFetch(`/api/restaurants/zones/`, { signal: controller.signal }),
-    ])
-      .then(async ([layoutRes, zonesRes]) => {
-        if (!layoutRes.ok) throw new Error("Failed to load tables")
-        const layoutData = (await layoutRes.json()) as {
-          tables: TableApiResponse[]
-          upcoming_reservations: Array<{ public_id: string; table_id: string; start_at: string }>
-        }
-        const items = layoutData.tables ?? []
-        setTables(items.map(mapTableToFloorTable))
-        setLayoutReservations(layoutData.upcoming_reservations ?? [])
-        if (zonesRes.ok) {
-          const zonesData = (await zonesRes.json()) as { results?: ZoneApiResponse[] }
-          const zonesList = zonesData.results ?? []
-          setZones(zonesList)
-          if (zonesList.length > 0) setSelectedZoneId(zonesList[0].public_id)
-        }
-      })
-      .catch((err) => {
-        if (err instanceof DOMException && err.name === "AbortError") return
-        setError(err instanceof Error ? err.message : "Failed to load data")
-      })
-      .finally(() => setLoading(false))
-    return () => controller.abort()
+    )
   }, [])
 
-  useEffect(() => {
-    const controller = new AbortController()
-    apiFetch(`/api/reservations/reservations/?status=pending&status=active`, {
-      signal: controller.signal,
-    })
-      .then(async (res) => {
-        if (!res.ok) return
-        const data = (await res.json()) as {
+  const handleNewReservation = useCallback((event: HallNewReservationEvent) => {
+    setLayoutReservations((prev) => [
+      ...prev,
+      {
+        public_id: event.reservation_id,
+        table_id: event.table_id,
+        start_at: event.start_at,
+      },
+    ])
+  }, [])
+
+  useHallSubscription({
+    onTableStatusChanged: handleTableStatusChanged,
+    onNewReservation: handleNewReservation,
+  })
+
+  const loadData = useCallback(async () => {
+    setLoading(true)
+    try {
+      const [layoutRes, zonesRes, reservationsRes] = await Promise.all([
+        apiFetch(`/api/restaurants/tables/layout/`),
+        apiFetch(`/api/restaurants/zones/`),
+        apiFetch(`/api/reservations/reservations/?status=pending&status=active`),
+      ])
+
+      if (!layoutRes.ok) throw new Error("Failed to load tables")
+      const layoutData = (await layoutRes.json()) as {
+        tables: TableApiResponse[]
+        upcoming_reservations: Array<{ public_id: string; table_id: string; start_at: string }>
+      }
+      const items = layoutData.tables ?? []
+      const mappedTables = items.map(mapTableToFloorTable)
+      setLayoutReservations(layoutData.upcoming_reservations ?? [])
+
+      if (zonesRes.ok) {
+        const zonesData = (await zonesRes.json()) as { results?: ZoneApiResponse[] }
+        const zonesList = zonesData.results ?? []
+        setZones(zonesList)
+        if (zonesList.length > 0 && !selectedZoneId) setSelectedZoneId(zonesList[0].public_id)
+      }
+
+      if (reservationsRes.ok) {
+        const reservationsData = (await reservationsRes.json()) as {
           results?: Array<{
             public_id: string
             start_at: string
@@ -110,22 +182,52 @@ export function WaiterOrderView() {
             customer_name?: string
           }>
         }
-        const items = data.results ?? []
-        setReservations(
-          items.map((r) => ({
-            public_id: r.public_id,
-            start_at: r.start_at,
-            table: r.table_info?.table_number ?? "",
-            guest_count: r.guest_count,
-            status: r.status as ReservationItem["status"],
-            notes: r.notes,
-            name: r.customer_name ?? "Guest",
-          })),
-        )
-      })
-      .catch(() => {})
-    return () => controller.abort()
-  }, [])
+        const reservationItems = (reservationsData.results ?? []).map((r) => ({
+          public_id: r.public_id,
+          start_at: r.start_at,
+          table: r.table_info?.table_number ?? "",
+          guest_count: r.guest_count,
+          status: r.status as ReservationItem["status"],
+          notes: r.notes,
+          name: r.customer_name ?? "Guest",
+        }))
+        setReservations(reservationItems)
+
+        const tablesWithReservations = mappedTables.map((table) => {
+          const matchingReservation = reservationItems.find(
+            (r) => r.table === table.table_number && r.status === "pending",
+          )
+          if (matchingReservation) {
+            return {
+              ...table,
+              activeReservation: {
+                public_id: matchingReservation.public_id,
+                guest_name: matchingReservation.name,
+                guest_count: matchingReservation.guest_count,
+                start_at: matchingReservation.start_at,
+              } as TableReservationInfo,
+            }
+          }
+          return table
+        })
+
+        const enrichedTables = await enrichTablesWithSessionData(tablesWithReservations)
+        setTables(enrichedTables)
+      } else {
+        const enrichedTables = await enrichTablesWithSessionData(mappedTables)
+        setTables(enrichedTables)
+      }
+    } catch (err) {
+      if (err instanceof DOMException && err.name === "AbortError") return
+      setError(err instanceof Error ? err.message : "Failed to load data")
+    } finally {
+      setLoading(false)
+    }
+  }, [enrichTablesWithSessionData, selectedZoneId])
+
+  useEffect(() => {
+    loadData() // eslint-disable-line react-hooks/set-state-in-effect
+  }, [loadData])
 
   const buildOverlayDetail = async (
     tablePublicId: string,
@@ -358,10 +460,13 @@ export function WaiterOrderView() {
           tableReservations={selectedTableReservations}
           visualStatus={selectedTableVisualStatus}
           loading={overlayLoading}
+          allTables={tables}
+          upcomingReservations={layoutReservations}
           onClose={() => {
             setSelectedTableId(null)
             setOverlayDetail(null)
           }}
+          onRefresh={loadData}
         />
       )}
     </div>
