@@ -18,6 +18,7 @@ interface TableDetailOverlayProps {
   visualStatus: VisualTableStatus
   loading: boolean
   allTables: FloorTable[]
+  allReservations: ReservationItem[]
   upcomingReservations: UpcomingReservation[]
   onClose: () => void
   onRefresh: () => void
@@ -30,6 +31,7 @@ export function TableDetailOverlay({
   visualStatus,
   loading,
   allTables,
+  allReservations,
   upcomingReservations,
   onClose,
   onRefresh,
@@ -58,8 +60,19 @@ export function TableDetailOverlay({
   const activeReservationId = activeReservation?.public_id
   const currentGuestCount = detail?.guest_count ?? 0
 
+  const reservedTableNumbers = new Set(
+    allReservations
+      .filter((r) => r.status === "pending" || r.status === "active")
+      .map((r) => r.table),
+  )
+
   const availableTablesWithInfo = allTables
-    .filter((t) => t.public_id !== table.public_id && !t.is_occupied)
+    .filter(
+      (t) =>
+        t.public_id !== table.public_id &&
+        !t.is_occupied &&
+        !reservedTableNumbers.has(t.table_number),
+    )
     .map((t) => {
       const now = new Date()
       const nextReservation = upcomingReservations

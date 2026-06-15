@@ -574,6 +574,7 @@ export function WaiterOrderView() {
           visualStatus={selectedTableVisualStatus}
           loading={overlayLoading}
           allTables={tables}
+          allReservations={reservations}
           upcomingReservations={layoutReservations}
           onClose={() => {
             setSelectedTableId(null)
