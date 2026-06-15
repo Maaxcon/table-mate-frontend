@@ -171,6 +171,15 @@ export function useCart({
   const [state, dispatch] = useReducer(reducer, initialState)
   const initialFetchDone = useRef(false)
 
+  // Run mutations one at a time so the single snapshot slot is never captured
+  // mid-flight by an overlapping action (rapid add/+/- taps).
+  const mutationChain = useRef<Promise<void>>(Promise.resolve())
+  const runExclusive = useCallback((task: () => Promise<void>): Promise<void> => {
+    const next = mutationChain.current.then(task, task)
+    mutationChain.current = next.catch(() => {})
+    return next
+  }, [])
+
   const findMenuItemIdByCartItem = useCallback(
     (cartItemId: string): string | undefined =>
       state.items.find((ci) => ci.public_id === cartItemId)?.menu_item,
@@ -205,55 +214,106 @@ export function useCart({
   }, [cartSessionId, guestJwt, refetch, reserved])
 
   const addItem = useCallback(
-    async (menuItemId: string, guestSlot?: number) => {
-      if (!cartSessionId || !guestJwt) return
-      dispatch({ type: "SAVE_SNAPSHOT" })
-      const tempItem: CartItemResponse = {
-        public_id: `temp-${Date.now()}`,
-        menu_item: menuItemId,
-        quantity: 1,
-        comment: null,
-        added_by: null,
-        guest_slot: guestSlot ?? null,
-        device_id: null,
-        is_paid: false,
-        cart_session: cartSessionId,
-        restaurant: "",
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      }
-      dispatch({ type: "OPTIMISTIC_ADD", item: tempItem })
+    (menuItemId: string, guestSlot?: number): Promise<void> =>
+      runExclusive(async () => {
+        if (!cartSessionId || !guestJwt) return
+        dispatch({ type: "SAVE_SNAPSHOT" })
+        const tempItem: CartItemResponse = {
+          public_id: `temp-${Date.now()}`,
+          menu_item: menuItemId,
+          quantity: 1,
+          comment: null,
+          added_by: null,
+          guest_slot: guestSlot ?? null,
+          device_id: null,
+          is_paid: false,
+          cart_session: cartSessionId,
+          restaurant: "",
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        }
+        dispatch({ type: "OPTIMISTIC_ADD", item: tempItem })
 
-      try {
-        await addCartItem(
-          cartSessionId,
-          { menu_item: menuItemId, quantity: 1, guest_slot: guestSlot },
-          guestJwt,
-        )
-        await refetch()
-      } catch (err) {
-        dispatch({ type: "ROLLBACK" })
-        dispatch({
-          type: "SET_ERROR",
-          error: resolveCartError(err, menuStrings.cart.errorAdd, {
-            menuItemId,
-            itemsById,
-          }),
-          itemId: tempItem.public_id,
-        })
-      }
-    },
-    [cartSessionId, guestJwt, refetch, itemsById],
+        try {
+          await addCartItem(
+            cartSessionId,
+            { menu_item: menuItemId, quantity: 1, guest_slot: guestSlot },
+            guestJwt,
+          )
+          await refetch()
+        } catch (err) {
+          dispatch({ type: "ROLLBACK" })
+          dispatch({
+            type: "SET_ERROR",
+            error: resolveCartError(err, menuStrings.cart.errorAdd, {
+              menuItemId,
+              itemsById,
+            }),
+            itemId: tempItem.public_id,
+          })
+        }
+      }),
+    [cartSessionId, guestJwt, refetch, itemsById, runExclusive],
   )
 
   const setQuantity = useCallback(
-    async (itemId: string, quantity: number) => {
-      if (!cartSessionId || !guestJwt) return
-      dispatch({ type: "SAVE_SNAPSHOT" })
-      const menuItemIdForError = findMenuItemIdByCartItem(itemId)
+    (itemId: string, quantity: number): Promise<void> =>
+      runExclusive(async () => {
+        if (!cartSessionId || !guestJwt) return
+        dispatch({ type: "SAVE_SNAPSHOT" })
+        const menuItemIdForError = findMenuItemIdByCartItem(itemId)
 
-      if (quantity <= 0) {
+        if (quantity <= 0) {
+          dispatch({ type: "OPTIMISTIC_REMOVE", itemId })
+          try {
+            await deleteCartItem(cartSessionId, itemId, guestJwt)
+            await refetch()
+          } catch (err) {
+            dispatch({ type: "ROLLBACK" })
+            dispatch({
+              type: "SET_ERROR",
+              error: resolveCartError(err, menuStrings.cart.errorRemove, {
+                menuItemId: menuItemIdForError,
+                itemsById,
+              }),
+              itemId,
+            })
+          }
+          return
+        }
+
+        dispatch({
+          type: "OPTIMISTIC_UPDATE",
+          itemId,
+          changes: { quantity },
+        })
+
+        try {
+          await updateCartItem(cartSessionId, itemId, { quantity }, guestJwt)
+          await refetch()
+        } catch (err) {
+          dispatch({ type: "ROLLBACK" })
+          dispatch({
+            type: "SET_ERROR",
+            error: resolveCartError(err, menuStrings.cart.errorUpdate, {
+              menuItemId: menuItemIdForError,
+              itemsById,
+            }),
+            itemId,
+          })
+        }
+      }),
+    [cartSessionId, guestJwt, refetch, itemsById, findMenuItemIdByCartItem, runExclusive],
+  )
+
+  const removeItem = useCallback(
+    (itemId: string): Promise<void> =>
+      runExclusive(async () => {
+        if (!cartSessionId || !guestJwt) return
+        dispatch({ type: "SAVE_SNAPSHOT" })
         dispatch({ type: "OPTIMISTIC_REMOVE", itemId })
+        const menuItemIdForError = findMenuItemIdByCartItem(itemId)
+
         try {
           await deleteCartItem(cartSessionId, itemId, guestJwt)
           await refetch()
@@ -268,56 +328,8 @@ export function useCart({
             itemId,
           })
         }
-        return
-      }
-
-      dispatch({
-        type: "OPTIMISTIC_UPDATE",
-        itemId,
-        changes: { quantity },
-      })
-
-      try {
-        await updateCartItem(cartSessionId, itemId, { quantity }, guestJwt)
-        await refetch()
-      } catch (err) {
-        dispatch({ type: "ROLLBACK" })
-        dispatch({
-          type: "SET_ERROR",
-          error: resolveCartError(err, menuStrings.cart.errorUpdate, {
-            menuItemId: menuItemIdForError,
-            itemsById,
-          }),
-          itemId,
-        })
-      }
-    },
-    [cartSessionId, guestJwt, refetch, itemsById, findMenuItemIdByCartItem],
-  )
-
-  const removeItem = useCallback(
-    async (itemId: string) => {
-      if (!cartSessionId || !guestJwt) return
-      dispatch({ type: "SAVE_SNAPSHOT" })
-      dispatch({ type: "OPTIMISTIC_REMOVE", itemId })
-      const menuItemIdForError = findMenuItemIdByCartItem(itemId)
-
-      try {
-        await deleteCartItem(cartSessionId, itemId, guestJwt)
-        await refetch()
-      } catch (err) {
-        dispatch({ type: "ROLLBACK" })
-        dispatch({
-          type: "SET_ERROR",
-          error: resolveCartError(err, menuStrings.cart.errorRemove, {
-            menuItemId: menuItemIdForError,
-            itemsById,
-          }),
-          itemId,
-        })
-      }
-    },
-    [cartSessionId, guestJwt, refetch, itemsById, findMenuItemIdByCartItem],
+      }),
+    [cartSessionId, guestJwt, refetch, itemsById, findMenuItemIdByCartItem, runExclusive],
   )
 
   const clearError = useCallback(() => {
