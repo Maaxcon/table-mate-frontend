@@ -3,7 +3,6 @@ import { guestInit } from "@/features/menu/api"
 import { getGuestToken } from "@/features/menu/guestToken"
 
 const DISPLAY_NAME_KEY = "tablemate.cart.display_name.v1"
-const GUEST_SLOT_KEY = "tablemate.cart.guest_slot.v1"
 
 type AuthStatus = "init" | "loading" | "ready" | "error"
 
@@ -17,11 +16,9 @@ type UseGuestAuthResult = {
   guestJwt: string | null
   cartSessionId: string | null
   displayName: string
-  guestSlot: number | null
   status: AuthStatus
   error: string | null
   setDisplayName: (name: string) => void
-  setGuestSlot: (slot: number) => void
   initialize: () => void
 }
 
@@ -62,23 +59,6 @@ function loadDisplayName(): string {
   }
 }
 
-function loadGuestSlot(): number | null {
-  try {
-    const raw = localStorage.getItem(GUEST_SLOT_KEY)
-    return raw ? Number(raw) : null
-  } catch {
-    return null
-  }
-}
-
-function deriveSlotFromDevice(deviceId: string): number {
-  const hex = deviceId.replace(/[^0-9a-f]/gi, "")
-  const slice = hex.slice(-3) || hex
-  const value = parseInt(slice, 16)
-  if (Number.isNaN(value)) return 1
-  return (value % 90) + 10
-}
-
 export function useGuestAuth({
   reservationId,
   cartSessionId: initialCartSessionId,
@@ -94,10 +74,6 @@ export function useGuestAuth({
     (_prev: string, next: string) => next,
     loadDisplayName(),
   )
-  const [guestSlot, setGuestSlotState] = useReducer(
-    (_prev: number | null, next: number) => next,
-    loadGuestSlot(),
-  )
   const initializing = useRef(false)
 
   const setDisplayName = useCallback((name: string) => {
@@ -108,22 +84,6 @@ export function useGuestAuth({
       // ignore
     }
   }, [])
-
-  const setGuestSlot = useCallback((slot: number) => {
-    setGuestSlotState(slot)
-    try {
-      localStorage.setItem(GUEST_SLOT_KEY, String(slot))
-    } catch {
-      // ignore
-    }
-  }, [])
-
-  useEffect(() => {
-    if (!deviceId) return
-    if (guestSlot == null || guestSlot <= 1) {
-      setGuestSlot(deriveSlotFromDevice(deviceId))
-    }
-  }, [guestSlot, deviceId, setGuestSlot])
 
   const initialize = useCallback(() => {
     if (!reservationId || initializing.current) return
@@ -160,11 +120,9 @@ export function useGuestAuth({
     guestJwt: authState.guestJwt,
     cartSessionId: authState.cartSessionId,
     displayName,
-    guestSlot,
     status: authState.status,
     error: authState.error,
     setDisplayName,
-    setGuestSlot,
     initialize,
   }
 }

@@ -189,10 +189,13 @@ function MenuPage() {
   const handleAddToCart = useCallback(
     (item: MenuItem) => {
       if (!guestAuth.guestJwt) return
-      addItem(item.public_id, guestAuth.guestSlot ?? undefined)
+      addItem(item.public_id)
     },
-    [addItem, guestAuth.guestJwt, guestAuth.guestSlot],
+    [addItem, guestAuth.guestJwt],
   )
+
+  // The server assigns the slot per device; read ours back from the cart.
+  const guestSlot = cartItems.find((ci) => ci.deviceId === guestAuth.deviceId)?.guestSlot ?? null
 
   const handleSetQuantity = useCallback(
     (itemId: string, quantity: number) => {
@@ -430,7 +433,7 @@ function MenuPage() {
           error={cartError}
           errorItemId={errorItemId}
           displayName={guestAuth.displayName}
-          guestSlot={guestAuth.guestSlot}
+          guestSlot={guestSlot}
           deviceId={guestAuth.deviceId}
           onSetQuantity={handleSetQuantity}
           onRemoveItem={removeItem}

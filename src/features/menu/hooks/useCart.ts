@@ -101,7 +101,7 @@ type UseCartResult = {
   loading: boolean
   error: string | null
   errorItemId: string | null
-  addItem: (menuItemId: string, guestSlot?: number) => Promise<void>
+  addItem: (menuItemId: string) => Promise<void>
   setQuantity: (itemId: string, quantity: number) => Promise<void>
   removeItem: (itemId: string) => Promise<void>
   refetch: () => Promise<void>
@@ -214,7 +214,7 @@ export function useCart({
   }, [cartSessionId, guestJwt, refetch, reserved])
 
   const addItem = useCallback(
-    (menuItemId: string, guestSlot?: number): Promise<void> =>
+    (menuItemId: string): Promise<void> =>
       runExclusive(async () => {
         if (!cartSessionId || !guestJwt) return
         dispatch({ type: "SAVE_SNAPSHOT" })
@@ -224,7 +224,7 @@ export function useCart({
           quantity: 1,
           comment: null,
           added_by: null,
-          guest_slot: guestSlot ?? null,
+          guest_slot: null,
           device_id: null,
           is_paid: false,
           cart_session: cartSessionId,
@@ -235,11 +235,7 @@ export function useCart({
         dispatch({ type: "OPTIMISTIC_ADD", item: tempItem })
 
         try {
-          await addCartItem(
-            cartSessionId,
-            { menu_item: menuItemId, quantity: 1, guest_slot: guestSlot },
-            guestJwt,
-          )
+          await addCartItem(cartSessionId, { menu_item: menuItemId, quantity: 1 }, guestJwt)
           await refetch()
         } catch (err) {
           dispatch({ type: "ROLLBACK" })
