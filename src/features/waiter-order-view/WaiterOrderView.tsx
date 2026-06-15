@@ -20,7 +20,9 @@ import type {
 } from "./hooks/useHallSubscription"
 import { BookModal } from "@/features/reservation/BookModal"
 import { RescheduleModal } from "@/features/reservation/RescheduleModal"
-import { cancelReservation } from "@/features/reservation/api"
+import type { WorkingHoursDay } from "@/features/reservation/api"
+import { cancelReservation, fetchRestaurantSettings } from "@/features/reservation/api"
+import { useAppSelector } from "@/store/hooks"
 import { apiFetch } from "@/api/client"
 import "./WaiterOrderView.css"
 
@@ -73,6 +75,9 @@ export function WaiterOrderView() {
   const [showBookModal, setShowBookModal] = useState(false)
   const [editingReservation, setEditingReservation] = useState<ReservationItem | null>(null)
   const [sidebarActionLoading, setSidebarActionLoading] = useState(false)
+  const [workingHours, setWorkingHours] = useState<Record<string, WorkingHoursDay> | null>(null)
+
+  const restaurantId = useAppSelector((state) => state.auth.user?.restaurantId)
 
   const enrichTablesWithSessionData = useCallback(
     async (tablesData: FloorTable[], signal?: AbortSignal): Promise<FloorTable[]> => {
@@ -201,6 +206,13 @@ export function WaiterOrderView() {
     onTableStatusChanged: handleTableStatusChanged,
     onNewReservation: handleNewReservation,
   })
+
+  useEffect(() => {
+    if (!restaurantId) return
+    fetchRestaurantSettings(restaurantId)
+      .then((settings) => setWorkingHours(settings.working_hours))
+      .catch(() => setWorkingHours(null))
+  }, [restaurantId])
 
   const loadData = useCallback(async () => {
     setLoading(true)
@@ -557,8 +569,8 @@ export function WaiterOrderView() {
       {showBookModal && tables.length > 0 && (
         <BookModal
           table={tables[0]}
-          workingHours={null}
-          restaurantId={""}
+          workingHours={workingHours}
+          restaurantId={restaurantId ?? ""}
           onClose={() => setShowBookModal(false)}
           onSuccess={() => {
             setShowBookModal(false)
@@ -581,7 +593,8 @@ export function WaiterOrderView() {
           tableCapacity={
             tables.find((t) => t.table_number === editingReservation.table)?.capacity ?? 10
           }
-          workingHours={null}
+          restaurantId={restaurantId ?? undefined}
+          workingHours={workingHours}
           onClose={() => setEditingReservation(null)}
           onSuccess={() => {
             setEditingReservation(null)
