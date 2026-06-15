@@ -159,7 +159,7 @@ async function authFetch<T>(
   }
   const res = await fetch(url, { ...init, headers })
   if (!res.ok) {
-    const detail = await firstError(res as unknown as Response, res.statusText)
+    const detail = await firstError(res, res.statusText)
     throw new Error(detail)
   }
   if (res.status === 204) return undefined as T
@@ -182,7 +182,7 @@ export function guestInit(deviceId: string, target: GuestInitTarget): Promise<Gu
       if (res.status === 404) {
         throw new Error("NO_ACTIVE_SESSION")
       }
-      const detail = await firstError(res as unknown as Response, res.statusText)
+      const detail = await firstError(res, res.statusText)
       throw new Error(detail)
     }
     return res.json() as Promise<GuestInitResponse>
