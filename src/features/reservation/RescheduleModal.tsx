@@ -22,6 +22,7 @@ interface RescheduleModalProps {
   tableCapacity: number
   restaurantId?: string
   workingHours: Record<string, WorkingHoursDay> | null
+  excludeReservationIds?: string[]
   onClose: () => void
   onSuccess: () => void
 }
@@ -44,6 +45,7 @@ export function RescheduleModal({
   tableCapacity,
   restaurantId,
   workingHours,
+  excludeReservationIds,
   onClose,
   onSuccess,
 }: RescheduleModalProps) {
@@ -81,11 +83,13 @@ export function RescheduleModal({
   const dateStr = localDateKey(parsedDate)
 
   useEffect(() => {
-    fetchAvailableSlots(tablePublicId, dateStr, publicId)
+    const excludeIds =
+      excludeReservationIds && excludeReservationIds.length > 0 ? excludeReservationIds : publicId
+    fetchAvailableSlots(tablePublicId, dateStr, excludeIds)
       .then((data) => setAvailableSlots(data[dateStr] ?? null))
       .catch(() => setAvailableSlots(null))
       .finally(() => setSlotsLoading(false))
-  }, [tablePublicId, dateStr, publicId])
+  }, [tablePublicId, dateStr, publicId, excludeReservationIds])
 
   const dayName = DAY_NAMES[parsedDate.getDay()]
   const dayConfig = workingHours?.[dayName] || internalWorkingHours?.[dayName]
