@@ -1,21 +1,41 @@
+import { useState } from "react"
 import type { ReservationItem } from "../data/waiterTypes"
 import { getTimeFromDatetime } from "../data/waiterTypes"
 import "./ReservationSidebar.css"
 
 interface ReservationSidebarProps {
   reservations: ReservationItem[]
+  onAdd: () => void
+  onCancel: (reservationId: string) => void
+  onModify: (reservation: ReservationItem) => void
+  actionLoading: boolean
 }
 
-export function ReservationSidebar({ reservations }: ReservationSidebarProps) {
+export function ReservationSidebar({
+  reservations,
+  onAdd,
+  onCancel,
+  onModify,
+  actionLoading,
+}: ReservationSidebarProps) {
+  const [searchQuery, setSearchQuery] = useState("")
+
   const sorted = [...reservations].sort(
     (a, b) => new Date(a.start_at).getTime() - new Date(b.start_at).getTime(),
   )
+
+  const filtered = sorted.filter((r) => r.name.toLowerCase().includes(searchQuery.toLowerCase()))
 
   return (
     <aside className="reservation-sidebar">
       <div className="reservation-sidebar__header">
         <h2 className="reservation-sidebar__title">NEXT RESERVATIONS</h2>
-        <button type="button" className="reservation-sidebar__add" aria-label="Add reservation">
+        <button
+          type="button"
+          className="reservation-sidebar__add"
+          aria-label="Add reservation"
+          onClick={onAdd}
+        >
           <svg
             width="16"
             height="16"
@@ -49,14 +69,16 @@ export function ReservationSidebar({ reservations }: ReservationSidebarProps) {
           type="text"
           className="reservation-sidebar__search-input"
           placeholder="SEARCH GUESTS..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
         />
       </div>
 
       <div className="reservation-sidebar__list">
-        {sorted.map((r, i) => (
+        {filtered.map((r, i) => (
           <div
             key={r.public_id}
-            className={`reservation-sidebar__item ${i < reservations.length - 1 ? "reservation-sidebar__item--bordered" : ""}`}
+            className={`reservation-sidebar__item ${i < filtered.length - 1 ? "reservation-sidebar__item--bordered" : ""}`}
           >
             <div className="reservation-sidebar__item-left">
               <span className="reservation-sidebar__item-time">
@@ -64,12 +86,39 @@ export function ReservationSidebar({ reservations }: ReservationSidebarProps) {
               </span>
               <div className="reservation-sidebar__item-info">
                 <span className="reservation-sidebar__item-name">{r.name}</span>
-                <span className="reservation-sidebar__item-meta">{r.guest_count} GUESTS</span>
+                <span className="reservation-sidebar__item-meta">
+                  {r.guest_count} GUESTS
+                  {r.status === "pending" && (
+                    <span className="reservation-sidebar__item-status">PENDING</span>
+                  )}
+                </span>
               </div>
             </div>
-            <span className="reservation-sidebar__item-table">
-              T-{r.table.replace("T-", "").padStart(2, "0")}
-            </span>
+            <div className="reservation-sidebar__item-right">
+              <span className="reservation-sidebar__item-table">
+                T-{r.table.replace("T-", "").padStart(2, "0")}
+              </span>
+              {r.status === "pending" && (
+                <div className="reservation-sidebar__item-actions">
+                  <button
+                    type="button"
+                    className="reservation-sidebar__action-btn reservation-sidebar__action-btn--modify"
+                    onClick={() => onModify(r)}
+                    disabled={actionLoading}
+                  >
+                    MODIFY
+                  </button>
+                  <button
+                    type="button"
+                    className="reservation-sidebar__action-btn reservation-sidebar__action-btn--cancel"
+                    onClick={() => onCancel(r.public_id)}
+                    disabled={actionLoading}
+                  >
+                    CANCEL
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         ))}
       </div>
