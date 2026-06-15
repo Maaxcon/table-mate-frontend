@@ -94,7 +94,7 @@ export function WaiterOrderView() {
 
   useEffect(() => {
     const controller = new AbortController()
-    apiFetch(`/api/reservations/reservations/`, {
+    apiFetch(`/api/reservations/reservations/?status=pending&status=active`, {
       signal: controller.signal,
     })
       .then(async (res) => {
@@ -112,17 +112,15 @@ export function WaiterOrderView() {
         }
         const items = data.results ?? []
         setReservations(
-          items
-            .filter((r) => r.status !== "cancelled")
-            .map((r) => ({
-              public_id: r.public_id,
-              start_at: r.start_at,
-              table: r.table_info?.table_number ?? "",
-              guest_count: r.guest_count,
-              status: r.status as ReservationItem["status"],
-              notes: r.notes,
-              name: r.customer_name ?? "Guest",
-            })),
+          items.map((r) => ({
+            public_id: r.public_id,
+            start_at: r.start_at,
+            table: r.table_info?.table_number ?? "",
+            guest_count: r.guest_count,
+            status: r.status as ReservationItem["status"],
+            notes: r.notes,
+            name: r.customer_name ?? "Guest",
+          })),
         )
       })
       .catch(() => {})
