@@ -139,25 +139,15 @@ async function authFetch<T>(
   jwt: string,
   init?: RequestInit & { query?: Record<string, string | undefined> },
 ): Promise<T> {
-  if (env.apiBaseUrl === ENV_NOT_CONFIGURED_VALUE) {
-    throw new Error("VITE_API_BASE_URL is not configured")
-  }
-  let url = `${env.apiBaseUrl}${path}`
-  if (init?.query) {
-    const qs = new URLSearchParams()
-    for (const [k, v] of Object.entries(init.query)) {
-      if (v !== undefined) qs.set(k, v)
-    }
-    const s = qs.toString()
-    if (s) url += `?${s}`
-  }
+  const { query, ...rest } = init ?? {}
+  const url = buildUrl(path, query ?? {})
   const headers: Record<string, string> = {
     Authorization: `Bearer ${jwt}`,
   }
-  if (init?.body && !(init.body instanceof FormData)) {
+  if (rest.body && !(rest.body instanceof FormData)) {
     headers["Content-Type"] = "application/json"
   }
-  const res = await fetch(url, { ...init, headers })
+  const res = await fetch(url, { ...rest, headers })
   if (!res.ok) {
     const detail = await firstError(res, res.statusText)
     throw new Error(detail)
