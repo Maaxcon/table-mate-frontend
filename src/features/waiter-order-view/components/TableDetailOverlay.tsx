@@ -5,7 +5,9 @@ import type {
   ReservationItem,
   OverlayDetail,
   VisualTableStatus,
+  UpcomingReservation,
 } from "../data/waiterTypes"
+import { closeCheck, moveTable, cancelReservation } from "@/features/reservation/api"
 import { OrderItemRow } from "./OrderItemRow"
 import "./TableDetailOverlay.css"
 
@@ -15,7 +17,10 @@ interface TableDetailOverlayProps {
   tableReservations: ReservationItem[]
   visualStatus: VisualTableStatus
   loading: boolean
+  allTables: FloorTable[]
+  upcomingReservations: UpcomingReservation[]
   onClose: () => void
+  onRefresh: () => void
 }
 
 export function TableDetailOverlay({
@@ -24,13 +29,24 @@ export function TableDetailOverlay({
   tableReservations,
   visualStatus,
   loading,
+  allTables,
+  upcomingReservations,
   onClose,
+  onRefresh,
 }: TableDetailOverlayProps) {
   const isOccupied = visualStatus === "occupied"
   const isReserved = visualStatus === "reserved"
   const [activeOverlayTab, setActiveOverlayTab] = useState<"order" | "reservations">(
     isOccupied ? "order" : "reservations",
   )
+  const [actionLoading, setActionLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [showMoveModal, setShowMoveModal] = useState(false)
+  const [confirmMove, setConfirmMove] = useState<{
+    tableId: string
+    tableNumber: string
+    capacity: number
+  } | null>(null)
 
   const guestSlots = detail ? [...new Set(detail.items.map((i) => i.guest_slot))].sort() : []
   const nearestReservation =
@@ -39,6 +55,77 @@ export function TableDetailOverlay({
           (a, b) => new Date(a.start_at).getTime() - new Date(b.start_at).getTime(),
         )[0]
       : null
+
+  const activeReservationId = nearestReservation?.public_id
+  const currentGuestCount = detail?.guest_count ?? 0
+
+  const availableTablesWithInfo = allTables
+    .filter((t) => t.public_id !== table.public_id && !t.is_occupied)
+    .map((t) => {
+      const now = new Date()
+      const nextReservation = upcomingReservations
+        .filter((r) => r.table_id === t.public_id && new Date(r.start_at) > now)
+        .sort((a, b) => new Date(a.start_at).getTime() - new Date(b.start_at).getTime())[0]
+      return {
+        ...t,
+        nextReservationStartAt: nextReservation?.start_at ?? null,
+        hasCapacityIssue: t.capacity < currentGuestCount,
+      }
+    })
+
+  const handleCloseCheck = async () => {
+    if (!activeReservationId) return
+    setActionLoading(true)
+    setError(null)
+    try {
+      await closeCheck(activeReservationId)
+      onRefresh()
+      onClose()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to close check")
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
+  const handleMoveTableClick = (newTableId: string, tableNumber: string, capacity: number) => {
+    const tableInfo = availableTablesWithInfo.find((t) => t.public_id === newTableId)
+    if (tableInfo?.hasCapacityIssue) {
+      setConfirmMove({ tableId: newTableId, tableNumber, capacity })
+    } else {
+      handleMoveTable(newTableId)
+    }
+  }
+
+  const handleMoveTable = async (newTableId: string) => {
+    if (!activeReservationId) return
+    setActionLoading(true)
+    setError(null)
+    try {
+      await moveTable(activeReservationId, newTableId)
+      setShowMoveModal(false)
+      setConfirmMove(null)
+      onRefresh()
+      onClose()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to move table")
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
+  const handleCancelReservation = async (reservationId: string) => {
+    setActionLoading(true)
+    setError(null)
+    try {
+      await cancelReservation(reservationId)
+      onRefresh()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to cancel reservation")
+    } finally {
+      setActionLoading(false)
+    }
+  }
 
   return (
     <>
@@ -139,13 +226,25 @@ export function TableDetailOverlay({
                   <button type="button" className="overlay__action-btn">
                     ADD ITEM
                   </button>
-                  <button type="button" className="overlay__action-btn">
+                  <button
+                    type="button"
+                    className="overlay__action-btn"
+                    onClick={() => setShowMoveModal(true)}
+                    disabled={actionLoading || availableTablesWithInfo.length === 0}
+                  >
                     MOVE TABLE
                   </button>
-                  <button type="button" className="overlay__action-btn">
-                    CLOSE CHECK
+                  <button
+                    type="button"
+                    className="overlay__action-btn"
+                    onClick={handleCloseCheck}
+                    disabled={actionLoading}
+                  >
+                    {actionLoading ? "CLOSING..." : "CLOSE CHECK"}
                   </button>
                 </div>
+
+                {error && <p className="overlay__error">{error}</p>}
 
                 <div className="overlay__divider" />
 
@@ -207,10 +306,94 @@ export function TableDetailOverlay({
                     <span className="overlay__reservation-meta">
                       {r.guest_count} guests &middot; {getTimeFromDatetime(r.start_at)}
                     </span>
+                    <span className="overlay__reservation-status">{r.status}</span>
                   </div>
+                  {r.status === "pending" && (
+                    <button
+                      type="button"
+                      className="overlay__cancel-btn"
+                      onClick={() => handleCancelReservation(r.public_id)}
+                      disabled={actionLoading}
+                    >
+                      CANCEL
+                    </button>
+                  )}
                 </div>
               ))
             )}
+          </div>
+        )}
+
+        {showMoveModal && (
+          <div className="overlay__move-modal">
+            <div className="overlay__move-modal-content">
+              <h3 className="overlay__move-modal-title">MOVE TO TABLE</h3>
+              <div className="overlay__move-modal-tables">
+                {availableTablesWithInfo.length === 0 ? (
+                  <p className="overlay__empty">No available tables</p>
+                ) : (
+                  availableTablesWithInfo.map((t) => (
+                    <button
+                      key={t.public_id}
+                      type="button"
+                      className={`overlay__move-table-btn ${t.hasCapacityIssue ? "overlay__move-table-btn--warning" : ""}`}
+                      onClick={() => handleMoveTableClick(t.public_id, t.table_number, t.capacity)}
+                      disabled={actionLoading}
+                    >
+                      <div className="overlay__move-table-info">
+                        <span className="overlay__move-table-number">Table {t.table_number}</span>
+                        <span className="overlay__move-table-capacity">
+                          {t.capacity} P {t.hasCapacityIssue && `(party: ${currentGuestCount})`}
+                        </span>
+                      </div>
+                      {t.nextReservationStartAt && (
+                        <span className="overlay__move-table-next">
+                          Next: {getTimeFromDatetime(t.nextReservationStartAt)}
+                        </span>
+                      )}
+                    </button>
+                  ))
+                )}
+              </div>
+              <button
+                type="button"
+                className="overlay__move-modal-close"
+                onClick={() => setShowMoveModal(false)}
+              >
+                CANCEL
+              </button>
+            </div>
+          </div>
+        )}
+
+        {confirmMove && (
+          <div className="overlay__confirm-modal">
+            <div className="overlay__confirm-content">
+              <h3 className="overlay__confirm-title">CAPACITY WARNING</h3>
+              <p className="overlay__confirm-text">
+                Table {confirmMove.tableNumber} has {confirmMove.capacity} seats, but the party has{" "}
+                {currentGuestCount} guests.
+              </p>
+              <p className="overlay__confirm-text">Are you sure you want to move?</p>
+              <div className="overlay__confirm-actions">
+                <button
+                  type="button"
+                  className="overlay__confirm-btn overlay__confirm-btn--cancel"
+                  onClick={() => setConfirmMove(null)}
+                  disabled={actionLoading}
+                >
+                  CANCEL
+                </button>
+                <button
+                  type="button"
+                  className="overlay__confirm-btn overlay__confirm-btn--confirm"
+                  onClick={() => handleMoveTable(confirmMove.tableId)}
+                  disabled={actionLoading}
+                >
+                  {actionLoading ? "MOVING..." : "CONFIRM MOVE"}
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>
