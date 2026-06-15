@@ -185,11 +185,21 @@ export function guestInit(deviceId: string, reservationId: string): Promise<Gues
   })
 }
 
-export function fetchCartItems(sessionId: string, jwt: string): Promise<CartItemResponse[]> {
-  return authFetch<{ count: number; results: CartItemResponse[] }>(
-    CART_API.items(sessionId),
-    jwt,
-  ).then((r) => r.results)
+// Safety cap so a misbehaving "next" can't loop forever (100 pages × 20 = 2000).
+const MAX_CART_PAGES = 100
+
+export async function fetchCartItems(sessionId: string, jwt: string): Promise<CartItemResponse[]> {
+  const all: CartItemResponse[] = []
+  for (let page = 1; page <= MAX_CART_PAGES; page += 1) {
+    const data = await authFetch<{ next: string | null; results: CartItemResponse[] }>(
+      CART_API.items(sessionId),
+      jwt,
+      { query: { page: String(page) } },
+    )
+    all.push(...data.results)
+    if (!data.next) break
+  }
+  return all
 }
 
 export function addCartItem(
