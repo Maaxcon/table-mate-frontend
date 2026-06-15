@@ -120,8 +120,7 @@ const initialState: State = {
 const MENU_ITEM_UNAVAILABLE = "menu_item_unavailable"
 
 function isUnavailableError(err: unknown): boolean {
-  if (!(err instanceof Error) || !err.message) return false
-  return err.message.toLowerCase().includes(MENU_ITEM_UNAVAILABLE)
+  return err instanceof Error && (err as { code?: string }).code === MENU_ITEM_UNAVAILABLE
 }
 
 function getUnavailableMessage(

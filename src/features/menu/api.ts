@@ -1,5 +1,5 @@
 import { ENV_NOT_CONFIGURED_VALUE, env } from "@/config/env"
-import { firstError, type Paginated } from "@/api/client"
+import type { Paginated } from "@/api/client"
 import { CART_API, MENU_API } from "./constants"
 import type {
   AddCartItemRequest,
@@ -25,13 +25,36 @@ function buildUrl(path: string, params: Record<string, string | undefined>): str
   return url.toString()
 }
 
+export type ApiError = Error & { code?: string }
+
+async function httpError(res: Response): Promise<ApiError> {
+  let message = res.statusText
+  let code: string | undefined
+  try {
+    const data = (await res.json()) as Record<string, unknown>
+    if (typeof data.code === "string") code = data.code
+    if (typeof data.detail === "string") {
+      message = data.detail
+    } else {
+      const first = Object.values(data)[0]
+      if (Array.isArray(first) && typeof first[0] === "string") message = first[0]
+      else if (typeof first === "string") message = first
+    }
+  } catch {
+    // ignore
+  }
+  const err = new Error(message) as ApiError
+  err.code = code
+  return err
+}
+
 async function menuGet<T>(
   path: string,
   params: Record<string, string | undefined>,
   signal?: AbortSignal,
 ): Promise<T> {
   const res = await fetch(buildUrl(path, params), { signal })
-  if (!res.ok) throw new Error(await firstError(res, res.statusText))
+  if (!res.ok) throw await httpError(res)
   return res.json() as Promise<T>
 }
 
@@ -45,7 +68,7 @@ async function menuPost<T>(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   })
-  if (!res.ok) throw new Error(await firstError(res, res.statusText))
+  if (!res.ok) throw await httpError(res)
   return res.json() as Promise<T>
 }
 
@@ -91,7 +114,7 @@ export async function fetchItem(
     { signal },
   )
   if (res.status === 404) return null
-  if (!res.ok) throw new Error(await firstError(res, res.statusText))
+  if (!res.ok) throw await httpError(res)
   return res.json() as Promise<MenuItem>
 }
 
@@ -149,8 +172,7 @@ async function authFetch<T>(
   }
   const res = await fetch(url, { ...rest, headers })
   if (!res.ok) {
-    const detail = await firstError(res, res.statusText)
-    throw new Error(detail)
+    throw await httpError(res)
   }
   if (res.status === 204) return undefined as T
   return res.json() as Promise<T>
@@ -172,8 +194,7 @@ export function guestInit(deviceId: string, target: GuestInitTarget): Promise<Gu
       if (res.status === 404) {
         throw new Error("NO_ACTIVE_SESSION")
       }
-      const detail = await firstError(res, res.statusText)
-      throw new Error(detail)
+      throw await httpError(res)
     }
     return res.json() as Promise<GuestInitResponse>
   })
