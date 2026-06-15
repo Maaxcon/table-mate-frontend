@@ -1,5 +1,18 @@
 import type { Table, Reservation, OrderItemStatusEnum } from "@/types/api/types.gen"
 
+export interface TableReservationInfo {
+  public_id: string
+  guest_name: string
+  guest_count: number
+  start_at: string
+}
+
+export interface TableSessionInfo {
+  public_id: string
+  opened_at: string
+  guest_count: number
+}
+
 export type FloorTable = Pick<
   Table,
   | "public_id"
@@ -12,6 +25,8 @@ export type FloorTable = Pick<
   | "active"
 > & {
   zone?: { public_id: string; name: string } | null
+  activeReservation?: TableReservationInfo | null
+  activeSession?: TableSessionInfo | null
 }
 
 export interface UpcomingReservation {
@@ -66,6 +81,20 @@ export const VOID_REASON_LABELS: Record<number, string> = {
 export function getTimeFromDatetime(datetime: string): string {
   const d = new Date(datetime)
   return `${d.getHours().toString().padStart(2, "0")}:${d.getMinutes().toString().padStart(2, "0")}`
+}
+
+export function formatDuration(openedAt: string): string {
+  const durationMinutes = Math.round((Date.now() - new Date(openedAt).getTime()) / 60000)
+  if (durationMinutes < 60) return `${durationMinutes}m`
+  return `${Math.floor(durationMinutes / 60)}h${durationMinutes % 60}m`
+}
+
+export function formatETA(startAt: string): string {
+  const diffMs = new Date(startAt).getTime() - Date.now()
+  if (diffMs <= 0) return "now"
+  const diffMinutes = Math.round(diffMs / 60000)
+  if (diffMinutes < 60) return `${diffMinutes}m`
+  return `${Math.floor(diffMinutes / 60)}h${diffMinutes % 60}m`
 }
 
 const FIFTEEN_MINUTES_MS = 15 * 60 * 1000
