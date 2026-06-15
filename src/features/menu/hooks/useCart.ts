@@ -40,7 +40,7 @@ type Action =
 function reducer(state: State, action: Action): State {
   switch (action.type) {
     case "SET_ITEMS":
-      return { ...state, items: action.items, loading: false, error: null }
+      return { ...state, items: action.items, loading: false, error: null, errorItemId: null }
     case "OPTIMISTIC_ADD": {
       const exists = state.items.find((i) => i.menu_item === action.item.menu_item)
       if (exists) {
