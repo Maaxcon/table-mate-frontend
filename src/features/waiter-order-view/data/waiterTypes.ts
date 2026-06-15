@@ -43,7 +43,8 @@ export type ReservationItem = Pick<
 > & {
   table: string
   name: string
-  status: "pending"
+  customer: string | null
+  status: "pending" | "active"
 }
 
 export interface OverlayOrderItem {
