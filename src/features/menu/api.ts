@@ -31,7 +31,7 @@ async function menuGet<T>(
   signal?: AbortSignal,
 ): Promise<T> {
   const res = await fetch(buildUrl(path, params), { signal })
-  if (!res.ok) throw new Error(`${res.status} ${res.statusText}`)
+  if (!res.ok) throw new Error(await firstError(res, res.statusText))
   return res.json() as Promise<T>
 }
 
@@ -45,7 +45,7 @@ async function menuPost<T>(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   })
-  if (!res.ok) throw new Error(`${res.status} ${res.statusText}`)
+  if (!res.ok) throw new Error(await firstError(res, res.statusText))
   return res.json() as Promise<T>
 }
 
@@ -91,7 +91,7 @@ export async function fetchItem(
     { signal },
   )
   if (res.status === 404) return null
-  if (!res.ok) throw new Error(`${res.status} ${res.statusText}`)
+  if (!res.ok) throw new Error(await firstError(res, res.statusText))
   return res.json() as Promise<MenuItem>
 }
 
