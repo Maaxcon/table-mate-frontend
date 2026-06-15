@@ -9,6 +9,7 @@ type AuthStatus = "init" | "loading" | "ready" | "error"
 
 type UseGuestAuthOptions = {
   reservationId?: string | null
+  tableId?: string | null
   cartSessionId?: string | null
 }
 
@@ -63,13 +64,14 @@ function loadDisplayName(): string {
 
 export function useGuestAuth({
   reservationId,
+  tableId,
   cartSessionId: initialCartSessionId,
 }: UseGuestAuthOptions = {}): UseGuestAuthResult {
   const deviceId = getGuestToken()
   const [authState, dispatch] = useReducer(authReducer, {
     guestJwt: null,
     cartSessionId: initialCartSessionId ?? null,
-    status: reservationId ? "init" : "ready",
+    status: reservationId || tableId ? "init" : "ready",
     error: null,
   })
   const [displayName, setDisplayNameState] = useReducer(
@@ -88,11 +90,11 @@ export function useGuestAuth({
   }, [])
 
   const initialize = useCallback(() => {
-    if (!reservationId || initializing.current) return
+    if ((!reservationId && !tableId) || initializing.current) return
     initializing.current = true
     dispatch({ type: "LOADING" })
 
-    guestInit(deviceId, reservationId)
+    guestInit(deviceId, { reservationId, tableId })
       .then((resp) => {
         const payload = decodeJwtPayload<{ cart_session_id?: string }>(resp.access)
         dispatch({
@@ -111,7 +113,7 @@ export function useGuestAuth({
       .finally(() => {
         initializing.current = false
       })
-  }, [deviceId, reservationId])
+  }, [deviceId, reservationId, tableId])
 
   useEffect(() => {
     initialize()

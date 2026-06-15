@@ -29,6 +29,7 @@ function MenuPage() {
   const { restaurantId } = useParams<{ restaurantId: string }>()
   const [searchParams] = useSearchParams()
   const reservationId = searchParams.get("reservation") ?? undefined
+  const tableId = searchParams.get("table") ?? undefined
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null)
   const [cartOpen, setCartOpen] = useState(false)
   const [scrollActiveCategory, setScrollActiveCategory] = useState<string | null>(null)
@@ -40,6 +41,7 @@ function MenuPage() {
 
   const guestAuth = useGuestAuth({
     reservationId,
+    tableId,
   })
 
   const {
@@ -106,7 +108,7 @@ function MenuPage() {
   })
 
   const showLobby = Boolean(
-    reservationId && guestAuth.status === "ready" && guestAuth.displayName === "",
+    (reservationId || tableId) && guestAuth.status === "ready" && guestAuth.displayName === "",
   )
 
   const handleLobbyJoin = useCallback(() => {
