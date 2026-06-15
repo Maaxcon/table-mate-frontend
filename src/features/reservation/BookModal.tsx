@@ -37,6 +37,7 @@ export function BookModal({
   const [selectedTime, setSelectedTime] = useState<string | null>(null)
   const [durationMinutes, setDurationMinutes] = useState(120)
   const [guestCount, setGuestCount] = useState(2)
+  const [notes, setNotes] = useState("")
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<{
@@ -144,6 +145,7 @@ export function BookModal({
         guest_count: guestCount,
         start_at: startISO,
         end_at: endISO,
+        notes: notes || undefined,
       })
 
       setSuccess({
@@ -161,8 +163,10 @@ export function BookModal({
   }, [
     selectedTime,
     selectedDate,
+    durationMinutes,
     endAt,
     guestCount,
+    notes,
     restaurantId,
     table.public_id,
     table.table_number,
@@ -371,6 +375,17 @@ export function BookModal({
                 +
               </button>
             </div>
+          </section>
+
+          <section className="book-modal__section">
+            <h3 className="book-modal__section-title">NOTES (optional)</h3>
+            <textarea
+              className="book-modal__notes"
+              placeholder="Guest name, phone number, special requests..."
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={3}
+            />
           </section>
 
           {selectedTime && (
