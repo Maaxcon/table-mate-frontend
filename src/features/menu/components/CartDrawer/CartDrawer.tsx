@@ -39,6 +39,19 @@ function lineTotal(ci: CartItemWithDetails): number {
   return unitPrice(ci) * ci.quantity
 }
 
+function isOwnGroup(
+  group: ItemGroup,
+  currentGuestSlot: number | null,
+  currentDeviceId: string,
+): boolean {
+  const matchesSlot =
+    currentGuestSlot != null && group.guestSlot != null && group.guestSlot === currentGuestSlot
+  const matchesDevice = Boolean(
+    currentDeviceId && group.deviceId && group.deviceId === currentDeviceId,
+  )
+  return matchesSlot || matchesDevice
+}
+
 function getGroupLabel(
   group: ItemGroup,
   displayName: string,
@@ -49,11 +62,7 @@ function getGroupLabel(
     return group.addedBy
   }
 
-  const matchesSlot =
-    currentGuestSlot != null && group.guestSlot != null && group.guestSlot === currentGuestSlot
-  const matchesDevice = currentDeviceId && group.deviceId && group.deviceId === currentDeviceId
-
-  if (matchesSlot || matchesDevice) {
+  if (isOwnGroup(group, currentGuestSlot, currentDeviceId)) {
     return displayName ? `${menuStrings.cart.you} · ${displayName}` : menuStrings.cart.you
   }
 
@@ -112,7 +121,11 @@ export function CartDrawer({
 
   const totalCount = items.reduce((s, i) => s + i.quantity, 0)
 
-  const groupedItems = groupItemsByGuest(items)
+  const groups = groupItemsByGuest(items)
+  const groupedItems = [
+    ...groups.filter((g) => isOwnGroup(g, currentGuestSlot, deviceId)),
+    ...groups.filter((g) => !isOwnGroup(g, currentGuestSlot, deviceId)),
+  ]
 
   return (
     <div
