@@ -114,20 +114,69 @@ export function WaiterOrderView() {
     [],
   )
 
-  const handleTableStatusChanged = useCallback((event: HallTableStatusChangedEvent) => {
-    setTables((prev) =>
-      prev.map((t) => {
-        if (t.public_id !== event.table_id) return t
-        const isOccupied = event.current_status === "occupied"
-        return {
-          ...t,
-          is_occupied: isOccupied,
-          activeSession: isOccupied ? t.activeSession : null,
-          activeReservation: isOccupied ? null : t.activeReservation,
+  const fetchSessionForTable = useCallback(
+    async (tablePublicId: string): Promise<TableSessionInfo | null> => {
+      try {
+        const sessionRes = await apiFetch(
+          `/api/orders/sessions/?table__public_id=${tablePublicId}&status=open`,
+        )
+        if (!sessionRes.ok) return null
+
+        const sessionData = (await sessionRes.json()) as {
+          results?: Array<{
+            public_id: string
+            opened_at: string
+            guest_count: number
+          }>
         }
-      }),
-    )
-  }, [])
+        const session = (sessionData.results ?? [])[0]
+        if (!session) return null
+
+        return {
+          public_id: session.public_id,
+          opened_at: session.opened_at,
+          guest_count: session.guest_count,
+        }
+      } catch {
+        return null
+      }
+    },
+    [],
+  )
+
+  const handleTableStatusChanged = useCallback(
+    async (event: HallTableStatusChangedEvent) => {
+      const isOccupied = event.current_status === "occupied"
+
+      if (isOccupied) {
+        const sessionInfo = await fetchSessionForTable(event.table_id)
+        setTables((prev) =>
+          prev.map((t) => {
+            if (t.public_id !== event.table_id) return t
+            return {
+              ...t,
+              is_occupied: true,
+              activeSession: sessionInfo,
+              activeReservation: null,
+            }
+          }),
+        )
+      } else {
+        setTables((prev) =>
+          prev.map((t) => {
+            if (t.public_id !== event.table_id) return t
+            return {
+              ...t,
+              is_occupied: false,
+              activeSession: null,
+              activeReservation: null,
+            }
+          }),
+        )
+      }
+    },
+    [fetchSessionForTable],
+  )
 
   const handleNewReservation = useCallback((event: HallNewReservationEvent) => {
     setLayoutReservations((prev) => [
