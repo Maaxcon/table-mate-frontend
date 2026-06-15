@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useReducer, useRef } from "react"
 import { guestInit } from "@/features/menu/api"
 import { getGuestToken } from "@/features/menu/guestToken"
+import { decodeJwtPayload } from "@/features/menu/jwt"
 
 const DISPLAY_NAME_KEY = "tablemate.cart.display_name.v1"
 
@@ -55,6 +56,7 @@ function loadDisplayName(): string {
   try {
     return localStorage.getItem(DISPLAY_NAME_KEY) ?? ""
   } catch {
+    // localStorage can be unavailable (private mode / disabled) — start blank.
     return ""
   }
 }
@@ -81,7 +83,7 @@ export function useGuestAuth({
     try {
       localStorage.setItem(DISPLAY_NAME_KEY, name)
     } catch {
-      // ignore
+      // Persisting the name is best-effort; ignore storage failures.
     }
   }, [])
 
@@ -92,7 +94,7 @@ export function useGuestAuth({
 
     guestInit(deviceId, reservationId)
       .then((resp) => {
-        const payload = parseGuestJwt(resp.access)
+        const payload = decodeJwtPayload<{ cart_session_id?: string }>(resp.access)
         dispatch({
           type: "READY",
           jwt: resp.access,
@@ -124,18 +126,5 @@ export function useGuestAuth({
     error: authState.error,
     setDisplayName,
     initialize,
-  }
-}
-
-function parseGuestJwt(
-  token: string,
-): { is_guest: boolean; device_id?: string; cart_session_id?: string } | null {
-  try {
-    const payload = token.split(".")[1]
-    if (!payload) return null
-    const base64 = payload.replace(/-/g, "+").replace(/_/g, "/")
-    return JSON.parse(atob(base64))
-  } catch {
-    return null
   }
 }
