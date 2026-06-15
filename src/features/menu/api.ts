@@ -4,8 +4,6 @@ import { CART_API, MENU_API } from "./constants"
 import type {
   AddCartItemRequest,
   CartItemResponse,
-  CartSession,
-  CreateCartSessionRequest,
   FetchItemsParams,
   GuestInitResponse,
   MenuCategory,
@@ -184,16 +182,6 @@ export function guestInit(deviceId: string, reservationId: string): Promise<Gues
       throw new Error(detail)
     }
     return res.json() as Promise<GuestInitResponse>
-  })
-}
-
-export function createCartSession(
-  body: CreateCartSessionRequest,
-  jwt: string,
-): Promise<CartSession> {
-  return authFetch<CartSession>(CART_API.sessions, jwt, {
-    method: "POST",
-    body: JSON.stringify(body),
   })
 }
 

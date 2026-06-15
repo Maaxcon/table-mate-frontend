@@ -50,19 +50,6 @@ export type PublicRestaurant = {
 
 // ── Cart API types ─────────────────────────────────────
 
-export type CartSessionStatus = "active" | "closed"
-
-export type CartSession = {
-  readonly public_id: string
-  readonly restaurant: string
-  reservation: string
-  status: CartSessionStatus
-  created_by: string | null
-  participants: string[]
-  readonly created_at: string
-  readonly updated_at: string
-}
-
 export type CartItemResponse = {
   readonly public_id: string
   menu_item: string
@@ -93,8 +80,4 @@ export type UpdateCartItemRequest = {
 
 export type GuestInitResponse = {
   access: string
-}
-
-export type CreateCartSessionRequest = {
-  reservation: string
 }
