@@ -86,38 +86,31 @@ export function ReservationSidebar({
               </span>
               <div className="reservation-sidebar__item-info">
                 <span className="reservation-sidebar__item-name">{r.name}</span>
-                <span className="reservation-sidebar__item-meta">
-                  {r.guest_count} GUESTS
-                  {r.status === "pending" && (
-                    <span className="reservation-sidebar__item-status">PENDING</span>
-                  )}
-                </span>
+                <span className="reservation-sidebar__item-meta">{r.guest_count} GUESTS</span>
               </div>
             </div>
             <div className="reservation-sidebar__item-right">
               <span className="reservation-sidebar__item-table">
                 T-{r.table.replace("T-", "").padStart(2, "0")}
               </span>
-              {r.status === "pending" && (
-                <div className="reservation-sidebar__item-actions">
-                  <button
-                    type="button"
-                    className="reservation-sidebar__action-btn reservation-sidebar__action-btn--modify"
-                    onClick={() => onModify(r)}
-                    disabled={actionLoading}
-                  >
-                    MODIFY
-                  </button>
-                  <button
-                    type="button"
-                    className="reservation-sidebar__action-btn reservation-sidebar__action-btn--cancel"
-                    onClick={() => onCancel(r.public_id)}
-                    disabled={actionLoading}
-                  >
-                    CANCEL
-                  </button>
-                </div>
-              )}
+              <div className="reservation-sidebar__item-actions">
+                <button
+                  type="button"
+                  className="reservation-sidebar__action-btn reservation-sidebar__action-btn--modify"
+                  onClick={() => onModify(r)}
+                  disabled={actionLoading}
+                >
+                  MODIFY
+                </button>
+                <button
+                  type="button"
+                  className="reservation-sidebar__action-btn reservation-sidebar__action-btn--cancel"
+                  onClick={() => onCancel(r.public_id)}
+                  disabled={actionLoading}
+                >
+                  CANCEL
+                </button>
+              </div>
             </div>
           </div>
         ))}

@@ -208,7 +208,7 @@ export function WaiterOrderView() {
       const [layoutRes, zonesRes, reservationsRes] = await Promise.all([
         apiFetch(`/api/restaurants/tables/layout/`),
         apiFetch(`/api/restaurants/zones/`),
-        apiFetch(`/api/reservations/reservations/?status=pending&status=active`),
+        apiFetch(`/api/reservations/reservations/?status=pending`),
       ])
 
       if (!layoutRes.ok) throw new Error("Failed to load tables")
@@ -244,7 +244,7 @@ export function WaiterOrderView() {
           start_at: r.start_at,
           table: r.table_info?.table_number ?? "",
           guest_count: r.guest_count,
-          status: r.status as ReservationItem["status"],
+          status: "pending" as const,
           notes: r.notes,
           name: r.customer_name ?? "Guest",
         }))
