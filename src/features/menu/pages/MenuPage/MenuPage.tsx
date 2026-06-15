@@ -31,6 +31,7 @@ function MenuPage() {
   const tableId = searchParams.get("table") ?? undefined
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null)
   const [cartOpen, setCartOpen] = useState(false)
+  const [cartAccessError, setCartAccessError] = useState<string | null>(null)
   const [scrollActiveCategory, setScrollActiveCategory] = useState<string | null>(null)
   const [lobbyName, setLobbyName] = useState("")
   const sectionRefs = useRef<Map<string, HTMLElement>>(new Map())
@@ -188,10 +189,33 @@ function MenuPage() {
 
   const handleAddToCart = useCallback(
     (item: MenuItem) => {
-      if (!guestAuth.guestJwt) return
+      if (guestAuth.status === "loading" || guestAuth.status === "init") {
+        setCartAccessError(menuStrings.cart.initializing)
+        setCartOpen(true)
+        return
+      }
+      if (!reservationId && !tableId) {
+        setCartAccessError(menuStrings.cart.requiresActiveTable)
+        setCartOpen(true)
+        return
+      }
+      if (!guestAuth.guestJwt || !guestAuth.cartSessionId) {
+        setCartAccessError(guestAuth.error ?? menuStrings.cart.sessionUnavailable)
+        setCartOpen(true)
+        return
+      }
+      setCartAccessError(null)
       addItem(item.public_id)
     },
-    [addItem, guestAuth.guestJwt],
+    [
+      addItem,
+      guestAuth.cartSessionId,
+      guestAuth.error,
+      guestAuth.guestJwt,
+      guestAuth.status,
+      reservationId,
+      tableId,
+    ],
   )
 
   const guestSlot = cartItems.find((ci) => ci.deviceId === guestAuth.deviceId)?.guestSlot ?? null
@@ -429,7 +453,8 @@ function MenuPage() {
           totalPrice={totalPrice}
           currencySymbol={currencySymbol}
           isConnected={isConnected}
-          error={cartError}
+          showConnectionStatus={Boolean(guestAuth.cartSessionId && guestAuth.guestJwt)}
+          error={cartAccessError ?? cartError}
           errorItemId={errorItemId}
           displayName={guestAuth.displayName}
           guestSlot={guestSlot}
@@ -437,8 +462,11 @@ function MenuPage() {
           onSetQuantity={handleSetQuantity}
           onRemoveItem={removeItem}
           onClose={() => setCartOpen(false)}
-          onClearError={clearError}
-          onRetry={syncFromServer}
+          onClearError={() => {
+            setCartAccessError(null)
+            clearError()
+          }}
+          onRetry={cartAccessError ? guestAuth.initialize : syncFromServer}
         />
       )}
 

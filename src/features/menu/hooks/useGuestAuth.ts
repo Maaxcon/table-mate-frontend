@@ -103,7 +103,7 @@ export function useGuestAuth({
       .catch((err: Error) => {
         const msg =
           err.message === "NO_ACTIVE_SESSION"
-            ? "No active cart session found. Please ask a staff member to open your table."
+            ? "Активний кошик для цього столика не знайдено. Попросіть офіціанта відкрити столик."
             : err.message
         dispatch({ type: "ERROR", error: msg })
       })

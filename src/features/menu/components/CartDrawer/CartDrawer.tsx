@@ -19,6 +19,7 @@ type Props = {
   totalPrice: number
   currencySymbol: string
   isConnected: boolean
+  showConnectionStatus?: boolean
   error: string | null
   errorItemId: string | null
   displayName: string
@@ -83,6 +84,7 @@ export function CartDrawer({
   totalPrice,
   currencySymbol,
   isConnected,
+  showConnectionStatus = true,
   error,
   errorItemId,
   displayName,
@@ -143,12 +145,14 @@ export function CartDrawer({
             {totalCount > 0 && <span className="cart-drawer__count">{totalCount}</span>}
           </div>
           <div className="cart-drawer__header-right">
-            <span
-              className={`cart-drawer__status ${isConnected ? "cart-drawer__status--connected" : "cart-drawer__status--disconnected"}`}
-              title={isConnected ? menuStrings.cart.connected : menuStrings.cart.disconnected}
-            >
-              {isConnected ? <LuWifi size={12} /> : <LuWifiOff size={12} />}
-            </span>
+            {showConnectionStatus && (
+              <span
+                className={`cart-drawer__status ${isConnected ? "cart-drawer__status--connected" : "cart-drawer__status--disconnected"}`}
+                title={isConnected ? menuStrings.cart.connected : menuStrings.cart.disconnected}
+              >
+                {isConnected ? <LuWifi size={12} /> : <LuWifiOff size={12} />}
+              </span>
+            )}
             <button
               className="cart-drawer__close"
               onClick={onClose}

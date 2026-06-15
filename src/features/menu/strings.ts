@@ -75,6 +75,10 @@ export const menuStrings = {
     errorUpdate: "Не вдалося оновити кількість",
     errorRemove: "Не вдалося видалити страву",
     errorFetch: "Не вдалося завантажити кошик",
+    requiresActiveTable: "Кошик доступний тільки зі столика або бронювання.",
+    initializing: "Підключаємо кошик...",
+    sessionUnavailable:
+      "Активний кошик для цього столика не знайдено. Попросіть офіціанта відкрити столик.",
     unavailable: (name: string) => `"${name}" більше недоступна`,
     retry: "Спробувати знову",
     connecting: "Підключення...",
