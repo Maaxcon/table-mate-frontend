@@ -22,6 +22,8 @@ interface TableDetailOverlayProps {
   upcomingReservations: UpcomingReservation[]
   onClose: () => void
   onRefresh: () => void
+  onBookTable?: (table: FloorTable) => void
+  onModifyReservation?: (reservation: ReservationItem) => void
 }
 
 export function TableDetailOverlay({
@@ -35,6 +37,8 @@ export function TableDetailOverlay({
   upcomingReservations,
   onClose,
   onRefresh,
+  onBookTable,
+  onModifyReservation,
 }: TableDetailOverlayProps) {
   const isOccupied = visualStatus === "occupied"
   const isReserved = visualStatus === "reserved"
@@ -258,50 +262,49 @@ export function TableDetailOverlay({
 
                 {error && <p className="overlay__error">{error}</p>}
 
+                {detail.items.length > 0 && (
+                  <>
+                    <div className="overlay__divider" />
+                    <div className="overlay__body">
+                      {guestSlots.map((slot) => {
+                        const slotItems = detail.items.filter((i) => i.guest_slot === slot)
+                        return (
+                          <div key={slot} className="overlay__slot">
+                            <h3 className="overlay__slot-title">GUEST {slot}</h3>
+                            {slotItems.map((item) => (
+                              <OrderItemRow key={item.public_id} item={item} />
+                            ))}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </>
+                )}
+
                 <div className="overlay__divider" />
 
-                <div className="overlay__body">
-                  {guestSlots.map((slot) => {
-                    const slotItems = detail.items.filter((i) => i.guest_slot === slot)
-                    return (
-                      <div key={slot} className="overlay__slot">
-                        <h3 className="overlay__slot-title">GUEST {slot}</h3>
-                        {slotItems.map((item) => (
-                          <OrderItemRow key={item.public_id} item={item} />
-                        ))}
-                      </div>
-                    )
-                  })}
-                </div>
-
-                {detail.items.length > 0 && <div className="overlay__divider" />}
-
-                {detail.items.length > 0 && (
-                  <div className="overlay__footer">
-                    <div className="overlay__total-row">
-                      <span className="overlay__total-label">SUBTOTAL</span>
-                      <span className="overlay__total-value">&euro;{detail.subtotal}</span>
-                    </div>
-                    <div className="overlay__total-row">
-                      <span className="overlay__total-label">TAX</span>
-                      <span className="overlay__total-value">&euro;{detail.tax_total}</span>
-                    </div>
-                    <div className="overlay__total-row overlay__total-row--final">
-                      <span className="overlay__total-label overlay__total-label--large">
-                        TOTAL
-                      </span>
-                      <span className="overlay__total-value overlay__total-value--large">
-                        &euro;{detail.total_amount}
-                      </span>
-                    </div>
-                    <button type="button" className="overlay__cta">
-                      PROCESS PAYMENT
-                    </button>
+                <div className="overlay__footer">
+                  <div className="overlay__total-row">
+                    <span className="overlay__total-label">SUBTOTAL</span>
+                    <span className="overlay__total-value">&euro;{detail.subtotal}</span>
                   </div>
-                )}
+                  <div className="overlay__total-row">
+                    <span className="overlay__total-label">TAX</span>
+                    <span className="overlay__total-value">&euro;{detail.tax_total}</span>
+                  </div>
+                  <div className="overlay__total-row overlay__total-row--final">
+                    <span className="overlay__total-label overlay__total-label--large">TOTAL</span>
+                    <span className="overlay__total-value overlay__total-value--large">
+                      &euro;{detail.total_amount}
+                    </span>
+                  </div>
+                  <button type="button" className="overlay__cta">
+                    PROCESS PAYMENT
+                  </button>
+                </div>
               </>
             ) : (
-              <p className="overlay__empty">No active order for this table.</p>
+              <p className="overlay__empty">No session for this table.</p>
             )}
           </>
         )}
@@ -309,7 +312,18 @@ export function TableDetailOverlay({
         {activeOverlayTab === "reservations" && (
           <div className="overlay__body">
             {tableReservations.length === 0 ? (
-              <p className="overlay__empty">No reservations for this table.</p>
+              <div className="overlay__reservations-empty">
+                <p className="overlay__empty">No reservations for this table.</p>
+                {onBookTable && (
+                  <button
+                    type="button"
+                    className="overlay__action-btn"
+                    onClick={() => onBookTable(table)}
+                  >
+                    BOOK THIS TABLE
+                  </button>
+                )}
+              </div>
             ) : (
               tableReservations.map((r) => (
                 <div key={r.public_id} className="overlay__reservation-row">
@@ -317,19 +331,32 @@ export function TableDetailOverlay({
                     <span className="overlay__reservation-name">{r.name}</span>
                     <span className="overlay__reservation-meta">
                       {r.guest_count} guests &middot; {getTimeFromDatetime(r.start_at)}
+                      {r.end_at && ` — ${getTimeFromDatetime(r.end_at)}`}
                     </span>
                     <span className="overlay__reservation-status">{r.status}</span>
                   </div>
-                  {r.status === "pending" && (
-                    <button
-                      type="button"
-                      className="overlay__cancel-btn"
-                      onClick={() => handleCancelReservation(r.public_id)}
-                      disabled={actionLoading}
-                    >
-                      CANCEL
-                    </button>
-                  )}
+                  <div className="overlay__reservation-actions">
+                    {onModifyReservation && (
+                      <button
+                        type="button"
+                        className="overlay__modify-btn"
+                        onClick={() => onModifyReservation(r)}
+                        disabled={actionLoading}
+                      >
+                        MODIFY
+                      </button>
+                    )}
+                    {r.status === "pending" && (
+                      <button
+                        type="button"
+                        className="overlay__cancel-btn"
+                        onClick={() => handleCancelReservation(r.public_id)}
+                        disabled={actionLoading}
+                      >
+                        CANCEL
+                      </button>
+                    )}
+                  </div>
                 </div>
               ))
             )}

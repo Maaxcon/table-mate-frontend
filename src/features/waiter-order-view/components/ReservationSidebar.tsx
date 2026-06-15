@@ -5,7 +5,6 @@ import "./ReservationSidebar.css"
 
 interface ReservationSidebarProps {
   reservations: ReservationItem[]
-  onAdd: () => void
   onCancel: (reservationId: string) => void
   onModify: (reservation: ReservationItem) => void
   actionLoading: boolean
@@ -13,7 +12,6 @@ interface ReservationSidebarProps {
 
 export function ReservationSidebar({
   reservations,
-  onAdd,
   onCancel,
   onModify,
   actionLoading,
@@ -30,25 +28,6 @@ export function ReservationSidebar({
     <aside className="reservation-sidebar">
       <div className="reservation-sidebar__header">
         <h2 className="reservation-sidebar__title">NEXT RESERVATIONS</h2>
-        <button
-          type="button"
-          className="reservation-sidebar__add"
-          aria-label="Add reservation"
-          onClick={onAdd}
-        >
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-          >
-            <line x1="12" y1="5" x2="12" y2="19" />
-            <line x1="5" y1="12" x2="19" y2="12" />
-          </svg>
-        </button>
       </div>
 
       <div className="reservation-sidebar__search">

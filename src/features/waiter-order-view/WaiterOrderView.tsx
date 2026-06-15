@@ -18,6 +18,7 @@ import type {
   HallTableStatusChangedEvent,
   HallNewReservationEvent,
 } from "./hooks/useHallSubscription"
+import type { Table } from "@/types/api/types.gen"
 import { BookModal } from "@/features/reservation/BookModal"
 import { RescheduleModal } from "@/features/reservation/RescheduleModal"
 import type { WorkingHoursDay } from "@/features/reservation/api"
@@ -72,7 +73,7 @@ export function WaiterOrderView() {
   const [overlayDetail, setOverlayDetail] = useState<OverlayDetail | null>(null)
   const [overlayLoading, setOverlayLoading] = useState(false)
 
-  const [showBookModal, setShowBookModal] = useState(false)
+  const [bookingTable, setBookingTable] = useState<FloorTable | null>(null)
   const [editingReservation, setEditingReservation] = useState<ReservationItem | null>(null)
   const [sidebarActionLoading, setSidebarActionLoading] = useState(false)
   const [workingHours, setWorkingHours] = useState<Record<string, WorkingHoursDay> | null>(null)
@@ -429,36 +430,44 @@ export function WaiterOrderView() {
         }
       }
 
-      if (!order) {
-        setOverlayLoading(false)
-        return
-      }
-
       const selTable = currentTables.find((t) => t.public_id === tablePublicId)
       const resForTable = currentReservations.find((r) => r.table === selTable?.table_number)
 
-      const rawSubtotal = orderItems.reduce(
-        (sum, item) => sum + parseFloat(item.unit_price) * item.quantity,
-        0,
-      )
-      const rawTax = parseFloat(order.tax_total)
-      const rawDiscount = parseFloat(order.discount_total || "0")
-      const rawServiceCharge = parseFloat(order.service_charge || "0")
-      const rawTotal = rawSubtotal + rawTax - rawDiscount + rawServiceCharge
+      let rawSubtotal = 0
+      let rawTax = 0
+      let rawDiscount = 0
+      let rawServiceCharge = 0
+      let rawTotal = 0
+      let currency = ""
+      let detailId = session.public_id
+      const guestName = resForTable?.name ?? "Guest"
+
+      if (order) {
+        currency = order.currency
+        detailId = order.public_id
+        rawSubtotal = orderItems.reduce(
+          (sum, item) => sum + parseFloat(item.unit_price) * item.quantity,
+          0,
+        )
+        rawTax = parseFloat(order.tax_total)
+        rawDiscount = parseFloat(order.discount_total || "0")
+        rawServiceCharge = parseFloat(order.service_charge || "0")
+        rawTotal = rawSubtotal + rawTax - rawDiscount + rawServiceCharge
+      }
 
       setOverlayDetail({
-        public_id: order.public_id,
+        public_id: detailId,
         table_number: selTable?.table_number ?? "",
-        guest_name: resForTable?.name ?? "Guest",
+        guest_name: guestName,
         guest_count: session.guest_count,
         duration,
-        currency: order.currency,
+        currency,
         items: orderItems,
         subtotal: rawSubtotal.toFixed(2),
-        tax_total: order.tax_total,
+        tax_total: rawTax.toFixed(2),
         total_amount: rawTotal.toFixed(2),
-        discount_total: order.discount_total,
-        service_charge: order.service_charge,
+        discount_total: rawDiscount.toFixed(2),
+        service_charge: rawServiceCharge.toFixed(2),
       })
     } finally {
       setOverlayLoading(false)
@@ -479,10 +488,10 @@ export function WaiterOrderView() {
 
   const handleTableSelect = (table: FloorTable) => {
     setSelectedTableId(table.public_id)
+    setOverlayDetail(null)
     if (table.is_occupied) {
       buildOverlayDetail(table.public_id, tables, reservations)
     } else {
-      setOverlayDetail(null)
       setOverlayLoading(false)
     }
   }
@@ -560,7 +569,6 @@ export function WaiterOrderView() {
         {showFloorPlan && (
           <ReservationSidebar
             reservations={reservations.filter((r) => r.status === "pending")}
-            onAdd={() => setShowBookModal(true)}
             onCancel={handleCancelReservation}
             onModify={handleModifyReservation}
             actionLoading={sidebarActionLoading}
@@ -583,17 +591,19 @@ export function WaiterOrderView() {
             setOverlayDetail(null)
           }}
           onRefresh={loadData}
+          onBookTable={setBookingTable}
+          onModifyReservation={handleModifyReservation}
         />
       )}
 
-      {showBookModal && tables.length > 0 && (
+      {bookingTable && (
         <BookModal
-          table={tables[0]}
+          table={bookingTable as unknown as Table}
           workingHours={workingHours}
           restaurantId={restaurantId ?? ""}
-          onClose={() => setShowBookModal(false)}
+          onClose={() => setBookingTable(null)}
           onSuccess={() => {
-            setShowBookModal(false)
+            setBookingTable(null)
             loadData()
           }}
         />
@@ -616,6 +626,7 @@ export function WaiterOrderView() {
           restaurantId={restaurantId ?? undefined}
           workingHours={workingHours}
           excludeReservationIds={excludeReservationIds}
+          prolongOnly={editingReservation.status === "active"}
           onClose={() => setEditingReservation(null)}
           onSuccess={() => {
             setEditingReservation(null)
