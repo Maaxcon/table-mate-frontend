@@ -96,7 +96,6 @@ export function CartDrawer({
 }: Props) {
   const [step, setStep] = useState<"cart" | "confirming" | "confirmed">("cart")
   const [confirmedItems, setConfirmedItems] = useState<CartItemWithDetails[]>([])
-  const [confirmedTotal, setConfirmedTotal] = useState(0)
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -115,10 +114,10 @@ export function CartDrawer({
 
   const handleConfirm = () => {
     setConfirmedItems([...items])
-    setConfirmedTotal(totalPrice)
     setStep("confirmed")
   }
 
+  const confirmedTotal = confirmedItems.reduce((s, ci) => s + lineTotal(ci), 0)
   const totalCount = items.reduce((s, i) => s + i.quantity, 0)
 
   const groups = groupItemsByGuest(items)
