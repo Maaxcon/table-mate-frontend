@@ -10,7 +10,6 @@ type AuthStatus = "init" | "loading" | "ready" | "error"
 type UseGuestAuthOptions = {
   reservationId?: string | null
   tableId?: string | null
-  cartSessionId?: string | null
 }
 
 type UseGuestAuthResult = {
@@ -64,12 +63,11 @@ function loadDisplayName(): string {
 export function useGuestAuth({
   reservationId,
   tableId,
-  cartSessionId: initialCartSessionId,
 }: UseGuestAuthOptions = {}): UseGuestAuthResult {
   const deviceId = getGuestToken()
   const [authState, dispatch] = useReducer(authReducer, {
     guestJwt: null,
-    cartSessionId: initialCartSessionId ?? null,
+    cartSessionId: null,
     status: reservationId || tableId ? "init" : "ready",
     error: null,
   })
