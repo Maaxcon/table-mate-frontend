@@ -31,6 +31,14 @@ type Props = {
   onRetry?: () => void
 }
 
+function unitPrice(ci: CartItemWithDetails): number {
+  return parseFloat(ci.item?.price ?? "0") || 0
+}
+
+function lineTotal(ci: CartItemWithDetails): number {
+  return unitPrice(ci) * ci.quantity
+}
+
 function getGroupLabel(
   group: ItemGroup,
   displayName: string,
@@ -187,8 +195,7 @@ export function CartDrawer({
                       <span className="cart-drawer__receipt-qty"> × {ci.quantity}</span>
                     </span>
                     <span className="cart-drawer__receipt-price">
-                      {formatAmount((parseFloat(ci.item?.price ?? "0") || 0) * ci.quantity)}{" "}
-                      {currencySymbol}
+                      {formatAmount(lineTotal(ci))} {currencySymbol}
                     </span>
                   </li>
                 ))}
@@ -241,15 +248,14 @@ export function CartDrawer({
                         <div className="cart-drawer__item-body">
                           <span className="cart-drawer__item-name">{ci.item?.name ?? "—"}</span>
                           <span className="cart-drawer__item-unit-price">
-                            {formatAmount(parseFloat(ci.item?.price ?? "0") || 0)} {currencySymbol}{" "}
+                            {formatAmount(unitPrice(ci))} {currencySymbol}{" "}
                             {menuStrings.cart.perUnit}
                           </span>
                         </div>
 
                         <div className="cart-drawer__item-right">
                           <span className="cart-drawer__item-total">
-                            {formatAmount((parseFloat(ci.item?.price ?? "0") || 0) * ci.quantity)}{" "}
-                            {currencySymbol}
+                            {formatAmount(lineTotal(ci))} {currencySymbol}
                           </span>
                           <div className="cart-drawer__stepper">
                             <button
