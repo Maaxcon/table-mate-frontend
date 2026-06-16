@@ -92,6 +92,7 @@ type UseCartOptions = {
   guestJwt: string | null
   itemsById: Record<string, MenuItem>
   reserved?: boolean
+  onAuthError?: () => void
 }
 
 type UseCartResult = {
@@ -120,6 +121,10 @@ const MENU_ITEM_UNAVAILABLE = "menu_item_unavailable"
 
 function isUnavailableError(err: unknown): boolean {
   return err instanceof Error && (err as { code?: string }).code === MENU_ITEM_UNAVAILABLE
+}
+
+function isAuthError(err: unknown): boolean {
+  return err instanceof Error && (err as { status?: number }).status === 401
 }
 
 function getUnavailableMessage(
@@ -166,6 +171,7 @@ export function useCart({
   guestJwt,
   itemsById,
   reserved,
+  onAuthError,
 }: UseCartOptions): UseCartResult {
   const [state, dispatch] = useReducer(reducer, initialState)
   const initialFetchDone = useRef(false)
@@ -192,6 +198,22 @@ export function useCart({
     initialFetchDone.current = false
   }, [cartSessionId, guestJwt])
 
+  const failMutation = useCallback(
+    (err: unknown, fallback: string, menuItemId: string | undefined, itemId: string | null) => {
+      dispatch({ type: "ROLLBACK" })
+      if (isAuthError(err)) {
+        onAuthError?.()
+        return
+      }
+      dispatch({
+        type: "SET_ERROR",
+        error: resolveCartError(err, fallback, { menuItemId, itemsById }),
+        itemId,
+      })
+    },
+    [itemsById, onAuthError],
+  )
+
   const refetch = useCallback(async () => {
     if (!cartSessionId || !guestJwt) return
     dispatch({ type: "SET_LOADING", loading: true })
@@ -200,14 +222,18 @@ export function useCart({
       itemsRef.current = items
       dispatch({ type: "SET_ITEMS", items })
     } catch (err) {
-      dispatch({
-        type: "SET_ERROR",
-        error: err instanceof Error ? err.message : menuStrings.cart.errorFetch,
-      })
+      if (isAuthError(err)) {
+        onAuthError?.()
+      } else {
+        dispatch({
+          type: "SET_ERROR",
+          error: err instanceof Error ? err.message : menuStrings.cart.errorFetch,
+        })
+      }
     } finally {
       dispatch({ type: "SET_LOADING", loading: false })
     }
-  }, [cartSessionId, guestJwt])
+  }, [cartSessionId, guestJwt, onAuthError])
 
   const syncFromServer = useCallback(() => runExclusive(refetch), [runExclusive, refetch])
 
@@ -243,18 +269,10 @@ export function useCart({
           await addCartItem(cartSessionId, { menu_item: menuItemId, quantity: 1 }, guestJwt)
           await refetch()
         } catch (err) {
-          dispatch({ type: "ROLLBACK" })
-          dispatch({
-            type: "SET_ERROR",
-            error: resolveCartError(err, menuStrings.cart.errorAdd, {
-              menuItemId,
-              itemsById,
-            }),
-            itemId: tempItem.public_id,
-          })
+          failMutation(err, menuStrings.cart.errorAdd, menuItemId, tempItem.public_id)
         }
       }),
-    [cartSessionId, guestJwt, refetch, itemsById, runExclusive],
+    [cartSessionId, guestJwt, refetch, failMutation, runExclusive],
   )
 
   const changeQuantity = useCallback(
@@ -274,15 +292,7 @@ export function useCart({
             await deleteCartItem(cartSessionId, itemId, guestJwt)
             await refetch()
           } catch (err) {
-            dispatch({ type: "ROLLBACK" })
-            dispatch({
-              type: "SET_ERROR",
-              error: resolveCartError(err, menuStrings.cart.errorRemove, {
-                menuItemId: menuItemIdForError,
-                itemsById,
-              }),
-              itemId,
-            })
+            failMutation(err, menuStrings.cart.errorRemove, menuItemIdForError, itemId)
           }
           return
         }
@@ -297,18 +307,10 @@ export function useCart({
           await updateCartItem(cartSessionId, itemId, { quantity }, guestJwt)
           await refetch()
         } catch (err) {
-          dispatch({ type: "ROLLBACK" })
-          dispatch({
-            type: "SET_ERROR",
-            error: resolveCartError(err, menuStrings.cart.errorUpdate, {
-              menuItemId: menuItemIdForError,
-              itemsById,
-            }),
-            itemId,
-          })
+          failMutation(err, menuStrings.cart.errorUpdate, menuItemIdForError, itemId)
         }
       }),
-    [cartSessionId, guestJwt, refetch, itemsById, runExclusive],
+    [cartSessionId, guestJwt, refetch, failMutation, runExclusive],
   )
 
   const removeItem = useCallback(
@@ -323,18 +325,10 @@ export function useCart({
           await deleteCartItem(cartSessionId, itemId, guestJwt)
           await refetch()
         } catch (err) {
-          dispatch({ type: "ROLLBACK" })
-          dispatch({
-            type: "SET_ERROR",
-            error: resolveCartError(err, menuStrings.cart.errorRemove, {
-              menuItemId: menuItemIdForError,
-              itemsById,
-            }),
-            itemId,
-          })
+          failMutation(err, menuStrings.cart.errorRemove, menuItemIdForError, itemId)
         }
       }),
-    [cartSessionId, guestJwt, refetch, itemsById, findMenuItemIdByCartItem, runExclusive],
+    [cartSessionId, guestJwt, refetch, failMutation, findMenuItemIdByCartItem, runExclusive],
   )
 
   const clearError = useCallback(() => {

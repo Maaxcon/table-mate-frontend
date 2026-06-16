@@ -94,6 +94,7 @@ function MenuPage() {
     guestJwt: guestAuth.guestJwt,
     itemsById,
     reserved: guestAuth.status === "ready",
+    onAuthError: guestAuth.initialize,
   })
 
   const handleCartUpdated = useCallback(() => {

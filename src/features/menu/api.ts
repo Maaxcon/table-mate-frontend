@@ -26,7 +26,7 @@ function buildUrl(path: string, params: Record<string, string | undefined>): str
   return url.toString()
 }
 
-export type ApiError = Error & { code?: string }
+export type ApiError = Error & { code?: string; status?: number }
 
 async function httpError(res: Response): Promise<ApiError> {
   let message = res.statusText
@@ -46,6 +46,7 @@ async function httpError(res: Response): Promise<ApiError> {
   }
   const err = new Error(message) as ApiError
   err.code = code
+  err.status = res.status
   return err
 }
 
