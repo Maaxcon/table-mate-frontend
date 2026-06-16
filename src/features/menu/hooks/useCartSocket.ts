@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import { ENV_NOT_CONFIGURED_VALUE, env } from "@/config/env"
+import { CART_CLIENT_ID } from "@/features/menu/clientId"
 
 type UseCartSocketOptions = {
   cartSessionId: string | null
@@ -122,8 +123,8 @@ export function useCartSocket({
 
     ws.onmessage = (event) => {
       try {
-        const data = JSON.parse(event.data) as { type: string }
-        if (data.type === "cart_updated") {
+        const data = JSON.parse(event.data) as { type: string; client_id?: string }
+        if (data.type === "cart_updated" && data.client_id !== CART_CLIENT_ID) {
           onCartUpdatedRef.current()
         }
       } catch {

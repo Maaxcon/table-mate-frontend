@@ -1,5 +1,6 @@
 import { ENV_NOT_CONFIGURED_VALUE, env } from "@/config/env"
 import type { Paginated } from "@/api/client"
+import { CART_CLIENT_ID } from "./clientId"
 import { CART_API, MENU_API } from "./constants"
 import type {
   AddCartItemRequest,
@@ -166,6 +167,7 @@ async function authFetch<T>(
   const url = buildUrl(path, query ?? {})
   const headers: Record<string, string> = {
     Authorization: `Bearer ${jwt}`,
+    "X-Client-Id": CART_CLIENT_ID,
   }
   if (rest.body && !(rest.body instanceof FormData)) {
     headers["Content-Type"] = "application/json"
