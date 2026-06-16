@@ -104,6 +104,7 @@ function MenuPage() {
     cartSessionId: guestAuth.cartSessionId,
     guestJwt: guestAuth.guestJwt,
     onCartUpdated: handleCartUpdated,
+    onAuthExpired: guestAuth.initialize,
   })
 
   const showLobby = Boolean(

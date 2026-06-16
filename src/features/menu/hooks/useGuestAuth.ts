@@ -4,6 +4,7 @@ import { getGuestToken } from "@/features/menu/guestToken"
 import { decodeJwtPayload } from "@/features/menu/jwt"
 
 const DISPLAY_NAME_KEY = "tablemate.cart.display_name.v1"
+const REFRESH_MARGIN_MS = 60_000
 
 type AuthStatus = "init" | "loading" | "ready" | "error"
 
@@ -115,6 +116,15 @@ export function useGuestAuth({
   useEffect(() => {
     initialize()
   }, [initialize])
+
+  useEffect(() => {
+    if (!authState.guestJwt) return
+    const payload = decodeJwtPayload<{ exp?: number }>(authState.guestJwt)
+    if (!payload?.exp) return
+    const msUntilRefresh = payload.exp * 1000 - Date.now() - REFRESH_MARGIN_MS
+    const timer = setTimeout(() => initialize(), Math.max(msUntilRefresh, 0))
+    return () => clearTimeout(timer)
+  }, [authState.guestJwt, initialize])
 
   return {
     deviceId,

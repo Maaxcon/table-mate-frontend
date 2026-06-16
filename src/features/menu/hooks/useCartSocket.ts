@@ -5,6 +5,7 @@ type UseCartSocketOptions = {
   cartSessionId: string | null
   guestJwt: string | null
   onCartUpdated: () => void
+  onAuthExpired: () => void
 }
 
 type UseCartSocketResult = {
@@ -22,12 +23,14 @@ export function useCartSocket({
   cartSessionId,
   guestJwt,
   onCartUpdated,
+  onAuthExpired,
 }: UseCartSocketOptions): UseCartSocketResult {
   const [isConnected, setIsConnected] = useState(false)
   const wsRef = useRef<WebSocket | null>(null)
   const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const attemptRef = useRef(0)
   const onCartUpdatedRef = useRef(onCartUpdated)
+  const onAuthExpiredRef = useRef(onAuthExpired)
   const mountedRef = useRef(true)
   const connectRef = useRef<() => void>(() => {})
   const shouldSyncRef = useRef(false)
@@ -35,6 +38,10 @@ export function useCartSocket({
   useEffect(() => {
     onCartUpdatedRef.current = onCartUpdated
   }, [onCartUpdated])
+
+  useEffect(() => {
+    onAuthExpiredRef.current = onAuthExpired
+  }, [onAuthExpired])
 
   const cleanup = useCallback(() => {
     if (reconnectTimeoutRef.current) {
@@ -90,8 +97,14 @@ export function useCartSocket({
       setIsConnected(false)
       wsRef.current = null
 
-      if (event.code === 4001 || event.code === 4003) {
+      if (event.code === 4003) {
         shouldSyncRef.current = false
+        return
+      }
+
+      if (event.code === 4001) {
+        shouldSyncRef.current = true
+        onAuthExpiredRef.current()
         return
       }
 
