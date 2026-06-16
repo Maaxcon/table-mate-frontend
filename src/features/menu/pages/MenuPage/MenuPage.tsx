@@ -85,7 +85,7 @@ function MenuPage() {
     error: cartError,
     errorItemId,
     addItem,
-    setQuantity,
+    changeQuantity,
     removeItem,
     syncFromServer,
     clearError,
@@ -221,17 +221,13 @@ function MenuPage() {
 
   const guestSlot = cartItems.find((ci) => ci.deviceId === guestAuth.deviceId)?.guestSlot ?? null
 
-  const handleSetQuantity = useCallback(
-    (itemId: string, quantity: number) => {
+  const handleChangeQuantity = useCallback(
+    (itemId: string, delta: number) => {
       const cartItem = cartItems.find((ci) => ci.menuItemId === itemId || ci.id === itemId)
-      const targetId = cartItem?.id ?? itemId
-      if (quantity <= 0) {
-        removeItem(targetId)
-      } else {
-        setQuantity(targetId, quantity)
-      }
+      if (!cartItem) return
+      changeQuantity(cartItem.id, delta)
     },
-    [cartItems, removeItem, setQuantity],
+    [cartItems, changeQuantity],
   )
 
   const railActiveCategory = showAllGrouped ? scrollActiveCategory : activeCategory
@@ -245,7 +241,7 @@ function MenuPage() {
     onSelect: setSelectedItem,
     onAddToCart: handleAddToCart,
     onToggleLike: toggleLike,
-    onSetQuantity: handleSetQuantity,
+    onChangeQuantity: handleChangeQuantity,
   }
 
   if (!restaurantId || restaurantNotFound) {
@@ -460,7 +456,7 @@ function MenuPage() {
           displayName={guestAuth.displayName}
           guestSlot={guestSlot}
           deviceId={guestAuth.deviceId}
-          onSetQuantity={handleSetQuantity}
+          onChangeQuantity={handleChangeQuantity}
           onRemoveItem={removeItem}
           onClose={() => setCartOpen(false)}
           onClearError={() => {

@@ -25,7 +25,7 @@ type Props = {
   displayName: string
   guestSlot: number | null
   deviceId: string
-  onSetQuantity: (itemId: string, quantity: number) => void
+  onChangeQuantity: (itemId: string, delta: number) => void
   onRemoveItem: (itemId: string) => void
   onClose: () => void
   onClearError: () => void
@@ -90,7 +90,7 @@ export function CartDrawer({
   displayName,
   guestSlot: currentGuestSlot,
   deviceId,
-  onSetQuantity,
+  onChangeQuantity,
   onRemoveItem,
   onClose,
   onClearError,
@@ -279,7 +279,7 @@ export function CartDrawer({
                               onClick={() =>
                                 ci.quantity === 1
                                   ? onRemoveItem(ci.id)
-                                  : onSetQuantity(ci.id, ci.quantity - 1)
+                                  : onChangeQuantity(ci.id, -1)
                               }
                               aria-label={menuStrings.cart.decrease}
                             >
@@ -288,7 +288,7 @@ export function CartDrawer({
                             <span className="cart-drawer__qty">{ci.quantity}</span>
                             <button
                               className="cart-drawer__stepper-btn"
-                              onClick={() => onSetQuantity(ci.id, ci.quantity + 1)}
+                              onClick={() => onChangeQuantity(ci.id, 1)}
                               aria-label={menuStrings.cart.increase}
                             >
                               <LuPlus size={12} />

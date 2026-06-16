@@ -10,7 +10,7 @@ type MenuItemCardProps = {
   onClick: (item: MenuItem) => void
   onAddToCart: (item: MenuItem) => void
   onToggleLike: (item: MenuItem) => void
-  onSetQuantity: (publicId: string, quantity: number) => void
+  onChangeQuantity: (publicId: string, delta: number) => void
   cartQuantity?: number
   likePending?: boolean
 }
@@ -21,7 +21,7 @@ function MenuItemCard({
   onClick,
   onAddToCart,
   onToggleLike,
-  onSetQuantity,
+  onChangeQuantity,
   cartQuantity = 0,
   likePending = false,
 }: MenuItemCardProps) {
@@ -32,7 +32,7 @@ function MenuItemCard({
 
   const handleDecrement = (e: React.MouseEvent) => {
     e.stopPropagation()
-    onSetQuantity(item.public_id, cartQuantity - 1)
+    onChangeQuantity(item.public_id, -1)
   }
 
   const handleIncrement = (e: React.MouseEvent) => {

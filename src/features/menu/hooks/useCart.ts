@@ -102,7 +102,7 @@ type UseCartResult = {
   error: string | null
   errorItemId: string | null
   addItem: (menuItemId: string) => Promise<void>
-  setQuantity: (itemId: string, quantity: number) => Promise<void>
+  changeQuantity: (itemId: string, delta: number) => Promise<void>
   removeItem: (itemId: string) => Promise<void>
   syncFromServer: () => Promise<void>
   clearError: () => void
@@ -197,6 +197,7 @@ export function useCart({
     dispatch({ type: "SET_LOADING", loading: true })
     try {
       const items = await fetchCartItems(cartSessionId, guestJwt)
+      itemsRef.current = items
       dispatch({ type: "SET_ITEMS", items })
     } catch (err) {
       dispatch({
@@ -256,12 +257,16 @@ export function useCart({
     [cartSessionId, guestJwt, refetch, itemsById, runExclusive],
   )
 
-  const setQuantity = useCallback(
-    (itemId: string, quantity: number): Promise<void> =>
+  const changeQuantity = useCallback(
+    (itemId: string, delta: number): Promise<void> =>
       runExclusive(async () => {
         if (!cartSessionId || !guestJwt) return
+        const current = itemsRef.current.find((ci) => ci.public_id === itemId)
+        if (!current) return
+        const quantity = current.quantity + delta
+        const menuItemIdForError = current.menu_item
+
         dispatch({ type: "SAVE_SNAPSHOT" })
-        const menuItemIdForError = findMenuItemIdByCartItem(itemId)
 
         if (quantity <= 0) {
           dispatch({ type: "OPTIMISTIC_REMOVE", itemId })
@@ -303,7 +308,7 @@ export function useCart({
           })
         }
       }),
-    [cartSessionId, guestJwt, refetch, itemsById, findMenuItemIdByCartItem, runExclusive],
+    [cartSessionId, guestJwt, refetch, itemsById, runExclusive],
   )
 
   const removeItem = useCallback(
@@ -358,7 +363,7 @@ export function useCart({
     error: state.error,
     errorItemId: state.errorItemId,
     addItem,
-    setQuantity,
+    changeQuantity,
     removeItem,
     syncFromServer,
     clearError,
