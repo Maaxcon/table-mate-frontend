@@ -32,7 +32,9 @@ export function TableDetailOverlay({
     isOccupied ? "order" : "reservations",
   )
 
-  const guestSlots = detail ? [...new Set(detail.items.map((i) => i.guest_slot))].sort() : []
+  const guestSlots = detail
+    ? [...new Set(detail.items.map((i) => i.guest_slot))].sort((a, b) => a - b)
+    : []
   const nearestReservation =
     tableReservations.length > 0
       ? [...tableReservations].sort(
