@@ -28,8 +28,6 @@ type UseCabinetResult = {
   updateProfile: (patch: ProfileUpdate) => Promise<void>
 }
 
-const BOOKINGS_PAGE_SIZE = 5
-
 export function useCabinet(): UseCabinetResult {
   const dispatch = useAppDispatch()
   const storeUser = useAppSelector((s) => s.auth.user)
@@ -48,19 +46,15 @@ export function useCabinet(): UseCabinetResult {
   const [bookingsHasMore, setBookingsHasMore] = useState(false)
   const [bookingsActionId, setBookingsActionId] = useState<string | null>(null)
 
-  const fetchedCountRef = useRef(0)
+  const currentPageRef = useRef(1)
 
-  const loadBookingsPage = useCallback(async (offset: number, signal?: AbortSignal) => {
-    const page = await fetchMyReservations({
-      limit: BOOKINGS_PAGE_SIZE + 1,
-      offset,
-      signal,
-    })
-    const visible = filterActiveBookings(page).slice(0, BOOKINGS_PAGE_SIZE)
-    fetchedCountRef.current = offset + visible.length
+  const loadBookingsPage = useCallback(async (page: number, signal?: AbortSignal) => {
+    const items = await fetchMyReservations({ page, signal })
+    const visible = filterActiveBookings(items)
+    currentPageRef.current = page
 
-    setBookings((prev) => (offset === 0 ? visible : [...prev, ...visible]))
-    setBookingsHasMore(page.length > BOOKINGS_PAGE_SIZE)
+    setBookings((prev) => (page === 1 ? visible : [...prev, ...visible]))
+    setBookingsHasMore(visible.length > 0)
     setBookingsError(null)
   }, [])
 
@@ -73,8 +67,8 @@ export function useCabinet(): UseCabinetResult {
       const [profileResult, bookingsResult, allReservationsResult, receiptsResult] =
         await Promise.allSettled([
           fetchMyProfile(signal),
-          fetchMyReservations({ limit: BOOKINGS_PAGE_SIZE + 1, offset: 0, signal }),
-          fetchMyReservations({ limit: 9999, offset: 0, signal, status: ["pending", "active"] }),
+          fetchMyReservations({ page: 1, signal }),
+          fetchMyReservations({ page: 1, signal, status: ["pending", "active"] }),
           fetchMyReceipts(signal),
         ])
 
@@ -99,9 +93,10 @@ export function useCabinet(): UseCabinetResult {
       }
 
       if (bookingsResult.status === "fulfilled") {
-        fetchedCountRef.current = bookingsResult.value.length
-        setBookings(filterActiveBookings(bookingsResult.value).slice(0, BOOKINGS_PAGE_SIZE))
-        setBookingsHasMore(bookingsResult.value.length > BOOKINGS_PAGE_SIZE)
+        const visible = filterActiveBookings(bookingsResult.value)
+        currentPageRef.current = 1
+        setBookings(visible)
+        setBookingsHasMore(visible.length > 0)
         setBookingsError(null)
       } else {
         setBookingsError("We could not load your bookings.")
@@ -122,12 +117,16 @@ export function useCabinet(): UseCabinetResult {
   }, [])
 
   const refreshBookings = useCallback(async () => {
-    await loadBookingsPage(0)
+    try {
+      await loadBookingsPage(1)
+    } catch {
+      setBookingsError("We could not refresh your bookings.")
+    }
   }, [loadBookingsPage])
 
   const loadMoreBookings = useCallback(async () => {
     try {
-      await loadBookingsPage(fetchedCountRef.current)
+      await loadBookingsPage(currentPageRef.current + 1)
     } catch {
       setBookingsError("We could not load more bookings.")
     }
