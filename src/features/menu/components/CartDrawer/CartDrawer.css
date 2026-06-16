@@ -317,8 +317,13 @@
   transition: background 100ms ease;
 }
 
-.cart-drawer__stepper-btn:hover {
+.cart-drawer__stepper-btn:hover:not(:disabled) {
   background: rgb(255 255 255 / 15%);
+}
+
+.cart-drawer__stepper-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
 }
 
 .cart-drawer__qty {

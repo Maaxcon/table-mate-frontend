@@ -32,6 +32,10 @@ type Props = {
   onRetry?: () => void
 }
 
+function isPending(ci: CartItemWithDetails): boolean {
+  return ci.id.startsWith("temp-")
+}
+
 function unitPrice(ci: CartItemWithDetails): number {
   return parseFloat(ci.item?.price ?? "0") || 0
 }
@@ -281,6 +285,7 @@ export function CartDrawer({
                                   ? onRemoveItem(ci.id)
                                   : onChangeQuantity(ci.id, -1)
                               }
+                              disabled={isPending(ci)}
                               aria-label={menuStrings.cart.decrease}
                             >
                               {ci.quantity === 1 ? <LuTrash2 size={12} /> : <LuMinus size={12} />}
@@ -289,6 +294,7 @@ export function CartDrawer({
                             <button
                               className="cart-drawer__stepper-btn"
                               onClick={() => onChangeQuantity(ci.id, 1)}
+                              disabled={isPending(ci)}
                               aria-label={menuStrings.cart.increase}
                             >
                               <LuPlus size={12} />
