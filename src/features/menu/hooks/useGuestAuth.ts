@@ -77,6 +77,10 @@ export function useGuestAuth({
     loadDisplayName(),
   )
   const initializing = useRef(false)
+  const guestJwtRef = useRef<string | null>(null)
+  useEffect(() => {
+    guestJwtRef.current = authState.guestJwt
+  }, [authState.guestJwt])
 
   const setDisplayName = useCallback((name: string) => {
     setDisplayNameState(name)
@@ -92,7 +96,7 @@ export function useGuestAuth({
     initializing.current = true
     dispatch({ type: "LOADING" })
 
-    guestInit({ reservationId, tableId })
+    guestInit({ reservationId, tableId }, guestJwtRef.current)
       .then((resp) => {
         const payload = decodeJwtPayload<{ cart_session_id?: string }>(resp.access)
         dispatch({

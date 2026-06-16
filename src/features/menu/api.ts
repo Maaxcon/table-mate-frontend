@@ -180,16 +180,21 @@ async function authFetch<T>(
   return res.json() as Promise<T>
 }
 
-export function guestInit(target: GuestInitTarget): Promise<GuestInitResponse> {
+export function guestInit(
+  target: GuestInitTarget,
+  currentJwt?: string | null,
+): Promise<GuestInitResponse> {
   if (env.apiBaseUrl === ENV_NOT_CONFIGURED_VALUE) {
     throw new Error("VITE_API_BASE_URL is not configured")
   }
   const body: Record<string, string> = {}
   if (target.reservationId) body.reservation_id = target.reservationId
   if (target.tableId) body.table_id = target.tableId
+  const headers: Record<string, string> = { "Content-Type": "application/json" }
+  if (currentJwt) headers.Authorization = `Bearer ${currentJwt}`
   return fetch(`${env.apiBaseUrl}${CART_API.guestInit}`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers,
     body: JSON.stringify(body),
   }).then(async (res) => {
     if (!res.ok) {
