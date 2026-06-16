@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react"
+import { Link } from "react-router-dom"
 import "./TopNav.css"
 
 const TABS = ["FLOOR PLAN", "WAITLIST", "ANALYTICS"]
@@ -77,6 +78,9 @@ export function TopNav({
           FREE: {freeCount}
         </span>
         <span className="top-nav__time">{currentTime}</span>
+        <Link to="/staff/orders" className="top-nav__nav-link">
+          KITCHEN
+        </Link>
         <div className="top-nav__avatar" />
       </div>
     </nav>

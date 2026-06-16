@@ -44,8 +44,8 @@ export function useHallSubscription({
 }: UseHallSubscriptionOptions) {
   const accessToken = useAppSelector((state) => state.auth.accessToken)
   const wsRef = useRef<WebSocket | null>(null)
-  const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout>>()
-  const connectRef = useRef<() => void>()
+  const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const connectRef = useRef<(() => void) | undefined>(undefined)
 
   const callbacksRef = useRef({
     onTableStatusChanged,

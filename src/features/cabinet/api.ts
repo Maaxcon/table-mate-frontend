@@ -131,23 +131,35 @@ async function extractError(res: Response): Promise<string> {
 
 // Load the signed-in customer's own reservations.
 type FetchMyReservationsOptions = {
-  limit?: number
-  offset?: number
+  page?: number
   signal?: AbortSignal
+  status?: string[]
+}
+
+type PaginatedReservationList = {
+  count: number
+  next: string | null
+  previous: string | null
+  results: Reservation[]
 }
 
 export async function fetchMyReservations(
   options: FetchMyReservationsOptions = {},
 ): Promise<Reservation[]> {
   const params = new URLSearchParams()
-  if (options.limit !== undefined) params.set("limit", String(options.limit))
-  if (options.offset !== undefined) params.set("offset", String(options.offset))
+  if (options.page !== undefined) params.set("page", String(options.page))
+  if (options.status) {
+    for (const s of options.status) {
+      params.append("status", s)
+    }
+  }
   const query = params.toString()
   const res = await apiFetch(`/api/reservations/reservations/my/${query ? `?${query}` : ""}`, {
     signal: options.signal,
   })
   if (!res.ok) throw new Error(`${res.status} ${res.statusText}`)
-  return (await res.json()) as Reservation[]
+  const data = (await res.json()) as PaginatedReservationList | Reservation[]
+  return Array.isArray(data) ? data : (data.results ?? [])
 }
 
 // Keep only the bookings the user can still modify or cancel.

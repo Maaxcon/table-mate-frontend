@@ -1,12 +1,13 @@
 import { Navigate, Outlet } from "react-router-dom"
 import { useAppSelector } from "@/store/hooks"
 
-const STAFF_ROLES = new Set(["admin", "waiter", "cook"])
-
 function PublicRoute() {
   const user = useAppSelector((state) => state.auth.user)
   if (user) {
-    if (STAFF_ROLES.has(user.role)) {
+    if (user.role === "cook") {
+      return <Navigate to="/staff/orders" replace />
+    }
+    if (user.role === "admin" || user.role === "waiter") {
       return <Navigate to="/waiter-order" replace />
     }
     return <Navigate to="/restaurants" replace />

@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react"
 import type { FloorTable, UpcomingReservation } from "../data/waiterTypes"
 import { getTableVisualStatus, formatDuration, formatETA } from "../data/waiterTypes"
 import "./FloorPlan.css"
@@ -7,6 +6,7 @@ interface FloorPlanProps {
   tables: FloorTable[]
   selectedId: string | null
   upcomingReservations?: UpcomingReservation[]
+  currentTime: Date
   onSelect: (table: FloorTable) => void
 }
 
@@ -14,15 +14,9 @@ export function FloorPlan({
   tables,
   selectedId,
   upcomingReservations = [],
+  currentTime,
   onSelect,
 }: FloorPlanProps) {
-  const [currentTime, setCurrentTime] = useState(new Date())
-
-  useEffect(() => {
-    const id = setInterval(() => setCurrentTime(new Date()), 60_000)
-    return () => clearInterval(id)
-  }, [])
-
   const statusLabel: Record<string, string> = {
     free: "FREE",
     reserved: "RESERVED",

@@ -54,7 +54,9 @@ export function TableDetailOverlay({
     capacity: number
   } | null>(null)
 
-  const guestSlots = detail ? [...new Set(detail.items.map((i) => i.guest_slot))].sort() : []
+  const guestSlots = detail
+    ? [...new Set(detail.items.map((i) => i.guest_slot))].sort((a, b) => a - b)
+    : []
   const sortedReservations = [...tableReservations].sort(
     (a, b) => new Date(a.start_at).getTime() - new Date(b.start_at).getTime(),
   )

@@ -11,6 +11,13 @@ export type ClientOptions = {
  */
 export type ActionEnum = "set_available" | "set_category" | "delete"
 
+export type AddCartItem = {
+  menu_item: string
+  quantity: number
+  comment?: string | null
+  guest_slot?: number | null
+}
+
 /**
  * Writable menu serializer for the admin panel.
  */
@@ -90,6 +97,38 @@ export type BulkItemAction = {
   category?: string | null
 }
 
+export type CartItem = {
+  readonly public_id: string
+  readonly menu_item: string
+  quantity: number
+  comment?: string | null
+  readonly added_by: string
+  readonly guest_slot: number | null
+  readonly device_id: string | null
+  readonly is_paid: boolean
+  readonly cart_session: string
+  readonly restaurant: string
+  readonly created_at: string
+  readonly updated_at: string
+}
+
+export type CartSession = {
+  readonly public_id: string
+  readonly restaurant: string
+  reservation: string
+  status: CartSessionStatusEnum
+  readonly created_by: string
+  readonly participants: Array<string>
+  readonly created_at: string
+  readonly updated_at: string
+}
+
+/**
+ * * `active` - Active
+ * * `closed` - Closed
+ */
+export type CartSessionStatusEnum = "active" | "closed"
+
 /**
  * * `staff` - Staff
  * * `customer` - Customer
@@ -103,12 +142,15 @@ export type CustomTokenObtainPair = {
   readonly refresh: string
 }
 
+export type CustomerContext = {
+  reservation: string
+}
+
 export type EditorTable = {
   readonly public_id: string
   readonly restaurant: string
   readonly table_number: string
   readonly capacity: number
-  status?: TableStatus
   shape?: TableShape
   active?: boolean
   position_x?: number | null
@@ -156,6 +198,11 @@ export type GoogleContextResponse = {
   readonly access: string
 }
 
+export type GuestInit = {
+  device_id: string
+  reservation_id: string
+}
+
 export type Layout = {
   readonly public_id: string
   readonly restaurant: string
@@ -165,6 +212,11 @@ export type Layout = {
   readonly published_by: string
   readonly created_at: string
   readonly updated_at: string
+}
+
+export type LayoutResponse = {
+  tables: Array<Table>
+  upcoming_reservations: Array<UpcomingReservation>
 }
 
 /**
@@ -247,6 +299,7 @@ export type OrderItem = {
   order: string
   ticket?: string | null
   menu_item: string
+  readonly menu_item_name: string
   guest_slot: number
   quantity: number
   comment?: string | null
@@ -307,6 +360,20 @@ export type PaginatedBookingSettingsList = {
   next?: string | null
   previous?: string | null
   results: Array<BookingSettings>
+}
+
+export type PaginatedCartItemList = {
+  count: number
+  next?: string | null
+  previous?: string | null
+  results: Array<CartItem>
+}
+
+export type PaginatedCartSessionList = {
+  count: number
+  next?: string | null
+  previous?: string | null
+  results: Array<CartSession>
 }
 
 export type PaginatedEditorTableList = {
@@ -472,7 +539,6 @@ export type PatchedEditorTable = {
   readonly restaurant?: string
   readonly table_number?: string
   readonly capacity?: number
-  status?: TableStatus
   shape?: TableShape
   active?: boolean
   position_x?: number | null
@@ -531,6 +597,7 @@ export type PatchedOrderItem = {
   order?: string
   ticket?: string | null
   menu_item?: string
+  readonly menu_item_name?: string
   guest_slot?: number
   quantity?: number
   comment?: string | null
@@ -556,7 +623,7 @@ export type PatchedReservation = {
   table_info?: TableInfo
   restaurant_info?: RestaurantInfo
   readonly customer_name?: string
-  type?: ReservationType
+  type?: TypeEnum
   guest_count?: number
   start_at?: string
   end_at?: string
@@ -600,7 +667,7 @@ export type PatchedSession = {
   readonly public_id?: string
   readonly restaurant?: string
   table?: string
-  reservation?: string
+  readonly reservation?: string
   readonly opened_by?: string
   guest_count?: number
   status?: SessionStatusEnum
@@ -624,6 +691,12 @@ export type PatchedTicket = {
   completed_at?: string | null
   readonly created_at?: string
   readonly updated_at?: string
+}
+
+export type PatchedUpdateCartItem = {
+  quantity?: number
+  comment?: string | null
+  guest_slot?: number | null
 }
 
 export type Payment = {
@@ -727,7 +800,7 @@ export type Reservation = {
   table_info: TableInfo
   restaurant_info: RestaurantInfo
   readonly customer_name: string
-  type?: ReservationType
+  type?: TypeEnum
   guest_count: number
   start_at: string
   end_at: string
@@ -737,12 +810,6 @@ export type Reservation = {
   readonly created_at: string
   readonly updated_at: string
 }
-
-/**
- * * `pre_booked` - Pre-booked
- * * `walk_in` - Walk-in
- */
-export type ReservationType = "pre_booked" | "walk_in"
 
 /**
  * * `pending` - Pending
@@ -798,7 +865,7 @@ export type Session = {
   readonly public_id: string
   readonly restaurant: string
   table: string
-  reservation: string
+  readonly reservation: string
   readonly opened_by: string
   guest_count: number
   status?: SessionStatusEnum
@@ -829,7 +896,7 @@ export type Table = {
   readonly restaurant: string
   table_number: string
   capacity: number
-  readonly is_occupied?: boolean
+  readonly is_occupied: boolean
   shape?: TableShape
   active?: boolean
   position_x?: number | null
@@ -853,12 +920,6 @@ export type TableInfo = {
  * * `booth` - Booth
  */
 export type TableShape = "rectangle" | "round" | "square" | "booth"
-
-/**
- * * `free` - Free
- * * `occupied` - Occupied
- */
-export type TableStatus = "free" | "occupied"
 
 export type Ticket = {
   readonly public_id: string
@@ -896,6 +957,18 @@ export type TokenRefresh = {
   refresh: string
 }
 
+/**
+ * * `pre_booked` - Pre-booked
+ * * `walk_in` - Walk-in
+ */
+export type TypeEnum = "pre_booked" | "walk_in"
+
+export type UpcomingReservation = {
+  public_id: string
+  table_id: string
+  start_at: string
+}
+
 export type User = {
   readonly public_id: string
   email: string
@@ -907,6 +980,11 @@ export type User = {
   is_active?: boolean
   readonly created_at: string
   readonly updated_at: string
+}
+
+export type VerifyScanResponse = {
+  valid: boolean
+  detail: string
 }
 
 /**
@@ -970,6 +1048,15 @@ export type AdminMenuItemWritable = {
   sort_order?: number
 }
 
+export type CartItemWritable = {
+  quantity: number
+  comment?: string | null
+}
+
+export type CartSessionWritable = {
+  reservation: string
+}
+
 export type CustomTokenObtainPairWritable = {
   restaurant_id?: number | null
   email: string
@@ -1003,6 +1090,11 @@ export type LayoutWritable = {
   version: number
   payload?: unknown
   published_at?: string | null
+}
+
+export type LayoutResponseWritable = {
+  tables: Array<TableWritable>
+  upcoming_reservations: Array<UpcomingReservation>
 }
 
 export type MenuWritable = {
@@ -1084,6 +1176,20 @@ export type PaginatedBookingSettingsListWritable = {
   next?: string | null
   previous?: string | null
   results: Array<unknown>
+}
+
+export type PaginatedCartItemListWritable = {
+  count: number
+  next?: string | null
+  previous?: string | null
+  results: Array<CartItemWritable>
+}
+
+export type PaginatedCartSessionListWritable = {
+  count: number
+  next?: string | null
+  previous?: string | null
+  results: Array<CartSessionWritable>
 }
 
 export type PaginatedEditorTableListWritable = {
@@ -1284,10 +1390,12 @@ export type PatchedOrderItemWritable = {
 
 export type PatchedReservationWritable = {
   table?: string
+  type?: TypeEnum
   guest_count?: number
   start_at?: string
   end_at?: string
   status?: ReservationStatus
+  created_by_staff?: boolean
   notes?: string | null
 }
 
@@ -1314,7 +1422,6 @@ export type PatchedRestaurantSettingsWritable = {
 
 export type PatchedSessionWritable = {
   table?: string
-  reservation?: string
   guest_count?: number
   status?: SessionStatusEnum
   currency?: string
@@ -1365,10 +1472,12 @@ export type ReceiptWritable = {
 
 export type ReservationWritable = {
   table: string
+  type?: TypeEnum
   guest_count: number
   start_at: string
   end_at: string
   status?: ReservationStatus
+  created_by_staff?: boolean
   notes?: string | null
 }
 
@@ -1399,7 +1508,6 @@ export type RestaurantSettingsWritable = {
 
 export type SessionWritable = {
   table: string
-  reservation: string
   guest_count: number
   status?: SessionStatusEnum
   currency: string
@@ -1441,6 +1549,27 @@ export type UserWritable = {
   role?: RoleEnum
   is_active?: boolean
 }
+
+export type AuthCustomerContextCreateData = {
+  body: CustomerContext
+  path?: never
+  query?: never
+  url: "/api/auth/customer/context/"
+}
+
+export type AuthCustomerContextCreateErrors = {
+  /**
+   * User is not a participant in this reservation.
+   */
+  403: unknown
+}
+
+export type AuthCustomerContextCreateResponses = {
+  200: GoogleContextResponse
+}
+
+export type AuthCustomerContextCreateResponse =
+  AuthCustomerContextCreateResponses[keyof AuthCustomerContextCreateResponses]
 
 export type AuthGoogleCreateData = {
   body: GoogleAuth
@@ -1486,6 +1615,27 @@ export type AuthGoogleContextCreateResponses = {
 
 export type AuthGoogleContextCreateResponse =
   AuthGoogleContextCreateResponses[keyof AuthGoogleContextCreateResponses]
+
+export type AuthGuestInitCreateData = {
+  body: GuestInit
+  path?: never
+  query?: never
+  url: "/api/auth/guest-init/"
+}
+
+export type AuthGuestInitCreateErrors = {
+  /**
+   * Invalid request.
+   */
+  400: unknown
+}
+
+export type AuthGuestInitCreateResponses = {
+  /**
+   * Guest JWT issued.
+   */
+  200: unknown
+}
 
 export type AuthLogoutCreateData = {
   body?: never
@@ -1616,12 +1766,6 @@ export type EditorTablesListData = {
      * * `booth` - Booth
      */
     shape?: "booth" | "rectangle" | "round" | "square"
-    /**
-     * * `free` - Free
-     * * `reserved` - Reserved
-     * * `occupied` - Occupied
-     */
-    status?: "free" | "occupied" | "reserved"
   }
   url: "/api/editor/tables/"
 }
@@ -2247,6 +2391,137 @@ export type MenuMenusRetrieveResponses = {
 
 export type MenuMenusRetrieveResponse = MenuMenusRetrieveResponses[keyof MenuMenusRetrieveResponses]
 
+export type OrdersCartSessionsListData = {
+  body?: never
+  path?: never
+  query?: {
+    /**
+     * Which field to use when ordering the results.
+     */
+    ordering?: string
+    /**
+     * A page number within the paginated result set.
+     */
+    page?: number
+  }
+  url: "/api/orders/cart/sessions/"
+}
+
+export type OrdersCartSessionsListResponses = {
+  200: PaginatedCartSessionList
+}
+
+export type OrdersCartSessionsListResponse =
+  OrdersCartSessionsListResponses[keyof OrdersCartSessionsListResponses]
+
+export type OrdersCartSessionsCreateData = {
+  body: CartSessionWritable
+  path?: never
+  query?: never
+  url: "/api/orders/cart/sessions/"
+}
+
+export type OrdersCartSessionsCreateResponses = {
+  201: CartSession
+}
+
+export type OrdersCartSessionsCreateResponse =
+  OrdersCartSessionsCreateResponses[keyof OrdersCartSessionsCreateResponses]
+
+export type OrdersCartSessionsRetrieveData = {
+  body?: never
+  path: {
+    id: string
+  }
+  query?: never
+  url: "/api/orders/cart/sessions/{id}/"
+}
+
+export type OrdersCartSessionsRetrieveResponses = {
+  200: CartSession
+}
+
+export type OrdersCartSessionsRetrieveResponse =
+  OrdersCartSessionsRetrieveResponses[keyof OrdersCartSessionsRetrieveResponses]
+
+export type OrdersCartSessionsItemsListData = {
+  body?: never
+  path: {
+    session_pk: string
+  }
+  query?: {
+    /**
+     * Which field to use when ordering the results.
+     */
+    ordering?: string
+    /**
+     * A page number within the paginated result set.
+     */
+    page?: number
+  }
+  url: "/api/orders/cart/sessions/{session_pk}/items/"
+}
+
+export type OrdersCartSessionsItemsListResponses = {
+  200: PaginatedCartItemList
+}
+
+export type OrdersCartSessionsItemsListResponse =
+  OrdersCartSessionsItemsListResponses[keyof OrdersCartSessionsItemsListResponses]
+
+export type OrdersCartSessionsItemsCreateData = {
+  body: AddCartItem
+  path: {
+    session_pk: string
+  }
+  query?: never
+  url: "/api/orders/cart/sessions/{session_pk}/items/"
+}
+
+export type OrdersCartSessionsItemsCreateResponses = {
+  201: CartItem
+}
+
+export type OrdersCartSessionsItemsCreateResponse =
+  OrdersCartSessionsItemsCreateResponses[keyof OrdersCartSessionsItemsCreateResponses]
+
+export type OrdersCartSessionsItemsDestroyData = {
+  body?: never
+  path: {
+    id: string
+    session_pk: string
+  }
+  query?: never
+  url: "/api/orders/cart/sessions/{session_pk}/items/{id}/"
+}
+
+export type OrdersCartSessionsItemsDestroyResponses = {
+  /**
+   * No response body
+   */
+  204: void
+}
+
+export type OrdersCartSessionsItemsDestroyResponse =
+  OrdersCartSessionsItemsDestroyResponses[keyof OrdersCartSessionsItemsDestroyResponses]
+
+export type OrdersCartSessionsItemsPartialUpdateData = {
+  body?: PatchedUpdateCartItem
+  path: {
+    id: string
+    session_pk: string
+  }
+  query?: never
+  url: "/api/orders/cart/sessions/{session_pk}/items/{id}/"
+}
+
+export type OrdersCartSessionsItemsPartialUpdateResponses = {
+  200: CartItem
+}
+
+export type OrdersCartSessionsItemsPartialUpdateResponse =
+  OrdersCartSessionsItemsPartialUpdateResponses[keyof OrdersCartSessionsItemsPartialUpdateResponses]
+
 export type OrdersOrderItemsListData = {
   body?: never
   path?: never
@@ -2254,6 +2529,7 @@ export type OrdersOrderItemsListData = {
     is_wasted?: boolean
     menu_item?: number
     order?: number
+    order__public_id?: string
     /**
      * Which field to use when ordering the results.
      */
@@ -2360,6 +2636,7 @@ export type OrdersOrdersListData = {
      */
     payment_status?: "authorized" | "cancelled" | "paid" | "refunded" | "settled" | "unpaid"
     session?: number
+    session__public_id?: string
     /**
      * * `waiter_manual` - Waiter manual
      * * `customer_prepaid` - Customer prepaid
@@ -2446,10 +2723,11 @@ export type OrdersSessionsListData = {
     /**
      * * `open` - Open
      * * `closed` - Closed
-     * * `cancelled` - Cancelled
+     * * `voided` - Voided
      */
-    status?: "cancelled" | "closed" | "open"
+    status?: "closed" | "open" | "voided"
     table?: number
+    table__public_id?: string
   }
   url: "/api/orders/sessions/"
 }
@@ -3046,12 +3324,6 @@ export type RestaurantsTablesListData = {
      * A page number within the paginated result set.
      */
     page?: number
-    /**
-     * * `free` - Free
-     * * `reserved` - Reserved
-     * * `occupied` - Occupied
-     */
-    status?: "free" | "occupied" | "reserved"
     zone__public_id?: string
   }
   url: "/api/restaurants/tables/"
@@ -3079,6 +3351,46 @@ export type RestaurantsTablesRetrieveResponses = {
 
 export type RestaurantsTablesRetrieveResponse =
   RestaurantsTablesRetrieveResponses[keyof RestaurantsTablesRetrieveResponses]
+
+export type RestaurantsTablesLayoutRetrieveData = {
+  body?: never
+  path?: never
+  query?: never
+  url: "/api/restaurants/tables/layout/"
+}
+
+export type RestaurantsTablesLayoutRetrieveResponses = {
+  200: LayoutResponse
+}
+
+export type RestaurantsTablesLayoutRetrieveResponse =
+  RestaurantsTablesLayoutRetrieveResponses[keyof RestaurantsTablesLayoutRetrieveResponses]
+
+export type RestaurantsTablesVerifyScanCreateData = {
+  body?: {
+    /**
+     * Table public ID
+     */
+    table_id: string
+  }
+  path?: never
+  query?: never
+  url: "/api/restaurants/tables/verify-scan/"
+}
+
+export type RestaurantsTablesVerifyScanCreateErrors = {
+  401: VerifyScanResponse
+}
+
+export type RestaurantsTablesVerifyScanCreateError =
+  RestaurantsTablesVerifyScanCreateErrors[keyof RestaurantsTablesVerifyScanCreateErrors]
+
+export type RestaurantsTablesVerifyScanCreateResponses = {
+  200: VerifyScanResponse
+}
+
+export type RestaurantsTablesVerifyScanCreateResponse =
+  RestaurantsTablesVerifyScanCreateResponses[keyof RestaurantsTablesVerifyScanCreateResponses]
 
 export type RestaurantsZonesListData = {
   body?: never

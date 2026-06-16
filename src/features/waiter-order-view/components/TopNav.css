@@ -105,6 +105,21 @@
   color: var(--color-text);
 }
 
+.top-nav__nav-link {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  padding: 4px 10px;
+  border: 1.5px solid var(--color-border-light);
+}
+
+.top-nav__nav-link:hover {
+  color: var(--color-text);
+  border-color: var(--color-border);
+}
+
 .top-nav__avatar {
   width: 32px;
   height: 32px;
