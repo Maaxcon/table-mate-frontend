@@ -92,7 +92,7 @@ export function useGuestAuth({
     initializing.current = true
     dispatch({ type: "LOADING" })
 
-    guestInit(deviceId, { reservationId, tableId })
+    guestInit({ reservationId, tableId })
       .then((resp) => {
         const payload = decodeJwtPayload<{ cart_session_id?: string }>(resp.access)
         dispatch({
@@ -111,7 +111,7 @@ export function useGuestAuth({
       .finally(() => {
         initializing.current = false
       })
-  }, [deviceId, reservationId, tableId])
+  }, [reservationId, tableId])
 
   useEffect(() => {
     initialize()

@@ -180,11 +180,11 @@ async function authFetch<T>(
   return res.json() as Promise<T>
 }
 
-export function guestInit(deviceId: string, target: GuestInitTarget): Promise<GuestInitResponse> {
+export function guestInit(target: GuestInitTarget): Promise<GuestInitResponse> {
   if (env.apiBaseUrl === ENV_NOT_CONFIGURED_VALUE) {
     throw new Error("VITE_API_BASE_URL is not configured")
   }
-  const body: Record<string, string> = { device_id: deviceId }
+  const body: Record<string, string> = {}
   if (target.reservationId) body.reservation_id = target.reservationId
   if (target.tableId) body.table_id = target.tableId
   return fetch(`${env.apiBaseUrl}${CART_API.guestInit}`, {

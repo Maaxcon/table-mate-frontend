@@ -69,7 +69,6 @@ export const menuStrings = {
     increase: "Збільшити",
     checkout: "Оформити замовлення",
     groupedBy: "Замовлення",
-    guest: (name: string) => `${name}`,
     you: "Ви",
     errorAdd: "Не вдалося додати страву",
     errorUpdate: "Не вдалося оновити кількість",
