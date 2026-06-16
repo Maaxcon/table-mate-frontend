@@ -74,7 +74,7 @@ export function useCabinet(): UseCabinetResult {
         await Promise.allSettled([
           fetchMyProfile(signal),
           fetchMyReservations({ limit: BOOKINGS_PAGE_SIZE + 1, offset: 0, signal }),
-          fetchMyReservations({ limit: 9999, offset: 0, signal }),
+          fetchMyReservations({ limit: 9999, offset: 0, signal, status: ["pending", "active"] }),
           fetchMyReceipts(signal),
         ])
 
@@ -138,6 +138,7 @@ export function useCabinet(): UseCabinetResult {
     try {
       await cancelReservation(publicId)
       setBookings((prev) => prev.filter((b) => b.public_id !== publicId))
+      setAllReservations((prev) => prev.filter((r) => r.public_id !== publicId))
       setBookingsError(null)
     } catch (err) {
       setBookingsError("We could not cancel this booking.")

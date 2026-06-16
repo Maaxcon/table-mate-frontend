@@ -134,6 +134,7 @@ type FetchMyReservationsOptions = {
   limit?: number
   offset?: number
   signal?: AbortSignal
+  status?: string[]
 }
 
 export async function fetchMyReservations(
@@ -142,6 +143,11 @@ export async function fetchMyReservations(
   const params = new URLSearchParams()
   if (options.limit !== undefined) params.set("limit", String(options.limit))
   if (options.offset !== undefined) params.set("offset", String(options.offset))
+  if (options.status) {
+    for (const s of options.status) {
+      params.append("status", s)
+    }
+  }
   const query = params.toString()
   const res = await apiFetch(`/api/reservations/reservations/my/${query ? `?${query}` : ""}`, {
     signal: options.signal,
