@@ -84,7 +84,10 @@ function buildCalendarDays(
 }
 
 export function ReservationCalendar({ reservations, history, loading }: Props) {
-  const today = useMemo(() => new Date(), [])
+  const today = useMemo(() => {
+    const d = new Date()
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate())
+  }, [])
   const hasHistory = history.length > 0
 
   const earliestHistoryMonth = useMemo(() => {
