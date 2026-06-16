@@ -215,8 +215,8 @@ export function useCart({
     if (!cartSessionId || !guestJwt || !reserved) return
     if (initialFetchDone.current) return
     initialFetchDone.current = true
-    refetch()
-  }, [cartSessionId, guestJwt, refetch, reserved])
+    syncFromServer()
+  }, [cartSessionId, guestJwt, syncFromServer, reserved])
 
   const addItem = useCallback(
     (menuItemId: string): Promise<void> =>
