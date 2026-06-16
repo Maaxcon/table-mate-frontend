@@ -12,19 +12,8 @@ import type {
 } from "./data/waiterTypes"
 import { getTableVisualStatus } from "./data/waiterTypes"
 import { apiFetch } from "@/api/client"
+import type { LayoutResponse, Table } from "@/types/api"
 import "./WaiterOrderView.css"
-
-interface TableApiResponse {
-  public_id: string
-  table_number: string
-  capacity: number
-  shape: string
-  is_occupied: boolean
-  active: boolean
-  position_x: number | null
-  position_y: number | null
-  zone?: { public_id: string; name: string } | null
-}
 
 interface ZoneApiResponse {
   public_id: string
@@ -32,16 +21,16 @@ interface ZoneApiResponse {
   sort_order: number
 }
 
-function mapTableToFloorTable(t: TableApiResponse): FloorTable {
+function mapTableToFloorTable(t: Table): FloorTable {
   return {
     public_id: t.public_id,
     table_number: t.table_number,
     capacity: t.capacity,
     shape: t.shape as FloorTable["shape"],
-    is_occupied: t.is_occupied,
-    position_x: t.position_x,
-    position_y: t.position_y,
-    active: t.active,
+    is_occupied: t.is_occupied ?? false,
+    position_x: t.position_x ?? null,
+    position_y: t.position_y ?? null,
+    active: t.active ?? true,
     zone: t.zone ?? null,
   }
 }
@@ -70,10 +59,7 @@ export function WaiterOrderView() {
     ])
       .then(async ([layoutRes, zonesRes]) => {
         if (!layoutRes.ok) throw new Error("Failed to load tables")
-        const layoutData = (await layoutRes.json()) as {
-          tables: TableApiResponse[]
-          upcoming_reservations: Array<{ public_id: string; table_id: string; start_at: string }>
-        }
+        const layoutData = (await layoutRes.json()) as LayoutResponse
         const items = layoutData.tables ?? []
         setTables(items.map(mapTableToFloorTable))
         setLayoutReservations(layoutData.upcoming_reservations ?? [])
