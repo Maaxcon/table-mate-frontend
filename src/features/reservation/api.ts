@@ -1,5 +1,6 @@
 import { apiFetch } from "@/api/client"
 import type { Table } from "@/types/api/types.gen"
+import type { UpcomingReservation } from "@/features/waiter-order-view/data/waiterTypes"
 
 export type WorkingHoursDay = {
   open: string
@@ -88,6 +89,19 @@ export async function fetchAvailableSlots(
   const res = await apiFetch(`/api/reservations/reservations/available-slots/?${params}`)
   if (!res.ok) throw new Error("Failed to fetch available slots")
   return res.json() as Promise<Record<string, string[]>>
+}
+
+export async function fetchUpcomingReservations(
+  restaurantId?: string,
+): Promise<UpcomingReservation[]> {
+  let url = "/api/restaurants/tables/layout/"
+  if (restaurantId) {
+    url += `?restaurant=${restaurantId}`
+  }
+  const res = await apiFetch(url)
+  if (!res.ok) return []
+  const data = (await res.json()) as { upcoming_reservations?: UpcomingReservation[] }
+  return data.upcoming_reservations ?? []
 }
 
 export async function checkAvailability(

@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react"
-import type { FloorTable } from "@/features/waiter-order-view/data/mockData"
+import { Link } from "react-router-dom"
 import "./TopNav.css"
 
 const TABS = ["FLOOR PLAN", "WAITLIST", "ANALYTICS"]
 
 interface TopNavProps {
-  tables: FloorTable[]
+  occupiedCount: number
+  reservedCount: number
+  freeCount: number
   activeTab: string
   onTabChange: (tab: string) => void
 }
@@ -26,10 +28,13 @@ function useCurrentTime(): string {
   return time
 }
 
-export function TopNav({ tables, activeTab, onTabChange }: TopNavProps) {
-  const occupiedCount = tables.filter((t) => t.status === "occupied").length
-  const reservedCount = tables.filter((t) => t.status === "reserved").length
-  const freeCount = tables.filter((t) => t.status === "free").length
+export function TopNav({
+  occupiedCount,
+  reservedCount,
+  freeCount,
+  activeTab,
+  onTabChange,
+}: TopNavProps) {
   const currentTime = useCurrentTime()
 
   return (
@@ -73,6 +78,9 @@ export function TopNav({ tables, activeTab, onTabChange }: TopNavProps) {
           FREE: {freeCount}
         </span>
         <span className="top-nav__time">{currentTime}</span>
+        <Link to="/staff/orders" className="top-nav__nav-link">
+          KITCHEN
+        </Link>
         <div className="top-nav__avatar" />
       </div>
     </nav>

@@ -1,10 +1,11 @@
 import { useState } from "react"
-import { getTimeFromDatetime } from "@/features/waiter-order-view/data/mockData"
+import { getTimeFromDatetime } from "../data/waiterTypes"
 import type {
   FloorTable,
   ReservationItem,
   OverlayDetail,
-} from "@/features/waiter-order-view/data/mockData"
+  VisualTableStatus,
+} from "../data/waiterTypes"
 import { OrderItemRow } from "./OrderItemRow"
 import "./TableDetailOverlay.css"
 
@@ -12,6 +13,8 @@ interface TableDetailOverlayProps {
   table: FloorTable
   detail: OverlayDetail | null
   tableReservations: ReservationItem[]
+  visualStatus: VisualTableStatus
+  loading: boolean
   onClose: () => void
 }
 
@@ -19,15 +22,19 @@ export function TableDetailOverlay({
   table,
   detail,
   tableReservations,
+  visualStatus,
+  loading,
   onClose,
 }: TableDetailOverlayProps) {
-  const isOccupied = table.status === "occupied"
-  const isReserved = table.status === "reserved"
+  const isOccupied = visualStatus === "occupied"
+  const isReserved = visualStatus === "reserved"
   const [activeOverlayTab, setActiveOverlayTab] = useState<"order" | "reservations">(
-    isOccupied || isReserved ? "reservations" : "reservations",
+    isOccupied ? "order" : "reservations",
   )
 
-  const guestSlots = detail ? [...new Set(detail.items.map((i) => i.guest_slot))].sort() : []
+  const guestSlots = detail
+    ? [...new Set(detail.items.map((i) => i.guest_slot))].sort((a, b) => a - b)
+    : []
   const nearestReservation =
     tableReservations.length > 0
       ? [...tableReservations].sort(
@@ -67,13 +74,15 @@ export function TableDetailOverlay({
             </button>
           </div>
           <p className="overlay__subtitle">
-            {isReserved
-              ? `Reserved ${nearestReservation ? `• ${nearestReservation.name} at ${getTimeFromDatetime(nearestReservation.start_at)}` : ""}`
-              : isOccupied && detail
-                ? `Current Party: ${detail.guest_name} • ${detail.guest_count} Guests • Duration: ${detail.duration}`
-                : nearestReservation
-                  ? `Capacity: ${table.capacity} • Next: ${nearestReservation.name} at ${getTimeFromDatetime(nearestReservation.start_at)}`
-                  : `Capacity: ${table.capacity} • Available`}
+            {loading
+              ? ""
+              : isReserved
+                ? `Reserved ${nearestReservation ? `• ${nearestReservation.name} at ${getTimeFromDatetime(nearestReservation.start_at)}` : ""}`
+                : isOccupied && detail
+                  ? `Current Party: ${detail.guest_name} • ${detail.guest_count} Guests • Duration: ${detail.duration}`
+                  : nearestReservation
+                    ? `Capacity: ${table.capacity} • Next: ${nearestReservation.name} at ${getTimeFromDatetime(nearestReservation.start_at)}`
+                    : `Capacity: ${table.capacity} • Available`}
           </p>
         </div>
 
@@ -96,57 +105,95 @@ export function TableDetailOverlay({
           </button>
         </div>
 
-        {activeOverlayTab === "order" && detail && (
+        {loading && (
+          <div className="overlay__skeleton">
+            <div className="overlay__skeleton-actions">
+              <div className="skeleton-box" style={{ width: 90, height: 34 }} />
+              <div className="skeleton-box" style={{ width: 100, height: 34 }} />
+              <div className="skeleton-box" style={{ width: 110, height: 34 }} />
+            </div>
+            <div className="overlay__skeleton-divider" />
+            <div className="overlay__skeleton-items">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="overlay__skeleton-row">
+                  <div className="skeleton-box" style={{ width: "60%", height: 16 }} />
+                  <div className="skeleton-box" style={{ width: 50, height: 16 }} />
+                </div>
+              ))}
+            </div>
+            <div className="overlay__skeleton-divider" />
+            <div className="overlay__skeleton-footer">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="overlay__skeleton-row">
+                  <div className="skeleton-box" style={{ width: 80, height: 16 }} />
+                  <div className="skeleton-box" style={{ width: 60, height: 16 }} />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {activeOverlayTab === "order" && !loading && (
           <>
-            <div className="overlay__actions">
-              <button type="button" className="overlay__action-btn">
-                ADD ITEM
-              </button>
-              <button type="button" className="overlay__action-btn">
-                MOVE TABLE
-              </button>
-              <button type="button" className="overlay__action-btn">
-                CLOSE CHECK
-              </button>
-            </div>
+            {detail ? (
+              <>
+                <div className="overlay__actions">
+                  <button type="button" className="overlay__action-btn">
+                    ADD ITEM
+                  </button>
+                  <button type="button" className="overlay__action-btn">
+                    MOVE TABLE
+                  </button>
+                  <button type="button" className="overlay__action-btn">
+                    CLOSE CHECK
+                  </button>
+                </div>
 
-            <div className="overlay__divider" />
+                <div className="overlay__divider" />
 
-            <div className="overlay__body">
-              {guestSlots.map((slot) => {
-                const slotItems = detail.items.filter((i) => i.guest_slot === slot)
-                return (
-                  <div key={slot} className="overlay__slot">
-                    <h3 className="overlay__slot-title">GUEST {slot}</h3>
-                    {slotItems.map((item) => (
-                      <OrderItemRow key={item.public_id} item={item} />
-                    ))}
+                <div className="overlay__body">
+                  {guestSlots.map((slot) => {
+                    const slotItems = detail.items.filter((i) => i.guest_slot === slot)
+                    return (
+                      <div key={slot} className="overlay__slot">
+                        <h3 className="overlay__slot-title">GUEST {slot}</h3>
+                        {slotItems.map((item) => (
+                          <OrderItemRow key={item.public_id} item={item} />
+                        ))}
+                      </div>
+                    )
+                  })}
+                </div>
+
+                {detail.items.length > 0 && <div className="overlay__divider" />}
+
+                {detail.items.length > 0 && (
+                  <div className="overlay__footer">
+                    <div className="overlay__total-row">
+                      <span className="overlay__total-label">SUBTOTAL</span>
+                      <span className="overlay__total-value">&euro;{detail.subtotal}</span>
+                    </div>
+                    <div className="overlay__total-row">
+                      <span className="overlay__total-label">TAX</span>
+                      <span className="overlay__total-value">&euro;{detail.tax_total}</span>
+                    </div>
+                    <div className="overlay__total-row overlay__total-row--final">
+                      <span className="overlay__total-label overlay__total-label--large">
+                        TOTAL
+                      </span>
+                      <span className="overlay__total-value overlay__total-value--large">
+                        &euro;{detail.total_amount}
+                      </span>
+                    </div>
+                    <button type="button" className="overlay__cta">
+                      PROCESS PAYMENT
+                    </button>
                   </div>
-                )
-              })}
-            </div>
-
-            <div className="overlay__divider" />
-
-            <div className="overlay__footer">
-              <div className="overlay__total-row">
-                <span className="overlay__total-label">SUBTOTAL</span>
-                <span className="overlay__total-value">&euro;{detail.subtotal}</span>
-              </div>
-              <div className="overlay__total-row">
-                <span className="overlay__total-label">TAX</span>
-                <span className="overlay__total-value">&euro;{detail.tax_total}</span>
-              </div>
-              <div className="overlay__total-row overlay__total-row--final">
-                <span className="overlay__total-label overlay__total-label--large">TOTAL</span>
-                <span className="overlay__total-value overlay__total-value--large">
-                  &euro;{detail.total_amount}
-                </span>
-              </div>
-              <button type="button" className="overlay__cta">
-                PROCESS PAYMENT
-              </button>
-            </div>
+                )}
+              </>
+            ) : (
+              <p className="overlay__empty">No active order for this table.</p>
+            )}
           </>
         )}
 

@@ -5,7 +5,7 @@ import { googleAuthCleanupQueryParams, googleAuthMessage } from "./googleAuth.co
 import type { GoogleFeedbackType, InitialGoogleFeedback, MeResponse } from "@/features/auth/types"
 import type { GoogleAuthResponse } from "@/types/api/types.gen"
 import { useAppDispatch } from "@/store/hooks"
-import { setAccessToken, setStaffContextPending, setUser } from "@/store/auth/authSlice"
+import { setAccessToken, setUser } from "@/store/auth/authSlice"
 import { apiFetch } from "@/api/client"
 
 type UseGoogleRedirectAuthResult = {
@@ -94,11 +94,6 @@ function useGoogleRedirectAuth(): UseGoogleRedirectAuthResult {
         }
 
         dispatch(setAccessToken(payload.access))
-
-        if (payload.needs_restaurant_context) {
-          dispatch(setStaffContextPending())
-          return
-        }
 
         const meResponse = await apiFetch("/api/auth/me/", { signal: controller.signal })
         if (!meResponse.ok) {

@@ -1,13 +1,22 @@
-import type { FloorTable } from "@/features/waiter-order-view/data/mockData"
+import type { FloorTable, UpcomingReservation } from "../data/waiterTypes"
+import { getTableVisualStatus } from "../data/waiterTypes"
 import "./FloorPlan.css"
 
 interface FloorPlanProps {
   tables: FloorTable[]
   selectedId: string | null
+  upcomingReservations?: UpcomingReservation[]
+  currentTime: Date
   onSelect: (table: FloorTable) => void
 }
 
-export function FloorPlan({ tables, selectedId, onSelect }: FloorPlanProps) {
+export function FloorPlan({
+  tables,
+  selectedId,
+  upcomingReservations = [],
+  currentTime,
+  onSelect,
+}: FloorPlanProps) {
   const statusLabel: Record<string, string> = {
     free: "FREE",
     reserved: "RESERVED",
@@ -18,35 +27,38 @@ export function FloorPlan({ tables, selectedId, onSelect }: FloorPlanProps) {
     <div className="floor-plan">
       <h2 className="floor-plan__title">FLOOR PLAN</h2>
       <div className="floor-plan__canvas">
-        {tables.map((table) => (
-          <button
-            key={table.public_id}
-            type="button"
-            className={[
-              "floor-plan__table",
-              `floor-plan__table--${table.status}`,
-              `floor-plan__table--${table.shape}`,
-              selectedId === table.public_id ? "floor-plan__table--selected" : null,
-            ]
-              .filter(Boolean)
-              .join(" ")}
-            style={{
-              left: table.position_x ?? undefined,
-              top: table.position_y ?? undefined,
-            }}
-            onClick={() => onSelect(table)}
-          >
-            <span className={`floor-plan__table-badge floor-plan__table-badge--${table.status}`}>
-              {statusLabel[table.status] ?? table.status.toUpperCase()}
-            </span>
+        {tables.map((table) => {
+          const visualStatus = getTableVisualStatus(table, upcomingReservations, currentTime)
+          return (
+            <button
+              key={table.public_id}
+              type="button"
+              className={[
+                "floor-plan__table",
+                `floor-plan__table--${visualStatus}`,
+                `floor-plan__table--${table.shape}`,
+                selectedId === table.public_id ? "floor-plan__table--selected" : null,
+              ]
+                .filter(Boolean)
+                .join(" ")}
+              style={{
+                left: table.position_x ?? undefined,
+                top: table.position_y ?? undefined,
+              }}
+              onClick={() => onSelect(table)}
+            >
+              <span className={`floor-plan__table-badge floor-plan__table-badge--${visualStatus}`}>
+                {statusLabel[visualStatus] ?? visualStatus.toUpperCase()}
+              </span>
 
-            <span className="floor-plan__table-number">{table.table_number}</span>
+              <span className="floor-plan__table-number">{table.table_number}</span>
 
-            <div className="floor-plan__table-meta">
-              <span className="floor-plan__table-capacity">{table.capacity} P</span>
-            </div>
-          </button>
-        ))}
+              <div className="floor-plan__table-meta">
+                <span className="floor-plan__table-capacity">{table.capacity} P</span>
+              </div>
+            </button>
+          )
+        })}
       </div>
     </div>
   )

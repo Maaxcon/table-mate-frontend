@@ -3,9 +3,15 @@ import { useAppSelector } from "@/store/hooks"
 
 function PublicRoute() {
   const user = useAppSelector((state) => state.auth.user)
-  const staffContextPending = useAppSelector((state) => state.auth.staffContextPending)
-  if (staffContextPending) return <Navigate to="/select-restaurant" replace />
-  if (user) return <Navigate to="/restaurants" replace />
+  if (user) {
+    if (user.role === "cook") {
+      return <Navigate to="/staff/orders" replace />
+    }
+    if (user.role === "admin" || user.role === "waiter") {
+      return <Navigate to="/waiter-order" replace />
+    }
+    return <Navigate to="/restaurants" replace />
+  }
   return <Outlet />
 }
 
