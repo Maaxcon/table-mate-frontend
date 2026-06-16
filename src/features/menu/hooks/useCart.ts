@@ -9,7 +9,7 @@ export type CartItemWithDetails = {
   quantity: number
   comment: string | null
   guestSlot: number | null
-  deviceId: string | null
+  isMine: boolean
   addedBy: string | null
   isPaid: boolean
   item: MenuItem | null
@@ -154,7 +154,7 @@ function buildDetails(
     quantity: ci.quantity,
     comment: ci.comment,
     guestSlot: ci.guest_slot,
-    deviceId: ci.device_id,
+    isMine: ci.is_mine,
     addedBy: ci.added_by,
     isPaid: ci.is_paid,
     item: itemsById[ci.menu_item] ?? null,
@@ -230,7 +230,7 @@ export function useCart({
           comment: null,
           added_by: null,
           guest_slot: null,
-          device_id: null,
+          is_mine: true,
           is_paid: false,
           cart_session: cartSessionId,
           restaurant: "",

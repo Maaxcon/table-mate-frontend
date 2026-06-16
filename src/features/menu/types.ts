@@ -57,7 +57,7 @@ export type CartItemResponse = {
   comment: string | null
   added_by: string | null
   guest_slot: number | null
-  device_id: string | null
+  is_mine: boolean
   is_paid: boolean
   cart_session: string
   readonly restaurant: string

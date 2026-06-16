@@ -219,8 +219,6 @@ function MenuPage() {
     ],
   )
 
-  const guestSlot = cartItems.find((ci) => ci.deviceId === guestAuth.deviceId)?.guestSlot ?? null
-
   const handleChangeQuantity = useCallback(
     (itemId: string, delta: number) => {
       const cartItem = cartItems.find((ci) => ci.menuItemId === itemId || ci.id === itemId)
@@ -454,8 +452,6 @@ function MenuPage() {
           error={cartAccessError ?? cartError}
           errorItemId={errorItemId}
           displayName={guestAuth.displayName}
-          guestSlot={guestSlot}
-          deviceId={guestAuth.deviceId}
           onChangeQuantity={handleChangeQuantity}
           onRemoveItem={removeItem}
           onClose={() => setCartOpen(false)}

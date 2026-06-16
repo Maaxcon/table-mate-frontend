@@ -23,8 +23,6 @@ type Props = {
   error: string | null
   errorItemId: string | null
   displayName: string
-  guestSlot: number | null
-  deviceId: string
   onChangeQuantity: (itemId: string, delta: number) => void
   onRemoveItem: (itemId: string) => void
   onClose: () => void
@@ -44,40 +42,17 @@ function lineTotal(ci: CartItemWithDetails): number {
   return unitPrice(ci) * ci.quantity
 }
 
-function isOwnGroup(
-  group: ItemGroup,
-  currentGuestSlot: number | null,
-  currentDeviceId: string,
-): boolean {
-  const matchesSlot =
-    currentGuestSlot != null && group.guestSlot != null && group.guestSlot === currentGuestSlot
-  const matchesDevice = Boolean(
-    currentDeviceId && group.deviceId && group.deviceId === currentDeviceId,
-  )
-  return matchesSlot || matchesDevice
-}
+function getGroupLabel(group: ItemGroup, displayName: string): string {
+  if (group.isMine) {
+    return displayName ? `${menuStrings.cart.you} · ${displayName}` : menuStrings.cart.you
+  }
 
-function getGroupLabel(
-  group: ItemGroup,
-  displayName: string,
-  currentGuestSlot: number | null,
-  currentDeviceId: string,
-): string {
   if (group.addedBy) {
     return group.addedBy
   }
 
-  if (isOwnGroup(group, currentGuestSlot, currentDeviceId)) {
-    return displayName ? `${menuStrings.cart.you} · ${displayName}` : menuStrings.cart.you
-  }
-
   if (group.guestSlot != null) {
     return menuStrings.cart.slotLabel(group.guestSlot)
-  }
-
-  if (group.deviceId) {
-    const suffix = group.deviceId.slice(0, 6).toUpperCase()
-    return menuStrings.cart.guest(`#${suffix}`)
   }
 
   return menuStrings.cart.groupedBy
@@ -92,8 +67,6 @@ export function CartDrawer({
   error,
   errorItemId,
   displayName,
-  guestSlot: currentGuestSlot,
-  deviceId,
   onChangeQuantity,
   onRemoveItem,
   onClose,
@@ -127,10 +100,7 @@ export function CartDrawer({
   const totalCount = items.reduce((s, i) => s + i.quantity, 0)
 
   const groups = groupItemsByGuest(items)
-  const groupedItems = [
-    ...groups.filter((g) => isOwnGroup(g, currentGuestSlot, deviceId)),
-    ...groups.filter((g) => !isOwnGroup(g, currentGuestSlot, deviceId)),
-  ]
+  const groupedItems = [...groups.filter((g) => g.isMine), ...groups.filter((g) => !g.isMine)]
 
   return (
     <div
@@ -246,7 +216,7 @@ export function CartDrawer({
               {groupedItems.map((group) => (
                 <div key={group.key} className="cart-drawer__group">
                   <span className="cart-drawer__group-label">
-                    {getGroupLabel(group, displayName, currentGuestSlot, deviceId)}
+                    {getGroupLabel(group, displayName)}
                   </span>
                   <ul className="cart-drawer__group-list">
                     {group.items.map((ci) => (
@@ -329,7 +299,7 @@ export function CartDrawer({
 type ItemGroup = {
   key: string
   guestSlot: number | null
-  deviceId: string | null
+  isMine: boolean
   addedBy: string | null
   items: CartItemWithDetails[]
 }
@@ -338,12 +308,12 @@ function groupItemsByGuest(items: CartItemWithDetails[]): ItemGroup[] {
   const groups = new Map<string, ItemGroup>()
 
   for (const item of items) {
-    const key = item.addedBy
-      ? `user-${item.addedBy}`
-      : item.guestSlot != null
-        ? `slot-${item.guestSlot}`
-        : item.deviceId
-          ? `dev-${item.deviceId}`
+    const key = item.isMine
+      ? "mine"
+      : item.addedBy
+        ? `user-${item.addedBy}`
+        : item.guestSlot != null
+          ? `slot-${item.guestSlot}`
           : "ungrouped"
 
     let group = groups.get(key)
@@ -351,7 +321,7 @@ function groupItemsByGuest(items: CartItemWithDetails[]): ItemGroup[] {
       group = {
         key,
         guestSlot: item.guestSlot,
-        deviceId: item.deviceId,
+        isMine: item.isMine,
         addedBy: item.addedBy,
         items: [],
       }
