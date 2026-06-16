@@ -48,6 +48,12 @@ export function WaiterOrderView() {
   const [layoutReservations, setLayoutReservations] = useState<UpcomingReservation[]>([])
   const [overlayDetail, setOverlayDetail] = useState<OverlayDetail | null>(null)
   const [overlayLoading, setOverlayLoading] = useState(false)
+  const [currentTime, setCurrentTime] = useState(() => new Date())
+
+  useEffect(() => {
+    const id = setInterval(() => setCurrentTime(new Date()), 60_000)
+    return () => clearInterval(id)
+  }, [])
 
   useEffect(() => {
     const controller = new AbortController()
@@ -266,18 +272,17 @@ export function WaiterOrderView() {
 
   const showFloorPlan = activeTab === "FLOOR PLAN"
 
-  const now = new Date()
   const visualOccupiedCount = tables.filter(
-    (t) => getTableVisualStatus(t, layoutReservations, now) === "occupied",
+    (t) => getTableVisualStatus(t, layoutReservations, currentTime) === "occupied",
   ).length
   const visualReservedCount = tables.filter(
-    (t) => getTableVisualStatus(t, layoutReservations, now) === "reserved",
+    (t) => getTableVisualStatus(t, layoutReservations, currentTime) === "reserved",
   ).length
   const visualFreeCount = tables.filter(
-    (t) => getTableVisualStatus(t, layoutReservations, now) === "free",
+    (t) => getTableVisualStatus(t, layoutReservations, currentTime) === "free",
   ).length
   const selectedTableVisualStatus = selectedTable
-    ? getTableVisualStatus(selectedTable, layoutReservations, now)
+    ? getTableVisualStatus(selectedTable, layoutReservations, currentTime)
     : "free"
 
   if (loading)
@@ -325,6 +330,7 @@ export function WaiterOrderView() {
               tables={filteredTables}
               selectedId={selectedTableId}
               upcomingReservations={layoutReservations}
+              currentTime={currentTime}
               onSelect={handleTableSelect}
             />
           ) : (
