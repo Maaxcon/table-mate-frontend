@@ -6,8 +6,10 @@ import {
   fetchMyReservations,
   fetchRestaurantSettings,
   fetchTables,
+  fetchUpcomingReservations,
   fetchZones,
 } from "@/features/reservation/api"
+import type { UpcomingReservation } from "@/features/waiter-order-view/data/waiterTypes"
 import { ActiveBookings } from "@/features/reservation/ActiveBookings"
 import { BookModal } from "@/features/reservation/BookModal"
 import { CustomerFloorPlan } from "@/features/reservation/CustomerFloorPlan"
@@ -38,6 +40,7 @@ export function BookingPage() {
 
   const [reservations, setReservations] = useState<ReservationWithTable[]>([])
   const [reservationsLoading, setReservationsLoading] = useState(false)
+  const [upcomingReservations, setUpcomingReservations] = useState<UpcomingReservation[]>([])
 
   const loadTables = useCallback(async () => {
     if (!public_restaurant_id) return
@@ -90,14 +93,25 @@ export function BookingPage() {
     }
   }, [public_restaurant_id, isAuthenticated])
 
+  const loadUpcoming = useCallback(async () => {
+    if (!public_restaurant_id) return
+    try {
+      const data = await fetchUpcomingReservations(public_restaurant_id)
+      setUpcomingReservations(data)
+    } catch {
+      setUpcomingReservations([])
+    }
+  }, [public_restaurant_id])
+
   useEffect(() => {
     /* eslint-disable react-hooks/set-state-in-effect */
     loadTables()
     loadSettings()
     loadReservations()
+    loadUpcoming()
     loadZones()
     /* eslint-enable react-hooks/set-state-in-effect */
-  }, [loadTables, loadSettings, loadReservations, loadZones])
+  }, [loadTables, loadSettings, loadReservations, loadUpcoming, loadZones])
 
   const handleTableSelect = useCallback(
     (table: Table) => {
@@ -159,6 +173,7 @@ export function BookingPage() {
               onZoneChange={setSelectedZone}
               selectedId={selectedTable?.public_id ?? null}
               onSelect={handleTableSelect}
+              upcomingReservations={upcomingReservations}
             />
           ))}
 
