@@ -13,6 +13,7 @@ type MenuItemCardProps = {
   onChangeQuantity: (publicId: string, delta: number) => void
   cartQuantity?: number
   likePending?: boolean
+  pending?: boolean
 }
 
 function MenuItemCard({
@@ -24,6 +25,7 @@ function MenuItemCard({
   onChangeQuantity,
   cartQuantity = 0,
   likePending = false,
+  pending = false,
 }: MenuItemCardProps) {
   const handleAdd = (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -90,6 +92,7 @@ function MenuItemCard({
                 <button
                   className="menu-item-card__stepper-btn"
                   onClick={handleDecrement}
+                  disabled={pending}
                   aria-label={menuStrings.card.decrease}
                 >
                   <LuMinus size={12} strokeWidth={2.6} />
@@ -98,6 +101,7 @@ function MenuItemCard({
                 <button
                   className="menu-item-card__stepper-btn"
                   onClick={handleIncrement}
+                  disabled={pending}
                   aria-label={menuStrings.card.increase}
                 >
                   <LuPlus size={12} strokeWidth={2.6} />

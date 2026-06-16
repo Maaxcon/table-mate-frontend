@@ -158,6 +158,16 @@ function MenuPage() {
     [cartItems],
   )
 
+  const pendingItemIds = useMemo(
+    () =>
+      new Set(
+        Array.isArray(cartItems)
+          ? cartItems.filter((c) => c.id.startsWith("temp-")).map((c) => c.menuItemId)
+          : [],
+      ),
+    [cartItems],
+  )
+
   useEffect(() => {
     if (!groupedItems) return
     const refs = sectionRefs.current
@@ -236,6 +246,7 @@ function MenuPage() {
   const gridHandlers = {
     currencySymbol,
     cartQuantities,
+    pendingItemIds,
     isLikePending,
     onSelect: setSelectedItem,
     onAddToCart: handleAddToCart,

@@ -5,6 +5,7 @@ type MenuItemGridProps = {
   items: MenuItem[]
   currencySymbol: string
   cartQuantities: Map<string, number>
+  pendingItemIds: Set<string>
   isLikePending: (publicId: string) => boolean
   onSelect: (item: MenuItem) => void
   onAddToCart: (item: MenuItem) => void
@@ -17,6 +18,7 @@ function MenuItemGrid({
   items,
   currencySymbol,
   cartQuantities,
+  pendingItemIds,
   isLikePending,
   onSelect,
   onAddToCart,
@@ -36,6 +38,7 @@ function MenuItemGrid({
           onChangeQuantity={onChangeQuantity}
           likePending={isLikePending(item.public_id)}
           cartQuantity={cartQuantities.get(item.public_id) ?? 0}
+          pending={pendingItemIds.has(item.public_id)}
         />
       ))}
     </div>
