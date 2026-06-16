@@ -99,7 +99,7 @@ function CabinetPage() {
         <>
           <ProfileHeader profile={profile} onSave={updateProfile} />
           <CabinetStats history={history} />
-          <ReservationCalendar reservations={allReservations} history={history} />
+          <ReservationCalendar reservations={allReservations} history={history} loading={loading} />
           <BookingsList
             bookings={bookings}
             error={bookingsError}
