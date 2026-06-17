@@ -85,6 +85,15 @@ export function getTimeFromDatetime(datetime: string): string {
   return `${d.getHours().toString().padStart(2, "0")}:${d.getMinutes().toString().padStart(2, "0")}`
 }
 
+export function getDateTimeFromDatetime(datetime: string): string {
+  const d = new Date(datetime)
+  const day = d.getDate().toString().padStart(2, "0")
+  const month = (d.getMonth() + 1).toString().padStart(2, "0")
+  const hours = d.getHours().toString().padStart(2, "0")
+  const minutes = d.getMinutes().toString().padStart(2, "0")
+  return `${day}.${month} ${hours}:${minutes}`
+}
+
 export function formatDuration(openedAt: string): string {
   const durationMinutes = Math.round((Date.now() - new Date(openedAt).getTime()) / 60000)
   if (durationMinutes < 60) return `${durationMinutes}m`

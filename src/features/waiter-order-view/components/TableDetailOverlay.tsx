@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react"
-import { getTimeFromDatetime } from "../data/waiterTypes"
+import { getTimeFromDatetime, getDateTimeFromDatetime } from "../data/waiterTypes"
 import type {
   FloorTable,
   ReservationItem,
@@ -395,8 +395,9 @@ export function TableDetailOverlay({
                         {isLate && <span className="overlay__late-tag">late</span>}
                       </span>
                       <span className="overlay__reservation-meta">
-                        {r.guest_count} guests &middot; {getTimeFromDatetime(r.start_at)}
-                        {r.end_at && ` — ${getTimeFromDatetime(r.end_at)}`}
+                        {r.guest_count} guests &middot; {getDateTimeFromDatetime(r.start_at)}
+                        {r.end_at &&
+                          ` — ${isSameDay(new Date(r.start_at), new Date(r.end_at)) ? getTimeFromDatetime(r.end_at) : getDateTimeFromDatetime(r.end_at)}`}
                       </span>
                       {r.notes && <span className="overlay__reservation-notes">{r.notes}</span>}
                       <span className="overlay__reservation-status">{r.status}</span>
