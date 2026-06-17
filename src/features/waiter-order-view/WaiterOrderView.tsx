@@ -585,6 +585,7 @@ export function WaiterOrderView() {
           onRefresh={loadData}
           onBookTable={setBookingTable}
           onModifyReservation={handleModifyReservation}
+          onActivateReservation={() => loadData()}
         />
       )}
 
@@ -618,7 +619,7 @@ export function WaiterOrderView() {
           restaurantId={restaurantId ?? undefined}
           workingHours={workingHours}
           excludeReservationIds={excludeReservationIds}
-          prolongOnly={editingReservation.status === "active"}
+          endTimeOnly={editingReservation.status === "active"}
           onClose={() => setEditingReservation(null)}
           onSuccess={() => {
             setEditingReservation(null)

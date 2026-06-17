@@ -24,6 +24,7 @@ interface RescheduleModalProps {
   workingHours: Record<string, WorkingHoursDay> | null
   excludeReservationIds?: string[]
   prolongOnly?: boolean
+  endTimeOnly?: boolean
   onClose: () => void
   onSuccess: () => void
 }
@@ -48,6 +49,7 @@ export function RescheduleModal({
   workingHours,
   excludeReservationIds,
   prolongOnly = false,
+  endTimeOnly = false,
   onClose,
   onSuccess,
 }: RescheduleModalProps) {
@@ -128,7 +130,7 @@ export function RescheduleModal({
       }
     }
 
-    if (availableSlots) {
+    if (availableSlots && !endTimeOnly) {
       const startMins = prolongOnly ? timeToMinutes(currentEndTime) : timeToMinutes(selectedTime)
       for (let m = startMins; m < endMins; m += 30) {
         const slotTime = minutesToTime(m)
@@ -139,7 +141,15 @@ export function RescheduleModal({
     }
 
     return null
-  }, [selectedTime, durationMinutes, dayConfig, availableSlots, prolongOnly, currentEndTime])
+  }, [
+    selectedTime,
+    durationMinutes,
+    dayConfig,
+    availableSlots,
+    prolongOnly,
+    currentEndTime,
+    endTimeOnly,
+  ])
 
   const handleSave = useCallback(async () => {
     if (!selectedTime) return
@@ -152,11 +162,15 @@ export function RescheduleModal({
       const startISO = startDt.toISOString()
       const endISO = endDt.toISOString()
 
-      await modifyReservation(publicId, {
-        start_at: startISO,
-        end_at: endISO,
-        guest_count: guestCount,
-      })
+      if (endTimeOnly) {
+        await modifyReservation(publicId, { end_at: endISO })
+      } else {
+        await modifyReservation(publicId, {
+          start_at: startISO,
+          end_at: endISO,
+          guest_count: guestCount,
+        })
+      }
 
       setSuccess(true)
     } catch (err) {
@@ -164,7 +178,7 @@ export function RescheduleModal({
     } finally {
       setSubmitting(false)
     }
-  }, [selectedTime, dateStr, endAt, guestCount, publicId])
+  }, [selectedTime, dateStr, endAt, guestCount, publicId, endTimeOnly])
 
   if (success) {
     return (
@@ -257,8 +271,8 @@ export function RescheduleModal({
 
           <section className="book-modal__section">
             <h3 className="book-modal__section-title">TIME</h3>
-            {prolongOnly ? (
-              <p className="book-modal__empty">Prolonging from {currentStartTime}</p>
+            {prolongOnly || endTimeOnly ? (
+              <p className="book-modal__empty">Starting from {currentStartTime}</p>
             ) : slotsLoading ? (
               <p className="book-modal__empty">Loading available slots…</p>
             ) : !dayConfig ? (

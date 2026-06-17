@@ -234,3 +234,15 @@ export async function closeCheck(reservationId: string): Promise<void> {
     throw new Error((body as { detail?: string }).detail ?? "Failed to close check")
   }
 }
+
+export async function activateReservation(reservationId: string): Promise<ReservationWithTable> {
+  const res = await apiFetch(`/api/reservations/reservations/${reservationId}/activate/`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+  })
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}))
+    throw new Error((body as { detail?: string }).detail ?? "Failed to activate reservation")
+  }
+  return res.json() as Promise<ReservationWithTable>
+}

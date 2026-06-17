@@ -36,6 +36,7 @@ interface TableDetailOverlayProps {
   onRefresh: () => void
   onBookTable?: (table: FloorTable) => void
   onModifyReservation?: (reservation: ReservationItem) => void
+  onActivateReservation?: (reservation: ReservationItem) => void
 }
 
 export function TableDetailOverlay({
@@ -51,6 +52,7 @@ export function TableDetailOverlay({
   onRefresh,
   onBookTable,
   onModifyReservation,
+  onActivateReservation,
 }: TableDetailOverlayProps) {
   const isOccupied = visualStatus === "occupied"
   const isReserved = visualStatus === "reserved"
@@ -403,6 +405,16 @@ export function TableDetailOverlay({
                       <span className="overlay__reservation-status">{r.status}</span>
                     </div>
                     <div className="overlay__reservation-actions">
+                      {r.status === "pending" && onActivateReservation && (
+                        <button
+                          type="button"
+                          className="overlay__activate-btn"
+                          onClick={() => onActivateReservation(r)}
+                          disabled={actionLoading}
+                        >
+                          ACTIVATE
+                        </button>
+                      )}
                       {onModifyReservation && (
                         <button
                           type="button"
