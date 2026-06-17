@@ -2,6 +2,7 @@ import { useCallback, useEffect, useReducer, useRef } from "react"
 import { guestInit } from "@/features/menu/api"
 import { getGuestToken } from "@/features/menu/guestToken"
 import { decodeJwtPayload } from "@/features/menu/jwt"
+import { menuStrings } from "@/features/menu/strings"
 
 const DISPLAY_NAME_KEY = "tablemate.cart.display_name.v1"
 const REFRESH_MARGIN_MS = 60_000
@@ -106,10 +107,14 @@ export function useGuestAuth({
         })
       })
       .catch((err: Error) => {
-        const msg =
-          err.message === "NO_ACTIVE_SESSION"
-            ? "Активний кошик для цього столика не знайдено. Попросіть офіціанта відкрити столик."
-            : err.message
+        let msg: string
+        if (err.message === "NO_ACTIVE_RESERVATION") {
+          msg = menuStrings.cart.noActiveReservation
+        } else if (err.message === "NO_ACTIVE_SESSION") {
+          msg = menuStrings.cart.sessionUnavailable
+        } else {
+          msg = err.message
+        }
         dispatch({ type: "ERROR", error: msg })
       })
       .finally(() => {

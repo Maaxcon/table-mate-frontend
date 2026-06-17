@@ -200,7 +200,10 @@ export function guestInit(
   }).then(async (res) => {
     if (!res.ok) {
       if (res.status === 404) {
-        throw new Error("NO_ACTIVE_SESSION")
+        const body = (await res.json().catch(() => null)) as { code?: string } | null
+        throw new Error(
+          body?.code === "NO_ACTIVE_RESERVATION" ? "NO_ACTIVE_RESERVATION" : "NO_ACTIVE_SESSION",
+        )
       }
       throw await httpError(res)
     }
