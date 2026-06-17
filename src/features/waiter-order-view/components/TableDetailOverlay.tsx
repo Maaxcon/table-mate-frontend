@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { getTimeFromDatetime } from "../data/waiterTypes"
 import type {
   FloorTable,
@@ -10,6 +10,18 @@ import type {
 import { closeCheck, moveTable, cancelReservation } from "@/features/reservation/api"
 import { OrderItemRow } from "./OrderItemRow"
 import "./TableDetailOverlay.css"
+
+function formatDateInput(d: Date): string {
+  return d.toISOString().slice(0, 10)
+}
+
+function isSameDay(a: Date, b: Date): boolean {
+  return (
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate()
+  )
+}
 
 interface TableDetailOverlayProps {
   table: FloorTable
@@ -49,6 +61,8 @@ export function TableDetailOverlay({
   const [error, setError] = useState<string | null>(null)
   const [showMoveModal, setShowMoveModal] = useState(false)
   const [currentTime, setCurrentTime] = useState(new Date())
+  const [dateFrom, setDateFrom] = useState(formatDateInput(new Date()))
+  const [dateTo, setDateTo] = useState(formatDateInput(new Date()))
 
   useEffect(() => {
     const id = setInterval(() => setCurrentTime(new Date()), 30_000)
@@ -63,7 +77,19 @@ export function TableDetailOverlay({
   const guestSlots = detail
     ? [...new Set(detail.items.map((i) => i.guest_slot))].sort((a, b) => a - b)
     : []
-  const sortedReservations = [...tableReservations].sort(
+
+  const filteredTableReservations = useMemo(() => {
+    const from = new Date(dateFrom)
+    from.setHours(0, 0, 0, 0)
+    const to = new Date(dateTo)
+    to.setHours(23, 59, 59, 999)
+    return tableReservations.filter((r) => {
+      const start = new Date(r.start_at)
+      return start >= from && start <= to
+    })
+  }, [tableReservations, dateFrom, dateTo])
+
+  const sortedReservations = [...filteredTableReservations].sort(
     (a, b) => new Date(a.start_at).getTime() - new Date(b.start_at).getTime(),
   )
   const activeReservation =
@@ -74,7 +100,12 @@ export function TableDetailOverlay({
 
   const reservedTableNumbers = new Set(
     allReservations
-      .filter((r) => r.status === "pending" || r.status === "active")
+      .filter((r) => {
+        if (r.status !== "pending" && r.status !== "active") return false
+        const today = new Date()
+        const reservationDate = new Date(r.start_at)
+        return isSameDay(today, reservationDate)
+      })
       .map((r) => r.table),
   )
 
@@ -319,6 +350,26 @@ export function TableDetailOverlay({
 
         {activeOverlayTab === "reservations" && (
           <div className="overlay__body">
+            <div className="overlay__date-filter">
+              <label className="overlay__date-label">
+                FROM
+                <input
+                  type="date"
+                  className="overlay__date-input"
+                  value={dateFrom}
+                  onChange={(e) => setDateFrom(e.target.value)}
+                />
+              </label>
+              <label className="overlay__date-label">
+                TO
+                <input
+                  type="date"
+                  className="overlay__date-input"
+                  value={dateTo}
+                  onChange={(e) => setDateTo(e.target.value)}
+                />
+              </label>
+            </div>
             {onBookTable && (
               <button
                 type="button"
@@ -328,23 +379,20 @@ export function TableDetailOverlay({
                 BOOK THIS TABLE
               </button>
             )}
-            {tableReservations.length === 0 ? (
+            {filteredTableReservations.length === 0 ? (
               <div className="overlay__reservations-empty">
-                <p className="overlay__empty">No reservations for this table.</p>
+                <p className="overlay__empty">No reservations for this period.</p>
               </div>
             ) : (
-              tableReservations.map((r) => {
+              filteredTableReservations.map((r) => {
                 const isLate =
                   r.status === "pending" && new Date(r.start_at).getTime() < currentTime.getTime()
                 return (
-                  <div
-                    key={r.public_id}
-                    className={`overlay__reservation-row ${isLate ? "overlay__reservation-row--late" : ""}`}
-                  >
+                  <div key={r.public_id} className="overlay__reservation-row">
                     <div className="overlay__reservation-info">
                       <span className="overlay__reservation-name">
                         {r.name}
-                        {isLate && <span className="overlay__late-badge">LATE</span>}
+                        {isLate && <span className="overlay__late-tag">late</span>}
                       </span>
                       <span className="overlay__reservation-meta">
                         {r.guest_count} guests &middot; {getTimeFromDatetime(r.start_at)}

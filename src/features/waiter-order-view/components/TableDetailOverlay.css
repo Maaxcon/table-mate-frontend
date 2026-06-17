@@ -514,22 +514,39 @@
   margin-bottom: 16px;
 }
 
-.overlay__reservation-row--late {
-  background: var(--color-warning-bg);
-  border-left: 3px solid var(--color-warning-icon);
-  padding-left: 12px;
+.overlay__date-filter {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
 }
 
-.overlay__late-badge {
-  display: inline-block;
-  margin-left: 8px;
-  padding: 1px 6px;
-  font-size: 0.55rem;
-  font-weight: 800;
+.overlay__date-label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.62rem;
+  font-weight: 700;
   letter-spacing: 0.08em;
+  color: var(--color-text-secondary);
+}
+
+.overlay__date-input {
+  padding: 6px 8px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--color-text);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  font-family: inherit;
+}
+
+.overlay__late-tag {
+  margin-left: 6px;
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
   color: var(--color-warning-label);
-  background: var(--color-warning-icon);
-  vertical-align: middle;
+  text-transform: uppercase;
 }
 
 .overlay__modify-btn {
