@@ -14,6 +14,7 @@ import {
   MenuSkeleton,
   RestaurantInfoPanel,
 } from "@/features/menu/components"
+import { checkout } from "@/features/menu/api"
 import { useCart } from "@/features/menu/hooks/useCart"
 import { useCartSocket } from "@/features/menu/hooks/useCartSocket"
 import { useGuestAuth } from "@/features/menu/hooks/useGuestAuth"
@@ -100,6 +101,13 @@ function MenuPage() {
   const handleCartUpdated = useCallback(() => {
     syncFromServer()
   }, [syncFromServer])
+
+  const handleCheckout = useCallback(() => {
+    if (!guestAuth.cartSessionId || !guestAuth.guestJwt) {
+      return Promise.reject(new Error(menuStrings.cart.sessionUnavailable))
+    }
+    return checkout(guestAuth.cartSessionId, guestAuth.guestJwt)
+  }, [guestAuth.cartSessionId, guestAuth.guestJwt])
 
   const { isConnected } = useCartSocket({
     cartSessionId: guestAuth.cartSessionId,
@@ -472,6 +480,8 @@ function MenuPage() {
             clearError()
           }}
           onRetry={cartAccessError ? guestAuth.initialize : syncFromServer}
+          onCheckout={handleCheckout}
+          onCartChanged={syncFromServer}
         />
       )}
 

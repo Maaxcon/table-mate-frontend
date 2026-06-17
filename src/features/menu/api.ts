@@ -211,6 +211,43 @@ export function guestInit(
   })
 }
 
+export type RemovedItem = { id: string; name: string }
+export type CheckoutResult = { orderId: string; total: string }
+
+export class CartChangedError extends Error {
+  removed: RemovedItem[]
+  constructor(removed: RemovedItem[]) {
+    super("CART_CHANGED")
+    this.name = "CartChangedError"
+    this.removed = removed
+  }
+}
+
+export function checkout(sessionId: string, jwt: string): Promise<CheckoutResult> {
+  if (env.apiBaseUrl === ENV_NOT_CONFIGURED_VALUE) {
+    throw new Error("VITE_API_BASE_URL is not configured")
+  }
+  return fetch(`${env.apiBaseUrl}${CART_API.checkout(sessionId)}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${jwt}` },
+  }).then(async (res) => {
+    if (res.status === 201) {
+      const body = (await res.json()) as { order_id: string; total: string }
+      return { orderId: body.order_id, total: body.total }
+    }
+    if (res.status === 409) {
+      const body = (await res.json().catch(() => null)) as {
+        code?: string
+        removed?: RemovedItem[]
+      } | null
+      if (body?.code === "CART_CHANGED") {
+        throw new CartChangedError(body.removed ?? [])
+      }
+    }
+    throw await httpError(res)
+  })
+}
+
 const MAX_CART_PAGES = 100
 
 export async function fetchCartItems(sessionId: string, jwt: string): Promise<CartItemResponse[]> {

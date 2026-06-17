@@ -9,6 +9,7 @@ import {
   LuWifiOff,
   LuX,
 } from "react-icons/lu"
+import { CartChangedError, type CheckoutResult, type RemovedItem } from "@/features/menu/api"
 import type { CartItemWithDetails } from "@/features/menu/hooks/useCart"
 import { formatAmount } from "@/features/menu/utils"
 import { menuStrings } from "@/features/menu/strings"
@@ -28,6 +29,8 @@ type Props = {
   onClose: () => void
   onClearError: () => void
   onRetry?: () => void
+  onCheckout: () => Promise<CheckoutResult>
+  onCartChanged?: () => void
 }
 
 function isPending(ci: CartItemWithDetails): boolean {
@@ -72,9 +75,14 @@ export function CartDrawer({
   onClose,
   onClearError,
   onRetry,
+  onCheckout,
+  onCartChanged,
 }: Props) {
-  const [step, setStep] = useState<"cart" | "confirming" | "confirmed">("cart")
+  const [step, setStep] = useState<"cart" | "confirming" | "confirmed" | "changed">("cart")
   const [confirmedItems, setConfirmedItems] = useState<CartItemWithDetails[]>([])
+  const [submitting, setSubmitting] = useState(false)
+  const [removedItems, setRemovedItems] = useState<RemovedItem[]>([])
+  const [submitError, setSubmitError] = useState<string | null>(null)
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -91,9 +99,26 @@ export function CartDrawer({
     }
   }, [error, onClearError])
 
-  const handleConfirm = () => {
-    setConfirmedItems([...items])
-    setStep("confirmed")
+  const handleSubmit = async () => {
+    if (submitting || items.length === 0) return
+    setSubmitting(true)
+    setSubmitError(null)
+    const snapshot = [...items]
+    try {
+      await onCheckout()
+      setConfirmedItems(snapshot)
+      setStep("confirmed")
+    } catch (err) {
+      if (err instanceof CartChangedError) {
+        setRemovedItems(err.removed)
+        onCartChanged?.()
+        setStep("changed")
+      } else {
+        setSubmitError(menuStrings.cart.checkoutError)
+      }
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   const confirmedTotal = confirmedItems.reduce((s, ci) => s + lineTotal(ci), 0)
@@ -157,12 +182,56 @@ export function CartDrawer({
             <p className="cart-drawer__confirm-dialog-sub">
               {menuStrings.cart.positions(totalCount)} · {formatAmount(totalPrice)} {currencySymbol}
             </p>
+            {submitError && (
+              <p className="cart-drawer__confirm-dialog-error" role="alert">
+                {submitError}
+              </p>
+            )}
             <div className="cart-drawer__confirm-dialog-btns">
-              <button className="cart-drawer__confirm-dialog-yes" onClick={handleConfirm}>
-                {menuStrings.cart.confirmYes}
+              <button
+                className="cart-drawer__confirm-dialog-yes"
+                onClick={handleSubmit}
+                disabled={submitting}
+              >
+                {submitting ? menuStrings.cart.submitting : menuStrings.cart.confirmYes}
               </button>
-              <button className="cart-drawer__confirm-dialog-no" onClick={() => setStep("cart")}>
+              <button
+                className="cart-drawer__confirm-dialog-no"
+                onClick={() => setStep("cart")}
+                disabled={submitting}
+              >
                 {menuStrings.cart.confirmNo}
+              </button>
+            </div>
+          </div>
+        ) : step === "changed" ? (
+          /* ── Items changed (unavailable removed) ── */
+          <div className="cart-drawer__confirm-dialog">
+            <p className="cart-drawer__confirm-dialog-title">{menuStrings.cart.changedTitle}</p>
+            <p className="cart-drawer__confirm-dialog-sub">{menuStrings.cart.changedSub}</p>
+            <ul className="cart-drawer__changed-list">
+              {removedItems.map((r) => (
+                <li key={r.id} className="cart-drawer__changed-item">
+                  {r.name}
+                </li>
+              ))}
+            </ul>
+            <div className="cart-drawer__confirm-dialog-btns">
+              {items.length > 0 && (
+                <button
+                  className="cart-drawer__confirm-dialog-yes"
+                  onClick={handleSubmit}
+                  disabled={submitting}
+                >
+                  {submitting ? menuStrings.cart.submitting : menuStrings.cart.confirmRemaining}
+                </button>
+              )}
+              <button
+                className="cart-drawer__confirm-dialog-no"
+                onClick={() => setStep("cart")}
+                disabled={submitting}
+              >
+                {menuStrings.cart.backToCart}
               </button>
             </div>
           </div>
@@ -285,7 +354,11 @@ export function CartDrawer({
                   {formatAmount(totalPrice)} {currencySymbol}
                 </span>
               </div>
-              <button className="cart-drawer__order" onClick={() => setStep("confirming")}>
+              <button
+                className="cart-drawer__order"
+                onClick={() => setStep("confirming")}
+                disabled={items.length === 0}
+              >
                 {menuStrings.cart.checkout}
               </button>
             </div>
