@@ -507,8 +507,8 @@
 }
 
 .overlay__reservation-row--late {
-  background: #fef3c7;
-  border-left: 3px solid #f59e0b;
+  background: var(--color-warning-bg);
+  border-left: 3px solid var(--color-warning-icon);
   padding-left: 12px;
 }
 
@@ -519,8 +519,8 @@
   font-size: 0.55rem;
   font-weight: 800;
   letter-spacing: 0.08em;
-  color: #92400e;
-  background: #fbbf24;
+  color: var(--color-warning-label);
+  background: var(--color-warning-icon);
   vertical-align: middle;
 }
 
