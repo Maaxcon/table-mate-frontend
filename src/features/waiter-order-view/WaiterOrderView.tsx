@@ -35,6 +35,28 @@ function mapTableToFloorTable(t: Table): FloorTable {
   }
 }
 
+interface ReservationApiItem {
+  public_id: string
+  start_at: string
+  table_info: { table_number: string } | null
+  guest_count: number
+  status: string
+  notes?: string | null
+  customer_name?: string
+}
+
+function mapReservationItem(r: ReservationApiItem): ReservationItem {
+  return {
+    public_id: r.public_id,
+    start_at: r.start_at,
+    table: r.table_info?.table_number ?? "",
+    guest_count: r.guest_count,
+    status: r.status as ReservationItem["status"],
+    notes: r.notes,
+    name: r.customer_name ?? "Guest",
+  }
+}
+
 export function WaiterOrderView() {
   const [activeTab, setActiveTab] = useState("FLOOR PLAN")
   const [selectedTableId, setSelectedTableId] = useState<string | null>(null)
@@ -91,33 +113,82 @@ export function WaiterOrderView() {
     })
       .then(async (res) => {
         if (!res.ok) return
-        const data = (await res.json()) as {
-          results?: Array<{
-            public_id: string
-            start_at: string
-            table_info: { table_number: string } | null
-            guest_count: number
-            status: string
-            notes?: string | null
-            customer_name?: string
-          }>
-        }
-        const items = data.results ?? []
-        setReservations(
-          items.map((r) => ({
-            public_id: r.public_id,
-            start_at: r.start_at,
-            table: r.table_info?.table_number ?? "",
-            guest_count: r.guest_count,
-            status: r.status as ReservationItem["status"],
-            notes: r.notes,
-            name: r.customer_name ?? "Guest",
-          })),
-        )
+        const data = (await res.json()) as { results?: ReservationApiItem[] }
+        setReservations((data.results ?? []).map(mapReservationItem))
       })
       .catch(() => {})
     return () => controller.abort()
   }, [])
+
+  const [actionBusy, setActionBusy] = useState(false)
+  const [actionError, setActionError] = useState<string | null>(null)
+
+  const refreshFloor = async () => {
+    try {
+      const [layoutRes, resvRes] = await Promise.all([
+        apiFetch(`/api/restaurants/tables/layout/`),
+        apiFetch(`/api/reservations/reservations/?status=pending&status=active`),
+      ])
+      if (layoutRes.ok) {
+        const layoutData = (await layoutRes.json()) as LayoutResponse
+        setTables((layoutData.tables ?? []).map(mapTableToFloorTable))
+        setLayoutReservations(layoutData.upcoming_reservations ?? [])
+      }
+      if (resvRes.ok) {
+        const data = (await resvRes.json()) as { results?: ReservationApiItem[] }
+        setReservations((data.results ?? []).map(mapReservationItem))
+      }
+    } catch {
+      // keep current state on refresh failure
+    }
+  }
+
+  const closeOverlay = () => {
+    setSelectedTableId(null)
+    setOverlayDetail(null)
+    setActionError(null)
+  }
+
+  const runTableAction = async (request: () => Promise<Response>, fallbackMsg: string) => {
+    setActionBusy(true)
+    setActionError(null)
+    try {
+      const res = await request()
+      if (!res.ok) {
+        const body = (await res.json().catch(() => null)) as { detail?: string } | null
+        throw new Error(body?.detail ?? fallbackMsg)
+      }
+      await refreshFloor()
+      closeOverlay()
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : fallbackMsg)
+    } finally {
+      setActionBusy(false)
+    }
+  }
+
+  const handleOpenTable = (guestCount: number) => {
+    if (!selectedTableId) return
+    void runTableAction(
+      () =>
+        apiFetch(`/api/orders/sessions/`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ table: selectedTableId, guest_count: guestCount }),
+        }),
+      "Failed to open table",
+    )
+  }
+
+  const handleActivateReservation = (reservationId: string) => {
+    void runTableAction(
+      () =>
+        apiFetch(`/api/reservations/reservations/${reservationId}/activate/`, {
+          method: "POST",
+        }),
+      "Failed to activate reservation",
+    )
+  }
 
   const buildOverlayDetail = async (
     tablePublicId: string,
@@ -350,10 +421,11 @@ export function WaiterOrderView() {
           tableReservations={selectedTableReservations}
           visualStatus={selectedTableVisualStatus}
           loading={overlayLoading}
-          onClose={() => {
-            setSelectedTableId(null)
-            setOverlayDetail(null)
-          }}
+          actionBusy={actionBusy}
+          actionError={actionError}
+          onOpenTable={handleOpenTable}
+          onActivateReservation={handleActivateReservation}
+          onClose={closeOverlay}
         />
       )}
     </div>

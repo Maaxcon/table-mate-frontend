@@ -15,6 +15,10 @@ interface TableDetailOverlayProps {
   tableReservations: ReservationItem[]
   visualStatus: VisualTableStatus
   loading: boolean
+  actionBusy?: boolean
+  actionError?: string | null
+  onOpenTable?: (guestCount: number) => void
+  onActivateReservation?: (reservationId: string) => void
   onClose: () => void
 }
 
@@ -24,6 +28,10 @@ export function TableDetailOverlay({
   tableReservations,
   visualStatus,
   loading,
+  actionBusy = false,
+  actionError = null,
+  onOpenTable,
+  onActivateReservation,
   onClose,
 }: TableDetailOverlayProps) {
   const isOccupied = visualStatus === "occupied"
@@ -31,6 +39,7 @@ export function TableDetailOverlay({
   const [activeOverlayTab, setActiveOverlayTab] = useState<"order" | "reservations">(
     isOccupied ? "order" : "reservations",
   )
+  const [guestCount, setGuestCount] = useState(2)
 
   const guestSlots = detail
     ? [...new Set(detail.items.map((i) => i.guest_slot))].sort((a, b) => a - b)
@@ -85,6 +94,41 @@ export function TableDetailOverlay({
                     : `Capacity: ${table.capacity} • Available`}
           </p>
         </div>
+
+        {!isOccupied && !loading && (
+          <div className="overlay__open-panel">
+            {actionError && (
+              <p className="overlay__action-error" role="alert">
+                {actionError}
+              </p>
+            )}
+            {tableReservations.some((r) => r.status === "pending") ? (
+              <p className="overlay__open-hint">Seat a booked guest from the Reservations tab.</p>
+            ) : (
+              <div className="overlay__open-row">
+                <label className="overlay__guests">
+                  Guests
+                  <input
+                    type="number"
+                    min={1}
+                    className="overlay__guests-input"
+                    value={guestCount}
+                    onChange={(e) => setGuestCount(Math.max(1, Number(e.target.value) || 1))}
+                    disabled={actionBusy}
+                  />
+                </label>
+                <button
+                  type="button"
+                  className="overlay__cta"
+                  disabled={actionBusy}
+                  onClick={() => onOpenTable?.(guestCount)}
+                >
+                  {actionBusy ? "OPENING…" : "OPEN TABLE"}
+                </button>
+              </div>
+            )}
+          </div>
+        )}
 
         <div className="overlay__tabs">
           {isOccupied && (
@@ -210,6 +254,16 @@ export function TableDetailOverlay({
                       {r.guest_count} guests &middot; {getTimeFromDatetime(r.start_at)}
                     </span>
                   </div>
+                  {!isOccupied && r.status === "pending" && (
+                    <button
+                      type="button"
+                      className="overlay__seat-btn"
+                      disabled={actionBusy}
+                      onClick={() => onActivateReservation?.(r.public_id)}
+                    >
+                      {actionBusy ? "…" : "SEAT"}
+                    </button>
+                  )}
                 </div>
               ))
             )}
