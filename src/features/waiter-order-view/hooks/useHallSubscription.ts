@@ -24,6 +24,7 @@ export interface HallNewReservationEvent {
   start_at: string
   end_at: string
   actor_id: number
+  actor_role: string
   occurred_at: string
 }
 
