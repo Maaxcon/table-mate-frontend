@@ -308,8 +308,8 @@
   padding: 8px 12px;
   font-size: 0.78rem;
   font-weight: 600;
-  color: var(--color-bg);
-  background: #c0392b;
+  color: var(--color-bg-page);
+  background: var(--color-text-primary);
 }
 
 .overlay__cancel-btn {
@@ -317,8 +317,8 @@
   font-size: 0.62rem;
   font-weight: 700;
   letter-spacing: 0.06em;
-  color: var(--color-bg);
-  background: #c0392b;
+  color: var(--color-bg-page);
+  background: var(--color-text-primary);
   border: none;
   cursor: pointer;
   font-family: inherit;
@@ -391,7 +391,7 @@
 }
 
 .overlay__move-table-btn--warning {
-  border-color: #e67e22;
+  border-color: var(--color-text-primary);
 }
 
 .overlay__move-table-info {
@@ -445,7 +445,7 @@
   font-size: 1.1rem;
   font-weight: 900;
   letter-spacing: -0.02em;
-  color: #e67e22;
+  color: var(--color-text-primary);
 }
 
 .overlay__confirm-text {
@@ -480,8 +480,8 @@
 }
 
 .overlay__confirm-btn--confirm {
-  background: #e67e22;
-  color: white;
+  background: var(--color-text-primary);
+  color: var(--color-bg-page);
 }
 
 .overlay__move-modal-close {
@@ -566,8 +566,8 @@
   font-size: 0.62rem;
   font-weight: 700;
   letter-spacing: 0.06em;
-  color: var(--color-bg);
-  background: #22c55e;
+  color: var(--color-bg-page);
+  background: var(--color-text-primary);
   border: none;
   cursor: pointer;
   font-family: inherit;

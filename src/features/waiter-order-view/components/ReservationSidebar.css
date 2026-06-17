@@ -122,9 +122,9 @@
   font-size: 0.55rem;
   font-weight: 700;
   letter-spacing: 0.06em;
-  color: #e67e22;
+  color: var(--color-text-secondary);
   padding: 1px 6px;
-  border: 1px solid #e67e22;
+  border: 1px solid var(--color-text-secondary);
 }
 
 .reservation-sidebar__item-right {
@@ -169,8 +169,8 @@
 }
 
 .reservation-sidebar__action-btn--cancel {
-  color: white;
-  background: #c0392b;
+  color: var(--color-bg-page);
+  background: var(--color-text-primary);
 }
 
 .reservation-sidebar__action {
