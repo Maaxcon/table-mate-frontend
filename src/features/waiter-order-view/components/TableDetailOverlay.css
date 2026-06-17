@@ -237,6 +237,14 @@
   color: var(--color-text-secondary);
 }
 
+.overlay__reservation-notes {
+  font-size: 0.68rem;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  font-style: italic;
+  margin-top: 2px;
+}
+
 @keyframes overlay-shimmer {
   0% {
     background-position: -400px 0;

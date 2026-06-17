@@ -350,6 +350,7 @@ export function TableDetailOverlay({
                         {r.guest_count} guests &middot; {getTimeFromDatetime(r.start_at)}
                         {r.end_at && ` — ${getTimeFromDatetime(r.end_at)}`}
                       </span>
+                      {r.notes && <span className="overlay__reservation-notes">{r.notes}</span>}
                       <span className="overlay__reservation-status">{r.status}</span>
                     </div>
                     <div className="overlay__reservation-actions">

@@ -475,7 +475,16 @@ export function WaiterOrderView() {
     : null
 
   const selectedTableReservations = selectedTable
-    ? reservations.filter((r) => r.table === selectedTable.table_number)
+    ? reservations.filter((r) => {
+        if (r.table !== selectedTable.table_number) return false
+        const today = new Date()
+        const reservationDate = new Date(r.start_at)
+        return (
+          reservationDate.getFullYear() === today.getFullYear() &&
+          reservationDate.getMonth() === today.getMonth() &&
+          reservationDate.getDate() === today.getDate()
+        )
+      })
     : []
 
   const handleTableSelect = (table: FloorTable) => {
