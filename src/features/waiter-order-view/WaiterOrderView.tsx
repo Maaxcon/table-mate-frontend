@@ -22,7 +22,11 @@ import type { Table } from "@/types/api/types.gen"
 import { BookModal } from "@/features/reservation/BookModal"
 import { RescheduleModal } from "@/features/reservation/RescheduleModal"
 import type { WorkingHoursDay } from "@/features/reservation/api"
-import { cancelReservation, fetchRestaurantSettings } from "@/features/reservation/api"
+import {
+  cancelReservation,
+  activateReservation,
+  fetchRestaurantSettings,
+} from "@/features/reservation/api"
 import { useAppSelector } from "@/store/hooks"
 import { apiFetch } from "@/api/client"
 import type { LayoutResponse } from "@/types/api"
@@ -315,6 +319,23 @@ export function WaiterOrderView() {
     [loadData],
   )
 
+  const handleActivateReservation = useCallback(
+    async (reservation: ReservationItem) => {
+      setSidebarActionLoading(true)
+      try {
+        await activateReservation(reservation.public_id)
+        setSelectedTableId(null)
+        setOverlayDetail(null)
+        await loadData()
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to activate reservation")
+      } finally {
+        setSidebarActionLoading(false)
+      }
+    },
+    [loadData],
+  )
+
   const handleModifyReservation = useCallback((reservation: ReservationItem) => {
     setEditingReservation(reservation)
   }, [])
@@ -585,7 +606,7 @@ export function WaiterOrderView() {
           onRefresh={loadData}
           onBookTable={setBookingTable}
           onModifyReservation={handleModifyReservation}
-          onActivateReservation={() => loadData()}
+          onActivateReservation={handleActivateReservation}
         />
       )}
 
