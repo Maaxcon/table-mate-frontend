@@ -6,9 +6,12 @@ import type {
   OverlayDetail,
   VisualTableStatus,
   UpcomingReservation,
+  VoidReason,
 } from "../data/waiterTypes"
 import { closeCheck, moveTable, cancelReservation } from "@/features/reservation/api"
+import { fetchVoidReasons, voidOrderItem } from "../api/orderApi"
 import { OrderItemRow } from "./OrderItemRow"
+import { OrderCreationModal } from "./OrderCreationModal"
 import "./TableDetailOverlay.css"
 
 function formatDateInput(d: Date): string {
@@ -26,6 +29,8 @@ function isSameDay(a: Date, b: Date): boolean {
 interface TableDetailOverlayProps {
   table: FloorTable
   detail: OverlayDetail | null
+  sessionId: string | null
+  restaurantId: string
   tableReservations: ReservationItem[]
   visualStatus: VisualTableStatus
   loading: boolean
@@ -42,6 +47,8 @@ interface TableDetailOverlayProps {
 export function TableDetailOverlay({
   table,
   detail,
+  sessionId,
+  restaurantId,
   tableReservations,
   visualStatus,
   loading,
@@ -65,6 +72,20 @@ export function TableDetailOverlay({
   const [currentTime, setCurrentTime] = useState(new Date())
   const [dateFrom, setDateFrom] = useState(formatDateInput(new Date()))
   const [dateTo, setDateTo] = useState(formatDateInput(new Date()))
+
+  const [showOrderCreation, setShowOrderCreation] = useState(false)
+  const [voidReasons, setVoidReasons] = useState<VoidReason[]>([])
+  const [voidReasonItemId, setVoidReasonItemId] = useState<string | null>(null)
+  const [voidReasonError, setVoidReasonError] = useState<string | null>(null)
+  const [voidingItemId, setVoidingItemId] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (isOccupied) {
+      fetchVoidReasons()
+        .then(setVoidReasons)
+        .catch(() => {})
+    }
+  }, [isOccupied])
 
   useEffect(() => {
     const id = setInterval(() => setCurrentTime(new Date()), 30_000)
@@ -184,6 +205,27 @@ export function TableDetailOverlay({
     }
   }
 
+  const handleVoidItemClick = (itemId: string) => {
+    setVoidReasonItemId(itemId)
+    setVoidReasonError(null)
+  }
+
+  const handleVoidItemConfirm = async (reasonCode: string) => {
+    const itemId = voidReasonItemId
+    if (!itemId) return
+    setVoidingItemId(itemId)
+    setVoidReasonError(null)
+    try {
+      await voidOrderItem(itemId, reasonCode)
+      setVoidReasonItemId(null)
+      onRefresh()
+    } catch (err) {
+      setVoidReasonError(err instanceof Error ? err.message : "Failed to void item")
+    } finally {
+      setVoidingItemId(null)
+    }
+  }
+
   return (
     <>
       <div
@@ -280,8 +322,13 @@ export function TableDetailOverlay({
             {detail ? (
               <>
                 <div className="overlay__actions">
-                  <button type="button" className="overlay__action-btn">
-                    ADD ITEM
+                  <button
+                    type="button"
+                    className="overlay__action-btn"
+                    onClick={() => setShowOrderCreation(true)}
+                    disabled={!sessionId}
+                  >
+                    NEW ORDER
                   </button>
                   <button
                     type="button"
@@ -313,7 +360,11 @@ export function TableDetailOverlay({
                           <div key={slot} className="overlay__slot">
                             <h3 className="overlay__slot-title">GUEST {slot}</h3>
                             {slotItems.map((item) => (
-                              <OrderItemRow key={item.public_id} item={item} />
+                              <OrderItemRow
+                                key={item.public_id}
+                                item={item}
+                                onVoid={handleVoidItemClick}
+                              />
                             ))}
                           </div>
                         )
@@ -514,6 +565,49 @@ export function TableDetailOverlay({
               </div>
             </div>
           </div>
+        )}
+
+        {voidReasonItemId && (
+          <div className="overlay__void-reason-modal">
+            <div className="overlay__void-reason-content">
+              <h3 className="overlay__void-reason-title">SELECT VOID REASON</h3>
+              {voidReasonError && <p className="overlay__error">{voidReasonError}</p>}
+              <div className="overlay__void-reason-list">
+                {voidReasons.map((vr) => (
+                  <button
+                    key={vr.code}
+                    type="button"
+                    className={`overlay__void-reason-btn ${voidingItemId === voidReasonItemId ? "overlay__void-reason-btn--loading" : ""}`}
+                    onClick={() => handleVoidItemConfirm(vr.code)}
+                    disabled={voidingItemId === voidReasonItemId}
+                  >
+                    {vr.label}
+                  </button>
+                ))}
+              </div>
+              <button
+                type="button"
+                className="overlay__void-reason-cancel"
+                onClick={() => setVoidReasonItemId(null)}
+                disabled={voidingItemId === voidReasonItemId}
+              >
+                CANCEL
+              </button>
+            </div>
+          </div>
+        )}
+
+        {showOrderCreation && sessionId && (
+          <OrderCreationModal
+            sessionId={sessionId}
+            guestCount={detail?.guest_count ?? 0}
+            restaurantId={restaurantId}
+            onClose={() => setShowOrderCreation(false)}
+            onSuccess={() => {
+              setShowOrderCreation(false)
+              onRefresh()
+            }}
+          />
         )}
       </div>
     </>

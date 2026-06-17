@@ -47,3 +47,24 @@
   min-width: 60px;
   text-align: right;
 }
+
+.order-item-row__void-btn {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 3px 8px;
+  border: 1px solid var(--color-danger);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--color-danger);
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+
+.order-item-row__void-btn:hover {
+  background: var(--color-danger);
+  color: var(--color-bg-page);
+}

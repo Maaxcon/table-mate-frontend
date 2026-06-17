@@ -62,14 +62,7 @@ export interface OverlayOrderItem {
   is_wasted: boolean
   source: "customer" | "waiter"
   order_id: string
-  void_reason?: number | null
-}
-
-export const VOID_REASON_LABELS: Record<number, string> = {
-  1: "mispick",
-  2: "guest_changed_mind",
-  3: "quality_issue",
-  4: "out_of_stock",
+  void_reason?: string | null
 }
 
 export interface OverlayDetail {
