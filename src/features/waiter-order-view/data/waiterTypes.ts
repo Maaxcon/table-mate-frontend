@@ -47,6 +47,11 @@ export type ReservationItem = Pick<
   status: "pending" | "active"
 }
 
+export interface VoidReason {
+  code: string
+  label: string
+}
+
 export interface OverlayOrderItem {
   public_id: string
   guest_slot: number
@@ -55,7 +60,16 @@ export interface OverlayOrderItem {
   unit_price: string
   status: OrderItemStatusEnum
   is_wasted: boolean
+  source: "customer" | "waiter"
+  order_id: string
   void_reason?: number | null
+}
+
+export const VOID_REASON_LABELS: Record<number, string> = {
+  1: "mispick",
+  2: "guest_changed_mind",
+  3: "quality_issue",
+  4: "out_of_stock",
 }
 
 export interface OverlayDetail {
@@ -71,13 +85,6 @@ export interface OverlayDetail {
   total_amount: string
   discount_total?: string
   service_charge?: string
-}
-
-export const VOID_REASON_LABELS: Record<number, string> = {
-  1: "mispick",
-  2: "guest_changed_mind",
-  3: "quality_issue",
-  4: "out_of_stock",
 }
 
 export function getTimeFromDatetime(datetime: string): string {
