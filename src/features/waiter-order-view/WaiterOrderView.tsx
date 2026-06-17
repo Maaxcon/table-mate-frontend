@@ -65,6 +65,7 @@ export function WaiterOrderView() {
   const [layoutReservations, setLayoutReservations] = useState<UpcomingReservation[]>([])
   const [overlayDetail, setOverlayDetail] = useState<OverlayDetail | null>(null)
   const [overlayLoading, setOverlayLoading] = useState(false)
+  const [activeSessionId, setActiveSessionId] = useState<string | null>(null)
   const [currentTime, setCurrentTime] = useState(() => new Date())
 
   useEffect(() => {
@@ -75,6 +76,7 @@ export function WaiterOrderView() {
   const [bookingTable, setBookingTable] = useState<FloorTable | null>(null)
   const [editingReservation, setEditingReservation] = useState<ReservationItem | null>(null)
   const [sidebarActionLoading, setSidebarActionLoading] = useState(false)
+  const [sidebarKey, setSidebarKey] = useState(0)
   const [workingHours, setWorkingHours] = useState<Record<string, WorkingHoursDay> | null>(null)
 
   const restaurantId = useAppSelector((state) => state.auth.user?.restaurantId)
@@ -233,7 +235,7 @@ export function WaiterOrderView() {
         const zonesData = (await zonesRes.json()) as { results?: ZoneApiResponse[] }
         const zonesList = zonesData.results ?? []
         setZones(zonesList)
-        if (zonesList.length > 0 && !selectedZoneId) setSelectedZoneId(zonesList[0].public_id)
+        if (zonesList.length > 0) setSelectedZoneId((prev) => prev ?? zonesList[0].public_id)
       }
 
       const parseReservationResponse = async (res: Response) => {
@@ -292,6 +294,7 @@ export function WaiterOrderView() {
 
       const enrichedTables = await enrichTablesWithSessionData(tablesWithReservations)
       setTables(enrichedTables)
+      setSidebarKey((k) => k + 1)
     } catch (err) {
       if (err instanceof DOMException && err.name === "AbortError") return
       setError(err instanceof Error ? err.message : "Failed to load data")
@@ -388,12 +391,13 @@ export function WaiterOrderView() {
           : `${durationMinutes}m`
 
       const orderRes = await apiFetch(`/api/orders/orders/?session__public_id=${session.public_id}`)
-      let orderItems: OverlayOrderItem[] = []
+      const orderItems: OverlayOrderItem[] = []
       let order: {
         public_id: string
         currency: string
         total_amount: string
         tax_total: string
+        created_by_source: string
         discount_total?: string
         service_charge?: string
       } | null = null
@@ -406,16 +410,17 @@ export function WaiterOrderView() {
             currency: string
             total_amount: string
             tax_total: string
+            created_by_source: string
             discount_total?: string
             service_charge?: string
           }>
         }
-        order = (orderData.results ?? [])[0] ?? null
+        const orders = orderData.results ?? []
+        order = orders[0] ?? null
 
-        if (order) {
-          const oiRes = await apiFetch(
-            `/api/orders/order-items/?order__public_id=${order.public_id}`,
-          )
+        for (const ord of orders) {
+          const source = ord.created_by_source === "staff" ? "waiter" : "customer"
+          const oiRes = await apiFetch(`/api/orders/order-items/?order__public_id=${ord.public_id}`)
           if (oiRes.ok) {
             const oiData = (await oiRes.json()) as {
               results?: Array<{
@@ -424,21 +429,25 @@ export function WaiterOrderView() {
                 quantity: number
                 status: string
                 is_wasted: boolean
-                void_reason?: number | null
+                void_reason?: string | null
                 unit_price: string
                 menu_item_name?: string
               }>
             }
-            orderItems = (oiData.results ?? []).map((oi) => ({
-              public_id: oi.public_id,
-              guest_slot: oi.guest_slot,
-              quantity: oi.quantity,
-              name: oi.menu_item_name ?? oi.public_id,
-              unit_price: oi.unit_price,
-              status: oi.status as OverlayOrderItem["status"],
-              is_wasted: oi.is_wasted,
-              void_reason: oi.void_reason,
-            }))
+            for (const oi of oiData.results ?? []) {
+              orderItems.push({
+                public_id: oi.public_id,
+                guest_slot: oi.guest_slot,
+                quantity: oi.quantity,
+                name: oi.menu_item_name ?? oi.public_id,
+                unit_price: oi.unit_price,
+                status: oi.status as OverlayOrderItem["status"],
+                is_wasted: oi.is_wasted,
+                void_reason: oi.void_reason ?? null,
+                source: source as "customer" | "waiter",
+                order_id: ord.public_id,
+              })
+            }
           }
         }
       }
@@ -467,6 +476,9 @@ export function WaiterOrderView() {
         rawServiceCharge = parseFloat(order.service_charge || "0")
         rawTotal = rawSubtotal + rawTax - rawDiscount + rawServiceCharge
       }
+
+      const currentSessionId = session.public_id
+      setActiveSessionId(currentSessionId)
 
       setOverlayDetail({
         public_id: detailId,
@@ -581,6 +593,7 @@ export function WaiterOrderView() {
 
         {showFloorPlan && (
           <ReservationSidebar
+            key={sidebarKey}
             reservations={reservations.filter((r) => r.status === "pending")}
             onCancel={handleCancelReservation}
             onModify={handleModifyReservation}
@@ -593,6 +606,8 @@ export function WaiterOrderView() {
         <TableDetailOverlay
           table={selectedTable}
           detail={overlayDetail}
+          sessionId={activeSessionId}
+          restaurantId={restaurantId ?? ""}
           tableReservations={selectedTableReservations}
           visualStatus={selectedTableVisualStatus}
           loading={overlayLoading}
@@ -602,6 +617,7 @@ export function WaiterOrderView() {
           onClose={() => {
             setSelectedTableId(null)
             setOverlayDetail(null)
+            setActiveSessionId(null)
           }}
           onRefresh={loadData}
           onBookTable={setBookingTable}
