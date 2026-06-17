@@ -107,12 +107,11 @@ export function getTableVisualStatus(
   currentTime: Date,
 ): VisualTableStatus {
   if (table.is_occupied) return "occupied"
-  const hasImminentReservation = upcomingReservations.some(
+  const hasReservation = upcomingReservations.some(
     (r) =>
       r.table_id === table.public_id &&
-      new Date(r.start_at).getTime() - currentTime.getTime() <= FIFTEEN_MINUTES_MS &&
-      new Date(r.start_at).getTime() > currentTime.getTime(),
+      new Date(r.start_at).getTime() - currentTime.getTime() <= FIFTEEN_MINUTES_MS,
   )
-  if (hasImminentReservation) return "reserved"
+  if (hasReservation) return "reserved"
   return "free"
 }

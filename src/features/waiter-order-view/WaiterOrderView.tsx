@@ -294,7 +294,7 @@ export function WaiterOrderView() {
     } finally {
       setLoading(false)
     }
-  }, [enrichTablesWithSessionData, selectedZoneId])
+  }, [enrichTablesWithSessionData])
 
   useEffect(() => {
     loadData() // eslint-disable-line react-hooks/set-state-in-effect

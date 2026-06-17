@@ -501,6 +501,29 @@
   gap: 16px;
 }
 
+.overlay__book-btn {
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+.overlay__reservation-row--late {
+  background: #fef3c7;
+  border-left: 3px solid #f59e0b;
+  padding-left: 12px;
+}
+
+.overlay__late-badge {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 1px 6px;
+  font-size: 0.55rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #92400e;
+  background: #fbbf24;
+  vertical-align: middle;
+}
+
 .overlay__modify-btn {
   padding: 6px 12px;
   font-size: 0.62rem;

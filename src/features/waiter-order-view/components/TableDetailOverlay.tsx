@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { getTimeFromDatetime } from "../data/waiterTypes"
 import type {
   FloorTable,
@@ -48,6 +48,12 @@ export function TableDetailOverlay({
   const [actionLoading, setActionLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [showMoveModal, setShowMoveModal] = useState(false)
+  const [currentTime, setCurrentTime] = useState(new Date())
+
+  useEffect(() => {
+    const id = setInterval(() => setCurrentTime(new Date()), 30_000)
+    return () => clearInterval(id)
+  }, [])
   const [confirmMove, setConfirmMove] = useState<{
     tableId: string
     tableNumber: string
@@ -313,54 +319,64 @@ export function TableDetailOverlay({
 
         {activeOverlayTab === "reservations" && (
           <div className="overlay__body">
+            {onBookTable && (
+              <button
+                type="button"
+                className="overlay__action-btn overlay__book-btn"
+                onClick={() => onBookTable(table)}
+              >
+                BOOK THIS TABLE
+              </button>
+            )}
             {tableReservations.length === 0 ? (
               <div className="overlay__reservations-empty">
                 <p className="overlay__empty">No reservations for this table.</p>
-                {onBookTable && (
-                  <button
-                    type="button"
-                    className="overlay__action-btn"
-                    onClick={() => onBookTable(table)}
-                  >
-                    BOOK THIS TABLE
-                  </button>
-                )}
               </div>
             ) : (
-              tableReservations.map((r) => (
-                <div key={r.public_id} className="overlay__reservation-row">
-                  <div className="overlay__reservation-info">
-                    <span className="overlay__reservation-name">{r.name}</span>
-                    <span className="overlay__reservation-meta">
-                      {r.guest_count} guests &middot; {getTimeFromDatetime(r.start_at)}
-                      {r.end_at && ` — ${getTimeFromDatetime(r.end_at)}`}
-                    </span>
-                    <span className="overlay__reservation-status">{r.status}</span>
+              tableReservations.map((r) => {
+                const isLate =
+                  r.status === "pending" && new Date(r.start_at).getTime() < currentTime.getTime()
+                return (
+                  <div
+                    key={r.public_id}
+                    className={`overlay__reservation-row ${isLate ? "overlay__reservation-row--late" : ""}`}
+                  >
+                    <div className="overlay__reservation-info">
+                      <span className="overlay__reservation-name">
+                        {r.name}
+                        {isLate && <span className="overlay__late-badge">LATE</span>}
+                      </span>
+                      <span className="overlay__reservation-meta">
+                        {r.guest_count} guests &middot; {getTimeFromDatetime(r.start_at)}
+                        {r.end_at && ` — ${getTimeFromDatetime(r.end_at)}`}
+                      </span>
+                      <span className="overlay__reservation-status">{r.status}</span>
+                    </div>
+                    <div className="overlay__reservation-actions">
+                      {onModifyReservation && (
+                        <button
+                          type="button"
+                          className="overlay__modify-btn"
+                          onClick={() => onModifyReservation(r)}
+                          disabled={actionLoading}
+                        >
+                          MODIFY
+                        </button>
+                      )}
+                      {r.status === "pending" && (
+                        <button
+                          type="button"
+                          className="overlay__cancel-btn"
+                          onClick={() => handleCancelReservation(r.public_id)}
+                          disabled={actionLoading}
+                        >
+                          CANCEL
+                        </button>
+                      )}
+                    </div>
                   </div>
-                  <div className="overlay__reservation-actions">
-                    {onModifyReservation && (
-                      <button
-                        type="button"
-                        className="overlay__modify-btn"
-                        onClick={() => onModifyReservation(r)}
-                        disabled={actionLoading}
-                      >
-                        MODIFY
-                      </button>
-                    )}
-                    {r.status === "pending" && (
-                      <button
-                        type="button"
-                        className="overlay__cancel-btn"
-                        onClick={() => handleCancelReservation(r.public_id)}
-                        disabled={actionLoading}
-                      >
-                        CANCEL
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))
+                )
+              })
             )}
           </div>
         )}
