@@ -107,6 +107,8 @@ export const menuStrings = {
     addToCart: "До кошика",
     unavailable: "Недоступно",
     close: "Close",
+    commentLabel: "Коментар (необов'язково)",
+    commentPlaceholder: "Напр., без цибулі",
   },
   info: {
     heading: "Про заклад",

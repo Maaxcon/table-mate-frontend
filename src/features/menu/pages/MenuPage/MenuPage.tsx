@@ -208,7 +208,7 @@ function MenuPage() {
   }
 
   const handleAddToCart = useCallback(
-    (item: MenuItem) => {
+    (item: MenuItem, comment?: string) => {
       if (guestAuth.status === "loading" || guestAuth.status === "init") {
         setCartAccessError(menuStrings.cart.initializing)
         setCartOpen(true)
@@ -225,7 +225,7 @@ function MenuPage() {
         return
       }
       setCartAccessError(null)
-      addItem(item.public_id)
+      addItem(item.public_id, comment)
     },
     [
       addItem,
