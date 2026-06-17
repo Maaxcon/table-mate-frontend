@@ -258,8 +258,13 @@
   transition: background 120ms ease;
 }
 
-.menu-item-card__stepper-btn:hover {
+.menu-item-card__stepper-btn:hover:not(:disabled) {
   background: var(--color-surface-tint);
+}
+
+.menu-item-card__stepper-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .menu-item-card__stepper-qty {

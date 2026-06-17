@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { useParams } from "react-router-dom"
+import { useParams, useSearchParams } from "react-router-dom"
 import { LuArrowDownUp, LuShoppingCart } from "react-icons/lu"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
 import { clearAuth } from "@/store/auth/authSlice"
@@ -14,33 +14,34 @@ import {
   MenuSkeleton,
   RestaurantInfoPanel,
 } from "@/features/menu/components"
-import { getGuestToken } from "@/features/menu/guestToken"
 import { useCart } from "@/features/menu/hooks/useCart"
+import { useCartSocket } from "@/features/menu/hooks/useCartSocket"
+import { useGuestAuth } from "@/features/menu/hooks/useGuestAuth"
 import { useItemLikes } from "@/features/menu/hooks/useItemLikes"
 import { useMenuPage } from "@/features/menu/hooks/useMenuPage"
+import { menuStrings } from "@/features/menu/strings"
 import { formatAmount, getCurrencySymbol } from "@/features/menu/utils"
 import type { MenuItem } from "@/features/menu/types"
-import { menuStrings } from "@/features/menu/strings"
 import "./MenuPage.css"
 
 function MenuPage() {
   const { restaurantId } = useParams<{ restaurantId: string }>()
+  const [searchParams] = useSearchParams()
+  const reservationId = searchParams.get("reservation") ?? undefined
+  const tableId = searchParams.get("table") ?? undefined
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null)
   const [cartOpen, setCartOpen] = useState(false)
+  const [cartAccessError, setCartAccessError] = useState<string | null>(null)
   const [scrollActiveCategory, setScrollActiveCategory] = useState<string | null>(null)
+  const [lobbyName, setLobbyName] = useState("")
   const sectionRefs = useRef<Map<string, HTMLElement>>(new Map())
   const user = useAppSelector((s) => s.auth.user)
   const dispatch = useAppDispatch()
-  const guestToken = useMemo(() => getGuestToken(), [])
 
-  const {
-    items: cartItems,
-    totalCount,
-    totalPrice,
-    addItem,
-    setQuantity,
-    clear,
-  } = useCart(restaurantId ?? "", guestToken)
+  const guestAuth = useGuestAuth({
+    reservationId,
+    tableId,
+  })
 
   const {
     restaurantName,
@@ -56,7 +57,7 @@ function MenuPage() {
     categoriesLoading,
     activeCategory,
     setActiveCategory,
-    items,
+    items: menuItems,
     itemsLoading,
     loadingMore,
     hasMore,
@@ -67,7 +68,60 @@ function MenuPage() {
     setSortOrder,
     setItemLikeState,
     error,
-  } = useMenuPage(restaurantId ?? "", guestToken)
+  } = useMenuPage(restaurantId ?? "", guestAuth.deviceId)
+
+  const itemsById = useMemo(() => {
+    const map: Record<string, MenuItem> = {}
+    for (const item of menuItems) {
+      map[item.public_id] = item
+    }
+    return map
+  }, [menuItems])
+
+  const {
+    items: cartItems,
+    totalCount,
+    totalPrice,
+    error: cartError,
+    errorItemId,
+    addItem,
+    changeQuantity,
+    removeItem,
+    syncFromServer,
+    clearError,
+  } = useCart({
+    cartSessionId: guestAuth.cartSessionId,
+    guestJwt: guestAuth.guestJwt,
+    itemsById,
+    reserved: guestAuth.status === "ready",
+    onAuthError: guestAuth.initialize,
+  })
+
+  const handleCartUpdated = useCallback(() => {
+    syncFromServer()
+  }, [syncFromServer])
+
+  const { isConnected } = useCartSocket({
+    cartSessionId: guestAuth.cartSessionId,
+    guestJwt: guestAuth.guestJwt,
+    onCartUpdated: handleCartUpdated,
+    onAuthExpired: guestAuth.initialize,
+  })
+
+  const showLobby = Boolean(
+    (reservationId || tableId) && guestAuth.status === "ready" && guestAuth.displayName === "",
+  )
+
+  const handleLobbyJoin = useCallback(() => {
+    const name = lobbyName.trim()
+    if (name) {
+      guestAuth.setDisplayName(name)
+    }
+  }, [lobbyName, guestAuth])
+
+  const handleLobbySkip = useCallback(() => {
+    guestAuth.setDisplayName("Anonymous")
+  }, [guestAuth])
 
   // Reflect a like in both the grid and the open modal.
   const handleLiked = useCallback(
@@ -83,7 +137,7 @@ function MenuPage() {
   )
   const { isPending: isLikePending, toggleLike } = useItemLikes(
     restaurantId ?? "",
-    guestToken,
+    guestAuth.deviceId,
     handleLiked,
   )
 
@@ -93,15 +147,24 @@ function MenuPage() {
     if (!showAllGrouped || categories.length === 0) return null
     const map = new Map<string, MenuItem[]>()
     for (const cat of categories) map.set(cat.public_id, [])
-    for (const item of items) {
+    for (const item of menuItems) {
       if (item.category && map.has(item.category)) map.get(item.category)!.push(item)
     }
     return map
-  }, [showAllGrouped, categories, items])
+  }, [showAllGrouped, categories, menuItems])
 
-  // Cart quantity by item id, so cards don't each scan the cart.
   const cartQuantities = useMemo(
-    () => new Map(cartItems.map((c) => [c.item.public_id, c.quantity])),
+    () => new Map(Array.isArray(cartItems) ? cartItems.map((c) => [c.menuItemId, c.quantity]) : []),
+    [cartItems],
+  )
+
+  const pendingItemIds = useMemo(
+    () =>
+      new Set(
+        Array.isArray(cartItems)
+          ? cartItems.filter((c) => c.id.startsWith("temp-")).map((c) => c.menuItemId)
+          : [],
+      ),
     [cartItems],
   )
 
@@ -136,6 +199,46 @@ function MenuPage() {
     }
   }
 
+  const handleAddToCart = useCallback(
+    (item: MenuItem) => {
+      if (guestAuth.status === "loading" || guestAuth.status === "init") {
+        setCartAccessError(menuStrings.cart.initializing)
+        setCartOpen(true)
+        return
+      }
+      if (!reservationId && !tableId) {
+        setCartAccessError(menuStrings.cart.requiresActiveTable)
+        setCartOpen(true)
+        return
+      }
+      if (!guestAuth.guestJwt || !guestAuth.cartSessionId) {
+        setCartAccessError(guestAuth.error ?? menuStrings.cart.sessionUnavailable)
+        setCartOpen(true)
+        return
+      }
+      setCartAccessError(null)
+      addItem(item.public_id)
+    },
+    [
+      addItem,
+      guestAuth.cartSessionId,
+      guestAuth.error,
+      guestAuth.guestJwt,
+      guestAuth.status,
+      reservationId,
+      tableId,
+    ],
+  )
+
+  const handleChangeQuantity = useCallback(
+    (itemId: string, delta: number) => {
+      const cartItem = cartItems.find((ci) => ci.menuItemId === itemId || ci.id === itemId)
+      if (!cartItem) return
+      changeQuantity(cartItem.id, delta)
+    },
+    [cartItems, changeQuantity],
+  )
+
   const railActiveCategory = showAllGrouped ? scrollActiveCategory : activeCategory
   const currencySymbol = restaurantSettings ? getCurrencySymbol(restaurantSettings.currency) : ""
   const totalPriceLabel = formatAmount(totalPrice)
@@ -143,11 +246,12 @@ function MenuPage() {
   const gridHandlers = {
     currencySymbol,
     cartQuantities,
+    pendingItemIds,
     isLikePending,
     onSelect: setSelectedItem,
-    onAddToCart: addItem,
+    onAddToCart: handleAddToCart,
     onToggleLike: toggleLike,
-    onSetQuantity: setQuantity,
+    onChangeQuantity: handleChangeQuantity,
   }
 
   if (!restaurantId || restaurantNotFound) {
@@ -242,11 +346,11 @@ function MenuPage() {
 
       <div className="menu-page__body">
         <div className="menu-page__content">
-          {itemsLoading && items.length === 0 ? (
+          {itemsLoading && menuItems.length === 0 ? (
             <div className="menu-page__grid">
               <MenuSkeleton count={6} />
             </div>
-          ) : items.length === 0 ? (
+          ) : menuItems.length === 0 ? (
             <MenuEmptyState
               message={
                 searchQuery ? menuStrings.grid.noResults(searchQuery) : menuStrings.grid.noItems
@@ -276,7 +380,7 @@ function MenuPage() {
             </>
           ) : (
             <>
-              <MenuItemGrid items={items} {...gridHandlers} />
+              <MenuItemGrid items={menuItems} {...gridHandlers} />
               {loadMoreButton}
             </>
           )}
@@ -294,7 +398,7 @@ function MenuPage() {
           item={selectedItem}
           currencySymbol={currencySymbol}
           onClose={() => setSelectedItem(null)}
-          onAddToCart={addItem}
+          onAddToCart={handleAddToCart}
         />
       )}
 
@@ -309,14 +413,65 @@ function MenuPage() {
         </button>
       )}
 
+      {/* ── Lobby modal ── */}
+      {showLobby && (
+        <div
+          className="menu-page__lobby-overlay"
+          role="presentation"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) handleLobbySkip()
+          }}
+        >
+          <div className="menu-page__lobby">
+            <h2 className="menu-page__lobby-title">{menuStrings.cart.lobbyTitle}</h2>
+            <p className="menu-page__lobby-sub">{menuStrings.cart.lobbySubtitle}</p>
+            <form
+              className="menu-page__lobby-form"
+              onSubmit={(e) => {
+                e.preventDefault()
+                handleLobbyJoin()
+              }}
+            >
+              <input
+                className="menu-page__lobby-input"
+                type="text"
+                placeholder={menuStrings.cart.lobbyPlaceholder}
+                value={lobbyName}
+                onChange={(e) => setLobbyName(e.target.value)}
+                maxLength={30}
+              />
+              <div className="menu-page__lobby-actions">
+                <button type="submit" className="menu-page__lobby-join">
+                  {menuStrings.cart.lobbyJoin}
+                </button>
+                <button type="button" className="menu-page__lobby-skip" onClick={handleLobbySkip}>
+                  {menuStrings.cart.lobbySkipped}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── Cart drawer ── */}
       {cartOpen && (
         <CartDrawer
           items={cartItems}
           totalPrice={totalPrice}
           currencySymbol={currencySymbol}
-          onSetQuantity={setQuantity}
-          onClear={clear}
+          isConnected={isConnected}
+          showConnectionStatus={Boolean(guestAuth.cartSessionId && guestAuth.guestJwt)}
+          error={cartAccessError ?? cartError}
+          errorItemId={errorItemId}
+          displayName={guestAuth.displayName}
+          onChangeQuantity={handleChangeQuantity}
+          onRemoveItem={removeItem}
           onClose={() => setCartOpen(false)}
+          onClearError={() => {
+            setCartAccessError(null)
+            clearError()
+          }}
+          onRetry={cartAccessError ? guestAuth.initialize : syncFromServer}
         />
       )}
 
