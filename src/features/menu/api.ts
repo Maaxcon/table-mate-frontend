@@ -1,5 +1,5 @@
 import { ENV_NOT_CONFIGURED_VALUE, env } from "@/config/env"
-import type { Paginated } from "@/api/client"
+import { apiFetch, type Paginated } from "@/api/client"
 import { CART_CLIENT_ID } from "./clientId"
 import { CART_API, MENU_API } from "./constants"
 import type {
@@ -209,6 +209,21 @@ export function guestInit(
     }
     return res.json() as Promise<GuestInitResponse>
   })
+}
+
+// Best-effort: tell the backend a guest is at this table so a pending booking
+// owned by the logged-in customer flips to active before we open the cart.
+// Silent on failure (guest not logged in / not the owner) — guest-init follows.
+export async function verifyScan(tableId: string): Promise<void> {
+  try {
+    await apiFetch("/api/restaurants/tables/verify-scan/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ table_id: tableId }),
+    })
+  } catch {
+    // ignore — activation is optional; cart opening proceeds regardless
+  }
 }
 
 export type RemovedItem = { id: string; name: string }

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useReducer, useRef } from "react"
-import { guestInit } from "@/features/menu/api"
+import { guestInit, verifyScan } from "@/features/menu/api"
 import { getGuestToken } from "@/features/menu/guestToken"
 import { decodeJwtPayload } from "@/features/menu/jwt"
 import { menuStrings } from "@/features/menu/strings"
@@ -97,7 +97,16 @@ export function useGuestAuth({
     initializing.current = true
     dispatch({ type: "LOADING" })
 
-    guestInit({ reservationId, tableId }, guestJwtRef.current)
+    const run = async () => {
+      // Static QR carries only the table: try to activate a pending booking
+      // (logged-in owner) before opening the cart. Best-effort, errors ignored.
+      if (tableId) {
+        await verifyScan(tableId)
+      }
+      return guestInit({ reservationId, tableId }, guestJwtRef.current)
+    }
+
+    run()
       .then((resp) => {
         const payload = decodeJwtPayload<{ cart_session_id?: string }>(resp.access)
         dispatch({
