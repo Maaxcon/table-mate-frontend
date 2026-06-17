@@ -66,6 +66,11 @@ export function FloorPlan({
 
               {visualStatus === "occupied" && table.activeSession && (
                 <div className="floor-plan__table-info">
+                  {table.activeReservation && (
+                    <span className="floor-plan__table-name">
+                      {table.activeReservation.guest_name}
+                    </span>
+                  )}
                   <span className="floor-plan__table-since">
                     {formatDuration(table.activeSession.opened_at)}
                   </span>
