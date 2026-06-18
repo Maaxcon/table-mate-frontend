@@ -64,7 +64,7 @@ export function useFloorSubscription({
   }, [onTableStatusChanged, onNewReservation, onReservationCancelled, onClose, onError])
 
   const connect = useCallback(() => {
-    if (!accessToken || !env.wsUrl) return
+    if (!accessToken || env.wsUrl === "Not configured") return
 
     if (wsRef.current) {
       wsRef.current.close(1000, "Reconnecting")
