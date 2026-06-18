@@ -52,25 +52,130 @@ export function snap(val: number): number {
 }
 
 export function serializeEntities(entities: EditorEntity[]): object {
-  return {
-    version: 1,
-    tables: entities.map((e) => ({
-      id: e.id,
-      server_id: e.serverId ?? null,
-      type: e.type,
+  const tables: object[] = []
+  const obstacles: object[] = []
+  const thresholds: object[] = []
+  const portals: object[] = []
+
+  for (const e of entities) {
+    const base = {
       x: e.x,
       y: e.y,
-      w: e.w,
-      h: e.h,
-      label: e.label ?? null,
-      capacity: e.capacity ?? null,
-      sector: e.sector ?? null,
-      tags: e.tags ?? [],
-      zoneId: e.zoneId ?? null,
-      targetZoneId: e.targetZoneId ?? null,
+      width: e.w,
+      height: e.h,
       rotation: e.rotation ?? 0,
-    })),
+    }
+
+    if (e.type === "table-square" || e.type === "table-round") {
+      tables.push({
+        ...base,
+        id: e.serverId ?? null,
+        public_number: e.label ?? "",
+        shape: e.type === "table-round" ? "round" : "square",
+        capacity: e.capacity ?? 4,
+        zone_id: e.zoneId ?? null,
+        tags: e.tags ?? [],
+      })
+    } else if (e.type === "obstacle") {
+      obstacles.push(base)
+    } else if (e.type === "threshold") {
+      thresholds.push(base)
+    } else if (e.type === "portal") {
+      portals.push({
+        ...base,
+        target_zone_id: e.targetZoneId ?? null,
+        label: e.label ?? "",
+      })
+    }
   }
+
+  return { tables, obstacles, thresholds, portals }
+}
+
+export interface LayoutPayload {
+  tables: Array<{
+    id: string | null
+    public_number: string
+    x: number
+    y: number
+    width: number
+    height: number
+    rotation: number
+    shape: string
+    capacity: number
+    zone_id: string | null
+    tags: string[]
+  }>
+  obstacles: Array<{ x: number; y: number; width: number; height: number; rotation: number }>
+  thresholds: Array<{ x: number; y: number; width: number; height: number }>
+  portals: Array<{
+    x: number
+    y: number
+    width: number
+    height: number
+    target_zone_id: string | null
+    label: string
+  }>
+}
+
+export function deserializeLayout(layout: LayoutPayload): EditorEntity[] {
+  const entities: EditorEntity[] = []
+
+  for (const t of layout.tables) {
+    const type = t.shape === "round" ? "table-round" : "table-square"
+    entities.push({
+      id: t.id ?? generateId(),
+      serverId: t.id ?? undefined,
+      type,
+      x: t.x,
+      y: t.y,
+      w: t.width,
+      h: t.height,
+      label: t.public_number || undefined,
+      capacity: t.capacity,
+      tags: t.tags,
+      zoneId: t.zone_id ?? undefined,
+      rotation: t.rotation,
+    })
+  }
+
+  for (const o of layout.obstacles) {
+    entities.push({
+      id: generateId(),
+      type: "obstacle",
+      x: o.x,
+      y: o.y,
+      w: o.width,
+      h: o.height,
+      rotation: o.rotation,
+    })
+  }
+
+  for (const th of layout.thresholds) {
+    entities.push({
+      id: generateId(),
+      type: "threshold",
+      x: th.x,
+      y: th.y,
+      w: th.width,
+      h: th.height,
+    })
+  }
+
+  for (const p of layout.portals) {
+    entities.push({
+      id: generateId(),
+      type: "portal",
+      x: p.x,
+      y: p.y,
+      w: p.width,
+      h: p.height,
+      targetZoneId: p.target_zone_id ?? undefined,
+      label: p.label || undefined,
+    })
+  }
+
+  return entities
 }
 
 export function rectsOverlap(

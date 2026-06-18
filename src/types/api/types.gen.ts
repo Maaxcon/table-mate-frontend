@@ -149,12 +149,10 @@ export type CustomerContext = {
 export type EditorTable = {
   readonly public_id: string
   readonly restaurant: string
-  readonly table_number: string
+  readonly public_number: string
   readonly capacity: number
   shape?: TableShape
   active?: boolean
-  position_x?: number | null
-  position_y?: number | null
   readonly created_at: string
   readonly updated_at: string
 }
@@ -217,6 +215,7 @@ export type Layout = {
 
 export type LayoutResponse = {
   tables: Array<Table>
+  layout: unknown
   upcoming_reservations: Array<UpcomingReservation>
 }
 
@@ -548,12 +547,10 @@ export type PatchedAdminMenuItem = {
 export type PatchedEditorTable = {
   readonly public_id?: string
   readonly restaurant?: string
-  readonly table_number?: string
+  readonly public_number?: string
   readonly capacity?: number
   shape?: TableShape
   active?: boolean
-  position_x?: number | null
-  position_y?: number | null
   readonly created_at?: string
   readonly updated_at?: string
 }
@@ -767,7 +764,10 @@ export type PublicRestaurantSettings = {
 }
 
 export type PublishLayout = {
-  layout_json: unknown
+  tables?: Array<unknown>
+  obstacles?: Array<unknown>
+  thresholds?: Array<unknown>
+  portals?: Array<unknown>
 }
 
 export type Receipt = {
@@ -909,13 +909,11 @@ export type SourceEnum = "waiter_manual" | "customer_prepaid"
 export type Table = {
   readonly public_id: string
   readonly restaurant: string
-  table_number: string
+  public_number: string
   capacity: number
   readonly is_occupied: boolean
   shape?: TableShape
   active?: boolean
-  position_x?: number | null
-  position_y?: number | null
   zone: Zone | null
   readonly created_at: string
   readonly updated_at: string
@@ -923,7 +921,7 @@ export type Table = {
 
 export type TableInfo = {
   readonly public_id: string
-  table_number: string
+  public_number: string
   capacity: number
   shape?: TableShape
 }
@@ -1086,8 +1084,6 @@ export type CustomTokenObtainPairWritable = {
 export type EditorTableWritable = {
   shape?: TableShape
   active?: boolean
-  position_x?: number | null
-  position_y?: number | null
 }
 
 export type EmployeeWritable = {
@@ -1362,8 +1358,6 @@ export type PatchedAdminMenuItemWritable = {
 export type PatchedEditorTableWritable = {
   shape?: TableShape
   active?: boolean
-  position_x?: number | null
-  position_y?: number | null
 }
 
 export type PatchedEmployeeWritable = {
@@ -1536,16 +1530,14 @@ export type SessionWritable = {
 }
 
 export type TableWritable = {
-  table_number: string
+  public_number: string
   capacity: number
   shape?: TableShape
   active?: boolean
-  position_x?: number | null
-  position_y?: number | null
 }
 
 export type TableInfoWritable = {
-  table_number: string
+  public_number: string
   capacity: number
   shape?: TableShape
 }
