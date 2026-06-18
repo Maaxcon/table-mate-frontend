@@ -64,5 +64,24 @@ export function useTableActions({ selectedTableId, onActionComplete }: UseTableA
     [runTableAction],
   )
 
-  return { actionBusy, actionError, handleOpenTable, handleActivateReservation, clearActionError }
+  // Close the check (end the visit). No payment step yet: this closes the
+  // session, completes the reservation, and closes the cart so the table frees.
+  const handleCloseCheck = useCallback(
+    (sessionId: string) => {
+      void runTableAction(
+        () => apiFetch(`/api/orders/sessions/${sessionId}/close/`, { method: "POST" }),
+        "Failed to close the check",
+      )
+    },
+    [runTableAction],
+  )
+
+  return {
+    actionBusy,
+    actionError,
+    handleOpenTable,
+    handleActivateReservation,
+    handleCloseCheck,
+    clearActionError,
+  }
 }

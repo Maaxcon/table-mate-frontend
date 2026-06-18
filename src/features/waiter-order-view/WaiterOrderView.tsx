@@ -122,11 +122,17 @@ export function WaiterOrderView() {
     closeOverlay()
   }, [refreshFloor, closeOverlay])
 
-  const { actionBusy, actionError, handleOpenTable, handleActivateReservation, clearActionError } =
-    useTableActions({
-      selectedTableId,
-      onActionComplete,
-    })
+  const {
+    actionBusy,
+    actionError,
+    handleOpenTable,
+    handleActivateReservation,
+    handleCloseCheck,
+    clearActionError,
+  } = useTableActions({
+    selectedTableId,
+    onActionComplete,
+  })
 
   const buildOverlayDetail = async (
     tablePublicId: string,
@@ -249,6 +255,7 @@ export function WaiterOrderView() {
           actionError={actionError}
           onOpenTable={handleOpenTable}
           onActivateReservation={handleActivateReservation}
+          onCloseCheck={overlayDetail ? () => handleCloseCheck(overlayDetail.public_id) : undefined}
           onClose={closeOverlay}
         />
       )}

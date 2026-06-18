@@ -7,6 +7,7 @@ import type {
   VisualTableStatus,
 } from "../data/waiterTypes"
 import { OrderItemRow } from "./OrderItemRow"
+import { CloseCheckModal } from "./CloseCheckModal"
 import "./TableDetailOverlay.css"
 
 interface TableDetailOverlayProps {
@@ -19,6 +20,7 @@ interface TableDetailOverlayProps {
   actionError?: string | null
   onOpenTable?: (guestCount: number) => void
   onActivateReservation?: (reservationId: string) => void
+  onCloseCheck?: () => void
   onClose: () => void
 }
 
@@ -32,6 +34,7 @@ export function TableDetailOverlay({
   actionError = null,
   onOpenTable,
   onActivateReservation,
+  onCloseCheck,
   onClose,
 }: TableDetailOverlayProps) {
   const isOccupied = visualStatus === "occupied"
@@ -40,6 +43,7 @@ export function TableDetailOverlay({
     isOccupied ? "order" : "reservations",
   )
   const [guestCount, setGuestCount] = useState(2)
+  const [showCloseCheck, setShowCloseCheck] = useState(false)
 
   const guestSlots = detail
     ? [...new Set(detail.items.map((i) => i.guest_slot))].sort((a, b) => a - b)
@@ -188,7 +192,11 @@ export function TableDetailOverlay({
                   <button type="button" className="overlay__action-btn">
                     MOVE TABLE
                   </button>
-                  <button type="button" className="overlay__action-btn">
+                  <button
+                    type="button"
+                    className="overlay__action-btn"
+                    onClick={() => setShowCloseCheck(true)}
+                  >
                     CLOSE CHECK
                   </button>
                 </div>
@@ -270,6 +278,15 @@ export function TableDetailOverlay({
           </div>
         )}
       </div>
+
+      {showCloseCheck && (
+        <CloseCheckModal
+          busy={actionBusy}
+          error={actionError}
+          onConfirm={() => onCloseCheck?.()}
+          onClose={() => setShowCloseCheck(false)}
+        />
+      )}
     </>
   )
 }
