@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { TopNav } from "./components/TopNav"
 import { FloorPlan } from "./components/FloorPlan"
 import { ReservationSidebar } from "./components/ReservationSidebar"
 import { TableDetailOverlay } from "./components/TableDetailOverlay"
+import { useTableActions } from "./hooks/useTableActions"
 import type {
   FloorTable,
   ReservationItem,
@@ -57,6 +58,16 @@ function mapReservationItem(r: ReservationApiItem): ReservationItem {
   }
 }
 
+async function fetchReservations(signal?: AbortSignal): Promise<ReservationItem[] | null> {
+  const res = await apiFetch(
+    `/api/reservations/reservations/?status=pending&status=active`,
+    signal ? { signal } : undefined,
+  )
+  if (!res.ok) return null
+  const data = (await res.json()) as { results?: ReservationApiItem[] }
+  return (data.results ?? []).map(mapReservationItem)
+}
+
 export function WaiterOrderView() {
   const [activeTab, setActiveTab] = useState("FLOOR PLAN")
   const [selectedTableId, setSelectedTableId] = useState<string | null>(null)
@@ -108,87 +119,46 @@ export function WaiterOrderView() {
 
   useEffect(() => {
     const controller = new AbortController()
-    apiFetch(`/api/reservations/reservations/?status=pending&status=active`, {
-      signal: controller.signal,
-    })
-      .then(async (res) => {
-        if (!res.ok) return
-        const data = (await res.json()) as { results?: ReservationApiItem[] }
-        setReservations((data.results ?? []).map(mapReservationItem))
+    fetchReservations(controller.signal)
+      .then((items) => {
+        if (items) setReservations(items)
       })
       .catch(() => {})
     return () => controller.abort()
   }, [])
 
-  const [actionBusy, setActionBusy] = useState(false)
-  const [actionError, setActionError] = useState<string | null>(null)
-
-  const refreshFloor = async () => {
+  const refreshFloor = useCallback(async () => {
     try {
-      const [layoutRes, resvRes] = await Promise.all([
+      const [layoutRes, items] = await Promise.all([
         apiFetch(`/api/restaurants/tables/layout/`),
-        apiFetch(`/api/reservations/reservations/?status=pending&status=active`),
+        fetchReservations(),
       ])
       if (layoutRes.ok) {
         const layoutData = (await layoutRes.json()) as LayoutResponse
         setTables((layoutData.tables ?? []).map(mapTableToFloorTable))
         setLayoutReservations(layoutData.upcoming_reservations ?? [])
       }
-      if (resvRes.ok) {
-        const data = (await resvRes.json()) as { results?: ReservationApiItem[] }
-        setReservations((data.results ?? []).map(mapReservationItem))
-      }
+      if (items) setReservations(items)
     } catch {
       // keep current state on refresh failure
     }
-  }
+  }, [])
 
-  const closeOverlay = () => {
+  const closeOverlay = useCallback(() => {
     setSelectedTableId(null)
     setOverlayDetail(null)
-    setActionError(null)
-  }
+  }, [])
 
-  const runTableAction = async (request: () => Promise<Response>, fallbackMsg: string) => {
-    setActionBusy(true)
-    setActionError(null)
-    try {
-      const res = await request()
-      if (!res.ok) {
-        const body = (await res.json().catch(() => null)) as { detail?: string } | null
-        throw new Error(body?.detail ?? fallbackMsg)
-      }
-      await refreshFloor()
-      closeOverlay()
-    } catch (err) {
-      setActionError(err instanceof Error ? err.message : fallbackMsg)
-    } finally {
-      setActionBusy(false)
-    }
-  }
+  const onActionComplete = useCallback(async () => {
+    await refreshFloor()
+    closeOverlay()
+  }, [refreshFloor, closeOverlay])
 
-  const handleOpenTable = (guestCount: number) => {
-    if (!selectedTableId) return
-    void runTableAction(
-      () =>
-        apiFetch(`/api/orders/sessions/`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ table: selectedTableId, guest_count: guestCount }),
-        }),
-      "Failed to open table",
-    )
-  }
-
-  const handleActivateReservation = (reservationId: string) => {
-    void runTableAction(
-      () =>
-        apiFetch(`/api/reservations/reservations/${reservationId}/activate/`, {
-          method: "POST",
-        }),
-      "Failed to activate reservation",
-    )
-  }
+  const { actionBusy, actionError, handleOpenTable, handleActivateReservation, clearActionError } =
+    useTableActions({
+      selectedTableId,
+      onActionComplete,
+    })
 
   const buildOverlayDetail = async (
     tablePublicId: string,
@@ -336,6 +306,7 @@ export function WaiterOrderView() {
     : []
 
   const handleTableSelect = (table: FloorTable) => {
+    clearActionError()
     setSelectedTableId(table.public_id)
     if (table.is_occupied) {
       buildOverlayDetail(table.public_id, tables, reservations)
