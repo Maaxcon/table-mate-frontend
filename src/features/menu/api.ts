@@ -216,7 +216,7 @@ export function guestInit(
 // Silent on failure (guest not logged in / not the owner) — guest-init follows.
 export async function verifyScan(tableId: string): Promise<void> {
   try {
-    await apiFetch("/api/restaurants/tables/verify-scan/", {
+    await apiFetch(CART_API.verifyScan, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ table_id: tableId }),
