@@ -235,12 +235,19 @@ export function WaiterOrderView() {
       const layoutData = (await layoutRes.json()) as LayoutResponse
       const items = layoutData.tables ?? []
 
+      const LAYOUT_CANVAS_W = 2000
+      const FLOOR_CANVAS_W = 680
+      const FLOOR_SCALE = FLOOR_CANVAS_W / LAYOUT_CANVAS_W
+
       const layoutPositions = new Map<string, { x: number; y: number }>()
       if (layoutData.layout && typeof layoutData.layout === "object") {
         const layoutPayload = layoutData.layout as LayoutPayload
         for (const t of layoutPayload.tables ?? []) {
           if (t.id) {
-            layoutPositions.set(t.id, { x: t.x, y: t.y })
+            layoutPositions.set(t.id, {
+              x: Math.round(t.x * FLOOR_SCALE),
+              y: Math.round(t.y * FLOOR_SCALE),
+            })
           }
         }
       }
