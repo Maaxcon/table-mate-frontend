@@ -247,8 +247,14 @@ export function checkout(sessionId: string, jwt: string): Promise<CheckoutResult
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${jwt}` },
   }).then(async (res) => {
     if (res.status === 201) {
-      const body = (await res.json()) as { order_id: string; total: string }
-      return { orderId: body.order_id, total: body.total }
+      const body = (await res.json().catch(() => null)) as {
+        order_id?: string
+        total?: string
+      } | null
+      if (!body?.order_id) {
+        throw new Error("Checkout succeeded but the response was malformed.")
+      }
+      return { orderId: body.order_id, total: body.total ?? "" }
     }
     if (res.status === 409) {
       const body = (await res.json().catch(() => null)) as {
