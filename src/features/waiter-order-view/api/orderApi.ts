@@ -65,12 +65,11 @@ export function createOrderWithItems(
 export function voidOrderItem(
   itemId: string,
   voidReason: string,
-  note?: string | null,
   signal?: AbortSignal,
 ): Promise<unknown> {
   return api.post(
     `/api/orders/order-items/${itemId}/void/`,
-    { void_reason: voidReason, note },
+    { void_reason: voidReason },
     { signal },
   )
 }

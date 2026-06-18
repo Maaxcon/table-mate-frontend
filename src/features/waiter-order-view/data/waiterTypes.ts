@@ -63,6 +63,7 @@ export interface OverlayOrderItem {
   source: "customer" | "waiter"
   order_id: string
   void_reason?: string | null
+  void_reason_note?: string | null
 }
 
 export interface OverlayDetail {

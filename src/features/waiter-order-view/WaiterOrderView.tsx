@@ -436,6 +436,7 @@ export function WaiterOrderView() {
                 status: string
                 is_wasted: boolean
                 void_reason?: string | null
+                void_reason_note?: string | null
                 unit_price: string
                 menu_item_name?: string
               }>
@@ -450,6 +451,7 @@ export function WaiterOrderView() {
                 status: oi.status as OverlayOrderItem["status"],
                 is_wasted: oi.is_wasted,
                 void_reason: oi.void_reason ?? null,
+                void_reason_note: oi.void_reason_note ?? null,
                 source: source as "customer" | "waiter",
                 order_id: ord.public_id,
               })
