@@ -200,7 +200,13 @@ export function guestInit(
   }).then(async (res) => {
     if (!res.ok) {
       if (res.status === 404) {
-        const body = (await res.json().catch(() => null)) as { code?: string } | null
+        const body = (await res.json().catch(() => null)) as {
+          code?: string
+          start_at?: string | null
+        } | null
+        if (body?.code === "RESERVATION_NOT_YET_ACTIVE") {
+          throw new ReservationNotYetActiveError(body.start_at ?? null)
+        }
         throw new Error(
           body?.code === "NO_ACTIVE_RESERVATION" ? "NO_ACTIVE_RESERVATION" : "NO_ACTIVE_SESSION",
         )
@@ -237,6 +243,17 @@ export class CartChangedError extends Error {
     super("CART_CHANGED")
     this.name = "CartChangedError"
     this.removed = removed
+  }
+}
+
+// The table has a pending booking that has not started yet. Carries the booking
+// start time (ISO) so we can tell the guest when the table opens.
+export class ReservationNotYetActiveError extends Error {
+  startAt: string | null
+  constructor(startAt: string | null) {
+    super("RESERVATION_NOT_YET_ACTIVE")
+    this.name = "ReservationNotYetActiveError"
+    this.startAt = startAt
   }
 }
 
