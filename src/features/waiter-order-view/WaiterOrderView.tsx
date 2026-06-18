@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useMemo } from "react"
+import { useEffect, useState, useCallback, useMemo, useRef } from "react"
 import { TopNav } from "./components/TopNav"
 import { FloorPlan } from "./components/FloorPlan"
 import { ReservationSidebar } from "./components/ReservationSidebar"
@@ -160,15 +160,21 @@ export function WaiterOrderView() {
     [],
   )
 
+  const latestTableEventRef = useRef<Record<string, string>>({})
+
   const handleTableStatusChanged = useCallback(
     async (event: HallTableStatusChangedEvent) => {
-      const isOccupied = event.current_status === "occupied"
+      const { table_id, event_id, current_status } = event
+      const isOccupied = current_status === "occupied"
+
+      latestTableEventRef.current[table_id] = event_id
 
       if (isOccupied) {
-        const sessionInfo = await fetchSessionForTable(event.table_id)
+        const sessionInfo = await fetchSessionForTable(table_id)
+        if (latestTableEventRef.current[table_id] !== event_id) return
         setTables((prev) =>
           prev.map((t) => {
-            if (t.public_id !== event.table_id) return t
+            if (t.public_id !== table_id) return t
             return {
               ...t,
               is_occupied: true,
@@ -179,7 +185,7 @@ export function WaiterOrderView() {
       } else {
         setTables((prev) =>
           prev.map((t) => {
-            if (t.public_id !== event.table_id) return t
+            if (t.public_id !== table_id) return t
             return {
               ...t,
               is_occupied: false,
