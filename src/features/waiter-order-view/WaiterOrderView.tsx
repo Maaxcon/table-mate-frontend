@@ -8,10 +8,10 @@ import type {
   FloorTable,
   ReservationItem,
   OverlayDetail,
-  OverlayOrderItem,
   UpcomingReservation,
 } from "./data/waiterTypes"
 import { getTableVisualStatus } from "./data/waiterTypes"
+import { fetchOverlayDetail, fetchReservations } from "./data/waiterApi"
 import { apiFetch } from "@/api/client"
 import type { LayoutResponse, Table } from "@/types/api"
 import "./WaiterOrderView.css"
@@ -34,38 +34,6 @@ function mapTableToFloorTable(t: Table): FloorTable {
     active: t.active ?? true,
     zone: t.zone ?? null,
   }
-}
-
-interface ReservationApiItem {
-  public_id: string
-  start_at: string
-  table_info: { table_number: string } | null
-  guest_count: number
-  status: string
-  notes?: string | null
-  customer_name?: string
-}
-
-function mapReservationItem(r: ReservationApiItem): ReservationItem {
-  return {
-    public_id: r.public_id,
-    start_at: r.start_at,
-    table: r.table_info?.table_number ?? "",
-    guest_count: r.guest_count,
-    status: r.status as ReservationItem["status"],
-    notes: r.notes,
-    name: r.customer_name ?? "Guest",
-  }
-}
-
-async function fetchReservations(signal?: AbortSignal): Promise<ReservationItem[] | null> {
-  const res = await apiFetch(
-    `/api/reservations/reservations/?status=pending&status=active`,
-    signal ? { signal } : undefined,
-  )
-  if (!res.ok) return null
-  const data = (await res.json()) as { results?: ReservationApiItem[] }
-  return (data.results ?? []).map(mapReservationItem)
 }
 
 export function WaiterOrderView() {
@@ -167,127 +135,8 @@ export function WaiterOrderView() {
   ) => {
     setOverlayLoading(true)
     setOverlayDetail(null)
-
     try {
-      const sessionRes = await apiFetch(
-        `/api/orders/sessions/?table__public_id=${tablePublicId}&status=open`,
-      )
-      if (!sessionRes.ok) {
-        setOverlayLoading(false)
-        return
-      }
-      const sessionData = (await sessionRes.json()) as {
-        results?: Array<{
-          public_id: string
-          table: string
-          guest_count: number
-          opened_at: string
-          status: string
-        }>
-      }
-      const session = (sessionData.results ?? [])[0]
-      if (!session) {
-        setOverlayLoading(false)
-        return
-      }
-      const openedAt = new Date(session.opened_at)
-      const durationMinutes = Math.round((Date.now() - openedAt.getTime()) / 60000)
-      const duration =
-        durationMinutes > 60
-          ? `${Math.floor(durationMinutes / 60)}h${durationMinutes % 60}m`
-          : `${durationMinutes}m`
-
-      const ordersRes = await apiFetch(
-        `/api/orders/orders/?session__public_id=${session.public_id}`,
-      )
-      let orders: Array<{
-        public_id: string
-        currency: string
-        total_amount: string
-        tax_total: string
-        discount_total?: string
-        service_charge?: string
-      }> = []
-      if (ordersRes.ok) {
-        const orderData = (await ordersRes.json()) as {
-          results?: Array<{
-            public_id: string
-            currency: string
-            total_amount: string
-            tax_total: string
-            discount_total?: string
-            service_charge?: string
-          }>
-        }
-        orders = orderData.results ?? []
-      }
-
-      if (orders.length === 0) {
-        setOverlayLoading(false)
-        return
-      }
-
-      // A visit can have several Orders (one per checkout round) on the same
-      // Session — gather items from all of them, not just the latest.
-      const itemsPerOrder = await Promise.all(
-        orders.map(async (o) => {
-          const oiRes = await apiFetch(`/api/orders/order-items/?order__public_id=${o.public_id}`)
-          if (!oiRes.ok) return [] as OverlayOrderItem[]
-          const oiData = (await oiRes.json()) as {
-            results?: Array<{
-              public_id: string
-              guest_slot: number
-              quantity: number
-              status: string
-              is_wasted: boolean
-              void_reason?: number | null
-              unit_price: string
-              menu_item_name?: string
-            }>
-          }
-          return (oiData.results ?? []).map((oi) => ({
-            public_id: oi.public_id,
-            guest_slot: oi.guest_slot,
-            quantity: oi.quantity,
-            name: oi.menu_item_name ?? oi.public_id,
-            unit_price: oi.unit_price,
-            status: oi.status as OverlayOrderItem["status"],
-            is_wasted: oi.is_wasted,
-            void_reason: oi.void_reason,
-          }))
-        }),
-      )
-      const orderItems = itemsPerOrder.flat()
-
-      const selTable = currentTables.find((t) => t.public_id === tablePublicId)
-      const resForTable = currentReservations.find((r) => r.table === selTable?.table_number)
-
-      const rawSubtotal = orderItems.reduce(
-        (sum, item) => sum + parseFloat(item.unit_price) * item.quantity,
-        0,
-      )
-      const rawTax = orders.reduce((sum, o) => sum + parseFloat(o.tax_total || "0"), 0)
-      const rawDiscount = orders.reduce((sum, o) => sum + parseFloat(o.discount_total || "0"), 0)
-      const rawServiceCharge = orders.reduce(
-        (sum, o) => sum + parseFloat(o.service_charge || "0"),
-        0,
-      )
-      const rawTotal = rawSubtotal + rawTax - rawDiscount + rawServiceCharge
-
-      setOverlayDetail({
-        public_id: session.public_id,
-        table_number: selTable?.table_number ?? "",
-        guest_name: resForTable?.name ?? "Guest",
-        guest_count: session.guest_count,
-        duration,
-        currency: orders[0].currency,
-        items: orderItems,
-        subtotal: rawSubtotal.toFixed(2),
-        tax_total: rawTax.toFixed(2),
-        total_amount: rawTotal.toFixed(2),
-        discount_total: rawDiscount.toFixed(2),
-        service_charge: rawServiceCharge.toFixed(2),
-      })
+      setOverlayDetail(await fetchOverlayDetail(tablePublicId, currentTables, currentReservations))
     } finally {
       setOverlayLoading(false)
     }
