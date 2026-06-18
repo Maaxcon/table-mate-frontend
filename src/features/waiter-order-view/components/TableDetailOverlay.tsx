@@ -137,7 +137,7 @@ export function TableDetailOverlay({
       (t) =>
         t.public_id !== table.public_id &&
         !t.is_occupied &&
-        !reservedTableNumbers.has(t.table_number),
+        !reservedTableNumbers.has(t.public_number),
     )
     .map((t) => {
       const now = new Date()
@@ -241,7 +241,7 @@ export function TableDetailOverlay({
       <div className="overlay">
         <div className="overlay__header">
           <div className="overlay__header-top">
-            <h2 className="overlay__title">TABLE {table.table_number}</h2>
+            <h2 className="overlay__title">TABLE {table.public_number}</h2>
             <button type="button" className="overlay__close" onClick={onClose} aria-label="Close">
               <svg
                 width="20"
@@ -507,11 +507,11 @@ export function TableDetailOverlay({
                       key={t.public_id}
                       type="button"
                       className={`overlay__move-table-btn ${t.hasCapacityIssue ? "overlay__move-table-btn--warning" : ""}`}
-                      onClick={() => handleMoveTableClick(t.public_id, t.table_number, t.capacity)}
+                      onClick={() => handleMoveTableClick(t.public_id, t.public_number, t.capacity)}
                       disabled={actionLoading}
                     >
                       <div className="overlay__move-table-info">
-                        <span className="overlay__move-table-number">Table {t.table_number}</span>
+                        <span className="overlay__move-table-number">Table {t.public_number}</span>
                         <span className="overlay__move-table-capacity">
                           {t.capacity} P {t.hasCapacityIssue && `(party: ${currentGuestCount})`}
                         </span>

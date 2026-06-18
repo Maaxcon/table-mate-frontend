@@ -15,18 +15,13 @@ export interface TableSessionInfo {
 
 export type FloorTable = Pick<
   Table,
-  | "public_id"
-  | "table_number"
-  | "capacity"
-  | "shape"
-  | "is_occupied"
-  | "position_x"
-  | "position_y"
-  | "active"
+  "public_id" | "public_number" | "capacity" | "shape" | "is_occupied" | "active"
 > & {
   zone?: { public_id: string; name: string } | null
   activeReservation?: TableReservationInfo | null
   activeSession?: TableSessionInfo | null
+  position_x?: number | null
+  position_y?: number | null
 }
 
 export interface UpcomingReservation {
@@ -67,7 +62,7 @@ export interface OverlayOrderItem {
 
 export interface OverlayDetail {
   public_id: string
-  table_number: string
+  public_number: string
   guest_name: string
   guest_count: number
   duration: string

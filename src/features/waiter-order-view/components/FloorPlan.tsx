@@ -51,7 +51,7 @@ export function FloorPlan({
                 {statusLabel[visualStatus] ?? visualStatus.toUpperCase()}
               </span>
 
-              <span className="floor-plan__table-number">{table.table_number}</span>
+              <span className="floor-plan__table-number">{table.public_number}</span>
 
               {visualStatus === "reserved" && table.activeReservation && (
                 <div className="floor-plan__table-info">

@@ -30,6 +30,7 @@ import {
 import { useAppSelector } from "@/store/hooks"
 import { apiFetch } from "@/api/client"
 import type { LayoutResponse } from "@/types/api"
+import type { LayoutPayload } from "@/features/editor/types"
 import "./WaiterOrderView.css"
 
 interface ZoneApiResponse {
@@ -38,15 +39,19 @@ interface ZoneApiResponse {
   sort_order: number
 }
 
-function mapTableToFloorTable(t: Table): FloorTable {
+function mapTableToFloorTable(
+  t: Table,
+  layoutPositions: Map<string, { x: number; y: number }>,
+): FloorTable {
+  const pos = layoutPositions.get(t.public_id)
   return {
     public_id: t.public_id,
-    table_number: t.table_number,
+    public_number: t.public_number,
     capacity: t.capacity,
     shape: t.shape as FloorTable["shape"],
     is_occupied: t.is_occupied ?? false,
-    position_x: t.position_x ?? null,
-    position_y: t.position_y ?? null,
+    position_x: pos?.x ?? null,
+    position_y: pos?.y ?? null,
     active: t.active ?? true,
     zone: t.zone ?? null,
   }
@@ -229,7 +234,18 @@ export function WaiterOrderView() {
       if (!layoutRes.ok) throw new Error("Failed to load tables")
       const layoutData = (await layoutRes.json()) as LayoutResponse
       const items = layoutData.tables ?? []
-      const mappedTables = items.map(mapTableToFloorTable)
+
+      const layoutPositions = new Map<string, { x: number; y: number }>()
+      if (layoutData.layout && typeof layoutData.layout === "object") {
+        const layoutPayload = layoutData.layout as LayoutPayload
+        for (const t of layoutPayload.tables ?? []) {
+          if (t.id) {
+            layoutPositions.set(t.id, { x: t.x, y: t.y })
+          }
+        }
+      }
+
+      const mappedTables = items.map((t) => mapTableToFloorTable(t, layoutPositions))
       setLayoutReservations(layoutData.upcoming_reservations ?? [])
 
       if (zonesRes.ok) {
@@ -246,7 +262,7 @@ export function WaiterOrderView() {
             public_id: string
             start_at: string
             end_at: string
-            table_info: { table_number: string } | null
+            table_info: { public_number: string } | null
             guest_count: number
             status: string
             notes?: string | null
@@ -258,7 +274,7 @@ export function WaiterOrderView() {
           public_id: r.public_id,
           start_at: r.start_at,
           end_at: r.end_at,
-          table: r.table_info?.table_number ?? "",
+          table: r.table_info?.public_number ?? "",
           guest_count: r.guest_count,
           status: r.status as "pending" | "active",
           notes: r.notes,
@@ -277,7 +293,7 @@ export function WaiterOrderView() {
       const tablesWithReservations = mappedTables.map((table) => {
         const matchingReservation = reservationItems.find(
           (r) =>
-            r.table === table.table_number && (r.status === "pending" || r.status === "active"),
+            r.table === table.public_number && (r.status === "pending" || r.status === "active"),
         )
         if (matchingReservation) {
           return {
@@ -458,7 +474,7 @@ export function WaiterOrderView() {
       }
 
       const selTable = currentTables.find((t) => t.public_id === tablePublicId)
-      const resForTable = currentReservations.find((r) => r.table === selTable?.table_number)
+      const resForTable = currentReservations.find((r) => r.table === selTable?.public_number)
 
       let rawSubtotal = 0
       let rawTax = 0
@@ -487,7 +503,7 @@ export function WaiterOrderView() {
 
       setOverlayDetail({
         public_id: detailId,
-        table_number: selTable?.table_number ?? "",
+        public_number: selTable?.public_number ?? "",
         guest_name: guestName,
         guest_count: session.guest_count,
         duration,
@@ -513,7 +529,7 @@ export function WaiterOrderView() {
     : null
 
   const selectedTableReservations = selectedTable
-    ? reservations.filter((r) => r.table === selectedTable.table_number)
+    ? reservations.filter((r) => r.table === selectedTable.public_number)
     : []
 
   const handleTableSelect = (table: FloorTable) => {
@@ -649,14 +665,14 @@ export function WaiterOrderView() {
           publicId={editingReservation.public_id}
           tableNumber={editingReservation.table}
           tablePublicId={
-            tables.find((t) => t.table_number === editingReservation.table)?.public_id ?? ""
+            tables.find((t) => t.public_number === editingReservation.table)?.public_id ?? ""
           }
           currentDate={editingReservation.start_at}
           currentStart={editingReservation.start_at}
           currentEnd={editingReservation.end_at}
           currentGuests={editingReservation.guest_count}
           tableCapacity={
-            tables.find((t) => t.table_number === editingReservation.table)?.capacity ?? 10
+            tables.find((t) => t.public_number === editingReservation.table)?.capacity ?? 10
           }
           restaurantId={restaurantId ?? undefined}
           workingHours={workingHours}
