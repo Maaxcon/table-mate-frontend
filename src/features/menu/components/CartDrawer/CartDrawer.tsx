@@ -252,6 +252,9 @@ export function CartDrawer({
                     <span className="cart-drawer__receipt-name">
                       {ci.item?.name ?? "—"}
                       <span className="cart-drawer__receipt-qty"> × {ci.quantity}</span>
+                      {ci.comment && (
+                        <span className="cart-drawer__receipt-comment">{ci.comment}</span>
+                      )}
                     </span>
                     <span className="cart-drawer__receipt-price">
                       {formatAmount(lineTotal(ci))} {currencySymbol}
@@ -310,6 +313,9 @@ export function CartDrawer({
                             {formatAmount(unitPrice(ci))} {currencySymbol}{" "}
                             {menuStrings.cart.perUnit}
                           </span>
+                          {ci.comment && (
+                            <span className="cart-drawer__item-comment">{ci.comment}</span>
+                          )}
                         </div>
 
                         <div className="cart-drawer__item-right">

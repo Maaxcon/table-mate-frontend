@@ -277,6 +277,15 @@
   color: var(--color-text-muted);
 }
 
+.cart-drawer__item-comment {
+  margin-top: 2px;
+  font-size: 0.775rem;
+  font-style: italic;
+  color: var(--color-text-muted);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
 .cart-drawer__item-right {
   display: flex;
   flex-direction: column;
@@ -592,6 +601,17 @@
 .cart-drawer__receipt-qty {
   color: var(--color-text-muted);
   font-weight: 400;
+}
+
+.cart-drawer__receipt-comment {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.75rem;
+  font-style: italic;
+  font-weight: 400;
+  color: var(--color-text-muted);
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
 .cart-drawer__receipt-price {
