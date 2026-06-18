@@ -1,4 +1,5 @@
 import { apiFetch } from "@/api/client"
+import type { Reservation } from "@/types/api"
 import type { Table } from "@/types/api/types.gen"
 import type { UpcomingReservation } from "@/features/waiter-order-view/data/waiterTypes"
 
@@ -235,7 +236,7 @@ export async function closeCheck(reservationId: string): Promise<void> {
   }
 }
 
-export async function activateReservation(reservationId: string): Promise<ReservationWithTable> {
+export async function activateReservation(reservationId: string): Promise<Reservation> {
   const res = await apiFetch(`/api/reservations/reservations/${reservationId}/activate/`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -244,5 +245,5 @@ export async function activateReservation(reservationId: string): Promise<Reserv
     const body = await res.json().catch(() => ({}))
     throw new Error((body as { detail?: string }).detail ?? "Failed to activate reservation")
   }
-  return res.json() as Promise<ReservationWithTable>
+  return res.json() as Promise<Reservation>
 }
