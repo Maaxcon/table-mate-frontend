@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { getTimeFromDatetime } from "../data/waiterTypes"
+import { formatTimeRange } from "../data/waiterTypes"
 import type {
   FloorTable,
   ReservationItem,
@@ -16,6 +16,7 @@ interface TableDetailOverlayProps {
   tableReservations: ReservationItem[]
   visualStatus: VisualTableStatus
   loading: boolean
+  currentTime: Date
   actionBusy?: boolean
   actionError?: string | null
   onOpenTable?: (guestCount: number) => void
@@ -30,6 +31,7 @@ export function TableDetailOverlay({
   tableReservations,
   visualStatus,
   loading,
+  currentTime,
   actionBusy = false,
   actionError = null,
   onOpenTable,
@@ -48,12 +50,15 @@ export function TableDetailOverlay({
   const guestSlots = detail
     ? [...new Set(detail.items.map((i) => i.guest_slot))].sort((a, b) => a - b)
     : []
+  const byStart = (a: ReservationItem, b: ReservationItem) =>
+    new Date(a.start_at).getTime() - new Date(b.start_at).getTime()
   const nearestReservation =
-    tableReservations.length > 0
-      ? [...tableReservations].sort(
-          (a, b) => new Date(a.start_at).getTime() - new Date(b.start_at).getTime(),
-        )[0]
-      : null
+    tableReservations.length > 0 ? [...tableReservations].sort(byStart)[0] : null
+  // The soonest booking that has not started yet — shown as the table's "next".
+  const nextReservation =
+    [...tableReservations]
+      .filter((r) => new Date(r.start_at).getTime() > currentTime.getTime())
+      .sort(byStart)[0] ?? null
 
   return (
     <>
@@ -90,11 +95,11 @@ export function TableDetailOverlay({
             {loading
               ? ""
               : isReserved
-                ? `Reserved ${nearestReservation ? `• ${nearestReservation.name} at ${getTimeFromDatetime(nearestReservation.start_at)}` : ""}`
+                ? `Reserved ${nearestReservation ? `• ${nearestReservation.name} ${formatTimeRange(nearestReservation.start_at, nearestReservation.end_at)}` : ""}`
                 : isOccupied && detail
-                  ? `Current Party: ${detail.guest_name} • ${detail.guest_count} Guests • Duration: ${detail.duration}`
-                  : nearestReservation
-                    ? `Capacity: ${table.capacity} • Next: ${nearestReservation.name} at ${getTimeFromDatetime(nearestReservation.start_at)}`
+                  ? `Current Party: ${detail.guest_name} • ${detail.guest_count} Guests • Duration: ${detail.duration}${nextReservation ? ` • Next: ${nextReservation.name} ${formatTimeRange(nextReservation.start_at, nextReservation.end_at)}` : ""}`
+                  : nextReservation
+                    ? `Capacity: ${table.capacity} • Next: ${nextReservation.name} ${formatTimeRange(nextReservation.start_at, nextReservation.end_at)}`
                     : `Capacity: ${table.capacity} • Available`}
           </p>
         </div>
@@ -263,7 +268,7 @@ export function TableDetailOverlay({
                   <div className="overlay__reservation-info">
                     <span className="overlay__reservation-name">{r.name}</span>
                     <span className="overlay__reservation-meta">
-                      {r.guest_count} guests &middot; {getTimeFromDatetime(r.start_at)}
+                      {r.guest_count} guests &middot; {formatTimeRange(r.start_at, r.end_at)}
                     </span>
                   </div>
                   {!isOccupied && r.status === "pending" && (

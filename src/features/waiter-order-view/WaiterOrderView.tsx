@@ -251,6 +251,7 @@ export function WaiterOrderView() {
           tableReservations={selectedTableReservations}
           visualStatus={selectedTableVisualStatus}
           loading={overlayLoading}
+          currentTime={currentTime}
           actionBusy={actionBusy}
           actionError={actionError}
           onOpenTable={handleOpenTable}

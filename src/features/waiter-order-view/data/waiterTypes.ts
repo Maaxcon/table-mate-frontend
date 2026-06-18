@@ -24,7 +24,7 @@ export type VisualTableStatus = "free" | "occupied" | "reserved"
 
 export type ReservationItem = Pick<
   Reservation,
-  "public_id" | "start_at" | "guest_count" | "status" | "notes"
+  "public_id" | "start_at" | "end_at" | "guest_count" | "status" | "notes"
 > & {
   table: string
   name: string
@@ -67,6 +67,13 @@ export const VOID_REASON_LABELS: Record<number, string> = {
 export function getTimeFromDatetime(datetime: string): string {
   const d = new Date(datetime)
   return `${d.getHours().toString().padStart(2, "0")}:${d.getMinutes().toString().padStart(2, "0")}`
+}
+
+// "12:00–14:00" — the booking window. Falls back to just the start if no end.
+export function formatTimeRange(start: string, end?: string | null): string {
+  return end
+    ? `${getTimeFromDatetime(start)}–${getTimeFromDatetime(end)}`
+    : getTimeFromDatetime(start)
 }
 
 const FIFTEEN_MINUTES_MS = 15 * 60 * 1000
