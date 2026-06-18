@@ -1,10 +1,6 @@
 import { api } from "@/api/client"
+import type { OrderItem, VoidReason } from "@/types/api/types.gen"
 import type { MenuCategory, MenuItem } from "@/types/api/types.gen"
-
-export type VoidReasonOption = {
-  code: string
-  label: string
-}
 
 export type CreateOrderItem = {
   menu_item: string
@@ -13,8 +9,8 @@ export type CreateOrderItem = {
   comment?: string | null
 }
 
-export function fetchVoidReasons(signal?: AbortSignal): Promise<VoidReasonOption[]> {
-  return api.getList<VoidReasonOption>("/api/orders/void-reasons/", { signal })
+export function fetchVoidReasons(signal?: AbortSignal): Promise<VoidReason[]> {
+  return api.getList<VoidReason>("/api/orders/void-reasons/", { signal })
 }
 
 export function fetchCategories(
@@ -66,7 +62,7 @@ export function voidOrderItem(
   itemId: string,
   voidReason: string,
   signal?: AbortSignal,
-): Promise<unknown> {
+): Promise<OrderItem> {
   return api.post(
     `/api/orders/order-items/${itemId}/void/`,
     { void_reason: voidReason },
