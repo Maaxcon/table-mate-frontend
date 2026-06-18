@@ -59,11 +59,8 @@ export function TableDetailOverlay({
     [...tableReservations]
       .filter((r) => new Date(r.start_at).getTime() > currentTime.getTime())
       .sort(byStart)[0] ?? null
-  // Upcoming bookings only (pending) for the Reservations tab — the active party
-  // already shows in the header, so we don't list it here too.
-  const upcomingReservations = [...tableReservations]
-    .filter((r) => r.status === "pending")
-    .sort(byStart)
+  // All of the table's bookings for the day (active + upcoming), earliest first.
+  const dayReservations = [...tableReservations].sort(byStart)
 
   return (
     <>
@@ -265,13 +262,18 @@ export function TableDetailOverlay({
 
         {activeOverlayTab === "reservations" && (
           <div className="overlay__body">
-            {upcomingReservations.length === 0 ? (
-              <p className="overlay__empty">No upcoming reservations for this table.</p>
+            {dayReservations.length === 0 ? (
+              <p className="overlay__empty">No reservations for this table.</p>
             ) : (
-              upcomingReservations.map((r) => (
+              dayReservations.map((r) => (
                 <div key={r.public_id} className="overlay__reservation-row">
                   <div className="overlay__reservation-info">
-                    <span className="overlay__reservation-name">{r.name}</span>
+                    <span className="overlay__reservation-name">
+                      {r.name}
+                      {r.status === "active" && (
+                        <span className="overlay__reservation-tag">SEATED NOW</span>
+                      )}
+                    </span>
                     <span className="overlay__reservation-meta">
                       {r.guest_count} guests &middot; {formatTimeRange(r.start_at, r.end_at)}
                     </span>
