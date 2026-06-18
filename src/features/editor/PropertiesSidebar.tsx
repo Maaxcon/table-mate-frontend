@@ -190,6 +190,27 @@ export function PropertiesSidebar({
           </div>
         )}
 
+        {!isTable && (
+          <div className="editor-sidebar__field">
+            <label className="editor-sidebar__label" htmlFor="sidebar-zone-decor">
+              Zone
+            </label>
+            <select
+              id="sidebar-zone-decor"
+              className="editor-sidebar__input"
+              value={entity.zoneId ?? ""}
+              onChange={(e) => onUpdate(entity.id, { zoneId: e.target.value || undefined })}
+            >
+              <option value="">-- None --</option>
+              {zones.map((z) => (
+                <option key={z.public_id} value={z.public_id}>
+                  {z.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
         <fieldset className="editor-sidebar__field">
           <legend className="editor-sidebar__label">Border Styles</legend>
           {Object.entries(EDGE_LABELS).map(([key, label]) => (

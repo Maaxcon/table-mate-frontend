@@ -85,7 +85,7 @@ function FloorPlanSection() {
   }, [])
 
   const visibleEntities = selectedZoneId
-    ? entities.filter((e) => e.zoneId === selectedZoneId || !e.type.startsWith("table"))
+    ? entities.filter((e) => e.zoneId === selectedZoneId)
     : entities
 
   const { publish, publishing } = usePublish({
@@ -117,8 +117,7 @@ function FloorPlanSection() {
   const handleCanvasClick = useCallback(
     (gridX: number, gridY: number) => {
       if (activeTool && activeTool !== "select" && activeTool !== "pan") {
-        const extra =
-          selectedZoneId && activeTool.startsWith("table") ? { zoneId: selectedZoneId } : undefined
+        const extra = selectedZoneId ? { zoneId: selectedZoneId } : undefined
         const entity = addEntity(activeTool as EditorEntity["type"], gridX, gridY, extra)
         setTool("select")
         if (entity) selectEntity(entity.id)
