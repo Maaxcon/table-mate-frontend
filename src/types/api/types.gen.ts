@@ -104,7 +104,7 @@ export type CartItem = {
   comment?: string | null
   readonly added_by: string
   readonly guest_slot: number | null
-  readonly device_id: string | null
+  readonly is_mine: boolean
   readonly is_paid: boolean
   readonly cart_session: string
   readonly restaurant: string
@@ -199,8 +199,9 @@ export type GoogleContextResponse = {
 }
 
 export type GuestInit = {
-  device_id: string
-  reservation_id: string
+  device_id?: string
+  reservation_id?: string
+  table_id?: string
 }
 
 export type Layout = {
@@ -311,7 +312,8 @@ export type OrderItem = {
   tax_amount?: string
   voided_at?: string | null
   readonly voided_by: string
-  void_reason?: number | null
+  readonly void_reason: string | null
+  void_reason_note?: string | null
   is_wasted?: boolean
   readonly created_at: string
   readonly updated_at: string
@@ -609,7 +611,8 @@ export type PatchedOrderItem = {
   tax_amount?: string
   voided_at?: string | null
   readonly voided_by?: string
-  void_reason?: number | null
+  readonly void_reason?: string | null
+  void_reason_note?: string | null
   is_wasted?: boolean
   readonly created_at?: string
   readonly updated_at?: string
@@ -987,6 +990,11 @@ export type VerifyScanResponse = {
   detail: string
 }
 
+export type VoidReason = {
+  readonly code: string
+  readonly label: string
+}
+
 /**
  * Schema shape for the working_hours JSON: optional mon–sun, each open/close.
  * Used only to type the OpenAPI schema; validation stays in validate_working_hours.
@@ -1146,7 +1154,7 @@ export type OrderItemWritable = {
   tax_rate?: string
   tax_amount?: string
   voided_at?: string | null
-  void_reason?: number | null
+  void_reason_note?: string | null
   is_wasted?: boolean
 }
 
@@ -1384,7 +1392,7 @@ export type PatchedOrderItemWritable = {
   tax_rate?: string
   tax_amount?: string
   voided_at?: string | null
-  void_reason?: number | null
+  void_reason_note?: string | null
   is_wasted?: boolean
 }
 
@@ -1617,7 +1625,7 @@ export type AuthGoogleContextCreateResponse =
   AuthGoogleContextCreateResponses[keyof AuthGoogleContextCreateResponses]
 
 export type AuthGuestInitCreateData = {
-  body: GuestInit
+  body?: GuestInit
   path?: never
   query?: never
   url: "/api/auth/guest-init/"
@@ -2606,6 +2614,22 @@ export type OrdersOrderItemsPartialUpdateResponses = {
 export type OrdersOrderItemsPartialUpdateResponse =
   OrdersOrderItemsPartialUpdateResponses[keyof OrdersOrderItemsPartialUpdateResponses]
 
+export type OrdersOrderItemsVoidCreateData = {
+  body?: never
+  path: {
+    public_id: string
+  }
+  query?: never
+  url: "/api/orders/order-items/{public_id}/void/"
+}
+
+export type OrdersOrderItemsVoidCreateResponses = {
+  200: OrderItem
+}
+
+export type OrdersOrderItemsVoidCreateResponse =
+  OrdersOrderItemsVoidCreateResponses[keyof OrdersOrderItemsVoidCreateResponses]
+
 export type OrdersOrdersListData = {
   body?: never
   path?: never
@@ -2862,6 +2886,44 @@ export type OrdersTicketsPartialUpdateResponses = {
 export type OrdersTicketsPartialUpdateResponse =
   OrdersTicketsPartialUpdateResponses[keyof OrdersTicketsPartialUpdateResponses]
 
+export type OrdersVoidReasonsListData = {
+  body?: never
+  path?: never
+  query?: {
+    /**
+     * Which field to use when ordering the results.
+     */
+    ordering?: string
+  }
+  url: "/api/orders/void-reasons/"
+}
+
+export type OrdersVoidReasonsListResponses = {
+  200: Array<VoidReason>
+}
+
+export type OrdersVoidReasonsListResponse =
+  OrdersVoidReasonsListResponses[keyof OrdersVoidReasonsListResponses]
+
+export type OrdersVoidReasonsRetrieveData = {
+  body?: never
+  path: {
+    /**
+     * A unique integer value identifying this void reason.
+     */
+    id: number
+  }
+  query?: never
+  url: "/api/orders/void-reasons/{id}/"
+}
+
+export type OrdersVoidReasonsRetrieveResponses = {
+  200: VoidReason
+}
+
+export type OrdersVoidReasonsRetrieveResponse =
+  OrdersVoidReasonsRetrieveResponses[keyof OrdersVoidReasonsRetrieveResponses]
+
 export type PaymentsPaymentsListData = {
   body?: never
   path?: never
@@ -3008,6 +3070,56 @@ export type ReservationsReservationsPartialUpdateResponses = {
 
 export type ReservationsReservationsPartialUpdateResponse =
   ReservationsReservationsPartialUpdateResponses[keyof ReservationsReservationsPartialUpdateResponses]
+
+export type ReservationsReservationsActivateCreateData = {
+  body: ReservationWritable
+  path: {
+    public_id: string
+  }
+  query?: never
+  url: "/api/reservations/reservations/{public_id}/activate/"
+}
+
+export type ReservationsReservationsActivateCreateResponses = {
+  200: Reservation
+}
+
+export type ReservationsReservationsActivateCreateResponse =
+  ReservationsReservationsActivateCreateResponses[keyof ReservationsReservationsActivateCreateResponses]
+
+export type ReservationsReservationsCloseCheckCreateData = {
+  body: ReservationWritable
+  path: {
+    public_id: string
+  }
+  query?: never
+  url: "/api/reservations/reservations/{public_id}/close-check/"
+}
+
+export type ReservationsReservationsCloseCheckCreateResponses = {
+  200: Reservation
+}
+
+export type ReservationsReservationsCloseCheckCreateResponse =
+  ReservationsReservationsCloseCheckCreateResponses[keyof ReservationsReservationsCloseCheckCreateResponses]
+
+export type ReservationsReservationsMoveTableCreateData = {
+  body?: {
+    table_id: string
+  }
+  path: {
+    public_id: string
+  }
+  query?: never
+  url: "/api/reservations/reservations/{public_id}/move-table/"
+}
+
+export type ReservationsReservationsMoveTableCreateResponses = {
+  200: Reservation
+}
+
+export type ReservationsReservationsMoveTableCreateResponse =
+  ReservationsReservationsMoveTableCreateResponses[keyof ReservationsReservationsMoveTableCreateResponses]
 
 export type ReservationsReservationsAvailableSlotsRetrieveData = {
   body?: never
