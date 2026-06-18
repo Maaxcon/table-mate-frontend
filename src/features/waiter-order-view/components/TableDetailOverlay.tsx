@@ -204,17 +204,21 @@ export function TableDetailOverlay({
                 <div className="overlay__divider" />
 
                 <div className="overlay__body">
-                  {guestSlots.map((slot) => {
-                    const slotItems = detail.items.filter((i) => i.guest_slot === slot)
-                    return (
-                      <div key={slot} className="overlay__slot">
-                        <h3 className="overlay__slot-title">GUEST {slot}</h3>
-                        {slotItems.map((item) => (
-                          <OrderItemRow key={item.public_id} item={item} />
-                        ))}
-                      </div>
-                    )
-                  })}
+                  {detail.items.length === 0 ? (
+                    <p className="overlay__empty">No dishes ordered yet.</p>
+                  ) : (
+                    guestSlots.map((slot) => {
+                      const slotItems = detail.items.filter((i) => i.guest_slot === slot)
+                      return (
+                        <div key={slot} className="overlay__slot">
+                          <h3 className="overlay__slot-title">GUEST {slot}</h3>
+                          {slotItems.map((item) => (
+                            <OrderItemRow key={item.public_id} item={item} />
+                          ))}
+                        </div>
+                      )
+                    })
+                  )}
                 </div>
 
                 {detail.items.length > 0 && <div className="overlay__divider" />}

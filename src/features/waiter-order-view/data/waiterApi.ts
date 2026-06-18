@@ -18,6 +18,7 @@ interface SessionApiItem {
   guest_count: number
   opened_at: string
   status: string
+  currency: string
 }
 
 interface OrderApiItem {
@@ -112,7 +113,8 @@ export async function fetchOverlayDetail(
     const orderData = (await ordersRes.json()) as { results?: OrderApiItem[] }
     orders = orderData.results ?? []
   }
-  if (orders.length === 0) return null
+  // Note: an open session with no orders yet still returns a detail (empty items)
+  // so the waiter can see the open table and close the check.
 
   // A visit can have several Orders (one per checkout round) on the same
   // Session — gather items from all of them, not just the latest.
@@ -137,7 +139,7 @@ export async function fetchOverlayDetail(
     guest_name: resForTable?.name ?? "Guest",
     guest_count: session.guest_count,
     duration: formatDuration(session.opened_at),
-    currency: orders[0].currency,
+    currency: orders[0]?.currency ?? session.currency,
     items: orderItems,
     subtotal: rawSubtotal.toFixed(2),
     tax_total: rawTax.toFixed(2),
