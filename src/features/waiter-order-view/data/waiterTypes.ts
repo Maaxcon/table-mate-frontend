@@ -39,6 +39,7 @@ export interface OverlayOrderItem {
   status: OrderItemStatusEnum
   is_wasted: boolean
   void_reason?: number | null
+  comment?: string | null
 }
 
 export interface OverlayDetail {

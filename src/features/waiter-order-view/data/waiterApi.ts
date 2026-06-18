@@ -38,6 +38,7 @@ interface OrderItemApiItem {
   void_reason?: number | null
   unit_price: string
   menu_item_name?: string
+  comment?: string | null
 }
 
 // ── Reservations ─────────────────────────────────────────────────────
@@ -74,6 +75,7 @@ function mapOrderItem(oi: OrderItemApiItem): OverlayOrderItem {
     status: oi.status as OverlayOrderItem["status"],
     is_wasted: oi.is_wasted,
     void_reason: oi.void_reason,
+    comment: oi.comment ?? null,
   }
 }
 

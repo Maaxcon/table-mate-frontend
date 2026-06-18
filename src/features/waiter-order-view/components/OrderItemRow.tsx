@@ -20,6 +20,7 @@ export function OrderItemRow({ item }: OrderItemRowProps) {
         <span className="order-item-row__name">
           {item.quantity}&times; {item.name}
         </span>
+        {item.comment && <span className="order-item-row__comment">{item.comment}</span>}
         {voidReasonLabel && <span className="order-item-row__void-reason">{voidReasonLabel}</span>}
       </div>
       <div className="order-item-row__right">
