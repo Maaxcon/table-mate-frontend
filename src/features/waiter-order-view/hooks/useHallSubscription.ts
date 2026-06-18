@@ -28,11 +28,24 @@ export interface HallNewReservationEvent {
   occurred_at: string
 }
 
-export type HallEvent = HallTableStatusChangedEvent | HallNewReservationEvent
+export interface HallLayoutPublishedEvent {
+  event_name: "LAYOUT_PUBLISHED"
+  schema_version: string
+  event_id: string
+  layout_version_id: number
+  restaurant_id: number
+  occurred_at: string
+}
+
+export type HallEvent =
+  | HallTableStatusChangedEvent
+  | HallNewReservationEvent
+  | HallLayoutPublishedEvent
 
 interface UseHallSubscriptionOptions {
   onTableStatusChanged?: (event: HallTableStatusChangedEvent) => void
   onNewReservation?: (event: HallNewReservationEvent) => void
+  onLayoutPublished?: (event: HallLayoutPublishedEvent) => void
   onError?: (error: Event) => void
   onClose?: () => void
 }
@@ -40,6 +53,7 @@ interface UseHallSubscriptionOptions {
 export function useHallSubscription({
   onTableStatusChanged,
   onNewReservation,
+  onLayoutPublished,
   onError,
   onClose,
 }: UseHallSubscriptionOptions) {
@@ -51,6 +65,7 @@ export function useHallSubscription({
   const callbacksRef = useRef({
     onTableStatusChanged,
     onNewReservation,
+    onLayoutPublished,
     onError,
     onClose,
   })
@@ -59,10 +74,11 @@ export function useHallSubscription({
     callbacksRef.current = {
       onTableStatusChanged,
       onNewReservation,
+      onLayoutPublished,
       onError,
       onClose,
     }
-  }, [onTableStatusChanged, onNewReservation, onError, onClose])
+  }, [onTableStatusChanged, onNewReservation, onLayoutPublished, onError, onClose])
 
   const connect = useCallback(() => {
     if (!accessToken || env.wsUrl === "Not configured") return
@@ -81,6 +97,8 @@ export function useHallSubscription({
           callbacksRef.current.onTableStatusChanged?.(data)
         } else if (data.event_name === "HALL_NEW_RESERVATION") {
           callbacksRef.current.onNewReservation?.(data)
+        } else if (data.event_name === "LAYOUT_PUBLISHED") {
+          callbacksRef.current.onLayoutPublished?.(data)
         }
       } catch (err) {
         console.error("[HallWS] Failed to parse message:", err)

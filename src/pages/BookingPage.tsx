@@ -162,9 +162,15 @@ export function BookingPage() {
     ])
   }, [])
 
+  const handleLayoutPublished = useCallback(() => {
+    loadTables()
+    loadUpcoming()
+  }, [loadTables, loadUpcoming])
+
   useFloorSubscription({
     onTableStatusChanged: handleTableStatusChanged,
     onNewReservation: handleNewReservation,
+    onLayoutPublished: handleLayoutPublished,
   })
 
   return (

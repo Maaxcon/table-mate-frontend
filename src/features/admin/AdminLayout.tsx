@@ -4,6 +4,7 @@ import {
   LuArrowLeft,
   LuLayoutDashboard,
   LuLogOut,
+  LuPencilRuler,
   LuSettings,
   LuStore,
   LuUsers,
@@ -23,6 +24,7 @@ const NAV_ITEMS = [
   { to: "/admin/settings", label: "Settings", icon: LuSettings },
   { to: "/admin/staff", label: "Staff", icon: LuUsers },
   { to: "/admin/menu", label: "Menu", icon: LuUtensilsCrossed },
+  { to: "/admin/floor-plan/edit", label: "Floor Plan", icon: LuPencilRuler },
 ] as const
 
 function AdminLayout() {

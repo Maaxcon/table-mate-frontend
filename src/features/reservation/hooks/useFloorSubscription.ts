@@ -15,11 +15,22 @@ export interface FloorNewReservationEvent {
   occurred_at: string
 }
 
-export type FloorEvent = FloorTableStatusEvent | FloorNewReservationEvent
+export interface FloorLayoutPublishedEvent {
+  event_name: "LAYOUT_PUBLISHED"
+  layout_version_id: number
+  restaurant_id: number
+  occurred_at: string
+}
+
+export type FloorEvent =
+  | FloorTableStatusEvent
+  | FloorNewReservationEvent
+  | FloorLayoutPublishedEvent
 
 interface UseFloorSubscriptionOptions {
   onTableStatusChanged?: (event: FloorTableStatusEvent) => void
   onNewReservation?: (event: FloorNewReservationEvent) => void
+  onLayoutPublished?: (event: FloorLayoutPublishedEvent) => void
   onClose?: () => void
   onError?: (error: Event) => void
 }
@@ -27,6 +38,7 @@ interface UseFloorSubscriptionOptions {
 export function useFloorSubscription({
   onTableStatusChanged,
   onNewReservation,
+  onLayoutPublished,
   onClose,
   onError,
 }: UseFloorSubscriptionOptions) {
@@ -34,11 +46,23 @@ export function useFloorSubscription({
   const wsRef = useRef<WebSocket | null>(null)
   const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const connectRef = useRef<(() => void) | null>(null)
-  const callbacksRef = useRef({ onTableStatusChanged, onNewReservation, onClose, onError })
+  const callbacksRef = useRef({
+    onTableStatusChanged,
+    onNewReservation,
+    onLayoutPublished,
+    onClose,
+    onError,
+  })
 
   useEffect(() => {
-    callbacksRef.current = { onTableStatusChanged, onNewReservation, onClose, onError }
-  }, [onTableStatusChanged, onNewReservation, onClose, onError])
+    callbacksRef.current = {
+      onTableStatusChanged,
+      onNewReservation,
+      onLayoutPublished,
+      onClose,
+      onError,
+    }
+  }, [onTableStatusChanged, onNewReservation, onLayoutPublished, onClose, onError])
 
   const connect = useCallback(() => {
     if (!accessToken || !env.wsUrl) return
@@ -62,6 +86,8 @@ export function useFloorSubscription({
           callbacksRef.current.onTableStatusChanged?.(data as FloorTableStatusEvent)
         } else if (data.event_name === "HALL_NEW_RESERVATION") {
           callbacksRef.current.onNewReservation?.(data as FloorNewReservationEvent)
+        } else if (data.event_name === "LAYOUT_PUBLISHED") {
+          callbacksRef.current.onLayoutPublished?.(data as FloorLayoutPublishedEvent)
         }
       } catch (err) {
         console.warn("[FloorWS] Failed to parse message:", err)

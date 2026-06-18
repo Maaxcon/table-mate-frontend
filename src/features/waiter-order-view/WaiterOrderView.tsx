@@ -206,6 +206,7 @@ export function WaiterOrderView() {
   useHallSubscription({
     onTableStatusChanged: handleTableStatusChanged,
     onNewReservation: handleNewReservation,
+    onLayoutPublished: handleLayoutPublished,
   })
 
   useEffect(() => {
@@ -304,7 +305,11 @@ export function WaiterOrderView() {
   }, [enrichTablesWithSessionData])
 
   useEffect(() => {
-    loadData() // eslint-disable-line react-hooks/set-state-in-effect
+    loadData()
+  }, [loadData])
+
+  const handleLayoutPublished = useCallback(() => {
+    loadData()
   }, [loadData])
 
   const handleCancelReservation = useCallback(
