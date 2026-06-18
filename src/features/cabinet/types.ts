@@ -20,7 +20,7 @@ export type Reservation = {
   table: string | null
   table_info?: {
     public_id: string
-    table_number: string
+    public_number: string
     capacity: number
     shape: string
   }

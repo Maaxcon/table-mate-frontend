@@ -50,7 +50,7 @@ export function BookingsList({
           <ul className="cabinet-bookings">
             {bookings.map((booking) => {
               const dateTime = formatBookingTime(booking.start_at, booking.end_at)
-              const tableNumber = booking.table_info?.table_number ?? booking.table ?? "Unknown"
+              const tableNumber = booking.table_info?.public_number ?? booking.table ?? "Unknown"
               const restaurantName = booking.restaurant_info?.name ?? "Restaurant"
               const isBusy = actionId === booking.public_id
 

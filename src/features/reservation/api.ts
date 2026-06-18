@@ -23,7 +23,7 @@ export type ReservationWithTable = {
   table: string
   table_info?: {
     public_id: string
-    table_number: string
+    public_number: string
     capacity: number
     shape: string
   }
@@ -96,17 +96,40 @@ export async function fetchAvailableSlots(
   return res.json() as Promise<Record<string, string[]>>
 }
 
-export async function fetchUpcomingReservations(
-  restaurantId?: string,
-): Promise<UpcomingReservation[]> {
+export type LayoutDataResponse = {
+  tables: Table[]
+  layout: unknown
+  upcoming_reservations: UpcomingReservation[]
+}
+
+export async function fetchLayoutData(restaurantId?: string): Promise<LayoutDataResponse> {
   let url = "/api/restaurants/tables/layout/"
   if (restaurantId) {
     url += `?restaurant=${restaurantId}`
   }
   const res = await apiFetch(url)
-  if (!res.ok) return []
-  const data = (await res.json()) as { upcoming_reservations?: UpcomingReservation[] }
-  return data.upcoming_reservations ?? []
+  if (!res.ok) return { tables: [], layout: null, upcoming_reservations: [] }
+  return res.json() as Promise<LayoutDataResponse>
+}
+
+export function extractLayoutPositions(layout: unknown): Map<string, { x: number; y: number }> {
+  const positions = new Map<string, { x: number; y: number }>()
+  if (layout && typeof layout === "object" && "tables" in layout) {
+    const layoutPayload = layout as { tables: Array<{ id: string | null; x: number; y: number }> }
+    for (const t of layoutPayload.tables ?? []) {
+      if (t.id) {
+        positions.set(t.id, { x: t.x, y: t.y })
+      }
+    }
+  }
+  return positions
+}
+
+export async function fetchUpcomingReservations(
+  restaurantId?: string,
+): Promise<UpcomingReservation[]> {
+  const data = await fetchLayoutData(restaurantId)
+  return data.upcoming_reservations
 }
 
 export async function checkAvailability(

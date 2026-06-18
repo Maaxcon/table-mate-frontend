@@ -13,6 +13,7 @@ interface CustomerFloorPlanProps {
   selectedId: string | null
   onSelect: (table: Table) => void
   upcomingReservations?: UpcomingReservation[]
+  layoutPositions?: Map<string, { x: number; y: number }>
 }
 
 export function CustomerFloorPlan({
@@ -23,6 +24,7 @@ export function CustomerFloorPlan({
   selectedId,
   onSelect,
   upcomingReservations = [],
+  layoutPositions = new Map(),
 }: CustomerFloorPlanProps) {
   const [currentTime, setCurrentTime] = useState(new Date())
 
@@ -37,17 +39,20 @@ export function CustomerFloorPlan({
     occupied: "OCCUPIED",
   }
 
-  const floorTables: FloorTable[] = tables.map((t) => ({
-    public_id: t.public_id,
-    table_number: t.table_number,
-    capacity: t.capacity,
-    shape: t.shape ?? "rectangle",
-    is_occupied: t.is_occupied ?? false,
-    position_x: t.position_x ?? null,
-    position_y: t.position_y ?? null,
-    active: t.active ?? true,
-    zone: t.zone ?? null,
-  }))
+  const floorTables: FloorTable[] = tables.map((t) => {
+    const pos = layoutPositions.get(t.public_id)
+    return {
+      public_id: t.public_id,
+      public_number: t.public_number,
+      capacity: t.capacity,
+      shape: t.shape ?? "rectangle",
+      is_occupied: t.is_occupied ?? false,
+      position_x: pos?.x ?? null,
+      position_y: pos?.y ?? null,
+      active: t.active ?? true,
+      zone: t.zone ?? null,
+    }
+  })
 
   return (
     <div className="c-floor-plan">
@@ -83,8 +88,8 @@ export function CustomerFloorPlan({
                 .filter(Boolean)
                 .join(" ")}
               style={{
-                left: table.position_x ?? undefined,
-                top: table.position_y ?? undefined,
+                left: ft.position_x ?? undefined,
+                top: ft.position_y ?? undefined,
               }}
               onClick={() => onSelect(table)}
             >
@@ -94,7 +99,7 @@ export function CustomerFloorPlan({
                 {statusLabel[visualStatus] ?? visualStatus.toUpperCase()}
               </span>
 
-              <span className="c-floor-plan__table-number">{table.table_number}</span>
+              <span className="c-floor-plan__table-number">{table.public_number}</span>
 
               <div className="c-floor-plan__table-meta">
                 <span className="c-floor-plan__table-capacity">{table.capacity} P</span>

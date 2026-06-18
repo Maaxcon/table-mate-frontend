@@ -311,7 +311,7 @@ export function ReservationCalendar({ reservations, history, loading }: Props) {
                   </span>
                   <span className="rc__item-row">
                     <LuTable2 aria-hidden="true" />
-                    Table {r.table_info?.table_number ?? r.table ?? "—"}
+                    Table {r.table_info?.public_number ?? r.table ?? "—"}
                   </span>
                   <span className="rc__item-row">
                     <LuClock aria-hidden="true" />

@@ -149,7 +149,7 @@ export function BookModal({
       })
 
       setSuccess({
-        tableNumber: table.table_number,
+        tableNumber: table.public_number,
         date: localDateKey(selectedDate),
         time: selectedTime,
         endTime: endAt,
@@ -169,7 +169,7 @@ export function BookModal({
     notes,
     restaurantId,
     table.public_id,
-    table.table_number,
+    table.public_number,
   ])
 
   if (success) {
@@ -258,7 +258,7 @@ export function BookModal({
     >
       <div className="book-modal">
         <div className="book-modal__header">
-          <h2 className="book-modal__title">BOOK TABLE {table.table_number}</h2>
+          <h2 className="book-modal__title">BOOK TABLE {table.public_number}</h2>
           <button className="book-modal__close" onClick={onClose} type="button">
             &times;
           </button>
@@ -394,7 +394,7 @@ export function BookModal({
               <div className="book-modal__summary">
                 <div className="book-modal__summary-row">
                   <span>Table</span>
-                  <span>#{table.table_number}</span>
+                  <span>#{table.public_number}</span>
                 </div>
                 <div className="book-modal__summary-row">
                   <span>Date</span>

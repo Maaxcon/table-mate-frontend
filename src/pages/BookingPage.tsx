@@ -6,7 +6,8 @@ import {
   fetchMyReservations,
   fetchRestaurantSettings,
   fetchTables,
-  fetchUpcomingReservations,
+  fetchLayoutData,
+  extractLayoutPositions,
   fetchZones,
 } from "@/features/reservation/api"
 import type { UpcomingReservation } from "@/features/waiter-order-view/data/waiterTypes"
@@ -46,6 +47,9 @@ export function BookingPage() {
   const [reservations, setReservations] = useState<ReservationWithTable[]>([])
   const [reservationsLoading, setReservationsLoading] = useState(false)
   const [upcomingReservations, setUpcomingReservations] = useState<UpcomingReservation[]>([])
+  const [layoutPositions, setLayoutPositions] = useState<Map<string, { x: number; y: number }>>(
+    () => new Map(),
+  )
 
   const loadTables = useCallback(async () => {
     if (!public_restaurant_id) return
@@ -101,10 +105,12 @@ export function BookingPage() {
   const loadUpcoming = useCallback(async () => {
     if (!public_restaurant_id) return
     try {
-      const data = await fetchUpcomingReservations(public_restaurant_id)
-      setUpcomingReservations(data)
+      const data = await fetchLayoutData(public_restaurant_id)
+      setUpcomingReservations(data.upcoming_reservations)
+      setLayoutPositions(extractLayoutPositions(data.layout))
     } catch {
       setUpcomingReservations([])
+      setLayoutPositions(new Map())
     }
   }, [public_restaurant_id])
 
@@ -211,6 +217,7 @@ export function BookingPage() {
               selectedId={selectedTable?.public_id ?? null}
               onSelect={handleTableSelect}
               upcomingReservations={upcomingReservations}
+              layoutPositions={layoutPositions}
             />
           ))}
 
