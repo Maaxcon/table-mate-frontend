@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useId, useRef, useState } from "react"
 import type { ReactElement } from "react"
 import {
   LuCheck,
@@ -52,6 +52,7 @@ type MenuItemModalProps = {
 function MenuItemModal({ item, currencySymbol, onClose, onAddToCart }: MenuItemModalProps) {
   const [added, setAdded] = useState(false)
   const [comment, setComment] = useState("")
+  const commentId = useId()
   const closeTimerRef = useRef<number | null>(null)
   // Focus trap + Esc-to-close + focus restore (focuses the close button first).
   const dialogRef = useFocusTrap<HTMLDivElement>({ onEscape: onClose })
@@ -152,11 +153,11 @@ function MenuItemModal({ item, currencySymbol, onClose, onAddToCart }: MenuItemM
 
           {item.is_available && (
             <div className="menu-modal__comment">
-              <label htmlFor="menu-modal-comment" className="menu-modal__section-label">
+              <label htmlFor={commentId} className="menu-modal__section-label">
                 {menuStrings.item.commentLabel}
               </label>
               <textarea
-                id="menu-modal-comment"
+                id={commentId}
                 className="menu-modal__comment-input"
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
