@@ -28,11 +28,26 @@ export interface HallNewReservationEvent {
   occurred_at: string
 }
 
-export type HallEvent = HallTableStatusChangedEvent | HallNewReservationEvent
+export interface HallReservationCancelledEvent {
+  event_name: "HALL_RESERVATION_CANCELLED"
+  schema_version: string
+  event_id: string
+  reservation_id: string
+  table_id: string
+  actor_id: number
+  actor_role: string
+  occurred_at: string
+}
+
+export type HallEvent =
+  | HallTableStatusChangedEvent
+  | HallNewReservationEvent
+  | HallReservationCancelledEvent
 
 interface UseHallSubscriptionOptions {
   onTableStatusChanged?: (event: HallTableStatusChangedEvent) => void
   onNewReservation?: (event: HallNewReservationEvent) => void
+  onReservationCancelled?: (event: HallReservationCancelledEvent) => void
   onError?: (error: Event) => void
   onClose?: () => void
 }
@@ -40,6 +55,7 @@ interface UseHallSubscriptionOptions {
 export function useHallSubscription({
   onTableStatusChanged,
   onNewReservation,
+  onReservationCancelled,
   onError,
   onClose,
 }: UseHallSubscriptionOptions) {
@@ -51,6 +67,7 @@ export function useHallSubscription({
   const callbacksRef = useRef({
     onTableStatusChanged,
     onNewReservation,
+    onReservationCancelled,
     onError,
     onClose,
   })
@@ -59,10 +76,11 @@ export function useHallSubscription({
     callbacksRef.current = {
       onTableStatusChanged,
       onNewReservation,
+      onReservationCancelled,
       onError,
       onClose,
     }
-  }, [onTableStatusChanged, onNewReservation, onError, onClose])
+  }, [onTableStatusChanged, onNewReservation, onReservationCancelled, onError, onClose])
 
   const connect = useCallback(() => {
     if (!accessToken || env.wsUrl === "Not configured") return
@@ -81,6 +99,8 @@ export function useHallSubscription({
           callbacksRef.current.onTableStatusChanged?.(data)
         } else if (data.event_name === "HALL_NEW_RESERVATION") {
           callbacksRef.current.onNewReservation?.(data)
+        } else if (data.event_name === "HALL_RESERVATION_CANCELLED") {
+          callbacksRef.current.onReservationCancelled?.(data)
         }
       } catch (err) {
         console.error("[HallWS] Failed to parse message:", err)

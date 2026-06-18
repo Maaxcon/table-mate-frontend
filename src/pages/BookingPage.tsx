@@ -18,6 +18,7 @@ import { useFloorSubscription } from "@/features/reservation/hooks/useFloorSubsc
 import type {
   FloorTableStatusEvent,
   FloorNewReservationEvent,
+  FloorReservationCancelledEvent,
 } from "@/features/reservation/hooks/useFloorSubscription"
 import { useAppSelector } from "@/store/hooks"
 import "./BookingPage.css"
@@ -162,9 +163,14 @@ export function BookingPage() {
     ])
   }, [])
 
+  const handleReservationCancelled = useCallback((event: FloorReservationCancelledEvent) => {
+    setUpcomingReservations((prev) => prev.filter((r) => r.table_id !== event.table_id))
+  }, [])
+
   useFloorSubscription({
     onTableStatusChanged: handleTableStatusChanged,
     onNewReservation: handleNewReservation,
+    onReservationCancelled: handleReservationCancelled,
   })
 
   return (

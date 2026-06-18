@@ -17,6 +17,7 @@ import { useHallSubscription } from "./hooks/useHallSubscription"
 import type {
   HallTableStatusChangedEvent,
   HallNewReservationEvent,
+  HallReservationCancelledEvent,
 } from "./hooks/useHallSubscription"
 import type { Table } from "@/types/api/types.gen"
 import { BookModal } from "@/features/reservation/BookModal"
@@ -203,9 +204,14 @@ export function WaiterOrderView() {
     ])
   }, [])
 
+  const handleReservationCancelled = useCallback((event: HallReservationCancelledEvent) => {
+    setLayoutReservations((prev) => prev.filter((r) => r.public_id !== event.reservation_id))
+  }, [])
+
   useHallSubscription({
     onTableStatusChanged: handleTableStatusChanged,
     onNewReservation: handleNewReservation,
+    onReservationCancelled: handleReservationCancelled,
   })
 
   useEffect(() => {
