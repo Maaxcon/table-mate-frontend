@@ -1,0 +1,71 @@
+.editor-canvas__container {
+  flex: 1;
+  min-width: 0;
+  background: var(--color-bg-page);
+  position: relative;
+}
+
+.editor-canvas {
+  position: relative;
+  width: 2000px;
+  height: 2000px;
+  min-width: 2000px;
+  min-height: 2000px;
+  background-image: radial-gradient(circle, var(--color-text-primary) 1px, transparent 1px);
+  background-size: 100px 100px;
+  background-color: var(--color-bg-surface);
+}
+
+.editor-canvas__edge {
+  position: absolute;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.editor-canvas__edge--top {
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 0;
+  border-top: 3px dashed var(--color-border-strong);
+}
+
+.editor-canvas__edge--top.editor-canvas__edge--solid {
+  border-top-style: solid;
+}
+
+.editor-canvas__edge--right {
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 0;
+  border-right: 3px dashed var(--color-border-strong);
+}
+
+.editor-canvas__edge--right.editor-canvas__edge--solid {
+  border-right-style: solid;
+}
+
+.editor-canvas__edge--bottom {
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 0;
+  border-bottom: 3px dashed var(--color-border-strong);
+}
+
+.editor-canvas__edge--bottom.editor-canvas__edge--solid {
+  border-bottom-style: solid;
+}
+
+.editor-canvas__edge--left {
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 0;
+  border-left: 3px dashed var(--color-border-strong);
+}
+
+.editor-canvas__edge--left.editor-canvas__edge--solid {
+  border-left-style: solid;
+}

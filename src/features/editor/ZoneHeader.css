@@ -1,0 +1,80 @@
+.editor-zone-header {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 16px;
+  border-bottom: 2px solid var(--color-border-strong);
+  background: var(--color-bg-surface);
+  flex-wrap: wrap;
+}
+
+.editor-zone-header__tab {
+  padding: 4px 12px;
+  border: 2px solid var(--color-border-strong);
+  background: var(--color-bg-surface);
+  color: var(--color-text-primary);
+  font-family: inherit;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+}
+
+.editor-zone-header__tab:hover {
+  box-shadow: 2px 2px 0 var(--color-border-strong);
+}
+
+.editor-zone-header__tab--active {
+  background: var(--color-text-primary);
+  color: var(--color-bg-page);
+}
+
+.editor-zone-header__tab--add {
+  border-style: dashed;
+  opacity: 0.6;
+}
+
+.editor-zone-header__tab--add:hover {
+  opacity: 1;
+}
+
+.editor-zone-header__add-form {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.editor-zone-header__input {
+  padding: 4px 8px;
+  border: 2px solid var(--color-border-strong);
+  font-family: inherit;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  background: var(--color-bg-page);
+  width: 120px;
+  outline: none;
+}
+
+.editor-zone-header__btn {
+  padding: 4px 8px;
+  border: 2px solid var(--color-border-strong);
+  background: var(--color-text-primary);
+  color: var(--color-bg-page);
+  font-family: inherit;
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.editor-zone-header__btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.editor-zone-header__btn--cancel {
+  background: var(--color-bg-surface);
+  color: var(--color-text-primary);
+}

@@ -1,0 +1,55 @@
+import type { EditorEntity } from "../types"
+import { GRID, CANVAS_W, CANVAS_H, OVERHANG } from "../types"
+import { ResizeHandles } from "./ResizeHandles"
+import "./blocks.css"
+
+interface PortalBlockProps {
+  entity: EditorEntity
+  selected: boolean
+  onMouseDown: (e: React.MouseEvent, id: string) => void
+  onClick: (id: string) => void
+  onResize?: (id: string, w: number, h: number) => void
+  canvasScale?: number
+}
+
+export function PortalBlock({
+  entity,
+  selected,
+  onMouseDown,
+  onClick,
+  onResize,
+  canvasScale = 1,
+}: PortalBlockProps) {
+  const px = (v: number) => v * GRID
+  const overhangL = entity.x === 0 ? OVERHANG : 0
+  const overhangT = entity.y === 0 ? OVERHANG : 0
+  const overhangR = entity.x + entity.w >= CANVAS_W / GRID ? OVERHANG : 0
+  const overhangB = entity.y + entity.h >= CANVAS_H / GRID ? OVERHANG : 0
+
+  return (
+    <div
+      className={["editor-block", "editor-block--portal", selected ? "editor-block--selected" : ""]
+        .filter(Boolean)
+        .join(" ")}
+      style={{
+        left: px(entity.x) - overhangL,
+        top: px(entity.y) - overhangT,
+        width: px(entity.w) + overhangL + overhangR,
+        height: px(entity.h) + overhangT + overhangB,
+      }}
+      role="button"
+      tabIndex={0}
+      onMouseDown={(e) => onMouseDown(e, entity.id)}
+      onClick={() => onClick(entity.id)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") onClick(entity.id)
+      }}
+    >
+      <span className="editor-block__portal-arrow">⬆</span>
+      <span className="editor-block__zone-label">{entity.label ?? "Portal"}</span>
+      {selected && onResize && (
+        <ResizeHandles entityId={entity.id} onResize={onResize} scale={canvasScale} />
+      )}
+    </div>
+  )
+}

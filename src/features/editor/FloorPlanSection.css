@@ -1,0 +1,14 @@
+.editor-page {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 56px);
+  background: var(--color-bg-page);
+  border: 2px solid var(--color-border-strong);
+}
+
+.editor-page__body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  padding: 100px;
+}

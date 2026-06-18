@@ -1,0 +1,225 @@
+import { useCallback, useReducer } from "react"
+import type { EditorEntity } from "../types"
+import {
+  CANVAS_H,
+  CANVAS_W,
+  findFreePosition,
+  generateId,
+  GRID,
+  minLabelSize,
+  serializeEntities,
+  TABLE_PRESETS,
+  SIZE_CONSTRAINTS,
+} from "../types"
+
+interface EditorState {
+  entities: EditorEntity[]
+  selectedId: string | null
+  lastPublishedJson: object | null
+  dirty: boolean
+  activeTool: string | null
+}
+
+type Action =
+  | { type: "ADD_ENTITY"; entity: EditorEntity }
+  | { type: "UPDATE_ENTITY"; id: string; patch: Partial<EditorEntity> }
+  | { type: "MOVE_ENTITY"; id: string; x: number; y: number }
+  | { type: "REMOVE_ENTITY"; id: string }
+  | { type: "SELECT_ENTITY"; id: string | null }
+  | { type: "SET_TOOL"; tool: string | null }
+  | { type: "PUBLISH_SUCCESS"; json: object }
+  | { type: "PUBLISH_ROLLBACK"; previousState: EditorState }
+  | { type: "SET_DIRTY"; dirty: boolean }
+  | { type: "LOAD_ENTITIES"; entities: EditorEntity[]; publishedJson: object }
+  | { type: "CLEAR" }
+
+function computeDirty(entities: EditorEntity[], lastPublishedJson: object | null): boolean {
+  if (!lastPublishedJson) return entities.length > 0
+  const current = serializeEntities(entities)
+  return JSON.stringify(current) !== JSON.stringify(lastPublishedJson)
+}
+
+function editorReducer(state: EditorState, action: Action): EditorState {
+  switch (action.type) {
+    case "ADD_ENTITY": {
+      const others = state.entities
+      const free = findFreePosition(action.entity, others, CANVAS_W, CANVAS_H)
+      const placed = { ...action.entity, x: free.x, y: free.y }
+      const entities = [...state.entities, placed]
+      return {
+        ...state,
+        entities,
+        selectedId: placed.id,
+        dirty: computeDirty(entities, state.lastPublishedJson),
+      }
+    }
+    case "UPDATE_ENTITY": {
+      const entities = state.entities.map((e) => {
+        if (e.id !== action.id) return e
+        const updated = { ...e, ...action.patch }
+        if (action.patch.label !== undefined) {
+          const minW = minLabelSize(action.patch.label)
+          updated.w = Math.max(updated.w, minW)
+          updated.h = Math.max(updated.h, 1)
+        }
+        const c = SIZE_CONSTRAINTS[updated.type]
+        if (c) {
+          updated.w = Math.max(c.minW, Math.min(c.maxW, updated.w))
+          updated.h = Math.max(c.minH, Math.min(c.maxH, updated.h))
+          if (c.lockAspect) {
+            const side = Math.max(updated.w, updated.h)
+            updated.w = side
+            updated.h = side
+          }
+        }
+        return updated
+      })
+      return { ...state, entities, dirty: computeDirty(entities, state.lastPublishedJson) }
+    }
+    case "MOVE_ENTITY": {
+      const entity = state.entities.find((e) => e.id === action.id)
+      if (!entity) return state
+      const others = state.entities.filter((e) => e.id !== action.id)
+      let { x, y } = action
+      if (entity.type !== "threshold" && entity.type !== "portal") {
+        x = Math.max(0, Math.min(x, CANVAS_W / GRID - entity.w))
+        y = Math.max(0, Math.min(y, CANVAS_H / GRID - entity.h))
+      }
+      const free = findFreePosition({ x, y, w: entity.w, h: entity.h }, others, CANVAS_W, CANVAS_H)
+      const entities = state.entities.map((e) =>
+        e.id === action.id ? { ...e, x: free.x, y: free.y } : e,
+      )
+      return { ...state, entities, dirty: computeDirty(entities, state.lastPublishedJson) }
+    }
+    case "REMOVE_ENTITY": {
+      const entities = state.entities.filter((e) => e.id !== action.id)
+      return {
+        ...state,
+        entities,
+        selectedId: state.selectedId === action.id ? null : state.selectedId,
+        dirty: computeDirty(entities, state.lastPublishedJson),
+      }
+    }
+    case "SELECT_ENTITY":
+      return { ...state, selectedId: action.id }
+    case "SET_TOOL":
+      return { ...state, activeTool: action.tool, selectedId: null }
+    case "PUBLISH_SUCCESS":
+      return { ...state, lastPublishedJson: action.json, dirty: false }
+    case "PUBLISH_ROLLBACK":
+      return { ...action.previousState }
+    case "SET_DIRTY":
+      return { ...state, dirty: action.dirty }
+    case "LOAD_ENTITIES":
+      return {
+        ...state,
+        entities: action.entities,
+        lastPublishedJson: action.publishedJson,
+        dirty: false,
+      }
+    case "CLEAR":
+      return {
+        entities: [],
+        selectedId: null,
+        lastPublishedJson: null,
+        dirty: false,
+        activeTool: null,
+      }
+    default:
+      return state
+  }
+}
+
+const initialState: EditorState = {
+  entities: [],
+  selectedId: null,
+  lastPublishedJson: null,
+  dirty: false,
+  activeTool: null,
+}
+
+export function useEditorState() {
+  const [state, dispatch] = useReducer(editorReducer, initialState)
+
+  const DEFAULT_SIZES: Partial<Record<EditorEntity["type"], { w: number; h: number }>> = {
+    obstacle: { w: 4, h: 1 },
+    threshold: { w: 3, h: 1 },
+    portal: { w: 2, h: 2 },
+  }
+
+  const addEntity = useCallback(
+    (type: EditorEntity["type"], gridX: number, gridY: number, extra?: Partial<EditorEntity>) => {
+      const preset = TABLE_PRESETS[type]
+      const defaultSize = preset ?? DEFAULT_SIZES[type]
+      let x = gridX
+      let y = gridY
+      if (type !== "threshold" && type !== "portal") {
+        const w = defaultSize?.w ?? 2
+        const h = defaultSize?.h ?? 2
+        x = Math.max(0, Math.min(x, CANVAS_W / GRID - w))
+        y = Math.max(0, Math.min(y, CANVAS_H / GRID - h))
+      }
+      const entity: EditorEntity = {
+        id: generateId(),
+        type,
+        x,
+        y,
+        w: defaultSize?.w ?? 2,
+        h: defaultSize?.h ?? 2,
+        capacity: preset?.defaultCapacity,
+        rotation: 0,
+        ...extra,
+      }
+      dispatch({ type: "ADD_ENTITY", entity })
+      return entity
+    },
+    [],
+  )
+
+  const updateEntity = useCallback((id: string, patch: Partial<EditorEntity>) => {
+    dispatch({ type: "UPDATE_ENTITY", id, patch })
+  }, [])
+
+  const moveEntity = useCallback((id: string, x: number, y: number) => {
+    dispatch({ type: "MOVE_ENTITY", id, x, y })
+  }, [])
+
+  const removeEntity = useCallback((id: string) => {
+    dispatch({ type: "REMOVE_ENTITY", id })
+  }, [])
+
+  const selectEntity = useCallback((id: string | null) => {
+    dispatch({ type: "SELECT_ENTITY", id })
+  }, [])
+
+  const setTool = useCallback((tool: string | null) => {
+    dispatch({ type: "SET_TOOL", tool })
+  }, [])
+
+  const publishSuccess = useCallback(() => {
+    const json = serializeEntities(state.entities)
+    dispatch({ type: "PUBLISH_SUCCESS", json })
+  }, [state.entities])
+
+  const loadEntities = useCallback((entities: EditorEntity[], publishedJson: object) => {
+    dispatch({ type: "LOAD_ENTITIES", entities, publishedJson })
+  }, [])
+
+  const clearAll = useCallback(() => {
+    dispatch({ type: "CLEAR" })
+  }, [])
+
+  return {
+    ...state,
+    addEntity,
+    updateEntity,
+    moveEntity,
+    removeEntity,
+    selectEntity,
+    setTool,
+    publishSuccess,
+    loadEntities,
+    clearAll,
+    dispatch,
+  }
+}
