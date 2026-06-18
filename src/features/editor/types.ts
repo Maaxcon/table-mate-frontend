@@ -59,10 +59,10 @@ export function serializeEntities(entities: EditorEntity[]): object {
 
   for (const e of entities) {
     const base = {
-      x: e.x,
-      y: e.y,
-      width: e.w,
-      height: e.h,
+      x: e.x * GRID,
+      y: e.y * GRID,
+      width: e.w * GRID,
+      height: e.h * GRID,
       rotation: e.rotation ?? 0,
     }
 
@@ -127,10 +127,10 @@ export function deserializeLayout(layout: LayoutPayload): EditorEntity[] {
       id: t.id ?? generateId(),
       serverId: t.id ?? undefined,
       type,
-      x: t.x,
-      y: t.y,
-      w: t.width,
-      h: t.height,
+      x: Math.round(t.x / GRID),
+      y: Math.round(t.y / GRID),
+      w: Math.round(t.width / GRID),
+      h: Math.round(t.height / GRID),
       label: t.public_number || undefined,
       capacity: t.capacity,
       tags: t.tags,
@@ -143,10 +143,10 @@ export function deserializeLayout(layout: LayoutPayload): EditorEntity[] {
     entities.push({
       id: generateId(),
       type: "obstacle",
-      x: o.x,
-      y: o.y,
-      w: o.width,
-      h: o.height,
+      x: Math.round(o.x / GRID),
+      y: Math.round(o.y / GRID),
+      w: Math.round(o.width / GRID),
+      h: Math.round(o.height / GRID),
       rotation: o.rotation,
     })
   }
@@ -155,10 +155,10 @@ export function deserializeLayout(layout: LayoutPayload): EditorEntity[] {
     entities.push({
       id: generateId(),
       type: "threshold",
-      x: th.x,
-      y: th.y,
-      w: th.width,
-      h: th.height,
+      x: Math.round(th.x / GRID),
+      y: Math.round(th.y / GRID),
+      w: Math.round(th.width / GRID),
+      h: Math.round(th.height / GRID),
     })
   }
 
@@ -166,10 +166,10 @@ export function deserializeLayout(layout: LayoutPayload): EditorEntity[] {
     entities.push({
       id: generateId(),
       type: "portal",
-      x: p.x,
-      y: p.y,
-      w: p.width,
-      h: p.height,
+      x: Math.round(p.x / GRID),
+      y: Math.round(p.y / GRID),
+      w: Math.round(p.width / GRID),
+      h: Math.round(p.height / GRID),
       targetZoneId: p.target_zone_id ?? undefined,
       label: p.label || undefined,
     })
