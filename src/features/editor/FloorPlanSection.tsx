@@ -10,7 +10,7 @@ import { PublishConfirmModal } from "./PublishConfirmModal"
 import { ZoneHeader } from "./ZoneHeader"
 import { useEditorState } from "./hooks/useEditorState"
 import { usePublish } from "./hooks/usePublish"
-import { GRID, generateId, TABLE_PRESETS } from "./types"
+import { GRID, generateId, serializeEntities, TABLE_PRESETS } from "./types"
 import type { EditorEntity } from "./types"
 import "./Toolbar.css"
 import "./Canvas.css"
@@ -79,7 +79,7 @@ function FloorPlanSection() {
               zoneId: (t.zone as string) ?? undefined,
             }
           })
-        loadEntities(loaded, {})
+        loadEntities(loaded, serializeEntities(loaded))
       })
       .catch(() => {})
   }, [restaurantId])

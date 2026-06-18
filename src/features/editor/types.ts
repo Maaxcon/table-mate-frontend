@@ -66,8 +66,8 @@ export function serializeEntities(entities: EditorEntity[]): object {
       capacity: e.capacity ?? null,
       sector: e.sector ?? null,
       tags: e.tags ?? [],
-      zone_id: e.zoneId ?? null,
-      target_zone_id: e.targetZoneId ?? null,
+      zoneId: e.zoneId ?? null,
+      targetZoneId: e.targetZoneId ?? null,
       rotation: e.rotation ?? 0,
     })),
   }
