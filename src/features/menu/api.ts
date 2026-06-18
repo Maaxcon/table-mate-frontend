@@ -227,6 +227,8 @@ export async function verifyScan(tableId: string): Promise<void> {
 }
 
 export type RemovedItem = { id: string; name: string }
+// The checkout response also carries `currency`, but the UI sources its symbol
+// from restaurant settings, so we intentionally keep only what callers use.
 export type CheckoutResult = { orderId: string; total: string }
 
 export class CartChangedError extends Error {
