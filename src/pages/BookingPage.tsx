@@ -156,9 +156,9 @@ export function BookingPage() {
     setUpcomingReservations((prev) => [
       ...prev,
       {
-        public_id: event.table_id,
+        public_id: event.reservation_id,
         table_id: event.table_id,
-        start_at: event.occurred_at,
+        start_at: event.start_at,
       },
     ])
   }, [])

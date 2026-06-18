@@ -11,7 +11,9 @@ export interface FloorTableStatusEvent {
 
 export interface FloorNewReservationEvent {
   event_name: "HALL_NEW_RESERVATION"
+  reservation_id: string
   table_id: string
+  start_at: string
   occurred_at: string
 }
 
