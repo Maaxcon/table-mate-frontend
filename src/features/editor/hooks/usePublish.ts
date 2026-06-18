@@ -22,9 +22,7 @@ export function usePublish({ onSuccess, onRollback }: UsePublishOptions) {
       rollbackRef.current = onRollback
 
       try {
-        const res = await api.post("/api/editor/layouts/publish/", {
-          layout_json: layoutJson,
-        })
+        const res = await api.post("/api/editor/layouts/publish/", layoutJson)
         if (!res.ok) {
           throw new Error(`Publish failed with status ${res.status}`)
         }

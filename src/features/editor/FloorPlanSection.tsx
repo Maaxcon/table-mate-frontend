@@ -10,8 +10,8 @@ import { PublishConfirmModal } from "./PublishConfirmModal"
 import { ZoneHeader } from "./ZoneHeader"
 import { useEditorState } from "./hooks/useEditorState"
 import { usePublish } from "./hooks/usePublish"
-import { GRID, generateId, serializeEntities, TABLE_PRESETS } from "./types"
-import type { EditorEntity } from "./types"
+import { serializeEntities, deserializeLayout } from "./types"
+import type { EditorEntity, LayoutPayload } from "./types"
 import "./Toolbar.css"
 import "./Canvas.css"
 import "./PropertiesSidebar.css"
@@ -57,32 +57,21 @@ function FloorPlanSection() {
 
   useEffect(() => {
     if (!restaurantId) return
-    apiFetch(`/api/editor/tables/?restaurant=${restaurantId}`)
-      .then((res) => (res.ok ? res.json() : []))
-      .then((tables: Record<string, unknown>[]) => {
-        const loaded = tables
-          .filter((t) => t.active !== false)
-          .map((t): EditorEntity => {
-            const shape = (t.shape as string) ?? "square"
-            const type = shape === "round" ? ("table-round" as const) : ("table-square" as const)
-            const preset = TABLE_PRESETS[type]
-            return {
-              id: generateId(),
-              serverId: t.public_id as string,
-              type,
-              x: ((t.position_x as number) ?? 0) / GRID,
-              y: ((t.position_y as number) ?? 0) / GRID,
-              w: preset?.w ?? 3,
-              h: preset?.h ?? 3,
-              label: (t.table_number as string) ?? undefined,
-              capacity: t.capacity as number,
-              zoneId: (t.zone as string) ?? undefined,
-            }
-          })
-        loadEntities(loaded, serializeEntities(loaded))
+    apiFetch(`/api/editor/layouts/?restaurant=${restaurantId}`)
+      .then((res) => (res.ok ? res.json() : { results: [] }))
+      .then((data: { results?: Array<{ payload?: unknown }> }) => {
+        const layouts = data.results ?? []
+        const latest = layouts[0]
+        if (latest?.payload && typeof latest.payload === "object") {
+          const layoutPayload = latest.payload as LayoutPayload
+          const loaded = deserializeLayout(layoutPayload)
+          loadEntities(loaded, serializeEntities(loaded))
+        } else {
+          loadEntities([], {})
+        }
       })
       .catch(() => {})
-  }, [restaurantId])
+  }, [restaurantId, loadEntities])
 
   const handleAddZone = useCallback(async (name: string) => {
     const res = await apiFetch("/api/restaurants/zones/", {
