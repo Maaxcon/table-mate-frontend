@@ -102,12 +102,15 @@ function MenuPage() {
     syncFromServer()
   }, [syncFromServer])
 
-  const handleCheckout = useCallback(() => {
+  const handleCheckout = useCallback(async () => {
     if (!guestAuth.cartSessionId || !guestAuth.guestJwt) {
       return Promise.reject(new Error(menuStrings.cart.sessionUnavailable))
     }
-    return checkout(guestAuth.cartSessionId, guestAuth.guestJwt)
-  }, [guestAuth.cartSessionId, guestAuth.guestJwt])
+    const result = await checkout(guestAuth.cartSessionId, guestAuth.guestJwt)
+    // Checkout closed this cart; reopen a fresh one so the guest can order again.
+    guestAuth.initialize()
+    return result
+  }, [guestAuth.cartSessionId, guestAuth.guestJwt, guestAuth.initialize])
 
   const { isConnected } = useCartSocket({
     cartSessionId: guestAuth.cartSessionId,
