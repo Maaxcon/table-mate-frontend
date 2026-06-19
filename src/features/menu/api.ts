@@ -1,5 +1,5 @@
 import { ENV_NOT_CONFIGURED_VALUE, env } from "@/config/env"
-import { apiFetch, type Paginated } from "@/api/client"
+import { apiFetch, getAccessToken, type Paginated } from "@/api/client"
 import { CART_CLIENT_ID } from "./clientId"
 import { CART_API, MENU_API } from "./constants"
 import type {
@@ -222,6 +222,10 @@ export function guestInit(
 // owned by the logged-in customer flips to active before we open the cart.
 // Silent on failure (guest not logged in / not the owner) — guest-init follows.
 export async function verifyScan(tableId: string): Promise<void> {
+  // Only a logged-in customer can have a booking to activate. For an anonymous
+  // guest there's no token, and routing this through apiFetch would 401 → failed
+  // refresh → clearAuth on every scan. Skip it; guest-init opens the cart anyway.
+  if (!getAccessToken()) return
   try {
     await apiFetch(CART_API.verifyScan, {
       method: "POST",
