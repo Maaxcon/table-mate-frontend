@@ -51,7 +51,12 @@ function FloorPlanSection() {
   useEffect(() => {
     if (!restaurantId) return
     fetchZones(String(restaurantId))
-      .then(setZones)
+      .then((z) => {
+        setZones(z)
+        if (z.length > 0 && !selectedZoneId) {
+          setSelectedZoneId(z[0].public_id)
+        }
+      })
       .catch(() => setZones([]))
   }, [restaurantId])
 
@@ -88,6 +93,8 @@ function FloorPlanSection() {
     ? entities.filter((e) => e.zoneId === selectedZoneId)
     : entities
 
+  const noZones = zones.length === 0
+
   const { publish, publishing } = usePublish({
     onSuccess: (result?: Record<string, unknown>) => {
       publishSuccess()
@@ -112,7 +119,7 @@ function FloorPlanSection() {
     publish(entities)
   }, [publish, entities])
 
-  const selectedEntity = entities.find((e) => e.id === selectedId) ?? null
+  const selectedEntity = visibleEntities.find((e) => e.id === selectedId) ?? null
 
   const handleCanvasClick = useCallback(
     (gridX: number, gridY: number) => {
@@ -147,24 +154,32 @@ function FloorPlanSection() {
         onAddZone={handleAddZone}
       />
       <div className="editor-page__body">
-        <Canvas
-          entities={visibleEntities}
-          selectedId={selectedId}
-          activeTool={activeTool}
-          onEntityMove={moveEntity}
-          onEntitySelect={selectEntity}
-          onCanvasClick={handleCanvasClick}
-          onEntityResize={(id, w, h) => updateEntity(id, { w, h })}
-          edgeStyles={edgeStyles}
-        />
-        <PropertiesSidebar
-          entity={selectedEntity}
-          onUpdate={updateEntity}
-          onDelete={removeEntity}
-          zones={zones}
-          edgeStyles={edgeStyles}
-          onEdgeStyleChange={handleEdgeStyleChange}
-        />
+        {noZones ? (
+          <div className="editor-page__empty">
+            <p>Please create a zone to start editing the floor plan.</p>
+          </div>
+        ) : (
+          <>
+            <Canvas
+              entities={visibleEntities}
+              selectedId={selectedId}
+              activeTool={activeTool}
+              onEntityMove={(id, x, y) => moveEntity(id, x, y, selectedZoneId ?? undefined)}
+              onEntitySelect={selectEntity}
+              onCanvasClick={handleCanvasClick}
+              onEntityResize={(id, w, h) => updateEntity(id, { w, h })}
+              edgeStyles={edgeStyles}
+            />
+            <PropertiesSidebar
+              entity={selectedEntity}
+              onUpdate={updateEntity}
+              onDelete={removeEntity}
+              zones={zones}
+              edgeStyles={edgeStyles}
+              onEdgeStyleChange={handleEdgeStyleChange}
+            />
+          </>
+        )}
       </div>
 
       {showPublishModal && (

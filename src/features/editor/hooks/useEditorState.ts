@@ -23,7 +23,7 @@ interface EditorState {
 type Action =
   | { type: "ADD_ENTITY"; entity: EditorEntity }
   | { type: "UPDATE_ENTITY"; id: string; patch: Partial<EditorEntity> }
-  | { type: "MOVE_ENTITY"; id: string; x: number; y: number }
+  | { type: "MOVE_ENTITY"; id: string; x: number; y: number; zoneId?: string }
   | { type: "REMOVE_ENTITY"; id: string }
   | { type: "SELECT_ENTITY"; id: string | null }
   | { type: "SET_TOOL"; tool: string | null }
@@ -42,7 +42,10 @@ function computeDirty(entities: EditorEntity[], lastPublishedJson: object | null
 function editorReducer(state: EditorState, action: Action): EditorState {
   switch (action.type) {
     case "ADD_ENTITY": {
-      const others = state.entities
+      const entityZoneId = action.entity.zoneId
+      const others = entityZoneId
+        ? state.entities.filter((e) => e.zoneId === entityZoneId)
+        : state.entities
       const free = findFreePosition(action.entity, others, CANVAS_W, CANVAS_H)
       const placed = { ...action.entity, x: free.x, y: free.y }
       const entities = [...state.entities, placed]
@@ -79,7 +82,10 @@ function editorReducer(state: EditorState, action: Action): EditorState {
     case "MOVE_ENTITY": {
       const entity = state.entities.find((e) => e.id === action.id)
       if (!entity) return state
-      const others = state.entities.filter((e) => e.id !== action.id)
+      const moveZoneId = action.zoneId ?? entity.zoneId
+      const others = state.entities.filter(
+        (e) => e.id !== action.id && (!moveZoneId || e.zoneId === moveZoneId),
+      )
       let { x, y } = action
       if (entity.type !== "threshold" && entity.type !== "portal") {
         x = Math.max(0, Math.min(x, CANVAS_W / GRID - entity.w))
@@ -180,8 +186,8 @@ export function useEditorState() {
     dispatch({ type: "UPDATE_ENTITY", id, patch })
   }, [])
 
-  const moveEntity = useCallback((id: string, x: number, y: number) => {
-    dispatch({ type: "MOVE_ENTITY", id, x, y })
+  const moveEntity = useCallback((id: string, x: number, y: number, zoneId?: string) => {
+    dispatch({ type: "MOVE_ENTITY", id, x, y, zoneId })
   }, [])
 
   const removeEntity = useCallback((id: string) => {

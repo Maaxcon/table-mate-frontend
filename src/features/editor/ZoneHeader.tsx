@@ -23,18 +23,6 @@ export function ZoneHeader({ zones, selectedZoneId, onZoneSelect, onAddZone }: Z
 
   return (
     <div className="editor-zone-header">
-      <button
-        type="button"
-        className={[
-          "editor-zone-header__tab",
-          selectedZoneId === null ? "editor-zone-header__tab--active" : "",
-        ]
-          .filter(Boolean)
-          .join(" ")}
-        onClick={() => onZoneSelect(null)}
-      >
-        ALL
-      </button>
       {zones.map((z) => (
         <button
           key={z.public_id}
