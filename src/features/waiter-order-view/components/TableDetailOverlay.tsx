@@ -242,6 +242,12 @@ export function TableDetailOverlay({
                       <span className="overlay__total-label">TAX</span>
                       <span className="overlay__total-value">&euro;{detail.tax_total}</span>
                     </div>
+                    {detail.service_charge != null && Number(detail.service_charge) > 0 && (
+                      <div className="overlay__total-row">
+                        <span className="overlay__total-label">SERVICE</span>
+                        <span className="overlay__total-value">&euro;{detail.service_charge}</span>
+                      </div>
+                    )}
                     <div className="overlay__total-row overlay__total-row--final">
                       <span className="overlay__total-label overlay__total-label--large">
                         TOTAL
