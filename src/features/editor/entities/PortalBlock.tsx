@@ -1,5 +1,5 @@
 import type { EditorEntity } from "../types"
-import { GRID, CANVAS_W, CANVAS_H, OVERHANG } from "../types"
+import { GRID } from "../types"
 import { ResizeHandles } from "./ResizeHandles"
 import "./blocks.css"
 
@@ -23,10 +23,6 @@ export function PortalBlock({
   canvasScale = 1,
 }: PortalBlockProps) {
   const px = (v: number) => v * GRID
-  const overhangL = entity.x < 0 ? OVERHANG : 0
-  const overhangT = entity.y < 0 ? OVERHANG : 0
-  const overhangR = entity.x + entity.w > CANVAS_W / GRID ? OVERHANG : 0
-  const overhangB = entity.y + entity.h > CANVAS_H / GRID ? OVERHANG : 0
 
   return (
     <div
@@ -34,10 +30,10 @@ export function PortalBlock({
         .filter(Boolean)
         .join(" ")}
       style={{
-        left: px(entity.x) - overhangL,
-        top: px(entity.y) - overhangT,
-        width: px(entity.w) + overhangL + overhangR,
-        height: px(entity.h) + overhangT + overhangB,
+        left: px(entity.x),
+        top: px(entity.y),
+        width: px(entity.w),
+        height: px(entity.h),
       }}
       role="button"
       tabIndex={0}
