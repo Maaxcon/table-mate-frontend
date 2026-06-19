@@ -347,6 +347,13 @@
   background: var(--color-success);
 }
 
+/* Disabled only coincides with the "Added" confirmation, so keep it crisp
+   (no UA dimming) rather than looking like an error-disabled control. */
+.menu-modal__add:disabled {
+  cursor: default;
+  opacity: 1;
+}
+
 .menu-modal__badge {
   font-size: 0.78rem;
   font-weight: 600;

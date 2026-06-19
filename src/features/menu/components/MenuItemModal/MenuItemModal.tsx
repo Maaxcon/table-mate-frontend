@@ -59,11 +59,12 @@ function MenuItemModal({ item, currencySymbol, onClose, onAddToCart }: MenuItemM
   const hasWeight = item.weight_grams != null && item.weight_grams > 0
 
   const handleAdd = () => {
+    // Guard against double/triple taps: once a tap has armed the auto-close
+    // timer, ignore further taps until it fires. useCart merges quantity on
+    // OPTIMISTIC_ADD, so an unguarded re-tap would silently bump the quantity.
+    if (closeTimerRef.current != null) return
     onAddToCart(item, comment.trim() || undefined)
     setAdded(true)
-    if (closeTimerRef.current != null) {
-      window.clearTimeout(closeTimerRef.current)
-    }
     closeTimerRef.current = window.setTimeout(() => {
       closeTimerRef.current = null
       setAdded(false)
@@ -184,6 +185,7 @@ function MenuItemModal({ item, currencySymbol, onClose, onAddToCart }: MenuItemM
             <button
               className={`menu-modal__add${added ? " menu-modal__add--added" : ""}`}
               onClick={handleAdd}
+              disabled={added}
             >
               {added ? <LuCheck size={16} /> : <LuShoppingCart size={16} />}
               {added ? menuStrings.item.added : menuStrings.item.addToCart}
