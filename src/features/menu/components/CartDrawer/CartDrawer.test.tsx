@@ -44,6 +44,17 @@ function makeItem(overrides: Partial<CartItemWithDetails> = {}): CartItemWithDet
   }
 }
 
+function makeResult(overrides: Partial<CheckoutResult> = {}): CheckoutResult {
+  return {
+    orderId: "ord-1",
+    subtotal: "59.98",
+    tax: "6.00",
+    serviceCharge: "3.00",
+    total: "68.98",
+    ...overrides,
+  }
+}
+
 type Overrides = Partial<React.ComponentProps<typeof CartDrawer>>
 
 function renderDrawer(overrides: Overrides = {}) {
@@ -84,11 +95,8 @@ describe("CartDrawer checkout state machine", () => {
 
   it("shows the authoritative server total on the receipt, not the client subtotal", async () => {
     const user = userEvent.setup()
-    // Server total (65.98, tax-inclusive) differs from the client subtotal (59.98).
-    const onCheckout = vi.fn<() => Promise<CheckoutResult>>().mockResolvedValue({
-      orderId: "ord-1",
-      total: "65.98",
-    })
+    // Server total (68.98, tax+service inclusive) differs from the client subtotal (59.98).
+    const onCheckout = vi.fn<() => Promise<CheckoutResult>>().mockResolvedValue(makeResult())
     renderDrawer({ onCheckout })
 
     await openConfirm(user)
@@ -96,17 +104,45 @@ describe("CartDrawer checkout state machine", () => {
 
     expect(await screen.findByText(S.confirmedTitle)).toBeInTheDocument()
     const receiptTotal = screen.getByText(S.total).closest("div")!
-    expect(within(receiptTotal).getByText(new RegExp(formatAmount(65.98)))).toBeInTheDocument()
-    expect(
-      within(receiptTotal).queryByText(new RegExp(formatAmount(59.98))),
-    ).not.toBeInTheDocument()
+    expect(within(receiptTotal).getByText(new RegExp(formatAmount(68.98)))).toBeInTheDocument()
+  })
+
+  it("renders the tax/service breakdown so the receipt reconciles", async () => {
+    const user = userEvent.setup()
+    const onCheckout = vi.fn<() => Promise<CheckoutResult>>().mockResolvedValue(makeResult())
+    renderDrawer({ onCheckout })
+
+    await openConfirm(user)
+    await user.click(screen.getByRole("button", { name: S.confirmYes }))
+
+    await screen.findByText(S.confirmedTitle)
+    // subtotal 59.98 + tax 6.00 + service 3.00 = total 68.98
+    expect(screen.getByText(S.subtotal)).toBeInTheDocument()
+    expect(screen.getByText(S.tax)).toBeInTheDocument()
+    expect(screen.getByText(S.serviceCharge)).toBeInTheDocument()
+    expect(screen.getByText(new RegExp(formatAmount(3.0)))).toBeInTheDocument()
+  })
+
+  it("hides the tax/service rows when there is no tax or service charge", async () => {
+    const user = userEvent.setup()
+    const onCheckout = vi
+      .fn<() => Promise<CheckoutResult>>()
+      .mockResolvedValue(makeResult({ tax: "0.00", serviceCharge: "0.00", total: "59.98" }))
+    renderDrawer({ onCheckout })
+
+    await openConfirm(user)
+    await user.click(screen.getByRole("button", { name: S.confirmYes }))
+
+    await screen.findByText(S.confirmedTitle)
+    expect(screen.queryByText(S.tax)).not.toBeInTheDocument()
+    expect(screen.queryByText(S.serviceCharge)).not.toBeInTheDocument()
   })
 
   it("falls back to the client subtotal when the server omits the total", async () => {
     const user = userEvent.setup()
     const onCheckout = vi
       .fn<() => Promise<CheckoutResult>>()
-      .mockResolvedValue({ orderId: "ord-1", total: "" })
+      .mockResolvedValue(makeResult({ subtotal: "", tax: "", serviceCharge: "", total: "" }))
     renderDrawer({ onCheckout, items: [makeItem({ quantity: 2 })] })
 
     await openConfirm(user)
@@ -133,7 +169,7 @@ describe("CartDrawer checkout state machine", () => {
     await user.click(confirmBtn)
 
     expect(onCheckout).toHaveBeenCalledTimes(1)
-    resolve({ orderId: "ord-1", total: "65.98" })
+    resolve(makeResult())
   })
 
   it("moves to the 'changed' step and reports removed items on CartChangedError", async () => {
@@ -190,7 +226,7 @@ describe("CartDrawer checkout state machine", () => {
     const onCheckout = vi
       .fn<() => Promise<CheckoutResult>>()
       .mockRejectedValueOnce(new CartChangedError([{ id: "mi-9", name: "Soup" }]))
-      .mockResolvedValueOnce({ orderId: "ord-2", total: "65.98" })
+      .mockResolvedValueOnce(makeResult({ orderId: "ord-2" }))
     renderDrawer({ onCheckout })
 
     await openConfirm(user)

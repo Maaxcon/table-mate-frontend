@@ -131,6 +131,9 @@ export type CartSessionStatusEnum = "active" | "closed"
 
 export type CheckoutResponse = {
   order_id: string
+  subtotal: string
+  tax: string
+  service_charge: string
   total: string
   currency: string
 }

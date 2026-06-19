@@ -234,9 +234,16 @@ export async function verifyScan(tableId: string): Promise<void> {
 }
 
 export type RemovedItem = { id: string; name: string }
-// The checkout response also carries `currency`, but the UI sources its symbol
-// from restaurant settings, so we intentionally keep only what callers use.
-export type CheckoutResult = { orderId: string; total: string }
+// Mirrors the server breakdown so the receipt can reconcile
+// (subtotal + tax + service = total). Currency is sourced from restaurant
+// settings in the UI, so it isn't carried here.
+export type CheckoutResult = {
+  orderId: string
+  subtotal: string
+  tax: string
+  serviceCharge: string
+  total: string
+}
 
 export class CartChangedError extends Error {
   removed: RemovedItem[]
@@ -272,7 +279,13 @@ export function checkout(sessionId: string, jwt: string): Promise<CheckoutResult
       if (!body?.order_id) {
         throw new Error("Checkout succeeded but the response was malformed.")
       }
-      return { orderId: body.order_id, total: body.total ?? "" }
+      return {
+        orderId: body.order_id,
+        subtotal: body.subtotal ?? "",
+        tax: body.tax ?? "",
+        serviceCharge: body.service_charge ?? "",
+        total: body.total ?? "",
+      }
     }
     if (res.status === 409) {
       const body = (await res.json().catch(() => null)) as {

@@ -33,6 +33,15 @@ type Props = {
   onCartChanged?: () => void
 }
 
+type ReceiptTotals = {
+  subtotal: number
+  tax: number
+  serviceCharge: number
+  total: number
+}
+
+const EMPTY_TOTALS: ReceiptTotals = { subtotal: 0, tax: 0, serviceCharge: 0, total: 0 }
+
 function isPending(ci: CartItemWithDetails): boolean {
   return ci.id.startsWith("temp-")
 }
@@ -80,7 +89,7 @@ export function CartDrawer({
 }: Props) {
   const [step, setStep] = useState<"cart" | "confirming" | "confirmed" | "changed">("cart")
   const [confirmedItems, setConfirmedItems] = useState<CartItemWithDetails[]>([])
-  const [confirmedTotal, setConfirmedTotal] = useState<number>(0)
+  const [confirmedTotals, setConfirmedTotals] = useState<ReceiptTotals>(EMPTY_TOTALS)
   const [submitting, setSubmitting] = useState(false)
   const [removedItems, setRemovedItems] = useState<RemovedItem[]>([])
   const [submitError, setSubmitError] = useState<string | null>(null)
@@ -107,15 +116,26 @@ export function CartDrawer({
     const snapshot = [...items]
     try {
       const result = await onCheckout()
-      // Render the authoritative server total (tax/service included), not a
-      // client-side pre-tax subtotal. Fall back to the subtotal only if the
-      // server omits it.
+      // Render the authoritative server breakdown (tax/service included) so the
+      // receipt reconciles. Fall back to the client subtotal only if the server
+      // omits the total.
       const serverTotal = parseFloat(result.total)
-      setConfirmedTotal(
-        Number.isFinite(serverTotal)
-          ? serverTotal
-          : snapshot.reduce((s, ci) => s + lineTotal(ci), 0),
-      )
+      if (Number.isFinite(serverTotal)) {
+        setConfirmedTotals({
+          subtotal: parseFloat(result.subtotal) || 0,
+          tax: parseFloat(result.tax) || 0,
+          serviceCharge: parseFloat(result.serviceCharge) || 0,
+          total: serverTotal,
+        })
+      } else {
+        const clientSubtotal = snapshot.reduce((s, ci) => s + lineTotal(ci), 0)
+        setConfirmedTotals({
+          subtotal: clientSubtotal,
+          tax: 0,
+          serviceCharge: 0,
+          total: clientSubtotal,
+        })
+      }
       setConfirmedItems(snapshot)
       setStep("confirmed")
     } catch (err) {
@@ -282,10 +302,38 @@ export function CartDrawer({
                   </li>
                 ))}
               </ul>
+              {/* Show the tax/service breakdown only when present, so the
+                  receipt reconciles (subtotal + tax + service = total). */}
+              {(confirmedTotals.tax > 0 || confirmedTotals.serviceCharge > 0) && (
+                <>
+                  <div className="cart-drawer__receipt-line">
+                    <span>{menuStrings.cart.subtotal}</span>
+                    <span>
+                      {formatAmount(confirmedTotals.subtotal)} {currencySymbol}
+                    </span>
+                  </div>
+                  {confirmedTotals.tax > 0 && (
+                    <div className="cart-drawer__receipt-line">
+                      <span>{menuStrings.cart.tax}</span>
+                      <span>
+                        {formatAmount(confirmedTotals.tax)} {currencySymbol}
+                      </span>
+                    </div>
+                  )}
+                  {confirmedTotals.serviceCharge > 0 && (
+                    <div className="cart-drawer__receipt-line">
+                      <span>{menuStrings.cart.serviceCharge}</span>
+                      <span>
+                        {formatAmount(confirmedTotals.serviceCharge)} {currencySymbol}
+                      </span>
+                    </div>
+                  )}
+                </>
+              )}
               <div className="cart-drawer__receipt-total">
                 <span>{menuStrings.cart.total}</span>
                 <span>
-                  {formatAmount(confirmedTotal)} {currencySymbol}
+                  {formatAmount(confirmedTotals.total)} {currencySymbol}
                 </span>
               </div>
             </div>

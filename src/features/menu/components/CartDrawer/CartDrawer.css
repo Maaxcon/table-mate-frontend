@@ -621,6 +621,14 @@
   font-variant-numeric: tabular-nums;
 }
 
+.cart-drawer__receipt-line {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 16px;
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+}
+
 .cart-drawer__receipt-total {
   display: flex;
   justify-content: space-between;
