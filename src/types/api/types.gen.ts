@@ -149,9 +149,9 @@ export type CustomerContext = {
 export type EditorTable = {
   readonly public_id: string
   readonly restaurant: string
+  readonly zone: string | null
   readonly public_number: string
   readonly capacity: number
-  shape?: TableShape
   active?: boolean
   readonly created_at: string
   readonly updated_at: string
@@ -215,7 +215,7 @@ export type Layout = {
 
 export type LayoutResponse = {
   tables: Array<Table>
-  layout: unknown
+  layout?: unknown
   upcoming_reservations: Array<UpcomingReservation>
 }
 
@@ -281,6 +281,15 @@ export type MenuItem = {
   sort_order?: number
   readonly created_at: string
   readonly updated_at: string
+}
+
+export type ObstacleEntity = {
+  x: number
+  y: number
+  width: number
+  height: number
+  rotation?: number
+  zone_id?: string | null
 }
 
 export type Order = {
@@ -548,9 +557,9 @@ export type PatchedAdminMenuItem = {
 export type PatchedEditorTable = {
   readonly public_id?: string
   readonly restaurant?: string
+  readonly zone?: string | null
   readonly public_number?: string
   readonly capacity?: number
-  shape?: TableShape
   active?: boolean
   readonly created_at?: string
   readonly updated_at?: string
@@ -744,6 +753,16 @@ export type PaymentStatusEnum =
   | "refunded"
   | "cancelled"
 
+export type PortalEntity = {
+  x: number
+  y: number
+  width: number
+  height: number
+  target_zone_id?: string | null
+  portal_label?: string
+  zone_id?: string | null
+}
+
 export type PublicRestaurant = {
   readonly public_id: string
   readonly name: string
@@ -766,10 +785,11 @@ export type PublicRestaurantSettings = {
 }
 
 export type PublishLayout = {
-  tables?: Array<unknown>
-  obstacles?: Array<unknown>
-  thresholds?: Array<unknown>
-  portals?: Array<unknown>
+  tables?: Array<TableEntity>
+  obstacles?: Array<ObstacleEntity>
+  thresholds?: Array<ThresholdEntity>
+  portals?: Array<PortalEntity>
+  deleted_table_ids?: Array<string>
 }
 
 export type Receipt = {
@@ -903,6 +923,14 @@ export type Session = {
 export type SessionStatusEnum = "open" | "closed" | "voided"
 
 /**
+ * * `rectangle` - rectangle
+ * * `round` - round
+ * * `square` - square
+ * * `booth` - booth
+ */
+export type ShapeEnum = "rectangle" | "round" | "square" | "booth"
+
+/**
  * * `waiter_manual` - Waiter manual
  * * `customer_prepaid` - Customer prepaid
  */
@@ -914,27 +942,40 @@ export type Table = {
   public_number: string
   capacity: number
   readonly is_occupied: boolean
-  shape?: TableShape
   active?: boolean
   zone: Zone | null
   readonly created_at: string
   readonly updated_at: string
 }
 
+export type TableEntity = {
+  id?: string | null
+  public_number?: string
+  x: number
+  y: number
+  width: number
+  height: number
+  rotation?: number
+  shape: ShapeEnum
+  capacity: number
+  zone_id?: string | null
+  tags?: Array<string>
+}
+
 export type TableInfo = {
   readonly public_id: string
   public_number: string
   capacity: number
-  shape?: TableShape
 }
 
-/**
- * * `rectangle` - Rectangle
- * * `round` - Round
- * * `square` - Square
- * * `booth` - Booth
- */
-export type TableShape = "rectangle" | "round" | "square" | "booth"
+export type ThresholdEntity = {
+  x: number
+  y: number
+  width: number
+  height: number
+  threshold_label?: string
+  zone_id?: string | null
+}
 
 export type Ticket = {
   readonly public_id: string
@@ -1028,8 +1069,8 @@ export type WorkingHoursDay = {
 
 export type Zone = {
   readonly public_id: string
-  readonly name: string
-  readonly sort_order: number
+  name: string
+  sort_order?: number
 }
 
 /**
@@ -1084,7 +1125,6 @@ export type CustomTokenObtainPairWritable = {
 }
 
 export type EditorTableWritable = {
-  shape?: TableShape
   active?: boolean
 }
 
@@ -1112,6 +1152,7 @@ export type LayoutWritable = {
 
 export type LayoutResponseWritable = {
   tables: Array<TableWritable>
+  layout?: unknown
   upcoming_reservations: Array<UpcomingReservation>
 }
 
@@ -1319,7 +1360,7 @@ export type PaginatedZoneListWritable = {
   count: number
   next?: string | null
   previous?: string | null
-  results: Array<unknown>
+  results: Array<ZoneWritable>
 }
 
 /**
@@ -1359,7 +1400,6 @@ export type PatchedAdminMenuItemWritable = {
 }
 
 export type PatchedEditorTableWritable = {
-  shape?: TableShape
   active?: boolean
 }
 
@@ -1536,14 +1576,12 @@ export type SessionWritable = {
 export type TableWritable = {
   public_number: string
   capacity: number
-  shape?: TableShape
   active?: boolean
 }
 
 export type TableInfoWritable = {
   public_number: string
   capacity: number
-  shape?: TableShape
 }
 
 export type TicketWritable = {
@@ -1562,6 +1600,11 @@ export type UserWritable = {
   phone?: string | null
   role?: RoleEnum
   is_active?: boolean
+}
+
+export type ZoneWritable = {
+  name: string
+  sort_order?: number
 }
 
 export type AuthCustomerContextCreateData = {
@@ -1760,7 +1803,7 @@ export type EditorLayoutsRetrieveResponse =
   EditorLayoutsRetrieveResponses[keyof EditorLayoutsRetrieveResponses]
 
 export type EditorLayoutsPublishCreateData = {
-  body: PublishLayout
+  body?: PublishLayout
   path?: never
   query?: never
   url: "/api/editor/layouts/publish/"
@@ -1787,13 +1830,6 @@ export type EditorTablesListData = {
      * A page number within the paginated result set.
      */
     page?: number
-    /**
-     * * `rectangle` - Rectangle
-     * * `round` - Round
-     * * `square` - Square
-     * * `booth` - Booth
-     */
-    shape?: "booth" | "rectangle" | "round" | "square"
   }
   url: "/api/editor/tables/"
 }
@@ -3546,6 +3582,20 @@ export type RestaurantsZonesListResponses = {
 
 export type RestaurantsZonesListResponse =
   RestaurantsZonesListResponses[keyof RestaurantsZonesListResponses]
+
+export type RestaurantsZonesCreateData = {
+  body: ZoneWritable
+  path?: never
+  query?: never
+  url: "/api/restaurants/zones/"
+}
+
+export type RestaurantsZonesCreateResponses = {
+  201: Zone
+}
+
+export type RestaurantsZonesCreateResponse =
+  RestaurantsZonesCreateResponses[keyof RestaurantsZonesCreateResponses]
 
 export type RestaurantsZonesRetrieveData = {
   body?: never
