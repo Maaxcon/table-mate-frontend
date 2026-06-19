@@ -1,6 +1,6 @@
 import { useCallback } from "react"
 import type { Zone } from "@/features/reservation/api"
-import type { EditorEntity } from "../types"
+import type { EditorEntity } from "./types"
 import "./PropertiesSidebar.css"
 
 interface PropertiesSidebarProps {
