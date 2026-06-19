@@ -80,6 +80,7 @@ export function CartDrawer({
 }: Props) {
   const [step, setStep] = useState<"cart" | "confirming" | "confirmed" | "changed">("cart")
   const [confirmedItems, setConfirmedItems] = useState<CartItemWithDetails[]>([])
+  const [confirmedTotal, setConfirmedTotal] = useState<number>(0)
   const [submitting, setSubmitting] = useState(false)
   const [removedItems, setRemovedItems] = useState<RemovedItem[]>([])
   const [submitError, setSubmitError] = useState<string | null>(null)
@@ -105,7 +106,16 @@ export function CartDrawer({
     setSubmitError(null)
     const snapshot = [...items]
     try {
-      await onCheckout()
+      const result = await onCheckout()
+      // Render the authoritative server total (tax/service included), not a
+      // client-side pre-tax subtotal. Fall back to the subtotal only if the
+      // server omits it.
+      const serverTotal = parseFloat(result.total)
+      setConfirmedTotal(
+        Number.isFinite(serverTotal)
+          ? serverTotal
+          : snapshot.reduce((s, ci) => s + lineTotal(ci), 0),
+      )
       setConfirmedItems(snapshot)
       setStep("confirmed")
     } catch (err) {
@@ -121,7 +131,6 @@ export function CartDrawer({
     }
   }
 
-  const confirmedTotal = confirmedItems.reduce((s, ci) => s + lineTotal(ci), 0)
   const totalCount = items.reduce((s, i) => s + i.quantity, 0)
 
   const groups = groupItemsByGuest(items)
