@@ -18,6 +18,7 @@ interface TableDetailOverlayProps {
   loading: boolean
   currentTime: Date
   actionBusy?: boolean
+  busyActionId?: string | null
   actionError?: string | null
   onOpenTable?: (guestCount: number) => void
   onActivateReservation?: (reservationId: string) => void
@@ -33,6 +34,7 @@ export function TableDetailOverlay({
   loading,
   currentTime,
   actionBusy = false,
+  busyActionId = null,
   actionError = null,
   onOpenTable,
   onActivateReservation,
@@ -285,7 +287,7 @@ export function TableDetailOverlay({
                       disabled={actionBusy}
                       onClick={() => onActivateReservation?.(r.public_id)}
                     >
-                      {actionBusy ? "…" : "SEAT"}
+                      {busyActionId === r.public_id ? "…" : "SEAT"}
                     </button>
                   )}
                 </div>

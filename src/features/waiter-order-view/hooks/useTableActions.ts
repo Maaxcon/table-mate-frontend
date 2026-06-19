@@ -11,13 +11,18 @@ type UseTableActionsOptions = {
 // plus their busy and error state.
 export function useTableActions({ selectedTableId, onActionComplete }: UseTableActionsOptions) {
   const [actionBusy, setActionBusy] = useState(false)
+  // Identifies which row triggered the in-flight action (e.g. a reservation
+  // being activated) so only that row shows a spinner — actionBusy still
+  // disables the rest to block concurrent submits.
+  const [busyActionId, setBusyActionId] = useState<string | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
 
   const clearActionError = useCallback(() => setActionError(null), [])
 
   const runTableAction = useCallback(
-    async (request: () => Promise<Response>, fallbackMsg: string) => {
+    async (request: () => Promise<Response>, fallbackMsg: string, actionId?: string) => {
       setActionBusy(true)
+      setBusyActionId(actionId ?? null)
       setActionError(null)
       try {
         const res = await request()
@@ -30,6 +35,7 @@ export function useTableActions({ selectedTableId, onActionComplete }: UseTableA
         setActionError(err instanceof Error ? err.message : fallbackMsg)
       } finally {
         setActionBusy(false)
+        setBusyActionId(null)
       }
     },
     [onActionComplete],
@@ -59,6 +65,7 @@ export function useTableActions({ selectedTableId, onActionComplete }: UseTableA
             method: "POST",
           }),
         "Failed to activate reservation",
+        reservationId,
       )
     },
     [runTableAction],
@@ -78,6 +85,7 @@ export function useTableActions({ selectedTableId, onActionComplete }: UseTableA
 
   return {
     actionBusy,
+    busyActionId,
     actionError,
     handleOpenTable,
     handleActivateReservation,

@@ -124,6 +124,7 @@ export function WaiterOrderView() {
 
   const {
     actionBusy,
+    busyActionId,
     actionError,
     handleOpenTable,
     handleActivateReservation,
@@ -254,6 +255,7 @@ export function WaiterOrderView() {
           loading={overlayLoading}
           currentTime={currentTime}
           actionBusy={actionBusy}
+          busyActionId={busyActionId}
           actionError={actionError}
           onOpenTable={handleOpenTable}
           onActivateReservation={handleActivateReservation}
