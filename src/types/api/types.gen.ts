@@ -2567,6 +2567,7 @@ export type OrdersOrderItemsListData = {
     menu_item?: number
     order?: number
     order__public_id?: string
+    order__session__public_id?: string
     /**
      * Which field to use when ordering the results.
      */

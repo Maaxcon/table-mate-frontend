@@ -27,10 +27,6 @@ interface SessionApiItem {
   total: string
 }
 
-interface OrderApiItem {
-  public_id: string
-}
-
 interface OrderItemApiItem {
   public_id: string
   guest_slot: number
@@ -94,15 +90,29 @@ function formatDuration(openedAt: string): string {
   return minutes > 60 ? `${Math.floor(minutes / 60)}h${minutes % 60}m` : `${minutes}m`
 }
 
-async function fetchOrderItems(orderId: string): Promise<OverlayOrderItem[]> {
-  const res = await apiFetch(`/api/orders/order-items/?order__public_id=${orderId}`)
-  if (!res.ok) return []
-  const data = (await res.json()) as { results?: OrderItemApiItem[] }
-  return (data.results ?? []).map(mapOrderItem)
+const MAX_ITEM_PAGES = 100
+
+// Fetch every order item for a session in one filtered, paginated query —
+// instead of one request per order (the old N+1 waterfall). The BE filter
+// order__session__public_id spans all of the visit's orders/rounds.
+async function fetchSessionOrderItems(sessionPublicId: string): Promise<OverlayOrderItem[]> {
+  const all: OverlayOrderItem[] = []
+  for (let page = 1; page <= MAX_ITEM_PAGES; page += 1) {
+    const res = await apiFetch(
+      `/api/orders/order-items/?order__session__public_id=${sessionPublicId}&page=${page}`,
+    )
+    if (!res.ok) break
+    const data = (await res.json()) as { next?: string | null; results?: OrderItemApiItem[] }
+    all.push(...(data.results ?? []).map(mapOrderItem))
+    if (!data.next) break
+  }
+  return all
 }
 
 // Build the open-table overlay for a table from its visit Session and Orders.
-// Returns null when the table has no open session or no orders yet.
+// Returns null when the table has no open session. An open session with no
+// orders yet still returns a detail (empty items) so the waiter can see the
+// open table and close the check.
 export async function fetchOverlayDetail(
   tablePublicId: string,
   tables: FloorTable[],
@@ -116,19 +126,8 @@ export async function fetchOverlayDetail(
   const session = (sessionData.results ?? [])[0]
   if (!session) return null
 
-  const ordersRes = await apiFetch(`/api/orders/orders/?session__public_id=${session.public_id}`)
-  let orders: OrderApiItem[] = []
-  if (ordersRes.ok) {
-    const orderData = (await ordersRes.json()) as { results?: OrderApiItem[] }
-    orders = orderData.results ?? []
-  }
-  // Note: an open session with no orders yet still returns a detail (empty items)
-  // so the waiter can see the open table and close the check.
-
-  // A visit can have several Orders (one per checkout round) on the same
-  // Session — gather items from all of them, not just the latest.
-  const itemsPerOrder = await Promise.all(orders.map((o) => fetchOrderItems(o.public_id)))
-  const orderItems = itemsPerOrder.flat()
+  // One query across all the visit's orders, not one per order.
+  const orderItems = await fetchSessionOrderItems(session.public_id)
 
   const selTable = tables.find((t) => t.public_id === tablePublicId)
   const resForTable = reservations.find((r) => r.table === selTable?.table_number)
