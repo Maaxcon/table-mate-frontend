@@ -20,15 +20,16 @@ interface SessionApiItem {
   opened_at: string
   status: string
   currency: string
+  // Authoritative bill totals (Decimal strings) recomputed by the BE.
+  subtotal: string
+  tax: string
+  service_charge: string
+  total: string
 }
 
 interface OrderApiItem {
   public_id: string
   currency: string
-  total_amount: string
-  tax_total: string
-  discount_total?: string
-  service_charge?: string
 }
 
 interface OrderItemApiItem {
@@ -82,6 +83,13 @@ function mapOrderItem(oi: OrderItemApiItem): OverlayOrderItem {
   }
 }
 
+// The BE stores money as Decimal(14,4); render it at 2 dp for the bill. This
+// only reformats a single authoritative value — it never re-sums client-side.
+function to2dp(value: string | undefined): string {
+  const n = parseFloat(value ?? "")
+  return Number.isFinite(n) ? n.toFixed(2) : "0.00"
+}
+
 function formatDuration(openedAt: string): string {
   const minutes = Math.round((Date.now() - new Date(openedAt).getTime()) / 60000)
   return minutes > 60 ? `${Math.floor(minutes / 60)}h${minutes % 60}m` : `${minutes}m`
@@ -126,15 +134,10 @@ export async function fetchOverlayDetail(
   const selTable = tables.find((t) => t.public_id === tablePublicId)
   const resForTable = reservations.find((r) => r.table === selTable?.table_number)
 
-  const rawSubtotal = orderItems.reduce(
-    (sum, item) => sum + parseFloat(item.unit_price) * item.quantity,
-    0,
-  )
-  const rawTax = orders.reduce((sum, o) => sum + parseFloat(o.tax_total || "0"), 0)
-  const rawDiscount = orders.reduce((sum, o) => sum + parseFloat(o.discount_total || "0"), 0)
-  const rawServiceCharge = orders.reduce((sum, o) => sum + parseFloat(o.service_charge || "0"), 0)
-  const rawTotal = rawSubtotal + rawTax - rawDiscount + rawServiceCharge
-
+  // Trust the BE-recomputed Session totals instead of re-summing order items
+  // client-side: re-summing over-counted voided/wasted items and diverged from
+  // the server's Decimal math. The item list is still shown for the waiter
+  // (voided rows are rendered greyed by OrderItemRow).
   return {
     public_id: session.public_id,
     table_number: selTable?.table_number ?? "",
@@ -143,10 +146,12 @@ export async function fetchOverlayDetail(
     duration: formatDuration(session.opened_at),
     currency: orders[0]?.currency ?? session.currency,
     items: orderItems,
-    subtotal: rawSubtotal.toFixed(2),
-    tax_total: rawTax.toFixed(2),
-    total_amount: rawTotal.toFixed(2),
-    discount_total: rawDiscount.toFixed(2),
-    service_charge: rawServiceCharge.toFixed(2),
+    subtotal: to2dp(session.subtotal),
+    tax_total: to2dp(session.tax),
+    total_amount: to2dp(session.total),
+    service_charge: to2dp(session.service_charge),
+    // Session carries no separate discount; any order-level discount is already
+    // reflected in session.total.
+    discount_total: "0.00",
   }
 }
