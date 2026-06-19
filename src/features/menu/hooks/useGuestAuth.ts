@@ -58,7 +58,7 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
         error: null,
       }
     case "ERROR":
-      return { ...state, status: "error", error: action.error }
+      return { ...state, status: "error", error: action.error, guestJwt: null, cartSessionId: null }
   }
 }
 

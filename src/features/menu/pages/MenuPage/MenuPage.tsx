@@ -102,15 +102,18 @@ function MenuPage() {
     syncFromServer()
   }, [syncFromServer])
 
+  // Destructure the stable fields so the callback deps are these values, not
+  // the whole guestAuth object (which is a fresh object every render).
+  const { cartSessionId, guestJwt, initialize: reinitGuestCart } = guestAuth
   const handleCheckout = useCallback(async () => {
-    if (!guestAuth.cartSessionId || !guestAuth.guestJwt) {
+    if (!cartSessionId || !guestJwt) {
       return Promise.reject(new Error(menuStrings.cart.sessionUnavailable))
     }
-    const result = await checkout(guestAuth.cartSessionId, guestAuth.guestJwt)
+    const result = await checkout(cartSessionId, guestJwt)
     // Checkout closed this cart; reopen a fresh one so the guest can order again.
-    guestAuth.initialize()
+    reinitGuestCart()
     return result
-  }, [guestAuth.cartSessionId, guestAuth.guestJwt, guestAuth.initialize])
+  }, [cartSessionId, guestJwt, reinitGuestCart])
 
   const { isConnected } = useCartSocket({
     cartSessionId: guestAuth.cartSessionId,
