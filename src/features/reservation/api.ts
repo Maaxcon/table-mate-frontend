@@ -26,7 +26,6 @@ export type ReservationWithTable = {
     public_id: string
     public_number: string
     capacity: number
-    shape: string
   }
   guest_count: number
   start_at: string
@@ -111,26 +110,6 @@ export async function fetchLayoutData(restaurantId?: string): Promise<LayoutData
   const res = await apiFetch(url)
   if (!res.ok) return { tables: [], layout: null, upcoming_reservations: [] }
   return res.json() as Promise<LayoutDataResponse>
-}
-
-const LAYOUT_CANVAS_W = 2000
-const FLOOR_CANVAS_W = 680
-const FLOOR_SCALE = FLOOR_CANVAS_W / LAYOUT_CANVAS_W
-
-export function extractLayoutPositions(layout: unknown): Map<string, { x: number; y: number }> {
-  const positions = new Map<string, { x: number; y: number }>()
-  if (layout && typeof layout === "object" && "tables" in layout) {
-    const layoutPayload = layout as { tables: Array<{ id: string | null; x: number; y: number }> }
-    for (const t of layoutPayload.tables ?? []) {
-      if (t.id) {
-        positions.set(t.id, {
-          x: Math.round(t.x * FLOOR_SCALE),
-          y: Math.round(t.y * FLOOR_SCALE),
-        })
-      }
-    }
-  }
-  return positions
 }
 
 export async function fetchUpcomingReservations(

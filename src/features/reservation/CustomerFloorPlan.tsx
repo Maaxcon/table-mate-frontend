@@ -1,5 +1,7 @@
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import type { Table } from "@/types/api/types.gen"
+import type { LayoutPayload } from "@/features/editor/types"
+import { FloorPlanView, type FloorPlanTableRef } from "@/features/floorplan/FloorPlanView"
 import type { FloorTable, UpcomingReservation } from "@/features/waiter-order-view/data/waiterTypes"
 import { getTableVisualStatus } from "@/features/waiter-order-view/data/waiterTypes"
 import type { Zone } from "@/features/reservation/api"
@@ -13,7 +15,13 @@ interface CustomerFloorPlanProps {
   selectedId: string | null
   onSelect: (table: Table) => void
   upcomingReservations?: UpcomingReservation[]
-  layoutPositions?: Map<string, { x: number; y: number }>
+  payload?: LayoutPayload | null
+}
+
+const statusLabel: Record<string, string> = {
+  free: "FREE",
+  reserved: "RESERVED",
+  occupied: "OCCUPIED",
 }
 
 export function CustomerFloorPlan({
@@ -24,7 +32,7 @@ export function CustomerFloorPlan({
   selectedId,
   onSelect,
   upcomingReservations = [],
-  layoutPositions = new Map(),
+  payload = null,
 }: CustomerFloorPlanProps) {
   const [currentTime, setCurrentTime] = useState(new Date())
 
@@ -33,26 +41,28 @@ export function CustomerFloorPlan({
     return () => clearInterval(id)
   }, [])
 
-  const statusLabel: Record<string, string> = {
-    free: "FREE",
-    reserved: "RESERVED",
-    occupied: "OCCUPIED",
-  }
+  // Join a layout table to its live table by public_id, falling back to public_number.
+  const { byId, byNumber } = useMemo(() => {
+    const byId = new Map(tables.map((t) => [t.public_id, t]))
+    const byNumber = new Map(tables.map((t) => [t.public_number, t]))
+    return { byId, byNumber }
+  }, [tables])
 
-  const floorTables: FloorTable[] = tables.map((t) => {
-    const pos = layoutPositions.get(t.public_id)
-    return {
+  const resolve = (ref: FloorPlanTableRef): Table | undefined =>
+    byId.get(ref.id) ?? (ref.publicNumber ? byNumber.get(ref.publicNumber) : undefined)
+
+  const statusFor = (t: Table | undefined) => {
+    if (!t) return "free" as const
+    const floorTable = {
       public_id: t.public_id,
       public_number: t.public_number,
       capacity: t.capacity,
-      shape: t.shape ?? "rectangle",
+      shape: "square",
       is_occupied: t.is_occupied ?? false,
-      position_x: pos?.x ?? null,
-      position_y: pos?.y ?? null,
       active: t.active ?? true,
-      zone: t.zone ?? null,
-    }
-  })
+    } as FloorTable
+    return getTableVisualStatus(floorTable, upcomingReservations, currentTime)
+  }
 
   return (
     <div className="c-floor-plan">
@@ -71,43 +81,32 @@ export function CustomerFloorPlan({
           ))}
         </div>
       )}
-      <div className="c-floor-plan__canvas">
-        {tables.map((table) => {
-          const ft = floorTables.find((ft) => ft.public_id === table.public_id)!
-          const visualStatus = getTableVisualStatus(ft, upcomingReservations, currentTime)
+      <FloorPlanView
+        payload={payload}
+        selectedZoneId={selectedZone}
+        selectedId={selectedId}
+        onTableSelect={(ref) => {
+          const table = resolve(ref)
+          if (table) onSelect(table)
+        }}
+        onPortalNavigate={(targetZoneId) => onZoneChange(targetZoneId)}
+        tableStatus={(ref) => statusFor(resolve(ref))}
+        renderTableContent={(ref) => {
+          const table = resolve(ref)
+          const visualStatus = statusFor(table)
+          const number = table?.public_number ?? ref.publicNumber
+          const capacity = table?.capacity ?? ref.capacity
           return (
-            <button
-              key={table.public_id}
-              type="button"
-              className={[
-                "c-floor-plan__table",
-                `c-floor-plan__table--${visualStatus}`,
-                `c-floor-plan__table--${table.shape}`,
-                selectedId === table.public_id ? "c-floor-plan__table--selected" : "",
-              ]
-                .filter(Boolean)
-                .join(" ")}
-              style={{
-                left: ft.position_x ?? undefined,
-                top: ft.position_y ?? undefined,
-              }}
-              onClick={() => onSelect(table)}
-            >
-              <span
-                className={`c-floor-plan__table-badge c-floor-plan__table-badge--${visualStatus}`}
-              >
+            <>
+              <span className={`fp-block__badge fp-block__badge--${visualStatus}`}>
                 {statusLabel[visualStatus] ?? visualStatus.toUpperCase()}
               </span>
-
-              <span className="c-floor-plan__table-number">{table.public_number}</span>
-
-              <div className="c-floor-plan__table-meta">
-                <span className="c-floor-plan__table-capacity">{table.capacity} P</span>
-              </div>
-            </button>
+              <span className="fp-block__label">{number}</span>
+              {capacity != null && <span className="fp-block__capacity">{capacity}P</span>}
+            </>
           )
-        })}
-      </div>
+        }}
+      />
     </div>
   )
 }
