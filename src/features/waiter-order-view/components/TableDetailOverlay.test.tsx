@@ -88,4 +88,12 @@ describe("TableDetailOverlay bill", () => {
 
     expect(screen.queryByText("SERVICE")).not.toBeInTheDocument()
   })
+
+  it("renders the bill with the session currency symbol, not a hardcoded euro", () => {
+    renderOverlay(makeDetail({ currency: "UAH" }))
+
+    // UAH → ₴; the old hardcoded euro must be gone.
+    expect(screen.getByText(/₴68\.98/)).toBeInTheDocument()
+    expect(screen.queryByText(/€/)).not.toBeInTheDocument()
+  })
 })

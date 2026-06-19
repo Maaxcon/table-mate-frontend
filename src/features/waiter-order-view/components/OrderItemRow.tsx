@@ -5,9 +5,10 @@ import "./OrderItemRow.css"
 
 interface OrderItemRowProps {
   item: OverlayOrderItem
+  currencySymbol: string
 }
 
-export function OrderItemRow({ item }: OrderItemRowProps) {
+export function OrderItemRow({ item, currencySymbol }: OrderItemRowProps) {
   const isVoided = item.status === "voided"
   const voidReasonLabel =
     item.void_reason != null
@@ -24,7 +25,10 @@ export function OrderItemRow({ item }: OrderItemRowProps) {
         {voidReasonLabel && <span className="order-item-row__void-reason">{voidReasonLabel}</span>}
       </div>
       <div className="order-item-row__right">
-        <span className="order-item-row__price">&euro;{item.unit_price}</span>
+        <span className="order-item-row__price">
+          {currencySymbol}
+          {item.unit_price}
+        </span>
         <StatusChip status={item.status} />
       </div>
     </div>

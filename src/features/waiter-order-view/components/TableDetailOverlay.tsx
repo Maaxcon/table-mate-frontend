@@ -6,6 +6,7 @@ import type {
   OverlayDetail,
   VisualTableStatus,
 } from "../data/waiterTypes"
+import { getCurrencySymbol } from "@/features/menu/utils"
 import { OrderItemRow } from "./OrderItemRow"
 import { CloseCheckModal } from "./CloseCheckModal"
 import "./TableDetailOverlay.css"
@@ -48,6 +49,9 @@ export function TableDetailOverlay({
   )
   const [guestCount, setGuestCount] = useState(2)
   const [showCloseCheck, setShowCloseCheck] = useState(false)
+
+  // Use the bill's real currency rather than a hardcoded symbol.
+  const currencySymbol = detail ? getCurrencySymbol(detail.currency) : ""
 
   const guestSlots = detail
     ? [...new Set(detail.items.map((i) => i.guest_slot))].sort((a, b) => a - b)
@@ -222,7 +226,11 @@ export function TableDetailOverlay({
                         <div key={slot} className="overlay__slot">
                           <h3 className="overlay__slot-title">GUEST {slot}</h3>
                           {slotItems.map((item) => (
-                            <OrderItemRow key={item.public_id} item={item} />
+                            <OrderItemRow
+                              key={item.public_id}
+                              item={item}
+                              currencySymbol={currencySymbol}
+                            />
                           ))}
                         </div>
                       )
@@ -236,16 +244,25 @@ export function TableDetailOverlay({
                   <div className="overlay__footer">
                     <div className="overlay__total-row">
                       <span className="overlay__total-label">SUBTOTAL</span>
-                      <span className="overlay__total-value">&euro;{detail.subtotal}</span>
+                      <span className="overlay__total-value">
+                        {currencySymbol}
+                        {detail.subtotal}
+                      </span>
                     </div>
                     <div className="overlay__total-row">
                       <span className="overlay__total-label">TAX</span>
-                      <span className="overlay__total-value">&euro;{detail.tax_total}</span>
+                      <span className="overlay__total-value">
+                        {currencySymbol}
+                        {detail.tax_total}
+                      </span>
                     </div>
                     {detail.service_charge != null && Number(detail.service_charge) > 0 && (
                       <div className="overlay__total-row">
                         <span className="overlay__total-label">SERVICE</span>
-                        <span className="overlay__total-value">&euro;{detail.service_charge}</span>
+                        <span className="overlay__total-value">
+                          {currencySymbol}
+                          {detail.service_charge}
+                        </span>
                       </div>
                     )}
                     <div className="overlay__total-row overlay__total-row--final">
@@ -253,7 +270,8 @@ export function TableDetailOverlay({
                         TOTAL
                       </span>
                       <span className="overlay__total-value overlay__total-value--large">
-                        &euro;{detail.total_amount}
+                        {currencySymbol}
+                        {detail.total_amount}
                       </span>
                     </div>
                     <button type="button" className="overlay__cta">
