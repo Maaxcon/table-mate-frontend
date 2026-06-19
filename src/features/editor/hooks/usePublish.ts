@@ -14,19 +14,18 @@ export function usePublish({ onSuccess, onRollback }: UsePublishOptions) {
   const rollbackRef = useRef<(() => void) | null>(null)
 
   const publish = useCallback(
-    async (entities: EditorEntity[]) => {
+    async (entities: EditorEntity[], deletedTableIds: string[] = []) => {
       setPublishing(true)
       setError(null)
       const layoutJson = serializeEntities(entities)
 
-      rollbackRef.current = onRollback
+      rollbackRef.current = onRollback ?? null
 
       try {
-        const res = await api.post("/api/editor/layouts/publish/", layoutJson)
-        if (!res.ok) {
-          throw new Error(`Publish failed with status ${res.status}`)
-        }
-        const data = await res.json()
+        const data = await api.post<Record<string, unknown>>("/api/editor/layouts/publish/", {
+          ...layoutJson,
+          deleted_table_ids: deletedTableIds,
+        })
         onSuccess(data)
       } catch (err) {
         setError(err instanceof Error ? err.message : "Publish failed")

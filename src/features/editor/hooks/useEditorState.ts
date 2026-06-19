@@ -18,6 +18,9 @@ interface EditorState {
   lastPublishedJson: object | null
   dirty: boolean
   activeTool: string | null
+  // serverIds of tables the admin explicitly removed since the last load/publish.
+  // Sent to the publish endpoint so only genuine deletions are conflict-checked.
+  deletedServerIds: string[]
 }
 
 type Action =
@@ -101,10 +104,16 @@ function editorReducer(state: EditorState, action: Action): EditorState {
       return { ...state, entities, dirty: computeDirty(entities, state.lastPublishedJson) }
     }
     case "REMOVE_ENTITY": {
+      const removed = state.entities.find((e) => e.id === action.id)
       const entities = state.entities.filter((e) => e.id !== action.id)
+      const deletedServerIds =
+        removed?.serverId && !state.deletedServerIds.includes(removed.serverId)
+          ? [...state.deletedServerIds, removed.serverId]
+          : state.deletedServerIds
       return {
         ...state,
         entities,
+        deletedServerIds,
         selectedId: state.selectedId === action.id ? null : state.selectedId,
         dirty: computeDirty(entities, state.lastPublishedJson),
       }
@@ -114,7 +123,7 @@ function editorReducer(state: EditorState, action: Action): EditorState {
     case "SET_TOOL":
       return { ...state, activeTool: action.tool, selectedId: null }
     case "PUBLISH_SUCCESS":
-      return { ...state, lastPublishedJson: action.json, dirty: false }
+      return { ...state, lastPublishedJson: action.json, dirty: false, deletedServerIds: [] }
     case "PUBLISH_ROLLBACK":
       return { ...action.previousState }
     case "SET_DIRTY":
@@ -125,6 +134,7 @@ function editorReducer(state: EditorState, action: Action): EditorState {
         entities: action.entities,
         lastPublishedJson: action.publishedJson,
         dirty: false,
+        deletedServerIds: [],
       }
     case "CLEAR":
       return {
@@ -133,6 +143,7 @@ function editorReducer(state: EditorState, action: Action): EditorState {
         lastPublishedJson: null,
         dirty: false,
         activeTool: null,
+        deletedServerIds: [],
       }
     default:
       return state
@@ -145,6 +156,7 @@ const initialState: EditorState = {
   lastPublishedJson: null,
   dirty: false,
   activeTool: null,
+  deletedServerIds: [],
 }
 
 export function useEditorState() {

@@ -31,6 +31,7 @@ function FloorPlanSection() {
     setTool,
     publishSuccess,
     loadEntities,
+    deletedServerIds,
     dispatch,
   } = useEditorState()
 
@@ -116,8 +117,8 @@ function FloorPlanSection() {
   })
 
   const handlePublishConfirm = useCallback(() => {
-    publish(entities)
-  }, [publish, entities])
+    publish(entities, deletedServerIds)
+  }, [publish, entities, deletedServerIds])
 
   const selectedEntity = visibleEntities.find((e) => e.id === selectedId) ?? null
 
