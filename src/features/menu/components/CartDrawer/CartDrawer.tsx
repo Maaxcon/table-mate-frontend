@@ -131,6 +131,17 @@ export function CartDrawer({
     }
   }
 
+  // Clear any stale checkout error when leaving/entering the confirm dialog,
+  // so a previous failure doesn't linger on the next open.
+  const goToCart = () => {
+    setSubmitError(null)
+    setStep("cart")
+  }
+  const openConfirm = () => {
+    setSubmitError(null)
+    setStep("confirming")
+  }
+
   const totalCount = items.reduce((s, i) => s + i.quantity, 0)
 
   const groups = groupItemsByGuest(items)
@@ -206,7 +217,7 @@ export function CartDrawer({
               </button>
               <button
                 className="cart-drawer__confirm-dialog-no"
-                onClick={() => setStep("cart")}
+                onClick={goToCart}
                 disabled={submitting}
               >
                 {menuStrings.cart.confirmNo}
@@ -237,7 +248,7 @@ export function CartDrawer({
               )}
               <button
                 className="cart-drawer__confirm-dialog-no"
-                onClick={() => setStep("cart")}
+                onClick={goToCart}
                 disabled={submitting}
               >
                 {menuStrings.cart.backToCart}
@@ -371,7 +382,7 @@ export function CartDrawer({
               </div>
               <button
                 className="cart-drawer__order"
-                onClick={() => setStep("confirming")}
+                onClick={openConfirm}
                 disabled={items.length === 0}
               >
                 {menuStrings.cart.checkout}
