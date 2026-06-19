@@ -64,13 +64,13 @@ export function serializeEntities(entities: EditorEntity[]): object {
       width: e.w * GRID,
       height: e.h * GRID,
       rotation: e.rotation ?? 0,
-      zone_id: e.zoneId ?? null,
+      zone_id: e.zoneId || null,
     }
 
     if (e.type === "table-square" || e.type === "table-round") {
       tables.push({
         ...base,
-        id: e.serverId ?? null,
+        id: e.serverId || null,
         public_number: e.label ?? "",
         shape: e.type === "table-round" ? "round" : "square",
         capacity: e.capacity ?? 4,
@@ -79,12 +79,12 @@ export function serializeEntities(entities: EditorEntity[]): object {
     } else if (e.type === "obstacle") {
       obstacles.push(base)
     } else if (e.type === "threshold") {
-      thresholds.push(base)
+      thresholds.push({ ...base, threshold_label: e.label ?? "" })
     } else if (e.type === "portal") {
       portals.push({
         ...base,
-        target_zone_id: e.targetZoneId ?? null,
-        label: e.label ?? "",
+        target_zone_id: e.targetZoneId || null,
+        portal_label: e.label ?? "",
       })
     }
   }
@@ -119,6 +119,7 @@ export interface LayoutPayload {
     y: number
     width: number
     height: number
+    label?: string
     zone_id: string | null
   }>
   portals: Array<{
@@ -127,7 +128,10 @@ export interface LayoutPayload {
     width: number
     height: number
     target_zone_id: string | null
-    label: string
+    // Stored under `label` (the publish serializer aliases portal_label → label);
+    // `portal_label` kept for backward-compat with older payloads.
+    label?: string
+    portal_label?: string
     zone_id: string | null
   }>
 }
@@ -174,6 +178,7 @@ export function deserializeLayout(layout: LayoutPayload): EditorEntity[] {
       y: Math.round(th.y / GRID),
       w: Math.round(th.width / GRID),
       h: Math.round(th.height / GRID),
+      label: th.label || undefined,
       zoneId: th.zone_id ?? undefined,
     })
   }
@@ -187,7 +192,7 @@ export function deserializeLayout(layout: LayoutPayload): EditorEntity[] {
       w: Math.round(p.width / GRID),
       h: Math.round(p.height / GRID),
       targetZoneId: p.target_zone_id ?? undefined,
-      label: p.portal_label || p.label || undefined,
+      label: p.label || p.portal_label || undefined,
       zoneId: p.zone_id ?? undefined,
     })
   }
