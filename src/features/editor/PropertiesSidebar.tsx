@@ -82,17 +82,10 @@ export function PropertiesSidebar({
         {isTable && (
           <>
             <div className="editor-sidebar__field">
-              <label className="editor-sidebar__label" htmlFor="sidebar-label">
-                Table ID
-              </label>
-              <input
-                id="sidebar-label"
-                className="editor-sidebar__input"
-                type="text"
-                value={entity.label ?? ""}
-                onChange={(e) => onUpdate(entity.id, { label: e.target.value })}
-                placeholder="e.g. T1"
-              />
+              <span className="editor-sidebar__label">Table ID</span>
+              <span className="editor-sidebar__value">
+                {entity.label || "Auto-assigned on publish"}
+              </span>
             </div>
 
             <div className="editor-sidebar__field">
