@@ -40,19 +40,15 @@ interface ZoneApiResponse {
   sort_order: number
 }
 
-function mapTableToFloorTable(
-  t: Table,
-  layoutPositions: Map<string, { x: number; y: number }>,
-): FloorTable {
-  const pos = layoutPositions.get(t.public_id)
+// Geometry (position/size/shape) now comes from the layout payload via
+// <FloorPlanView>; this only carries the status fields the floor view needs.
+function mapTableToFloorTable(t: Table): FloorTable {
   return {
     public_id: t.public_id,
     public_number: t.public_number,
     capacity: t.capacity,
-    shape: t.shape as FloorTable["shape"],
+    shape: "square",
     is_occupied: t.is_occupied ?? false,
-    position_x: pos?.x ?? null,
-    position_y: pos?.y ?? null,
     active: t.active ?? true,
     zone: t.zone ?? null,
   }
@@ -62,6 +58,7 @@ export function WaiterOrderView() {
   const [activeTab, setActiveTab] = useState("FLOOR PLAN")
   const [selectedTableId, setSelectedTableId] = useState<string | null>(null)
   const [tables, setTables] = useState<FloorTable[]>([])
+  const [layoutPayload, setLayoutPayload] = useState<LayoutPayload | null>(null)
   const [zones, setZones] = useState<ZoneApiResponse[]>([])
   const [selectedZoneId, setSelectedZoneId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -219,13 +216,6 @@ export function WaiterOrderView() {
     setLayoutReservations((prev) => prev.filter((r) => r.public_id !== event.reservation_id))
   }, [])
 
-  useHallSubscription({
-    onTableStatusChanged: handleTableStatusChanged,
-    onNewReservation: handleNewReservation,
-    onReservationCancelled: handleReservationCancelled,
-    onLayoutPublished: handleLayoutPublished,
-  })
-
   useEffect(() => {
     if (!restaurantId) return
     fetchRestaurantSettings(restaurantId)
@@ -247,24 +237,13 @@ export function WaiterOrderView() {
       const layoutData = (await layoutRes.json()) as LayoutResponse
       const items = layoutData.tables ?? []
 
-      const LAYOUT_CANVAS_W = 2000
-      const FLOOR_CANVAS_W = 680
-      const FLOOR_SCALE = FLOOR_CANVAS_W / LAYOUT_CANVAS_W
+      setLayoutPayload(
+        layoutData.layout && typeof layoutData.layout === "object"
+          ? (layoutData.layout as LayoutPayload)
+          : null,
+      )
 
-      const layoutPositions = new Map<string, { x: number; y: number }>()
-      if (layoutData.layout && typeof layoutData.layout === "object") {
-        const layoutPayload = layoutData.layout as LayoutPayload
-        for (const t of layoutPayload.tables ?? []) {
-          if (t.id) {
-            layoutPositions.set(t.id, {
-              x: Math.round(t.x * FLOOR_SCALE),
-              y: Math.round(t.y * FLOOR_SCALE),
-            })
-          }
-        }
-      }
-
-      const mappedTables = items.map((t) => mapTableToFloorTable(t, layoutPositions))
+      const mappedTables = items.map((t) => mapTableToFloorTable(t))
       setLayoutReservations(layoutData.upcoming_reservations ?? [])
 
       if (zonesRes.ok) {
@@ -340,12 +319,20 @@ export function WaiterOrderView() {
   }, [enrichTablesWithSessionData])
 
   useEffect(() => {
+    /* eslint-disable-next-line react-hooks/set-state-in-effect */
     loadData()
   }, [loadData])
 
   const handleLayoutPublished = useCallback(() => {
     loadData()
   }, [loadData])
+
+  useHallSubscription({
+    onTableStatusChanged: handleTableStatusChanged,
+    onNewReservation: handleNewReservation,
+    onReservationCancelled: handleReservationCancelled,
+    onLayoutPublished: handleLayoutPublished,
+  })
 
   const handleCancelReservation = useCallback(
     async (reservationId: string) => {
@@ -620,11 +607,14 @@ export function WaiterOrderView() {
         <div className="waiter-view__main">
           {showFloorPlan ? (
             <FloorPlan
-              tables={filteredTables}
+              payload={layoutPayload}
+              tables={tables}
+              selectedZoneId={selectedZoneId}
               selectedId={selectedTableId}
               upcomingReservations={layoutReservations}
               currentTime={currentTime}
               onSelect={handleTableSelect}
+              onZoneChange={setSelectedZoneId}
             />
           ) : (
             <div className="waiter-view__placeholder">

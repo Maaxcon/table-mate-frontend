@@ -1,89 +1,104 @@
+import { useMemo } from "react"
+import { FloorPlanView, type FloorPlanTableRef } from "@/features/floorplan/FloorPlanView"
+import type { LayoutPayload } from "@/features/editor/types"
 import type { FloorTable, UpcomingReservation } from "../data/waiterTypes"
 import { getTableVisualStatus, formatDuration, formatETA } from "../data/waiterTypes"
 import "./FloorPlan.css"
 
 interface FloorPlanProps {
+  payload: LayoutPayload | null | undefined
   tables: FloorTable[]
+  selectedZoneId?: string | null
   selectedId: string | null
   upcomingReservations?: UpcomingReservation[]
   currentTime: Date
   onSelect: (table: FloorTable) => void
+  onZoneChange?: (zoneId: string) => void
+}
+
+const statusLabel: Record<string, string> = {
+  free: "FREE",
+  reserved: "RESERVED",
+  occupied: "OCCUPIED",
 }
 
 export function FloorPlan({
+  payload,
   tables,
+  selectedZoneId = null,
   selectedId,
   upcomingReservations = [],
   currentTime,
   onSelect,
+  onZoneChange,
 }: FloorPlanProps) {
-  const statusLabel: Record<string, string> = {
-    free: "FREE",
-    reserved: "RESERVED",
-    occupied: "OCCUPIED",
-  }
+  // Join a layout table to its live table by public_id, falling back to public_number.
+  const { byId, byNumber } = useMemo(() => {
+    const byId = new Map(tables.map((t) => [t.public_id, t]))
+    const byNumber = new Map(tables.map((t) => [t.public_number, t]))
+    return { byId, byNumber }
+  }, [tables])
+
+  const resolve = (ref: FloorPlanTableRef): FloorTable | undefined =>
+    byId.get(ref.id) ?? (ref.publicNumber ? byNumber.get(ref.publicNumber) : undefined)
 
   return (
     <div className="floor-plan">
       <h2 className="floor-plan__title">FLOOR PLAN</h2>
-      <div className="floor-plan__canvas">
-        {tables.map((table) => {
-          const visualStatus = getTableVisualStatus(table, upcomingReservations, currentTime)
+      <FloorPlanView
+        payload={payload}
+        selectedZoneId={selectedZoneId}
+        selectedId={selectedId}
+        onTableSelect={(ref) => {
+          const table = resolve(ref)
+          if (table) onSelect(table)
+        }}
+        onPortalNavigate={onZoneChange ? (targetZoneId) => onZoneChange(targetZoneId) : undefined}
+        tableStatus={(ref) => {
+          const table = resolve(ref)
+          return table ? getTableVisualStatus(table, upcomingReservations, currentTime) : "free"
+        }}
+        renderTableContent={(ref) => {
+          const table = resolve(ref)
+          const visualStatus = table
+            ? getTableVisualStatus(table, upcomingReservations, currentTime)
+            : "free"
+          const number = table?.public_number ?? ref.publicNumber
+          const capacity = table?.capacity ?? ref.capacity
           return (
-            <button
-              key={table.public_id}
-              type="button"
-              className={[
-                "floor-plan__table",
-                `floor-plan__table--${visualStatus}`,
-                `floor-plan__table--${table.shape}`,
-                selectedId === table.public_id ? "floor-plan__table--selected" : null,
-              ]
-                .filter(Boolean)
-                .join(" ")}
-              style={{
-                left: table.position_x ?? undefined,
-                top: table.position_y ?? undefined,
-              }}
-              onClick={() => onSelect(table)}
-            >
-              <span className={`floor-plan__table-badge floor-plan__table-badge--${visualStatus}`}>
+            <>
+              <span className={`fp-block__badge fp-block__badge--${visualStatus}`}>
                 {statusLabel[visualStatus] ?? visualStatus.toUpperCase()}
               </span>
+              <span className="fp-block__label">{number}</span>
 
-              <span className="floor-plan__table-number">{table.public_number}</span>
-
-              {visualStatus === "reserved" && table.activeReservation && (
-                <div className="floor-plan__table-info">
-                  <span className="floor-plan__table-name">
-                    {table.activeReservation.guest_name}
-                  </span>
-                  <span className="floor-plan__table-since">
+              {visualStatus === "reserved" && table?.activeReservation && (
+                <div className="fp-block__info">
+                  <span className="fp-block__info-name">{table.activeReservation.guest_name}</span>
+                  <span className="fp-block__info-sub">
                     in {formatETA(table.activeReservation.start_at)}
                   </span>
                 </div>
               )}
 
-              {visualStatus === "occupied" && table.activeSession && (
-                <div className="floor-plan__table-info">
+              {visualStatus === "occupied" && table?.activeSession && (
+                <div className="fp-block__info">
                   {table.activeReservation && (
-                    <span className="floor-plan__table-name">
+                    <span className="fp-block__info-name">
                       {table.activeReservation.guest_name}
                     </span>
                   )}
-                  <span className="floor-plan__table-since">
+                  <span className="fp-block__info-sub">
                     {formatDuration(table.activeSession.opened_at)}
                   </span>
                 </div>
               )}
 
-              <div className="floor-plan__table-meta">
-                <span className="floor-plan__table-capacity">{table.capacity} P</span>
-              </div>
-            </button>
+              {capacity != null && <span className="fp-block__capacity">{capacity}P</span>}
+            </>
           )
-        })}
-      </div>
+        }}
+      />
     </div>
   )
 }

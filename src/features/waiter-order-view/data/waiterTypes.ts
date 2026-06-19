@@ -15,8 +15,9 @@ export interface TableSessionInfo {
 
 export type FloorTable = Pick<
   Table,
-  "public_id" | "public_number" | "capacity" | "shape" | "is_occupied" | "active"
+  "public_id" | "public_number" | "capacity" | "is_occupied" | "active"
 > & {
+  shape: string
   zone?: { public_id: string; name: string } | null
   activeReservation?: TableReservationInfo | null
   activeSession?: TableSessionInfo | null
