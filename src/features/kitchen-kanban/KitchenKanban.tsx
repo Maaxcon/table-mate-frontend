@@ -1,6 +1,15 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { Link } from "react-router-dom"
 import "./KitchenKanban.css"
+import {
+  fetchTickets,
+  fetchCompletedTickets,
+  fetchOrderItems,
+  updateTicketStatus,
+  updateOrderItemStatus,
+  type KitchenTicket,
+} from "./api"
+import type { OrderItem } from "@/types/api/types.gen"
 
 interface KanbanItem {
   id: string
@@ -20,104 +29,55 @@ interface KanbanTicket {
   completedMinutes?: number
 }
 
-const INITIAL_TICKETS: KanbanTicket[] = [
-  {
-    id: "T12",
-    status: "incoming",
-    startedAt: Date.now() - 4 * 60000,
-    guestCount: 2,
-    serverName: "Anya",
-    items: [
-      { id: "i1", name: "Burger", quantity: 1, status: "pending" },
-      { id: "i2", name: "Wings", quantity: 1, status: "pending" },
-    ],
-  },
-  {
-    id: "T8",
-    status: "incoming",
-    startedAt: Date.now() - 2 * 60000,
-    guestCount: 3,
-    serverName: "Milo",
-    items: [{ id: "i3", name: "Pizza", quantity: 2, modifiers: "Pepperoni", status: "pending" }],
-  },
-  {
-    id: "T3",
-    status: "incoming",
-    startedAt: Date.now() - 9 * 60000,
-    guestCount: 1,
-    serverName: "Jade",
-    items: [
-      { id: "i4", name: "Caesar Salad", quantity: 1, status: "pending" },
-      { id: "i5", name: "Fries", quantity: 1, status: "pending" },
-    ],
-  },
-  {
-    id: "T5",
-    status: "active",
-    startedAt: Date.now() - 12 * 60000,
-    guestCount: 4,
-    serverName: "Anya",
-    items: [
-      { id: "i6", name: "Steak", quantity: 2, modifiers: "Med-rare", status: "pending" },
-      { id: "i7", name: "Fries", quantity: 1, status: "ready" },
-      { id: "i8", name: "Grilled Chicken", quantity: 1, status: "pending" },
-      { id: "i9", name: "Side Salad", quantity: 2, status: "pending" },
-    ],
-  },
-  {
-    id: "T9",
-    status: "active",
-    startedAt: Date.now() - 8 * 60000,
-    guestCount: 2,
-    serverName: "Milo",
-    items: [
-      { id: "i10", name: "Burger", quantity: 2, status: "pending" },
-      { id: "i11", name: "Fries", quantity: 2, status: "ready" },
-    ],
-  },
-  {
-    id: "T2",
-    status: "active",
-    startedAt: Date.now() - 18 * 60000,
-    guestCount: 3,
-    serverName: "Jade",
-    items: [
-      { id: "i12", name: "Ribeye Steak", quantity: 1, modifiers: "Well-done", status: "ready" },
-      { id: "i13", name: "Mushroom Risotto", quantity: 1, status: "pending" },
-      { id: "i14", name: "Grilled Salmon", quantity: 1, status: "ready" },
-    ],
-  },
-]
+function mapItem(item: OrderItem): KanbanItem {
+  return {
+    id: item.public_id,
+    name: item.menu_item_name,
+    quantity: item.quantity,
+    modifiers: item.comment ?? undefined,
+    status: item.status === "ready" ? "ready" : "pending",
+  }
+}
 
-const INITIAL_COMPLETED: KanbanTicket[] = [
-  {
-    id: "T1",
+function mapTicket(ticket: KitchenTicket, items: OrderItem[]): KanbanTicket {
+  const ticketItems = items.filter((it) => it.ticket === ticket.public_id)
+  return {
+    id: ticket.public_id,
+    status: (ticket.status ?? "incoming") as KanbanTicket["status"],
+    startedAt:
+      ticket.status === "incoming"
+        ? new Date(ticket.injected_at).getTime()
+        : new Date(ticket.started_at ?? ticket.injected_at).getTime(),
+    guestCount: ticket.guest_count,
+    serverName: ticket.server_name,
+    completedMinutes:
+      ticket.completed_at && ticket.started_at
+        ? Math.round(
+            (new Date(ticket.completed_at).getTime() - new Date(ticket.started_at).getTime()) /
+              60000,
+          )
+        : undefined,
+    items: ticketItems.map(mapItem),
+  }
+}
+
+function mapTicketShort(ticket: KitchenTicket): KanbanTicket {
+  return {
+    id: ticket.public_id,
     status: "completed",
-    startedAt: 0,
-    guestCount: 2,
-    serverName: "Anya",
+    startedAt: new Date(ticket.started_at ?? ticket.injected_at).getTime(),
+    guestCount: ticket.guest_count,
+    serverName: ticket.server_name,
+    completedMinutes:
+      ticket.completed_at && ticket.started_at
+        ? Math.round(
+            (new Date(ticket.completed_at).getTime() - new Date(ticket.started_at).getTime()) /
+              60000,
+          )
+        : undefined,
     items: [],
-    completedMinutes: 45,
-  },
-  {
-    id: "T4",
-    status: "completed",
-    startedAt: 0,
-    guestCount: 4,
-    serverName: "Milo",
-    items: [],
-    completedMinutes: 32,
-  },
-  {
-    id: "T7",
-    status: "completed",
-    startedAt: 0,
-    guestCount: 1,
-    serverName: "Jade",
-    items: [],
-    completedMinutes: 28,
-  },
-]
+  }
+}
 
 function elapsedMinutes(startedAt: number): number {
   return Math.floor((Date.now() - startedAt) / 60000)
@@ -151,50 +111,100 @@ function useCurrentTime(): string {
 export function KitchenKanban() {
   const currentTime = useCurrentTime()
   const [tick, setTick] = useState(0)
-  const [tickets, setTickets] = useState<KanbanTicket[]>(INITIAL_TICKETS)
-  const [completed, setCompleted] = useState<KanbanTicket[]>(INITIAL_COMPLETED)
+  const [tickets, setTickets] = useState<KanbanTicket[]>([])
+  const [completed, setCompleted] = useState<KanbanTicket[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     const id = setInterval(() => setTick((t) => t + 1), 30000)
     return () => clearInterval(id)
   }, [])
 
-  const toggleItem = useCallback((ticketId: string, itemId: string) => {
-    setTickets((prev) =>
-      prev.map((t) =>
-        t.id === ticketId
-          ? {
-              ...t,
-              items: t.items.map((it) =>
-                it.id === itemId
-                  ? { ...it, status: it.status === "ready" ? "pending" : "ready" }
-                  : it,
-              ),
-            }
-          : t,
-      ),
-    )
+  useEffect(() => {
+    const abort = new AbortController()
+
+    async function load() {
+      try {
+        const [incoming, active, completedList] = await Promise.all([
+          fetchTickets("incoming", abort.signal),
+          fetchTickets("active", abort.signal),
+          fetchCompletedTickets(abort.signal),
+        ])
+
+        const allActive = [...incoming, ...active]
+
+        const itemsByOrder = await Promise.all(
+          allActive.map((t) => fetchOrderItems(t.order, abort.signal)),
+        )
+
+        setTickets(allActive.map((t, i) => mapTicket(t, itemsByOrder[i])))
+        setCompleted(completedList.map(mapTicketShort))
+        setError(null)
+      } catch (err) {
+        if (err instanceof DOMException && err.name === "AbortError") return
+        setError("Could not load tickets.")
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    load()
+    return () => abort.abort()
+  }, [tick])
+
+  const toggleItem = useCallback(
+    async (ticketId: string, itemId: string) => {
+      const ticket = tickets.find((t) => t.id === ticketId)
+      const item = ticket?.items.find((it) => it.id === itemId)
+      if (!item) return
+
+      const newStatus = item.status === "ready" ? "pending" : "ready"
+      try {
+        const updated = await updateOrderItemStatus(itemId, newStatus)
+        setTickets((prev) =>
+          prev.map((t) =>
+            t.id === ticketId
+              ? { ...t, items: t.items.map((it) => (it.id === itemId ? mapItem(updated) : it)) }
+              : t,
+          ),
+        )
+      } catch {
+        setError("Could not update item.")
+      }
+    },
+    [tickets],
+  )
+
+  const bumpOrder = useCallback(
+    async (ticketId: string) => {
+      const ticket = tickets.find((t) => t.id === ticketId)
+      if (!ticket) return
+      if (!ticket.items.every((it) => it.status === "ready")) return
+
+      try {
+        await updateTicketStatus(ticketId, "completed")
+        setCompleted((c) => [
+          { ...ticket, status: "completed", completedMinutes: elapsedMinutes(ticket.startedAt) },
+          ...c,
+        ])
+        setTickets((prev) => prev.filter((t) => t.id !== ticketId))
+      } catch {
+        setError("Could not bump order.")
+      }
+    },
+    [tickets],
+  )
+
+  const promoteToActive = useCallback(async (ticketId: string) => {
+    try {
+      await updateTicketStatus(ticketId, "active")
+      setTickets((prev) => prev.map((t) => (t.id === ticketId ? { ...t, status: "active" } : t)))
+    } catch {
+      setError("Could not accept order.")
+    }
   }, [])
 
-  const bumpOrder = useCallback((ticketId: string) => {
-    setTickets((prev) => {
-      const ticket = prev.find((t) => t.id === ticketId)
-      if (!ticket) return prev
-      const allReady = ticket.items.every((it) => it.status === "ready")
-      if (!allReady) return prev
-      setCompleted((c) => [
-        { ...ticket, status: "completed", completedMinutes: elapsedMinutes(ticket.startedAt) },
-        ...c,
-      ])
-      return prev.filter((t) => t.id !== ticketId)
-    })
-  }, [])
-
-  const promoteToActive = useCallback((ticketId: string) => {
-    setTickets((prev) => prev.map((t) => (t.id === ticketId ? { ...t, status: "active" } : t)))
-  }, [])
-
-  // force re-render every 30s so elapsedMinutes() recalculates
   void tick
 
   const incoming = useMemo(() => tickets.filter((t) => t.status === "incoming"), [tickets])
@@ -216,6 +226,32 @@ export function KitchenKanban() {
       }))
       .sort((a, b) => b.count - a.count)
   }, [tickets])
+
+  if (error) {
+    return (
+      <div className="kanban">
+        <header className="kanban__header">
+          <div className="kanban__header-left">
+            <span className="kanban__brand">KITCHEN KANBAN SYSTEM</span>
+          </div>
+        </header>
+        <div className="kanban__error">{error}</div>
+      </div>
+    )
+  }
+
+  if (loading) {
+    return (
+      <div className="kanban">
+        <header className="kanban__header">
+          <div className="kanban__header-left">
+            <span className="kanban__brand">KITCHEN KANBAN SYSTEM</span>
+          </div>
+        </header>
+        <div className="kanban__loading">Loading tickets...</div>
+      </div>
+    )
+  }
 
   return (
     <div className="kanban">
@@ -241,6 +277,9 @@ export function KitchenKanban() {
             <span className="kanban__col-badge">{incoming.length}</span>
           </div>
           <div className="kanban__col-body">
+            {incoming.length === 0 && (
+              <div className="kanban-card kanban-card--empty">No incoming orders</div>
+            )}
             {incoming.map((ticket) => (
               <button
                 key={ticket.id}
@@ -250,7 +289,7 @@ export function KitchenKanban() {
                 title="Click to accept order"
               >
                 <div className="kanban-card__header">
-                  <span className="kanban-card__id">{ticket.id}</span>
+                  <span className="kanban-card__id">{ticket.id.slice(0, 8)}</span>
                   <span className="kanban-card__timer">{elapsedMinutes(ticket.startedAt)}m</span>
                 </div>
                 <div className="kanban-card__items">
@@ -271,13 +310,16 @@ export function KitchenKanban() {
             <span className="kanban__col-subtitle">PRIORITY QUEUE</span>
           </div>
           <div className="kanban__col-body">
+            {active.length === 0 && (
+              <div className="kanban-card kanban-card--empty">No active orders</div>
+            )}
             {active.map((ticket) => {
               const allReady = ticket.items.every((it) => it.status === "ready")
               return (
                 <div key={ticket.id} className="kanban-card kanban-card--active">
                   <div className="kanban-card__top">
                     <div className="kanban-card__header">
-                      <span className="kanban-card__id">{ticket.id}</span>
+                      <span className="kanban-card__id">{ticket.id.slice(0, 8)}</span>
                       <span className="kanban-card__divider" />
                       <span className="kanban-card__timer">
                         {elapsedMinutes(ticket.startedAt)}m
@@ -386,7 +428,7 @@ export function KitchenKanban() {
           <div className="kanban__col-body">
             {completed.map((ticket) => (
               <div key={ticket.id} className="kanban-card kanban-card--completed">
-                <span className="kanban-card__id">{ticket.id}</span>
+                <span className="kanban-card__id">{ticket.id.slice(0, 8)}</span>
                 <svg
                   className="kanban-card__check"
                   width="16"

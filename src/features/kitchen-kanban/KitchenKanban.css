@@ -362,6 +362,34 @@
   font-size: 0.82rem;
 }
 
+/* ─── Empty card ─── */
+
+.kanban-card--empty {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  text-align: center;
+  padding: 24px 16px;
+}
+
+/* ─── Loading / Error ─── */
+
+.kanban__loading,
+.kanban__error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  padding: 48px 24px;
+}
+
+.kanban__error {
+  color: red;
+}
+
 /* ─── Footer ─── */
 
 .kanban__footer {
