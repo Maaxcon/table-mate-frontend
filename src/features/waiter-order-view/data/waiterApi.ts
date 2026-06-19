@@ -29,7 +29,6 @@ interface SessionApiItem {
 
 interface OrderApiItem {
   public_id: string
-  currency: string
 }
 
 interface OrderItemApiItem {
@@ -144,7 +143,7 @@ export async function fetchOverlayDetail(
     guest_name: resForTable?.name ?? "Guest",
     guest_count: session.guest_count,
     duration: formatDuration(session.opened_at),
-    currency: orders[0]?.currency ?? session.currency,
+    currency: session.currency,
     items: orderItems,
     subtotal: to2dp(session.subtotal),
     tax_total: to2dp(session.tax),
