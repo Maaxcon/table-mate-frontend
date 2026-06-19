@@ -246,6 +246,7 @@ export function WaiterOrderView() {
 
       {selectedTable && (
         <TableDetailOverlay
+          key={selectedTableId}
           table={selectedTable}
           detail={overlayDetail}
           tableReservations={selectedTableReservations}
