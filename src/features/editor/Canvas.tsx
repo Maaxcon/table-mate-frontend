@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from "react"
-import { snap, GRID, CANVAS_W, CANVAS_H } from "./types"
+import { useCallback, useEffect, useRef } from "react"
+import { snap, GRID } from "./types"
 import type { EditorEntity } from "./types"
 import { TableBlock } from "./entities/TableBlock"
 import { ObstacleBlock } from "./entities/ObstacleBlock"
@@ -30,7 +30,6 @@ export function Canvas({
 }: CanvasProps) {
   const canvasRef = useRef<HTMLDivElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
-  const [scale, setScale] = useState(1)
   const dragRef = useRef<{
     entityId: string
     startMouseX: number
@@ -40,19 +39,7 @@ export function Canvas({
     moved: boolean
   } | null>(null)
 
-  useEffect(() => {
-    const container = containerRef.current
-    if (!container) return
-    const observer = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        const { width, height } = entry.contentRect
-        const s = Math.min(width / CANVAS_W, height / CANVAS_H, 1)
-        setScale(s)
-      }
-    })
-    observer.observe(container)
-    return () => observer.disconnect()
-  }, [])
+  const scale = 1
 
   const onBlockMouseDown = useCallback(
     (e: React.MouseEvent, id: string) => {
@@ -134,6 +121,7 @@ export function Canvas({
       onMouseDown: onBlockMouseDown,
       onClick: onEntitySelect,
       onResize: onEntityResize,
+      onMove: onEntityMove,
       canvasScale: scale,
     }
 
@@ -167,7 +155,7 @@ export function Canvas({
       <div
         ref={canvasRef}
         className="editor-canvas"
-        style={{ transform: `scale(${scale})`, transformOrigin: "top left" }}
+        style={{ transform: `scale(${scale})` }}
         onMouseDown={handleCanvasMouseDown}
         role="presentation"
       >

@@ -39,7 +39,7 @@ export const SIZE_CONSTRAINTS: Record<
   "table-square": { minW: 2, minH: 2, maxW: 8, maxH: 8 },
   "table-round": { minW: 2, minH: 2, maxW: 6, maxH: 6, lockAspect: true },
   obstacle: { minW: 2, minH: 1, maxW: 8, maxH: 2 },
-  threshold: { minW: 1, minH: 1, maxW: 8, maxH: 1 },
+  threshold: { minW: 1, minH: 1, maxW: 8, maxH: 4 },
   portal: { minW: 1, minH: 1, maxW: 4, maxH: 4 },
 }
 
@@ -187,7 +187,7 @@ export function deserializeLayout(layout: LayoutPayload): EditorEntity[] {
       w: Math.round(p.width / GRID),
       h: Math.round(p.height / GRID),
       targetZoneId: p.target_zone_id ?? undefined,
-      label: p.label || undefined,
+      label: p.portal_label || p.label || undefined,
       zoneId: p.zone_id ?? undefined,
     })
   }

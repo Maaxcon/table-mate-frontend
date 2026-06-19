@@ -3,6 +3,9 @@
   min-width: 0;
   background: var(--color-bg-page);
   position: relative;
+  overflow: auto;
+  padding: 100px;
+  box-sizing: border-box;
 }
 
 .editor-canvas {

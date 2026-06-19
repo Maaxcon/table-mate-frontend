@@ -9,6 +9,7 @@ interface ObstacleBlockProps {
   onMouseDown: (e: React.MouseEvent, id: string) => void
   onClick: (id: string) => void
   onResize?: (id: string, w: number, h: number) => void
+  onMove?: (id: string, x: number, y: number) => void
   canvasScale?: number
 }
 
@@ -18,6 +19,7 @@ export function ObstacleBlock({
   onMouseDown,
   onClick,
   onResize,
+  onMove,
   canvasScale = 1,
 }: ObstacleBlockProps) {
   const px = (v: number) => v * GRID
@@ -45,8 +47,18 @@ export function ObstacleBlock({
         if (e.key === "Enter") onClick(entity.id)
       }}
     >
-      {selected && onResize && (
-        <ResizeHandles entityId={entity.id} onResize={onResize} scale={canvasScale} />
+      {selected && onResize && onMove && (
+        <ResizeHandles
+          entityId={entity.id}
+          entityType={entity.type}
+          entityX={entity.x}
+          entityY={entity.y}
+          entityW={entity.w}
+          entityH={entity.h}
+          onResize={onResize}
+          onMove={onMove}
+          scale={canvasScale}
+        />
       )}
     </div>
   )

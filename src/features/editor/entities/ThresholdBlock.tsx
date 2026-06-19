@@ -9,6 +9,7 @@ interface ThresholdBlockProps {
   onMouseDown: (e: React.MouseEvent, id: string) => void
   onClick: (id: string) => void
   onResize?: (id: string, w: number, h: number) => void
+  onMove?: (id: string, x: number, y: number) => void
   canvasScale?: number
 }
 
@@ -18,13 +19,14 @@ export function ThresholdBlock({
   onMouseDown,
   onClick,
   onResize,
+  onMove,
   canvasScale = 1,
 }: ThresholdBlockProps) {
   const px = (v: number) => v * GRID
-  const overhangL = entity.x === 0 ? OVERHANG : 0
-  const overhangT = entity.y === 0 ? OVERHANG : 0
-  const overhangR = entity.x + entity.w >= CANVAS_W / GRID ? OVERHANG : 0
-  const overhangB = entity.y + entity.h >= CANVAS_H / GRID ? OVERHANG : 0
+  const overhangL = entity.x < 0 ? OVERHANG : 0
+  const overhangT = entity.y < 0 ? OVERHANG : 0
+  const overhangR = entity.x + entity.w > CANVAS_W / GRID ? OVERHANG : 0
+  const overhangB = entity.y + entity.h > CANVAS_H / GRID ? OVERHANG : 0
 
   return (
     <div
@@ -50,8 +52,18 @@ export function ThresholdBlock({
       }}
     >
       <span className="editor-block__zone-label">{entity.label ?? ""}</span>
-      {selected && onResize && (
-        <ResizeHandles entityId={entity.id} onResize={onResize} scale={canvasScale} />
+      {selected && onResize && onMove && (
+        <ResizeHandles
+          entityId={entity.id}
+          entityType={entity.type}
+          entityX={entity.x}
+          entityY={entity.y}
+          entityW={entity.w}
+          entityH={entity.h}
+          onResize={onResize}
+          onMove={onMove}
+          scale={canvasScale}
+        />
       )}
     </div>
   )

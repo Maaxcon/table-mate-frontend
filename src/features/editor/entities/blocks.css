@@ -42,7 +42,7 @@
 
 .editor-block__label {
   font-weight: 900;
-  font-size: 0.7rem;
+  font-size: 0.9rem;
   text-transform: uppercase;
   letter-spacing: 0.12em;
   line-height: 1;
@@ -50,7 +50,7 @@
 }
 
 .editor-block__capacity {
-  font-size: 0.55rem;
+  font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.05em;
   color: var(--color-text-primary);
@@ -68,7 +68,7 @@
 
 .editor-block__zone-label {
   font-weight: 900;
-  font-size: 0.85rem;
+  font-size: 1rem;
   text-transform: uppercase;
   letter-spacing: 0.18em;
   color: var(--color-text-primary);
@@ -85,7 +85,8 @@
   align-items: center;
   justify-content: center;
   border: 2px dashed var(--color-border-strong);
-  background: transparent;
+  background: var(--color-bg-surface);
+  opacity: 0.85;
 }
 
 .editor-block--portal {
@@ -102,6 +103,7 @@
 .editor-block__portal-arrow {
   font-size: 1.2rem;
   line-height: 1;
+  display: none;
 }
 
 .editor-block__resize {

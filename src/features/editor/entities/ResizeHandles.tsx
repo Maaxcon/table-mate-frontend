@@ -1,37 +1,61 @@
 import { useCallback, useEffect, useRef } from "react"
-import { GRID, snap } from "../types"
+import { GRID, CANVAS_W, CANVAS_H, snap, SIZE_CONSTRAINTS } from "../types"
+import type { EntityType } from "../types"
 import "./blocks.css"
 
 interface ResizeHandlesProps {
   entityId: string
+  entityType: EntityType
+  entityX: number
+  entityY: number
+  entityW: number
+  entityH: number
   onResize: (id: string, w: number, h: number) => void
+  onMove: (id: string, x: number, y: number) => void
   scale: number
 }
 
 type Corner = "nw" | "ne" | "sw" | "se"
 
-export function ResizeHandles({ entityId, onResize, scale }: ResizeHandlesProps) {
+export function ResizeHandles({
+  entityId,
+  entityType,
+  entityX,
+  entityY,
+  entityW,
+  entityH,
+  onResize,
+  onMove,
+  scale,
+}: ResizeHandlesProps) {
   const dragRef = useRef<{
     corner: Corner
     startX: number
     startY: number
     startW: number
     startH: number
+    startEntityX: number
+    startEntityY: number
   } | null>(null)
 
-  const handleMouseDown = useCallback((e: React.MouseEvent, corner: Corner) => {
-    e.preventDefault()
-    e.stopPropagation()
-    const el = (e.currentTarget as HTMLElement).parentElement
-    if (!el) return
-    dragRef.current = {
-      corner,
-      startX: e.clientX,
-      startY: e.clientY,
-      startW: Math.round(el.offsetWidth / GRID),
-      startH: Math.round(el.offsetHeight / GRID),
-    }
-  }, [])
+  const handleMouseDown = useCallback(
+    (e: React.MouseEvent, corner: Corner) => {
+      e.preventDefault()
+      e.stopPropagation()
+      const el = (e.currentTarget as HTMLElement).parentElement
+      if (!el) return
+      dragRef.current = {
+        corner,
+        startX: e.clientX,
+        startY: e.clientY,
+        startW: Math.round(el.offsetWidth / GRID),
+        startH: Math.round(el.offsetHeight / GRID),
+        startEntityX: entityX,
+        startEntityY: entityY,
+      }
+    },
+    [entityX, entityY],
+  )
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -45,7 +69,22 @@ export function ResizeHandles({ entityId, onResize, scale }: ResizeHandlesProps)
       if (drag.corner.includes("w")) newW = Math.max(1, snap(drag.startW * GRID - dx) / GRID)
       if (drag.corner.includes("s")) newH = Math.max(1, snap(drag.startH * GRID + dy) / GRID)
       if (drag.corner.includes("n")) newH = Math.max(1, snap(drag.startH * GRID - dy) / GRID)
+      const c = SIZE_CONSTRAINTS[entityType]
+      if (c) {
+        newW = Math.max(c.minW, Math.min(c.maxW, newW))
+        newH = Math.max(c.minH, Math.min(c.maxH, newH))
+        if (c.lockAspect) {
+          const side = Math.max(newW, newH)
+          newW = side
+          newH = side
+        }
+      }
+      let newX = drag.startEntityX
+      let newY = drag.startEntityY
+      if (drag.corner.includes("w")) newX = drag.startEntityX + drag.startW - newW
+      if (drag.corner.includes("n")) newY = drag.startEntityY + drag.startH - newH
       onResize(entityId, newW, newH)
+      onMove(entityId, newX, newY)
     }
 
     const handleMouseUp = () => {
@@ -58,9 +97,21 @@ export function ResizeHandles({ entityId, onResize, scale }: ResizeHandlesProps)
       window.removeEventListener("mousemove", handleMouseMove)
       window.removeEventListener("mouseup", handleMouseUp)
     }
-  }, [entityId, onResize, scale])
+  }, [entityId, entityType, onResize, onMove, scale])
 
-  const corners: Corner[] = ["nw", "ne", "sw", "se"]
+  const atTop = entityY <= 0
+  const atBottom = entityY + entityH >= CANVAS_H / GRID
+  const atLeft = entityX <= 0
+  const atRight = entityX + entityW >= CANVAS_W / GRID
+
+  const allCorners: Corner[] = ["nw", "ne", "sw", "se"]
+  const corners = allCorners.filter((c) => {
+    if (c === "nw" && (atTop || atLeft)) return false
+    if (c === "ne" && (atTop || atRight)) return false
+    if (c === "sw" && (atBottom || atLeft)) return false
+    if (c === "se" && (atBottom || atRight)) return false
+    return true
+  })
 
   return (
     <>

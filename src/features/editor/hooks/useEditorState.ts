@@ -87,7 +87,10 @@ function editorReducer(state: EditorState, action: Action): EditorState {
         (e) => e.id !== action.id && (!moveZoneId || e.zoneId === moveZoneId),
       )
       let { x, y } = action
-      if (entity.type !== "threshold" && entity.type !== "portal") {
+      if (entity.type === "threshold" || entity.type === "portal") {
+        x = Math.max(-1, Math.min(x, CANVAS_W / GRID + 1 - entity.w))
+        y = Math.max(-1, Math.min(y, CANVAS_H / GRID + 1 - entity.h))
+      } else {
         x = Math.max(0, Math.min(x, CANVAS_W / GRID - entity.w))
         y = Math.max(0, Math.min(y, CANVAS_H / GRID - entity.h))
       }
@@ -179,6 +182,8 @@ export function useEditorState() {
       dispatch({ type: "ADD_ENTITY", entity })
       return entity
     },
+    // TABLE_PRESETS and DEFAULT_SIZES are module-level constants
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [],
   )
 
