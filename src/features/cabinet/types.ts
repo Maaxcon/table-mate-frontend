@@ -22,7 +22,6 @@ export type Reservation = {
     public_id: string
     public_number: string
     capacity: number
-    shape: string
   }
   restaurant: string
   restaurant_info?: {
