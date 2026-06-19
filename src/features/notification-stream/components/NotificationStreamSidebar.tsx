@@ -8,7 +8,7 @@ function formatTime(date: Date): string {
 }
 
 export function NotificationStreamSidebar() {
-  const { events, isConnected } = useNotificationStream({ mock: true })
+  const { events, isConnected } = useNotificationStream()
   const navigate = useNavigate()
 
   const clientEvents = events.filter((e) => e.stream === "client")
