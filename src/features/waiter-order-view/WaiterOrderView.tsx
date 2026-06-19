@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useMemo } from "react"
+import { useEffect, useState, useCallback, useMemo, useRef } from "react"
 import { TopNav } from "./components/TopNav"
 import { FloorPlan } from "./components/FloorPlan"
 import { ReservationSidebar } from "./components/ReservationSidebar"
@@ -17,6 +17,7 @@ import { useHallSubscription } from "./hooks/useHallSubscription"
 import type {
   HallTableStatusChangedEvent,
   HallNewReservationEvent,
+  HallReservationCancelledEvent,
 } from "./hooks/useHallSubscription"
 import type { Table } from "@/types/api/types.gen"
 import { BookModal } from "@/features/reservation/BookModal"
@@ -164,15 +165,21 @@ export function WaiterOrderView() {
     [],
   )
 
+  const latestTableEventRef = useRef<Record<string, string>>({})
+
   const handleTableStatusChanged = useCallback(
     async (event: HallTableStatusChangedEvent) => {
-      const isOccupied = event.current_status === "occupied"
+      const { table_id, event_id, current_status } = event
+      const isOccupied = current_status === "occupied"
+
+      latestTableEventRef.current[table_id] = event_id
 
       if (isOccupied) {
-        const sessionInfo = await fetchSessionForTable(event.table_id)
+        const sessionInfo = await fetchSessionForTable(table_id)
+        if (latestTableEventRef.current[table_id] !== event_id) return
         setTables((prev) =>
           prev.map((t) => {
-            if (t.public_id !== event.table_id) return t
+            if (t.public_id !== table_id) return t
             return {
               ...t,
               is_occupied: true,
@@ -183,7 +190,7 @@ export function WaiterOrderView() {
       } else {
         setTables((prev) =>
           prev.map((t) => {
-            if (t.public_id !== event.table_id) return t
+            if (t.public_id !== table_id) return t
             return {
               ...t,
               is_occupied: false,
@@ -208,9 +215,14 @@ export function WaiterOrderView() {
     ])
   }, [])
 
+  const handleReservationCancelled = useCallback((event: HallReservationCancelledEvent) => {
+    setLayoutReservations((prev) => prev.filter((r) => r.public_id !== event.reservation_id))
+  }, [])
+
   useHallSubscription({
     onTableStatusChanged: handleTableStatusChanged,
     onNewReservation: handleNewReservation,
+    onReservationCancelled: handleReservationCancelled,
     onLayoutPublished: handleLayoutPublished,
   })
 
@@ -458,6 +470,7 @@ export function WaiterOrderView() {
                 status: string
                 is_wasted: boolean
                 void_reason?: string | null
+                void_reason_note?: string | null
                 unit_price: string
                 menu_item_name?: string
               }>
@@ -472,6 +485,7 @@ export function WaiterOrderView() {
                 status: oi.status as OverlayOrderItem["status"],
                 is_wasted: oi.is_wasted,
                 void_reason: oi.void_reason ?? null,
+                void_reason_note: oi.void_reason_note ?? null,
                 source: source as "customer" | "waiter",
                 order_id: ord.public_id,
               })

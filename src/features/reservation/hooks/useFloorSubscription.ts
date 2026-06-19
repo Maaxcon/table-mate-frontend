@@ -11,6 +11,14 @@ export interface FloorTableStatusEvent {
 
 export interface FloorNewReservationEvent {
   event_name: "HALL_NEW_RESERVATION"
+  reservation_id: string
+  table_id: string
+  start_at: string
+  occurred_at: string
+}
+
+export interface FloorReservationCancelledEvent {
+  event_name: "HALL_RESERVATION_CANCELLED"
   table_id: string
   occurred_at: string
 }
@@ -25,11 +33,13 @@ export interface FloorLayoutPublishedEvent {
 export type FloorEvent =
   | FloorTableStatusEvent
   | FloorNewReservationEvent
+  | FloorReservationCancelledEvent
   | FloorLayoutPublishedEvent
 
 interface UseFloorSubscriptionOptions {
   onTableStatusChanged?: (event: FloorTableStatusEvent) => void
   onNewReservation?: (event: FloorNewReservationEvent) => void
+  onReservationCancelled?: (event: FloorReservationCancelledEvent) => void
   onLayoutPublished?: (event: FloorLayoutPublishedEvent) => void
   onClose?: () => void
   onError?: (error: Event) => void
@@ -38,6 +48,7 @@ interface UseFloorSubscriptionOptions {
 export function useFloorSubscription({
   onTableStatusChanged,
   onNewReservation,
+  onReservationCancelled,
   onLayoutPublished,
   onClose,
   onError,
@@ -49,6 +60,7 @@ export function useFloorSubscription({
   const callbacksRef = useRef({
     onTableStatusChanged,
     onNewReservation,
+    onReservationCancelled,
     onLayoutPublished,
     onClose,
     onError,
@@ -58,14 +70,22 @@ export function useFloorSubscription({
     callbacksRef.current = {
       onTableStatusChanged,
       onNewReservation,
+      onReservationCancelled,
       onLayoutPublished,
       onClose,
       onError,
     }
-  }, [onTableStatusChanged, onNewReservation, onLayoutPublished, onClose, onError])
+  }, [
+    onTableStatusChanged,
+    onNewReservation,
+    onReservationCancelled,
+    onLayoutPublished,
+    onClose,
+    onError,
+  ])
 
   const connect = useCallback(() => {
-    if (!accessToken || !env.wsUrl) return
+    if (!accessToken || env.wsUrl === "Not configured") return
 
     if (wsRef.current) {
       wsRef.current.close(1000, "Reconnecting")
@@ -86,6 +106,8 @@ export function useFloorSubscription({
           callbacksRef.current.onTableStatusChanged?.(data as FloorTableStatusEvent)
         } else if (data.event_name === "HALL_NEW_RESERVATION") {
           callbacksRef.current.onNewReservation?.(data as FloorNewReservationEvent)
+        } else if (data.event_name === "HALL_RESERVATION_CANCELLED") {
+          callbacksRef.current.onReservationCancelled?.(data as FloorReservationCancelledEvent)
         } else if (data.event_name === "LAYOUT_PUBLISHED") {
           callbacksRef.current.onLayoutPublished?.(data as FloorLayoutPublishedEvent)
         }

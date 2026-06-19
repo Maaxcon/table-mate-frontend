@@ -28,6 +28,17 @@ export interface HallNewReservationEvent {
   occurred_at: string
 }
 
+export interface HallReservationCancelledEvent {
+  event_name: "HALL_RESERVATION_CANCELLED"
+  schema_version: string
+  event_id: string
+  reservation_id: string
+  table_id: string
+  actor_id: number
+  actor_role: string
+  occurred_at: string
+}
+
 export interface HallLayoutPublishedEvent {
   event_name: "LAYOUT_PUBLISHED"
   schema_version: string
@@ -40,11 +51,13 @@ export interface HallLayoutPublishedEvent {
 export type HallEvent =
   | HallTableStatusChangedEvent
   | HallNewReservationEvent
+  | HallReservationCancelledEvent
   | HallLayoutPublishedEvent
 
 interface UseHallSubscriptionOptions {
   onTableStatusChanged?: (event: HallTableStatusChangedEvent) => void
   onNewReservation?: (event: HallNewReservationEvent) => void
+  onReservationCancelled?: (event: HallReservationCancelledEvent) => void
   onLayoutPublished?: (event: HallLayoutPublishedEvent) => void
   onError?: (error: Event) => void
   onClose?: () => void
@@ -53,6 +66,7 @@ interface UseHallSubscriptionOptions {
 export function useHallSubscription({
   onTableStatusChanged,
   onNewReservation,
+  onReservationCancelled,
   onLayoutPublished,
   onError,
   onClose,
@@ -65,6 +79,7 @@ export function useHallSubscription({
   const callbacksRef = useRef({
     onTableStatusChanged,
     onNewReservation,
+    onReservationCancelled,
     onLayoutPublished,
     onError,
     onClose,
@@ -74,11 +89,19 @@ export function useHallSubscription({
     callbacksRef.current = {
       onTableStatusChanged,
       onNewReservation,
+      onReservationCancelled,
       onLayoutPublished,
       onError,
       onClose,
     }
-  }, [onTableStatusChanged, onNewReservation, onLayoutPublished, onError, onClose])
+  }, [
+    onTableStatusChanged,
+    onNewReservation,
+    onReservationCancelled,
+    onLayoutPublished,
+    onError,
+    onClose,
+  ])
 
   const connect = useCallback(() => {
     if (!accessToken || env.wsUrl === "Not configured") return
@@ -97,6 +120,8 @@ export function useHallSubscription({
           callbacksRef.current.onTableStatusChanged?.(data)
         } else if (data.event_name === "HALL_NEW_RESERVATION") {
           callbacksRef.current.onNewReservation?.(data)
+        } else if (data.event_name === "HALL_RESERVATION_CANCELLED") {
+          callbacksRef.current.onReservationCancelled?.(data)
         } else if (data.event_name === "LAYOUT_PUBLISHED") {
           callbacksRef.current.onLayoutPublished?.(data)
         }

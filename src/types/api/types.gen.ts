@@ -322,6 +322,7 @@ export type OrderItem = {
   voided_at?: string | null
   readonly voided_by: string
   readonly void_reason: string | null
+  void_reason_note?: string | null
   is_wasted?: boolean
   readonly created_at: string
   readonly updated_at: string
@@ -618,6 +619,7 @@ export type PatchedOrderItem = {
   voided_at?: string | null
   readonly voided_by?: string
   readonly void_reason?: string | null
+  void_reason_note?: string | null
   is_wasted?: boolean
   readonly created_at?: string
   readonly updated_at?: string
@@ -1162,6 +1164,7 @@ export type OrderItemWritable = {
   tax_rate?: string
   tax_amount?: string
   voided_at?: string | null
+  void_reason_note?: string | null
   is_wasted?: boolean
 }
 
@@ -1397,6 +1400,7 @@ export type PatchedOrderItemWritable = {
   tax_rate?: string
   tax_amount?: string
   voided_at?: string | null
+  void_reason_note?: string | null
   is_wasted?: boolean
 }
 

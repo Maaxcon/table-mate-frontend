@@ -1,12 +1,12 @@
 import { useState, useEffect, useMemo } from "react"
 import { getTimeFromDatetime, getDateTimeFromDatetime } from "../data/waiterTypes"
+import type { VoidReason } from "@/types/api"
 import type {
   FloorTable,
   ReservationItem,
   OverlayDetail,
   VisualTableStatus,
   UpcomingReservation,
-  VoidReason,
 } from "../data/waiterTypes"
 import { closeCheck, moveTable, cancelReservation } from "@/features/reservation/api"
 import { fetchVoidReasons, voidOrderItem } from "../api/orderApi"

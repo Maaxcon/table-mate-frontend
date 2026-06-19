@@ -42,11 +42,6 @@ export type ReservationItem = Pick<
   status: "pending" | "active"
 }
 
-export interface VoidReason {
-  code: string
-  label: string
-}
-
 export interface OverlayOrderItem {
   public_id: string
   guest_slot: number
@@ -58,6 +53,7 @@ export interface OverlayOrderItem {
   source: "customer" | "waiter"
   order_id: string
   void_reason?: string | null
+  void_reason_note?: string | null
 }
 
 export interface OverlayDetail {
