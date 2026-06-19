@@ -5,6 +5,7 @@ import { CART_API, MENU_API } from "./constants"
 import type {
   AddCartItemRequest,
   CartItemResponse,
+  CheckoutResponse,
   FetchItemsParams,
   GuestInitResponse,
   GuestInitTarget,
@@ -266,10 +267,8 @@ export function checkout(sessionId: string, jwt: string): Promise<CheckoutResult
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${jwt}` },
   }).then(async (res) => {
     if (res.status === 201) {
-      const body = (await res.json().catch(() => null)) as {
-        order_id?: string
-        total?: string
-      } | null
+      // Shape tied to the generated schema type so it can't drift from the API.
+      const body = (await res.json().catch(() => null)) as Partial<CheckoutResponse> | null
       if (!body?.order_id) {
         throw new Error("Checkout succeeded but the response was malformed.")
       }

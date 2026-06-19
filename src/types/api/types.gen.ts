@@ -104,7 +104,7 @@ export type CartItem = {
   comment?: string | null
   readonly added_by: string
   readonly guest_slot: number | null
-  readonly device_id: string | null
+  readonly is_mine: boolean
   readonly is_paid: boolean
   readonly cart_session: string
   readonly restaurant: string
@@ -128,6 +128,12 @@ export type CartSession = {
  * * `closed` - Closed
  */
 export type CartSessionStatusEnum = "active" | "closed"
+
+export type CheckoutResponse = {
+  order_id: string
+  total: string
+  currency: string
+}
 
 /**
  * * `staff` - Staff
@@ -199,8 +205,9 @@ export type GoogleContextResponse = {
 }
 
 export type GuestInit = {
-  device_id: string
-  reservation_id: string
+  device_id?: string
+  reservation_id?: string
+  table_id?: string
 }
 
 export type Layout = {
@@ -671,11 +678,12 @@ export type PatchedSession = {
   readonly opened_by?: string
   guest_count?: number
   status?: SessionStatusEnum
-  currency?: string
+  readonly currency?: string
   subtotal?: string
   tax?: string
+  service_charge?: string
   total?: string
-  opened_at?: string
+  readonly opened_at?: string
   readonly created_at?: string
   readonly updated_at?: string
 }
@@ -869,11 +877,12 @@ export type Session = {
   readonly opened_by: string
   guest_count: number
   status?: SessionStatusEnum
-  currency: string
+  readonly currency: string
   subtotal?: string
   tax?: string
+  service_charge?: string
   total?: string
-  opened_at: string
+  readonly opened_at: string
   readonly created_at: string
   readonly updated_at: string
 }
@@ -1424,11 +1433,10 @@ export type PatchedSessionWritable = {
   table?: string
   guest_count?: number
   status?: SessionStatusEnum
-  currency?: string
   subtotal?: string
   tax?: string
+  service_charge?: string
   total?: string
-  opened_at?: string
 }
 
 export type PatchedTicketWritable = {
@@ -1510,11 +1518,10 @@ export type SessionWritable = {
   table: string
   guest_count: number
   status?: SessionStatusEnum
-  currency: string
   subtotal?: string
   tax?: string
+  service_charge?: string
   total?: string
-  opened_at: string
 }
 
 export type TableWritable = {
@@ -1617,7 +1624,7 @@ export type AuthGoogleContextCreateResponse =
   AuthGoogleContextCreateResponses[keyof AuthGoogleContextCreateResponses]
 
 export type AuthGuestInitCreateData = {
-  body: GuestInit
+  body?: GuestInit
   path?: never
   query?: never
   url: "/api/auth/guest-init/"
@@ -2444,6 +2451,33 @@ export type OrdersCartSessionsRetrieveResponses = {
 export type OrdersCartSessionsRetrieveResponse =
   OrdersCartSessionsRetrieveResponses[keyof OrdersCartSessionsRetrieveResponses]
 
+export type OrdersCartSessionsCheckoutCreateData = {
+  body?: never
+  path: {
+    session_pk: string
+  }
+  query?: never
+  url: "/api/orders/cart/sessions/{session_pk}/checkout/"
+}
+
+export type OrdersCartSessionsCheckoutCreateErrors = {
+  /**
+   * Cart is empty.
+   */
+  400: unknown
+  /**
+   * Cart changed: unavailable items were removed (code CART_CHANGED).
+   */
+  409: unknown
+}
+
+export type OrdersCartSessionsCheckoutCreateResponses = {
+  201: CheckoutResponse
+}
+
+export type OrdersCartSessionsCheckoutCreateResponse =
+  OrdersCartSessionsCheckoutCreateResponses[keyof OrdersCartSessionsCheckoutCreateResponses]
+
 export type OrdersCartSessionsItemsListData = {
   body?: never
   path: {
@@ -2785,6 +2819,22 @@ export type OrdersSessionsPartialUpdateResponses = {
 export type OrdersSessionsPartialUpdateResponse =
   OrdersSessionsPartialUpdateResponses[keyof OrdersSessionsPartialUpdateResponses]
 
+export type OrdersSessionsCloseCreateData = {
+  body?: never
+  path: {
+    public_id: string
+  }
+  query?: never
+  url: "/api/orders/sessions/{public_id}/close/"
+}
+
+export type OrdersSessionsCloseCreateResponses = {
+  200: Session
+}
+
+export type OrdersSessionsCloseCreateResponse =
+  OrdersSessionsCloseCreateResponses[keyof OrdersSessionsCloseCreateResponses]
+
 export type OrdersTicketsListData = {
   body?: never
   path?: never
@@ -3008,6 +3058,22 @@ export type ReservationsReservationsPartialUpdateResponses = {
 
 export type ReservationsReservationsPartialUpdateResponse =
   ReservationsReservationsPartialUpdateResponses[keyof ReservationsReservationsPartialUpdateResponses]
+
+export type ReservationsReservationsActivateCreateData = {
+  body?: never
+  path: {
+    public_id: string
+  }
+  query?: never
+  url: "/api/reservations/reservations/{public_id}/activate/"
+}
+
+export type ReservationsReservationsActivateCreateResponses = {
+  200: Reservation
+}
+
+export type ReservationsReservationsActivateCreateResponse =
+  ReservationsReservationsActivateCreateResponses[keyof ReservationsReservationsActivateCreateResponses]
 
 export type ReservationsReservationsAvailableSlotsRetrieveData = {
   body?: never
