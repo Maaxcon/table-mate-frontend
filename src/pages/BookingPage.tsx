@@ -164,7 +164,7 @@ export function BookingPage() {
   }, [])
 
   const handleReservationCancelled = useCallback((event: FloorReservationCancelledEvent) => {
-    setUpcomingReservations((prev) => prev.filter((r) => r.table_id !== event.table_id))
+    setUpcomingReservations((prev) => prev.filter((r) => r.public_id !== event.reservation_id))
   }, [])
 
   useFloorSubscription({
