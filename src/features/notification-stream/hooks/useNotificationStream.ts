@@ -152,8 +152,8 @@ export function useNotificationStream({ mock = false }: { mock?: boolean } = {})
 
     cleanup()
 
-    const url = `${env.wsUrl}/staff/notifications/?token=${encodeURIComponent(accessToken)}`
-    const ws = new WebSocket(url)
+    const url = `${env.wsUrl}/staff/notifications/`
+    const ws = new WebSocket(url, ["access_token", accessToken])
     wsRef.current = ws
 
     ws.onopen = () => {
