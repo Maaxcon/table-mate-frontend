@@ -14,7 +14,7 @@ class RefreshAuthError extends Error {
   }
 }
 
-async function refreshAccessToken(): Promise<string> {
+export async function refreshAccessToken(): Promise<string> {
   const accessToken = store.getState().auth.accessToken
 
   if (refreshFailedForAccessToken !== undefined && refreshFailedForAccessToken === accessToken) {

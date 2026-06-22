@@ -3,6 +3,7 @@ import { TopNav } from "./components/TopNav"
 import { FloorPlan } from "./components/FloorPlan"
 import { ReservationSidebar } from "./components/ReservationSidebar"
 import { TableDetailOverlay } from "./components/TableDetailOverlay"
+import { NotificationStreamSidebar } from "@/features/notification-stream/components/NotificationStreamSidebar"
 import { useTableActions } from "./hooks/useTableActions"
 import type {
   FloorTable,
@@ -243,6 +244,8 @@ export function WaiterOrderView() {
         </div>
 
         {showFloorPlan && <ReservationSidebar reservations={reservations} />}
+
+        <NotificationStreamSidebar />
       </div>
 
       {selectedTable && (

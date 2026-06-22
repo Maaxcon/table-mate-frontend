@@ -1,46 +1,22 @@
 import { Link } from "react-router-dom"
+import { NotificationStreamSidebar } from "@/features/notification-stream/components/NotificationStreamSidebar"
+import "./StaffOrdersPage.css"
 
 function StaffOrdersPage() {
   return (
-    <div>
-      <nav
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "24px",
-          padding: "12px 24px",
-          borderBottom: "2px solid var(--color-border)",
-          background: "var(--color-bg)",
-        }}
-      >
-        <span
-          style={{
-            fontSize: "0.82rem",
-            fontWeight: 800,
-            letterSpacing: "0.12em",
-            color: "var(--color-text)",
-          }}
-        >
-          KITCHEN ORDERS
-        </span>
-        <Link
-          to="/waiter-order"
-          style={{
-            fontSize: "0.72rem",
-            fontWeight: 700,
-            letterSpacing: "0.1em",
-            color: "var(--color-text-secondary)",
-            textDecoration: "none",
-            padding: "4px 10px",
-            border: "1.5px solid var(--color-border-light)",
-            marginLeft: "auto",
-          }}
-        >
+    <div className="staff-orders">
+      <nav className="staff-orders__nav">
+        <span className="staff-orders__brand">KITCHEN ORDERS</span>
+        <Link to="/waiter-order" className="staff-orders__link">
           FLOOR
         </Link>
       </nav>
-      <div style={{ padding: "2rem" }}>
-        <p>Kitchen order queue — coming soon.</p>
+
+      <div className="staff-orders__body">
+        <div className="staff-orders__content">
+          <p className="staff-orders__placeholder">Kitchen order queue — coming soon.</p>
+        </div>
+        <NotificationStreamSidebar />
       </div>
     </div>
   )
