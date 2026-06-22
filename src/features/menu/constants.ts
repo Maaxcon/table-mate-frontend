@@ -12,7 +12,9 @@ export const MENU_API = {
 
 export const CART_API = {
   guestInit: "/api/auth/guest-init/",
+  verifyScan: "/api/restaurants/tables/verify-scan/",
   items: (sessionId: string) => `/api/orders/cart/sessions/${sessionId}/items/`,
   item: (sessionId: string, itemId: string) =>
     `/api/orders/cart/sessions/${sessionId}/items/${itemId}/`,
+  checkout: (sessionId: string) => `/api/orders/cart/sessions/${sessionId}/checkout/`,
 } as const

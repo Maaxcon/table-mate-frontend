@@ -14,6 +14,7 @@ import {
   MenuSkeleton,
   RestaurantInfoPanel,
 } from "@/features/menu/components"
+import { checkout } from "@/features/menu/api"
 import { useCart } from "@/features/menu/hooks/useCart"
 import { useCartSocket } from "@/features/menu/hooks/useCartSocket"
 import { useGuestAuth } from "@/features/menu/hooks/useGuestAuth"
@@ -100,6 +101,19 @@ function MenuPage() {
   const handleCartUpdated = useCallback(() => {
     syncFromServer()
   }, [syncFromServer])
+
+  // Destructure the stable fields so the callback deps are these values, not
+  // the whole guestAuth object (which is a fresh object every render).
+  const { cartSessionId, guestJwt, initialize: reinitGuestCart } = guestAuth
+  const handleCheckout = useCallback(async () => {
+    if (!cartSessionId || !guestJwt) {
+      return Promise.reject(new Error(menuStrings.cart.sessionUnavailable))
+    }
+    const result = await checkout(cartSessionId, guestJwt)
+    // Checkout closed this cart; reopen a fresh one so the guest can order again.
+    reinitGuestCart()
+    return result
+  }, [cartSessionId, guestJwt, reinitGuestCart])
 
   const { isConnected } = useCartSocket({
     cartSessionId: guestAuth.cartSessionId,
@@ -200,7 +214,7 @@ function MenuPage() {
   }
 
   const handleAddToCart = useCallback(
-    (item: MenuItem) => {
+    (item: MenuItem, comment?: string) => {
       if (guestAuth.status === "loading" || guestAuth.status === "init") {
         setCartAccessError(menuStrings.cart.initializing)
         setCartOpen(true)
@@ -217,7 +231,7 @@ function MenuPage() {
         return
       }
       setCartAccessError(null)
-      addItem(item.public_id)
+      addItem(item.public_id, comment)
     },
     [
       addItem,
@@ -472,6 +486,8 @@ function MenuPage() {
             clearError()
           }}
           onRetry={cartAccessError ? guestAuth.initialize : syncFromServer}
+          onCheckout={handleCheckout}
+          onCartChanged={syncFromServer}
         />
       )}
 

@@ -162,6 +162,35 @@
   color: var(--color-text-muted);
 }
 
+.menu-modal__comment {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.menu-modal__comment .menu-modal__section-label {
+  margin-bottom: 0;
+}
+
+.menu-modal__comment-input {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  resize: none;
+  padding: 10px 12px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  color: var(--color-text);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+}
+
+.menu-modal__comment-input:focus {
+  outline: none;
+  border-color: var(--color-text);
+}
+
 /* ── Ingredients ─────────────────────────────────────── */
 .menu-modal__ingredients-list {
   list-style: none;
@@ -316,6 +345,13 @@
 
 .menu-modal__add--added {
   background: var(--color-success);
+}
+
+/* Disabled only coincides with the "Added" confirmation, so keep it crisp
+   (no UA dimming) rather than looking like an error-disabled control. */
+.menu-modal__add:disabled {
+  cursor: default;
+  opacity: 1;
 }
 
 .menu-modal__badge {

@@ -1,10 +1,11 @@
 import { ENV_NOT_CONFIGURED_VALUE, env } from "@/config/env"
-import type { Paginated } from "@/api/client"
+import { apiFetch, getAccessToken, type Paginated } from "@/api/client"
 import { CART_CLIENT_ID } from "./clientId"
 import { CART_API, MENU_API } from "./constants"
 import type {
   AddCartItemRequest,
   CartItemResponse,
+  CheckoutResponse,
   FetchItemsParams,
   GuestInitResponse,
   GuestInitTarget,
@@ -200,11 +201,106 @@ export function guestInit(
   }).then(async (res) => {
     if (!res.ok) {
       if (res.status === 404) {
-        throw new Error("NO_ACTIVE_SESSION")
+        const body = (await res.json().catch(() => null)) as {
+          code?: string
+          start_at?: string | null
+        } | null
+        if (body?.code === "RESERVATION_NOT_YET_ACTIVE") {
+          throw new ReservationNotYetActiveError(body.start_at ?? null)
+        }
+        throw new Error(
+          body?.code === "NO_ACTIVE_RESERVATION" ? "NO_ACTIVE_RESERVATION" : "NO_ACTIVE_SESSION",
+        )
       }
       throw await httpError(res)
     }
     return res.json() as Promise<GuestInitResponse>
+  })
+}
+
+// Best-effort: tell the backend a guest is at this table so a pending booking
+// owned by the logged-in customer flips to active before we open the cart.
+// Silent on failure (guest not logged in / not the owner) — guest-init follows.
+export async function verifyScan(tableId: string): Promise<void> {
+  // Only a logged-in customer can have a booking to activate. For an anonymous
+  // guest there's no token, and routing this through apiFetch would 401 → failed
+  // refresh → clearAuth on every scan. Skip it; guest-init opens the cart anyway.
+  if (!getAccessToken()) return
+  try {
+    await apiFetch(CART_API.verifyScan, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ table_id: tableId }),
+    })
+  } catch {
+    // ignore — activation is optional; cart opening proceeds regardless
+  }
+}
+
+export type RemovedItem = { id: string; name: string }
+// Mirrors the server breakdown so the receipt can reconcile
+// (subtotal + tax + service = total). Currency is sourced from restaurant
+// settings in the UI, so it isn't carried here.
+export type CheckoutResult = {
+  orderId: string
+  subtotal: string
+  tax: string
+  serviceCharge: string
+  total: string
+}
+
+export class CartChangedError extends Error {
+  removed: RemovedItem[]
+  constructor(removed: RemovedItem[]) {
+    super("CART_CHANGED")
+    this.name = "CartChangedError"
+    this.removed = removed
+  }
+}
+
+// The table has a pending booking that has not started yet. Carries the booking
+// start time (ISO) so we can tell the guest when the table opens.
+export class ReservationNotYetActiveError extends Error {
+  startAt: string | null
+  constructor(startAt: string | null) {
+    super("RESERVATION_NOT_YET_ACTIVE")
+    this.name = "ReservationNotYetActiveError"
+    this.startAt = startAt
+  }
+}
+
+export function checkout(sessionId: string, jwt: string): Promise<CheckoutResult> {
+  if (env.apiBaseUrl === ENV_NOT_CONFIGURED_VALUE) {
+    throw new Error("VITE_API_BASE_URL is not configured")
+  }
+  return fetch(`${env.apiBaseUrl}${CART_API.checkout(sessionId)}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${jwt}` },
+  }).then(async (res) => {
+    if (res.status === 201) {
+      // Shape tied to the generated schema type so it can't drift from the API.
+      const body = (await res.json().catch(() => null)) as Partial<CheckoutResponse> | null
+      if (!body?.order_id) {
+        throw new Error("Checkout succeeded but the response was malformed.")
+      }
+      return {
+        orderId: body.order_id,
+        subtotal: body.subtotal ?? "",
+        tax: body.tax ?? "",
+        serviceCharge: body.service_charge ?? "",
+        total: body.total ?? "",
+      }
+    }
+    if (res.status === 409) {
+      const body = (await res.json().catch(() => null)) as {
+        code?: string
+        removed?: RemovedItem[]
+      } | null
+      if (body?.code === "CART_CHANGED") {
+        throw new CartChangedError(body.removed ?? [])
+      }
+    }
+    throw await httpError(res)
   })
 }
 

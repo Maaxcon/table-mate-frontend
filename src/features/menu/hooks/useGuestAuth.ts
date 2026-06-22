@@ -1,10 +1,19 @@
 import { useCallback, useEffect, useReducer, useRef } from "react"
-import { guestInit } from "@/features/menu/api"
+import { guestInit, ReservationNotYetActiveError, verifyScan } from "@/features/menu/api"
 import { getGuestToken } from "@/features/menu/guestToken"
 import { decodeJwtPayload } from "@/features/menu/jwt"
+import { menuStrings } from "@/features/menu/strings"
 
 const DISPLAY_NAME_KEY = "tablemate.cart.display_name.v1"
 const REFRESH_MARGIN_MS = 60_000
+
+// Local HH:MM for a booking start (ISO), or null if missing/unparseable.
+function formatBookingTime(iso: string | null): string | null {
+  if (!iso) return null
+  const date = new Date(iso)
+  if (Number.isNaN(date.getTime())) return null
+  return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+}
 
 type AuthStatus = "init" | "loading" | "ready" | "error"
 
@@ -49,7 +58,7 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
         error: null,
       }
     case "ERROR":
-      return { ...state, status: "error", error: action.error }
+      return { ...state, status: "error", error: action.error, guestJwt: null, cartSessionId: null }
   }
 }
 
@@ -96,7 +105,16 @@ export function useGuestAuth({
     initializing.current = true
     dispatch({ type: "LOADING" })
 
-    guestInit({ reservationId, tableId }, guestJwtRef.current)
+    const run = async () => {
+      // Static QR carries only the table: try to activate a pending booking
+      // (logged-in owner) before opening the cart. Best-effort, errors ignored.
+      if (tableId) {
+        await verifyScan(tableId)
+      }
+      return guestInit({ reservationId, tableId }, guestJwtRef.current)
+    }
+
+    run()
       .then((resp) => {
         const payload = decodeJwtPayload<{ cart_session_id?: string }>(resp.access)
         dispatch({
@@ -106,10 +124,16 @@ export function useGuestAuth({
         })
       })
       .catch((err: Error) => {
-        const msg =
-          err.message === "NO_ACTIVE_SESSION"
-            ? "Активний кошик для цього столика не знайдено. Попросіть офіціанта відкрити столик."
-            : err.message
+        let msg: string
+        if (err instanceof ReservationNotYetActiveError) {
+          msg = menuStrings.cart.reservationNotYetActive(formatBookingTime(err.startAt))
+        } else if (err.message === "NO_ACTIVE_RESERVATION") {
+          msg = menuStrings.cart.noActiveReservation
+        } else if (err.message === "NO_ACTIVE_SESSION") {
+          msg = menuStrings.cart.sessionUnavailable
+        } else {
+          msg = err.message
+        }
         dispatch({ type: "ERROR", error: msg })
       })
       .finally(() => {
