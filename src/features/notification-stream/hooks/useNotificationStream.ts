@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react"
-import { env } from "@/config/env"
+import { ENV_NOT_CONFIGURED_VALUE, env } from "@/config/env"
 import { store } from "@/store"
 import type { NotificationEvent, WSNotificationMessage, WSMessageType } from "../types"
 import { getStream, formatEvent, type WSNotificationData } from "../types"
@@ -151,6 +151,8 @@ export function useNotificationStream({ mock = false }: { mock?: boolean } = {})
     if (wsRef.current?.readyState === WebSocket.OPEN) return
 
     cleanup()
+
+    if (env.wsUrl === ENV_NOT_CONFIGURED_VALUE) return
 
     const url = `${env.wsUrl}/staff/notifications/`
     const ws = new WebSocket(url, ["access_token", accessToken])
