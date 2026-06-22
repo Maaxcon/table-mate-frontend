@@ -74,8 +74,8 @@ export function useCartSocket({
 
     if (env.wsUrl === ENV_NOT_CONFIGURED_VALUE) return
 
-    const url = `${env.wsUrl}/cart/${cartSessionId}/?token=${encodeURIComponent(guestJwt)}`
-    const ws = new WebSocket(url)
+    const url = `${env.wsUrl}/cart/${cartSessionId}/`
+    const ws = new WebSocket(url, ["access_token", guestJwt])
     wsRef.current = ws
 
     ws.onopen = () => {

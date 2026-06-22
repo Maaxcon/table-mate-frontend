@@ -49,10 +49,10 @@ const KITCHEN_EVENTS = new Set<WSMessageType>([
   "KITCHEN_TICKET_INJECTED",
 ])
 
-export function getStream(type: WSMessageType): StreamType {
+export function getStream(type: WSMessageType): StreamType | null {
   if (CLIENT_EVENTS.has(type)) return "client"
   if (KITCHEN_EVENTS.has(type)) return "kitchen"
-  return "client"
+  return null
 }
 
 export function formatEvent(

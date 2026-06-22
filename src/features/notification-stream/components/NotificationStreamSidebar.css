@@ -32,7 +32,7 @@
 }
 
 .notification-stream__status--connected {
-  background: #2e7d32;
+  background: var(--color-success, #2e7d32);
 }
 
 .notification-stream__sections {

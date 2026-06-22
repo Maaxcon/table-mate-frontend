@@ -60,7 +60,16 @@ export const menuStrings = {
     confirmNo: "Скасувати",
     confirmedTitle: "Замовлення прийнято!",
     confirmedSub: "Офіціант отримав ваше замовлення",
+    submitting: "Оформлюємо...",
+    checkoutError: "Не вдалося оформити замовлення. Спробуйте ще раз.",
+    changedTitle: "Деякі страви стали недоступні",
+    changedSub: "Ці позиції прибрано з кошика. Перевірте замовлення й підтвердьте ще раз:",
+    confirmRemaining: "Підтвердити решту",
+    backToCart: "Назад до кошика",
     receiptLabel: "Ваше замовлення",
+    subtotal: "Сума",
+    tax: "Податок",
+    serviceCharge: "Сервісний збір",
     total: "Разом",
     emptyTitle: "Кошик порожній",
     emptySub: "Додайте страви з меню",
@@ -78,6 +87,12 @@ export const menuStrings = {
     initializing: "Підключаємо кошик...",
     sessionUnavailable:
       "Активний кошик для цього столика не знайдено. Попросіть офіціанта відкрити столик.",
+    noActiveReservation:
+      "На цьому столику немає активного бронювання. Зверніться до офіціанта, щоб відкрити столик.",
+    reservationNotYetActive: (time: string | null) =>
+      time
+        ? `Ваше бронювання на ${time}. Столик відкриється ближче до часу — поверніться за 15 хвилин до початку.`
+        : "Ваше бронювання ще не активне. Столик відкриється ближче до часу початку.",
     unavailable: (name: string) => `"${name}" більше недоступна`,
     retry: "Спробувати знову",
     connecting: "Підключення...",
@@ -99,6 +114,8 @@ export const menuStrings = {
     addToCart: "До кошика",
     unavailable: "Недоступно",
     close: "Close",
+    commentLabel: "Коментар (необов'язково)",
+    commentPlaceholder: "Напр., без цибулі",
   },
   info: {
     heading: "Про заклад",

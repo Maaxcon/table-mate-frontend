@@ -28,6 +28,8 @@ export function NotificationStreamSidebar() {
         <h2 className="notification-stream__title">NOTIFICATIONS</h2>
         <span
           className={`notification-stream__status ${isConnected ? "notification-stream__status--connected" : ""}`}
+          role="status"
+          aria-label={isConnected ? "Connected" : "Disconnected"}
         />
       </div>
 

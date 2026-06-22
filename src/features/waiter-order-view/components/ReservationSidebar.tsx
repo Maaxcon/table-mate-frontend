@@ -1,5 +1,5 @@
 import type { ReservationItem } from "../data/waiterTypes"
-import { getTimeFromDatetime } from "../data/waiterTypes"
+import { formatTimeRange } from "../data/waiterTypes"
 import "./ReservationSidebar.css"
 
 interface ReservationSidebarProps {
@@ -60,7 +60,7 @@ export function ReservationSidebar({ reservations }: ReservationSidebarProps) {
           >
             <div className="reservation-sidebar__item-left">
               <span className="reservation-sidebar__item-time">
-                {getTimeFromDatetime(r.start_at)}
+                {formatTimeRange(r.start_at, r.end_at)}
               </span>
               <div className="reservation-sidebar__item-info">
                 <span className="reservation-sidebar__item-name">{r.name}</span>

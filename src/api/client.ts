@@ -14,7 +14,7 @@ class RefreshAuthError extends Error {
   }
 }
 
-async function refreshAccessToken(): Promise<string> {
+export async function refreshAccessToken(): Promise<string> {
   const accessToken = store.getState().auth.accessToken
 
   if (refreshFailedForAccessToken !== undefined && refreshFailedForAccessToken === accessToken) {
@@ -214,4 +214,9 @@ export const api = {
   del: (path: string, opts?: RequestOptions) => request<void>("DELETE", path, undefined, opts),
 }
 
-export { apiFetch, ensureSession }
+/** The current logged-in user's access token, or null when anonymous. */
+function getAccessToken(): string | null {
+  return store.getState().auth.accessToken
+}
+
+export { apiFetch, ensureSession, getAccessToken }

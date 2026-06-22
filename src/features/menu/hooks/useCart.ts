@@ -102,7 +102,7 @@ type UseCartResult = {
   loading: boolean
   error: string | null
   errorItemId: string | null
-  addItem: (menuItemId: string) => Promise<void>
+  addItem: (menuItemId: string, comment?: string) => Promise<void>
   changeQuantity: (itemId: string, delta: number) => Promise<void>
   removeItem: (itemId: string) => Promise<void>
   syncFromServer: () => Promise<void>
@@ -245,15 +245,16 @@ export function useCart({
   }, [cartSessionId, guestJwt, syncFromServer, reserved])
 
   const addItem = useCallback(
-    (menuItemId: string): Promise<void> =>
+    (menuItemId: string, comment?: string): Promise<void> =>
       runExclusive(async () => {
         if (!cartSessionId || !guestJwt) return
         dispatch({ type: "SAVE_SNAPSHOT" })
+        const trimmedComment = comment?.trim() || null
         const tempItem: CartItemResponse = {
           public_id: `temp-${Date.now()}`,
           menu_item: menuItemId,
           quantity: 1,
-          comment: null,
+          comment: trimmedComment,
           added_by: null,
           guest_slot: null,
           is_mine: true,
@@ -266,7 +267,15 @@ export function useCart({
         dispatch({ type: "OPTIMISTIC_ADD", item: tempItem })
 
         try {
-          await addCartItem(cartSessionId, { menu_item: menuItemId, quantity: 1 }, guestJwt)
+          await addCartItem(
+            cartSessionId,
+            {
+              menu_item: menuItemId,
+              quantity: 1,
+              ...(trimmedComment ? { comment: trimmedComment } : {}),
+            },
+            guestJwt,
+          )
           await refetch()
         } catch (err) {
           failMutation(err, menuStrings.cart.errorAdd, menuItemId, tempItem.public_id)
