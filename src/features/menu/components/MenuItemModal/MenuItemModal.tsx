@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useId, useRef, useState } from "react"
 import type { ReactElement } from "react"
 import {
   LuCheck,
@@ -46,22 +46,25 @@ type MenuItemModalProps = {
   item: MenuItem
   currencySymbol: string
   onClose: () => void
-  onAddToCart: (item: MenuItem) => void
+  onAddToCart: (item: MenuItem, comment?: string) => void
 }
 
 function MenuItemModal({ item, currencySymbol, onClose, onAddToCart }: MenuItemModalProps) {
   const [added, setAdded] = useState(false)
+  const [comment, setComment] = useState("")
+  const commentId = useId()
   const closeTimerRef = useRef<number | null>(null)
   // Focus trap + Esc-to-close + focus restore (focuses the close button first).
   const dialogRef = useFocusTrap<HTMLDivElement>({ onEscape: onClose })
   const hasWeight = item.weight_grams != null && item.weight_grams > 0
 
   const handleAdd = () => {
-    onAddToCart(item)
+    // Guard against double/triple taps: once a tap has armed the auto-close
+    // timer, ignore further taps until it fires. useCart merges quantity on
+    // OPTIMISTIC_ADD, so an unguarded re-tap would silently bump the quantity.
+    if (closeTimerRef.current != null) return
+    onAddToCart(item, comment.trim() || undefined)
     setAdded(true)
-    if (closeTimerRef.current != null) {
-      window.clearTimeout(closeTimerRef.current)
-    }
     closeTimerRef.current = window.setTimeout(() => {
       closeTimerRef.current = null
       setAdded(false)
@@ -148,6 +151,23 @@ function MenuItemModal({ item, currencySymbol, onClose, onAddToCart }: MenuItemM
               </div>
             </div>
           )}
+
+          {item.is_available && (
+            <div className="menu-modal__comment">
+              <label htmlFor={commentId} className="menu-modal__section-label">
+                {menuStrings.item.commentLabel}
+              </label>
+              <textarea
+                id={commentId}
+                className="menu-modal__comment-input"
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                placeholder={menuStrings.item.commentPlaceholder}
+                rows={2}
+                maxLength={500}
+              />
+            </div>
+          )}
         </div>
 
         <div className="menu-modal__footer">
@@ -165,6 +185,7 @@ function MenuItemModal({ item, currencySymbol, onClose, onAddToCart }: MenuItemM
             <button
               className={`menu-modal__add${added ? " menu-modal__add--added" : ""}`}
               onClick={handleAdd}
+              disabled={added}
             >
               {added ? <LuCheck size={16} /> : <LuShoppingCart size={16} />}
               {added ? menuStrings.item.added : menuStrings.item.addToCart}
