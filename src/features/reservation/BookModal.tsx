@@ -161,6 +161,7 @@ export function BookModal({
   }, [
     selectedTime,
     selectedDate,
+    durationMinutes,
     endAt,
     guestCount,
     restaurantId,

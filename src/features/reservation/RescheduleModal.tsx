@@ -150,7 +150,7 @@ export function RescheduleModal({
     } finally {
       setSubmitting(false)
     }
-  }, [selectedTime, dateStr, endAt, guestCount, publicId])
+  }, [selectedTime, dateStr, durationMinutes, guestCount, publicId])
 
   if (success) {
     return (
