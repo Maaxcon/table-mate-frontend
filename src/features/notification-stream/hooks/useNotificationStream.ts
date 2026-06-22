@@ -14,18 +14,17 @@ function jitter(delay: number): number {
   return delay * (0.5 + Math.random() * 0.5)
 }
 
-let idCounter = 0
-function nextId(): string {
-  idCounter += 1
-  return `evt-${Date.now()}-${idCounter}`
-}
-
 function parseMessage(msg: WSNotificationMessage): NotificationEvent | null {
+  const stream = getStream(msg.type)
+  if (!stream) {
+    if (import.meta.env.DEV) console.warn("unknown notification type:", msg.type)
+    return null
+  }
   const { title, description } = formatEvent(msg.type, msg.data)
   return {
-    id: nextId(),
+    id: msg.data.id ?? `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
     type: msg.type,
-    stream: getStream(msg.type),
+    stream,
     title,
     description,
     tableNumber: msg.data.table_number,
