@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react"
+import { refreshAccessToken } from "@/api/client"
 import { ENV_NOT_CONFIGURED_VALUE, env } from "@/config/env"
 import { store } from "@/store"
+import { clearAuth } from "@/store/auth/authSlice"
 import type { NotificationEvent, WSNotificationMessage, WSMessageType } from "../types"
 import { getStream, formatEvent, type WSNotificationData } from "../types"
 
@@ -172,7 +174,19 @@ export function useNotificationStream({ mock = false }: { mock?: boolean } = {})
       setIsConnected(false)
       wsRef.current = null
 
-      if (event.code === 4003 || event.code === 4001) return
+      if (event.code === 4003) return
+
+      if (event.code === 4001) {
+        ;(async () => {
+          try {
+            await refreshAccessToken()
+            if (mountedRef.current) connectRef.current()
+          } catch {
+            store.dispatch(clearAuth())
+          }
+        })()
+        return
+      }
 
       attemptRef.current += 1
       const delay = Math.min(BASE_DELAY_MS * Math.pow(2, attemptRef.current - 1), MAX_DELAY_MS)
