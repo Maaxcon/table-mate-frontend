@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
 import "./KitchenKanban.css"
+import { onKitchenEvent } from "@/features/notification-stream/kitchenEventBus"
 import {
   fetchTickets,
   fetchCompletedTickets,
@@ -105,6 +106,10 @@ export function KitchenKanban() {
   useEffect(() => {
     const id = setInterval(() => setTick((t) => t + 1), 30000)
     return () => clearInterval(id)
+  }, [])
+
+  useEffect(() => {
+    return onKitchenEvent(() => setTick((t) => t + 1))
   }, [])
 
   useEffect(() => {
