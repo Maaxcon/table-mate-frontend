@@ -33,6 +33,7 @@ export interface UpcomingReservation {
   public_id: string
   table_id: string
   start_at: string
+  end_at?: string
 }
 
 export type VisualTableStatus = "free" | "occupied" | "reserved"
@@ -102,15 +103,27 @@ export function formatETA(startAt: string): string {
   return minutes > 60 ? `${Math.floor(minutes / 60)}h${minutes % 60}m` : `${minutes}m`
 }
 
+const FIFTEEN_MINUTES_MS = 15 * 60 * 1000
+
 export function getTableVisualStatus(
   table: FloorTable,
   upcomingReservations: UpcomingReservation[],
   currentTime: Date,
 ): VisualTableStatus {
   if (table.is_occupied) return "occupied"
-  const hasUpcomingReservation = upcomingReservations.some(
-    (r) => r.table_id === table.public_id && new Date(r.start_at).getTime() > currentTime.getTime(),
-  )
-  if (hasUpcomingReservation) return "reserved"
+  const now = currentTime.getTime()
+  const hasRelevantReservation = upcomingReservations.some((r) => {
+    if (r.table_id !== table.public_id) return false
+    const start = new Date(r.start_at).getTime()
+    if (start > now && start - now <= FIFTEEN_MINUTES_MS) return true
+    if (start <= now) {
+      if (r.end_at) {
+        const end = new Date(r.end_at).getTime()
+        if (now < end) return true
+      }
+    }
+    return false
+  })
+  if (hasRelevantReservation) return "reserved"
   return "free"
 }
