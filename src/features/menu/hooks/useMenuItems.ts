@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useReducer, useRef } from "react"
-import type { SortOrder } from "@/features/menu/api"
 import { fetchItems, searchItems } from "@/features/menu/api"
-import type { MenuItem } from "@/features/menu/types"
+import type { MenuItem, SortOrder } from "@/features/menu/types"
 
 type State = {
   items: MenuItem[]

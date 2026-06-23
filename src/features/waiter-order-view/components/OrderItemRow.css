@@ -24,6 +24,14 @@
   color: var(--color-text);
 }
 
+.order-item-row__comment {
+  font-size: 0.74rem;
+  font-style: italic;
+  color: var(--color-text-muted);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
 .order-item-row__void-reason {
   font-size: 0.62rem;
   font-weight: 600;

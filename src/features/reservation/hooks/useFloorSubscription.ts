@@ -19,6 +19,7 @@ export interface FloorNewReservationEvent {
 
 export interface FloorReservationCancelledEvent {
   event_name: "HALL_RESERVATION_CANCELLED"
+  reservation_id: string
   table_id: string
   occurred_at: string
 }

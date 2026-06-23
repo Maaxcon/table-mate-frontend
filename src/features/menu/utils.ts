@@ -1,4 +1,4 @@
-import type { WorkingHours, WorkingHoursDay } from "./api"
+import type { WorkingHours, WorkingHoursDay } from "./types"
 
 const PRICE_FORMATTER = new Intl.NumberFormat("uk-UA", {
   minimumFractionDigits: 0,

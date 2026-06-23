@@ -1,230 +1,72 @@
-import { useState, useEffect, useMemo } from "react"
-import { getTimeFromDatetime, getDateTimeFromDatetime } from "../data/waiterTypes"
-import type { VoidReason } from "@/types/api"
+import { useState } from "react"
+import { formatTimeRange } from "../data/waiterTypes"
 import type {
   FloorTable,
   ReservationItem,
   OverlayDetail,
   VisualTableStatus,
-  UpcomingReservation,
 } from "../data/waiterTypes"
-import { closeCheck, moveTable, cancelReservation } from "@/features/reservation/api"
-import { fetchVoidReasons, voidOrderItem } from "../api/orderApi"
+import { getCurrencySymbol } from "@/features/menu/utils"
 import { OrderItemRow } from "./OrderItemRow"
-import { OrderCreationModal } from "./OrderCreationModal"
+import { CloseCheckModal } from "./CloseCheckModal"
 import "./TableDetailOverlay.css"
-
-function formatDateInput(d: Date): string {
-  return d.toISOString().slice(0, 10)
-}
-
-function isSameDay(a: Date, b: Date): boolean {
-  return (
-    a.getFullYear() === b.getFullYear() &&
-    a.getMonth() === b.getMonth() &&
-    a.getDate() === b.getDate()
-  )
-}
 
 interface TableDetailOverlayProps {
   table: FloorTable
   detail: OverlayDetail | null
-  sessionId: string | null
-  restaurantId: string
   tableReservations: ReservationItem[]
   visualStatus: VisualTableStatus
   loading: boolean
-  allTables: FloorTable[]
-  allReservations: ReservationItem[]
-  upcomingReservations: UpcomingReservation[]
+  currentTime: Date
+  actionBusy?: boolean
+  busyActionId?: string | null
+  actionError?: string | null
+  onOpenTable?: (guestCount: number) => void
+  onActivateReservation?: (reservationId: string) => void
+  onCloseCheck?: () => void
   onClose: () => void
-  onRefresh: () => void
-  onBookTable?: (table: FloorTable) => void
-  onModifyReservation?: (reservation: ReservationItem) => void
-  onActivateReservation?: (reservation: ReservationItem) => void
 }
 
 export function TableDetailOverlay({
   table,
   detail,
-  sessionId,
-  restaurantId,
   tableReservations,
   visualStatus,
   loading,
-  allTables,
-  allReservations,
-  upcomingReservations,
-  onClose,
-  onRefresh,
-  onBookTable,
-  onModifyReservation,
+  currentTime,
+  actionBusy = false,
+  busyActionId = null,
+  actionError = null,
+  onOpenTable,
   onActivateReservation,
+  onCloseCheck,
+  onClose,
 }: TableDetailOverlayProps) {
   const isOccupied = visualStatus === "occupied"
   const isReserved = visualStatus === "reserved"
   const [activeOverlayTab, setActiveOverlayTab] = useState<"order" | "reservations">(
     isOccupied ? "order" : "reservations",
   )
-  const [actionLoading, setActionLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [showMoveModal, setShowMoveModal] = useState(false)
-  const [currentTime, setCurrentTime] = useState(new Date())
-  const [dateFrom, setDateFrom] = useState(formatDateInput(new Date()))
-  const [dateTo, setDateTo] = useState(formatDateInput(new Date()))
+  const [guestCount, setGuestCount] = useState(2)
+  const [showCloseCheck, setShowCloseCheck] = useState(false)
 
-  const [showOrderCreation, setShowOrderCreation] = useState(false)
-  const [voidReasons, setVoidReasons] = useState<VoidReason[]>([])
-  const [voidReasonItemId, setVoidReasonItemId] = useState<string | null>(null)
-  const [voidReasonError, setVoidReasonError] = useState<string | null>(null)
-  const [voidingItemId, setVoidingItemId] = useState<string | null>(null)
-
-  useEffect(() => {
-    if (isOccupied) {
-      fetchVoidReasons()
-        .then(setVoidReasons)
-        .catch(() => {})
-    }
-  }, [isOccupied])
-
-  useEffect(() => {
-    const id = setInterval(() => setCurrentTime(new Date()), 30_000)
-    return () => clearInterval(id)
-  }, [])
-  const [confirmMove, setConfirmMove] = useState<{
-    tableId: string
-    tableNumber: string
-    capacity: number
-  } | null>(null)
+  // Use the bill's real currency rather than a hardcoded symbol.
+  const currencySymbol = detail ? getCurrencySymbol(detail.currency) : ""
 
   const guestSlots = detail
     ? [...new Set(detail.items.map((i) => i.guest_slot))].sort((a, b) => a - b)
     : []
-
-  const filteredTableReservations = useMemo(() => {
-    const from = new Date(dateFrom)
-    from.setHours(0, 0, 0, 0)
-    const to = new Date(dateTo)
-    to.setHours(23, 59, 59, 999)
-    return tableReservations.filter((r) => {
-      const start = new Date(r.start_at)
-      return start >= from && start <= to
-    })
-  }, [tableReservations, dateFrom, dateTo])
-
-  const sortedReservations = [...filteredTableReservations].sort(
-    (a, b) => new Date(a.start_at).getTime() - new Date(b.start_at).getTime(),
-  )
-  const activeReservation =
-    tableReservations.find((r) => r.status === "active") ?? sortedReservations[0] ?? null
-
-  const activeReservationId = activeReservation?.public_id
-  const currentGuestCount = detail?.guest_count ?? 0
-
-  const reservedTableNumbers = new Set(
-    allReservations
-      .filter((r) => {
-        if (r.status !== "pending" && r.status !== "active") return false
-        const today = new Date()
-        const reservationDate = new Date(r.start_at)
-        return isSameDay(today, reservationDate)
-      })
-      .map((r) => r.table),
-  )
-
-  const availableTablesWithInfo = allTables
-    .filter(
-      (t) =>
-        t.public_id !== table.public_id &&
-        !t.is_occupied &&
-        !reservedTableNumbers.has(t.public_number),
-    )
-    .map((t) => {
-      const now = new Date()
-      const nextReservation = upcomingReservations
-        .filter((r) => r.table_id === t.public_id && new Date(r.start_at) > now)
-        .sort((a, b) => new Date(a.start_at).getTime() - new Date(b.start_at).getTime())[0]
-      return {
-        ...t,
-        nextReservationStartAt: nextReservation?.start_at ?? null,
-        hasCapacityIssue: t.capacity < currentGuestCount,
-      }
-    })
-
-  const handleCloseCheck = async () => {
-    if (!activeReservationId) return
-    setActionLoading(true)
-    setError(null)
-    try {
-      await closeCheck(activeReservationId)
-      onRefresh()
-      onClose()
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to close check")
-    } finally {
-      setActionLoading(false)
-    }
-  }
-
-  const handleMoveTableClick = (newTableId: string, tableNumber: string, capacity: number) => {
-    const tableInfo = availableTablesWithInfo.find((t) => t.public_id === newTableId)
-    if (tableInfo?.hasCapacityIssue) {
-      setConfirmMove({ tableId: newTableId, tableNumber, capacity })
-    } else {
-      handleMoveTable(newTableId)
-    }
-  }
-
-  const handleMoveTable = async (newTableId: string) => {
-    if (!activeReservationId) return
-    setActionLoading(true)
-    setError(null)
-    try {
-      await moveTable(activeReservationId, newTableId)
-      setShowMoveModal(false)
-      setConfirmMove(null)
-      onRefresh()
-      onClose()
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to move table")
-    } finally {
-      setActionLoading(false)
-    }
-  }
-
-  const handleCancelReservation = async (reservationId: string) => {
-    setActionLoading(true)
-    setError(null)
-    try {
-      await cancelReservation(reservationId)
-      onRefresh()
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to cancel reservation")
-    } finally {
-      setActionLoading(false)
-    }
-  }
-
-  const handleVoidItemClick = (itemId: string) => {
-    setVoidReasonItemId(itemId)
-    setVoidReasonError(null)
-  }
-
-  const handleVoidItemConfirm = async (reasonCode: string) => {
-    const itemId = voidReasonItemId
-    if (!itemId) return
-    setVoidingItemId(itemId)
-    setVoidReasonError(null)
-    try {
-      await voidOrderItem(itemId, reasonCode)
-      setVoidReasonItemId(null)
-      onRefresh()
-    } catch (err) {
-      setVoidReasonError(err instanceof Error ? err.message : "Failed to void item")
-    } finally {
-      setVoidingItemId(null)
-    }
-  }
+  const byStart = (a: ReservationItem, b: ReservationItem) =>
+    new Date(a.start_at).getTime() - new Date(b.start_at).getTime()
+  const nearestReservation =
+    tableReservations.length > 0 ? [...tableReservations].sort(byStart)[0] : null
+  // The soonest booking that has not started yet — shown as the table's "next".
+  const nextReservation =
+    [...tableReservations]
+      .filter((r) => new Date(r.start_at).getTime() > currentTime.getTime())
+      .sort(byStart)[0] ?? null
+  // All of the table's bookings for the day (active + upcoming), earliest first.
+  const dayReservations = [...tableReservations].sort(byStart)
 
   return (
     <>
@@ -261,14 +103,49 @@ export function TableDetailOverlay({
             {loading
               ? ""
               : isReserved
-                ? `Reserved ${activeReservation ? `• ${activeReservation.name} at ${getTimeFromDatetime(activeReservation.start_at)}` : ""}`
+                ? `Reserved ${nearestReservation ? `• ${nearestReservation.name} ${formatTimeRange(nearestReservation.start_at, nearestReservation.end_at)}` : ""}`
                 : isOccupied && detail
-                  ? `Current Party: ${detail.guest_name} • ${detail.guest_count} Guests • Duration: ${detail.duration}`
-                  : activeReservation
-                    ? `Capacity: ${table.capacity} • Next: ${activeReservation.name} at ${getTimeFromDatetime(activeReservation.start_at)}`
+                  ? `Current Party: ${detail.guest_name} • ${detail.guest_count} Guests • Duration: ${detail.duration}${nextReservation ? ` • Next: ${nextReservation.name} ${formatTimeRange(nextReservation.start_at, nextReservation.end_at)}` : ""}`
+                  : nextReservation
+                    ? `Capacity: ${table.capacity} • Next: ${nextReservation.name} ${formatTimeRange(nextReservation.start_at, nextReservation.end_at)}`
                     : `Capacity: ${table.capacity} • Available`}
           </p>
         </div>
+
+        {!isOccupied && !loading && (
+          <div className="overlay__open-panel">
+            {actionError && (
+              <p className="overlay__action-error" role="alert">
+                {actionError}
+              </p>
+            )}
+            {tableReservations.some((r) => r.status === "pending") ? (
+              <p className="overlay__open-hint">Seat a booked guest from the Reservations tab.</p>
+            ) : (
+              <div className="overlay__open-row">
+                <label className="overlay__guests">
+                  Guests
+                  <input
+                    type="number"
+                    min={1}
+                    className="overlay__guests-input"
+                    value={guestCount}
+                    onChange={(e) => setGuestCount(Math.max(1, Number(e.target.value) || 1))}
+                    disabled={actionBusy}
+                  />
+                </label>
+                <button
+                  type="button"
+                  className="overlay__cta"
+                  disabled={actionBusy}
+                  onClick={() => onOpenTable?.(guestCount)}
+                >
+                  {actionBusy ? "OPENING…" : "OPEN TABLE"}
+                </button>
+              </div>
+            )}
+          </div>
+        )}
 
         <div className="overlay__tabs">
           {isOccupied && (
@@ -322,294 +199,136 @@ export function TableDetailOverlay({
             {detail ? (
               <>
                 <div className="overlay__actions">
-                  <button
-                    type="button"
-                    className="overlay__action-btn"
-                    onClick={() => setShowOrderCreation(true)}
-                    disabled={!sessionId}
-                  >
-                    NEW ORDER
+                  <button type="button" className="overlay__action-btn">
+                    ADD ITEM
                   </button>
-                  <button
-                    type="button"
-                    className="overlay__action-btn"
-                    onClick={() => setShowMoveModal(true)}
-                    disabled={actionLoading || availableTablesWithInfo.length === 0}
-                  >
+                  <button type="button" className="overlay__action-btn">
                     MOVE TABLE
                   </button>
                   <button
                     type="button"
                     className="overlay__action-btn"
-                    onClick={handleCloseCheck}
-                    disabled={actionLoading}
+                    onClick={() => setShowCloseCheck(true)}
                   >
-                    {actionLoading ? "CLOSING..." : "CLOSE CHECK"}
+                    CLOSE CHECK
                   </button>
                 </div>
-
-                {error && <p className="overlay__error">{error}</p>}
-
-                {detail.items.length > 0 && (
-                  <>
-                    <div className="overlay__divider" />
-                    <div className="overlay__body">
-                      {guestSlots.map((slot) => {
-                        const slotItems = detail.items.filter((i) => i.guest_slot === slot)
-                        return (
-                          <div key={slot} className="overlay__slot">
-                            <h3 className="overlay__slot-title">GUEST {slot}</h3>
-                            {slotItems.map((item) => (
-                              <OrderItemRow
-                                key={item.public_id}
-                                item={item}
-                                onVoid={handleVoidItemClick}
-                              />
-                            ))}
-                          </div>
-                        )
-                      })}
-                    </div>
-                  </>
-                )}
 
                 <div className="overlay__divider" />
 
-                <div className="overlay__footer">
-                  <div className="overlay__total-row">
-                    <span className="overlay__total-label">SUBTOTAL</span>
-                    <span className="overlay__total-value">&euro;{detail.subtotal}</span>
-                  </div>
-                  <div className="overlay__total-row">
-                    <span className="overlay__total-label">TAX</span>
-                    <span className="overlay__total-value">&euro;{detail.tax_total}</span>
-                  </div>
-                  <div className="overlay__total-row overlay__total-row--final">
-                    <span className="overlay__total-label overlay__total-label--large">TOTAL</span>
-                    <span className="overlay__total-value overlay__total-value--large">
-                      &euro;{detail.total_amount}
-                    </span>
-                  </div>
-                  <button type="button" className="overlay__cta">
-                    PROCESS PAYMENT
-                  </button>
+                <div className="overlay__body">
+                  {detail.items.length === 0 ? (
+                    <p className="overlay__empty">No dishes ordered yet.</p>
+                  ) : (
+                    guestSlots.map((slot) => {
+                      const slotItems = detail.items.filter((i) => i.guest_slot === slot)
+                      return (
+                        <div key={slot} className="overlay__slot">
+                          <h3 className="overlay__slot-title">GUEST {slot}</h3>
+                          {slotItems.map((item) => (
+                            <OrderItemRow
+                              key={item.public_id}
+                              item={item}
+                              currencySymbol={currencySymbol}
+                            />
+                          ))}
+                        </div>
+                      )
+                    })
+                  )}
                 </div>
+
+                {detail.items.length > 0 && <div className="overlay__divider" />}
+
+                {detail.items.length > 0 && (
+                  <div className="overlay__footer">
+                    <div className="overlay__total-row">
+                      <span className="overlay__total-label">SUBTOTAL</span>
+                      <span className="overlay__total-value">
+                        {currencySymbol}
+                        {detail.subtotal}
+                      </span>
+                    </div>
+                    <div className="overlay__total-row">
+                      <span className="overlay__total-label">TAX</span>
+                      <span className="overlay__total-value">
+                        {currencySymbol}
+                        {detail.tax_total}
+                      </span>
+                    </div>
+                    {detail.service_charge != null && Number(detail.service_charge) > 0 && (
+                      <div className="overlay__total-row">
+                        <span className="overlay__total-label">SERVICE</span>
+                        <span className="overlay__total-value">
+                          {currencySymbol}
+                          {detail.service_charge}
+                        </span>
+                      </div>
+                    )}
+                    <div className="overlay__total-row overlay__total-row--final">
+                      <span className="overlay__total-label overlay__total-label--large">
+                        TOTAL
+                      </span>
+                      <span className="overlay__total-value overlay__total-value--large">
+                        {currencySymbol}
+                        {detail.total_amount}
+                      </span>
+                    </div>
+                    <button type="button" className="overlay__cta">
+                      PROCESS PAYMENT
+                    </button>
+                  </div>
+                )}
               </>
             ) : (
-              <p className="overlay__empty">No session for this table.</p>
+              <p className="overlay__empty">No active order for this table.</p>
             )}
           </>
         )}
 
         {activeOverlayTab === "reservations" && (
           <div className="overlay__body">
-            <div className="overlay__date-filter">
-              <label className="overlay__date-label">
-                FROM
-                <input
-                  type="date"
-                  className="overlay__date-input"
-                  value={dateFrom}
-                  onChange={(e) => setDateFrom(e.target.value)}
-                />
-              </label>
-              <label className="overlay__date-label">
-                TO
-                <input
-                  type="date"
-                  className="overlay__date-input"
-                  value={dateTo}
-                  onChange={(e) => setDateTo(e.target.value)}
-                />
-              </label>
-            </div>
-            {onBookTable && (
-              <button
-                type="button"
-                className="overlay__action-btn overlay__book-btn"
-                onClick={() => onBookTable(table)}
-              >
-                BOOK THIS TABLE
-              </button>
-            )}
-            {filteredTableReservations.length === 0 ? (
-              <div className="overlay__reservations-empty">
-                <p className="overlay__empty">No reservations for this period.</p>
-              </div>
+            {dayReservations.length === 0 ? (
+              <p className="overlay__empty">No reservations for this table.</p>
             ) : (
-              filteredTableReservations.map((r) => {
-                const isLate =
-                  r.status === "pending" && new Date(r.start_at).getTime() < currentTime.getTime()
-                return (
-                  <div key={r.public_id} className="overlay__reservation-row">
-                    <div className="overlay__reservation-info">
-                      <span className="overlay__reservation-name">
-                        {r.name}
-                        {isLate && <span className="overlay__late-tag">late</span>}
-                      </span>
-                      <span className="overlay__reservation-meta">
-                        {r.guest_count} guests &middot; {getDateTimeFromDatetime(r.start_at)}
-                        {r.end_at &&
-                          ` — ${isSameDay(new Date(r.start_at), new Date(r.end_at)) ? getTimeFromDatetime(r.end_at) : getDateTimeFromDatetime(r.end_at)}`}
-                      </span>
-                      {r.notes && <span className="overlay__reservation-notes">{r.notes}</span>}
-                      <span className="overlay__reservation-status">{r.status}</span>
-                    </div>
-                    <div className="overlay__reservation-actions">
-                      {r.status === "pending" && onActivateReservation && (
-                        <button
-                          type="button"
-                          className="overlay__activate-btn"
-                          onClick={() => onActivateReservation(r)}
-                          disabled={actionLoading}
-                        >
-                          ACTIVATE
-                        </button>
+              dayReservations.map((r) => (
+                <div key={r.public_id} className="overlay__reservation-row">
+                  <div className="overlay__reservation-info">
+                    <span className="overlay__reservation-name">
+                      {r.name}
+                      {r.status === "active" && (
+                        <span className="overlay__reservation-tag">SEATED NOW</span>
                       )}
-                      {onModifyReservation && (
-                        <button
-                          type="button"
-                          className="overlay__modify-btn"
-                          onClick={() => onModifyReservation(r)}
-                          disabled={actionLoading}
-                        >
-                          MODIFY
-                        </button>
-                      )}
-                      {r.status === "pending" && (
-                        <button
-                          type="button"
-                          className="overlay__cancel-btn"
-                          onClick={() => handleCancelReservation(r.public_id)}
-                          disabled={actionLoading}
-                        >
-                          CANCEL
-                        </button>
-                      )}
-                    </div>
+                    </span>
+                    <span className="overlay__reservation-meta">
+                      {r.guest_count} guests &middot; {formatTimeRange(r.start_at, r.end_at)}
+                    </span>
                   </div>
-                )
-              })
+                  {!isOccupied && r.status === "pending" && (
+                    <button
+                      type="button"
+                      className="overlay__seat-btn"
+                      disabled={actionBusy}
+                      onClick={() => onActivateReservation?.(r.public_id)}
+                    >
+                      {busyActionId === r.public_id ? "…" : "SEAT"}
+                    </button>
+                  )}
+                </div>
+              ))
             )}
           </div>
-        )}
-
-        {showMoveModal && (
-          <div className="overlay__move-modal">
-            <div className="overlay__move-modal-content">
-              <h3 className="overlay__move-modal-title">MOVE TO TABLE</h3>
-              <div className="overlay__move-modal-tables">
-                {availableTablesWithInfo.length === 0 ? (
-                  <p className="overlay__empty">No available tables</p>
-                ) : (
-                  availableTablesWithInfo.map((t) => (
-                    <button
-                      key={t.public_id}
-                      type="button"
-                      className={`overlay__move-table-btn ${t.hasCapacityIssue ? "overlay__move-table-btn--warning" : ""}`}
-                      onClick={() => handleMoveTableClick(t.public_id, t.public_number, t.capacity)}
-                      disabled={actionLoading}
-                    >
-                      <div className="overlay__move-table-info">
-                        <span className="overlay__move-table-number">Table {t.public_number}</span>
-                        <span className="overlay__move-table-capacity">
-                          {t.capacity} P {t.hasCapacityIssue && `(party: ${currentGuestCount})`}
-                        </span>
-                      </div>
-                      {t.nextReservationStartAt && (
-                        <span className="overlay__move-table-next">
-                          Next: {getTimeFromDatetime(t.nextReservationStartAt)}
-                        </span>
-                      )}
-                    </button>
-                  ))
-                )}
-              </div>
-              <button
-                type="button"
-                className="overlay__move-modal-close"
-                onClick={() => setShowMoveModal(false)}
-              >
-                CANCEL
-              </button>
-            </div>
-          </div>
-        )}
-
-        {confirmMove && (
-          <div className="overlay__confirm-modal">
-            <div className="overlay__confirm-content">
-              <h3 className="overlay__confirm-title">CAPACITY WARNING</h3>
-              <p className="overlay__confirm-text">
-                Table {confirmMove.tableNumber} has {confirmMove.capacity} seats, but the party has{" "}
-                {currentGuestCount} guests.
-              </p>
-              <p className="overlay__confirm-text">Are you sure you want to move?</p>
-              <div className="overlay__confirm-actions">
-                <button
-                  type="button"
-                  className="overlay__confirm-btn overlay__confirm-btn--cancel"
-                  onClick={() => setConfirmMove(null)}
-                  disabled={actionLoading}
-                >
-                  CANCEL
-                </button>
-                <button
-                  type="button"
-                  className="overlay__confirm-btn overlay__confirm-btn--confirm"
-                  onClick={() => handleMoveTable(confirmMove.tableId)}
-                  disabled={actionLoading}
-                >
-                  {actionLoading ? "MOVING..." : "CONFIRM MOVE"}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {voidReasonItemId && (
-          <div className="overlay__void-reason-modal">
-            <div className="overlay__void-reason-content">
-              <h3 className="overlay__void-reason-title">SELECT VOID REASON</h3>
-              {voidReasonError && <p className="overlay__error">{voidReasonError}</p>}
-              <div className="overlay__void-reason-list">
-                {voidReasons.map((vr) => (
-                  <button
-                    key={vr.code}
-                    type="button"
-                    className={`overlay__void-reason-btn ${voidingItemId === voidReasonItemId ? "overlay__void-reason-btn--loading" : ""}`}
-                    onClick={() => handleVoidItemConfirm(vr.code)}
-                    disabled={voidingItemId === voidReasonItemId}
-                  >
-                    {vr.label}
-                  </button>
-                ))}
-              </div>
-              <button
-                type="button"
-                className="overlay__void-reason-cancel"
-                onClick={() => setVoidReasonItemId(null)}
-                disabled={voidingItemId === voidReasonItemId}
-              >
-                CANCEL
-              </button>
-            </div>
-          </div>
-        )}
-
-        {showOrderCreation && sessionId && (
-          <OrderCreationModal
-            sessionId={sessionId}
-            guestCount={detail?.guest_count ?? 0}
-            restaurantId={restaurantId}
-            onClose={() => setShowOrderCreation(false)}
-            onSuccess={() => {
-              setShowOrderCreation(false)
-              onRefresh()
-            }}
-          />
         )}
       </div>
+
+      {showCloseCheck && (
+        <CloseCheckModal
+          busy={actionBusy}
+          error={actionError}
+          onConfirm={() => onCloseCheck?.()}
+          onClose={() => setShowCloseCheck(false)}
+        />
+      )}
     </>
   )
 }

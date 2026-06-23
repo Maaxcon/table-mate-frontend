@@ -85,24 +85,30 @@ export function BookingsList({
                       </span>
                     </p>
                   </div>
-                  <div className="booking-card__actions">
-                    <button
-                      type="button"
-                      className="booking-card__btn"
-                      onClick={() => onModify(booking)}
-                      disabled={isBusy}
-                    >
-                      Modify
-                    </button>
-                    <button
-                      type="button"
-                      className="booking-card__btn booking-card__btn--danger"
-                      onClick={() => onCancel(booking)}
-                      disabled={isBusy}
-                    >
-                      {isBusy ? "Cancelling..." : "Cancel"}
-                    </button>
-                  </div>
+                  {booking.status === "active" ? (
+                    <p className="booking-card__row booking-card__row--muted">
+                      Your table is active — ask the waiter for changes.
+                    </p>
+                  ) : (
+                    <div className="booking-card__actions">
+                      <button
+                        type="button"
+                        className="booking-card__btn"
+                        onClick={() => onModify(booking)}
+                        disabled={isBusy}
+                      >
+                        Modify
+                      </button>
+                      <button
+                        type="button"
+                        className="booking-card__btn booking-card__btn--danger"
+                        onClick={() => onCancel(booking)}
+                        disabled={isBusy}
+                      >
+                        {isBusy ? "Cancelling..." : "Cancel"}
+                      </button>
+                    </div>
+                  )}
                 </li>
               )
             })}

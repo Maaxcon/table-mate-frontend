@@ -1,4 +1,4 @@
-import { getTimeFromDatetime } from "../data/waiterTypes"
+import { formatTimeRange } from "../data/waiterTypes"
 import type { ReservationItem } from "../data/waiterTypes"
 import "./ReservationsView.css"
 
@@ -15,7 +15,7 @@ export function ReservationsView({ reservations }: ReservationsViewProps) {
           <div key={r.public_id} className="reservations-view__item">
             <div className="reservations-view__item-left">
               <span className="reservations-view__item-time">
-                {getTimeFromDatetime(r.start_at)}
+                {formatTimeRange(r.start_at, r.end_at)}
               </span>
               <div className="reservations-view__item-info">
                 <span className="reservations-view__item-name">{r.name}</span>

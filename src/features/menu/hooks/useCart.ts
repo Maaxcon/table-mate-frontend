@@ -1,230 +1,374 @@
-import { useCallback, useEffect, useMemo, useReducer } from "react"
-import { fetchItem } from "@/features/menu/api"
-import type { MenuItem } from "@/features/menu/types"
+import { useCallback, useEffect, useMemo, useReducer, useRef } from "react"
+import { addCartItem, deleteCartItem, fetchCartItems, updateCartItem } from "@/features/menu/api"
+import type { CartItemResponse, MenuItem } from "@/features/menu/types"
+import { menuStrings } from "@/features/menu/strings"
 
-export type CartItem = { item: MenuItem; quantity: number }
-type CartLine = { publicId: string; quantity: number }
+export type CartItemWithDetails = {
+  id: string
+  menuItemId: string
+  quantity: number
+  comment: string | null
+  guestSlot: number | null
+  isMine: boolean
+  addedBy: string | null
+  isPaid: boolean
+  item: MenuItem | null
+}
 
 type State = {
-  restaurantId: string
-  lines: CartLine[]
-  itemsById: Record<string, MenuItem>
+  items: CartItemResponse[]
+  snapshot: CartItemResponse[] | null
+  loading: boolean
+  error: string | null
+  errorItemId: string | null
 }
 
 type Action =
-  | { type: "ADD"; item: MenuItem }
-  | { type: "SET_QTY"; publicId: string; quantity: number }
-  | { type: "CLEAR" }
-  | { type: "LOAD_RESTAURANT"; restaurantId: string; lines: CartLine[] }
-  | { type: "HYDRATE_ITEMS"; requestedIds: string[]; items: MenuItem[] }
-
-function storageKey(restaurantId: string): string {
-  return `tablemate.cart.${restaurantId}.v2`
-}
-
-function legacyStorageKey(restaurantId: string): string {
-  return `tablemate.cart.${restaurantId}.v1`
-}
-
-function isValidCartLine(v: unknown): v is CartLine {
-  return (
-    typeof v === "object" &&
-    v !== null &&
-    typeof (v as CartLine).publicId === "string" &&
-    typeof (v as CartLine).quantity === "number" &&
-    Number.isFinite((v as CartLine).quantity) &&
-    (v as CartLine).quantity > 0
-  )
-}
-
-function isLegacyCartItem(v: unknown): v is CartItem {
-  return (
-    typeof v === "object" &&
-    v !== null &&
-    "item" in v &&
-    typeof (v as CartItem).item?.public_id === "string" &&
-    typeof (v as CartItem).quantity === "number" &&
-    Number.isFinite((v as CartItem).quantity) &&
-    (v as CartItem).quantity > 0
-  )
-}
-
-function loadLinesFromStorage(restaurantId: string): CartLine[] {
-  try {
-    const raw = localStorage.getItem(storageKey(restaurantId))
-    if (raw) {
-      const parsed: unknown = JSON.parse(raw)
-      if (Array.isArray(parsed)) return parsed.filter(isValidCartLine)
+  | { type: "SET_ITEMS"; items: CartItemResponse[] }
+  | { type: "OPTIMISTIC_ADD"; item: CartItemResponse }
+  | { type: "OPTIMISTIC_UPDATE"; itemId: string; changes: Partial<CartItemResponse> }
+  | { type: "OPTIMISTIC_REMOVE"; itemId: string }
+  | { type: "SAVE_SNAPSHOT" }
+  | { type: "ROLLBACK" }
+  | { type: "SET_LOADING"; loading: boolean }
+  | {
+      type: "SET_ERROR"
+      error: string | null
+      itemId?: string | null
     }
-
-    const legacyRaw = localStorage.getItem(legacyStorageKey(restaurantId))
-    if (!legacyRaw) return []
-
-    const legacyParsed: unknown = JSON.parse(legacyRaw)
-    if (!Array.isArray(legacyParsed)) return []
-
-    return legacyParsed.filter(isLegacyCartItem).map(({ item, quantity }) => ({
-      publicId: item.public_id,
-      quantity,
-    }))
-  } catch {
-    return []
-  }
-}
 
 function reducer(state: State, action: Action): State {
   switch (action.type) {
-    case "ADD": {
-      const existing = state.lines.find((line) => line.publicId === action.item.public_id)
-      if (existing) {
+    case "SET_ITEMS":
+      return { ...state, items: action.items, loading: false, error: null, errorItemId: null }
+    case "OPTIMISTIC_ADD": {
+      const exists = state.items.find((i) => i.menu_item === action.item.menu_item)
+      if (exists) {
         return {
           ...state,
-          lines: state.lines.map((line) =>
-            line.publicId === action.item.public_id
-              ? { ...line, quantity: line.quantity + 1 }
-              : line,
+          items: state.items.map((i) =>
+            i.menu_item === action.item.menu_item
+              ? { ...i, quantity: i.quantity + action.item.quantity }
+              : i,
           ),
-          itemsById: { ...state.itemsById, [action.item.public_id]: action.item },
         }
       }
-      return {
-        ...state,
-        lines: [...state.lines, { publicId: action.item.public_id, quantity: 1 }],
-        itemsById: { ...state.itemsById, [action.item.public_id]: action.item },
-      }
+      return { ...state, items: [...state.items, action.item] }
     }
-    case "SET_QTY": {
-      if (action.quantity <= 0) {
-        const itemsById = { ...state.itemsById }
-        delete itemsById[action.publicId]
-        return {
-          ...state,
-          lines: state.lines.filter((line) => line.publicId !== action.publicId),
-          itemsById,
-        }
-      }
+    case "OPTIMISTIC_UPDATE":
       return {
         ...state,
-        lines: state.lines.map((line) =>
-          line.publicId === action.publicId ? { ...line, quantity: action.quantity } : line,
+        items: state.items.map((i) =>
+          i.public_id === action.itemId ? { ...i, ...action.changes } : i,
         ),
       }
-    }
-    case "CLEAR":
-      return { ...state, lines: [], itemsById: {} }
-    case "LOAD_RESTAURANT":
-      return { restaurantId: action.restaurantId, lines: action.lines, itemsById: {} }
-    case "HYDRATE_ITEMS": {
-      const requestedIds = new Set(action.requestedIds)
-      const validIds = new Set(action.items.map((item) => item.public_id))
-      const itemsById = { ...state.itemsById }
-
-      for (const publicId of requestedIds) {
-        delete itemsById[publicId]
-      }
-      for (const item of action.items) {
-        itemsById[item.public_id] = item
-      }
-
+    case "OPTIMISTIC_REMOVE":
       return {
         ...state,
-        lines: state.lines.filter(
-          (line) => !requestedIds.has(line.publicId) || validIds.has(line.publicId),
-        ),
-        itemsById,
+        items: state.items.filter((i) => i.public_id !== action.itemId),
       }
-    }
+    case "SAVE_SNAPSHOT":
+      return { ...state, snapshot: state.items }
+    case "ROLLBACK":
+      return {
+        ...state,
+        items: state.snapshot ?? state.items,
+        snapshot: null,
+        error: null,
+      }
+    case "SET_LOADING":
+      return { ...state, loading: action.loading }
+    case "SET_ERROR":
+      return {
+        ...state,
+        error: action.error,
+        errorItemId: action.itemId ?? null,
+      }
   }
 }
 
-export type UseCartResult = {
-  items: CartItem[]
+type UseCartOptions = {
+  cartSessionId: string | null
+  guestJwt: string | null
+  itemsById: Record<string, MenuItem>
+  reserved?: boolean
+  onAuthError?: () => void
+}
+
+type UseCartResult = {
+  items: CartItemWithDetails[]
   totalCount: number
   totalPrice: number
-  addItem: (item: MenuItem) => void
-  setQuantity: (publicId: string, quantity: number) => void
-  clear: () => void
+  loading: boolean
+  error: string | null
+  errorItemId: string | null
+  addItem: (menuItemId: string, comment?: string) => Promise<void>
+  changeQuantity: (itemId: string, delta: number) => Promise<void>
+  removeItem: (itemId: string) => Promise<void>
+  syncFromServer: () => Promise<void>
+  clearError: () => void
 }
 
-function initState(restaurantId: string): State {
-  return { restaurantId, lines: loadLinesFromStorage(restaurantId), itemsById: {} }
+const initialState: State = {
+  items: [],
+  snapshot: null,
+  loading: false,
+  error: null,
+  errorItemId: null,
 }
 
-function useCart(restaurantId: string, guestToken?: string): UseCartResult {
-  const [state, dispatch] = useReducer(reducer, restaurantId, initState)
+const MENU_ITEM_UNAVAILABLE = "menu_item_unavailable"
 
+function isUnavailableError(err: unknown): boolean {
+  return err instanceof Error && (err as { code?: string }).code === MENU_ITEM_UNAVAILABLE
+}
+
+function isAuthError(err: unknown): boolean {
+  return err instanceof Error && (err as { status?: number }).status === 401
+}
+
+function getUnavailableMessage(
+  menuItemId: string | undefined,
+  itemsById: Record<string, MenuItem>,
+): string {
+  if (!menuItemId) {
+    return menuStrings.cart.unavailable(menuStrings.cart.unknownItem)
+  }
+  const name = itemsById[menuItemId]?.name ?? menuStrings.cart.unknownItem
+  return menuStrings.cart.unavailable(name)
+}
+
+function resolveCartError(
+  err: unknown,
+  fallback: string,
+  info: { menuItemId?: string; itemsById: Record<string, MenuItem> },
+): string {
+  if (isUnavailableError(err)) {
+    return getUnavailableMessage(info.menuItemId, info.itemsById)
+  }
+  return err instanceof Error ? err.message : fallback
+}
+
+function buildDetails(
+  items: CartItemResponse[],
+  itemsById: Record<string, MenuItem>,
+): CartItemWithDetails[] {
+  return items.map((ci) => ({
+    id: ci.public_id,
+    menuItemId: ci.menu_item,
+    quantity: ci.quantity,
+    comment: ci.comment,
+    guestSlot: ci.guest_slot,
+    isMine: ci.is_mine,
+    addedBy: ci.added_by,
+    isPaid: ci.is_paid,
+    item: itemsById[ci.menu_item] ?? null,
+  }))
+}
+
+export function useCart({
+  cartSessionId,
+  guestJwt,
+  itemsById,
+  reserved,
+  onAuthError,
+}: UseCartOptions): UseCartResult {
+  const [state, dispatch] = useReducer(reducer, initialState)
+  const initialFetchDone = useRef(false)
+
+  const mutationChain = useRef<Promise<void>>(Promise.resolve())
+  const runExclusive = useCallback((task: () => Promise<void>): Promise<void> => {
+    const next = mutationChain.current.then(task, task)
+    mutationChain.current = next.catch(() => {})
+    return next
+  }, [])
+
+  const itemsRef = useRef(state.items)
   useEffect(() => {
-    dispatch({
-      type: "LOAD_RESTAURANT",
-      restaurantId,
-      lines: loadLinesFromStorage(restaurantId),
-    })
-  }, [restaurantId])
+    itemsRef.current = state.items
+  }, [state.items])
 
-  useEffect(() => {
-    if (!restaurantId || state.restaurantId !== restaurantId) return
-    try {
-      localStorage.setItem(storageKey(restaurantId), JSON.stringify(state.lines))
-      localStorage.removeItem(legacyStorageKey(restaurantId))
-    } catch {
-      // localStorage unavailable (private mode, quota exceeded) — ignore
-    }
-  }, [restaurantId, state.restaurantId, state.lines])
-
-  useEffect(() => {
-    if (!restaurantId || state.restaurantId !== restaurantId || state.lines.length === 0) return
-
-    const missingLines = state.lines.filter((line) => !state.itemsById[line.publicId])
-    if (missingLines.length === 0) return
-
-    const controller = new AbortController()
-    const requestedIds = missingLines.map((line) => line.publicId)
-
-    Promise.all(
-      requestedIds.map((publicId) =>
-        fetchItem(restaurantId, publicId, guestToken, controller.signal),
-      ),
-    )
-      .then((items) => {
-        const availableItems = items.filter(
-          (item): item is MenuItem => item !== null && item.is_available === true,
-        )
-        dispatch({ type: "HYDRATE_ITEMS", requestedIds, items: availableItems })
-      })
-      .catch(() => {
-        if (controller.signal.aborted) return
-      })
-
-    return () => controller.abort()
-  }, [guestToken, restaurantId, state.itemsById, state.lines, state.restaurantId])
-
-  const addItem = useCallback((item: MenuItem) => dispatch({ type: "ADD", item }), [])
-  const setQuantity = useCallback(
-    (publicId: string, quantity: number) => dispatch({ type: "SET_QTY", publicId, quantity }),
+  const findMenuItemIdByCartItem = useCallback(
+    (cartItemId: string): string | undefined =>
+      itemsRef.current.find((ci) => ci.public_id === cartItemId)?.menu_item,
     [],
   )
-  const clear = useCallback(() => dispatch({ type: "CLEAR" }), [])
 
-  const items = useMemo(
-    () =>
-      state.lines.flatMap((line) => {
-        const item = state.itemsById[line.publicId]
-        return item ? [{ item, quantity: line.quantity }] : []
-      }),
-    [state.itemsById, state.lines],
+  useEffect(() => {
+    initialFetchDone.current = false
+  }, [cartSessionId, guestJwt])
+
+  const failMutation = useCallback(
+    (err: unknown, fallback: string, menuItemId: string | undefined, itemId: string | null) => {
+      dispatch({ type: "ROLLBACK" })
+      if (isAuthError(err)) {
+        onAuthError?.()
+        return
+      }
+      dispatch({
+        type: "SET_ERROR",
+        error: resolveCartError(err, fallback, { menuItemId, itemsById }),
+        itemId,
+      })
+    },
+    [itemsById, onAuthError],
   )
 
-  const totalCount = useMemo(() => items.reduce((sum, i) => sum + i.quantity, 0), [items])
+  const refetch = useCallback(async () => {
+    if (!cartSessionId || !guestJwt) return
+    dispatch({ type: "SET_LOADING", loading: true })
+    try {
+      const items = await fetchCartItems(cartSessionId, guestJwt)
+      itemsRef.current = items
+      dispatch({ type: "SET_ITEMS", items })
+    } catch (err) {
+      if (isAuthError(err)) {
+        onAuthError?.()
+      } else {
+        dispatch({
+          type: "SET_ERROR",
+          error: err instanceof Error ? err.message : menuStrings.cart.errorFetch,
+        })
+      }
+    } finally {
+      dispatch({ type: "SET_LOADING", loading: false })
+    }
+  }, [cartSessionId, guestJwt, onAuthError])
+
+  const syncFromServer = useCallback(() => runExclusive(refetch), [runExclusive, refetch])
+
+  useEffect(() => {
+    if (!cartSessionId || !guestJwt || !reserved) return
+    if (initialFetchDone.current) return
+    initialFetchDone.current = true
+    syncFromServer()
+  }, [cartSessionId, guestJwt, syncFromServer, reserved])
+
+  const addItem = useCallback(
+    (menuItemId: string, comment?: string): Promise<void> =>
+      runExclusive(async () => {
+        if (!cartSessionId || !guestJwt) return
+        dispatch({ type: "SAVE_SNAPSHOT" })
+        const trimmedComment = comment?.trim() || null
+        const tempItem: CartItemResponse = {
+          public_id: `temp-${Date.now()}`,
+          menu_item: menuItemId,
+          quantity: 1,
+          comment: trimmedComment,
+          added_by: null,
+          guest_slot: null,
+          is_mine: true,
+          is_paid: false,
+          cart_session: cartSessionId,
+          restaurant: "",
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        }
+        dispatch({ type: "OPTIMISTIC_ADD", item: tempItem })
+
+        try {
+          await addCartItem(
+            cartSessionId,
+            {
+              menu_item: menuItemId,
+              quantity: 1,
+              ...(trimmedComment ? { comment: trimmedComment } : {}),
+            },
+            guestJwt,
+          )
+          await refetch()
+        } catch (err) {
+          failMutation(err, menuStrings.cart.errorAdd, menuItemId, tempItem.public_id)
+        }
+      }),
+    [cartSessionId, guestJwt, refetch, failMutation, runExclusive],
+  )
+
+  const changeQuantity = useCallback(
+    (itemId: string, delta: number): Promise<void> =>
+      runExclusive(async () => {
+        if (!cartSessionId || !guestJwt) return
+        const current = itemsRef.current.find((ci) => ci.public_id === itemId)
+        if (!current) return
+        const quantity = current.quantity + delta
+        const menuItemIdForError = current.menu_item
+
+        dispatch({ type: "SAVE_SNAPSHOT" })
+
+        if (quantity <= 0) {
+          dispatch({ type: "OPTIMISTIC_REMOVE", itemId })
+          try {
+            await deleteCartItem(cartSessionId, itemId, guestJwt)
+            await refetch()
+          } catch (err) {
+            failMutation(err, menuStrings.cart.errorRemove, menuItemIdForError, itemId)
+          }
+          return
+        }
+
+        dispatch({
+          type: "OPTIMISTIC_UPDATE",
+          itemId,
+          changes: { quantity },
+        })
+
+        try {
+          await updateCartItem(cartSessionId, itemId, { quantity }, guestJwt)
+          await refetch()
+        } catch (err) {
+          failMutation(err, menuStrings.cart.errorUpdate, menuItemIdForError, itemId)
+        }
+      }),
+    [cartSessionId, guestJwt, refetch, failMutation, runExclusive],
+  )
+
+  const removeItem = useCallback(
+    (itemId: string): Promise<void> =>
+      runExclusive(async () => {
+        if (!cartSessionId || !guestJwt) return
+        dispatch({ type: "SAVE_SNAPSHOT" })
+        dispatch({ type: "OPTIMISTIC_REMOVE", itemId })
+        const menuItemIdForError = findMenuItemIdByCartItem(itemId)
+
+        try {
+          await deleteCartItem(cartSessionId, itemId, guestJwt)
+          await refetch()
+        } catch (err) {
+          failMutation(err, menuStrings.cart.errorRemove, menuItemIdForError, itemId)
+        }
+      }),
+    [cartSessionId, guestJwt, refetch, failMutation, findMenuItemIdByCartItem, runExclusive],
+  )
+
+  const clearError = useCallback(() => {
+    dispatch({ type: "SET_ERROR", error: null })
+  }, [])
+
+  const items = useMemo(() => buildDetails(state.items, itemsById), [state.items, itemsById])
+
+  const totalCount = useMemo(() => items.reduce((s, i) => s + i.quantity, 0), [items])
+
   const totalPrice = useMemo(
     () =>
-      items.reduce((sum, i) => {
+      items.reduce((s, i) => {
+        if (!i.item) return s
         const p = parseFloat(i.item.price)
-        return sum + (isNaN(p) ? 0 : p) * i.quantity
+        return s + (isNaN(p) ? 0 : p) * i.quantity
       }, 0),
     [items],
   )
 
-  return { items, totalCount, totalPrice, addItem, setQuantity, clear }
+  return {
+    items,
+    totalCount,
+    totalPrice,
+    loading: state.loading,
+    error: state.error,
+    errorItemId: state.errorItemId,
+    addItem,
+    changeQuantity,
+    removeItem,
+    syncFromServer,
+    clearError,
+  }
 }
-
-export { useCart }
