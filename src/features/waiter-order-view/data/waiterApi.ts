@@ -1,5 +1,11 @@
 import { apiFetch } from "@/api/client"
-import type { FloorTable, OverlayDetail, OverlayOrderItem, ReservationItem } from "./waiterTypes"
+import {
+  formatDuration,
+  type FloorTable,
+  type OverlayDetail,
+  type OverlayOrderItem,
+  type ReservationItem,
+} from "./waiterTypes"
 
 // ── API response shapes ──────────────────────────────────────────────
 interface ReservationApiItem {
@@ -83,11 +89,6 @@ function mapOrderItem(oi: OrderItemApiItem): OverlayOrderItem {
 function to2dp(value: string | undefined): string {
   const n = parseFloat(value ?? "")
   return Number.isFinite(n) ? n.toFixed(2) : "0.00"
-}
-
-function formatDuration(openedAt: string): string {
-  const minutes = Math.round((Date.now() - new Date(openedAt).getTime()) / 60000)
-  return minutes > 60 ? `${Math.floor(minutes / 60)}h${minutes % 60}m` : `${minutes}m`
 }
 
 const MAX_ITEM_PAGES = 100

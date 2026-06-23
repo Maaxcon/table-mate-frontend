@@ -91,6 +91,17 @@ export function formatTimeRange(start: string, end?: string | null): string {
     : getTimeFromDatetime(start)
 }
 
+export function formatDuration(openedAt: string): string {
+  const minutes = Math.round((Date.now() - new Date(openedAt).getTime()) / 60000)
+  return minutes > 60 ? `${Math.floor(minutes / 60)}h${minutes % 60}m` : `${minutes}m`
+}
+
+export function formatETA(startAt: string): string {
+  const minutes = Math.round((new Date(startAt).getTime() - Date.now()) / 60000)
+  if (minutes <= 0) return "now"
+  return minutes > 60 ? `${Math.floor(minutes / 60)}h${minutes % 60}m` : `${minutes}m`
+}
+
 const FIFTEEN_MINUTES_MS = 15 * 60 * 1000
 
 export function getTableVisualStatus(
