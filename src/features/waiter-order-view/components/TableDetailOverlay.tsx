@@ -24,6 +24,9 @@ interface TableDetailOverlayProps {
   onOpenTable?: (guestCount: number) => void
   onActivateReservation?: (reservationId: string) => void
   onCloseCheck?: () => void
+  onAddItem?: () => void
+  onModifyReservation?: (reservation: ReservationItem) => void
+  onCreateReservation?: () => void
   onClose: () => void
 }
 
@@ -40,6 +43,9 @@ export function TableDetailOverlay({
   onOpenTable,
   onActivateReservation,
   onCloseCheck,
+  onAddItem,
+  onModifyReservation,
+  onCreateReservation,
   onClose,
 }: TableDetailOverlayProps) {
   const isOccupied = visualStatus === "occupied"
@@ -199,7 +205,7 @@ export function TableDetailOverlay({
             {detail ? (
               <>
                 <div className="overlay__actions">
-                  <button type="button" className="overlay__action-btn">
+                  <button type="button" className="overlay__action-btn" onClick={onAddItem}>
                     ADD ITEM
                   </button>
                   <button type="button" className="overlay__action-btn">
@@ -304,18 +310,37 @@ export function TableDetailOverlay({
                       {r.guest_count} guests &middot; {formatTimeRange(r.start_at, r.end_at)}
                     </span>
                   </div>
-                  {!isOccupied && r.status === "pending" && (
-                    <button
-                      type="button"
-                      className="overlay__seat-btn"
-                      disabled={actionBusy}
-                      onClick={() => onActivateReservation?.(r.public_id)}
-                    >
-                      {busyActionId === r.public_id ? "…" : "SEAT"}
-                    </button>
-                  )}
+                  <div className="overlay__reservation-actions">
+                    {!isOccupied && r.status === "pending" && (
+                      <button
+                        type="button"
+                        className="overlay__seat-btn"
+                        disabled={actionBusy}
+                        onClick={() => onActivateReservation?.(r.public_id)}
+                      >
+                        {busyActionId === r.public_id ? "…" : "SEAT"}
+                      </button>
+                    )}
+                    {r.status === "active" && onModifyReservation && (
+                      <button
+                        type="button"
+                        className="overlay__seat-btn overlay__seat-btn--modify"
+                        onClick={() => onModifyReservation(r)}
+                      >
+                        MODIFY
+                      </button>
+                    )}
+                  </div>
                 </div>
               ))
+            )}
+
+            {onCreateReservation && (
+              <div className="overlay__body-footer">
+                <button type="button" className="overlay__cta" onClick={onCreateReservation}>
+                  NEW RESERVATION
+                </button>
+              </div>
             )}
           </div>
         )}

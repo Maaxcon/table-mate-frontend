@@ -5,6 +5,9 @@ import { FloorPlan } from "./components/FloorPlan"
 import { ReservationSidebar } from "./components/ReservationSidebar"
 import { TableDetailOverlay } from "./components/TableDetailOverlay"
 import { NotificationStreamSidebar } from "@/features/notification-stream/components/NotificationStreamSidebar"
+import { OrderCreationModal } from "./components/OrderCreationModal"
+import { ModifyReservationModal } from "./components/ModifyReservationModal"
+import { CreateReservationModal } from "./components/CreateReservationModal"
 import { useTableActions } from "./hooks/useTableActions"
 import type {
   FloorTable,
@@ -40,7 +43,6 @@ function mapTableToFloorTable(t: Table): FloorTable {
 }
 
 export function WaiterOrderView() {
-  const [activeTab, setActiveTab] = useState("FLOOR PLAN")
   const [selectedTableId, setSelectedTableId] = useState<string | null>(null)
   const [tables, setTables] = useState<FloorTable[]>([])
   const [layoutPayload, setLayoutPayload] = useState<LayoutPayload | null>(null)
@@ -56,6 +58,10 @@ export function WaiterOrderView() {
   const [currentTime, setCurrentTime] = useState(() => new Date())
   const [sidebarActionLoading, setSidebarActionLoading] = useState(false)
   const [sidebarError, setSidebarError] = useState<string | null>(null)
+  const [restaurantId, setRestaurantId] = useState<string>("")
+  const [modifyTarget, setModifyTarget] = useState<ReservationItem | null>(null)
+  const [orderModalOpen, setOrderModalOpen] = useState(false)
+  const [createResModalOpen, setCreateResModalOpen] = useState(false)
 
   useEffect(() => {
     const id = setInterval(() => setCurrentTime(new Date()), 60_000)
@@ -75,6 +81,9 @@ export function WaiterOrderView() {
         const layoutData = (await layoutRes.json()) as LayoutResponse
         const items = layoutData.tables ?? []
         setTables(items.map(mapTableToFloorTable))
+        if (items.length > 0 && !restaurantId) {
+          setRestaurantId(String(items[0].restaurant ?? ""))
+        }
         setLayoutPayload(
           layoutData.layout && typeof layoutData.layout === "object"
             ? (layoutData.layout as LayoutPayload)
@@ -229,8 +238,6 @@ export function WaiterOrderView() {
     }
   }
 
-  const showFloorPlan = activeTab === "FLOOR PLAN"
-
   const visualOccupiedCount = tables.filter(
     (t) => getTableVisualStatus(t, layoutReservations, currentTime) === "occupied",
   ).length
@@ -263,8 +270,6 @@ export function WaiterOrderView() {
         occupiedCount={visualOccupiedCount}
         reservedCount={visualReservedCount}
         freeCount={visualFreeCount}
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
       />
 
       {zones.length > 1 && (
@@ -284,33 +289,25 @@ export function WaiterOrderView() {
 
       <div className="waiter-view__layout">
         <div className="waiter-view__main">
-          {showFloorPlan ? (
-            <FloorPlan
-              payload={layoutPayload}
-              tables={tables}
-              selectedZoneId={selectedZoneId}
-              selectedId={selectedTableId}
-              upcomingReservations={layoutReservations}
-              currentTime={currentTime}
-              onSelect={handleTableSelect}
-              onZoneChange={setSelectedZoneId}
-            />
-          ) : (
-            <div className="waiter-view__placeholder">
-              <p>{activeTab} view — not yet implemented</p>
-            </div>
-          )}
+          <FloorPlan
+            payload={layoutPayload}
+            tables={tables}
+            selectedZoneId={selectedZoneId}
+            selectedId={selectedTableId}
+            upcomingReservations={layoutReservations}
+            currentTime={currentTime}
+            onSelect={handleTableSelect}
+            onZoneChange={setSelectedZoneId}
+          />
         </div>
 
-        {showFloorPlan && (
-          <ReservationSidebar
-            reservations={reservations}
-            onCancel={handleCancel}
-            onModify={handleModify}
-            actionLoading={sidebarActionLoading}
-            error={sidebarError}
-          />
-        )}
+        <ReservationSidebar
+          reservations={reservations}
+          onCancel={handleCancel}
+          onModify={handleModify}
+          actionLoading={sidebarActionLoading}
+          error={sidebarError}
+        />
 
         <NotificationStreamSidebar />
       </div>
@@ -330,7 +327,45 @@ export function WaiterOrderView() {
           onOpenTable={handleOpenTable}
           onActivateReservation={handleActivateReservation}
           onCloseCheck={overlayDetail ? () => handleCloseCheck(overlayDetail.public_id) : undefined}
+          onAddItem={overlayDetail ? () => setOrderModalOpen(true) : undefined}
+          onModifyReservation={(r) => setModifyTarget(r)}
+          onCreateReservation={() => setCreateResModalOpen(true)}
           onClose={closeOverlay}
+        />
+      )}
+
+      {modifyTarget && (
+        <ModifyReservationModal
+          reservation={modifyTarget}
+          onClose={() => setModifyTarget(null)}
+          onSuccess={() => {
+            setModifyTarget(null)
+            refreshFloor()
+          }}
+        />
+      )}
+
+      {orderModalOpen && overlayDetail && (
+        <OrderCreationModal
+          sessionId={overlayDetail.public_id}
+          guestCount={overlayDetail.guest_count}
+          restaurantId={restaurantId}
+          onClose={() => setOrderModalOpen(false)}
+          onSuccess={() => {
+            setOrderModalOpen(false)
+            refreshFloor()
+          }}
+        />
+      )}
+
+      {createResModalOpen && (
+        <CreateReservationModal
+          tables={tables.map((t) => ({ public_id: t.public_id, public_number: t.public_number }))}
+          onClose={() => setCreateResModalOpen(false)}
+          onSuccess={() => {
+            setCreateResModalOpen(false)
+            refreshFloor()
+          }}
         />
       )}
     </div>

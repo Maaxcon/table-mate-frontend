@@ -2,14 +2,10 @@ import { useEffect, useState } from "react"
 import { Link } from "react-router-dom"
 import "./TopNav.css"
 
-const TABS = ["FLOOR PLAN", "WAITLIST", "ANALYTICS"]
-
 interface TopNavProps {
   occupiedCount: number
   reservedCount: number
   freeCount: number
-  activeTab: string
-  onTabChange: (tab: string) => void
 }
 
 function getTimeString(): string {
@@ -28,13 +24,7 @@ function useCurrentTime(): string {
   return time
 }
 
-export function TopNav({
-  occupiedCount,
-  reservedCount,
-  freeCount,
-  activeTab,
-  onTabChange,
-}: TopNavProps) {
+export function TopNav({ occupiedCount, reservedCount, freeCount }: TopNavProps) {
   const currentTime = useCurrentTime()
 
   return (
@@ -49,19 +39,6 @@ export function TopNav({
           </span>
           <span className="top-nav__logo-text">LIVE OCCUPANCY</span>
         </div>
-      </div>
-
-      <div className="top-nav__tabs">
-        {TABS.map((tab) => (
-          <button
-            key={tab}
-            type="button"
-            className={`top-nav__tab ${activeTab === tab ? "top-nav__tab--active" : ""}`}
-            onClick={() => onTabChange(tab)}
-          >
-            {tab}
-          </button>
-        ))}
       </div>
 
       <div className="top-nav__right">

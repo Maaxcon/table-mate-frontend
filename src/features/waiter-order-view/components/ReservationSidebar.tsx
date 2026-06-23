@@ -1,6 +1,7 @@
 import { useState } from "react"
 import type { ReservationItem } from "../data/waiterTypes"
 import { formatTimeRange } from "../data/waiterTypes"
+import { ConfirmCancelModal } from "./ConfirmCancelModal"
 import "./ReservationSidebar.css"
 
 interface ReservationSidebarProps {
@@ -19,6 +20,7 @@ export function ReservationSidebar({
   error = null,
 }: ReservationSidebarProps) {
   const [searchQuery, setSearchQuery] = useState("")
+  const [confirmingId, setConfirmingId] = useState<string | null>(null)
 
   const sorted = [...reservations].sort(
     (a, b) => new Date(a.start_at).getTime() - new Date(b.start_at).getTime(),
@@ -90,7 +92,7 @@ export function ReservationSidebar({
                 <button
                   type="button"
                   className="reservation-sidebar__action-btn reservation-sidebar__action-btn--cancel"
-                  onClick={() => onCancel(r.public_id)}
+                  onClick={() => setConfirmingId(r.public_id)}
                   disabled={actionLoading}
                 >
                   CANCEL
@@ -104,6 +106,20 @@ export function ReservationSidebar({
       <button type="button" className="reservation-sidebar__action">
         GENERATE SHIFT REPORT
       </button>
+
+      {confirmingId && (
+        <ConfirmCancelModal
+          title="Cancel Reservation"
+          message="Are you sure you want to cancel this reservation? This action cannot be undone."
+          confirmLabel="Cancel Reservation"
+          busy={actionLoading}
+          onConfirm={() => {
+            onCancel(confirmingId)
+            setConfirmingId(null)
+          }}
+          onClose={() => setConfirmingId(null)}
+        />
+      )}
     </aside>
   )
 }
