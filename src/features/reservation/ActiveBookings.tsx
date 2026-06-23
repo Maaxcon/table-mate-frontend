@@ -113,6 +113,7 @@ export function ActiveBookings({
           currentGuests={rescheduleTarget.guest_count}
           tableCapacity={rescheduleTarget.table_info?.capacity ?? 10}
           workingHours={workingHours}
+          endTimeOnly={rescheduleTarget.status === "active"}
           onClose={() => setRescheduleTarget(null)}
           onSuccess={onRefresh}
         />

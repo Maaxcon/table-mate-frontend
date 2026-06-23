@@ -1,5 +1,5 @@
 import type { FloorTable, UpcomingReservation } from "../data/waiterTypes"
-import { getTableVisualStatus } from "../data/waiterTypes"
+import { getTableVisualStatus, formatDuration, formatETA } from "../data/waiterTypes"
 import "./FloorPlan.css"
 
 interface FloorPlanProps {
@@ -52,6 +52,30 @@ export function FloorPlan({
               </span>
 
               <span className="floor-plan__table-number">{table.table_number}</span>
+
+              {visualStatus === "reserved" && table.activeReservation && (
+                <div className="floor-plan__table-info">
+                  <span className="floor-plan__table-name">
+                    {table.activeReservation.guest_name}
+                  </span>
+                  <span className="floor-plan__table-since">
+                    in {formatETA(table.activeReservation.start_at)}
+                  </span>
+                </div>
+              )}
+
+              {visualStatus === "occupied" && table.activeSession && (
+                <div className="floor-plan__table-info">
+                  {table.activeReservation && (
+                    <span className="floor-plan__table-name">
+                      {table.activeReservation.guest_name}
+                    </span>
+                  )}
+                  <span className="floor-plan__table-since">
+                    {formatDuration(table.activeSession.opened_at)}
+                  </span>
+                </div>
+              )}
 
               <div className="floor-plan__table-meta">
                 <span className="floor-plan__table-capacity">{table.capacity} P</span>

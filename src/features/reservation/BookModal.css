@@ -238,6 +238,23 @@
   color: var(--color-text-primary);
 }
 
+.book-modal__notes {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--color-border-default);
+  background: var(--color-bg-surface);
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--color-text-primary);
+  resize: vertical;
+  min-height: 60px;
+}
+
+.book-modal__notes::placeholder {
+  color: var(--color-text-muted);
+}
+
 .book-modal__summary {
   display: flex;
   flex-direction: column;

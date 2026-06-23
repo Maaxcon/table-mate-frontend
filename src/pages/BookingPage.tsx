@@ -14,6 +14,12 @@ import { ActiveBookings } from "@/features/reservation/ActiveBookings"
 import { BookModal } from "@/features/reservation/BookModal"
 import { CustomerFloorPlan } from "@/features/reservation/CustomerFloorPlan"
 import { LoginCtaModal } from "@/features/reservation/LoginCtaModal"
+import { useFloorSubscription } from "@/features/reservation/hooks/useFloorSubscription"
+import type {
+  FloorTableStatusEvent,
+  FloorNewReservationEvent,
+  FloorReservationCancelledEvent,
+} from "@/features/reservation/hooks/useFloorSubscription"
 import { useAppSelector } from "@/store/hooks"
 import "./BookingPage.css"
 
@@ -135,6 +141,37 @@ export function BookingPage() {
   const handleRefresh = useCallback(() => {
     loadReservations()
   }, [loadReservations])
+
+  const handleTableStatusChanged = useCallback((event: FloorTableStatusEvent) => {
+    const isOccupied = event.current_status === "occupied"
+    setTables((prev) =>
+      prev.map((t) => {
+        if (t.public_id !== event.table_id) return t
+        return { ...t, is_occupied: isOccupied }
+      }),
+    )
+  }, [])
+
+  const handleNewReservation = useCallback((event: FloorNewReservationEvent) => {
+    setUpcomingReservations((prev) => [
+      ...prev,
+      {
+        public_id: event.reservation_id,
+        table_id: event.table_id,
+        start_at: event.start_at,
+      },
+    ])
+  }, [])
+
+  const handleReservationCancelled = useCallback((event: FloorReservationCancelledEvent) => {
+    setUpcomingReservations((prev) => prev.filter((r) => r.public_id !== event.reservation_id))
+  }, [])
+
+  useFloorSubscription({
+    onTableStatusChanged: handleTableStatusChanged,
+    onNewReservation: handleNewReservation,
+    onReservationCancelled: handleReservationCancelled,
+  })
 
   return (
     <div className="bp">

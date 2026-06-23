@@ -62,6 +62,7 @@
 
   /* Interactive */
   --color-like: #c81e1e;
+  --color-danger: var(--color-text-primary);
 }
 
 [data-theme="dark"] {
@@ -127,4 +128,5 @@
 
   /* Interactive */
   --color-like: #f87171;
+  --color-danger: var(--color-text-primary);
 }
