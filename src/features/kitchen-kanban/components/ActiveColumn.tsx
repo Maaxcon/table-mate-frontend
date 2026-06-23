@@ -33,6 +33,7 @@ export function ActiveColumn({ tickets, onToggleItem, onBump }: ActiveColumnProp
                   className={`kanban-card__bump ${allReady ? "kanban-card__bump--done" : ""}`}
                   onClick={() => onBump(ticket.id)}
                   disabled={!allReady}
+                  aria-label="Complete order"
                 >
                   {allReady ? (
                     <svg
@@ -44,6 +45,7 @@ export function ActiveColumn({ tickets, onToggleItem, onBump }: ActiveColumnProp
                       strokeWidth="3"
                       strokeLinecap="round"
                       strokeLinejoin="round"
+                      aria-hidden="true"
                     >
                       <polyline points="20 6 9 17 4 12" />
                     </svg>
@@ -59,6 +61,7 @@ export function ActiveColumn({ tickets, onToggleItem, onBump }: ActiveColumnProp
                     type="button"
                     className={`kanban-card__item-block ${item.status === "ready" ? "kanban-card__item-block--ready" : ""}`}
                     onClick={() => onToggleItem(ticket.id, item.id)}
+                    aria-pressed={item.status === "ready"}
                   >
                     <span>
                       {item.quantity}X {item.name}
@@ -77,6 +80,7 @@ export function ActiveColumn({ tickets, onToggleItem, onBump }: ActiveColumnProp
                         strokeWidth="3"
                         strokeLinecap="round"
                         strokeLinejoin="round"
+                        aria-hidden="true"
                       >
                         <polyline points="20 6 9 17 4 12" />
                       </svg>

@@ -25,6 +25,7 @@ export function CompletedColumn({ tickets }: CompletedColumnProps) {
               strokeWidth="3"
               strokeLinecap="round"
               strokeLinejoin="round"
+              aria-label="Completed"
             >
               <polyline points="20 6 9 17 4 12" />
             </svg>

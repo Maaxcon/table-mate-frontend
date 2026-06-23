@@ -249,7 +249,7 @@ export function KitchenKanban() {
   }
 
   return (
-    <div className="kanban">
+    <div className="kanban" aria-live="polite">
       <KanbanHeader currentTime={currentTime} />
 
       {mutationError && <div className="kanban__toast">{mutationError}</div>}
