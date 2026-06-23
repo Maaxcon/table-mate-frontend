@@ -387,7 +387,7 @@
 }
 
 .kanban__error {
-  color: red;
+  color: var(--color-error-text);
 }
 
 .kanban__toast {
