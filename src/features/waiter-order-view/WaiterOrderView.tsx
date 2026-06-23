@@ -8,6 +8,7 @@ import { NotificationStreamSidebar } from "@/features/notification-stream/compon
 import { OrderCreationModal } from "./components/OrderCreationModal"
 import { ModifyReservationModal } from "./components/ModifyReservationModal"
 import { CreateReservationModal } from "./components/CreateReservationModal"
+import { MoveTableModal } from "./components/MoveTableModal"
 import { useTableActions } from "./hooks/useTableActions"
 import type {
   FloorTable,
@@ -60,6 +61,7 @@ export function WaiterOrderView() {
   const [sidebarError, setSidebarError] = useState<string | null>(null)
   const [restaurantId, setRestaurantId] = useState<string>("")
   const [modifyTarget, setModifyTarget] = useState<ReservationItem | null>(null)
+  const [moveTarget, setMoveTarget] = useState<ReservationItem | null>(null)
   const [orderModalOpen, setOrderModalOpen] = useState(false)
   const [createResModalOpen, setCreateResModalOpen] = useState(false)
 
@@ -193,12 +195,16 @@ export function WaiterOrderView() {
       setOverlayLoading(false)
       if (table.zone) setSelectedZoneId(table.zone.public_id)
       setSelectedTableId(table.public_id)
+      setModifyTarget(r)
     },
     [tables, clearActionError],
   )
 
   useHallSubscription({
     onLayoutPublished: refreshFloor,
+    onTableStatusChanged: refreshFloor,
+    onNewReservation: refreshFloor,
+    onReservationCancelled: refreshFloor,
   })
 
   const buildOverlayDetail = async (
@@ -251,6 +257,11 @@ export function WaiterOrderView() {
     ? getTableVisualStatus(selectedTable, layoutReservations, currentTime)
     : "free"
 
+  const pendingTodayReservations = reservations.filter(
+    (r) =>
+      r.status === "pending" && new Date(r.start_at).toDateString() === currentTime.toDateString(),
+  )
+
   if (loading)
     return (
       <div className="waiter-view">
@@ -302,7 +313,7 @@ export function WaiterOrderView() {
         </div>
 
         <ReservationSidebar
-          reservations={reservations}
+          reservations={pendingTodayReservations}
           onCancel={handleCancel}
           onModify={handleModify}
           actionLoading={sidebarActionLoading}
@@ -326,9 +337,11 @@ export function WaiterOrderView() {
           actionError={actionError}
           onOpenTable={handleOpenTable}
           onActivateReservation={handleActivateReservation}
+          onCancelReservation={(reservationId) => handleCancel(reservationId)}
           onCloseCheck={overlayDetail ? () => handleCloseCheck(overlayDetail.public_id) : undefined}
           onAddItem={overlayDetail ? () => setOrderModalOpen(true) : undefined}
           onModifyReservation={(r) => setModifyTarget(r)}
+          onMoveTable={(r) => setMoveTarget(r)}
           onCreateReservation={() => setCreateResModalOpen(true)}
           onClose={closeOverlay}
         />
@@ -337,6 +350,7 @@ export function WaiterOrderView() {
       {modifyTarget && (
         <ModifyReservationModal
           reservation={modifyTarget}
+          tables={tables.map((t) => ({ public_id: t.public_id, public_number: t.public_number }))}
           onClose={() => setModifyTarget(null)}
           onSuccess={() => {
             setModifyTarget(null)
@@ -364,6 +378,18 @@ export function WaiterOrderView() {
           onClose={() => setCreateResModalOpen(false)}
           onSuccess={() => {
             setCreateResModalOpen(false)
+            refreshFloor()
+          }}
+        />
+      )}
+
+      {moveTarget && (
+        <MoveTableModal
+          reservation={moveTarget}
+          tables={tables.map((t) => ({ public_id: t.public_id, public_number: t.public_number }))}
+          onClose={() => setMoveTarget(null)}
+          onSuccess={() => {
+            setMoveTarget(null)
             refreshFloor()
           }}
         />
