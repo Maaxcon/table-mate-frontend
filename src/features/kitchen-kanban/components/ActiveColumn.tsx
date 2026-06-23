@@ -1,5 +1,5 @@
 import type { KanbanTicket } from "../types"
-import { elapsedMinutes } from "../utils"
+import { elapsedMinutes, timerUrgencyClass } from "../utils"
 
 interface ActiveColumnProps {
   tickets: KanbanTicket[]
@@ -20,13 +20,16 @@ export function ActiveColumn({ tickets, onToggleItem, onBump }: ActiveColumnProp
         )}
         {tickets.map((ticket) => {
           const allReady = ticket.items.every((it) => it.status === "ready")
+          const elapsed = elapsedMinutes(ticket.startedAt)
           return (
             <div key={ticket.id} className="kanban-card kanban-card--active">
               <div className="kanban-card__top">
                 <div className="kanban-card__header">
                   <span className="kanban-card__id">{ticket.id.slice(0, 8)}</span>
                   <span className="kanban-card__divider" />
-                  <span className="kanban-card__timer">{elapsedMinutes(ticket.startedAt)}m</span>
+                  <span className={`kanban-card__timer ${timerUrgencyClass(elapsed)}`}>
+                    {elapsed}m
+                  </span>
                 </div>
                 <button
                   type="button"

@@ -1,5 +1,5 @@
 import type { KanbanTicket } from "../types"
-import { elapsedMinutes } from "../utils"
+import { elapsedMinutes, timerUrgencyClass } from "../utils"
 
 interface IncomingColumnProps {
   tickets: KanbanTicket[]
@@ -17,27 +17,32 @@ export function IncomingColumn({ tickets, onPromote }: IncomingColumnProps) {
         {tickets.length === 0 && (
           <div className="kanban-card kanban-card--empty">No incoming orders</div>
         )}
-        {tickets.map((ticket) => (
-          <button
-            key={ticket.id}
-            type="button"
-            className={`kanban-card kanban-card--clickable ${elapsedMinutes(ticket.startedAt) > 7 ? "kanban-card--aged" : ""}`}
-            onClick={() => onPromote(ticket.id)}
-            title="Click to accept order"
-          >
-            <div className="kanban-card__header">
-              <span className="kanban-card__id">{ticket.id.slice(0, 8)}</span>
-              <span className="kanban-card__timer">{elapsedMinutes(ticket.startedAt)}m</span>
-            </div>
-            <div className="kanban-card__items">
-              {ticket.items.map((item) => (
-                <div key={item.id} className="kanban-card__item">
-                  {item.quantity}X {item.name}
-                </div>
-              ))}
-            </div>
-          </button>
-        ))}
+        {tickets.map((ticket) => {
+          const elapsed = elapsedMinutes(ticket.startedAt)
+          return (
+            <button
+              key={ticket.id}
+              type="button"
+              className={`kanban-card kanban-card--clickable ${elapsed > 7 ? "kanban-card--aged" : ""}`}
+              onClick={() => onPromote(ticket.id)}
+              title="Click to accept order"
+            >
+              <div className="kanban-card__header">
+                <span className="kanban-card__id">{ticket.id.slice(0, 8)}</span>
+                <span className={`kanban-card__timer ${timerUrgencyClass(elapsed)}`}>
+                  {elapsed}m
+                </span>
+              </div>
+              <div className="kanban-card__items">
+                {ticket.items.map((item) => (
+                  <div key={item.id} className="kanban-card__item">
+                    {item.quantity}X {item.name}
+                  </div>
+                ))}
+              </div>
+            </button>
+          )
+        })}
       </div>
     </div>
   )

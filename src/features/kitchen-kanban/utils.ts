@@ -6,6 +6,12 @@ export function elapsedMinutes(startedAt: number): number {
   return Math.floor((Date.now() - startedAt) / 60000)
 }
 
+export function timerUrgencyClass(elapsed: number): string {
+  if (elapsed >= 10) return "kanban-card__timer--danger"
+  if (elapsed >= 5) return "kanban-card__timer--warning"
+  return ""
+}
+
 export function mapItem(item: OrderItem): KanbanItem {
   return {
     id: item.public_id,
