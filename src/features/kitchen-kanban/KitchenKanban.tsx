@@ -5,6 +5,7 @@ import {
   fetchTickets,
   fetchCompletedTickets,
   fetchOrderItems,
+  fetchTicketStats,
   updateTicketStatus,
   updateOrderItemStatus,
   type KitchenTicket,
@@ -99,6 +100,7 @@ export function KitchenKanban() {
   const [tick, setTick] = useState(0)
   const [tickets, setTickets] = useState<KanbanTicket[]>([])
   const [completed, setCompleted] = useState<KanbanTicket[]>([])
+  const [avgPrepTimeSeconds, setAvgPrepTimeSeconds] = useState<number | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [mutationError, setMutationError] = useState<string | null>(null)
@@ -123,10 +125,11 @@ export function KitchenKanban() {
 
     async function load() {
       try {
-        const [incoming, active, completedList] = await Promise.all([
+        const [incoming, active, completedList, stats] = await Promise.all([
           fetchTickets("incoming", abort.signal),
           fetchTickets("active", abort.signal),
           fetchCompletedTickets(abort.signal),
+          fetchTicketStats(abort.signal),
         ])
 
         const allActive = [...incoming, ...active]
@@ -137,6 +140,7 @@ export function KitchenKanban() {
 
         setTickets(allActive.map((t, i) => mapTicket(t, itemsByOrder[i])))
         setCompleted(completedList.map(mapTicketShort))
+        setAvgPrepTimeSeconds(stats.avg_prep_time_seconds)
         setError(null)
       } catch (err) {
         if (err instanceof DOMException && err.name === "AbortError") return
@@ -261,6 +265,7 @@ export function KitchenKanban() {
         incomingCount={incoming.length}
         activeCount={active.length}
         completedCount={completed.length}
+        avgPrepTimeSeconds={avgPrepTimeSeconds}
       />
     </div>
   )

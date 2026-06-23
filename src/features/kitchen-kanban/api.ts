@@ -21,6 +21,14 @@ export interface KitchenTicket {
 const TICKETS_PATH = "/api/orders/tickets/"
 const ORDER_ITEMS_PATH = "/api/orders/order-items/"
 
+export interface TicketStats {
+  avg_prep_time_seconds: number | null
+}
+
+export function fetchTicketStats(signal?: AbortSignal): Promise<TicketStats> {
+  return api.get<TicketStats>(`${TICKETS_PATH}stats/`, { signal })
+}
+
 export function fetchTickets(
   status: TicketStatusEnum,
   signal?: AbortSignal,
