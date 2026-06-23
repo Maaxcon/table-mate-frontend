@@ -117,8 +117,8 @@ function FloorPlanSection() {
   })
 
   const handlePublishConfirm = useCallback(() => {
-    publish(entities, deletedServerIds)
-  }, [publish, entities, deletedServerIds])
+    publish(entities, deletedServerIds, edgeStyles)
+  }, [publish, entities, deletedServerIds, edgeStyles])
 
   const selectedEntity = visibleEntities.find((e) => e.id === selectedId) ?? null
 

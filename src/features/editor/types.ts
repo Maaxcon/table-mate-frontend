@@ -128,12 +128,16 @@ export interface LayoutPayload {
     width: number
     height: number
     target_zone_id: string | null
-    // Stored under `label` (the publish serializer aliases portal_label → label);
-    // `portal_label` kept for backward-compat with older payloads.
     label?: string
     portal_label?: string
     zone_id: string | null
   }>
+  edge_styles?: {
+    top: "dashed" | "solid"
+    right: "dashed" | "solid"
+    bottom: "dashed" | "solid"
+    left: "dashed" | "solid"
+  }
 }
 
 export function deserializeLayout(layout: LayoutPayload): EditorEntity[] {

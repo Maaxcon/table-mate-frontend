@@ -4,11 +4,10 @@
 
 .fp-view {
   position: relative;
+  display: flex;
   width: 100%;
-  overflow: hidden;
+  overflow: auto;
   background-color: var(--color-bg-surface);
-  background-image: radial-gradient(circle, var(--color-text-primary) 1px, transparent 1px);
-  background-size: 100px 100px;
   border: 2px solid var(--color-border-strong);
   box-sizing: border-box;
 }
@@ -196,4 +195,59 @@
 .fp-block__info-sub {
   font-size: 0.9rem;
   opacity: 0.7;
+}
+
+/* Canvas edge borders (mirrors editor-canvas__edge). */
+.fp-view__edge {
+  position: absolute;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.fp-view__edge--top {
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 0;
+  border-top: 3px dashed var(--color-border-strong);
+}
+
+.fp-view__edge--top.fp-view__edge--solid {
+  border-top-style: solid;
+}
+
+.fp-view__edge--right {
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 0;
+  border-right: 3px dashed var(--color-border-strong);
+}
+
+.fp-view__edge--right.fp-view__edge--solid {
+  border-right-style: solid;
+}
+
+.fp-view__edge--bottom {
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 0;
+  border-bottom: 3px dashed var(--color-border-strong);
+}
+
+.fp-view__edge--bottom.fp-view__edge--solid {
+  border-bottom-style: solid;
+}
+
+.fp-view__edge--left {
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 0;
+  border-left: 3px dashed var(--color-border-strong);
+}
+
+.fp-view__edge--left.fp-view__edge--solid {
+  border-left-style: solid;
 }

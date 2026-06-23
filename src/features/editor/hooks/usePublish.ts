@@ -14,7 +14,11 @@ export function usePublish({ onSuccess, onRollback }: UsePublishOptions) {
   const rollbackRef = useRef<(() => void) | null>(null)
 
   const publish = useCallback(
-    async (entities: EditorEntity[], deletedTableIds: string[] = []) => {
+    async (
+      entities: EditorEntity[],
+      deletedTableIds: string[] = [],
+      edgeStyles?: Record<string, "dashed" | "solid">,
+    ) => {
       setPublishing(true)
       setError(null)
       const layoutJson = serializeEntities(entities)
@@ -24,6 +28,12 @@ export function usePublish({ onSuccess, onRollback }: UsePublishOptions) {
       try {
         const data = await api.post<Record<string, unknown>>("/api/editor/layouts/publish/", {
           ...layoutJson,
+          edge_styles: edgeStyles ?? {
+            top: "dashed",
+            right: "dashed",
+            bottom: "dashed",
+            left: "dashed",
+          },
           deleted_table_ids: deletedTableIds,
         })
         onSuccess(data)

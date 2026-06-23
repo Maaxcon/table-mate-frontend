@@ -64,7 +64,7 @@ export function FloorPlanView({
   useEffect(() => {
     const el = containerRef.current
     if (!el) return
-    const update = () => setScale(el.clientWidth / CANVAS_W)
+    const update = () => setScale(Math.max(el.clientWidth / CANVAS_W, 0.3))
     update()
     const observer = new ResizeObserver(update)
     observer.observe(el)
@@ -73,6 +73,12 @@ export function FloorPlanView({
 
   const entities = useMemo<EditorEntity[]>(
     () => (payload ? deserializeLayout(payload) : []),
+    [payload],
+  )
+
+  const edgeStyles = useMemo(
+    () =>
+      payload?.edge_styles ?? { top: "dashed", right: "dashed", bottom: "dashed", left: "dashed" },
     [payload],
   )
 
@@ -89,14 +95,30 @@ export function FloorPlanView({
     )
   }
 
+  const scaledW = CANVAS_W * scale
+  const scaledH = CANVAS_H * scale
+
   return (
-    <div className="fp-view" ref={containerRef} style={{ height: CANVAS_H * scale }}>
+    <div className="fp-view" ref={containerRef}>
+      <div
+        style={{
+          width: scaledW,
+          height: scaledH,
+          flexShrink: 0,
+          pointerEvents: "none",
+          visibility: "hidden",
+        }}
+      />
       <div
         className="fp-view__stage"
         style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
           width: CANVAS_W,
           height: CANVAS_H,
           transform: `scale(${scale})`,
+          transformOrigin: "top left",
         }}
       >
         {visible.map((e) =>
@@ -108,6 +130,18 @@ export function FloorPlanView({
             onPortalNavigate,
           }),
         )}
+        <div
+          className={`fp-view__edge fp-view__edge--top${edgeStyles.top === "solid" ? " fp-view__edge--solid" : ""}`}
+        />
+        <div
+          className={`fp-view__edge fp-view__edge--right${edgeStyles.right === "solid" ? " fp-view__edge--solid" : ""}`}
+        />
+        <div
+          className={`fp-view__edge fp-view__edge--bottom${edgeStyles.bottom === "solid" ? " fp-view__edge--solid" : ""}`}
+        />
+        <div
+          className={`fp-view__edge fp-view__edge--left${edgeStyles.left === "solid" ? " fp-view__edge--solid" : ""}`}
+        />
       </div>
     </div>
   )
