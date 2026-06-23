@@ -8,6 +8,7 @@ interface ReservationSidebarProps {
   onCancel: (reservationId: string) => void
   onModify: (reservation: ReservationItem) => void
   actionLoading: boolean
+  error?: string | null
 }
 
 export function ReservationSidebar({
@@ -15,6 +16,7 @@ export function ReservationSidebar({
   onCancel,
   onModify,
   actionLoading,
+  error = null,
 }: ReservationSidebarProps) {
   const [searchQuery, setSearchQuery] = useState("")
 
@@ -53,6 +55,12 @@ export function ReservationSidebar({
         />
       </div>
 
+      {error && (
+        <p className="reservation-sidebar__error" role="alert">
+          {error}
+        </p>
+      )}
+
       <div className="reservation-sidebar__list">
         {filtered.map((r, i) => (
           <div
@@ -69,9 +77,7 @@ export function ReservationSidebar({
               </div>
             </div>
             <div className="reservation-sidebar__item-right">
-              <span className="reservation-sidebar__item-table">
-                T-{r.table.replace("T-", "").padStart(2, "0")}
-              </span>
+              <span className="reservation-sidebar__item-table">{r.table}</span>
               <div className="reservation-sidebar__item-actions">
                 <button
                   type="button"

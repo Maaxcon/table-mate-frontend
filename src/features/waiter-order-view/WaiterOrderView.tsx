@@ -54,6 +54,8 @@ export function WaiterOrderView() {
   const [overlayDetail, setOverlayDetail] = useState<OverlayDetail | null>(null)
   const [overlayLoading, setOverlayLoading] = useState(false)
   const [currentTime, setCurrentTime] = useState(() => new Date())
+  const [sidebarActionLoading, setSidebarActionLoading] = useState(false)
+  const [sidebarError, setSidebarError] = useState<string | null>(null)
 
   useEffect(() => {
     const id = setInterval(() => setCurrentTime(new Date()), 60_000)
@@ -131,6 +133,30 @@ export function WaiterOrderView() {
     setOverlayDetail(null)
   }, [])
 
+  const handleCancel = useCallback(
+    async (reservationId: string) => {
+      setSidebarActionLoading(true)
+      setSidebarError(null)
+      try {
+        const res = await apiFetch(`/api/reservations/reservations/${reservationId}/`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status: "cancelled" }),
+        })
+        if (!res.ok) {
+          const body = (await res.json().catch(() => null)) as { detail?: string } | null
+          throw new Error(body?.detail ?? "Failed to cancel reservation")
+        }
+        await refreshFloor()
+      } catch (err) {
+        setSidebarError(err instanceof Error ? err.message : "Failed to cancel")
+      } finally {
+        setSidebarActionLoading(false)
+      }
+    },
+    [refreshFloor],
+  )
+
   const onActionComplete = useCallback(async () => {
     await refreshFloor()
     closeOverlay()
@@ -148,6 +174,19 @@ export function WaiterOrderView() {
     selectedTableId,
     onActionComplete,
   })
+
+  const handleModify = useCallback(
+    (r: ReservationItem) => {
+      const table = tables.find((t) => t.public_number === r.table)
+      if (!table) return
+      clearActionError()
+      setOverlayDetail(null)
+      setOverlayLoading(false)
+      if (table.zone) setSelectedZoneId(table.zone.public_id)
+      setSelectedTableId(table.public_id)
+    },
+    [tables, clearActionError],
+  )
 
   useHallSubscription({
     onLayoutPublished: refreshFloor,
@@ -263,7 +302,15 @@ export function WaiterOrderView() {
           )}
         </div>
 
-        {showFloorPlan && <ReservationSidebar reservations={reservations} />}
+        {showFloorPlan && (
+          <ReservationSidebar
+            reservations={reservations}
+            onCancel={handleCancel}
+            onModify={handleModify}
+            actionLoading={sidebarActionLoading}
+            error={sidebarError}
+          />
+        )}
 
         <NotificationStreamSidebar />
       </div>

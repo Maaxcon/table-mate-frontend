@@ -12,7 +12,7 @@ interface ReservationApiItem {
   public_id: string
   start_at: string
   end_at: string
-  table_info: { table_number: string } | null
+  table_info: { public_number: string } | null
   guest_count: number
   status: string
   notes?: string | null
@@ -51,7 +51,7 @@ function mapReservationItem(r: ReservationApiItem): ReservationItem {
     public_id: r.public_id,
     start_at: r.start_at,
     end_at: r.end_at,
-    table: r.table_info?.table_number ?? "",
+    table: r.table_info?.public_number ?? "",
     guest_count: r.guest_count,
     status: r.status as ReservationItem["status"],
     notes: r.notes,
