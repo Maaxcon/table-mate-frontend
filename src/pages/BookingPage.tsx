@@ -170,6 +170,7 @@ export function BookingPage() {
     onNewReservation: handleNewReservation,
     onReservationCancelled: handleReservationCancelled,
     onLayoutPublished: handleLayoutPublished,
+    restaurantPublicId: public_restaurant_id,
   })
 
   return (

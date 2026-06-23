@@ -1,6 +1,5 @@
 import { useEffect, useRef, useCallback } from "react"
 import { env } from "@/config/env"
-import { useAppSelector } from "@/store/hooks"
 
 export interface FloorTableStatusEvent {
   event_name: "HALL_TABLE_STATUS_CHANGED"
@@ -53,11 +52,11 @@ export function useFloorSubscription({
   onLayoutPublished,
   onClose,
   onError,
-}: UseFloorSubscriptionOptions) {
-  const accessToken = useAppSelector((s) => s.auth.accessToken)
+  restaurantPublicId,
+}: UseFloorSubscriptionOptions & { restaurantPublicId?: string }) {
   const wsRef = useRef<WebSocket | null>(null)
   const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const connectRef = useRef<(() => void) | null>(null)
+  const connectRef = useRef<(() => void) | undefined>(undefined)
   const callbacksRef = useRef({
     onTableStatusChanged,
     onNewReservation,
@@ -86,14 +85,14 @@ export function useFloorSubscription({
   ])
 
   const connect = useCallback(() => {
-    if (!accessToken || env.wsUrl === "Not configured") return
+    if (env.wsUrl === "Not configured" || !restaurantPublicId) return
 
     if (wsRef.current) {
       wsRef.current.close(1000, "Reconnecting")
       wsRef.current = null
     }
 
-    const ws = new WebSocket(`${env.wsUrl}/floor/?token=${accessToken}`)
+    const ws = new WebSocket(`${env.wsUrl}/floor/?restaurant_id=${restaurantPublicId}`)
     wsRef.current = ws
 
     ws.onopen = () => {
@@ -127,11 +126,11 @@ export function useFloorSubscription({
       wsRef.current = null
       callbacksRef.current.onClose?.()
 
-      if (event.code !== 1000 && accessToken) {
+      if (event.code !== 1000) {
         reconnectTimeoutRef.current = setTimeout(() => connectRef.current?.(), 3000)
       }
     }
-  }, [accessToken])
+  }, [restaurantPublicId])
 
   useEffect(() => {
     connectRef.current = connect
