@@ -100,11 +100,18 @@ export function KitchenKanban() {
   const [completed, setCompleted] = useState<KanbanTicket[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [mutationError, setMutationError] = useState<string | null>(null)
 
   useEffect(() => {
     const id = setInterval(() => setTick((t) => t + 1), 30000)
     return () => clearInterval(id)
   }, [])
+
+  useEffect(() => {
+    if (!mutationError) return
+    const id = setTimeout(() => setMutationError(null), 5000)
+    return () => clearTimeout(id)
+  }, [mutationError])
 
   useEffect(() => {
     const abort = new AbortController()
@@ -144,7 +151,9 @@ export function KitchenKanban() {
       const item = ticket?.items.find((it) => it.id === itemId)
       if (!item) return
 
-      const newStatus = item.status === "ready" ? "pending" : "ready"
+      if (item.status === "ready") return
+
+      const newStatus = "ready"
       try {
         const updated = await updateOrderItemStatus(itemId, newStatus)
         setTickets((prev) =>
@@ -155,7 +164,7 @@ export function KitchenKanban() {
           ),
         )
       } catch {
-        setError("Could not update item.")
+        setMutationError("Could not update item.")
       }
     },
     [tickets],
@@ -175,7 +184,7 @@ export function KitchenKanban() {
         ])
         setTickets((prev) => prev.filter((t) => t.id !== ticketId))
       } catch {
-        setError("Could not bump order.")
+        setMutationError("Could not bump order.")
       }
     },
     [tickets],
@@ -186,7 +195,7 @@ export function KitchenKanban() {
       await updateTicketStatus(ticketId, "active")
       setTickets((prev) => prev.map((t) => (t.id === ticketId ? { ...t, status: "active" } : t)))
     } catch {
-      setError("Could not accept order.")
+      setMutationError("Could not accept order.")
     }
   }, [])
 
@@ -233,6 +242,8 @@ export function KitchenKanban() {
   return (
     <div className="kanban">
       <KanbanHeader currentTime={currentTime} />
+
+      {mutationError && <div className="kanban__toast">{mutationError}</div>}
 
       <div className="kanban__columns">
         <IncomingColumn tickets={incoming} onPromote={promoteToActive} />
