@@ -14,7 +14,8 @@ import {
   LuUtensilsCrossed,
 } from "react-icons/lu"
 import { useAppSelector } from "@/store/hooks"
-import { fetchRestaurant, type PublicRestaurant } from "@/features/menu/api"
+import { fetchRestaurant } from "@/features/menu/api"
+import type { PublicRestaurant } from "@/features/menu/types"
 import { isRestaurantOpenNow } from "@/features/menu/utils"
 import { useAdminOverview } from "@/features/admin/hooks/useAdminOverview"
 import { useMenuData } from "@/features/admin/hooks/useMenuData"

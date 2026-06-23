@@ -1,18 +1,5 @@
 import type { Table, Reservation, OrderItemStatusEnum } from "@/types/api/types.gen"
 
-export interface TableReservationInfo {
-  public_id: string
-  guest_name: string
-  guest_count: number
-  start_at: string
-}
-
-export interface TableSessionInfo {
-  public_id: string
-  opened_at: string
-  guest_count: number
-}
-
 export type FloorTable = Pick<
   Table,
   | "public_id"
@@ -25,8 +12,6 @@ export type FloorTable = Pick<
   | "active"
 > & {
   zone?: { public_id: string; name: string } | null
-  activeReservation?: TableReservationInfo | null
-  activeSession?: TableSessionInfo | null
 }
 
 export interface UpcomingReservation {
@@ -39,12 +24,10 @@ export type VisualTableStatus = "free" | "occupied" | "reserved"
 
 export type ReservationItem = Pick<
   Reservation,
-  "public_id" | "start_at" | "end_at" | "guest_count" | "notes"
+  "public_id" | "start_at" | "end_at" | "guest_count" | "status" | "notes"
 > & {
   table: string
   name: string
-  customer: string | null
-  status: "pending" | "active"
 }
 
 export interface OverlayOrderItem {
@@ -55,10 +38,8 @@ export interface OverlayOrderItem {
   unit_price: string
   status: OrderItemStatusEnum
   is_wasted: boolean
-  source: "customer" | "waiter"
-  order_id: string
-  void_reason?: string | null
-  void_reason_note?: string | null
+  void_reason?: number | null
+  comment?: string | null
 }
 
 export interface OverlayDetail {
@@ -76,32 +57,23 @@ export interface OverlayDetail {
   service_charge?: string
 }
 
+export const VOID_REASON_LABELS: Record<number, string> = {
+  1: "mispick",
+  2: "guest_changed_mind",
+  3: "quality_issue",
+  4: "out_of_stock",
+}
+
 export function getTimeFromDatetime(datetime: string): string {
   const d = new Date(datetime)
   return `${d.getHours().toString().padStart(2, "0")}:${d.getMinutes().toString().padStart(2, "0")}`
 }
 
-export function getDateTimeFromDatetime(datetime: string): string {
-  const d = new Date(datetime)
-  const day = d.getDate().toString().padStart(2, "0")
-  const month = (d.getMonth() + 1).toString().padStart(2, "0")
-  const hours = d.getHours().toString().padStart(2, "0")
-  const minutes = d.getMinutes().toString().padStart(2, "0")
-  return `${day}.${month} ${hours}:${minutes}`
-}
-
-export function formatDuration(openedAt: string): string {
-  const durationMinutes = Math.round((Date.now() - new Date(openedAt).getTime()) / 60000)
-  if (durationMinutes < 60) return `${durationMinutes}m`
-  return `${Math.floor(durationMinutes / 60)}h${durationMinutes % 60}m`
-}
-
-export function formatETA(startAt: string): string {
-  const diffMs = new Date(startAt).getTime() - Date.now()
-  if (diffMs <= 0) return "now"
-  const diffMinutes = Math.round(diffMs / 60000)
-  if (diffMinutes < 60) return `${diffMinutes}m`
-  return `${Math.floor(diffMinutes / 60)}h${diffMinutes % 60}m`
+// "12:00–14:00" — the booking window. Falls back to just the start if no end.
+export function formatTimeRange(start: string, end?: string | null): string {
+  return end
+    ? `${getTimeFromDatetime(start)}–${getTimeFromDatetime(end)}`
+    : getTimeFromDatetime(start)
 }
 
 const FIFTEEN_MINUTES_MS = 15 * 60 * 1000
@@ -112,11 +84,12 @@ export function getTableVisualStatus(
   currentTime: Date,
 ): VisualTableStatus {
   if (table.is_occupied) return "occupied"
-  const hasReservation = upcomingReservations.some(
+  const hasImminentReservation = upcomingReservations.some(
     (r) =>
       r.table_id === table.public_id &&
-      new Date(r.start_at).getTime() - currentTime.getTime() <= FIFTEEN_MINUTES_MS,
+      new Date(r.start_at).getTime() - currentTime.getTime() <= FIFTEEN_MINUTES_MS &&
+      new Date(r.start_at).getTime() > currentTime.getTime(),
   )
-  if (hasReservation) return "reserved"
+  if (hasImminentReservation) return "reserved"
   return "free"
 }

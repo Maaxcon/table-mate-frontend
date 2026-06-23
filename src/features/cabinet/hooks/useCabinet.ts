@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import { setUser } from "@/store/auth/authSlice"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
 import {
+  BOOKINGS_PAGE_SIZE,
   cancelReservation,
   fetchMyProfile,
   fetchMyReceipts,
@@ -46,15 +47,15 @@ export function useCabinet(): UseCabinetResult {
   const [bookingsHasMore, setBookingsHasMore] = useState(false)
   const [bookingsActionId, setBookingsActionId] = useState<string | null>(null)
 
-  const currentPageRef = useRef(1)
+  const currentOffsetRef = useRef(0)
 
-  const loadBookingsPage = useCallback(async (page: number, signal?: AbortSignal) => {
-    const items = await fetchMyReservations({ page, signal })
+  const loadBookingsPage = useCallback(async (offset: number, signal?: AbortSignal) => {
+    const items = await fetchMyReservations({ limit: BOOKINGS_PAGE_SIZE, offset, signal })
     const visible = filterActiveBookings(items)
-    currentPageRef.current = page
+    currentOffsetRef.current = offset
 
-    setBookings((prev) => (page === 1 ? visible : [...prev, ...visible]))
-    setBookingsHasMore(visible.length > 0)
+    setBookings((prev) => (offset === 0 ? visible : [...prev, ...visible]))
+    setBookingsHasMore(visible.length >= BOOKINGS_PAGE_SIZE)
     setBookingsError(null)
   }, [])
 
@@ -67,8 +68,8 @@ export function useCabinet(): UseCabinetResult {
       const [profileResult, bookingsResult, allReservationsResult, receiptsResult] =
         await Promise.allSettled([
           fetchMyProfile(signal),
-          fetchMyReservations({ page: 1, signal }),
-          fetchMyReservations({ page: 1, signal, status: ["pending", "active"] }),
+          fetchMyReservations({ limit: BOOKINGS_PAGE_SIZE, offset: 0, signal }),
+          fetchMyReservations({ signal, status: ["pending", "active"] }),
           fetchMyReceipts(signal),
         ])
 
@@ -94,9 +95,9 @@ export function useCabinet(): UseCabinetResult {
 
       if (bookingsResult.status === "fulfilled") {
         const visible = filterActiveBookings(bookingsResult.value)
-        currentPageRef.current = 1
+        currentOffsetRef.current = 0
         setBookings(visible)
-        setBookingsHasMore(visible.length > 0)
+        setBookingsHasMore(visible.length >= BOOKINGS_PAGE_SIZE)
         setBookingsError(null)
       } else {
         setBookingsError("We could not load your bookings.")
@@ -118,7 +119,7 @@ export function useCabinet(): UseCabinetResult {
 
   const refreshBookings = useCallback(async () => {
     try {
-      await loadBookingsPage(1)
+      await loadBookingsPage(0)
     } catch {
       setBookingsError("We could not refresh your bookings.")
     }
@@ -126,7 +127,7 @@ export function useCabinet(): UseCabinetResult {
 
   const loadMoreBookings = useCallback(async () => {
     try {
-      await loadBookingsPage(currentPageRef.current + 1)
+      await loadBookingsPage(currentOffsetRef.current + BOOKINGS_PAGE_SIZE)
     } catch {
       setBookingsError("We could not load more bookings.")
     }

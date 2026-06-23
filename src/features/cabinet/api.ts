@@ -129,9 +129,12 @@ async function extractError(res: Response): Promise<string> {
   return "Could not save changes. Please try again."
 }
 
+export const BOOKINGS_PAGE_SIZE = 10
+
 // Load the signed-in customer's own reservations.
 type FetchMyReservationsOptions = {
-  page?: number
+  limit?: number
+  offset?: number
   signal?: AbortSignal
   status?: string[]
 }
@@ -147,7 +150,8 @@ export async function fetchMyReservations(
   options: FetchMyReservationsOptions = {},
 ): Promise<Reservation[]> {
   const params = new URLSearchParams()
-  if (options.page !== undefined) params.set("page", String(options.page))
+  if (options.limit !== undefined) params.set("limit", String(options.limit))
+  if (options.offset !== undefined) params.set("offset", String(options.offset))
   if (options.status) {
     for (const s of options.status) {
       params.append("status", s)

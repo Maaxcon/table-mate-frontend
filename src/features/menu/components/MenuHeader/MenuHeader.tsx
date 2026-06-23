@@ -2,7 +2,7 @@ import { Fragment, type ReactElement } from "react"
 import { Link } from "react-router-dom"
 import logo from "@/assets/logo.png"
 import type { AuthUser } from "@/store/auth/authSlice"
-import type { PublicRestaurantSettings } from "@/features/menu/api"
+import type { PublicRestaurantSettings } from "@/features/menu/types"
 import { getCurrencySymbol, isRestaurantOpenNow } from "@/features/menu/utils"
 import { menuStrings } from "@/features/menu/strings"
 

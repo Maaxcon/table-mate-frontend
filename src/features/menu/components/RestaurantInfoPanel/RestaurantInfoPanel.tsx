@@ -1,4 +1,4 @@
-import type { PublicRestaurantSettings, WorkingHours } from "@/features/menu/api"
+import type { PublicRestaurantSettings, WorkingHours } from "@/features/menu/types"
 import { menuStrings } from "@/features/menu/strings"
 import "./RestaurantInfoPanel.css"
 

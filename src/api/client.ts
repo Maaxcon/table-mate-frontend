@@ -5,13 +5,16 @@ import { clearAuth, setAccessToken } from "@/store/auth/authSlice"
 let refreshPromise: Promise<string> | null = null
 let refreshFailedForAccessToken: string | null | undefined
 
+let consecutiveRemintFailures = 0
+const MAX_REMINT_FAILURES = 3
+
 class RefreshAuthError extends Error {
   constructor() {
     super("Refresh token rejected")
   }
 }
 
-async function refreshAccessToken(): Promise<string> {
+export async function refreshAccessToken(): Promise<string> {
   const accessToken = store.getState().auth.accessToken
 
   if (refreshFailedForAccessToken !== undefined && refreshFailedForAccessToken === accessToken) {
@@ -79,18 +82,32 @@ async function apiFetch(path: string, init: RequestInit = {}): Promise<Response>
     return response
   }
 
+  if (consecutiveRemintFailures >= MAX_REMINT_FAILURES) {
+    refreshFailedForAccessToken = null
+    consecutiveRemintFailures = 0
+    store.dispatch(clearAuth())
+    return response
+  }
+
   try {
     const newToken = await refreshAccessToken()
     const retryHeaders = new Headers(init.headers)
     retryHeaders.set("Authorization", `Bearer ${newToken}`)
-    return fetch(`${env.apiBaseUrl}${path}`, {
+    const retry = await fetch(`${env.apiBaseUrl}${path}`, {
       ...init,
       headers: retryHeaders,
       credentials: "include",
     })
+    if (retry.status === 401) {
+      consecutiveRemintFailures += 1
+    } else {
+      consecutiveRemintFailures = 0
+    }
+    return retry
   } catch (err) {
     if (err instanceof RefreshAuthError) {
       refreshFailedForAccessToken = null
+      consecutiveRemintFailures = 0
       store.dispatch(clearAuth())
     }
     return response
@@ -197,4 +214,9 @@ export const api = {
   del: (path: string, opts?: RequestOptions) => request<void>("DELETE", path, undefined, opts),
 }
 
-export { apiFetch, ensureSession }
+/** The current logged-in user's access token, or null when anonymous. */
+function getAccessToken(): string | null {
+  return store.getState().auth.accessToken
+}
+
+export { apiFetch, ensureSession, getAccessToken }

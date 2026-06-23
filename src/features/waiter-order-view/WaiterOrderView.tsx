@@ -1,36 +1,20 @@
-import { useEffect, useState, useCallback, useMemo, useRef } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { TopNav } from "./components/TopNav"
 import { FloorPlan } from "./components/FloorPlan"
 import { ReservationSidebar } from "./components/ReservationSidebar"
 import { TableDetailOverlay } from "./components/TableDetailOverlay"
+import { NotificationStreamSidebar } from "@/features/notification-stream/components/NotificationStreamSidebar"
+import { useTableActions } from "./hooks/useTableActions"
 import type {
   FloorTable,
   ReservationItem,
   OverlayDetail,
-  OverlayOrderItem,
   UpcomingReservation,
-  TableReservationInfo,
-  TableSessionInfo,
 } from "./data/waiterTypes"
 import { getTableVisualStatus } from "./data/waiterTypes"
-import { useHallSubscription } from "./hooks/useHallSubscription"
-import type {
-  HallTableStatusChangedEvent,
-  HallNewReservationEvent,
-  HallReservationCancelledEvent,
-} from "./hooks/useHallSubscription"
-import type { Table } from "@/types/api/types.gen"
-import { BookModal } from "@/features/reservation/BookModal"
-import { RescheduleModal } from "@/features/reservation/RescheduleModal"
-import type { WorkingHoursDay } from "@/features/reservation/api"
-import {
-  cancelReservation,
-  activateReservation,
-  fetchRestaurantSettings,
-} from "@/features/reservation/api"
-import { useAppSelector } from "@/store/hooks"
+import { fetchOverlayDetail, fetchReservations } from "./data/waiterApi"
 import { apiFetch } from "@/api/client"
-import type { LayoutResponse } from "@/types/api"
+import type { LayoutResponse, Table } from "@/types/api"
 import "./WaiterOrderView.css"
 
 interface ZoneApiResponse {
@@ -66,7 +50,6 @@ export function WaiterOrderView() {
   const [layoutReservations, setLayoutReservations] = useState<UpcomingReservation[]>([])
   const [overlayDetail, setOverlayDetail] = useState<OverlayDetail | null>(null)
   const [overlayLoading, setOverlayLoading] = useState(false)
-  const [activeSessionId, setActiveSessionId] = useState<string | null>(null)
   const [currentTime, setCurrentTime] = useState(() => new Date())
 
   useEffect(() => {
@@ -74,296 +57,84 @@ export function WaiterOrderView() {
     return () => clearInterval(id)
   }, [])
 
-  const [bookingTable, setBookingTable] = useState<FloorTable | null>(null)
-  const [editingReservation, setEditingReservation] = useState<ReservationItem | null>(null)
-  const [sidebarActionLoading, setSidebarActionLoading] = useState(false)
-  const [sidebarKey, setSidebarKey] = useState(0)
-  const [workingHours, setWorkingHours] = useState<Record<string, WorkingHoursDay> | null>(null)
-
-  const restaurantId = useAppSelector((state) => state.auth.user?.restaurantId)
-
-  const enrichTablesWithSessionData = useCallback(
-    async (tablesData: FloorTable[], signal?: AbortSignal): Promise<FloorTable[]> => {
-      const occupiedTables = tablesData.filter((t) => t.is_occupied)
-      if (occupiedTables.length === 0) return tablesData
-
-      const enrichedTables = [...tablesData]
-
-      await Promise.all(
-        occupiedTables.map(async (table) => {
-          try {
-            const sessionRes = await apiFetch(
-              `/api/orders/sessions/?table__public_id=${table.public_id}&status=open`,
-              { signal },
-            )
-            if (!sessionRes.ok) return
-
-            const sessionData = (await sessionRes.json()) as {
-              results?: Array<{
-                public_id: string
-                opened_at: string
-                guest_count: number
-              }>
-            }
-            const session = (sessionData.results ?? [])[0]
-            if (!session) return
-
-            const idx = enrichedTables.findIndex((t) => t.public_id === table.public_id)
-            if (idx !== -1) {
-              enrichedTables[idx] = {
-                ...enrichedTables[idx],
-                activeSession: {
-                  public_id: session.public_id,
-                  opened_at: session.opened_at,
-                  guest_count: session.guest_count,
-                },
-              }
-            }
-          } catch {
-            // Skip failed enrichment for this table
-          }
-        }),
-      )
-
-      return enrichedTables
-    },
-    [],
-  )
-
-  const fetchSessionForTable = useCallback(
-    async (tablePublicId: string): Promise<TableSessionInfo | null> => {
-      try {
-        const sessionRes = await apiFetch(
-          `/api/orders/sessions/?table__public_id=${tablePublicId}&status=open`,
-        )
-        if (!sessionRes.ok) return null
-
-        const sessionData = (await sessionRes.json()) as {
-          results?: Array<{
-            public_id: string
-            opened_at: string
-            guest_count: number
-          }>
-        }
-        const session = (sessionData.results ?? [])[0]
-        if (!session) return null
-
-        return {
-          public_id: session.public_id,
-          opened_at: session.opened_at,
-          guest_count: session.guest_count,
-        }
-      } catch {
-        return null
-      }
-    },
-    [],
-  )
-
-  const latestTableEventRef = useRef<Record<string, string>>({})
-
-  const handleTableStatusChanged = useCallback(
-    async (event: HallTableStatusChangedEvent) => {
-      const { table_id, event_id, current_status } = event
-      const isOccupied = current_status === "occupied"
-
-      latestTableEventRef.current[table_id] = event_id
-
-      if (isOccupied) {
-        const sessionInfo = await fetchSessionForTable(table_id)
-        if (latestTableEventRef.current[table_id] !== event_id) return
-        setTables((prev) =>
-          prev.map((t) => {
-            if (t.public_id !== table_id) return t
-            return {
-              ...t,
-              is_occupied: true,
-              activeSession: sessionInfo,
-            }
-          }),
-        )
-      } else {
-        setTables((prev) =>
-          prev.map((t) => {
-            if (t.public_id !== table_id) return t
-            return {
-              ...t,
-              is_occupied: false,
-              activeSession: null,
-              activeReservation: null,
-            }
-          }),
-        )
-      }
-    },
-    [fetchSessionForTable],
-  )
-
-  const handleNewReservation = useCallback((event: HallNewReservationEvent) => {
-    setLayoutReservations((prev) => [
-      ...prev,
-      {
-        public_id: event.reservation_id,
-        table_id: event.table_id,
-        start_at: event.start_at,
-      },
+  useEffect(() => {
+    const controller = new AbortController()
+    Promise.all([
+      apiFetch(`/api/restaurants/tables/layout/`, {
+        signal: controller.signal,
+      }),
+      apiFetch(`/api/restaurants/zones/`, { signal: controller.signal }),
     ])
-  }, [])
-
-  const handleReservationCancelled = useCallback((event: HallReservationCancelledEvent) => {
-    setLayoutReservations((prev) => prev.filter((r) => r.public_id !== event.reservation_id))
-  }, [])
-
-  useHallSubscription({
-    onTableStatusChanged: handleTableStatusChanged,
-    onNewReservation: handleNewReservation,
-    onReservationCancelled: handleReservationCancelled,
-  })
-
-  useEffect(() => {
-    if (!restaurantId) return
-    fetchRestaurantSettings(restaurantId)
-      .then((settings) => setWorkingHours(settings.working_hours))
-      .catch(() => setWorkingHours(null))
-  }, [restaurantId])
-
-  const loadData = useCallback(async () => {
-    setLoading(true)
-    try {
-      const [layoutRes, zonesRes, pendingRes, activeRes] = await Promise.all([
-        apiFetch(`/api/restaurants/tables/layout/`),
-        apiFetch(`/api/restaurants/zones/`),
-        apiFetch(`/api/reservations/reservations/?status=pending`),
-        apiFetch(`/api/reservations/reservations/?status=active`),
-      ])
-
-      if (!layoutRes.ok) throw new Error("Failed to load tables")
-      const layoutData = (await layoutRes.json()) as LayoutResponse
-      const items = layoutData.tables ?? []
-      const mappedTables = items.map(mapTableToFloorTable)
-      setLayoutReservations(layoutData.upcoming_reservations ?? [])
-
-      if (zonesRes.ok) {
-        const zonesData = (await zonesRes.json()) as { results?: ZoneApiResponse[] }
-        const zonesList = zonesData.results ?? []
-        setZones(zonesList)
-        if (zonesList.length > 0) setSelectedZoneId((prev) => prev ?? zonesList[0].public_id)
-      }
-
-      const parseReservationResponse = async (res: Response) => {
-        if (!res.ok) return []
-        const data = (await res.json()) as {
-          results?: Array<{
-            public_id: string
-            start_at: string
-            end_at: string
-            table_info: { table_number: string } | null
-            guest_count: number
-            status: string
-            notes?: string | null
-            customer_name?: string
-            customer?: string | null
-          }>
+      .then(async ([layoutRes, zonesRes]) => {
+        if (!layoutRes.ok) throw new Error("Failed to load tables")
+        const layoutData = (await layoutRes.json()) as LayoutResponse
+        const items = layoutData.tables ?? []
+        setTables(items.map(mapTableToFloorTable))
+        setLayoutReservations(layoutData.upcoming_reservations ?? [])
+        if (zonesRes.ok) {
+          const zonesData = (await zonesRes.json()) as { results?: ZoneApiResponse[] }
+          const zonesList = zonesData.results ?? []
+          setZones(zonesList)
+          if (zonesList.length > 0) setSelectedZoneId(zonesList[0].public_id)
         }
-        return (data.results ?? []).map((r) => ({
-          public_id: r.public_id,
-          start_at: r.start_at,
-          end_at: r.end_at,
-          table: r.table_info?.table_number ?? "",
-          guest_count: r.guest_count,
-          status: r.status as "pending" | "active",
-          notes: r.notes,
-          name: r.customer_name ?? "Guest",
-          customer: r.customer ?? null,
-        }))
-      }
-
-      const [pendingItems, activeItems] = await Promise.all([
-        parseReservationResponse(pendingRes),
-        parseReservationResponse(activeRes),
-      ])
-      const reservationItems = [...pendingItems, ...activeItems]
-      setReservations(reservationItems)
-
-      const tablesWithReservations = mappedTables.map((table) => {
-        const matchingReservation = reservationItems.find(
-          (r) =>
-            r.table === table.table_number && (r.status === "pending" || r.status === "active"),
-        )
-        if (matchingReservation) {
-          return {
-            ...table,
-            activeReservation: {
-              public_id: matchingReservation.public_id,
-              guest_name: matchingReservation.name,
-              guest_count: matchingReservation.guest_count,
-              start_at: matchingReservation.start_at,
-            } as TableReservationInfo,
-          }
-        }
-        return table
       })
-
-      const enrichedTables = await enrichTablesWithSessionData(tablesWithReservations)
-      setTables(enrichedTables)
-      setSidebarKey((k) => k + 1)
-    } catch (err) {
-      if (err instanceof DOMException && err.name === "AbortError") return
-      setError(err instanceof Error ? err.message : "Failed to load data")
-    } finally {
-      setLoading(false)
-    }
-  }, [enrichTablesWithSessionData])
-
-  useEffect(() => {
-    loadData() // eslint-disable-line react-hooks/set-state-in-effect
-  }, [loadData])
-
-  const handleCancelReservation = useCallback(
-    async (reservationId: string) => {
-      setSidebarActionLoading(true)
-      try {
-        await cancelReservation(reservationId)
-        await loadData()
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to cancel reservation")
-      } finally {
-        setSidebarActionLoading(false)
-      }
-    },
-    [loadData],
-  )
-
-  const handleActivateReservation = useCallback(
-    async (reservation: ReservationItem) => {
-      setSidebarActionLoading(true)
-      try {
-        await activateReservation(reservation.public_id)
-        setSelectedTableId(null)
-        setOverlayDetail(null)
-        await loadData()
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to activate reservation")
-      } finally {
-        setSidebarActionLoading(false)
-      }
-    },
-    [loadData],
-  )
-
-  const handleModifyReservation = useCallback((reservation: ReservationItem) => {
-    setEditingReservation(reservation)
+      .catch((err) => {
+        if (err instanceof DOMException && err.name === "AbortError") return
+        setError(err instanceof Error ? err.message : "Failed to load data")
+      })
+      .finally(() => setLoading(false))
+    return () => controller.abort()
   }, [])
 
-  const excludeReservationIds = useMemo(() => {
-    if (!editingReservation) return undefined
-    if (editingReservation.customer) {
-      return reservations
-        .filter((r) => r.customer === editingReservation.customer)
-        .map((r) => r.public_id)
+  useEffect(() => {
+    const controller = new AbortController()
+    fetchReservations(controller.signal)
+      .then((items) => {
+        if (items) setReservations(items)
+      })
+      .catch(() => {})
+    return () => controller.abort()
+  }, [])
+
+  const refreshFloor = useCallback(async () => {
+    try {
+      const [layoutRes, items] = await Promise.all([
+        apiFetch(`/api/restaurants/tables/layout/`),
+        fetchReservations(),
+      ])
+      if (layoutRes.ok) {
+        const layoutData = (await layoutRes.json()) as LayoutResponse
+        setTables((layoutData.tables ?? []).map(mapTableToFloorTable))
+        setLayoutReservations(layoutData.upcoming_reservations ?? [])
+      }
+      if (items) setReservations(items)
+    } catch {
+      // keep current state on refresh failure
     }
-    return [editingReservation.public_id]
-  }, [editingReservation, reservations])
+  }, [])
+
+  const closeOverlay = useCallback(() => {
+    setSelectedTableId(null)
+    setOverlayDetail(null)
+  }, [])
+
+  const onActionComplete = useCallback(async () => {
+    await refreshFloor()
+    closeOverlay()
+  }, [refreshFloor, closeOverlay])
+
+  const {
+    actionBusy,
+    busyActionId,
+    actionError,
+    handleOpenTable,
+    handleActivateReservation,
+    handleCloseCheck,
+    clearActionError,
+  } = useTableActions({
+    selectedTableId,
+    onActionComplete,
+  })
 
   const buildOverlayDetail = async (
     tablePublicId: string,
@@ -372,142 +143,8 @@ export function WaiterOrderView() {
   ) => {
     setOverlayLoading(true)
     setOverlayDetail(null)
-
     try {
-      const sessionRes = await apiFetch(
-        `/api/orders/sessions/?table__public_id=${tablePublicId}&status=open`,
-      )
-      if (!sessionRes.ok) {
-        setOverlayLoading(false)
-        return
-      }
-      const sessionData = (await sessionRes.json()) as {
-        results?: Array<{
-          public_id: string
-          table: string
-          guest_count: number
-          opened_at: string
-          status: string
-        }>
-      }
-      const session = (sessionData.results ?? [])[0]
-      if (!session) {
-        setOverlayLoading(false)
-        return
-      }
-      const openedAt = new Date(session.opened_at)
-      const durationMinutes = Math.round((Date.now() - openedAt.getTime()) / 60000)
-      const duration =
-        durationMinutes > 60
-          ? `${Math.floor(durationMinutes / 60)}h${durationMinutes % 60}m`
-          : `${durationMinutes}m`
-
-      const orderRes = await apiFetch(`/api/orders/orders/?session__public_id=${session.public_id}`)
-      const orderItems: OverlayOrderItem[] = []
-      let order: {
-        public_id: string
-        currency: string
-        total_amount: string
-        tax_total: string
-        created_by_source: string
-        discount_total?: string
-        service_charge?: string
-      } | null = null
-
-      if (orderRes.ok) {
-        const orderData = (await orderRes.json()) as {
-          results?: Array<{
-            public_id: string
-            session: string
-            currency: string
-            total_amount: string
-            tax_total: string
-            created_by_source: string
-            discount_total?: string
-            service_charge?: string
-          }>
-        }
-        const orders = orderData.results ?? []
-        order = orders[0] ?? null
-
-        for (const ord of orders) {
-          const source = ord.created_by_source === "staff" ? "waiter" : "customer"
-          const oiRes = await apiFetch(`/api/orders/order-items/?order__public_id=${ord.public_id}`)
-          if (oiRes.ok) {
-            const oiData = (await oiRes.json()) as {
-              results?: Array<{
-                public_id: string
-                guest_slot: number
-                quantity: number
-                status: string
-                is_wasted: boolean
-                void_reason?: string | null
-                void_reason_note?: string | null
-                unit_price: string
-                menu_item_name?: string
-              }>
-            }
-            for (const oi of oiData.results ?? []) {
-              orderItems.push({
-                public_id: oi.public_id,
-                guest_slot: oi.guest_slot,
-                quantity: oi.quantity,
-                name: oi.menu_item_name ?? oi.public_id,
-                unit_price: oi.unit_price,
-                status: oi.status as OverlayOrderItem["status"],
-                is_wasted: oi.is_wasted,
-                void_reason: oi.void_reason ?? null,
-                void_reason_note: oi.void_reason_note ?? null,
-                source: source as "customer" | "waiter",
-                order_id: ord.public_id,
-              })
-            }
-          }
-        }
-      }
-
-      const selTable = currentTables.find((t) => t.public_id === tablePublicId)
-      const resForTable = currentReservations.find((r) => r.table === selTable?.table_number)
-
-      let rawSubtotal = 0
-      let rawTax = 0
-      let rawDiscount = 0
-      let rawServiceCharge = 0
-      let rawTotal = 0
-      let currency = ""
-      let detailId = session.public_id
-      const guestName = resForTable?.name ?? "Guest"
-
-      if (order) {
-        currency = order.currency
-        detailId = order.public_id
-        rawSubtotal = orderItems.reduce(
-          (sum, item) => sum + parseFloat(item.unit_price) * item.quantity,
-          0,
-        )
-        rawTax = parseFloat(order.tax_total)
-        rawDiscount = parseFloat(order.discount_total || "0")
-        rawServiceCharge = parseFloat(order.service_charge || "0")
-        rawTotal = rawSubtotal + rawTax - rawDiscount + rawServiceCharge
-      }
-
-      const currentSessionId = session.public_id
-      setActiveSessionId(currentSessionId)
-
-      setOverlayDetail({
-        public_id: detailId,
-        table_number: selTable?.table_number ?? "",
-        guest_name: guestName,
-        guest_count: session.guest_count,
-        duration,
-        currency,
-        items: orderItems,
-        subtotal: rawSubtotal.toFixed(2),
-        tax_total: rawTax.toFixed(2),
-        total_amount: rawTotal.toFixed(2),
-        discount_total: rawDiscount.toFixed(2),
-        service_charge: rawServiceCharge.toFixed(2),
-      })
+      setOverlayDetail(await fetchOverlayDetail(tablePublicId, currentTables, currentReservations))
     } finally {
       setOverlayLoading(false)
     }
@@ -526,11 +163,12 @@ export function WaiterOrderView() {
     : []
 
   const handleTableSelect = (table: FloorTable) => {
+    clearActionError()
     setSelectedTableId(table.public_id)
-    setOverlayDetail(null)
     if (table.is_occupied) {
       buildOverlayDetail(table.public_id, tables, reservations)
     } else {
+      setOverlayDetail(null)
       setOverlayLoading(false)
     }
   }
@@ -605,77 +243,27 @@ export function WaiterOrderView() {
           )}
         </div>
 
-        {showFloorPlan && (
-          <ReservationSidebar
-            key={sidebarKey}
-            reservations={reservations.filter((r) => r.status === "pending")}
-            onCancel={handleCancelReservation}
-            onModify={handleModifyReservation}
-            actionLoading={sidebarActionLoading}
-          />
-        )}
+        {showFloorPlan && <ReservationSidebar reservations={reservations} />}
+
+        <NotificationStreamSidebar />
       </div>
 
       {selectedTable && (
         <TableDetailOverlay
+          key={selectedTableId}
           table={selectedTable}
           detail={overlayDetail}
-          sessionId={activeSessionId}
-          restaurantId={restaurantId ?? ""}
           tableReservations={selectedTableReservations}
           visualStatus={selectedTableVisualStatus}
           loading={overlayLoading}
-          allTables={tables}
-          allReservations={reservations}
-          upcomingReservations={layoutReservations}
-          onClose={() => {
-            setSelectedTableId(null)
-            setOverlayDetail(null)
-            setActiveSessionId(null)
-          }}
-          onRefresh={loadData}
-          onBookTable={setBookingTable}
-          onModifyReservation={handleModifyReservation}
+          currentTime={currentTime}
+          actionBusy={actionBusy}
+          busyActionId={busyActionId}
+          actionError={actionError}
+          onOpenTable={handleOpenTable}
           onActivateReservation={handleActivateReservation}
-        />
-      )}
-
-      {bookingTable && (
-        <BookModal
-          table={bookingTable as unknown as Table}
-          workingHours={workingHours}
-          restaurantId={restaurantId ?? ""}
-          onClose={() => setBookingTable(null)}
-          onSuccess={() => {
-            setBookingTable(null)
-            loadData()
-          }}
-        />
-      )}
-
-      {editingReservation && (
-        <RescheduleModal
-          publicId={editingReservation.public_id}
-          tableNumber={editingReservation.table}
-          tablePublicId={
-            tables.find((t) => t.table_number === editingReservation.table)?.public_id ?? ""
-          }
-          currentDate={editingReservation.start_at}
-          currentStart={editingReservation.start_at}
-          currentEnd={editingReservation.end_at}
-          currentGuests={editingReservation.guest_count}
-          tableCapacity={
-            tables.find((t) => t.table_number === editingReservation.table)?.capacity ?? 10
-          }
-          restaurantId={restaurantId ?? undefined}
-          workingHours={workingHours}
-          excludeReservationIds={excludeReservationIds}
-          endTimeOnly={editingReservation.status === "active"}
-          onClose={() => setEditingReservation(null)}
-          onSuccess={() => {
-            setEditingReservation(null)
-            loadData()
-          }}
+          onCloseCheck={overlayDetail ? () => handleCloseCheck(overlayDetail.public_id) : undefined}
+          onClose={closeOverlay}
         />
       )}
     </div>

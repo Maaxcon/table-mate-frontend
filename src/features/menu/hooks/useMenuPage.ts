@@ -1,6 +1,10 @@
 import { useCallback, useState } from "react"
-import type { PublicRestaurantSettings, SortOrder } from "@/features/menu/api"
-import type { MenuCategory, MenuItem } from "@/features/menu/types"
+import type {
+  MenuCategory,
+  MenuItem,
+  PublicRestaurantSettings,
+  SortOrder,
+} from "@/features/menu/types"
 import { useRestaurantInfo } from "./useRestaurantInfo"
 import { useMenuCategories } from "./useMenuCategories"
 import { useMenuItems } from "./useMenuItems"

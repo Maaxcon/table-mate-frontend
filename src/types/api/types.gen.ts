@@ -129,6 +129,15 @@ export type CartSession = {
  */
 export type CartSessionStatusEnum = "active" | "closed"
 
+export type CheckoutResponse = {
+  order_id: string
+  subtotal: string
+  tax: string
+  service_charge: string
+  total: string
+  currency: string
+}
+
 /**
  * * `staff` - Staff
  * * `customer` - Customer
@@ -312,8 +321,7 @@ export type OrderItem = {
   tax_amount?: string
   voided_at?: string | null
   readonly voided_by: string
-  readonly void_reason: string | null
-  void_reason_note?: string | null
+  void_reason?: number | null
   is_wasted?: boolean
   readonly created_at: string
   readonly updated_at: string
@@ -611,8 +619,7 @@ export type PatchedOrderItem = {
   tax_amount?: string
   voided_at?: string | null
   readonly voided_by?: string
-  readonly void_reason?: string | null
-  void_reason_note?: string | null
+  void_reason?: number | null
   is_wasted?: boolean
   readonly created_at?: string
   readonly updated_at?: string
@@ -674,11 +681,12 @@ export type PatchedSession = {
   readonly opened_by?: string
   guest_count?: number
   status?: SessionStatusEnum
-  currency?: string
+  readonly currency?: string
   subtotal?: string
   tax?: string
+  service_charge?: string
   total?: string
-  opened_at?: string
+  readonly opened_at?: string
   readonly created_at?: string
   readonly updated_at?: string
 }
@@ -872,11 +880,12 @@ export type Session = {
   readonly opened_by: string
   guest_count: number
   status?: SessionStatusEnum
-  currency: string
+  readonly currency: string
   subtotal?: string
   tax?: string
+  service_charge?: string
   total?: string
-  opened_at: string
+  readonly opened_at: string
   readonly created_at: string
   readonly updated_at: string
 }
@@ -988,11 +997,6 @@ export type User = {
 export type VerifyScanResponse = {
   valid: boolean
   detail: string
-}
-
-export type VoidReason = {
-  readonly code: string
-  readonly label: string
 }
 
 /**
@@ -1154,7 +1158,7 @@ export type OrderItemWritable = {
   tax_rate?: string
   tax_amount?: string
   voided_at?: string | null
-  void_reason_note?: string | null
+  void_reason?: number | null
   is_wasted?: boolean
 }
 
@@ -1392,7 +1396,7 @@ export type PatchedOrderItemWritable = {
   tax_rate?: string
   tax_amount?: string
   voided_at?: string | null
-  void_reason_note?: string | null
+  void_reason?: number | null
   is_wasted?: boolean
 }
 
@@ -1432,11 +1436,10 @@ export type PatchedSessionWritable = {
   table?: string
   guest_count?: number
   status?: SessionStatusEnum
-  currency?: string
   subtotal?: string
   tax?: string
+  service_charge?: string
   total?: string
-  opened_at?: string
 }
 
 export type PatchedTicketWritable = {
@@ -1518,11 +1521,10 @@ export type SessionWritable = {
   table: string
   guest_count: number
   status?: SessionStatusEnum
-  currency: string
   subtotal?: string
   tax?: string
+  service_charge?: string
   total?: string
-  opened_at: string
 }
 
 export type TableWritable = {
@@ -2452,6 +2454,33 @@ export type OrdersCartSessionsRetrieveResponses = {
 export type OrdersCartSessionsRetrieveResponse =
   OrdersCartSessionsRetrieveResponses[keyof OrdersCartSessionsRetrieveResponses]
 
+export type OrdersCartSessionsCheckoutCreateData = {
+  body?: never
+  path: {
+    session_pk: string
+  }
+  query?: never
+  url: "/api/orders/cart/sessions/{session_pk}/checkout/"
+}
+
+export type OrdersCartSessionsCheckoutCreateErrors = {
+  /**
+   * Cart is empty.
+   */
+  400: unknown
+  /**
+   * Cart changed: unavailable items were removed (code CART_CHANGED).
+   */
+  409: unknown
+}
+
+export type OrdersCartSessionsCheckoutCreateResponses = {
+  201: CheckoutResponse
+}
+
+export type OrdersCartSessionsCheckoutCreateResponse =
+  OrdersCartSessionsCheckoutCreateResponses[keyof OrdersCartSessionsCheckoutCreateResponses]
+
 export type OrdersCartSessionsItemsListData = {
   body?: never
   path: {
@@ -2538,6 +2567,7 @@ export type OrdersOrderItemsListData = {
     menu_item?: number
     order?: number
     order__public_id?: string
+    order__session__public_id?: string
     /**
      * Which field to use when ordering the results.
      */
@@ -2613,22 +2643,6 @@ export type OrdersOrderItemsPartialUpdateResponses = {
 
 export type OrdersOrderItemsPartialUpdateResponse =
   OrdersOrderItemsPartialUpdateResponses[keyof OrdersOrderItemsPartialUpdateResponses]
-
-export type OrdersOrderItemsVoidCreateData = {
-  body?: never
-  path: {
-    public_id: string
-  }
-  query?: never
-  url: "/api/orders/order-items/{public_id}/void/"
-}
-
-export type OrdersOrderItemsVoidCreateResponses = {
-  200: OrderItem
-}
-
-export type OrdersOrderItemsVoidCreateResponse =
-  OrdersOrderItemsVoidCreateResponses[keyof OrdersOrderItemsVoidCreateResponses]
 
 export type OrdersOrdersListData = {
   body?: never
@@ -2809,6 +2823,22 @@ export type OrdersSessionsPartialUpdateResponses = {
 export type OrdersSessionsPartialUpdateResponse =
   OrdersSessionsPartialUpdateResponses[keyof OrdersSessionsPartialUpdateResponses]
 
+export type OrdersSessionsCloseCreateData = {
+  body?: never
+  path: {
+    public_id: string
+  }
+  query?: never
+  url: "/api/orders/sessions/{public_id}/close/"
+}
+
+export type OrdersSessionsCloseCreateResponses = {
+  200: Session
+}
+
+export type OrdersSessionsCloseCreateResponse =
+  OrdersSessionsCloseCreateResponses[keyof OrdersSessionsCloseCreateResponses]
+
 export type OrdersTicketsListData = {
   body?: never
   path?: never
@@ -2885,44 +2915,6 @@ export type OrdersTicketsPartialUpdateResponses = {
 
 export type OrdersTicketsPartialUpdateResponse =
   OrdersTicketsPartialUpdateResponses[keyof OrdersTicketsPartialUpdateResponses]
-
-export type OrdersVoidReasonsListData = {
-  body?: never
-  path?: never
-  query?: {
-    /**
-     * Which field to use when ordering the results.
-     */
-    ordering?: string
-  }
-  url: "/api/orders/void-reasons/"
-}
-
-export type OrdersVoidReasonsListResponses = {
-  200: Array<VoidReason>
-}
-
-export type OrdersVoidReasonsListResponse =
-  OrdersVoidReasonsListResponses[keyof OrdersVoidReasonsListResponses]
-
-export type OrdersVoidReasonsRetrieveData = {
-  body?: never
-  path: {
-    /**
-     * A unique integer value identifying this void reason.
-     */
-    id: number
-  }
-  query?: never
-  url: "/api/orders/void-reasons/{id}/"
-}
-
-export type OrdersVoidReasonsRetrieveResponses = {
-  200: VoidReason
-}
-
-export type OrdersVoidReasonsRetrieveResponse =
-  OrdersVoidReasonsRetrieveResponses[keyof OrdersVoidReasonsRetrieveResponses]
 
 export type PaymentsPaymentsListData = {
   body?: never
@@ -3072,7 +3064,7 @@ export type ReservationsReservationsPartialUpdateResponse =
   ReservationsReservationsPartialUpdateResponses[keyof ReservationsReservationsPartialUpdateResponses]
 
 export type ReservationsReservationsActivateCreateData = {
-  body: ReservationWritable
+  body?: never
   path: {
     public_id: string
   }
@@ -3086,40 +3078,6 @@ export type ReservationsReservationsActivateCreateResponses = {
 
 export type ReservationsReservationsActivateCreateResponse =
   ReservationsReservationsActivateCreateResponses[keyof ReservationsReservationsActivateCreateResponses]
-
-export type ReservationsReservationsCloseCheckCreateData = {
-  body: ReservationWritable
-  path: {
-    public_id: string
-  }
-  query?: never
-  url: "/api/reservations/reservations/{public_id}/close-check/"
-}
-
-export type ReservationsReservationsCloseCheckCreateResponses = {
-  200: Reservation
-}
-
-export type ReservationsReservationsCloseCheckCreateResponse =
-  ReservationsReservationsCloseCheckCreateResponses[keyof ReservationsReservationsCloseCheckCreateResponses]
-
-export type ReservationsReservationsMoveTableCreateData = {
-  body?: {
-    table_id: string
-  }
-  path: {
-    public_id: string
-  }
-  query?: never
-  url: "/api/reservations/reservations/{public_id}/move-table/"
-}
-
-export type ReservationsReservationsMoveTableCreateResponses = {
-  200: Reservation
-}
-
-export type ReservationsReservationsMoveTableCreateResponse =
-  ReservationsReservationsMoveTableCreateResponses[keyof ReservationsReservationsMoveTableCreateResponses]
 
 export type ReservationsReservationsAvailableSlotsRetrieveData = {
   body?: never
