@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react"
+import { useHallSubscription } from "./hooks/useHallSubscription"
 import { TopNav } from "./components/TopNav"
 import { FloorPlan } from "./components/FloorPlan"
 import { ReservationSidebar } from "./components/ReservationSidebar"
@@ -15,6 +16,7 @@ import { getTableVisualStatus } from "./data/waiterTypes"
 import { fetchOverlayDetail, fetchReservations } from "./data/waiterApi"
 import { apiFetch } from "@/api/client"
 import type { LayoutResponse, Table } from "@/types/api"
+import type { LayoutPayload } from "@/features/editor/types"
 import "./WaiterOrderView.css"
 
 interface ZoneApiResponse {
@@ -41,6 +43,7 @@ export function WaiterOrderView() {
   const [activeTab, setActiveTab] = useState("FLOOR PLAN")
   const [selectedTableId, setSelectedTableId] = useState<string | null>(null)
   const [tables, setTables] = useState<FloorTable[]>([])
+  const [layoutPayload, setLayoutPayload] = useState<LayoutPayload | null>(null)
   const [zones, setZones] = useState<ZoneApiResponse[]>([])
   const [selectedZoneId, setSelectedZoneId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -70,6 +73,11 @@ export function WaiterOrderView() {
         const layoutData = (await layoutRes.json()) as LayoutResponse
         const items = layoutData.tables ?? []
         setTables(items.map(mapTableToFloorTable))
+        setLayoutPayload(
+          layoutData.layout && typeof layoutData.layout === "object"
+            ? (layoutData.layout as LayoutPayload)
+            : null,
+        )
         setLayoutReservations(layoutData.upcoming_reservations ?? [])
         if (zonesRes.ok) {
           const zonesData = (await zonesRes.json()) as { results?: ZoneApiResponse[] }
@@ -105,6 +113,11 @@ export function WaiterOrderView() {
       if (layoutRes.ok) {
         const layoutData = (await layoutRes.json()) as LayoutResponse
         setTables((layoutData.tables ?? []).map(mapTableToFloorTable))
+        setLayoutPayload(
+          layoutData.layout && typeof layoutData.layout === "object"
+            ? (layoutData.layout as LayoutPayload)
+            : null,
+        )
         setLayoutReservations(layoutData.upcoming_reservations ?? [])
       }
       if (items) setReservations(items)
@@ -134,6 +147,10 @@ export function WaiterOrderView() {
   } = useTableActions({
     selectedTableId,
     onActionComplete,
+  })
+
+  useHallSubscription({
+    onLayoutPublished: refreshFloor,
   })
 
   const buildOverlayDetail = async (
@@ -230,11 +247,14 @@ export function WaiterOrderView() {
         <div className="waiter-view__main">
           {showFloorPlan ? (
             <FloorPlan
-              tables={filteredTables}
+              payload={layoutPayload}
+              tables={tables}
+              selectedZoneId={selectedZoneId}
               selectedId={selectedTableId}
               upcomingReservations={layoutReservations}
               currentTime={currentTime}
               onSelect={handleTableSelect}
+              onZoneChange={setSelectedZoneId}
             />
           ) : (
             <div className="waiter-view__placeholder">
