@@ -8,67 +8,15 @@ import {
   fetchTicketStats,
   updateTicketStatus,
   updateOrderItemStatus,
-  type KitchenTicket,
 } from "./api"
-import type { OrderItem } from "@/types/api/types.gen"
-import type { BatchCount, KanbanItem, KanbanTicket } from "./types"
-import { elapsedMinutes } from "./utils"
+import type { BatchCount, KanbanTicket } from "./types"
+import { elapsedMinutes, mapItem, mapTicket, mapTicketShort } from "./utils"
 import { KanbanHeader } from "./components/KanbanHeader"
 import { IncomingColumn } from "./components/IncomingColumn"
 import { ActiveColumn } from "./components/ActiveColumn"
 import { BatchColumn } from "./components/BatchColumn"
 import { CompletedColumn } from "./components/CompletedColumn"
 import { KanbanFooter } from "./components/KanbanFooter"
-
-function mapItem(item: OrderItem): KanbanItem {
-  return {
-    id: item.public_id,
-    name: item.menu_item_name,
-    quantity: item.quantity,
-    modifiers: item.comment ?? undefined,
-    status: item.status === "ready" ? "ready" : "pending",
-  }
-}
-
-function mapTicket(ticket: KitchenTicket, items: OrderItem[]): KanbanTicket {
-  const ticketItems = items.filter((it) => it.ticket === ticket.public_id)
-  return {
-    id: ticket.public_id,
-    status: (ticket.status ?? "incoming") as KanbanTicket["status"],
-    startedAt:
-      ticket.status === "incoming"
-        ? new Date(ticket.injected_at).getTime()
-        : new Date(ticket.started_at ?? ticket.injected_at).getTime(),
-    guestCount: ticket.guest_count,
-    serverName: ticket.server_name,
-    completedMinutes:
-      ticket.completed_at && ticket.started_at
-        ? Math.round(
-            (new Date(ticket.completed_at).getTime() - new Date(ticket.started_at).getTime()) /
-              60000,
-          )
-        : undefined,
-    items: ticketItems.map(mapItem),
-  }
-}
-
-function mapTicketShort(ticket: KitchenTicket): KanbanTicket {
-  return {
-    id: ticket.public_id,
-    status: "completed",
-    startedAt: new Date(ticket.started_at ?? ticket.injected_at).getTime(),
-    guestCount: ticket.guest_count,
-    serverName: ticket.server_name,
-    completedMinutes:
-      ticket.completed_at && ticket.started_at
-        ? Math.round(
-            (new Date(ticket.completed_at).getTime() - new Date(ticket.started_at).getTime()) /
-              60000,
-          )
-        : undefined,
-    items: [],
-  }
-}
 
 function useCurrentTime(): string {
   const [time, setTime] = useState(() =>
@@ -160,9 +108,7 @@ export function KitchenKanban() {
       const item = ticket?.items.find((it) => it.id === itemId)
       if (!item) return
 
-      if (item.status === "ready") return
-
-      const newStatus = "ready"
+      const newStatus = item.status === "ready" ? "pending" : "ready"
       try {
         const updated = await updateOrderItemStatus(itemId, newStatus)
         setTickets((prev) =>
