@@ -102,20 +102,15 @@ export function formatETA(startAt: string): string {
   return minutes > 60 ? `${Math.floor(minutes / 60)}h${minutes % 60}m` : `${minutes}m`
 }
 
-const FIFTEEN_MINUTES_MS = 15 * 60 * 1000
-
 export function getTableVisualStatus(
   table: FloorTable,
   upcomingReservations: UpcomingReservation[],
   currentTime: Date,
 ): VisualTableStatus {
   if (table.is_occupied) return "occupied"
-  const hasImminentReservation = upcomingReservations.some(
-    (r) =>
-      r.table_id === table.public_id &&
-      new Date(r.start_at).getTime() - currentTime.getTime() <= FIFTEEN_MINUTES_MS &&
-      new Date(r.start_at).getTime() > currentTime.getTime(),
+  const hasUpcomingReservation = upcomingReservations.some(
+    (r) => r.table_id === table.public_id && new Date(r.start_at).getTime() > currentTime.getTime(),
   )
-  if (hasImminentReservation) return "reserved"
+  if (hasUpcomingReservation) return "reserved"
   return "free"
 }
