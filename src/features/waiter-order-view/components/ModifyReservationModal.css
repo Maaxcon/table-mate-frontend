@@ -86,6 +86,70 @@
   outline: none;
 }
 
+.modify-res__section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.modify-res__section-title {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+}
+
+.modify-res__section-value {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--color-text-primary);
+}
+
+.modify-res__times {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.modify-res__time-btn {
+  padding: 6px 12px;
+  border: 1px solid var(--color-border-default);
+  background: var(--color-bg-surface);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.85rem;
+  border-radius: 4px;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
+}
+
+.modify-res__time-btn:hover {
+  border-color: var(--color-border-strong);
+}
+
+.modify-res__time-btn--active {
+  border-color: var(--color-text-primary);
+  background: var(--color-text-primary);
+  color: var(--color-bg-surface);
+}
+
+.modify-res__unit {
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+  flex-shrink: 0;
+}
+
+.modify-res__hint {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--color-error-text);
+  width: 100%;
+}
+
 .modify-res__error {
   margin: 0;
   color: var(--color-error-text);
