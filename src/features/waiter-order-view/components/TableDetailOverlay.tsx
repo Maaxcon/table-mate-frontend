@@ -23,9 +23,11 @@ interface TableDetailOverlayProps {
   actionError?: string | null
   onOpenTable?: (guestCount: number) => void
   onActivateReservation?: (reservationId: string) => void
+  onCancelReservation?: (reservationId: string) => void
   onCloseCheck?: () => void
   onAddItem?: () => void
   onModifyReservation?: (reservation: ReservationItem) => void
+  onMoveTable?: (reservation: ReservationItem) => void
   onCreateReservation?: () => void
   onClose: () => void
 }
@@ -42,9 +44,11 @@ export function TableDetailOverlay({
   actionError = null,
   onOpenTable,
   onActivateReservation,
+  onCancelReservation,
   onCloseCheck,
   onAddItem,
   onModifyReservation,
+  onMoveTable,
   onCreateReservation,
   onClose,
 }: TableDetailOverlayProps) {
@@ -208,9 +212,15 @@ export function TableDetailOverlay({
                   <button type="button" className="overlay__action-btn" onClick={onAddItem}>
                     ADD ITEM
                   </button>
-                  <button type="button" className="overlay__action-btn">
-                    MOVE TABLE
-                  </button>
+                  {nearestReservation && onMoveTable && (
+                    <button
+                      type="button"
+                      className="overlay__action-btn"
+                      onClick={() => onMoveTable(nearestReservation)}
+                    >
+                      MOVE TABLE
+                    </button>
+                  )}
                   <button
                     type="button"
                     className="overlay__action-btn"
@@ -312,14 +322,46 @@ export function TableDetailOverlay({
                   </div>
                   <div className="overlay__reservation-actions">
                     {!isOccupied && r.status === "pending" && (
-                      <button
-                        type="button"
-                        className="overlay__seat-btn"
-                        disabled={actionBusy}
-                        onClick={() => onActivateReservation?.(r.public_id)}
-                      >
-                        {busyActionId === r.public_id ? "…" : "SEAT"}
-                      </button>
+                      <>
+                        <button
+                          type="button"
+                          className="overlay__seat-btn"
+                          disabled={actionBusy}
+                          onClick={() => onActivateReservation?.(r.public_id)}
+                        >
+                          {busyActionId === r.public_id ? "…" : "SEAT"}
+                        </button>
+                        {onModifyReservation && (
+                          <button
+                            type="button"
+                            className="overlay__seat-btn overlay__seat-btn--modify"
+                            disabled={actionBusy}
+                            onClick={() => onModifyReservation(r)}
+                          >
+                            MODIFY
+                          </button>
+                        )}
+                        {onCancelReservation && (
+                          <button
+                            type="button"
+                            className="overlay__seat-btn overlay__seat-btn--cancel"
+                            disabled={actionBusy}
+                            onClick={() => onCancelReservation(r.public_id)}
+                          >
+                            CANCEL
+                          </button>
+                        )}
+                        {onMoveTable && (
+                          <button
+                            type="button"
+                            className="overlay__seat-btn"
+                            disabled={actionBusy}
+                            onClick={() => onMoveTable(r)}
+                          >
+                            MOVE
+                          </button>
+                        )}
+                      </>
                     )}
                     {r.status === "active" && onModifyReservation && (
                       <button
