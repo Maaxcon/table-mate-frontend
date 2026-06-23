@@ -75,6 +75,7 @@ export function useHallSubscription({
   const wsRef = useRef<WebSocket | null>(null)
   const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const connectRef = useRef<(() => void) | undefined>(undefined)
+  const tokenRef = useRef(accessToken)
 
   const callbacksRef = useRef({
     onTableStatusChanged,
@@ -140,10 +141,14 @@ export function useHallSubscription({
       wsRef.current = null
       callbacksRef.current.onClose?.()
 
-      if (event.code !== 1000 && accessToken) {
+      if (event.code !== 1000 && tokenRef.current) {
         reconnectTimeoutRef.current = setTimeout(() => connectRef.current?.(), 3000)
       }
     }
+  }, [accessToken])
+
+  useEffect(() => {
+    tokenRef.current = accessToken
   }, [accessToken])
 
   useEffect(() => {
