@@ -160,6 +160,14 @@
   line-height: 1.2;
 }
 
+.floor-plan__table-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  margin-top: 4px;
+}
+
 .floor-plan__table--round .floor-plan__table-guests {
   margin-top: 0;
 }
@@ -170,4 +178,84 @@
 
 .floor-plan__table--round .floor-plan__table-number {
   font-size: 1.6rem;
+}
+
+/* Responsive styles for smaller screens */
+@media (max-width: 1024px) {
+  .floor-plan__table {
+    width: 120px;
+    padding: 16px 10px;
+  }
+
+  .floor-plan__table--round {
+    width: 110px;
+    height: 110px;
+  }
+
+  .floor-plan__table-number {
+    font-size: 1.6rem;
+  }
+
+  .floor-plan__table--round .floor-plan__table-number {
+    font-size: 1.3rem;
+  }
+
+  .floor-plan__table-name {
+    font-size: 0.65rem;
+  }
+
+  .floor-plan__table-since {
+    font-size: 0.58rem;
+  }
+
+  .floor-plan__table-order-summary {
+    font-size: 0.58rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .floor-plan__canvas {
+    min-width: 100%;
+    min-height: 400px;
+  }
+
+  .floor-plan__table {
+    width: 100px;
+    padding: 12px 8px;
+    gap: 3px;
+  }
+
+  .floor-plan__table--round {
+    width: 90px;
+    height: 90px;
+  }
+
+  .floor-plan__table-badge {
+    font-size: 0.5rem;
+    padding: 1px 6px;
+  }
+
+  .floor-plan__table-number {
+    font-size: 1.3rem;
+  }
+
+  .floor-plan__table--round .floor-plan__table-number {
+    font-size: 1.1rem;
+  }
+
+  .floor-plan__table-capacity {
+    font-size: 0.58rem;
+  }
+
+  .floor-plan__table-name {
+    font-size: 0.58rem;
+  }
+
+  .floor-plan__table-since {
+    font-size: 0.52rem;
+  }
+
+  .floor-plan__table-order-summary {
+    font-size: 0.52rem;
+  }
 }

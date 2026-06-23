@@ -1,4 +1,5 @@
 import { apiFetch } from "@/api/client"
+import type { Reservation } from "@/types/api"
 import type { Table } from "@/types/api/types.gen"
 import type { UpcomingReservation } from "@/features/waiter-order-view/data/waiterTypes"
 
@@ -81,11 +82,16 @@ export async function fetchRestaurantSettings(
 export async function fetchAvailableSlots(
   tableId: string,
   date?: string,
-  exclude?: string,
+  exclude?: string | string[],
 ): Promise<Record<string, string[]>> {
   const params = new URLSearchParams({ table: tableId })
   if (date) params.set("date", date)
-  if (exclude) params.set("exclude", exclude)
+  if (exclude) {
+    const ids = Array.isArray(exclude) ? exclude : [exclude]
+    for (const id of ids) {
+      params.append("exclude", id)
+    }
+  }
   const res = await apiFetch(`/api/reservations/reservations/available-slots/?${params}`)
   if (!res.ok) throw new Error("Failed to fetch available slots")
   return res.json() as Promise<Record<string, string[]>>
@@ -124,6 +130,7 @@ export async function createReservation(data: {
   guest_count: number
   start_at: string
   end_at: string
+  notes?: string
 }): Promise<ReservationWithTable> {
   const res = await apiFetch("/api/reservations/reservations/", {
     method: "POST",
@@ -181,4 +188,62 @@ export async function modifyReservation(
     throw new Error((body as { detail?: string }).detail ?? "Failed to modify reservation")
   }
   return res.json() as Promise<ReservationWithTable>
+}
+
+export async function createStaffReservation(data: {
+  table: string
+  guest_count: number
+  start_at: string
+  end_at: string
+  guest_name: string
+  guest_phone?: string
+  notes?: string
+}): Promise<ReservationWithTable> {
+  const res = await apiFetch("/api/reservations/reservations/", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  })
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}))
+    const detail = (body as { detail?: string | Record<string, string[]> }).detail
+    const message = typeof detail === "string" ? detail : JSON.stringify(detail ?? body)
+    throw new Error(message ?? "Failed to create reservation")
+  }
+  return res.json() as Promise<ReservationWithTable>
+}
+
+export async function moveTable(reservationId: string, tableId: string): Promise<void> {
+  const res = await apiFetch(`/api/reservations/reservations/${reservationId}/move-table/`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ table_id: tableId }),
+  })
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}))
+    throw new Error((body as { detail?: string }).detail ?? "Failed to move table")
+  }
+}
+
+export async function closeCheck(reservationId: string): Promise<void> {
+  const res = await apiFetch(`/api/reservations/reservations/${reservationId}/close-check/`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+  })
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}))
+    throw new Error((body as { detail?: string }).detail ?? "Failed to close check")
+  }
+}
+
+export async function activateReservation(reservationId: string): Promise<Reservation> {
+  const res = await apiFetch(`/api/reservations/reservations/${reservationId}/activate/`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+  })
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}))
+    throw new Error((body as { detail?: string }).detail ?? "Failed to activate reservation")
+  }
+  return res.json() as Promise<Reservation>
 }

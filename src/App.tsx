@@ -64,8 +64,10 @@ function App() {
 
               {/* Protected staff routes */}
               <Route element={<ProtectedRoute allowedRoles={["admin", "waiter", "cook"]} />}>
-                <Route path="/waiter-order" element={<WaiterOrderPage />} />
                 <Route path="/staff/orders" element={<StaffOrdersPage />} />
+              </Route>
+              <Route element={<ProtectedRoute allowedRoles={["admin", "waiter"]} />}>
+                <Route path="/waiter-order" element={<WaiterOrderPage />} />
               </Route>
 
               {/* Protected customer / general routes */}

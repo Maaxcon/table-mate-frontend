@@ -22,6 +22,9 @@ interface RescheduleModalProps {
   tableCapacity: number
   restaurantId?: string
   workingHours: Record<string, WorkingHoursDay> | null
+  excludeReservationIds?: string[]
+  prolongOnly?: boolean
+  endTimeOnly?: boolean
   onClose: () => void
   onSuccess: () => void
 }
@@ -44,6 +47,9 @@ export function RescheduleModal({
   tableCapacity,
   restaurantId,
   workingHours,
+  excludeReservationIds,
+  prolongOnly = false,
+  endTimeOnly = false,
   onClose,
   onSuccess,
 }: RescheduleModalProps) {
@@ -66,7 +72,15 @@ export function RescheduleModal({
 
   const parsedDate = useMemo(() => new Date(currentDate), [currentDate])
 
-  const [selectedTime, setSelectedTime] = useState<string | null>(currentStartTime)
+  const initialSnappedTime = useMemo(() => {
+    const mins = timeToMinutes(currentStartTime)
+    const snapped = Math.round(mins / 30) * 30
+    return minutesToTime(snapped)
+  }, [currentStartTime])
+
+  const [selectedTime, setSelectedTime] = useState<string | null>(
+    prolongOnly ? currentStartTime : initialSnappedTime,
+  )
   const [durationMinutes, setDurationMinutes] = useState(
     Math.max(MIN_DURATION, currentDurationMinutes),
   )
@@ -81,11 +95,13 @@ export function RescheduleModal({
   const dateStr = localDateKey(parsedDate)
 
   useEffect(() => {
-    fetchAvailableSlots(tablePublicId, dateStr, publicId)
+    const excludeIds =
+      excludeReservationIds && excludeReservationIds.length > 0 ? excludeReservationIds : publicId
+    fetchAvailableSlots(tablePublicId, dateStr, excludeIds)
       .then((data) => setAvailableSlots(data[dateStr] ?? null))
       .catch(() => setAvailableSlots(null))
       .finally(() => setSlotsLoading(false))
-  }, [tablePublicId, dateStr, publicId])
+  }, [tablePublicId, dateStr, publicId, excludeReservationIds])
 
   const dayName = DAY_NAMES[parsedDate.getDay()]
   const dayConfig = workingHours?.[dayName] || internalWorkingHours?.[dayName]
@@ -114,8 +130,8 @@ export function RescheduleModal({
       }
     }
 
-    if (availableSlots) {
-      const startMins = timeToMinutes(selectedTime)
+    if (availableSlots && !endTimeOnly) {
+      const startMins = prolongOnly ? timeToMinutes(currentEndTime) : timeToMinutes(selectedTime)
       for (let m = startMins; m < endMins; m += 30) {
         const slotTime = minutesToTime(m)
         if (!availableSlots.includes(slotTime)) {
@@ -125,7 +141,15 @@ export function RescheduleModal({
     }
 
     return null
-  }, [selectedTime, durationMinutes, dayConfig, availableSlots])
+  }, [
+    selectedTime,
+    durationMinutes,
+    dayConfig,
+    availableSlots,
+    prolongOnly,
+    currentEndTime,
+    endTimeOnly,
+  ])
 
   const handleSave = useCallback(async () => {
     if (!selectedTime) return
@@ -138,11 +162,15 @@ export function RescheduleModal({
       const startISO = startDt.toISOString()
       const endISO = endDt.toISOString()
 
-      await modifyReservation(publicId, {
-        start_at: startISO,
-        end_at: endISO,
-        guest_count: guestCount,
-      })
+      if (endTimeOnly) {
+        await modifyReservation(publicId, { end_at: endISO })
+      } else {
+        await modifyReservation(publicId, {
+          start_at: startISO,
+          end_at: endISO,
+          guest_count: guestCount,
+        })
+      }
 
       setSuccess(true)
     } catch (err) {
@@ -150,7 +178,7 @@ export function RescheduleModal({
     } finally {
       setSubmitting(false)
     }
-  }, [selectedTime, dateStr, endAt, guestCount, publicId])
+  }, [selectedTime, dateStr, endAt, guestCount, publicId, endTimeOnly])
 
   if (success) {
     return (
@@ -243,7 +271,9 @@ export function RescheduleModal({
 
           <section className="book-modal__section">
             <h3 className="book-modal__section-title">TIME</h3>
-            {slotsLoading ? (
+            {prolongOnly || endTimeOnly ? (
+              <p className="book-modal__empty">Starting from {currentStartTime}</p>
+            ) : slotsLoading ? (
               <p className="book-modal__empty">Loading available slots…</p>
             ) : !dayConfig ? (
               <p className="book-modal__empty">Restaurant closed on this day</p>

@@ -34,7 +34,7 @@
 }
 
 .waiter-view__message--error {
-  color: var(--color-danger, #d32f2f);
+  color: var(--color-text-primary);
 }
 
 .waiter-view__placeholder {
