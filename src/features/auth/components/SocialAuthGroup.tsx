@@ -1,4 +1,3 @@
-import { IconButton } from "@/components/Button"
 import Card from "@/components/Card"
 import type { GoogleFeedbackType } from "@/features/auth/types"
 import { FcGoogle } from "react-icons/fc"
@@ -20,13 +19,10 @@ function SocialAuthGroup({
       <h2 className="social-auth-group__title">Get started</h2>
       <p className="social-auth-group__text">Unlock one-tap booking, favorites, and history.</p>
 
-      <div className="social-auth-group__icons social-auth-group__icons--single">
-        <IconButton
-          ariaLabel="Continue with Google"
-          icon={<FcGoogle size={24} />}
-          onClick={onGoogleLogin}
-        />
-      </div>
+      <button className="social-auth-group__google" onClick={onGoogleLogin} type="button">
+        <FcGoogle aria-hidden="true" className="social-auth-group__google-icon" size={20} />
+        <span>Continue with Google</span>
+      </button>
 
       {googleFeedback ? (
         <p
