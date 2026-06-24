@@ -348,3 +348,10 @@ export function deleteCartItem(sessionId: string, itemId: string, jwt: string): 
     method: "DELETE",
   })
 }
+
+export function setGuestName(sessionId: string, jwt: string, displayName: string): Promise<void> {
+  return authFetch<void>(CART_API.guestName(sessionId), jwt, {
+    method: "POST",
+    body: JSON.stringify({ display_name: displayName }),
+  })
+}
