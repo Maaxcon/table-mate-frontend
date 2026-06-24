@@ -9,6 +9,7 @@ export const authStrings = {
     title: "Get started",
     text: "Unlock one-tap booking, favorites, and history.",
     googleButton: "Continue with Google",
+    or: "or",
   },
   guest: {
     button: "Continue as Guest",

@@ -52,7 +52,7 @@ function SocialAuthGroup({
       {children ? (
         <>
           <div aria-hidden="true" className="social-auth-group__or">
-            or
+            {authStrings.socialAuth.or}
           </div>
           {children}
         </>
