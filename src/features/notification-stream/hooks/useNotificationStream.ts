@@ -5,6 +5,7 @@ import { store } from "@/store"
 import { clearAuth } from "@/store/auth/authSlice"
 import type { NotificationEvent, WSNotificationMessage } from "../types"
 import { getStream, formatEvent } from "../types"
+import { notifyKitchenEvent } from "../kitchenEventBus"
 
 const MAX_EVENTS = 50
 const BASE_DELAY_MS = 1000
@@ -123,6 +124,9 @@ export function useNotificationStream() {
         const notificationEvent = parseMessage(msg)
         if (notificationEvent) {
           setEvents((prev) => [notificationEvent, ...prev].slice(0, MAX_EVENTS))
+          if (notificationEvent.stream === "kitchen") {
+            notifyKitchenEvent()
+          }
         }
       } catch {
         // ignore malformed messages
