@@ -22,30 +22,17 @@ export function MoveTableModal({ reservation, tables, onClose, onSuccess }: Move
     setBusy(true)
     setError(null)
     try {
-      const isActive = reservation.status === "active"
-      if (isActive) {
-        const res = await apiFetch(
-          `/api/reservations/reservations/${reservation.public_id}/move-table/`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ table_id: targetTableId }),
-          },
-        )
-        if (!res.ok) {
-          const body = (await res.json().catch(() => null)) as { detail?: string } | null
-          throw new Error(body?.detail ?? "Failed to move table")
-        }
-      } else {
-        const res = await apiFetch(`/api/reservations/reservations/${reservation.public_id}/`, {
-          method: "PATCH",
+      const res = await apiFetch(
+        `/api/reservations/reservations/${reservation.public_id}/move-table/`,
+        {
+          method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ table: targetTableId }),
-        })
-        if (!res.ok) {
-          const body = (await res.json().catch(() => null)) as { detail?: string } | null
-          throw new Error(body?.detail ?? "Failed to move table")
-        }
+          body: JSON.stringify({ table_id: targetTableId }),
+        },
+      )
+      if (!res.ok) {
+        const body = (await res.json().catch(() => null)) as { detail?: string } | null
+        throw new Error(body?.detail ?? "Failed to move table")
       }
       onSuccess()
     } catch (err) {

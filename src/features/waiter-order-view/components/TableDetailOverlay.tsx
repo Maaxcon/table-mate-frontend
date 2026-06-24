@@ -351,16 +351,6 @@ export function TableDetailOverlay({
                             CANCEL
                           </button>
                         )}
-                        {onMoveTable && (
-                          <button
-                            type="button"
-                            className="overlay__seat-btn"
-                            disabled={actionBusy}
-                            onClick={() => onMoveTable(r)}
-                          >
-                            MOVE
-                          </button>
-                        )}
                       </>
                     )}
                     {r.status === "active" && onModifyReservation && (
