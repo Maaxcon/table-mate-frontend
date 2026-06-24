@@ -30,6 +30,8 @@ export interface UpcomingReservation {
   table_id: string
   start_at: string
   end_at?: string
+  customer_name?: string
+  guest_count?: number
 }
 
 export type VisualTableStatus = "free" | "occupied" | "reserved"
