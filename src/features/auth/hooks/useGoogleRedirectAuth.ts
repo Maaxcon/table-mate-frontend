@@ -37,7 +37,7 @@ function getInitialGoogleFeedback(): InitialGoogleFeedback {
 
     return {
       code: null,
-      message: `Google sign-in failed: ${error}.`,
+      message: googleAuthMessage.redirectFailed,
       type: "error",
       cleanUrl: url.toString(),
     }
