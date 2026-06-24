@@ -1,21 +1,24 @@
 import { type PropsWithChildren, useEffect, useMemo, useState } from "react"
 import { apiFetch, ensureSession } from "@/api/client"
 import { setUser } from "@/store/auth/authSlice"
+import { hasHadSession } from "@/store/auth/sessionFlag"
 import { useAppDispatch } from "@/store/hooks"
 import type { MeResponse } from "@/features/auth/types"
 
 function AuthInitializer({ children }: PropsWithChildren) {
   const dispatch = useAppDispatch()
-  // If an OAuth code/error is present, useGoogleRedirectAuth handles auth —
-  // skip the session-restore check to avoid spurious 401s.
-  const isOAuthFlow = useMemo(() => {
+  // Restore a session only when it makes sense: skip the OAuth flow (handled by
+  // useGoogleRedirectAuth) and skip guests who never logged in on this device
+  // (avoids a spurious 401 from the refresh probe).
+  const shouldRestore = useMemo(() => {
     const params = new URLSearchParams(window.location.search)
-    return params.has("code") || params.has("error")
+    const isOAuthFlow = params.has("code") || params.has("error")
+    return !isOAuthFlow && hasHadSession()
   }, [])
-  const [ready, setReady] = useState(isOAuthFlow)
+  const [ready, setReady] = useState(!shouldRestore)
 
   useEffect(() => {
-    if (isOAuthFlow) return
+    if (!shouldRestore) return
 
     const controller = new AbortController()
     const { signal } = controller
@@ -49,7 +52,7 @@ function AuthInitializer({ children }: PropsWithChildren) {
 
     void restoreSession()
     return () => controller.abort()
-  }, [dispatch, isOAuthFlow])
+  }, [dispatch, shouldRestore])
 
   if (!ready) return null
 

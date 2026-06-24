@@ -1,4 +1,5 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit"
+import { clearHadSession, markHadSession } from "@/store/auth/sessionFlag"
 import type { UserRole } from "@/features/auth/types"
 
 type AuthUser = {
@@ -25,6 +26,7 @@ const authSlice = createSlice({
   reducers: {
     setAccessToken(state, action: PayloadAction<string>) {
       state.accessToken = action.payload
+      markHadSession()
     },
     setUser(state, action: PayloadAction<AuthUser>) {
       state.user = action.payload
@@ -32,6 +34,7 @@ const authSlice = createSlice({
     clearAuth(state) {
       state.accessToken = null
       state.user = null
+      clearHadSession()
     },
   },
 })
