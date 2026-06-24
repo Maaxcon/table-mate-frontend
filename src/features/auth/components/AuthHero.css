@@ -7,6 +7,11 @@
   animation: auth-fade-up 360ms ease both;
 }
 
+.auth-hero__brand {
+  margin: 0;
+  line-height: 0;
+}
+
 .auth-hero__logo {
   width: min(92vw, 340px);
   height: auto;
