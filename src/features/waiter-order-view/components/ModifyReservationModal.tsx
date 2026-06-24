@@ -56,6 +56,11 @@ export function ModifyReservationModal({
 
   const isActive = reservation.status === "active"
 
+  const snappedNowMinutes = useMemo(() => {
+    const now = new Date()
+    return Math.ceil((now.getHours() * 60 + now.getMinutes()) / 30) * 30
+  }, [])
+
   const [selectedTime, setSelectedTime] = useState<string | null>(
     isActive ? currentStartTime : initialSnappedTime,
   )
@@ -104,10 +109,9 @@ export function ModifyReservationModal({
     if (!selectedTime || !durationMinutes) return null
     if (availableSlots) {
       const endMins = timeToMinutes(selectedTime) + durationMinutes
-      const startMins =
-        isActive && availableSlots.length > 0
-          ? Math.max(timeToMinutes(currentEndTime), timeToMinutes(availableSlots[0]))
-          : timeToMinutes(selectedTime)
+      const startMins = isActive
+        ? Math.max(timeToMinutes(currentEndTime), snappedNowMinutes)
+        : timeToMinutes(selectedTime)
       for (let m = startMins; m < endMins; m += 30) {
         const slotTime = minutesToTime(m)
         if (!availableSlots.includes(slotTime)) {
@@ -116,7 +120,7 @@ export function ModifyReservationModal({
       }
     }
     return null
-  }, [selectedTime, durationMinutes, availableSlots, isActive, currentEndTime])
+  }, [selectedTime, durationMinutes, availableSlots, isActive, currentEndTime, snappedNowMinutes])
 
   const handleSave = async () => {
     if (!selectedTime) return

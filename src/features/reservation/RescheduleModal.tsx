@@ -79,7 +79,7 @@ export function RescheduleModal({
   }, [currentStartTime])
 
   const [selectedTime, setSelectedTime] = useState<string | null>(
-    prolongOnly ? currentStartTime : initialSnappedTime,
+    prolongOnly || endTimeOnly ? currentStartTime : initialSnappedTime,
   )
   const [durationMinutes, setDurationMinutes] = useState(
     Math.max(MIN_DURATION, currentDurationMinutes),
