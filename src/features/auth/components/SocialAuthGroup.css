@@ -103,6 +103,10 @@
   line-height: 1.35;
 }
 
+.social-auth-group__feedback p {
+  margin: 0;
+}
+
 .social-auth-group__feedback--success {
   color: var(--color-success-text);
 }
