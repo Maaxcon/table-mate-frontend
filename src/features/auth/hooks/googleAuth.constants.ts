@@ -1,11 +1,9 @@
 export const googleAuthMessage = {
-  successFromRedirect: "Signing you in…",
-  exchangingCode: "Signing you in…",
+  signingIn: "Signing you in…",
   backendAuthSuccess: "You're signed in.",
   backendAuthFailed: "Couldn't sign you in. Please try again.",
   redirectFailed: "Couldn't sign you in with Google. Please try again.",
-  missingApiBaseUrl: "Sign-in is unavailable right now. Please try again later.",
-  missingClientId: "Sign-in is unavailable right now. Please try again later.",
+  unavailable: "Sign-in is unavailable right now. Please try again later.",
   redirecting: "Taking you to Google…",
 } as const
 

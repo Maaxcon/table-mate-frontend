@@ -27,7 +27,7 @@ function getInitialGoogleFeedback(): InitialGoogleFeedback {
 
     return {
       code,
-      message: googleAuthMessage.successFromRedirect,
+      message: googleAuthMessage.signingIn,
       type: "success",
       cleanUrl: url.toString(),
     }
@@ -65,13 +65,13 @@ function useGoogleRedirectAuth(): UseGoogleRedirectAuthResult {
 
     const exchangeGoogleCode = async (code: string) => {
       if (env.apiBaseUrl === ENV_NOT_CONFIGURED_VALUE) {
-        setGoogleFeedback(googleAuthMessage.missingApiBaseUrl)
+        setGoogleFeedback(googleAuthMessage.unavailable)
         setGoogleFeedbackType("error")
         setLoading(false)
         return
       }
 
-      setGoogleFeedback(googleAuthMessage.exchangingCode)
+      setGoogleFeedback(googleAuthMessage.signingIn)
       setGoogleFeedbackType("success")
 
       try {
@@ -145,7 +145,7 @@ function useGoogleRedirectAuth(): UseGoogleRedirectAuthResult {
 
   const handleGoogleLogin = () => {
     if (env.googleClientId === ENV_NOT_CONFIGURED_VALUE) {
-      setGoogleFeedback(googleAuthMessage.missingClientId)
+      setGoogleFeedback(googleAuthMessage.unavailable)
       setGoogleFeedbackType("error")
       return
     }
