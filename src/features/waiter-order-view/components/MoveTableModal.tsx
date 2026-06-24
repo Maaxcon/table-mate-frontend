@@ -57,81 +57,75 @@ export function MoveTableModal({ reservation, tables, onClose, onSuccess }: Move
 
   return (
     <div
-      className="modal-backdrop"
-      role="presentation"
-      onClick={onClose}
-      onKeyDown={(e) => {
-        if (e.key === "Escape") onClose()
+      className="modify-res"
+      onClick={(event) => {
+        if (event.target === event.currentTarget && !busy) onClose()
+      }}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(event) => {
+        if (event.key === "Escape" && !busy) onClose()
       }}
     >
-      {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions, jsx-a11y/click-events-have-key-events */}
-      <div className="modal-overlay" onClick={(e) => e.stopPropagation()}>
-        <div className="modify-modal" role="dialog" aria-modal="true">
-          <div className="modify-modal__header">
-            <h2 className="modify-modal__title">Move Reservation</h2>
-            <button
-              type="button"
-              className="modify-modal__close"
-              onClick={onClose}
-              aria-label="Close"
-            >
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-              >
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
-              </svg>
-            </button>
-          </div>
+      <div className="modify-res__dialog" role="dialog" aria-modal="true">
+        <div className="modify-res__header">
+          <h2 className="modify-res__title">Move Reservation</h2>
+          <button
+            type="button"
+            className="modify-res__close"
+            onClick={onClose}
+            disabled={busy}
+            aria-label="Close"
+          >
+            &times;
+          </button>
+        </div>
 
-          <div className="modify-modal__body">
-            <p className="modify-modal__detail">
-              Guest: {reservation.name} &middot; Table {reservation.table} &middot;{" "}
+        <div className="modify-res__body">
+          <div className="modify-res__field">
+            <span className="modify-res__label">Guest</span>
+            <span className="modify-res__value">
+              {reservation.name} &middot; Table {reservation.table} &middot;{" "}
               {reservation.guest_count} guests
+            </span>
+          </div>
+
+          {error && (
+            <p className="modify-res__error" role="alert">
+              {error}
             </p>
+          )}
 
-            {error && (
-              <p className="modify-modal__error" role="alert">
-                {error}
-              </p>
-            )}
-
-            <label className="modify-modal__field">
-              <span className="modify-modal__label">Target table</span>
-              <select
-                className="modify-modal__input"
-                value={targetTableId}
-                onChange={(e) => setTargetTableId(e.target.value)}
-                disabled={busy}
-              >
-                <option value="">Select a table…</option>
-                {otherTables.map((t) => (
-                  <option key={t.public_id} value={t.public_id}>
-                    {t.public_number}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
-
-          <div className="modify-modal__actions">
-            <button type="button" className="modify-modal__btn" onClick={onClose} disabled={busy}>
-              CANCEL
-            </button>
-            <button
-              type="button"
-              className="modify-modal__btn modify-modal__btn--primary"
-              disabled={busy || !targetTableId}
-              onClick={handleMove}
+          <label className="modify-res__field">
+            <span className="modify-res__label">Target table</span>
+            <select
+              className="modify-res__input"
+              value={targetTableId}
+              onChange={(e) => setTargetTableId(e.target.value)}
+              disabled={busy}
             >
-              {busy ? "MOVING…" : "MOVE"}
-            </button>
-          </div>
+              <option value="">Select a table…</option>
+              {otherTables.map((t) => (
+                <option key={t.public_id} value={t.public_id}>
+                  {t.public_number}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+
+        <div className="modify-res__actions">
+          <button type="button" className="modify-res__btn" onClick={onClose} disabled={busy}>
+            CANCEL
+          </button>
+          <button
+            type="button"
+            className="modify-res__btn modify-res__btn--primary"
+            disabled={busy || !targetTableId}
+            onClick={handleMove}
+          >
+            {busy ? "MOVING…" : "MOVE"}
+          </button>
         </div>
       </div>
     </div>
