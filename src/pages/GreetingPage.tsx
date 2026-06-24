@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from "react"
+import { useCallback } from "react"
 import { useNavigate } from "react-router-dom"
 import Divider from "@/components/Divider"
 import { AuthHero, GuestAccess, SocialAuthGroup } from "@/features/auth/components"
@@ -11,18 +11,8 @@ function GreetingPage() {
   const { googleFeedback, googleFeedbackType, handleGoogleLogin, loading } = useGoogleRedirectAuth()
   const handleContinueAsGuest = useCallback(() => navigate("/restaurants"), [navigate])
 
-  useEffect(() => {
-    const root = document.documentElement
-    const prev = root.getAttribute("data-theme")
-    root.setAttribute("data-theme", "light")
-    return () => {
-      if (prev) root.setAttribute("data-theme", prev)
-      else root.removeAttribute("data-theme")
-    }
-  }, [])
-
   return (
-    <AuthLayout>
+    <AuthLayout data-theme="light">
       <section className="greeting-page">
         <AuthHero />
         <SocialAuthGroup
