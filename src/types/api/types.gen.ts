@@ -321,7 +321,8 @@ export type OrderItem = {
   tax_amount?: string
   voided_at?: string | null
   readonly voided_by: string
-  void_reason?: number | null
+  readonly void_reason: string | null
+  void_reason_note?: string | null
   is_wasted?: boolean
   readonly created_at: string
   readonly updated_at: string
@@ -335,6 +336,11 @@ export type OrderItem = {
  * * `voided` - Voided
  */
 export type OrderItemStatusEnum = "pending" | "in_progress" | "ready" | "served" | "voided"
+
+export type OrderItemVoidRequest = {
+  void_reason: string
+  note?: string | null
+}
 
 /**
  * * `draft` - Draft
@@ -619,7 +625,8 @@ export type PatchedOrderItem = {
   tax_amount?: string
   voided_at?: string | null
   readonly voided_by?: string
-  void_reason?: number | null
+  readonly void_reason?: string | null
+  void_reason_note?: string | null
   is_wasted?: boolean
   readonly created_at?: string
   readonly updated_at?: string
@@ -682,10 +689,10 @@ export type PatchedSession = {
   guest_count?: number
   status?: SessionStatusEnum
   readonly currency?: string
-  subtotal?: string
-  tax?: string
-  service_charge?: string
-  total?: string
+  readonly subtotal?: string
+  readonly tax?: string
+  readonly service_charge?: string
+  readonly total?: string
   readonly opened_at?: string
   readonly created_at?: string
   readonly updated_at?: string
@@ -700,6 +707,10 @@ export type PatchedTicket = {
   injected_at?: string
   started_at?: string | null
   completed_at?: string | null
+  readonly table_number?: string
+  readonly server_name?: string
+  readonly guest_count?: number
+  readonly items_count?: number
   readonly created_at?: string
   readonly updated_at?: string
 }
@@ -881,10 +892,10 @@ export type Session = {
   guest_count: number
   status?: SessionStatusEnum
   readonly currency: string
-  subtotal?: string
-  tax?: string
-  service_charge?: string
-  total?: string
+  readonly subtotal: string
+  readonly tax: string
+  readonly service_charge: string
+  readonly total: string
   readonly opened_at: string
   readonly created_at: string
   readonly updated_at: string
@@ -942,8 +953,16 @@ export type Ticket = {
   injected_at: string
   started_at?: string | null
   completed_at?: string | null
+  readonly table_number: string
+  readonly server_name: string
+  readonly guest_count: number
+  readonly items_count: number
   readonly created_at: string
   readonly updated_at: string
+}
+
+export type TicketStats = {
+  avg_prep_time_seconds: number | null
 }
 
 /**
@@ -997,6 +1016,11 @@ export type User = {
 export type VerifyScanResponse = {
   valid: boolean
   detail: string
+}
+
+export type VoidReason = {
+  readonly code: string
+  readonly label: string
 }
 
 /**
@@ -1158,7 +1182,7 @@ export type OrderItemWritable = {
   tax_rate?: string
   tax_amount?: string
   voided_at?: string | null
-  void_reason?: number | null
+  void_reason_note?: string | null
   is_wasted?: boolean
 }
 
@@ -1396,7 +1420,7 @@ export type PatchedOrderItemWritable = {
   tax_rate?: string
   tax_amount?: string
   voided_at?: string | null
-  void_reason?: number | null
+  void_reason_note?: string | null
   is_wasted?: boolean
 }
 
@@ -1436,10 +1460,6 @@ export type PatchedSessionWritable = {
   table?: string
   guest_count?: number
   status?: SessionStatusEnum
-  subtotal?: string
-  tax?: string
-  service_charge?: string
-  total?: string
 }
 
 export type PatchedTicketWritable = {
@@ -1521,10 +1541,6 @@ export type SessionWritable = {
   table: string
   guest_count: number
   status?: SessionStatusEnum
-  subtotal?: string
-  tax?: string
-  service_charge?: string
-  total?: string
 }
 
 export type TableWritable = {
@@ -2644,6 +2660,22 @@ export type OrdersOrderItemsPartialUpdateResponses = {
 export type OrdersOrderItemsPartialUpdateResponse =
   OrdersOrderItemsPartialUpdateResponses[keyof OrdersOrderItemsPartialUpdateResponses]
 
+export type OrdersOrderItemsVoidCreateData = {
+  body: OrderItemVoidRequest
+  path: {
+    public_id: string
+  }
+  query?: never
+  url: "/api/orders/order-items/{public_id}/void/"
+}
+
+export type OrdersOrderItemsVoidCreateResponses = {
+  200: OrderItem
+}
+
+export type OrdersOrderItemsVoidCreateResponse =
+  OrdersOrderItemsVoidCreateResponses[keyof OrdersOrderItemsVoidCreateResponses]
+
 export type OrdersOrdersListData = {
   body?: never
   path?: never
@@ -2916,6 +2948,58 @@ export type OrdersTicketsPartialUpdateResponses = {
 export type OrdersTicketsPartialUpdateResponse =
   OrdersTicketsPartialUpdateResponses[keyof OrdersTicketsPartialUpdateResponses]
 
+export type OrdersTicketsStatsRetrieveData = {
+  body?: never
+  path?: never
+  query?: never
+  url: "/api/orders/tickets/stats/"
+}
+
+export type OrdersTicketsStatsRetrieveResponses = {
+  200: TicketStats
+}
+
+export type OrdersTicketsStatsRetrieveResponse =
+  OrdersTicketsStatsRetrieveResponses[keyof OrdersTicketsStatsRetrieveResponses]
+
+export type OrdersVoidReasonsListData = {
+  body?: never
+  path?: never
+  query?: {
+    /**
+     * Which field to use when ordering the results.
+     */
+    ordering?: string
+  }
+  url: "/api/orders/void-reasons/"
+}
+
+export type OrdersVoidReasonsListResponses = {
+  200: Array<VoidReason>
+}
+
+export type OrdersVoidReasonsListResponse =
+  OrdersVoidReasonsListResponses[keyof OrdersVoidReasonsListResponses]
+
+export type OrdersVoidReasonsRetrieveData = {
+  body?: never
+  path: {
+    /**
+     * A unique integer value identifying this void reason.
+     */
+    id: number
+  }
+  query?: never
+  url: "/api/orders/void-reasons/{id}/"
+}
+
+export type OrdersVoidReasonsRetrieveResponses = {
+  200: VoidReason
+}
+
+export type OrdersVoidReasonsRetrieveResponse =
+  OrdersVoidReasonsRetrieveResponses[keyof OrdersVoidReasonsRetrieveResponses]
+
 export type PaymentsPaymentsListData = {
   body?: never
   path?: never
@@ -3078,6 +3162,40 @@ export type ReservationsReservationsActivateCreateResponses = {
 
 export type ReservationsReservationsActivateCreateResponse =
   ReservationsReservationsActivateCreateResponses[keyof ReservationsReservationsActivateCreateResponses]
+
+export type ReservationsReservationsCloseCheckCreateData = {
+  body: ReservationWritable
+  path: {
+    public_id: string
+  }
+  query?: never
+  url: "/api/reservations/reservations/{public_id}/close-check/"
+}
+
+export type ReservationsReservationsCloseCheckCreateResponses = {
+  200: Reservation
+}
+
+export type ReservationsReservationsCloseCheckCreateResponse =
+  ReservationsReservationsCloseCheckCreateResponses[keyof ReservationsReservationsCloseCheckCreateResponses]
+
+export type ReservationsReservationsMoveTableCreateData = {
+  body?: {
+    table_id: string
+  }
+  path: {
+    public_id: string
+  }
+  query?: never
+  url: "/api/reservations/reservations/{public_id}/move-table/"
+}
+
+export type ReservationsReservationsMoveTableCreateResponses = {
+  200: Reservation
+}
+
+export type ReservationsReservationsMoveTableCreateResponse =
+  ReservationsReservationsMoveTableCreateResponses[keyof ReservationsReservationsMoveTableCreateResponses]
 
 export type ReservationsReservationsAvailableSlotsRetrieveData = {
   body?: never

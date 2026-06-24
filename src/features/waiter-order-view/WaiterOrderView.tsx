@@ -173,6 +173,16 @@ export function WaiterOrderView() {
     }
   }
 
+  const handleReservationCancel = useCallback((reservationId: string) => {
+    // Placeholder until waiter reservation cancellation flow ships.
+    void reservationId
+  }, [])
+
+  const handleReservationModify = useCallback((reservation: ReservationItem) => {
+    // Placeholder hook for future reservation edit flow.
+    void reservation
+  }, [])
+
   const showFloorPlan = activeTab === "FLOOR PLAN"
 
   const visualOccupiedCount = tables.filter(
@@ -243,7 +253,14 @@ export function WaiterOrderView() {
           )}
         </div>
 
-        {showFloorPlan && <ReservationSidebar reservations={reservations} />}
+        {showFloorPlan && (
+          <ReservationSidebar
+            reservations={reservations}
+            onCancel={handleReservationCancel}
+            onModify={handleReservationModify}
+            actionLoading={actionBusy}
+          />
+        )}
 
         <NotificationStreamSidebar />
       </div>
