@@ -178,7 +178,7 @@ export function RescheduleModal({
     } finally {
       setSubmitting(false)
     }
-  }, [selectedTime, dateStr, endAt, guestCount, publicId, endTimeOnly])
+  }, [selectedTime, dateStr, durationMinutes, guestCount, publicId, endTimeOnly])
 
   if (success) {
     return (
