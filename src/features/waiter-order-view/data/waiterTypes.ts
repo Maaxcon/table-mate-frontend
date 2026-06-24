@@ -47,6 +47,7 @@ export type ReservationItem = Pick<
 export interface OverlayOrderItem {
   public_id: string
   guest_slot: number
+  guest_display_name: string | null
   quantity: number
   name: string
   unit_price: string

@@ -238,9 +238,10 @@ export function TableDetailOverlay({
                   ) : (
                     guestSlots.map((slot) => {
                       const slotItems = detail.items.filter((i) => i.guest_slot === slot)
+                      const guestName = slotItems[0]?.guest_display_name
                       return (
                         <div key={slot} className="overlay__slot">
-                          <h3 className="overlay__slot-title">GUEST {slot}</h3>
+                          <h3 className="overlay__slot-title">{guestName ?? `GUEST ${slot}`}</h3>
                           {slotItems.map((item) => (
                             <OrderItemRow
                               key={item.public_id}

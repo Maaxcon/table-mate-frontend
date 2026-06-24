@@ -36,6 +36,7 @@ interface SessionApiItem {
 interface OrderItemApiItem {
   public_id: string
   guest_slot: number
+  guest_display_name?: string | null
   quantity: number
   status: string
   is_wasted: boolean
@@ -74,6 +75,7 @@ function mapOrderItem(oi: OrderItemApiItem): OverlayOrderItem {
   return {
     public_id: oi.public_id,
     guest_slot: oi.guest_slot,
+    guest_display_name: oi.guest_display_name ?? null,
     quantity: oi.quantity,
     name: oi.menu_item_name ?? oi.public_id,
     unit_price: oi.unit_price,
