@@ -110,7 +110,7 @@ export function ModifyReservationModal({
     if (availableSlots) {
       const endMins = timeToMinutes(selectedTime) + durationMinutes
       const startMins = isActive
-        ? Math.max(timeToMinutes(currentEndTime), snappedNowMinutes)
+        ? Math.ceil(Math.max(timeToMinutes(currentEndTime), snappedNowMinutes) / 30) * 30
         : timeToMinutes(selectedTime)
       for (let m = startMins; m < endMins; m += 30) {
         const slotTime = minutesToTime(m)
