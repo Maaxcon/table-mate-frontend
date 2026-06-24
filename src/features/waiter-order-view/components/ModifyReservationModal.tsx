@@ -54,7 +54,11 @@ export function ModifyReservationModal({
     return minutesToTime(snapped)
   }, [currentStartTime])
 
-  const [selectedTime, setSelectedTime] = useState<string | null>(initialSnappedTime)
+  const isActive = reservation.status === "active"
+
+  const [selectedTime, setSelectedTime] = useState<string | null>(
+    isActive ? currentStartTime : initialSnappedTime,
+  )
   const [durationMinutes, setDurationMinutes] = useState(Math.max(30, currentDurationMinutes))
   const [guestCount, setGuestCount] = useState(reservation.guest_count)
   const [busy, setBusy] = useState(false)
@@ -99,8 +103,11 @@ export function ModifyReservationModal({
   const durationError = useMemo(() => {
     if (!selectedTime || !durationMinutes) return null
     if (availableSlots) {
-      const startMins = timeToMinutes(selectedTime)
-      const endMins = startMins + durationMinutes
+      const endMins = timeToMinutes(selectedTime) + durationMinutes
+      const startMins =
+        isActive && availableSlots.length > 0
+          ? Math.max(timeToMinutes(currentEndTime), timeToMinutes(availableSlots[0]))
+          : timeToMinutes(selectedTime)
       for (let m = startMins; m < endMins; m += 30) {
         const slotTime = minutesToTime(m)
         if (!availableSlots.includes(slotTime)) {
@@ -109,23 +116,29 @@ export function ModifyReservationModal({
       }
     }
     return null
-  }, [selectedTime, durationMinutes, availableSlots])
+  }, [selectedTime, durationMinutes, availableSlots, isActive, currentEndTime])
 
   const handleSave = async () => {
     if (!selectedTime) return
     setError(null)
     setBusy(true)
     try {
-      const startDt = new Date(`${dateStr}T${selectedTime}:00`)
+      const startDt = isActive
+        ? new Date(reservation.start_at)
+        : new Date(`${dateStr}T${selectedTime}:00`)
       const endDt = new Date(startDt.getTime() + durationMinutes * 60000)
+      const body: Record<string, unknown> = {}
+      if (isActive) {
+        body.end_at = endDt.toISOString()
+      } else {
+        body.start_at = startDt.toISOString()
+        body.end_at = endDt.toISOString()
+        body.guest_count = guestCount
+      }
       const res = await apiFetch(`/api/reservations/reservations/${reservation.public_id}/`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          start_at: startDt.toISOString(),
-          end_at: endDt.toISOString(),
-          guest_count: guestCount,
-        }),
+        body: JSON.stringify(body),
       })
       if (!res.ok) {
         const body = (await res.json().catch(() => null)) as { detail?: string } | null
@@ -189,7 +202,9 @@ export function ModifyReservationModal({
 
           <div className="modify-res__section">
             <h3 className="modify-res__section-title">Time</h3>
-            {slotsLoading ? (
+            {isActive ? (
+              <p className="modify-res__section-value">Starting from {currentStartTime}</p>
+            ) : slotsLoading ? (
               <p className="modify-res__section-value">Loading available slots…</p>
             ) : !tableId ? (
               <p className="modify-res__section-value">Table not found</p>
@@ -218,7 +233,7 @@ export function ModifyReservationModal({
                 ))}
               </div>
             )}
-            {!slotsLoading && !availableSlots && (
+            {!slotsLoading && !availableSlots && !isActive && (
               <p className="modify-res__section-value">
                 Current: {currentStartTime} <em>(unable to load availability)</em>
               </p>

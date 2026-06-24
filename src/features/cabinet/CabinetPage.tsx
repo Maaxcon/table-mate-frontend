@@ -128,6 +128,7 @@ function CabinetPage() {
           currentGuests={modifyTarget.guest_count}
           tableCapacity={modifyTarget.table_info?.capacity ?? 10}
           workingHours={null}
+          endTimeOnly={modifyTarget.status === "active"}
           onClose={() => setModifyTarget(null)}
           onSuccess={() => {
             setModifyTarget(null)
