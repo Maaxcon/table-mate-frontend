@@ -49,7 +49,14 @@ function SocialAuthGroup({
         </p>
       </div>
 
-      {children}
+      {children ? (
+        <>
+          <div aria-hidden="true" className="social-auth-group__or">
+            or
+          </div>
+          {children}
+        </>
+      ) : null}
     </Card>
   )
 }
