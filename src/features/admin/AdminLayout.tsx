@@ -2,8 +2,10 @@ import { useMemo, useState } from "react"
 import { NavLink, Outlet, useNavigate } from "react-router-dom"
 import {
   LuArrowLeft,
+  LuChefHat,
   LuLayoutDashboard,
   LuLogOut,
+  LuMap,
   LuSettings,
   LuStore,
   LuUsers,
@@ -23,6 +25,8 @@ const NAV_ITEMS = [
   { to: "/admin/settings", label: "Settings", icon: LuSettings },
   { to: "/admin/staff", label: "Staff", icon: LuUsers },
   { to: "/admin/menu", label: "Menu", icon: LuUtensilsCrossed },
+  { to: "/admin/kitchen", label: "Kitchen", icon: LuChefHat },
+  { to: "/admin/floor", label: "Floor", icon: LuMap },
 ] as const
 
 function AdminLayout() {
