@@ -12,6 +12,13 @@ export type FloorTable = Pick<
   | "active"
 > & {
   zone?: { public_id: string; name: string } | null
+  activeReservation?: {
+    guest_name: string
+    start_at: string
+  } | null
+  activeSession?: {
+    opened_at: string
+  } | null
 }
 
 export interface UpcomingReservation {
@@ -77,6 +84,30 @@ export function formatTimeRange(start: string, end?: string | null): string {
 }
 
 const FIFTEEN_MINUTES_MS = 15 * 60 * 1000
+
+export function formatDuration(openedAt: string): string {
+  const opened = new Date(openedAt).getTime()
+  if (Number.isNaN(opened)) return "0m"
+  const minutes = Math.max(0, Math.round((Date.now() - opened) / 60000))
+  if (minutes >= 60) {
+    const hours = Math.floor(minutes / 60)
+    const mins = minutes % 60
+    return mins === 0 ? `${hours}h` : `${hours}h${mins}m`
+  }
+  return `${minutes}m`
+}
+
+export function formatETA(startAt: string): string {
+  const start = new Date(startAt).getTime()
+  if (Number.isNaN(start)) return "soon"
+  const diffMinutes = Math.max(0, Math.round((start - Date.now()) / 60000))
+  if (diffMinutes >= 60) {
+    const hours = Math.floor(diffMinutes / 60)
+    const mins = diffMinutes % 60
+    return mins === 0 ? `${hours}h` : `${hours}h${mins}m`
+  }
+  return diffMinutes === 0 ? "now" : `${diffMinutes}m`
+}
 
 export function getTableVisualStatus(
   table: FloorTable,
