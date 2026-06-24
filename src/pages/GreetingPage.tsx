@@ -8,7 +8,7 @@ import "./GreetingPage.css"
 
 function GreetingPage() {
   const navigate = useNavigate()
-  const { googleFeedback, googleFeedbackType, handleGoogleLogin } = useGoogleRedirectAuth()
+  const { googleFeedback, googleFeedbackType, handleGoogleLogin, loading } = useGoogleRedirectAuth()
   const handleContinueAsGuest = useCallback(() => navigate("/restaurants"), [navigate])
 
   useEffect(() => {
@@ -29,6 +29,7 @@ function GreetingPage() {
           onGoogleLogin={handleGoogleLogin}
           googleFeedback={googleFeedback}
           googleFeedbackType={googleFeedbackType}
+          loading={loading}
         />
         <GuestAccess onContinueAsGuest={handleContinueAsGuest} />
         <Divider className="greeting-page__divider" />

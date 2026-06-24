@@ -73,6 +73,28 @@
   flex-shrink: 0;
 }
 
+.social-auth-group__spinner {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  border: 2px solid rgba(31, 31, 31, 0.25);
+  border-top-color: #1f1f1f;
+  border-radius: 50%;
+  animation: social-auth-spin 700ms linear infinite;
+}
+
+@keyframes social-auth-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .social-auth-group__spinner {
+    animation-duration: 1600ms;
+  }
+}
+
 .social-auth-group__feedback {
   margin: 4px 0 0;
   text-align: center;

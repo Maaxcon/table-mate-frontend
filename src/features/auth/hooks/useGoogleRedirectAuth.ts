@@ -12,6 +12,7 @@ type UseGoogleRedirectAuthResult = {
   googleFeedback: string
   googleFeedbackType: GoogleFeedbackType
   handleGoogleLogin: () => void
+  loading: boolean
 }
 
 function getInitialGoogleFeedback(): InitialGoogleFeedback {
@@ -53,6 +54,7 @@ function useGoogleRedirectAuth(): UseGoogleRedirectAuthResult {
   const [googleFeedbackType, setGoogleFeedbackType] = useState<GoogleFeedbackType>(
     initialGoogleFeedback.type,
   )
+  const [loading, setLoading] = useState<boolean>(() => Boolean(initialGoogleFeedback.code))
 
   useEffect(() => {
     if (!initialGoogleFeedback.code) {
@@ -65,6 +67,7 @@ function useGoogleRedirectAuth(): UseGoogleRedirectAuthResult {
       if (env.apiBaseUrl === ENV_NOT_CONFIGURED_VALUE) {
         setGoogleFeedback(googleAuthMessage.missingApiBaseUrl)
         setGoogleFeedbackType("error")
+        setLoading(false)
         return
       }
 
@@ -113,6 +116,7 @@ function useGoogleRedirectAuth(): UseGoogleRedirectAuthResult {
 
         setGoogleFeedback(googleAuthMessage.backendAuthSuccess)
         setGoogleFeedbackType("success")
+        setLoading(false)
       } catch (error) {
         if (error instanceof DOMException && error.name === "AbortError") {
           return
@@ -120,6 +124,7 @@ function useGoogleRedirectAuth(): UseGoogleRedirectAuthResult {
         const message = error instanceof Error ? error.message : googleAuthMessage.backendAuthFailed
         setGoogleFeedback(message)
         setGoogleFeedbackType("error")
+        setLoading(false)
       }
     }
 
@@ -148,10 +153,11 @@ function useGoogleRedirectAuth(): UseGoogleRedirectAuthResult {
 
     setGoogleFeedbackType("success")
     setGoogleFeedback(googleAuthMessage.redirecting)
+    setLoading(true)
     runGoogleLogin()
   }
 
-  return { googleFeedback, googleFeedbackType, handleGoogleLogin }
+  return { googleFeedback, googleFeedbackType, handleGoogleLogin, loading }
 }
 
 export { useGoogleRedirectAuth }
