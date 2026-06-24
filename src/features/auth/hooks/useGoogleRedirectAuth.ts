@@ -121,8 +121,7 @@ function useGoogleRedirectAuth(): UseGoogleRedirectAuthResult {
         if (error instanceof DOMException && error.name === "AbortError") {
           return
         }
-        const message = error instanceof Error ? error.message : googleAuthMessage.backendAuthFailed
-        setGoogleFeedback(message)
+        setGoogleFeedback(googleAuthMessage.backendAuthFailed)
         setGoogleFeedbackType("error")
         setLoading(false)
       }
