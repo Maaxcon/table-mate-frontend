@@ -59,6 +59,7 @@ export type CartItemResponse = {
   guest_slot: number | null
   is_mine: boolean
   is_paid: boolean
+  display_name: string | null
   cart_session: string
   readonly restaurant: string
   readonly created_at: string

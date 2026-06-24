@@ -11,6 +11,7 @@ export type CartItemWithDetails = {
   guestSlot: number | null
   isMine: boolean
   addedBy: string | null
+  displayName: string | null
   isPaid: boolean
   item: MenuItem | null
 }
@@ -161,6 +162,7 @@ function buildDetails(
     guestSlot: ci.guest_slot,
     isMine: ci.is_mine,
     addedBy: ci.added_by,
+    displayName: ci.display_name,
     isPaid: ci.is_paid,
     item: itemsById[ci.menu_item] ?? null,
   }))
