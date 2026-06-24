@@ -1,5 +1,10 @@
 import { useCallback, useEffect, useReducer, useRef } from "react"
-import { guestInit, ReservationNotYetActiveError, verifyScan } from "@/features/menu/api"
+import {
+  guestInit,
+  ReservationNotYetActiveError,
+  setGuestName,
+  verifyScan,
+} from "@/features/menu/api"
 import { getGuestToken } from "@/features/menu/guestToken"
 import { decodeJwtPayload } from "@/features/menu/jwt"
 import { menuStrings } from "@/features/menu/strings"
@@ -91,14 +96,23 @@ export function useGuestAuth({
     guestJwtRef.current = authState.guestJwt
   }, [authState.guestJwt])
 
-  const setDisplayName = useCallback((name: string) => {
-    setDisplayNameState(name)
-    try {
-      localStorage.setItem(DISPLAY_NAME_KEY, name)
-    } catch {
-      // ignore
-    }
-  }, [])
+  const setDisplayName = useCallback(
+    (name: string) => {
+      setDisplayNameState(name)
+      try {
+        localStorage.setItem(DISPLAY_NAME_KEY, name)
+      } catch {
+        // ignore
+      }
+      // Persist to backend so other guests and the waiter can see the name.
+      if (authState.cartSessionId && authState.guestJwt) {
+        setGuestName(authState.cartSessionId, authState.guestJwt, name).catch(() => {
+          // Best-effort: don't block the UI if this fails.
+        })
+      }
+    },
+    [authState.cartSessionId, authState.guestJwt],
+  )
 
   const initialize = useCallback(() => {
     if ((!reservationId && !tableId) || initializing.current) return
