@@ -32,16 +32,17 @@ interface ZoneApiResponse {
 }
 
 function mapTableToFloorTable(t: Table): FloorTable {
+  const item = t as Table & { shape: string; position_x: number | null; position_y: number | null }
   return {
-    public_id: t.public_id,
-    public_number: t.public_number,
-    capacity: t.capacity,
-    shape: t.shape as FloorTable["shape"],
-    is_occupied: t.is_occupied ?? false,
-    position_x: t.position_x ?? null,
-    position_y: t.position_y ?? null,
-    active: t.active ?? true,
-    zone: t.zone ?? null,
+    public_id: item.public_id,
+    public_number: item.public_number,
+    capacity: item.capacity,
+    shape: item.shape,
+    is_occupied: item.is_occupied ?? false,
+    position_x: item.position_x ?? null,
+    position_y: item.position_y ?? null,
+    active: item.active ?? true,
+    zone: item.zone ?? null,
   }
 }
 
