@@ -39,6 +39,18 @@ export function FloorPlan({
     return { byId, byNumber }
   }, [tables])
 
+  // Nearest upcoming reservation per table (for showing guest name + ETA).
+  const nearestByTable = useMemo(() => {
+    const map = new Map<string, UpcomingReservation>()
+    for (const r of upcomingReservations) {
+      const existing = map.get(r.table_id)
+      if (!existing || new Date(r.start_at) < new Date(existing.start_at)) {
+        map.set(r.table_id, r)
+      }
+    }
+    return map
+  }, [upcomingReservations])
+
   const resolve = (ref: FloorPlanTableRef): FloorTable | undefined =>
     byId.get(ref.id) ?? (ref.publicNumber ? byNumber.get(ref.publicNumber) : undefined)
 
@@ -72,14 +84,16 @@ export function FloorPlan({
               </span>
               <span className="fp-block__label">{number}</span>
 
-              {visualStatus === "reserved" && table?.activeReservation && (
-                <div className="fp-block__info">
-                  <span className="fp-block__info-name">{table.activeReservation.guest_name}</span>
-                  <span className="fp-block__info-sub">
-                    in {formatETA(table.activeReservation.start_at)}
-                  </span>
-                </div>
-              )}
+              {visualStatus === "reserved" &&
+                (() => {
+                  const res = table ? nearestByTable.get(table.public_id) : undefined
+                  return res ? (
+                    <div className="fp-block__info">
+                      <span className="fp-block__info-name">{res.customer_name ?? "Guest"}</span>
+                      <span className="fp-block__info-sub">in {formatETA(res.start_at)}</span>
+                    </div>
+                  ) : null
+                })()}
 
               {visualStatus === "occupied" && table?.activeSession && (
                 <div className="fp-block__info">
