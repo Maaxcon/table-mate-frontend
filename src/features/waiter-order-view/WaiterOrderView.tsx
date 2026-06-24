@@ -413,7 +413,9 @@ export function WaiterOrderView() {
       {moveTarget && (
         <MoveTableModal
           reservation={moveTarget}
-          tables={tables.map((t) => ({ public_id: t.public_id, public_number: t.public_number }))}
+          tables={tables
+            .filter((t) => getTableVisualStatus(t, layoutReservations, currentTime) === "free")
+            .map((t) => ({ public_id: t.public_id, public_number: t.public_number }))}
           onClose={() => setMoveTarget(null)}
           onSuccess={() => {
             setMoveTarget(null)
