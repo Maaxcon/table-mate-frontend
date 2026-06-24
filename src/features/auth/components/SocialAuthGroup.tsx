@@ -36,13 +36,13 @@ function SocialAuthGroup({
         <span>Continue with Google</span>
       </button>
 
-      {googleFeedback ? (
-        <p
-          className={`social-auth-group__feedback social-auth-group__feedback--${googleFeedbackType}`}
-        >
-          {googleFeedback}
-        </p>
-      ) : null}
+      <p
+        aria-live="polite"
+        className={`social-auth-group__feedback social-auth-group__feedback--${googleFeedbackType}`}
+        role="status"
+      >
+        {googleFeedback}
+      </p>
     </Card>
   )
 }
