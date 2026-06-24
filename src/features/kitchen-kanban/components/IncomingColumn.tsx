@@ -4,9 +4,10 @@ import { elapsedMinutes, timerUrgencyClass } from "../utils"
 interface IncomingColumnProps {
   tickets: KanbanTicket[]
   onPromote(ticketId: string): void
+  canManage: boolean
 }
 
-export function IncomingColumn({ tickets, onPromote }: IncomingColumnProps) {
+export function IncomingColumn({ tickets, onPromote, canManage }: IncomingColumnProps) {
   return (
     <div className="kanban__col kanban__col--incoming">
       <div className="kanban__col-header">
@@ -24,8 +25,13 @@ export function IncomingColumn({ tickets, onPromote }: IncomingColumnProps) {
               key={ticket.id}
               type="button"
               className={`kanban-card kanban-card--clickable ${elapsed > 7 ? "kanban-card--aged" : ""}`}
-              onClick={() => onPromote(ticket.id)}
-              title="Click to accept order"
+              onClick={() => {
+                if (!canManage) return
+                onPromote(ticket.id)
+              }}
+              title={canManage ? "Click to accept order" : "Read only"}
+              disabled={!canManage}
+              aria-disabled={!canManage}
             >
               <div className="kanban-card__header">
                 <span className="kanban-card__id">{ticket.id.slice(0, 8)}</span>

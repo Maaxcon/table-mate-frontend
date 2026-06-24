@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
 import "./KitchenKanban.css"
 import { onKitchenEvent } from "@/features/notification-stream/kitchenEventBus"
+import { useAppSelector } from "@/store/hooks"
 import {
   fetchTickets,
   fetchCompletedTickets,
@@ -52,6 +53,8 @@ export function KitchenKanban() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [mutationError, setMutationError] = useState<string | null>(null)
+  const userRole = useAppSelector((state) => state.auth.user?.role)
+  const canManageTickets = userRole === "cook" || userRole === "admin"
 
   useEffect(() => {
     const id = setInterval(() => setTick((t) => t + 1), 30000)
@@ -104,6 +107,7 @@ export function KitchenKanban() {
 
   const toggleItem = useCallback(
     async (ticketId: string, itemId: string) => {
+      if (!canManageTickets) return
       const ticket = tickets.find((t) => t.id === ticketId)
       const item = ticket?.items.find((it) => it.id === itemId)
       if (!item) return
@@ -122,11 +126,12 @@ export function KitchenKanban() {
         setMutationError("Could not update item.")
       }
     },
-    [tickets],
+    [tickets, canManageTickets],
   )
 
   const bumpOrder = useCallback(
     async (ticketId: string) => {
+      if (!canManageTickets) return
       const ticket = tickets.find((t) => t.id === ticketId)
       if (!ticket) return
       if (!ticket.items.every((it) => it.status === "ready")) return
@@ -142,17 +147,21 @@ export function KitchenKanban() {
         setMutationError("Could not bump order.")
       }
     },
-    [tickets],
+    [tickets, canManageTickets],
   )
 
-  const promoteToActive = useCallback(async (ticketId: string) => {
-    try {
-      await updateTicketStatus(ticketId, "active")
-      setTickets((prev) => prev.map((t) => (t.id === ticketId ? { ...t, status: "active" } : t)))
-    } catch {
-      setMutationError("Could not accept order.")
-    }
-  }, [])
+  const promoteToActive = useCallback(
+    async (ticketId: string) => {
+      if (!canManageTickets) return
+      try {
+        await updateTicketStatus(ticketId, "active")
+        setTickets((prev) => prev.map((t) => (t.id === ticketId ? { ...t, status: "active" } : t)))
+      } catch {
+        setMutationError("Could not accept order.")
+      }
+    },
+    [canManageTickets],
+  )
 
   const incoming = useMemo(() => tickets.filter((t) => t.status === "incoming"), [tickets])
   const active = useMemo(() => tickets.filter((t) => t.status === "active"), [tickets])
@@ -201,8 +210,17 @@ export function KitchenKanban() {
       {mutationError && <div className="kanban__toast">{mutationError}</div>}
 
       <div className="kanban__columns">
-        <IncomingColumn tickets={incoming} onPromote={promoteToActive} />
-        <ActiveColumn tickets={active} onToggleItem={toggleItem} onBump={bumpOrder} />
+        <IncomingColumn
+          tickets={incoming}
+          onPromote={promoteToActive}
+          canManage={canManageTickets}
+        />
+        <ActiveColumn
+          tickets={active}
+          onToggleItem={toggleItem}
+          onBump={bumpOrder}
+          canManage={canManageTickets}
+        />
         <BatchColumn batches={batchCounts} />
         <CompletedColumn tickets={completed} />
       </div>

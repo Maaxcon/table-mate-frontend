@@ -5,9 +5,10 @@ interface ActiveColumnProps {
   tickets: KanbanTicket[]
   onToggleItem(ticketId: string, itemId: string): void
   onBump(ticketId: string): void
+  canManage: boolean
 }
 
-export function ActiveColumn({ tickets, onToggleItem, onBump }: ActiveColumnProps) {
+export function ActiveColumn({ tickets, onToggleItem, onBump, canManage }: ActiveColumnProps) {
   return (
     <div className="kanban__col kanban__col--active">
       <div className="kanban__col-header">
@@ -34,8 +35,11 @@ export function ActiveColumn({ tickets, onToggleItem, onBump }: ActiveColumnProp
                 <button
                   type="button"
                   className={`kanban-card__bump ${allReady ? "kanban-card__bump--done" : ""}`}
-                  onClick={() => onBump(ticket.id)}
-                  disabled={!allReady}
+                  onClick={() => {
+                    if (!canManage) return
+                    onBump(ticket.id)
+                  }}
+                  disabled={!allReady || !canManage}
                   aria-label="Complete order"
                 >
                   {allReady ? (
@@ -63,8 +67,13 @@ export function ActiveColumn({ tickets, onToggleItem, onBump }: ActiveColumnProp
                     key={item.id}
                     type="button"
                     className={`kanban-card__item-block ${item.status === "ready" ? "kanban-card__item-block--ready" : ""}`}
-                    onClick={() => onToggleItem(ticket.id, item.id)}
+                    onClick={() => {
+                      if (!canManage) return
+                      onToggleItem(ticket.id, item.id)
+                    }}
+                    disabled={!canManage}
                     aria-pressed={item.status === "ready"}
+                    aria-disabled={!canManage}
                   >
                     <span>
                       {item.quantity}X {item.name}
