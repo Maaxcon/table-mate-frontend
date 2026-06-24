@@ -262,20 +262,22 @@ export function ModifyReservationModal({
             {durationError && <p className="modify-res__hint">{durationError}</p>}
           </div>
 
-          <div className="modify-res__field">
-            <label className="modify-res__label" htmlFor="mod-res-guests">
-              Guests
-            </label>
-            <input
-              id="mod-res-guests"
-              type="number"
-              className="modify-res__input"
-              min={1}
-              value={guestCount}
-              onChange={(e) => setGuestCount(Math.max(1, Number(e.target.value) || 1))}
-              disabled={busy}
-            />
-          </div>
+          {!isActive && (
+            <div className="modify-res__field">
+              <label className="modify-res__label" htmlFor="mod-res-guests">
+                Guests
+              </label>
+              <input
+                id="mod-res-guests"
+                type="number"
+                className="modify-res__input"
+                min={1}
+                value={guestCount}
+                onChange={(e) => setGuestCount(Math.max(1, Number(e.target.value) || 1))}
+                disabled={busy}
+              />
+            </div>
+          )}
 
           {selectedTime && (
             <div className="modify-res__field">
