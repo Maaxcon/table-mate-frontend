@@ -1,12 +1,40 @@
 .auth-layout {
+  /* Auth-scoped palette: single source of truth for this (always-dark) page,
+     independent of the global light/dark theme tokens. */
+  --auth-bg: #050505;
+  --auth-accent: 124, 92, 255;
+  --auth-accent-cyan: 56, 189, 248;
+  --auth-accent-violet: 168, 85, 247;
+  --auth-card-top: rgba(30, 30, 42, 0.72);
+  --auth-card-bottom: rgba(15, 15, 22, 0.78);
+  --auth-card-border: rgba(255, 255, 255, 0.07);
+  --auth-hairline: rgba(255, 255, 255, 0.12);
+  --auth-text-strong: #ffffff;
+  --auth-text: #f0f0f5;
+  --auth-text-muted: rgba(235, 235, 245, 0.62);
+  --auth-text-faint: rgba(235, 235, 245, 0.45);
+  --auth-title-end: #b7b7c6;
+  --auth-success: #4ade80;
+  --auth-error: #ff8585;
+  --auth-focus: #8b75ff;
+  --auth-google-bg: #ffffff;
+  --auth-google-bg-hover: #f3f4f6;
+  --auth-google-bg-active: #e9eaed;
+  --auth-google-text: #1f1f1f;
+  --auth-google-border: #dadce0;
+  --auth-surface: rgba(255, 255, 255, 0.04);
+  --auth-surface-hover: rgba(255, 255, 255, 0.09);
+  --auth-surface-border: rgba(255, 255, 255, 0.14);
+  --auth-surface-border-hover: rgba(255, 255, 255, 0.3);
+
   position: fixed;
   inset: 0;
   background:
-    radial-gradient(58% 44% at 50% 42%, rgba(124, 92, 255, 0.16), transparent 70%),
-    radial-gradient(125% 85% at 50% -25%, rgba(124, 92, 255, 0.24), transparent 60%),
-    radial-gradient(90% 60% at 88% 4%, rgba(56, 189, 248, 0.12), transparent 55%),
-    radial-gradient(72% 50% at 8% 102%, rgba(168, 85, 247, 0.12), transparent 60%),
-    var(--color-bg-auth);
+    radial-gradient(58% 44% at 50% 42%, rgba(var(--auth-accent), 0.16), transparent 70%),
+    radial-gradient(125% 85% at 50% -25%, rgba(var(--auth-accent), 0.24), transparent 60%),
+    radial-gradient(90% 60% at 88% 4%, rgba(var(--auth-accent-cyan), 0.12), transparent 55%),
+    radial-gradient(72% 50% at 8% 102%, rgba(var(--auth-accent-violet), 0.12), transparent 60%),
+    var(--auth-bg);
   display: grid;
   place-items: center;
   padding: 24px 16px;

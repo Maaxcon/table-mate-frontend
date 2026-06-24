@@ -16,13 +16,13 @@
   width: min(64vw, 200px);
   height: auto;
   display: block;
-  filter: drop-shadow(0 8px 24px rgba(124, 92, 255, 0.25));
+  filter: drop-shadow(0 8px 24px rgba(var(--auth-accent), 0.25));
 }
 
 .auth-hero__subtitle {
   margin: 0;
   max-width: 360px;
-  color: var(--color-text-subtle);
+  color: var(--auth-text-muted);
   font-weight: 600;
   letter-spacing: 0.2em;
   text-transform: uppercase;

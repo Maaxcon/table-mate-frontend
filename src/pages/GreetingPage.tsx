@@ -13,7 +13,7 @@ function GreetingPage() {
   const handleContinueAsGuest = useCallback(() => navigate("/restaurants"), [navigate])
 
   return (
-    <AuthLayout data-theme="light">
+    <AuthLayout data-theme="dark">
       <section className="greeting-page">
         <AuthHero />
         <SocialAuthGroup
