@@ -7,8 +7,10 @@ import { TableDetailOverlay } from "./components/TableDetailOverlay"
 import { NotificationStreamSidebar } from "@/features/notification-stream/components/NotificationStreamSidebar"
 import { OrderCreationModal } from "./components/OrderCreationModal"
 import { ModifyReservationModal } from "./components/ModifyReservationModal"
-import { CreateReservationModal } from "./components/CreateReservationModal"
 import { MoveTableModal } from "./components/MoveTableModal"
+import { BookModal } from "@/features/reservation/BookModal"
+import { fetchRestaurantSettings } from "@/features/reservation/api"
+import type { WorkingHoursDay } from "@/features/reservation/api"
 import { useTableActions } from "./hooks/useTableActions"
 import type {
   FloorTable,
@@ -60,6 +62,7 @@ export function WaiterOrderView() {
   const [sidebarActionLoading, setSidebarActionLoading] = useState(false)
   const [sidebarError, setSidebarError] = useState<string | null>(null)
   const [restaurantId, setRestaurantId] = useState<string>("")
+  const [workingHours, setWorkingHours] = useState<Record<string, WorkingHoursDay> | null>(null)
   const [modifyTarget, setModifyTarget] = useState<ReservationItem | null>(null)
   const [moveTarget, setMoveTarget] = useState<ReservationItem | null>(null)
   const [orderModalOpen, setOrderModalOpen] = useState(false)
@@ -116,6 +119,13 @@ export function WaiterOrderView() {
       .catch(() => {})
     return () => controller.abort()
   }, [])
+
+  useEffect(() => {
+    if (!restaurantId) return
+    fetchRestaurantSettings(restaurantId)
+      .then((settings) => setWorkingHours(settings.working_hours))
+      .catch(() => setWorkingHours(null))
+  }, [restaurantId])
 
   const refreshFloor = useCallback(async () => {
     try {
@@ -372,11 +382,27 @@ export function WaiterOrderView() {
         />
       )}
 
-      {createResModalOpen && (
-        <CreateReservationModal
-          tables={tables.map((t) => ({ public_id: t.public_id, public_number: t.public_number }))}
+      {createResModalOpen && selectedTable && (
+        <BookModal
+          table={selectedTable}
+          workingHours={workingHours}
+          restaurantId={restaurantId}
+          showNameField
           onClose={() => setCreateResModalOpen(false)}
-          onSuccess={() => {
+          onSuccess={(r) => {
+            if (r) {
+              const mapped: ReservationItem = {
+                public_id: r.public_id,
+                start_at: r.start_at,
+                end_at: r.end_at,
+                table: r.table_info?.public_number ?? "",
+                guest_count: r.guest_count,
+                status: r.status as ReservationItem["status"],
+                notes: r.notes,
+                name: r.customer_name ?? "Guest",
+              }
+              setReservations((prev) => [...prev, mapped])
+            }
             setCreateResModalOpen(false)
             refreshFloor()
           }}

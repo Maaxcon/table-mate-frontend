@@ -21,6 +21,7 @@ export type ReservationWithTable = {
   public_id: string
   restaurant: string
   customer: string | null
+  customer_name?: string
   table: string
   table_info?: {
     public_id: string
@@ -140,6 +141,7 @@ export async function createReservation(data: {
   start_at: string
   end_at: string
   notes?: string
+  guest_name?: string
 }): Promise<ReservationWithTable> {
   const res = await apiFetch("/api/reservations/reservations/", {
     method: "POST",

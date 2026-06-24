@@ -61,7 +61,7 @@ function mapReservationItem(r: ReservationApiItem): ReservationItem {
 
 export async function fetchReservations(signal?: AbortSignal): Promise<ReservationItem[] | null> {
   const res = await apiFetch(
-    `/api/reservations/reservations/?status=pending`,
+    `/api/reservations/reservations/?status__in=pending,active`,
     signal ? { signal } : undefined,
   )
   if (!res.ok) return null
