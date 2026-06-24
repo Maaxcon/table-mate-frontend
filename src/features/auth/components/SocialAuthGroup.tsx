@@ -1,4 +1,6 @@
+import type { ReactNode } from "react"
 import Card from "@/components/Card"
+import { authStrings } from "@/features/auth/strings"
 import type { GoogleFeedbackType } from "@/features/auth/types"
 import { FcGoogle } from "react-icons/fc"
 import "./SocialAuthGroup.css"
@@ -8,6 +10,7 @@ type SocialAuthGroupProps = {
   googleFeedback: string
   googleFeedbackType: GoogleFeedbackType
   loading?: boolean
+  children?: ReactNode
 }
 
 function SocialAuthGroup({
@@ -15,11 +18,12 @@ function SocialAuthGroup({
   googleFeedback,
   googleFeedbackType,
   loading = false,
+  children,
 }: SocialAuthGroupProps) {
   return (
     <Card className="social-auth-group">
-      <h2 className="social-auth-group__title">Get started</h2>
-      <p className="social-auth-group__text">Unlock one-tap booking, favorites, and history.</p>
+      <h2 className="social-auth-group__title">{authStrings.socialAuth.title}</h2>
+      <p className="social-auth-group__text">{authStrings.socialAuth.text}</p>
 
       <button
         aria-busy={loading}
@@ -33,7 +37,7 @@ function SocialAuthGroup({
         ) : (
           <FcGoogle aria-hidden="true" className="social-auth-group__google-icon" size={20} />
         )}
-        <span>Continue with Google</span>
+        <span>{authStrings.socialAuth.googleButton}</span>
       </button>
 
       <div className="social-auth-group__feedback">
@@ -44,6 +48,8 @@ function SocialAuthGroup({
           {googleFeedbackType === "error" ? googleFeedback : ""}
         </p>
       </div>
+
+      {children}
     </Card>
   )
 }

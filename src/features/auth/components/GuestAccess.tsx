@@ -1,4 +1,5 @@
 import Button from "@/components/Button"
+import { authStrings } from "@/features/auth/strings"
 import "./GuestAccess.css"
 
 type GuestAccessProps = {
@@ -9,12 +10,12 @@ function GuestAccess({ onContinueAsGuest }: GuestAccessProps) {
   return (
     <section className="guest-access">
       <Button className="guest-access__button" onClick={onContinueAsGuest}>
-        Continue as Guest
+        {authStrings.guest.button}
       </Button>
       <p className="guest-access__note">
-        Anonymous access to maps and menus.
+        {authStrings.guest.noteLine1}
         <br />
-        Registration required for booking.
+        {authStrings.guest.noteLine2}
       </p>
     </section>
   )
