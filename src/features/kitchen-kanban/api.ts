@@ -1,6 +1,8 @@
 import { api } from "@/api/client"
 import type { OrderItem, OrderItemStatusEnum, TicketStatusEnum } from "@/types/api/types.gen"
 
+export type { OrderItem }
+
 export interface KitchenTicket {
   readonly public_id: string
   readonly restaurant: string
