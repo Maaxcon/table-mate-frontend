@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useParams, useSearchParams } from "react-router-dom"
 import { LuArrowDownUp, LuShoppingCart } from "react-icons/lu"
+import { apiFetch } from "@/api/client"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
 import { clearAuth } from "@/store/auth/authSlice"
 import {
@@ -38,6 +39,14 @@ function MenuPage() {
   const sectionRefs = useRef<Map<string, HTMLElement>>(new Map())
   const user = useAppSelector((s) => s.auth.user)
   const dispatch = useAppDispatch()
+
+  const handleSignOut = useCallback(async () => {
+    try {
+      await apiFetch("/api/auth/logout/", { method: "POST" })
+    } finally {
+      dispatch(clearAuth())
+    }
+  }, [dispatch])
 
   const guestAuth = useGuestAuth({
     reservationId,
@@ -298,7 +307,7 @@ function MenuPage() {
         settings={restaurantSettings}
         user={user}
         restaurantId={restaurantId}
-        onSignOut={() => dispatch(clearAuth())}
+        onSignOut={handleSignOut}
       />
 
       <div className="menu-page__sticky-controls">
