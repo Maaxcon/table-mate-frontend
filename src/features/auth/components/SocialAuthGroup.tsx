@@ -17,12 +17,12 @@ function SocialAuthGroup({
 }: SocialAuthGroupProps) {
   return (
     <Card className="social-auth-group">
-      <h2 className="social-auth-group__title">Create Profile</h2>
+      <h2 className="social-auth-group__title">Get started</h2>
       <p className="social-auth-group__text">Unlock one-tap booking, favorites, and history.</p>
 
       <div className="social-auth-group__icons social-auth-group__icons--single">
         <IconButton
-          ariaLabel="Sign in with Google"
+          ariaLabel="Continue with Google"
           icon={<FcGoogle size={24} />}
           onClick={onGoogleLogin}
         />
