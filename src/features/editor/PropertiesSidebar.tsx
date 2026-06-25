@@ -140,7 +140,12 @@ export function PropertiesSidebar({
                 min={1}
                 max={20}
                 value={entity.capacity ?? 4}
-                onChange={(e) => onUpdate(entity.id, { capacity: Number(e.target.value) })}
+                onChange={(e) => {
+                  const raw = Number(e.target.value)
+                  if (e.target.value === "" || Number.isNaN(raw)) return
+                  const capacity = Math.max(1, Math.min(20, Math.round(raw)))
+                  onUpdate(entity.id, { capacity })
+                }}
               />
             </div>
 
