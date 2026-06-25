@@ -3,7 +3,10 @@
   gap: 8px;
   overflow-x: auto;
   scrollbar-width: none;
-  padding-bottom: 2px;
+  /* overflow-x: auto forces overflow-y to auto too, which clips the chips. The
+     vertical padding gives room for the hover lift and the active chip's shadow
+     so the top border isn't cut off under the sticky search. */
+  padding: 4px 2px;
 }
 
 .category-rail::-webkit-scrollbar {
