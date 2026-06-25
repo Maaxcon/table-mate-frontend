@@ -7,7 +7,6 @@ import {
   CartDrawer,
   CategoryRail,
   MenuEmptyState,
-  MenuFooter,
   MenuHeader,
   MenuItemGrid,
   MenuItemModal,
@@ -550,8 +549,6 @@ function MenuPage() {
           onCartChanged={syncFromServer}
         />
       )}
-
-      <MenuFooter telegramUrl={restaurantTelegramUrl} facebookUrl={restaurantFacebookUrl} />
     </main>
   )
 }

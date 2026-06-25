@@ -39,9 +39,6 @@ export const menuStrings = {
     openAria: "Відкрити кошик",
     action: "Переглянути кошик",
   },
-  footer: {
-    social: "Ми в соцмережах",
-  },
   card: {
     decrease: "Зменшити кількість",
     increase: "Збільшити кількість",
