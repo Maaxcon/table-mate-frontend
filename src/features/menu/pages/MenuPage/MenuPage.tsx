@@ -513,7 +513,7 @@ function MenuPage() {
             setCartAccessError(null)
             clearError()
           }}
-          onRetry={cartAccessError ? guestAuth.initialize : syncFromServer}
+          onRetry={cartAccessError ? undefined : syncFromServer}
           onCheckout={handleCheckout}
           onCartChanged={syncFromServer}
         />

@@ -206,9 +206,13 @@ export function CartDrawer({
         {error && (
           <div className="cart-drawer__toast" role="alert">
             <span className="cart-drawer__toast-text">{error}</span>
-            {onRetry && (
+            {onRetry ? (
               <button className="cart-drawer__toast-action" onClick={onRetry}>
                 {menuStrings.cart.retry}
+              </button>
+            ) : (
+              <button className="cart-drawer__toast-action" onClick={onClearError}>
+                {menuStrings.cart.close}
               </button>
             )}
           </div>
