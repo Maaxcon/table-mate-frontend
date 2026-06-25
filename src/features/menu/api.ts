@@ -358,10 +358,9 @@ export type BillItem = {
   name: string
   guest_slot: number
   quantity: number
-  total_price: string
-  // Full amount owed for this line: goods + tax + its share of service charge.
-  // The sum reconciles with the checkout receipt total; use this for bill sums,
-  // not total_price (which is goods-only).
+  // The amount owed for this line: goods + tax + its share of service charge.
+  // Summing it reconciles with the checkout receipt total. (The goods-only
+  // total_price is intentionally not part of the bill response.)
   payable: string
   is_paid: boolean
 }
