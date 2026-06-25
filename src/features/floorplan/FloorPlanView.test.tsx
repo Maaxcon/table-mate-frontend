@@ -113,4 +113,14 @@ describe("FloorPlanView", () => {
     const tile = screen.getByRole("button", { name: "Table 1, free" })
     expect(tile.style.transform).toContain("rotate(90deg)")
   })
+
+  it("counter-rotates a rotated table's text so it stays upright", () => {
+    const payload = makePayload({
+      tables: [tableEntry({ id: "t1", number: "1", zone: "A", rotation: 90 })],
+    })
+    render(<FloorPlanView payload={payload} />)
+    const label = screen.getByText("1")
+    const wrapper = label.parentElement!
+    expect(wrapper.style.transform).toContain("rotate(-90deg)")
+  })
 })

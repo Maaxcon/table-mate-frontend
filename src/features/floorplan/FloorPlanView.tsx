@@ -4,6 +4,7 @@ import {
   CANVAS_W,
   GRID,
   deserializeLayout,
+  uprightContentStyle,
   type EditorEntity,
   type LayoutPayload,
 } from "@/features/editor/types"
@@ -197,16 +198,18 @@ function renderEntity(e: EditorEntity, opts: RenderOpts): ReactNode {
         aria-label={`Table ${tableRef.publicNumber || tableRef.id}, ${status}`}
         onClick={opts.onTableSelect ? () => opts.onTableSelect?.(tableRef) : undefined}
       >
-        {opts.renderTableContent ? (
-          opts.renderTableContent(tableRef)
-        ) : (
-          <>
-            <span className="fp-block__label">{tableRef.publicNumber}</span>
-            {tableRef.capacity != null && (
-              <span className="fp-block__capacity">{tableRef.capacity}P</span>
-            )}
-          </>
-        )}
+        <span style={uprightContentStyle(e.rotation)}>
+          {opts.renderTableContent ? (
+            opts.renderTableContent(tableRef)
+          ) : (
+            <>
+              <span className="fp-block__label">{tableRef.publicNumber}</span>
+              {tableRef.capacity != null && (
+                <span className="fp-block__capacity">{tableRef.capacity}P</span>
+              )}
+            </>
+          )}
+        </span>
       </button>
     )
   }
@@ -218,7 +221,9 @@ function renderEntity(e: EditorEntity, opts: RenderOpts): ReactNode {
   if (e.type === "threshold") {
     return (
       <div key={e.id} className="fp-block fp-block--threshold" style={style}>
-        <span className="fp-block__zone-label">{e.label ?? ""}</span>
+        <span style={uprightContentStyle(e.rotation)}>
+          <span className="fp-block__zone-label">{e.label ?? ""}</span>
+        </span>
       </div>
     )
   }
@@ -238,13 +243,17 @@ function renderEntity(e: EditorEntity, opts: RenderOpts): ReactNode {
         <span className="fp-block__portal-arrow" aria-hidden>
           →
         </span>
-        <span className="fp-block__zone-label">{e.label ?? "Portal"}</span>
+        <span style={uprightContentStyle(e.rotation)}>
+          <span className="fp-block__zone-label">{e.label ?? "Portal"}</span>
+        </span>
       </button>
     )
   }
   return (
     <div key={e.id} className="fp-block fp-block--portal" style={style}>
-      <span className="fp-block__zone-label">{e.label ?? "Portal"}</span>
+      <span style={uprightContentStyle(e.rotation)}>
+        <span className="fp-block__zone-label">{e.label ?? "Portal"}</span>
+      </span>
     </div>
   )
 }
