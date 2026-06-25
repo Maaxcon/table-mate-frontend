@@ -7,6 +7,7 @@ import {
   CartDrawer,
   CategoryRail,
   MenuEmptyState,
+  MenuFooter,
   MenuHeader,
   MenuItemGrid,
   MenuItemModal,
@@ -500,6 +501,8 @@ function MenuPage() {
           facebookUrl={restaurantFacebookUrl}
         />
       </div>
+
+      <MenuFooter restaurantName={restaurantName} />
 
       {selectedItem && (
         <MenuItemModal

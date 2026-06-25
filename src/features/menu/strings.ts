@@ -40,6 +40,12 @@ export const menuStrings = {
     action: "Переглянути кошик",
     dismiss: "Сховати",
   },
+  footer: {
+    brand: "TableMate",
+    tagline: "Цифрове меню для ресторанів",
+    rights: (year: number, name: string | null) =>
+      name ? `© ${year} ${name}. Усі права захищено.` : `© ${year} TableMate. Усі права захищено.`,
+  },
   card: {
     decrease: "Зменшити кількість",
     increase: "Збільшити кількість",

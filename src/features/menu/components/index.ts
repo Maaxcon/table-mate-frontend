@@ -1,6 +1,7 @@
 export { default as CategoryRail } from "./CategoryRail"
 export { CartDrawer } from "./CartDrawer"
 export { default as MenuEmptyState } from "./MenuEmptyState"
+export { default as MenuFooter } from "./MenuFooter"
 export { default as MenuHeader } from "./MenuHeader"
 export { default as MenuItemCard } from "./MenuItemCard"
 export { default as MenuItemGrid } from "./MenuItemGrid"
