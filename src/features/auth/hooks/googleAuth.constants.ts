@@ -7,10 +7,13 @@ export const googleAuthMessage = {
   redirecting: "Taking you to Google…",
 } as const
 
+export const googleAuthStateStorageKey = "tablemate.auth.google_state"
+
 export const googleAuthCleanupQueryParams = [
   "code",
   "scope",
   "authuser",
   "prompt",
   "error",
+  "state",
 ] as const

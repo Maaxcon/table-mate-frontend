@@ -1,7 +1,11 @@
 import { ENV_NOT_CONFIGURED_VALUE, env } from "@/config/env"
 import { useGoogleLogin } from "@react-oauth/google"
 import { useEffect, useState } from "react"
-import { googleAuthCleanupQueryParams, googleAuthMessage } from "./googleAuth.constants"
+import {
+  googleAuthCleanupQueryParams,
+  googleAuthMessage,
+  googleAuthStateStorageKey,
+} from "./googleAuth.constants"
 import type { GoogleFeedbackType, InitialGoogleFeedback, MeResponse } from "@/features/auth/types"
 import type { GoogleAuthResponse } from "@/types/api/types.gen"
 import { useAppDispatch } from "@/store/hooks"
@@ -15,14 +19,36 @@ type UseGoogleRedirectAuthResult = {
   loading: boolean
 }
 
+function readAndClearStoredState(): string | null {
+  try {
+    const stored = window.sessionStorage.getItem(googleAuthStateStorageKey)
+    window.sessionStorage.removeItem(googleAuthStateStorageKey)
+    return stored
+  } catch {
+    return null
+  }
+}
+
 function getInitialGoogleFeedback(): InitialGoogleFeedback {
   const url = new URL(window.location.href)
   const code = url.searchParams.get("code")
   const error = url.searchParams.get("error")
 
   if (code) {
+    const returnedState = url.searchParams.get("state")
+    const storedState = readAndClearStoredState()
+
     for (const param of googleAuthCleanupQueryParams) {
       url.searchParams.delete(param)
+    }
+
+    if (!storedState || returnedState !== storedState) {
+      return {
+        code: null,
+        message: googleAuthMessage.redirectFailed,
+        type: "error",
+        cleanUrl: url.toString(),
+      }
     }
 
     return {
@@ -137,14 +163,25 @@ function useGoogleRedirectAuth(): UseGoogleRedirectAuthResult {
     }
   }, [initialGoogleFeedback.cleanUrl])
 
+  const [oauthState] = useState<string>(() => crypto.randomUUID())
+
   const runGoogleLogin = useGoogleLogin({
     flow: "auth-code",
     ux_mode: "redirect",
     redirect_uri: window.location.origin,
+    state: oauthState,
   })
 
   const handleGoogleLogin = () => {
     if (env.googleClientId === ENV_NOT_CONFIGURED_VALUE) {
+      setGoogleFeedback(googleAuthMessage.unavailable)
+      setGoogleFeedbackType("error")
+      return
+    }
+
+    try {
+      window.sessionStorage.setItem(googleAuthStateStorageKey, oauthState)
+    } catch {
       setGoogleFeedback(googleAuthMessage.unavailable)
       setGoogleFeedbackType("error")
       return
