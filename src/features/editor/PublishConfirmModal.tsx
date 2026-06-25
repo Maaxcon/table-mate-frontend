@@ -5,15 +5,9 @@ interface PublishConfirmModalProps {
   onConfirm: () => void
   onClose: () => void
   busy: boolean
-  warnings?: Array<{ table_number: string; reservation_count: number; message: string }>
 }
 
-export function PublishConfirmModal({
-  onConfirm,
-  onClose,
-  busy,
-  warnings,
-}: PublishConfirmModalProps) {
+export function PublishConfirmModal({ onConfirm, onClose, busy }: PublishConfirmModalProps) {
   return (
     <Modal
       title="Publish Layout"
@@ -23,28 +17,6 @@ export function PublishConfirmModal({
       closeDisabled={busy}
       backdropLabel="Cancel"
     >
-      {warnings && warnings.length > 0 && (
-        <div
-          style={{
-            padding: "0 24px",
-            fontSize: "0.85rem",
-            lineHeight: 1.5,
-            margin: "16px 0",
-          }}
-        >
-          <p style={{ fontWeight: 600, marginBottom: 8, color: "#e68a00" }}>
-            {warnings.length} table(s) have active reservations:
-          </p>
-          <ul style={{ margin: 0, paddingLeft: 20 }}>
-            {warnings.map((w, i) => (
-              <li key={i} style={{ marginBottom: 4 }}>
-                <strong>{w.table_number}</strong>: {w.message}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
       <p
         style={{
           padding: "0 24px",

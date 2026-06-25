@@ -39,9 +39,6 @@ function FloorPlanSection() {
   const [showPublishModal, setShowPublishModal] = useState(false)
   const [zones, setZones] = useState<Zone[]>([])
   const [selectedZoneId, setSelectedZoneId] = useState<string | null>(null)
-  const [publishWarnings, setPublishWarnings] = useState<
-    Array<{ table_number: string; reservation_count: number; message: string }>
-  >([])
 
   const selectedZone = useMemo(
     () => zones.find((z) => z.public_id === selectedZoneId) ?? null,
@@ -116,13 +113,6 @@ function FloorPlanSection() {
           dispatch({ type: "UPDATE_ENTITY", id: clientId, patch: { serverId } })
         }
       }
-      setPublishWarnings(
-        (result?.warnings as Array<{
-          table_number: string
-          reservation_count: number
-          message: string
-        }>) ?? [],
-      )
     },
   })
 
@@ -208,7 +198,6 @@ function FloorPlanSection() {
           onConfirm={handlePublishConfirm}
           onClose={() => setShowPublishModal(false)}
           busy={publishing}
-          warnings={publishWarnings}
         />
       )}
     </div>
