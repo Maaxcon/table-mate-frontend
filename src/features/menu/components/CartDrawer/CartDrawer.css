@@ -714,7 +714,7 @@
 .cart-drawer__changed-item {
   padding: 8px 12px;
   border-radius: 10px;
-  background: var(--color-surface-muted, #f5f5f5);
+  background: var(--color-bg-surface-subtle);
   font-size: 0.875rem;
   text-align: center;
 }
@@ -799,7 +799,7 @@
 }
 
 .cart-drawer__confirm-icon {
-  color: #16a34a;
+  color: var(--color-success-text, #16a34a);
   margin-bottom: 4px;
 }
 
