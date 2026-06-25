@@ -98,7 +98,7 @@ function useMenuItems(
     const load = () => {
       dispatch({ type: "LOADING" })
       const promise = isSearching
-        ? searchItems(restaurantId, searchQuery.trim(), guestToken, signal)
+        ? searchItems(restaurantId, searchQuery.trim(), guestToken, signal, undefined, sortOrder)
         : fetchItems({
             restaurantId,
             categoryId: activeCategory ?? undefined,
@@ -140,7 +140,7 @@ function useMenuItems(
     // also cancels this in-flight request and prevents a stale APPEND.
     const signal = abortRef.current?.signal
     const promise = isSearching
-      ? searchItems(restaurantId, searchQuery.trim(), guestToken, signal, nextPage)
+      ? searchItems(restaurantId, searchQuery.trim(), guestToken, signal, nextPage, sortOrder)
       : fetchItems({
           restaurantId,
           categoryId: activeCategory ?? undefined,

@@ -12,6 +12,7 @@ import type {
   MenuCategory,
   MenuItem,
   PublicRestaurant,
+  SortOrder,
   ToggleLikeResponse,
   UpdateCartItemRequest,
 } from "./types"
@@ -127,6 +128,7 @@ export function searchItems(
   guestToken?: string,
   signal?: AbortSignal,
   page?: number,
+  sortOrder: SortOrder = "sort_order",
 ): Promise<Paginated<MenuItem>> {
   return menuGet(
     MENU_API.itemsSearch,
@@ -134,6 +136,7 @@ export function searchItems(
       restaurant: restaurantId,
       q: query,
       guest_token: guestToken,
+      ordering: sortOrder,
       ...(page && page > 1 ? { page: String(page) } : {}),
     },
     signal,
