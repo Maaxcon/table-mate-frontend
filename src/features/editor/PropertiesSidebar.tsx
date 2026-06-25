@@ -128,9 +128,9 @@ export function PropertiesSidebar({
               type="button"
               className="editor-sidebar__input"
               style={{ width: "auto" }}
-              onClick={() => onUpdate(entity.id, { rotation: ((entity.rotation ?? 0) + 90) % 360 })}
+              onClick={() => onUpdate(entity.id, { rotation: ((entity.rotation ?? 0) + 45) % 360 })}
             >
-              Rotate 90°
+              Rotate 45°
             </button>
           </div>
         </div>
