@@ -457,6 +457,87 @@
   flex-direction: column;
 }
 
+.cart-drawer__bill-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 8px 16px 6px;
+  padding: 16px 18px;
+  border-radius: 16px;
+  background: var(--color-bg-page);
+}
+
+.cart-drawer__bill-summary-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-text-muted);
+}
+
+.cart-drawer__bill-summary-total {
+  font-family: var(--font-family-display);
+  font-size: 1.7rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--color-text-primary);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.cart-drawer__bill-progress {
+  margin-top: 4px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--color-border-default);
+  overflow: hidden;
+}
+
+.cart-drawer__bill-progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--color-success-text, #16a34a);
+  transition: width 300ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.cart-drawer__bill-summary-sub {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.cart-drawer__bill-group-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 20px 4px;
+}
+
+.cart-drawer__bill-group-head .cart-drawer__group-label {
+  padding: 0;
+}
+
+.cart-drawer__bill-group-total {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.cart-drawer__bill-paid-check {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-success-bg, #dcfce7);
+  color: var(--color-success-text, #16a34a);
+}
+
 .cart-drawer__bill-selectall {
   display: inline-flex;
   align-items: center;

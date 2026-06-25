@@ -182,6 +182,10 @@ export function CartDrawer({
   const selectedTotal = selectedBill.reduce((s, b) => s + (parseFloat(b.total_price) || 0), 0)
   const allBillSelected = payableBill.length > 0 && selectedBill.length === payableBill.length
   const billGroups = groupBillByGuest(payableBill)
+  const unpaidTotal = payableBill.reduce((s, b) => s + (parseFloat(b.total_price) || 0), 0)
+  const paidTotal = paidBill.reduce((s, b) => s + (parseFloat(b.total_price) || 0), 0)
+  const billGrandTotal = unpaidTotal + paidTotal
+  const paidPct = billGrandTotal > 0 ? Math.round((paidTotal / billGrandTotal) * 100) : 0
 
   const openBill = () => {
     setSelectedToPay(new Set())
@@ -423,83 +427,136 @@ export function CartDrawer({
           /* ── Bill: pick items to pay (simulated) ── */
           <>
             <div className="cart-drawer__bill">
-              {payableBill.length > 0 ? (
+              {billItems.length === 0 ? (
+                <p className="cart-drawer__bill-empty">{menuStrings.cart.billNoneToPay}</p>
+              ) : (
                 <>
-                  <button className="cart-drawer__bill-selectall" onClick={toggleSelectAll}>
-                    <span className="cart-drawer__bill-checkbox" data-checked={allBillSelected}>
-                      {allBillSelected && <LuCheck size={12} />}
+                  <div className="cart-drawer__bill-summary">
+                    <span className="cart-drawer__bill-summary-label">
+                      {menuStrings.cart.billToPay}
                     </span>
-                    {menuStrings.cart.billSelectAll}
-                  </button>
-                  {billGroups.map((group) => (
-                    <div key={group.slot} className="cart-drawer__group">
-                      <span className="cart-drawer__group-label">
-                        {menuStrings.cart.slotLabel(group.slot)}
+                    <span className="cart-drawer__bill-summary-total">
+                      {formatAmount(unpaidTotal)} {currencySymbol}
+                    </span>
+                    {paidTotal > 0 && (
+                      <>
+                        <div
+                          className="cart-drawer__bill-progress"
+                          role="progressbar"
+                          aria-valuenow={paidPct}
+                        >
+                          <div
+                            className="cart-drawer__bill-progress-fill"
+                            style={{ width: `${paidPct}%` }}
+                          />
+                        </div>
+                        <span className="cart-drawer__bill-summary-sub">
+                          {menuStrings.cart.billPaidOf(
+                            formatAmount(paidTotal),
+                            formatAmount(billGrandTotal),
+                          )}{" "}
+                          {currencySymbol}
+                        </span>
+                      </>
+                    )}
+                  </div>
+
+                  {payableBill.length > 0 ? (
+                    <>
+                      <button className="cart-drawer__bill-selectall" onClick={toggleSelectAll}>
+                        <span className="cart-drawer__bill-checkbox" data-checked={allBillSelected}>
+                          {allBillSelected && <LuCheck size={12} />}
+                        </span>
+                        {menuStrings.cart.billSelectAll}
+                      </button>
+                      {billGroups.map((group) => {
+                        const groupTotal = group.items.reduce(
+                          (s, b) => s + (parseFloat(b.total_price) || 0),
+                          0,
+                        )
+                        return (
+                          <div key={group.slot} className="cart-drawer__group">
+                            <div className="cart-drawer__bill-group-head">
+                              <span className="cart-drawer__group-label">
+                                {menuStrings.cart.slotLabel(group.slot)}
+                              </span>
+                              <span className="cart-drawer__bill-group-total">
+                                {formatAmount(groupTotal)} {currencySymbol}
+                              </span>
+                            </div>
+                            <ul className="cart-drawer__bill-list">
+                              {group.items.map((b) => {
+                                const checked = selectedToPay.has(b.id)
+                                return (
+                                  <li key={b.id}>
+                                    <button
+                                      className={`cart-drawer__bill-item${checked ? " cart-drawer__bill-item--checked" : ""}`}
+                                      onClick={() => toggleSelected(b.id)}
+                                      aria-pressed={checked}
+                                    >
+                                      <span
+                                        className="cart-drawer__bill-checkbox"
+                                        data-checked={checked}
+                                      >
+                                        {checked && <LuCheck size={12} />}
+                                      </span>
+                                      <span className="cart-drawer__bill-name">
+                                        {b.name}
+                                        <span className="cart-drawer__receipt-qty">
+                                          {" "}
+                                          × {b.quantity}
+                                        </span>
+                                      </span>
+                                      <span className="cart-drawer__bill-price">
+                                        {formatAmount(parseFloat(b.total_price) || 0)}{" "}
+                                        {currencySymbol}
+                                      </span>
+                                    </button>
+                                  </li>
+                                )
+                              })}
+                            </ul>
+                          </div>
+                        )
+                      })}
+                    </>
+                  ) : (
+                    <p className="cart-drawer__bill-empty">{menuStrings.cart.billAllPaid}</p>
+                  )}
+
+                  {paidBill.length > 0 && (
+                    <>
+                      <span className="cart-drawer__bill-paid-label">
+                        {menuStrings.cart.billPaidLabel}
                       </span>
                       <ul className="cart-drawer__bill-list">
-                        {group.items.map((b) => {
-                          const checked = selectedToPay.has(b.id)
-                          return (
-                            <li key={b.id}>
-                              <button
-                                className={`cart-drawer__bill-item${checked ? " cart-drawer__bill-item--checked" : ""}`}
-                                onClick={() => toggleSelected(b.id)}
-                                aria-pressed={checked}
-                              >
-                                <span className="cart-drawer__bill-checkbox" data-checked={checked}>
-                                  {checked && <LuCheck size={12} />}
-                                </span>
-                                <span className="cart-drawer__bill-name">
-                                  {b.name}
-                                  <span className="cart-drawer__receipt-qty"> × {b.quantity}</span>
-                                </span>
-                                <span className="cart-drawer__bill-price">
-                                  {formatAmount(parseFloat(b.total_price) || 0)} {currencySymbol}
-                                </span>
-                              </button>
-                            </li>
-                          )
-                        })}
+                        {paidBill.map((b) => (
+                          <li
+                            key={b.id}
+                            className="cart-drawer__bill-item cart-drawer__bill-item--paid"
+                          >
+                            <span className="cart-drawer__bill-paid-check">
+                              <LuCheck size={13} />
+                            </span>
+                            <span className="cart-drawer__bill-name">
+                              {b.name}
+                              <span className="cart-drawer__receipt-qty"> × {b.quantity}</span>
+                            </span>
+                            <span className="cart-drawer__bill-price">
+                              {formatAmount(parseFloat(b.total_price) || 0)} {currencySymbol}
+                            </span>
+                          </li>
+                        ))}
                       </ul>
-                    </div>
-                  ))}
-                </>
-              ) : (
-                <p className="cart-drawer__bill-empty">
-                  {billItems.length === 0
-                    ? menuStrings.cart.billNoneToPay
-                    : menuStrings.cart.billAllPaid}
-                </p>
-              )}
-
-              {paidBill.length > 0 && (
-                <>
-                  <span className="cart-drawer__bill-paid-label">
-                    {menuStrings.cart.billPaidLabel}
-                  </span>
-                  <ul className="cart-drawer__bill-list">
-                    {paidBill.map((b) => (
-                      <li
-                        key={b.id}
-                        className="cart-drawer__bill-item cart-drawer__bill-item--paid"
-                      >
-                        <span className="cart-drawer__bill-name">
-                          {b.name}
-                          <span className="cart-drawer__receipt-qty"> × {b.quantity}</span>
-                        </span>
-                        <span className="cart-drawer__bill-price">
-                          {formatAmount(parseFloat(b.total_price) || 0)} {currencySymbol}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
+                    </>
+                  )}
                 </>
               )}
             </div>
 
             <div className="cart-drawer__footer">
               <div className="cart-drawer__total-row">
-                <span className="cart-drawer__total-label">{menuStrings.cart.billToPay}</span>
+                <span className="cart-drawer__total-label">{menuStrings.cart.billSelected}</span>
                 <span className="cart-drawer__total-value">
                   {formatAmount(selectedTotal)} {currencySymbol}
                 </span>
@@ -509,7 +566,11 @@ export function CartDrawer({
                 onClick={handlePay}
                 disabled={paying || selectedBill.length === 0}
               >
-                {paying ? menuStrings.cart.paying : menuStrings.cart.pay}
+                {paying
+                  ? menuStrings.cart.paying
+                  : selectedBill.length > 0
+                    ? `${menuStrings.cart.pay} · ${formatAmount(selectedTotal)} ${currencySymbol}`
+                    : menuStrings.cart.pay}
               </button>
             </div>
           </>

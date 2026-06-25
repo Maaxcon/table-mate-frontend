@@ -84,6 +84,8 @@ export const menuStrings = {
     billPaidLabel: "Оплачено",
     billAllPaid: "Усе оплачено",
     billNoneToPay: "Немає позицій до сплати",
+    billPaidOf: (paid: string, total: string) => `Оплачено ${paid} з ${total}`,
+    billSelected: "Обрано",
     paying: "Оплачуємо...",
     groupedBy: "Замовлення",
     you: "Ви",

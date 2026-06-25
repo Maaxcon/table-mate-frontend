@@ -268,7 +268,7 @@ describe("CartDrawer checkout state machine", () => {
     await user.click(screen.getByRole("tab", { name: S.billTitle }))
 
     expect(onLoadBill).toHaveBeenCalledTimes(1)
-    expect(screen.getByText(S.billToPay)).toBeInTheDocument()
+    expect(screen.getByText(S.billNoneToPay)).toBeInTheDocument()
   })
 
   it("pays the selected ordered items by their order-item ids", async () => {
@@ -289,7 +289,7 @@ describe("CartDrawer checkout state machine", () => {
 
     await user.click(screen.getByRole("tab", { name: S.billTitle }))
     await user.click(screen.getByRole("button", { name: /Pizza/ }))
-    await user.click(screen.getByRole("button", { name: S.pay }))
+    await user.click(screen.getByRole("button", { name: new RegExp(`^${S.pay}`) }))
 
     expect(onPayBill).toHaveBeenCalledWith(["oi-1"])
   })
