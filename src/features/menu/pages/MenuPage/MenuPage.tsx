@@ -165,7 +165,11 @@ function MenuPage() {
     handleLiked,
   )
 
-  const showAllGrouped = activeCategory === null && !searchQuery
+  // Group by category only in the default order. A price sort is global, so the
+  // first page holds the cheapest items and whole (e.g. seafood) categories would
+  // render empty until more pages load — making dishes look "deleted". When
+  // sorting by price we show one flat, price-ordered list instead.
+  const showAllGrouped = activeCategory === null && !searchQuery && sortOrder === "sort_order"
 
   const groupedItems = useMemo(() => {
     if (!showAllGrouped || categories.length === 0) return null
