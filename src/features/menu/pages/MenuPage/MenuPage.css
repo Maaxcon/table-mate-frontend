@@ -181,21 +181,34 @@
 }
 
 .menu-page__book-btn {
-  padding: 10px 16px;
-  border: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 18px;
+  border: 1px solid var(--color-text-primary);
   border-radius: 12px;
-  background: var(--color-primary, #1976d2);
-  color: #fff;
+  background: var(--color-text-primary);
+  color: var(--color-bg-surface);
   font-family: var(--font-family-base);
   font-size: 0.85rem;
   font-weight: 600;
+  letter-spacing: 0.01em;
   text-decoration: none;
   white-space: nowrap;
-  transition: opacity 150ms ease;
+  box-shadow: var(--shadow);
+  transition:
+    transform 150ms ease,
+    box-shadow 150ms ease,
+    opacity 150ms ease;
 }
 
 .menu-page__book-btn:hover {
-  opacity: 0.85;
+  transform: translateY(-1px);
+  opacity: 0.92;
+}
+
+.menu-page__book-btn:active {
+  transform: translateY(0);
 }
 
 .menu-page__signin {
