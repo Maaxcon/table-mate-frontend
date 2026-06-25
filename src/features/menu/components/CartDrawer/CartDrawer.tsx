@@ -474,7 +474,9 @@ export function CartDrawer({
 
               {paidBill.length > 0 && (
                 <>
-                  <span className="cart-drawer__group-label">{menuStrings.cart.billPaidLabel}</span>
+                  <span className="cart-drawer__bill-paid-label">
+                    {menuStrings.cart.billPaidLabel}
+                  </span>
                   <ul className="cart-drawer__bill-list">
                     {paidBill.map((b) => (
                       <li
