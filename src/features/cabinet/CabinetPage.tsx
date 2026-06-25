@@ -1,11 +1,9 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { LuArrowLeft, LuLogOut } from "react-icons/lu"
-import { apiFetch } from "@/api/client"
 import { CancellationConfirmationModal } from "@/features/reservation/CancellationConfirmationModal"
 import { RescheduleModal } from "@/features/reservation/RescheduleModal"
-import { clearAuth } from "@/store/auth/authSlice"
-import { useAppDispatch } from "@/store/hooks"
+import { useLogout } from "@/features/auth/hooks/useLogout"
 import {
   BookingsList,
   CabinetStats,
@@ -20,7 +18,7 @@ import "./CabinetPage.css"
 
 function CabinetPage() {
   const navigate = useNavigate()
-  const dispatch = useAppDispatch()
+  const { logout, logoutFailed } = useLogout()
   const {
     profile,
     bookings,
@@ -39,15 +37,6 @@ function CabinetPage() {
   const [receipt, setReceipt] = useState<HistoryEntry | null>(null)
   const [modifyTarget, setModifyTarget] = useState<Reservation | null>(null)
   const [cancelTarget, setCancelTarget] = useState<Reservation | null>(null)
-
-  const handleLogout = async () => {
-    try {
-      await apiFetch("/api/auth/logout/", { method: "POST" })
-    } finally {
-      dispatch(clearAuth())
-      navigate("/", { replace: true })
-    }
-  }
 
   const handleModify = (booking: Reservation) => {
     setModifyTarget(booking)
@@ -86,12 +75,18 @@ function CabinetPage() {
         <button
           type="button"
           className="cabinet-page__icon-btn"
-          onClick={() => void handleLogout()}
+          onClick={() => void logout()}
           aria-label="Log out"
         >
           <LuLogOut aria-hidden="true" />
         </button>
       </header>
+
+      {logoutFailed && (
+        <p className="cabinet-page__logout-error" role="alert">
+          Couldn't sign you out. Please try again.
+        </p>
+      )}
 
       {loading && !profile ? (
         <p className="cabinet-page__loading">Loading your cabinet…</p>
