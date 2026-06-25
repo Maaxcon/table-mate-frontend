@@ -119,6 +119,7 @@ export interface LayoutPayload {
     y: number
     width: number
     height: number
+    rotation?: number
     label?: string
     zone_id: string | null
   }>
@@ -127,6 +128,7 @@ export interface LayoutPayload {
     y: number
     width: number
     height: number
+    rotation?: number
     target_zone_id: string | null
     label?: string
     portal_label?: string
@@ -184,6 +186,7 @@ export function deserializeLayout(layout: LayoutPayload): EditorEntity[] {
       h: Math.round(th.height / GRID),
       label: th.label || undefined,
       zoneId: th.zone_id ?? undefined,
+      rotation: th.rotation,
     })
   }
 
@@ -198,6 +201,7 @@ export function deserializeLayout(layout: LayoutPayload): EditorEntity[] {
       targetZoneId: p.target_zone_id ?? undefined,
       label: p.label || p.portal_label || undefined,
       zoneId: p.zone_id ?? undefined,
+      rotation: p.rotation,
     })
   }
 

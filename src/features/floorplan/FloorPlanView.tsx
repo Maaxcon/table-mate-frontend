@@ -164,7 +164,13 @@ interface RenderOpts {
 }
 
 function renderEntity(e: EditorEntity, opts: RenderOpts): ReactNode {
-  const style = { left: px(e.x), top: px(e.y), width: px(e.w), height: px(e.h) }
+  const style = {
+    left: px(e.x),
+    top: px(e.y),
+    width: px(e.w),
+    height: px(e.h),
+    transform: e.rotation ? `rotate(${e.rotation}deg)` : undefined,
+  }
 
   if (e.type === "table-square" || e.type === "table-round") {
     const tableRef: FloorPlanTableRef = {

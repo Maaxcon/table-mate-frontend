@@ -120,6 +120,21 @@ export function PropertiesSidebar({
           </div>
         </div>
 
+        <div className="editor-sidebar__field">
+          <span className="editor-sidebar__label">Rotation</span>
+          <div className="editor-sidebar__row">
+            <span className="editor-sidebar__value">{entity.rotation ?? 0}°</span>
+            <button
+              type="button"
+              className="editor-sidebar__input"
+              style={{ width: "auto" }}
+              onClick={() => onUpdate(entity.id, { rotation: ((entity.rotation ?? 0) + 90) % 360 })}
+            >
+              Rotate 90°
+            </button>
+          </div>
+        </div>
+
         {isTable && (
           <>
             <div className="editor-sidebar__field">

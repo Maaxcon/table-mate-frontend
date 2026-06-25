@@ -38,6 +38,7 @@ export function ThresholdBlock({
         top: px(entity.y),
         width: px(entity.w),
         height: px(entity.h),
+        transform: entity.rotation ? `rotate(${entity.rotation}deg)` : undefined,
       }}
       role="button"
       tabIndex={0}
