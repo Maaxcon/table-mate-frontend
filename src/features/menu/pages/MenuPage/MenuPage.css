@@ -791,6 +791,13 @@
   }
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .menu-page__lobby-overlay,
+  .menu-page__lobby {
+    animation: none;
+  }
+}
+
 .menu-page__lobby-title {
   margin: 0;
   font-family: var(--font-family-display);

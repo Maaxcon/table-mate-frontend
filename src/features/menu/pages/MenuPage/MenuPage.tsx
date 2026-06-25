@@ -339,6 +339,14 @@ function MenuPage() {
 
   const showCartBar = totalCount > 0 && !cartBarDismissed
 
+  // The swipe sets cartBarSwiped to suppress the trailing synthetic click. When
+  // the swipe dismisses the bar, it unmounts before that click arrives, so the
+  // flag stays set and would swallow the first real tap after the bar returns.
+  // Clear it whenever the bar reappears.
+  useEffect(() => {
+    if (showCartBar) cartBarSwiped.current = false
+  }, [showCartBar])
+
   // The controls row (search/sort/cart/categories) is sticky at the top. Expose
   // its live height so the sticky "About" panel can sit right below it instead
   // of being covered.

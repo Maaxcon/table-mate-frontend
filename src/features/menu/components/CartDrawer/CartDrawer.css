@@ -960,3 +960,15 @@
     }
   }
 }
+
+@media (prefers-reduced-motion: reduce) {
+  /* Entrance animations resolve to the element's visible resting state, so
+     disabling them shows everything immediately with no motion. */
+  .cart-overlay,
+  .cart-drawer,
+  .cart-drawer__toast,
+  .cart-drawer__confirm-dialog,
+  .cart-drawer__confirm {
+    animation: none;
+  }
+}
