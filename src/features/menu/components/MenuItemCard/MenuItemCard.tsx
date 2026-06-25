@@ -14,6 +14,7 @@ type MenuItemCardProps = {
   cartQuantity?: number
   likePending?: boolean
   pending?: boolean
+  index?: number
 }
 
 function MenuItemCard({
@@ -26,6 +27,7 @@ function MenuItemCard({
   cartQuantity = 0,
   likePending = false,
   pending = false,
+  index = 0,
 }: MenuItemCardProps) {
   const handleAdd = (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -52,6 +54,7 @@ function MenuItemCard({
   return (
     <div
       className={`menu-item-card${!item.is_available ? " menu-item-card--unavailable" : ""}`}
+      style={{ "--card-index": index } as React.CSSProperties}
       role="button"
       tabIndex={0}
       onClick={() => onClick(item)}
