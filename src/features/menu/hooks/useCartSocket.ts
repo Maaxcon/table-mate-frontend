@@ -15,6 +15,9 @@ type UseCartSocketResult = {
 
 const BASE_DELAY_MS = 1000
 const MAX_DELAY_MS = 30000
+// Auth-expired fallback: long enough for a token refresh to win the race and
+// reconnect with the fresh token, short enough to recover if the refresh fails.
+const AUTH_EXPIRED_RETRY_MS = 4000
 
 function jitter(delay: number): number {
   return delay * (0.5 + Math.random() * 0.5)
@@ -104,14 +107,18 @@ export function useCartSocket({
 
       shouldSyncRef.current = true
 
-      // 4001 = auth expired: ask the app to refresh the guest token. A new token
-      // changes the connect deps and reconnects via the effect. We still fall
-      // through to schedule a backoff retry as a fallback — if the refresh
-      // fails, the socket keeps trying (and each retry re-triggers the refresh)
-      // instead of dying. A successful refresh reconnects first and cleanup()
-      // clears this pending timer, so there's no double connect.
+      // 4001 = auth expired: ask the app to refresh the guest token. The new
+      // token changes the connect deps, so the effect reconnects with it and its
+      // cleanup clears the fallback timer below — no reconnect on the stale
+      // token. We keep ONE longer fallback (not the short backoff) so a *failed*
+      // refresh still retries instead of the socket dying, without racing the
+      // refresh and looping on the expired token.
       if (event.code === 4001) {
         onAuthExpiredRef.current()
+        reconnectTimeoutRef.current = setTimeout(() => {
+          if (mountedRef.current) connectRef.current()
+        }, AUTH_EXPIRED_RETRY_MS)
+        return
       }
 
       attemptRef.current += 1
