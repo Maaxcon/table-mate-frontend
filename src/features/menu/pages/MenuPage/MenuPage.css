@@ -755,11 +755,14 @@
   color: var(--color-text-primary);
   outline: none;
   text-align: center;
-  transition: border-color 150ms ease;
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease;
 }
 
 .menu-page__lobby-input:focus {
   border-color: var(--color-border-strong);
+  box-shadow: 0 0 0 3px rgb(17 24 39 / 8%);
 }
 
 .menu-page__lobby-input::placeholder {
@@ -783,11 +786,21 @@
   font-size: 0.95rem;
   font-weight: 700;
   cursor: pointer;
-  transition: opacity 150ms ease;
+  box-shadow: 0 8px 20px rgb(17 24 39 / 20%);
+  transition:
+    opacity 150ms ease,
+    transform 150ms ease,
+    box-shadow 150ms ease;
 }
 
 .menu-page__lobby-join:hover {
-  opacity: 0.88;
+  opacity: 0.92;
+  transform: translateY(-2px);
+  box-shadow: 0 14px 30px rgb(17 24 39 / 26%);
+}
+
+.menu-page__lobby-join:active {
+  transform: translateY(0);
 }
 
 .menu-page__lobby-skip {
