@@ -138,6 +138,36 @@ export function Canvas({
     }
   }
 
+  // Keyboard editing for the selected entity: arrows move by one grid cell,
+  // Shift+arrows resize. The reducer clamps both, so this stays on-canvas.
+  useEffect(() => {
+    if (!selectedId) return
+    const ARROWS: Record<string, [number, number]> = {
+      ArrowLeft: [-1, 0],
+      ArrowRight: [1, 0],
+      ArrowUp: [0, -1],
+      ArrowDown: [0, 1],
+    }
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null
+      // Don't hijack arrow keys while typing in the properties sidebar.
+      if (target && ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName)) return
+      const delta = ARROWS[e.key]
+      if (!delta) return
+      const entity = entities.find((en) => en.id === selectedId)
+      if (!entity) return
+      e.preventDefault()
+      const [dx, dy] = delta
+      if (e.shiftKey) {
+        onEntityResize(entity.id, entity.w + dx, entity.h + dy)
+      } else {
+        onEntityMove(entity.id, entity.x + dx, entity.y + dy)
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
+  }, [selectedId, entities, onEntityMove, onEntityResize])
+
   useEffect(() => {
     if (activeTool && activeTool !== "select" && activeTool !== "pan") {
       if (canvasRef.current) {
