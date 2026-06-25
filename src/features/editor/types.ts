@@ -3,6 +3,10 @@ export const CANVAS_W = 2000
 export const CANVAS_H = 2000
 export const OVERHANG = GRID
 
+// Bounds for pinch/ctrl-wheel zoom of the editor canvas.
+export const EDITOR_MIN_SCALE = 0.4
+export const EDITOR_MAX_SCALE = 2
+
 export type EntityType = "table-square" | "table-round" | "obstacle" | "threshold" | "portal"
 
 export type Tool = EntityType | "select" | "pan"

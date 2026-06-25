@@ -1,11 +1,13 @@
-import { useCallback, useEffect, useRef } from "react"
-import { snap, GRID } from "./types"
+import { useCallback, useEffect, useRef, useState } from "react"
+import { snap, GRID, EDITOR_MIN_SCALE, EDITOR_MAX_SCALE } from "./types"
 import type { EditorEntity } from "./types"
 import { TableBlock } from "./entities/TableBlock"
 import { ObstacleBlock } from "./entities/ObstacleBlock"
 import { ThresholdBlock } from "./entities/ThresholdBlock"
 import { PortalBlock } from "./entities/PortalBlock"
 import "./Canvas.css"
+
+const clampScale = (s: number) => Math.min(EDITOR_MAX_SCALE, Math.max(EDITOR_MIN_SCALE, s))
 
 interface CanvasProps {
   entities: EditorEntity[]
@@ -39,7 +41,54 @@ export function Canvas({
     moved: boolean
   } | null>(null)
 
-  const scale = 1
+  const [scale, setScale] = useState(1)
+  // Mirror scale into a ref so the (once-bound) gesture listeners read the live
+  // value without re-subscribing on every zoom step.
+  const scaleRef = useRef(scale)
+  useEffect(() => {
+    scaleRef.current = scale
+  }, [scale])
+
+  // Pinch (two-finger) and ctrl+wheel zoom of the canvas. Native non-passive
+  // listeners so we can preventDefault the browser's own page zoom/scroll.
+  useEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+    let pinchStart: { dist: number; scale: number } | null = null
+    const distance = (touches: TouchList) =>
+      Math.hypot(touches[0].clientX - touches[1].clientX, touches[0].clientY - touches[1].clientY)
+
+    const onTouchStart = (e: TouchEvent) => {
+      if (e.touches.length === 2) {
+        pinchStart = { dist: distance(e.touches), scale: scaleRef.current }
+      }
+    }
+    const onTouchMove = (e: TouchEvent) => {
+      if (pinchStart && e.touches.length === 2) {
+        e.preventDefault()
+        setScale(clampScale(pinchStart.scale * (distance(e.touches) / pinchStart.dist)))
+      }
+    }
+    const onTouchEnd = (e: TouchEvent) => {
+      if (e.touches.length < 2) pinchStart = null
+    }
+    const onWheel = (e: WheelEvent) => {
+      if (!e.ctrlKey) return // trackpad pinch surfaces as ctrl+wheel
+      e.preventDefault()
+      setScale((s) => clampScale(s * (1 - e.deltaY * 0.01)))
+    }
+
+    el.addEventListener("touchstart", onTouchStart, { passive: false })
+    el.addEventListener("touchmove", onTouchMove, { passive: false })
+    el.addEventListener("touchend", onTouchEnd)
+    el.addEventListener("wheel", onWheel, { passive: false })
+    return () => {
+      el.removeEventListener("touchstart", onTouchStart)
+      el.removeEventListener("touchmove", onTouchMove)
+      el.removeEventListener("touchend", onTouchEnd)
+      el.removeEventListener("wheel", onWheel)
+    }
+  }, [])
 
   const onBlockMouseDown = useCallback(
     (e: React.MouseEvent, id: string) => {
