@@ -502,7 +502,9 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
-  scroll-margin-top: 120px;
+  /* Leave room for the sticky controls row (live height) so a clicked category
+     scrolls below it instead of under it. */
+  scroll-margin-top: calc(var(--menu-sticky-h, 120px) + 16px);
 }
 
 .menu-page__category-heading {

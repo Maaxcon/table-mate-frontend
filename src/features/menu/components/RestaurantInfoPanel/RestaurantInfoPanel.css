@@ -1,6 +1,8 @@
 .restaurant-info {
   position: sticky;
-  top: 16px;
+  /* Sit just below the sticky controls row (its live height is published as
+     --menu-sticky-h) so it isn't covered when scrolling. */
+  top: calc(var(--menu-sticky-h, 96px) + 12px);
   background: var(--color-bg-surface);
   border: 1px solid var(--color-border-default);
   border-radius: 16px;

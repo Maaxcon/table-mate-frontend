@@ -38,6 +38,7 @@ function MenuPage() {
   const pendingScrollCategory = useRef<string | null>(null)
   const [lobbyName, setLobbyName] = useState("")
   const sectionRefs = useRef<Map<string, HTMLElement>>(new Map())
+  const stickyControlsRef = useRef<HTMLDivElement>(null)
   const user = useAppSelector((s) => s.auth.user)
   const dispatch = useAppDispatch()
 
@@ -326,6 +327,20 @@ function MenuPage() {
 
   const showCartBar = totalCount > 0 && !cartBarDismissed
 
+  // The controls row (search/sort/cart/categories) is sticky at the top. Expose
+  // its live height so the sticky "About" panel can sit right below it instead
+  // of being covered.
+  useEffect(() => {
+    const el = stickyControlsRef.current
+    if (!el) return
+    const update = () =>
+      document.documentElement.style.setProperty("--menu-sticky-h", `${el.offsetHeight}px`)
+    update()
+    const observer = new ResizeObserver(update)
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
+
   const railActiveCategory = showAllGrouped ? scrollActiveCategory : activeCategory
   const currencySymbol = restaurantSettings ? getCurrencySymbol(restaurantSettings.currency) : ""
   const totalPriceLabel = formatAmount(totalPrice)
@@ -374,7 +389,7 @@ function MenuPage() {
         onSignOut={() => dispatch(clearAuth())}
       />
 
-      <div className="menu-page__sticky-controls">
+      <div className="menu-page__sticky-controls" ref={stickyControlsRef}>
         <div className="menu-page__searchrow">
           <input
             className="menu-page__search"
