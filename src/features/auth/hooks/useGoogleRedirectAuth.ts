@@ -9,7 +9,7 @@ import {
 import type { GoogleFeedbackType, InitialGoogleFeedback, MeResponse } from "@/features/auth/types"
 import type { GoogleAuthResponse } from "@/types/api/types.gen"
 import { useAppDispatch } from "@/store/hooks"
-import { setAccessToken, setUser } from "@/store/auth/authSlice"
+import { clearAuth, setAccessToken, setUser } from "@/store/auth/authSlice"
 import { apiFetch } from "@/api/client"
 
 type UseGoogleRedirectAuthResult = {
@@ -100,6 +100,8 @@ function useGoogleRedirectAuth(): UseGoogleRedirectAuthResult {
       setGoogleFeedback(googleAuthMessage.signingIn)
       setGoogleFeedbackType("success")
 
+      let tokenApplied = false
+
       try {
         const response = await fetch(`${env.apiBaseUrl}/api/auth/google/`, {
           method: "POST",
@@ -123,6 +125,7 @@ function useGoogleRedirectAuth(): UseGoogleRedirectAuthResult {
         }
 
         dispatch(setAccessToken(payload.access))
+        tokenApplied = true
 
         const meResponse = await apiFetch("/api/auth/me/", { signal: controller.signal })
         if (!meResponse.ok) {
@@ -146,6 +149,9 @@ function useGoogleRedirectAuth(): UseGoogleRedirectAuthResult {
       } catch (error) {
         if (error instanceof DOMException && error.name === "AbortError") {
           return
+        }
+        if (tokenApplied) {
+          dispatch(clearAuth())
         }
         setGoogleFeedback(googleAuthMessage.backendAuthFailed)
         setGoogleFeedbackType("error")
