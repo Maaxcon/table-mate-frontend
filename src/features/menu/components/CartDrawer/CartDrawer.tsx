@@ -36,6 +36,7 @@ type Props = {
   onRetry?: () => void
   onCheckout: () => Promise<CheckoutResult>
   billItems: BillItem[]
+  billLoading: boolean
   onLoadBill: () => void
   onPayBill: (orderItemIds: string[]) => Promise<void>
   onCartChanged?: () => void
@@ -94,6 +95,7 @@ export function CartDrawer({
   onRetry,
   onCheckout,
   billItems,
+  billLoading,
   onLoadBill,
   onPayBill,
   onCartChanged,
@@ -428,7 +430,9 @@ export function CartDrawer({
           <>
             <div className="cart-drawer__bill">
               {billItems.length === 0 ? (
-                <p className="cart-drawer__bill-empty">{menuStrings.cart.billNoneToPay}</p>
+                <p className="cart-drawer__bill-empty">
+                  {billLoading ? menuStrings.cart.billLoading : menuStrings.cart.billNoneToPay}
+                </p>
               ) : (
                 <>
                   <div className="cart-drawer__bill-summary">

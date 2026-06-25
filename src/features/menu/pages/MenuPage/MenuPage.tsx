@@ -618,6 +618,7 @@ function MenuPage() {
           onRetry={cartAccessError ? guestAuth.initialize : syncFromServer}
           onCheckout={handleCheckout}
           billItems={bill.items}
+          billLoading={bill.loading}
           onLoadBill={bill.refresh}
           onPayBill={bill.pay}
           onCartChanged={syncFromServer}

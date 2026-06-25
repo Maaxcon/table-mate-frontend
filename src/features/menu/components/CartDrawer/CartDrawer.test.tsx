@@ -72,6 +72,7 @@ function renderDrawer(overrides: Overrides = {}) {
     onClearError: vi.fn(),
     onCheckout: vi.fn<() => Promise<CheckoutResult>>(),
     billItems: [],
+    billLoading: false,
     onLoadBill: vi.fn(),
     onPayBill: vi.fn<(ids: string[]) => Promise<void>>().mockResolvedValue(undefined),
     onCartChanged: vi.fn(),
