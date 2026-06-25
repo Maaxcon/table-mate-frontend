@@ -130,6 +130,9 @@ export const menuStrings = {
   info: {
     heading: "Про заклад",
     hours: "Графік роботи",
+    openNow: "Відчинено",
+    closedNow: "Зачинено",
+    contacts: "Контакти",
     currency: (code: string) => `Валюта: ${code}`,
   },
   weightGrams: (grams: number) => `${grams} г`,

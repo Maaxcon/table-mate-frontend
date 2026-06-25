@@ -1,87 +1,174 @@
 .restaurant-info {
+  position: sticky;
+  top: 16px;
   background: var(--color-bg-surface);
   border: 1px solid var(--color-border-default);
+  border-radius: 16px;
   padding: 20px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 18px;
   font-family: var(--font-family-base);
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.04),
+    0 8px 24px -16px rgba(0, 0, 0, 0.18);
+}
+
+.restaurant-info__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
 }
 
 .restaurant-info__heading {
-  margin: 0 0 4px;
+  margin: 0;
   font-family: var(--font-family-display);
   font-size: 0.72rem;
-  font-weight: 600;
-  letter-spacing: 0.12em;
+  font-weight: 700;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
+}
+
+/* ── Open / closed status pill ── */
+.restaurant-info__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.restaurant-info__status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.restaurant-info__status--open {
+  color: var(--color-success-text);
+  background: var(--color-success-bg);
+}
+
+.restaurant-info__status--open .restaurant-info__status-dot {
+  box-shadow: 0 0 0 3px var(--color-success-border);
+}
+
+.restaurant-info__status--closed {
+  color: var(--color-text-secondary);
+  background: var(--color-bg-surface-subtle);
+}
+
+/* ── Sections ── */
+.restaurant-info__group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.restaurant-info__group + .restaurant-info__group {
+  padding-top: 16px;
+  border-top: 1px solid var(--color-border-light);
 }
 
 .restaurant-info__row {
   display: flex;
   align-items: flex-start;
-  gap: 10px;
+  gap: 11px;
 }
 
 .restaurant-info__icon {
-  font-size: 0.9rem;
-  line-height: 1.5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
-  width: 18px;
-  text-align: center;
+  width: 20px;
+  height: 20px;
+  color: var(--color-text-muted);
 }
 
 .restaurant-info__text {
   font-size: 0.875rem;
   color: var(--color-text-primary);
-  line-height: 1.5;
-}
-
-.restaurant-info__text--label {
-  font-weight: 600;
-  font-size: 0.8rem;
-  letter-spacing: 0.02em;
+  line-height: 1.45;
 }
 
 .restaurant-info__link {
   font-size: 0.875rem;
   color: var(--color-text-primary);
   text-decoration: none;
-  line-height: 1.5;
+  line-height: 1.45;
+  transition: color 0.15s ease;
 }
 
 .restaurant-info__link:hover {
-  text-decoration: underline;
+  color: var(--color-primary);
+}
+
+/* ── Schedule ── */
+.restaurant-info__group-head {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.restaurant-info__group-label {
+  font-family: var(--font-family-display);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
 }
 
 .restaurant-info__schedule {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0 31px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 2px;
 }
 
-.restaurant-info__row--schedule-title {
-  margin-bottom: 0;
-}
-
-.restaurant-info__table {
-  border-collapse: collapse;
-  width: 100%;
-  padding-left: 28px;
-}
-
-.restaurant-info__day,
-.restaurant-info__time {
+.restaurant-info__schedule-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 4px 8px;
+  border-radius: 7px;
   font-size: 0.8rem;
-  color: var(--color-text-primary);
-  padding: 2px 8px 2px 0;
-  vertical-align: top;
+  font-variant-numeric: tabular-nums;
+}
+
+.restaurant-info__schedule-row--today {
+  background: var(--color-bg-surface-subtle);
 }
 
 .restaurant-info__day {
   color: var(--color-text-muted);
   white-space: nowrap;
-  width: 48px;
-  padding-left: 28px;
+}
+
+.restaurant-info__time {
+  color: var(--color-text-primary);
+}
+
+.restaurant-info__schedule-row--today .restaurant-info__day,
+.restaurant-info__schedule-row--today .restaurant-info__time {
+  color: var(--color-text-primary);
+  font-weight: 600;
+}
+
+@media (max-width: 768px) {
+  .restaurant-info {
+    position: static;
+  }
 }
