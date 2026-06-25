@@ -315,6 +315,9 @@ function MenuPage() {
   }, [totalCount])
 
   const cartBarTouchStartY = useRef<number | null>(null)
+  // A swipe ends in a synthesized click; this flag lets onClick ignore it so a
+  // dismiss gesture doesn't also open the cart.
+  const cartBarSwiped = useRef(false)
   const handleCartBarTouchStart = (e: TouchEvent) => {
     cartBarTouchStartY.current = e.touches[0].clientY
   }
@@ -322,8 +325,16 @@ function MenuPage() {
     const start = cartBarTouchStartY.current
     cartBarTouchStartY.current = null
     if (start !== null && e.changedTouches[0].clientY - start > 40) {
+      cartBarSwiped.current = true
       setCartBarDismissed(true)
     }
+  }
+  const handleCartBarClick = () => {
+    if (cartBarSwiped.current) {
+      cartBarSwiped.current = false
+      return
+    }
+    setCartOpen(true)
   }
 
   const showCartBar = totalCount > 0 && !cartBarDismissed
@@ -518,7 +529,7 @@ function MenuPage() {
           className="menu-page__cart-bar"
           role="button"
           tabIndex={0}
-          onClick={() => setCartOpen(true)}
+          onClick={handleCartBarClick}
           onKeyDown={(e) => {
             if (e.key === "Enter" || e.key === " ") {
               e.preventDefault()

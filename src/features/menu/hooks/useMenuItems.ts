@@ -140,7 +140,7 @@ function useMenuItems(
     // also cancels this in-flight request and prevents a stale APPEND.
     const signal = abortRef.current?.signal
     const promise = isSearching
-      ? searchItems(restaurantId, searchQuery.trim(), guestToken, signal, nextPage, sortOrder)
+      ? searchItems(restaurantId, searchQuery.trim(), guestToken, signal, nextPage)
       : fetchItems({
           restaurantId,
           categoryId: activeCategory ?? undefined,
