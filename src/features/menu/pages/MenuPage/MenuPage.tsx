@@ -459,6 +459,8 @@ function MenuPage() {
           address={restaurantAddress}
           phone={restaurantPhone}
           settings={restaurantSettings}
+          telegramUrl={restaurantTelegramUrl}
+          facebookUrl={restaurantFacebookUrl}
         />
       </div>
 

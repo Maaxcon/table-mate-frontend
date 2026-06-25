@@ -1,7 +1,12 @@
-import { LuClock, LuMapPin, LuPhone, LuWallet } from "react-icons/lu"
+import { FaFacebook, FaTelegram } from "react-icons/fa"
+import { LuArrowUpRight, LuClock, LuMapPin, LuPhone, LuWallet } from "react-icons/lu"
 import type { PublicRestaurantSettings, WorkingHours } from "@/features/menu/types"
 import { menuStrings } from "@/features/menu/strings"
 import "./RestaurantInfoPanel.css"
+
+function mapsUrl(address: string): string {
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`
+}
 
 const DAY_LABELS = menuStrings.dayShort
 
@@ -65,12 +70,21 @@ type Props = {
   address: string | null
   phone: string | null
   settings: PublicRestaurantSettings | null
+  telegramUrl?: string
+  facebookUrl?: string
 }
 
-export function RestaurantInfoPanel({ address, phone, settings }: Props) {
+export function RestaurantInfoPanel({
+  address,
+  phone,
+  settings,
+  telegramUrl = "",
+  facebookUrl = "",
+}: Props) {
   const hours = settings?.working_hours
   const hasSchedule = Boolean(hours && Object.keys(hours).length > 0)
-  const hasContent = address || phone || hasSchedule
+  const hasSocial = Boolean(telegramUrl || facebookUrl)
+  const hasContent = address || phone || hasSchedule || hasSocial
 
   if (!hasContent) return null
 
@@ -94,12 +108,19 @@ export function RestaurantInfoPanel({ address, phone, settings }: Props) {
       {(address || phone) && (
         <div className="restaurant-info__group">
           {address && (
-            <div className="restaurant-info__row">
+            <a
+              className="restaurant-info__row restaurant-info__row--map"
+              href={mapsUrl(address)}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={menuStrings.info.viewOnMap}
+            >
               <span className="restaurant-info__icon" aria-hidden="true">
                 <LuMapPin size={16} />
               </span>
               <span className="restaurant-info__text">{address}</span>
-            </div>
+              <LuArrowUpRight className="restaurant-info__map-arrow" size={14} aria-hidden="true" />
+            </a>
           )}
           {phone && (
             <div className="restaurant-info__row">
@@ -110,6 +131,12 @@ export function RestaurantInfoPanel({ address, phone, settings }: Props) {
                 {phone}
               </a>
             </div>
+          )}
+          {phone && (
+            <a className="restaurant-info__call" href={`tel:${phone.replace(/\s/g, "")}`}>
+              <LuPhone size={16} />
+              {menuStrings.info.call}
+            </a>
           )}
         </div>
       )}
@@ -145,6 +172,38 @@ export function RestaurantInfoPanel({ address, phone, settings }: Props) {
             <span className="restaurant-info__text">
               {menuStrings.info.currency(settings.currency)}
             </span>
+          </div>
+        </div>
+      )}
+
+      {hasSocial && (
+        <div className="restaurant-info__group">
+          <span className="restaurant-info__group-label">{menuStrings.info.social}</span>
+          <div className="restaurant-info__social">
+            {telegramUrl && (
+              <a
+                className="restaurant-info__social-btn"
+                href={telegramUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Telegram"
+              >
+                <FaTelegram size={16} />
+                <span>Telegram</span>
+              </a>
+            )}
+            {facebookUrl && (
+              <a
+                className="restaurant-info__social-btn"
+                href={facebookUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Facebook"
+              >
+                <FaFacebook size={16} />
+                <span>Facebook</span>
+              </a>
+            )}
           </div>
         </div>
       )}

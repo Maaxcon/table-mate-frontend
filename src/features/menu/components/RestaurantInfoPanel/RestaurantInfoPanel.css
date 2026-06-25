@@ -112,6 +112,102 @@
   color: var(--color-primary);
 }
 
+/* ── Address → Google Maps ── */
+.restaurant-info__row--map {
+  text-decoration: none;
+  color: inherit;
+  border-radius: 8px;
+  margin: -4px -6px;
+  padding: 4px 6px;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+}
+
+.restaurant-info__row--map:hover {
+  background: var(--color-bg-surface-subtle);
+}
+
+.restaurant-info__row--map:hover .restaurant-info__text,
+.restaurant-info__row--map:hover .restaurant-info__icon {
+  color: var(--color-primary);
+}
+
+.restaurant-info__map-arrow {
+  flex-shrink: 0;
+  margin-left: auto;
+  color: var(--color-text-muted);
+  opacity: 0;
+  transform: translate(-2px, 2px);
+  transition:
+    opacity 0.15s ease,
+    transform 0.15s ease;
+}
+
+.restaurant-info__row--map:hover .restaurant-info__map-arrow {
+  color: var(--color-primary);
+  opacity: 1;
+  transform: translate(0, 0);
+}
+
+/* ── Call CTA ── */
+.restaurant-info__call {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 4px;
+  padding: 10px 14px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 11px;
+  background: var(--color-text-primary);
+  color: var(--color-bg-surface);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition:
+    opacity 0.15s ease,
+    transform 0.15s ease;
+}
+
+.restaurant-info__call:hover {
+  opacity: 0.88;
+  transform: translateY(-1px);
+}
+
+/* ── Social buttons ── */
+.restaurant-info__social {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.restaurant-info__social-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 12px;
+  border: 1px solid var(--color-border-default);
+  border-radius: 10px;
+  background: var(--color-bg-surface);
+  color: var(--color-text-secondary);
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition:
+    border-color 0.15s ease,
+    color 0.15s ease,
+    background 0.15s ease,
+    transform 0.15s ease;
+}
+
+.restaurant-info__social-btn:hover {
+  border-color: var(--color-border-strong);
+  color: var(--color-text-primary);
+  background: var(--color-bg-surface-subtle);
+  transform: translateY(-1px);
+}
+
 /* ── Schedule ── */
 .restaurant-info__group-head {
   display: flex;
