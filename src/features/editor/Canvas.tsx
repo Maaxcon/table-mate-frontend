@@ -152,12 +152,16 @@ export function Canvas({
 
   return (
     <div ref={containerRef} className="editor-canvas__container">
+      {/* The canvas is an application widget: it owns pointer placement and (below)
+          keyboard move/resize, so it legitimately carries interaction handlers. */}
+      {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions */}
       <div
         ref={canvasRef}
         className="editor-canvas"
         style={{ transform: `scale(${scale})` }}
         onMouseDown={handleCanvasMouseDown}
-        role="presentation"
+        role="application"
+        aria-label="Floor plan editor"
       >
         {entities.map(renderBlock)}
         <div

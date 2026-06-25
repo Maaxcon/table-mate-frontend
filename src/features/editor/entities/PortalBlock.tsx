@@ -38,6 +38,7 @@ export function PortalBlock({
       }}
       role="button"
       tabIndex={0}
+      aria-label={`Portal${entity.label ? ` to ${entity.label}` : ""}`}
       onMouseDown={(e) => onMouseDown(e, entity.id)}
       onClick={() => onClick(entity.id)}
       onKeyDown={(e) => {

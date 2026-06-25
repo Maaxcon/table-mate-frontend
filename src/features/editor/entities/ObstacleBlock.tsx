@@ -42,6 +42,7 @@ export function ObstacleBlock({
       }}
       role="button"
       tabIndex={0}
+      aria-label="Obstacle"
       onMouseDown={(e) => onMouseDown(e, entity.id)}
       onClick={() => onClick(entity.id)}
       onKeyDown={(e) => {

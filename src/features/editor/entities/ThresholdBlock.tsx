@@ -42,6 +42,7 @@ export function ThresholdBlock({
       }}
       role="button"
       tabIndex={0}
+      aria-label={`Threshold${entity.label ? ` ${entity.label}` : ""}`}
       onMouseDown={(e) => onMouseDown(e, entity.id)}
       onClick={() => onClick(entity.id)}
       onKeyDown={(e) => {

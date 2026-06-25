@@ -194,6 +194,7 @@ function renderEntity(e: EditorEntity, opts: RenderOpts): ReactNode {
           .filter(Boolean)
           .join(" ")}
         style={style}
+        aria-label={`Table ${tableRef.publicNumber || tableRef.id}, ${status}`}
         onClick={opts.onTableSelect ? () => opts.onTableSelect?.(tableRef) : undefined}
       >
         {opts.renderTableContent ? (
@@ -231,6 +232,7 @@ function renderEntity(e: EditorEntity, opts: RenderOpts): ReactNode {
         type="button"
         className="fp-block fp-block--portal fp-block--portal-link"
         style={style}
+        aria-label={`Go to ${e.label ?? "zone"}`}
         onClick={() => opts.onPortalNavigate?.(e.targetZoneId as string)}
       >
         <span className="fp-block__portal-arrow" aria-hidden>

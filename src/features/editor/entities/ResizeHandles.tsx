@@ -104,6 +104,13 @@ export function ResizeHandles({
   const atLeft = entityX <= 0
   const atRight = entityX + entityW >= CANVAS_W / GRID
 
+  const cornerLabels: Record<Corner, string> = {
+    nw: "top-left",
+    ne: "top-right",
+    sw: "bottom-left",
+    se: "bottom-right",
+  }
+
   const allCorners: Corner[] = ["nw", "ne", "sw", "se"]
   const corners = allCorners.filter((c) => {
     if (c === "nw" && (atTop || atLeft)) return false
@@ -121,6 +128,7 @@ export function ResizeHandles({
           className={`editor-block__resize editor-block__resize--${c}`}
           role="button"
           tabIndex={0}
+          aria-label={`Resize ${cornerLabels[c]}`}
           onMouseDown={(e) => handleMouseDown(e, c)}
           onKeyDown={(e) => {
             if (e.key === "Enter") handleMouseDown(e as unknown as React.MouseEvent, c)

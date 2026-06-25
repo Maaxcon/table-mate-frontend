@@ -31,6 +31,9 @@ export function TableBlock({ entity, selected, onMouseDown, onClick }: TableBloc
       }}
       role="button"
       tabIndex={0}
+      aria-label={`Table ${entity.label ?? entity.id.slice(-4)}${
+        entity.capacity ? `, ${entity.capacity} seats` : ""
+      }`}
       onMouseDown={(e) => onMouseDown(e, entity.id)}
       onClick={() => onClick(entity.id)}
       onKeyDown={(e) => {
