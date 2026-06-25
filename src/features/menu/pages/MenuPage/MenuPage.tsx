@@ -1,6 +1,6 @@
 import { type TouchEvent, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useParams, useSearchParams } from "react-router-dom"
-import { LuArrowDownUp, LuShoppingCart, LuX } from "react-icons/lu"
+import { LuArrowDown, LuArrowDownUp, LuLoaderCircle, LuShoppingCart, LuX } from "react-icons/lu"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
 import { clearAuth } from "@/store/auth/authSlice"
 import {
@@ -385,9 +385,26 @@ function MenuPage() {
   }
 
   const loadMoreButton = hasMore ? (
-    <button className="menu-page__load-more" onClick={loadMore} disabled={loadingMore}>
-      {loadingMore ? menuStrings.grid.loadingMore : menuStrings.grid.loadMore}
-    </button>
+    <div className="menu-page__load-more-wrap">
+      <button
+        className="menu-page__load-more"
+        onClick={loadMore}
+        disabled={loadingMore}
+        aria-busy={loadingMore}
+      >
+        {loadingMore ? (
+          <>
+            <LuLoaderCircle className="menu-page__load-more-spinner" size={16} aria-hidden="true" />
+            {menuStrings.grid.loadingMore}
+          </>
+        ) : (
+          <>
+            {menuStrings.grid.loadMore}
+            <LuArrowDown size={15} aria-hidden="true" />
+          </>
+        )}
+      </button>
+    </div>
   ) : null
 
   return (

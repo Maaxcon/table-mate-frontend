@@ -518,38 +518,90 @@
   width: fit-content;
 }
 
+/* Centred button flanked by thin rules — an editorial "more" divider. */
+.menu-page__load-more-wrap {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-top: 8px;
+  padding: 0 4px;
+}
+
+.menu-page__load-more-wrap::before,
+.menu-page__load-more-wrap::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(to var(--rule-dir, right), transparent, var(--color-border-default));
+}
+
+.menu-page__load-more-wrap::before {
+  --rule-dir: left;
+}
+
 .menu-page__load-more {
-  align-self: center;
-  padding: 13px 36px;
-  border: 1px solid var(--color-border-strong);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  padding: 12px 28px;
+  border: 1px solid var(--color-border-default);
   border-radius: 999px;
-  background: transparent;
+  background: var(--color-bg-surface);
   color: var(--color-text-primary);
-  font-size: 0.875rem;
+  font-family: var(--font-family-display);
+  font-size: 0.8rem;
   font-weight: 600;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   cursor: pointer;
   transition:
-    background 150ms ease,
-    color 150ms ease,
-    transform 150ms ease,
-    box-shadow 150ms ease;
+    background 180ms ease,
+    color 180ms ease,
+    border-color 180ms ease,
+    transform 180ms ease,
+    box-shadow 180ms ease;
 }
 
-.menu-page__load-more:hover {
+.menu-page__load-more svg {
+  transition: transform 180ms ease;
+}
+
+.menu-page__load-more:hover:not(:disabled) {
   background: var(--color-text-primary);
   color: var(--color-bg-surface);
+  border-color: var(--color-text-primary);
   transform: translateY(-2px);
-  box-shadow: var(--shadow);
+  box-shadow: 0 10px 22px -12px rgb(17 24 39 / 40%);
 }
 
-.menu-page__load-more:active {
+.menu-page__load-more:hover:not(:disabled) svg {
+  transform: translateY(2px);
+}
+
+.menu-page__load-more:active:not(:disabled) {
   transform: translateY(0);
 }
 
 .menu-page__load-more:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
+  cursor: default;
+  color: var(--color-text-muted);
+}
+
+.menu-page__load-more-spinner {
+  animation: menu-load-more-spin 0.7s linear infinite;
+}
+
+@keyframes menu-load-more-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .menu-page__load-more-spinner {
+    animation-duration: 1.6s;
+  }
 }
 
 .menu-page__error {
