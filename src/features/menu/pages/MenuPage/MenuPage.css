@@ -501,7 +501,7 @@
 .menu-page__category-section {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 22px;
   /* Leave room for the sticky controls row (live height) so a clicked category
      scrolls below it instead of under it. */
   scroll-margin-top: calc(var(--menu-sticky-h, 120px) + 16px);
