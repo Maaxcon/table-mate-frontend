@@ -35,6 +35,8 @@ function makeTicket(overrides: Partial<KitchenTicket> = {}): KitchenTicket {
     completed_at: null,
     created_at: "2026-06-23T10:00:00Z",
     updated_at: "2026-06-23T10:00:00Z",
+    label: "T1",
+    daily_number: 1,
     table_number: "5",
     server_name: "Alice",
     guest_count: 3,

@@ -24,7 +24,7 @@ export function IncomingColumn({ tickets, onPromote, canManage }: IncomingColumn
             <button
               key={ticket.id}
               type="button"
-              className={`kanban-card kanban-card--clickable ${elapsed > 7 ? "kanban-card--aged" : ""}`}
+              className="kanban-card kanban-card--incoming kanban-card--clickable"
               onClick={() => {
                 if (!canManage) return
                 onPromote(ticket.id)
@@ -34,7 +34,7 @@ export function IncomingColumn({ tickets, onPromote, canManage }: IncomingColumn
               aria-disabled={!canManage}
             >
               <div className="kanban-card__header">
-                <span className="kanban-card__id">{ticket.id.slice(0, 8)}</span>
+                <span className="kanban-card__id">{ticket.label}</span>
                 <span className={`kanban-card__timer ${timerUrgencyClass(elapsed)}`}>
                   {elapsed}m
                 </span>
@@ -42,7 +42,7 @@ export function IncomingColumn({ tickets, onPromote, canManage }: IncomingColumn
               <div className="kanban-card__items">
                 {ticket.items.map((item) => (
                   <div key={item.id} className="kanban-card__item">
-                    {item.quantity}X {item.name}
+                    <span className="kanban-card__item-qty">{item.quantity}X</span> {item.name}
                   </div>
                 ))}
               </div>

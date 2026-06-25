@@ -8,6 +8,7 @@ export interface KanbanItem {
 
 export interface KanbanTicket {
   id: string
+  label: string
   status: "incoming" | "active" | "completed"
   items: KanbanItem[]
   startedAt: number

@@ -1,3 +1,4 @@
+import { LuCircleCheck } from "react-icons/lu"
 import type { KanbanTicket } from "../types"
 import { elapsedMinutes, timerUrgencyClass } from "../utils"
 
@@ -26,8 +27,7 @@ export function ActiveColumn({ tickets, onToggleItem, onBump, canManage }: Activ
             <div key={ticket.id} className="kanban-card kanban-card--active">
               <div className="kanban-card__top">
                 <div className="kanban-card__header">
-                  <span className="kanban-card__id">{ticket.id.slice(0, 8)}</span>
-                  <span className="kanban-card__divider" />
+                  <span className="kanban-card__id">{ticket.label}</span>
                   <span className={`kanban-card__timer ${timerUrgencyClass(elapsed)}`}>
                     {elapsed}m
                   </span>
@@ -44,8 +44,8 @@ export function ActiveColumn({ tickets, onToggleItem, onBump, canManage }: Activ
                 >
                   {allReady ? (
                     <svg
-                      width="16"
-                      height="16"
+                      width="18"
+                      height="18"
                       viewBox="0 0 24 24"
                       fill="none"
                       stroke="currentColor"
@@ -75,27 +75,14 @@ export function ActiveColumn({ tickets, onToggleItem, onBump, canManage }: Activ
                     aria-pressed={item.status === "ready"}
                     aria-disabled={!canManage}
                   >
-                    <span>
+                    <span className="kanban-card__item-name">
                       {item.quantity}X {item.name}
                       {item.modifiers ? (
                         <span className="kanban-card__modifier"> ({item.modifiers})</span>
                       ) : null}
                     </span>
                     {item.status === "ready" && (
-                      <svg
-                        className="kanban-card__check"
-                        width="18"
-                        height="18"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="3"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        aria-hidden="true"
-                      >
-                        <polyline points="20 6 9 17 4 12" />
-                      </svg>
+                      <LuCircleCheck className="kanban-card__item-check" aria-hidden="true" />
                     )}
                   </button>
                 ))}

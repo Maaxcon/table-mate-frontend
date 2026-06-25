@@ -14,6 +14,8 @@ export interface KitchenTicket {
   completed_at?: string | null
   readonly created_at: string
   readonly updated_at: string
+  label: string
+  daily_number: number | null
   table_number: string
   server_name: string
   guest_count: number

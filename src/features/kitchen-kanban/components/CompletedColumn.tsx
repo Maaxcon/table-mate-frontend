@@ -1,3 +1,4 @@
+import { LuCheck } from "react-icons/lu"
 import type { KanbanTicket } from "../types"
 
 interface CompletedColumnProps {
@@ -11,24 +12,16 @@ export function CompletedColumn({ tickets }: CompletedColumnProps) {
         <span className="kanban__col-title">COMPLETED</span>
         <span className="kanban__col-badge">{tickets.length}</span>
       </div>
-      <div className="kanban__col-body">
+      <div className="kanban__col-body kanban__col-body--grid">
+        {tickets.length === 0 && (
+          <div className="kanban-card kanban-card--empty">No completed orders</div>
+        )}
         {tickets.map((ticket) => (
           <div key={ticket.id} className="kanban-card kanban-card--completed">
-            <span className="kanban-card__id">{ticket.id.slice(0, 8)}</span>
-            <svg
-              className="kanban-card__check"
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="3"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-label="Completed"
-            >
-              <polyline points="20 6 9 17 4 12" />
-            </svg>
+            <div className="kanban-card__completed-top">
+              <span className="kanban-card__id">{ticket.label}</span>
+              <LuCheck className="kanban-card__check" aria-label="Completed" />
+            </div>
             <span className="kanban-card__timer">{ticket.completedMinutes}m</span>
           </div>
         ))}

@@ -6,6 +6,7 @@ import type { KanbanTicket } from "../types"
 function makeTicket(overrides: Partial<KanbanTicket> = {}): KanbanTicket {
   return {
     id: "t-1",
+    label: "T1",
     status: "active",
     items: [
       { id: "i-1", name: "Burger", quantity: 2, status: "pending" },

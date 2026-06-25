@@ -17,6 +17,7 @@ import { IncomingColumn } from "./components/IncomingColumn"
 import { ActiveColumn } from "./components/ActiveColumn"
 import { BatchColumn } from "./components/BatchColumn"
 import { CompletedColumn } from "./components/CompletedColumn"
+import { NotificationsPanel } from "./components/NotificationsPanel"
 import { KanbanFooter } from "./components/KanbanFooter"
 
 function useCurrentTime(): string {
@@ -222,7 +223,10 @@ export function KitchenKanban() {
           canManage={canManageTickets}
         />
         <BatchColumn batches={batchCounts} />
-        <CompletedColumn tickets={completed} />
+        <div className="kanban__right">
+          <CompletedColumn tickets={completed} />
+          <NotificationsPanel />
+        </div>
       </div>
 
       <KanbanFooter
