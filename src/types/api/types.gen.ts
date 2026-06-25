@@ -106,6 +106,7 @@ export type CartItem = {
   readonly guest_slot: number | null
   readonly is_mine: boolean
   readonly is_paid: boolean
+  readonly display_name: string | null
   readonly cart_session: string
   readonly restaurant: string
   readonly created_at: string
@@ -298,7 +299,7 @@ export type ObstacleEntity = {
   width: number
   height: number
   rotation?: number
-  zone_id?: string | null
+  zone_id: string
 }
 
 export type Order = {
@@ -329,6 +330,7 @@ export type OrderItem = {
   menu_item: string
   readonly menu_item_name: string
   guest_slot: number
+  guest_display_name?: string | null
   quantity: number
   comment?: string | null
   modifiers?: unknown
@@ -631,6 +633,7 @@ export type PatchedOrderItem = {
   menu_item?: string
   readonly menu_item_name?: string
   guest_slot?: number
+  guest_display_name?: string | null
   quantity?: number
   comment?: string | null
   modifiers?: unknown
@@ -737,6 +740,13 @@ export type PatchedUpdateCartItem = {
   guest_slot?: number | null
 }
 
+export type PatchedZone = {
+  readonly public_id?: string
+  name?: string
+  sort_order?: number
+  edge_styles?: unknown
+}
+
 export type Payment = {
   readonly public_id: string
   readonly restaurant: string
@@ -779,7 +789,7 @@ export type PortalEntity = {
   height: number
   target_zone_id?: string | null
   portal_label?: string
-  zone_id?: string | null
+  zone_id: string
 }
 
 export type PublicRestaurant = {
@@ -942,6 +952,10 @@ export type Session = {
  */
 export type SessionStatusEnum = "open" | "closed" | "voided"
 
+export type SetGuestName = {
+  display_name: string
+}
+
 /**
  * * `rectangle` - rectangle
  * * `round` - round
@@ -978,7 +992,7 @@ export type TableEntity = {
   rotation?: number
   shape: ShapeEnum
   capacity: number
-  zone_id?: string | null
+  zone_id: string
   tags?: Array<string>
 }
 
@@ -994,7 +1008,7 @@ export type ThresholdEntity = {
   width: number
   height: number
   threshold_label?: string
-  zone_id?: string | null
+  zone_id: string
 }
 
 export type Ticket = {
@@ -1051,6 +1065,7 @@ export type UpcomingReservation = {
   public_id: string
   table_id: string
   start_at: string
+  end_at: string
 }
 
 export type User = {
@@ -1099,6 +1114,7 @@ export type Zone = {
   readonly public_id: string
   name: string
   sort_order?: number
+  edge_styles?: unknown
 }
 
 /**
@@ -1224,6 +1240,7 @@ export type OrderItemWritable = {
   ticket?: string | null
   menu_item: string
   guest_slot: number
+  guest_display_name?: string | null
   quantity: number
   comment?: string | null
   modifiers?: unknown
@@ -1459,6 +1476,7 @@ export type PatchedOrderItemWritable = {
   ticket?: string | null
   menu_item?: string
   guest_slot?: number
+  guest_display_name?: string | null
   quantity?: number
   comment?: string | null
   modifiers?: unknown
@@ -1517,6 +1535,12 @@ export type PatchedTicketWritable = {
   injected_at?: string
   started_at?: string | null
   completed_at?: string | null
+}
+
+export type PatchedZoneWritable = {
+  name?: string
+  sort_order?: number
+  edge_styles?: unknown
 }
 
 export type PaymentWritable = {
@@ -1623,6 +1647,7 @@ export type UserWritable = {
 export type ZoneWritable = {
   name: string
   sort_order?: number
+  edge_styles?: unknown
 }
 
 export type AuthCustomerContextCreateData = {
@@ -2553,6 +2578,22 @@ export type OrdersCartSessionsCheckoutCreateResponses = {
 export type OrdersCartSessionsCheckoutCreateResponse =
   OrdersCartSessionsCheckoutCreateResponses[keyof OrdersCartSessionsCheckoutCreateResponses]
 
+export type OrdersCartSessionsGuestNameCreateData = {
+  body: SetGuestName
+  path: {
+    session_pk: string
+  }
+  query?: never
+  url: "/api/orders/cart/sessions/{session_pk}/guest-name/"
+}
+
+export type OrdersCartSessionsGuestNameCreateResponses = {
+  /**
+   * No response body
+   */
+  200: unknown
+}
+
 export type OrdersCartSessionsItemsListData = {
   body?: never
   path: {
@@ -3145,6 +3186,7 @@ export type ReservationsReservationsListData = {
      * * `cancelled` - Cancelled
      */
     status?: "active" | "cancelled" | "completed" | "pending"
+    status__in?: string
     table?: number
   }
   url: "/api/reservations/reservations/"
@@ -3287,6 +3329,7 @@ export type ReservationsReservationsMyListData = {
      * * `cancelled` - Cancelled
      */
     status?: "active" | "cancelled" | "completed" | "pending"
+    status__in?: string
     table?: number
   }
   url: "/api/reservations/reservations/my/"
@@ -3688,3 +3731,35 @@ export type RestaurantsZonesRetrieveResponses = {
 
 export type RestaurantsZonesRetrieveResponse =
   RestaurantsZonesRetrieveResponses[keyof RestaurantsZonesRetrieveResponses]
+
+export type RestaurantsZonesPartialUpdateData = {
+  body?: PatchedZoneWritable
+  path: {
+    public_id: string
+  }
+  query?: never
+  url: "/api/restaurants/zones/{public_id}/"
+}
+
+export type RestaurantsZonesPartialUpdateResponses = {
+  200: Zone
+}
+
+export type RestaurantsZonesPartialUpdateResponse =
+  RestaurantsZonesPartialUpdateResponses[keyof RestaurantsZonesPartialUpdateResponses]
+
+export type RestaurantsZonesUpdateData = {
+  body: ZoneWritable
+  path: {
+    public_id: string
+  }
+  query?: never
+  url: "/api/restaurants/zones/{public_id}/"
+}
+
+export type RestaurantsZonesUpdateResponses = {
+  200: Zone
+}
+
+export type RestaurantsZonesUpdateResponse =
+  RestaurantsZonesUpdateResponses[keyof RestaurantsZonesUpdateResponses]
