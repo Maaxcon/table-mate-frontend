@@ -25,6 +25,7 @@ function FloorPlanSection() {
     selectedId,
     dirty,
     activeTool,
+    lastPublishedJson,
     addEntity,
     updateEntity,
     moveEntity,
@@ -147,8 +148,10 @@ function FloorPlanSection() {
   const handleCanvasClick = useCallback(
     (gridX: number, gridY: number) => {
       if (activeTool && activeTool !== "select" && activeTool !== "pan") {
-        const extra = selectedZoneId ? { zoneId: selectedZoneId } : undefined
-        const entity = addEntity(activeTool as EditorEntity["type"], gridX, gridY, extra)
+        if (!selectedZoneId) return
+        const entity = addEntity(activeTool as EditorEntity["type"], gridX, gridY, {
+          zoneId: selectedZoneId,
+        })
         setTool("select")
         if (entity) selectEntity(entity.id)
       }
