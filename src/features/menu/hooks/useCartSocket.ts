@@ -96,18 +96,24 @@ export function useCartSocket({
       setIsConnected(false)
       wsRef.current = null
 
+      // 4003 = forbidden: access denied for good, retrying is pointless.
       if (event.code === 4003) {
         shouldSyncRef.current = false
         return
       }
 
+      shouldSyncRef.current = true
+
+      // 4001 = auth expired: ask the app to refresh the guest token. A new token
+      // changes the connect deps and reconnects via the effect. We still fall
+      // through to schedule a backoff retry as a fallback — if the refresh
+      // fails, the socket keeps trying (and each retry re-triggers the refresh)
+      // instead of dying. A successful refresh reconnects first and cleanup()
+      // clears this pending timer, so there's no double connect.
       if (event.code === 4001) {
-        shouldSyncRef.current = true
         onAuthExpiredRef.current()
-        return
       }
 
-      shouldSyncRef.current = true
       attemptRef.current += 1
       const delay = Math.min(BASE_DELAY_MS * Math.pow(2, attemptRef.current - 1), MAX_DELAY_MS)
       reconnectTimeoutRef.current = setTimeout(() => {
