@@ -294,4 +294,34 @@ describe("CartDrawer checkout state machine", () => {
 
     expect(onPayBill).toHaveBeenCalledWith(["oi-1"])
   })
+
+  it("surfaces an error and keeps the selection when payment fails", async () => {
+    const user = userEvent.setup()
+    const onPayBill = vi.fn<(ids: string[]) => Promise<void>>().mockRejectedValue(new Error("boom"))
+    const billItems = [
+      {
+        id: "oi-1",
+        name: "Pizza",
+        guest_slot: 1,
+        quantity: 1,
+        total_price: "30.00",
+        is_paid: false,
+      },
+    ]
+    renderDrawer({ billItems, onPayBill })
+
+    await user.click(screen.getByRole("tab", { name: S.billTitle }))
+    await user.click(screen.getByRole("button", { name: /Pizza/ }))
+    await user.click(screen.getByRole("button", { name: new RegExp(`^${S.pay}`) }))
+
+    // The failure is surfaced...
+    expect(await screen.findByRole("alert")).toHaveTextContent(S.payError)
+    // ...and the button is re-enabled, with the selection kept, so a retry
+    // re-sends the same id (the BE pay is idempotent).
+    const retry = screen.getByRole("button", { name: new RegExp(`^${S.pay}`) })
+    expect(retry).toBeEnabled()
+    await user.click(retry)
+    expect(onPayBill).toHaveBeenCalledTimes(2)
+    expect(onPayBill).toHaveBeenNthCalledWith(2, ["oi-1"])
+  })
 })

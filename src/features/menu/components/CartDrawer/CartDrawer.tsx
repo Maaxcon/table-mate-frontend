@@ -110,6 +110,7 @@ export function CartDrawer({
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [selectedToPay, setSelectedToPay] = useState<Set<string>>(new Set())
   const [paying, setPaying] = useState(false)
+  const [payError, setPayError] = useState<string | null>(null)
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -213,9 +214,14 @@ export function CartDrawer({
   const handlePay = async () => {
     if (paying || selectedBill.length === 0) return
     setPaying(true)
+    setPayError(null)
     try {
       await onPayBill(selectedBill.map((b) => b.id))
       setSelectedToPay(new Set())
+    } catch {
+      // Money action: surface the failure and keep the selection so the guest
+      // can retry. The BE pay is idempotent, so re-submitting is safe.
+      setPayError(menuStrings.cart.payError)
     } finally {
       setPaying(false)
     }
@@ -575,6 +581,11 @@ export function CartDrawer({
                   {formatAmount(selectedTotal)} {currencySymbol}
                 </span>
               </div>
+              {payError && (
+                <p className="cart-drawer__confirm-dialog-error" role="alert">
+                  {payError}
+                </p>
+              )}
               <button
                 className="cart-drawer__order"
                 onClick={handlePay}

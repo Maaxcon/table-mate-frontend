@@ -100,6 +100,7 @@ export const menuStrings = {
     billPaidOf: (paid: string, total: string) => `Оплачено ${paid} з ${total}`,
     billSelected: "Обрано",
     paying: "Оплачуємо...",
+    payError: "Оплата не пройшла. Спробуйте ще раз.",
     groupedBy: "Замовлення",
     you: "Ви",
     errorAdd: "Не вдалося додати страву",
