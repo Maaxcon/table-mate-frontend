@@ -178,34 +178,62 @@
 /* ── Social buttons ── */
 .restaurant-info__social {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: 8px;
 }
 
 .restaurant-info__social-btn {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: 7px;
-  padding: 7px 12px;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 12px;
   border: 1px solid var(--color-border-default);
-  border-radius: 10px;
+  border-radius: 11px;
   background: var(--color-bg-surface);
   color: var(--color-text-secondary);
   font-size: 0.8rem;
   font-weight: 600;
   text-decoration: none;
   transition:
-    border-color 0.15s ease,
-    color 0.15s ease,
-    background 0.15s ease,
-    transform 0.15s ease;
+    border-color 0.18s ease,
+    color 0.18s ease,
+    background 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s ease;
 }
 
-.restaurant-info__social-btn:hover {
-  border-color: var(--color-border-strong);
-  color: var(--color-text-primary);
-  background: var(--color-bg-surface-subtle);
+.restaurant-info__social-btn svg {
+  transition: color 0.18s ease;
+}
+
+/* Brand-tinted icons, neutral until hover, then a full brand fill. */
+.restaurant-info__social-btn--telegram svg {
+  color: #229ed9;
+}
+
+.restaurant-info__social-btn--telegram:hover {
+  background: #229ed9;
+  border-color: #229ed9;
+  color: #fff;
   transform: translateY(-1px);
+  box-shadow: 0 8px 18px -10px rgba(34, 158, 217, 0.7);
+}
+
+.restaurant-info__social-btn--facebook svg {
+  color: #1877f2;
+}
+
+.restaurant-info__social-btn--facebook:hover {
+  background: #1877f2;
+  border-color: #1877f2;
+  color: #fff;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px -10px rgba(24, 119, 242, 0.7);
+}
+
+.restaurant-info__social-btn:hover svg {
+  color: #fff;
 }
 
 /* ── Schedule ── */

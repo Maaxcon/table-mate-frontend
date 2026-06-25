@@ -182,25 +182,25 @@ export function RestaurantInfoPanel({
           <div className="restaurant-info__social">
             {telegramUrl && (
               <a
-                className="restaurant-info__social-btn"
+                className="restaurant-info__social-btn restaurant-info__social-btn--telegram"
                 href={telegramUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Telegram"
               >
-                <FaTelegram size={16} />
+                <FaTelegram size={18} />
                 <span>Telegram</span>
               </a>
             )}
             {facebookUrl && (
               <a
-                className="restaurant-info__social-btn"
+                className="restaurant-info__social-btn restaurant-info__social-btn--facebook"
                 href={facebookUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Facebook"
               >
-                <FaFacebook size={16} />
+                <FaFacebook size={18} />
                 <span>Facebook</span>
               </a>
             )}
