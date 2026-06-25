@@ -34,6 +34,7 @@ function MenuPage() {
   const [cartOpen, setCartOpen] = useState(false)
   const [cartAccessError, setCartAccessError] = useState<string | null>(null)
   const [scrollActiveCategory, setScrollActiveCategory] = useState<string | null>(null)
+  const pendingScrollCategory = useRef<string | null>(null)
   const [lobbyName, setLobbyName] = useState("")
   const sectionRefs = useRef<Map<string, HTMLElement>>(new Map())
   const user = useAppSelector((s) => s.auth.user)
@@ -201,17 +202,44 @@ function MenuPage() {
     return () => observer.disconnect()
   }, [groupedItems])
 
+  const scrollToCategory = useCallback((id: string) => {
+    const el = sectionRefs.current.get(id)
+    if (!el) return false
+    el.scrollIntoView({ behavior: "smooth", block: "start" })
+    return true
+  }, [])
+
   const handleCategorySelect = (id: string | null) => {
     if (id === null) {
       setActiveCategory(null)
       setScrollActiveCategory(null)
+      pendingScrollCategory.current = null
     } else if (showAllGrouped) {
-      const el = sectionRefs.current.get(id)
-      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" })
+      // The section may not be rendered yet because its items are still
+      // behind pagination. If so, remember it and load more until it appears.
+      if (!scrollToCategory(id)) {
+        pendingScrollCategory.current = id
+        if (hasMore && !loadingMore) loadMore()
+      }
     } else {
       setActiveCategory(id)
     }
   }
+
+  // Keep loading pages until the pending category's section exists, then scroll.
+  // Each page load updates groupedItems, which re-runs this effect.
+  useEffect(() => {
+    const target = pendingScrollCategory.current
+    if (!target) return
+    const catItems = groupedItems?.get(target)
+    if (catItems && catItems.length > 0 && scrollToCategory(target)) {
+      pendingScrollCategory.current = null
+    } else if (hasMore) {
+      if (!loadingMore) loadMore()
+    } else {
+      pendingScrollCategory.current = null
+    }
+  }, [groupedItems, hasMore, loadingMore, loadMore, scrollToCategory])
 
   const handleAddToCart = useCallback(
     (item: MenuItem, comment?: string) => {
