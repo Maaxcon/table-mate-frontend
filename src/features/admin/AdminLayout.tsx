@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react"
-import { NavLink, Outlet, useNavigate } from "react-router-dom"
+import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom"
 import {
   LuArrowLeft,
   LuChefHat,
@@ -31,6 +31,7 @@ const NAV_ITEMS = [
 
 function AdminLayout() {
   const navigate = useNavigate()
+  const location = useLocation()
   const dispatch = useAppDispatch()
   const user = useAppSelector((state) => state.auth.user)
 
@@ -51,6 +52,12 @@ function AdminLayout() {
     setDirty(false)
     action?.()
   }
+
+  const isFullBleed = useMemo(() => {
+    return (
+      location.pathname.startsWith("/admin/kitchen") || location.pathname.startsWith("/admin/floor")
+    )
+  }, [location.pathname])
 
   const handleLogout = async () => {
     try {
@@ -114,7 +121,9 @@ function AdminLayout() {
             </div>
           </aside>
 
-          <main className="admin-layout__content">
+          <main
+            className={`admin-layout__content${isFullBleed ? " admin-layout__content--flush" : ""}`}
+          >
             <Outlet />
           </main>
         </div>
