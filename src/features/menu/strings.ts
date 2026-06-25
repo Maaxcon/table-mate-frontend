@@ -5,6 +5,17 @@ import type { WeekDay } from "@/types/workingHours"
 // with their data, not here, because they're matched against backend values.
 export type GuestInfo = { name: string; slot: number }
 
+// Ukrainian plural for "позиція" (cart line): 1 → позиція, 2–4 → позиції,
+// 0/5+ and the 11–14 exception → позицій.
+function positionsLabel(n: number): string {
+  const mod10 = n % 10
+  const mod100 = n % 100
+  let word = "позицій"
+  if (mod10 === 1 && mod100 !== 11) word = "позиція"
+  else if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) word = "позиції"
+  return `${n} ${word}`
+}
+
 export const menuStrings = {
   header: {
     signIn: "Увійти",
@@ -15,8 +26,8 @@ export const menuStrings = {
   hero: {
     label: "Menu",
     tagline: "Fresh dishes, fast ordering, cozy taste.",
-    openNow: "Open now",
-    closedNow: "Closed now",
+    openNow: "Відчинено",
+    closedNow: "Зачинено",
   },
   controls: {
     searchPlaceholder: "Search dishes...",
@@ -39,14 +50,7 @@ export const menuStrings = {
     openAria: "Відкрити кошик",
     action: "Переглянути кошик",
     dismiss: "Сховати",
-    items: (n: number) => {
-      const mod10 = n % 10
-      const mod100 = n % 100
-      let word = "позицій"
-      if (mod10 === 1 && mod100 !== 11) word = "позиція"
-      else if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) word = "позиції"
-      return `${n} ${word}`
-    },
+    items: positionsLabel,
   },
   footer: {
     brand: "TableMate",
@@ -67,7 +71,7 @@ export const menuStrings = {
     title: "Кошик",
     close: "Закрити",
     confirmTitle: "Підтвердити замовлення?",
-    positions: (n: number) => `${n} позицій`,
+    positions: positionsLabel,
     confirmYes: "Так, замовити",
     confirmNo: "Скасувати",
     confirmedTitle: "Замовлення прийнято!",

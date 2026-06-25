@@ -282,9 +282,18 @@ describe("CartDrawer checkout state machine", () => {
         guest_slot: 1,
         quantity: 1,
         total_price: "30.00",
+        payable: "34.50",
         is_paid: false,
       },
-      { id: "oi-2", name: "Tea", guest_slot: 1, quantity: 2, total_price: "20.00", is_paid: false },
+      {
+        id: "oi-2",
+        name: "Tea",
+        guest_slot: 1,
+        quantity: 2,
+        total_price: "20.00",
+        payable: "23.00",
+        is_paid: false,
+      },
     ]
     renderDrawer({ billItems, onPayBill })
 
@@ -305,6 +314,7 @@ describe("CartDrawer checkout state machine", () => {
         guest_slot: 1,
         quantity: 1,
         total_price: "30.00",
+        payable: "34.50",
         is_paid: false,
       },
     ]
@@ -334,9 +344,18 @@ describe("CartDrawer checkout state machine", () => {
         guest_slot: 1,
         quantity: 1,
         total_price: "30.00",
+        payable: "34.50",
         is_paid: false,
       },
-      { id: "oi-2", name: "Tea", guest_slot: 1, quantity: 1, total_price: "10.00", is_paid: true },
+      {
+        id: "oi-2",
+        name: "Tea",
+        guest_slot: 1,
+        quantity: 1,
+        total_price: "10.00",
+        payable: "11.50",
+        is_paid: true,
+      },
     ]
     renderDrawer({ billItems })
     await user.click(screen.getByRole("tab", { name: S.billTitle }))
@@ -358,5 +377,27 @@ describe("CartDrawer checkout state machine", () => {
       "cart-drawer-panel-bill",
     )
     expect(screen.getByRole("tabpanel")).toHaveAttribute("aria-labelledby", "cart-drawer-tab-bill")
+  })
+
+  it("sums the bill on payable (tax + service), not goods-only total_price", async () => {
+    const user = userEvent.setup()
+    const billItems = [
+      {
+        id: "oi-1",
+        name: "Pizza",
+        guest_slot: 1,
+        quantity: 1,
+        total_price: "30.00",
+        payable: "34.50",
+        is_paid: false,
+      },
+    ]
+    renderDrawer({ billItems })
+    await user.click(screen.getByRole("tab", { name: S.billTitle }))
+
+    // The bill shows the full payable (34.50), reconciling with the receipt —
+    // not the goods-only subtotal (30.00).
+    expect(screen.getAllByText(new RegExp(formatAmount(34.5))).length).toBeGreaterThan(0)
+    expect(screen.queryByText(new RegExp(formatAmount(30)))).not.toBeInTheDocument()
   })
 })

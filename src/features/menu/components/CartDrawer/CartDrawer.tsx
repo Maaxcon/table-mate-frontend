@@ -184,11 +184,11 @@ export function CartDrawer({
   const payableBill = billItems.filter((b) => !b.is_paid)
   const paidBill = billItems.filter((b) => b.is_paid)
   const selectedBill = payableBill.filter((b) => selectedToPay.has(b.id))
-  const selectedTotal = selectedBill.reduce((s, b) => s + (parseFloat(b.total_price) || 0), 0)
+  const selectedTotal = selectedBill.reduce((s, b) => s + (parseFloat(b.payable) || 0), 0)
   const allBillSelected = payableBill.length > 0 && selectedBill.length === payableBill.length
   const billGroups = groupBillByGuest(payableBill)
-  const unpaidTotal = payableBill.reduce((s, b) => s + (parseFloat(b.total_price) || 0), 0)
-  const paidTotal = paidBill.reduce((s, b) => s + (parseFloat(b.total_price) || 0), 0)
+  const unpaidTotal = payableBill.reduce((s, b) => s + (parseFloat(b.payable) || 0), 0)
+  const paidTotal = paidBill.reduce((s, b) => s + (parseFloat(b.payable) || 0), 0)
   const billGrandTotal = unpaidTotal + paidTotal
   const paidPct = billGrandTotal > 0 ? Math.round((paidTotal / billGrandTotal) * 100) : 0
 
@@ -508,7 +508,7 @@ export function CartDrawer({
                       </button>
                       {billGroups.map((group) => {
                         const groupTotal = group.items.reduce(
-                          (s, b) => s + (parseFloat(b.total_price) || 0),
+                          (s, b) => s + (parseFloat(b.payable) || 0),
                           0,
                         )
                         return (
@@ -545,8 +545,7 @@ export function CartDrawer({
                                         </span>
                                       </span>
                                       <span className="cart-drawer__bill-price">
-                                        {formatAmount(parseFloat(b.total_price) || 0)}{" "}
-                                        {currencySymbol}
+                                        {formatAmount(parseFloat(b.payable) || 0)} {currencySymbol}
                                       </span>
                                     </button>
                                   </li>
@@ -580,7 +579,7 @@ export function CartDrawer({
                               <span className="cart-drawer__receipt-qty"> × {b.quantity}</span>
                             </span>
                             <span className="cart-drawer__bill-price">
-                              {formatAmount(parseFloat(b.total_price) || 0)} {currencySymbol}
+                              {formatAmount(parseFloat(b.payable) || 0)} {currencySymbol}
                             </span>
                           </li>
                         ))}
