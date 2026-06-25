@@ -211,11 +211,12 @@ export function rectsOverlap(
   return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y
 }
 
+// Bounds are in GRID UNITS (columns/rows), matching `desired`/`others` — not pixels.
 export function findFreePosition(
   desired: { x: number; y: number; w: number; h: number },
   others: Array<{ x: number; y: number; w: number; h: number }>,
-  canvasW: number,
-  canvasH: number,
+  gridCols: number,
+  gridRows: number,
 ): { x: number; y: number } {
   if (!others.some((o) => rectsOverlap(desired, o))) {
     return { x: desired.x, y: desired.y }
@@ -229,7 +230,7 @@ export function findFreePosition(
       { x: desired.x, y: desired.y - step },
     ]
     for (const pos of candidates) {
-      if (pos.x < 0 || pos.y < 0 || pos.x + desired.w > canvasW || pos.y + desired.h > canvasH)
+      if (pos.x < 0 || pos.y < 0 || pos.x + desired.w > gridCols || pos.y + desired.h > gridRows)
         continue
       if (!others.some((o) => rectsOverlap({ ...desired, x: pos.x, y: pos.y }, o))) {
         return pos

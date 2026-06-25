@@ -49,7 +49,7 @@ function editorReducer(state: EditorState, action: Action): EditorState {
       const others = entityZoneId
         ? state.entities.filter((e) => e.zoneId === entityZoneId)
         : state.entities
-      const free = findFreePosition(action.entity, others, CANVAS_W, CANVAS_H)
+      const free = findFreePosition(action.entity, others, CANVAS_W / GRID, CANVAS_H / GRID)
       const placed = { ...action.entity, x: free.x, y: free.y }
       const entities = [...state.entities, placed]
       return {
@@ -97,7 +97,12 @@ function editorReducer(state: EditorState, action: Action): EditorState {
         x = Math.max(0, Math.min(x, CANVAS_W / GRID - entity.w))
         y = Math.max(0, Math.min(y, CANVAS_H / GRID - entity.h))
       }
-      const free = findFreePosition({ x, y, w: entity.w, h: entity.h }, others, CANVAS_W, CANVAS_H)
+      const free = findFreePosition(
+        { x, y, w: entity.w, h: entity.h },
+        others,
+        CANVAS_W / GRID,
+        CANVAS_H / GRID,
+      )
       const entities = state.entities.map((e) =>
         e.id === action.id ? { ...e, x: free.x, y: free.y } : e,
       )
