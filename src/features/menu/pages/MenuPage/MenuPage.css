@@ -566,7 +566,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 13px 16px;
+  padding: 17px 16px 13px;
   border: 1px solid rgb(17 24 39 / 10%);
   border-radius: 14px;
   background: var(--color-text-primary);
@@ -577,6 +577,7 @@
 }
 
 .menu-page__cart-bar-summary {
+  flex: 1;
   font-size: 0.88rem;
   font-weight: 600;
   letter-spacing: 0.01em;
@@ -588,6 +589,43 @@
   text-transform: uppercase;
   letter-spacing: 0.06em;
   opacity: 0.95;
+}
+
+/* Swipe-down affordance: a small grab handle centred at the top of the bar. */
+.menu-page__cart-bar-grabber {
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 34px;
+  height: 4px;
+  border-radius: 999px;
+  background: currentColor;
+  opacity: 0.32;
+}
+
+.menu-page__cart-bar-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  margin: -4px -6px -4px 0;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  opacity: 0.7;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    opacity 0.15s ease;
+}
+
+.menu-page__cart-bar-close:hover {
+  opacity: 1;
+  background: rgb(255 255 255 / 14%);
 }
 
 @media (max-width: 860px) {

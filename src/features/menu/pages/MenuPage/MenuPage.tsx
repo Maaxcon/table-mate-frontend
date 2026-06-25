@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { type TouchEvent, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useParams, useSearchParams } from "react-router-dom"
-import { LuArrowDownUp, LuShoppingCart } from "react-icons/lu"
+import { LuArrowDownUp, LuShoppingCart, LuX } from "react-icons/lu"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
 import { clearAuth } from "@/store/auth/authSlice"
 import {
@@ -32,6 +32,7 @@ function MenuPage() {
   const tableId = searchParams.get("table") ?? undefined
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null)
   const [cartOpen, setCartOpen] = useState(false)
+  const [cartBarDismissed, setCartBarDismissed] = useState(false)
   const [cartAccessError, setCartAccessError] = useState<string | null>(null)
   const [scrollActiveCategory, setScrollActiveCategory] = useState<string | null>(null)
   const pendingScrollCategory = useRef<string | null>(null)
@@ -303,6 +304,28 @@ function MenuPage() {
     [changeQuantity],
   )
 
+  // The cart bar can be dismissed (swipe down / ✕). Bring it back when the cart
+  // grows again so a new item is never hidden.
+  const prevTotalCount = useRef(totalCount)
+  useEffect(() => {
+    if (totalCount > prevTotalCount.current) setCartBarDismissed(false)
+    prevTotalCount.current = totalCount
+  }, [totalCount])
+
+  const cartBarTouchStartY = useRef<number | null>(null)
+  const handleCartBarTouchStart = (e: TouchEvent) => {
+    cartBarTouchStartY.current = e.touches[0].clientY
+  }
+  const handleCartBarTouchEnd = (e: TouchEvent) => {
+    const start = cartBarTouchStartY.current
+    cartBarTouchStartY.current = null
+    if (start !== null && e.changedTouches[0].clientY - start > 40) {
+      setCartBarDismissed(true)
+    }
+  }
+
+  const showCartBar = totalCount > 0 && !cartBarDismissed
+
   const railActiveCategory = showAllGrouped ? scrollActiveCategory : activeCategory
   const currencySymbol = restaurantSettings ? getCurrencySymbol(restaurantSettings.currency) : ""
   const totalPriceLabel = formatAmount(totalPrice)
@@ -341,7 +364,7 @@ function MenuPage() {
   ) : null
 
   return (
-    <main className={`menu-page${totalCount > 0 ? " menu-page--has-cart-bar" : ""}`}>
+    <main className={`menu-page${showCartBar ? " menu-page--has-cart-bar" : ""}`}>
       <MenuHeader
         name={restaurantName}
         coverImage={restaurantCoverImage}
@@ -472,15 +495,37 @@ function MenuPage() {
         />
       )}
 
-      {totalCount > 0 && !selectedItem && (
-        <button
+      {showCartBar && !selectedItem && (
+        <div
           className="menu-page__cart-bar"
+          role="button"
+          tabIndex={0}
           onClick={() => setCartOpen(true)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault()
+              setCartOpen(true)
+            }
+          }}
+          onTouchStart={handleCartBarTouchStart}
+          onTouchEnd={handleCartBarTouchEnd}
           aria-label={menuStrings.cartBar.openAria}
         >
+          <span className="menu-page__cart-bar-grabber" aria-hidden="true" />
           <span className="menu-page__cart-bar-summary">{`${totalCount} items · ${totalPriceLabel} ${currencySymbol}`}</span>
           <span className="menu-page__cart-bar-action">{menuStrings.cartBar.action}</span>
-        </button>
+          <button
+            type="button"
+            className="menu-page__cart-bar-close"
+            onClick={(e) => {
+              e.stopPropagation()
+              setCartBarDismissed(true)
+            }}
+            aria-label={menuStrings.cartBar.dismiss}
+          >
+            <LuX size={16} />
+          </button>
+        </div>
       )}
 
       {/* ── Lobby modal ── */}

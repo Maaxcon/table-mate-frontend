@@ -38,6 +38,7 @@ export const menuStrings = {
   cartBar: {
     openAria: "Відкрити кошик",
     action: "Переглянути кошик",
+    dismiss: "Сховати",
   },
   card: {
     decrease: "Зменшити кількість",
