@@ -42,6 +42,7 @@ interface FloorPlanViewProps {
   emptyMessage?: string
 }
 
+const PADDING = 100
 const px = (v: number) => v * GRID
 
 /**
@@ -67,7 +68,7 @@ export function FloorPlanView({
   useEffect(() => {
     const el = containerRef.current
     if (!el) return
-    const update = () => setScale(Math.max(el.clientWidth / CANVAS_W, 0.3))
+    const update = () => setScale(Math.max((el.clientWidth - 2 * PADDING) / CANVAS_W, 0.3))
     update()
     const observer = new ResizeObserver(update)
     observer.observe(el)
@@ -99,8 +100,8 @@ export function FloorPlanView({
     )
   }
 
-  const scaledW = CANVAS_W * scale
-  const scaledH = CANVAS_H * scale
+  const scaledW = CANVAS_W * scale + 2 * PADDING
+  const scaledH = CANVAS_H * scale + 2 * PADDING
 
   return (
     <div className="fp-view" ref={containerRef}>
@@ -117,8 +118,8 @@ export function FloorPlanView({
         className="fp-view__stage"
         style={{
           position: "absolute",
-          top: 0,
-          left: 0,
+          top: PADDING,
+          left: PADDING,
           width: CANVAS_W,
           height: CANVAS_H,
           transform: `scale(${scale})`,
