@@ -492,21 +492,31 @@
 
 .menu-page__load-more {
   align-self: center;
-  padding: 12px 32px;
+  padding: 13px 36px;
   border: 1px solid var(--color-border-strong);
+  border-radius: 999px;
   background: transparent;
   color: var(--color-text-primary);
   font-size: 0.875rem;
   font-weight: 600;
+  letter-spacing: 0.02em;
   cursor: pointer;
   transition:
     background 150ms ease,
-    color 150ms ease;
+    color 150ms ease,
+    transform 150ms ease,
+    box-shadow 150ms ease;
 }
 
 .menu-page__load-more:hover {
   background: var(--color-text-primary);
   color: var(--color-bg-surface);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
+}
+
+.menu-page__load-more:active {
+  transform: translateY(0);
 }
 
 .menu-page__load-more:disabled {
