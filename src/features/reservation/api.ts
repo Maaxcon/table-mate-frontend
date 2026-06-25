@@ -41,6 +41,7 @@ export type Zone = {
   public_id: string
   name: string
   sort_order: number
+  edge_styles?: Record<string, "dashed" | "solid">
 }
 
 export async function fetchZones(restaurantId?: string): Promise<Zone[]> {
@@ -52,6 +53,16 @@ export async function fetchZones(restaurantId?: string): Promise<Zone[]> {
   if (!res.ok) throw new Error("Failed to fetch zones")
   const data = await res.json()
   return data.results ?? data
+}
+
+export async function updateZone(zoneId: string, data: Partial<Zone>): Promise<Zone> {
+  const res = await apiFetch(`/api/restaurants/zones/${zoneId}/`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  })
+  if (!res.ok) throw new Error("Failed to update zone")
+  return res.json()
 }
 
 export async function fetchTables(restaurantId?: string): Promise<Table[]> {

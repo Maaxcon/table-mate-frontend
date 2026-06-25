@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { useAppSelector } from "@/store/hooks"
-import { fetchZones } from "@/features/reservation/api"
+import { fetchZones, updateZone } from "@/features/reservation/api"
 import type { Zone } from "@/features/reservation/api"
 import { apiFetch } from "@/api/client"
 import { Toolbar } from "./Toolbar"
@@ -39,15 +39,25 @@ function FloorPlanSection() {
   const [showPublishModal, setShowPublishModal] = useState(false)
   const [zones, setZones] = useState<Zone[]>([])
   const [selectedZoneId, setSelectedZoneId] = useState<string | null>(null)
-  const [edgeStyles, setEdgeStyles] = useState<Record<string, "dashed" | "solid">>({
-    top: "dashed",
-    right: "dashed",
-    bottom: "dashed",
-    left: "dashed",
-  })
   const [publishWarnings, setPublishWarnings] = useState<
     Array<{ table_number: string; reservation_count: number; message: string }>
   >([])
+
+  const selectedZone = useMemo(
+    () => zones.find((z) => z.public_id === selectedZoneId) ?? null,
+    [zones, selectedZoneId],
+  )
+
+  const edgeStyles = useMemo(
+    () =>
+      selectedZone?.edge_styles ?? {
+        top: "dashed" as const,
+        right: "dashed" as const,
+        bottom: "dashed" as const,
+        left: "dashed" as const,
+      },
+    [selectedZone],
+  )
 
   useEffect(() => {
     if (!restaurantId) return
@@ -117,8 +127,8 @@ function FloorPlanSection() {
   })
 
   const handlePublishConfirm = useCallback(() => {
-    publish(entities, deletedServerIds, edgeStyles)
-  }, [publish, entities, deletedServerIds, edgeStyles])
+    publish(entities, deletedServerIds)
+  }, [publish, entities, deletedServerIds])
 
   const selectedEntity = visibleEntities.find((e) => e.id === selectedId) ?? null
 
@@ -134,9 +144,19 @@ function FloorPlanSection() {
     [activeTool, addEntity, selectedZoneId, setTool, selectEntity],
   )
 
-  const handleEdgeStyleChange = useCallback((edge: string, style: "dashed" | "solid") => {
-    setEdgeStyles((prev) => ({ ...prev, [edge]: style }))
-  }, [])
+  const handleZoneStyleChange = useCallback(
+    async (edge: string, style: "dashed" | "solid") => {
+      if (!selectedZoneId) return
+      const zone = zones.find((z) => z.public_id === selectedZoneId)
+      if (!zone) return
+      const updated = { ...(zone.edge_styles ?? {}), [edge]: style }
+      setZones((prev) =>
+        prev.map((z) => (z.public_id === selectedZoneId ? { ...z, edge_styles: updated } : z)),
+      )
+      await updateZone(selectedZoneId, { edge_styles: updated })
+    },
+    [selectedZoneId, zones],
+  )
 
   return (
     <div className="editor-page">
@@ -176,8 +196,8 @@ function FloorPlanSection() {
               onUpdate={updateEntity}
               onDelete={removeEntity}
               zones={zones}
-              edgeStyles={edgeStyles}
-              onEdgeStyleChange={handleEdgeStyleChange}
+              selectedZone={selectedZone}
+              onZoneStyleChange={handleZoneStyleChange}
             />
           </>
         )}

@@ -29,6 +29,8 @@ interface FloorPlanViewProps {
   selectedZoneId?: string | null
   /** public_id of the currently selected table. */
   selectedId?: string | null
+  /** Per-zone edge styles override (computed externally from zone data). */
+  edgeStyles?: Record<string, "dashed" | "solid">
   onTableSelect?: (table: FloorPlanTableRef) => void
   /** Resolve a table's visual status (defaults to "free"). */
   tableStatus?: (table: FloorPlanTableRef) => FloorVisualStatus
@@ -52,6 +54,7 @@ export function FloorPlanView({
   payload,
   selectedZoneId = null,
   selectedId = null,
+  edgeStyles: edgeStylesProp,
   onTableSelect,
   tableStatus,
   renderTableContent,
@@ -78,8 +81,9 @@ export function FloorPlanView({
 
   const edgeStyles = useMemo(
     () =>
+      edgeStylesProp ??
       payload?.edge_styles ?? { top: "dashed", right: "dashed", bottom: "dashed", left: "dashed" },
-    [payload],
+    [edgeStylesProp, payload],
   )
 
   const visible = useMemo(

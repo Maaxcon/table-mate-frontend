@@ -8,8 +8,8 @@ interface PropertiesSidebarProps {
   onUpdate: (id: string, patch: Partial<EditorEntity>) => void
   onDelete: (id: string) => void
   zones: Zone[]
-  edgeStyles: Record<string, "dashed" | "solid">
-  onEdgeStyleChange: (edge: string, style: "dashed" | "solid") => void
+  selectedZone: Zone | null
+  onZoneStyleChange: (edge: string, style: "dashed" | "solid") => void
 }
 
 const METADATA_TAGS = ["Window Seat", "Quiet", "Wheelchair Accessible"]
@@ -26,8 +26,8 @@ export function PropertiesSidebar({
   onUpdate,
   onDelete,
   zones,
-  edgeStyles,
-  onEdgeStyleChange,
+  selectedZone,
+  onZoneStyleChange,
 }: PropertiesSidebarProps) {
   const handleTargetZoneChange = useCallback(
     (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -45,6 +45,47 @@ export function PropertiesSidebar({
   )
 
   if (!entity) {
+    if (selectedZone) {
+      const zoneEdgeStyles = selectedZone.edge_styles ?? {
+        top: "dashed" as const,
+        right: "dashed" as const,
+        bottom: "dashed" as const,
+        left: "dashed" as const,
+      }
+      return (
+        <aside className="editor-sidebar">
+          <div className="editor-sidebar__header">
+            <h3 className="editor-sidebar__title">{selectedZone.name}</h3>
+            <span className="editor-sidebar__id">Zone</span>
+          </div>
+          <div className="editor-sidebar__body">
+            <fieldset className="editor-sidebar__field">
+              <legend className="editor-sidebar__label">Border Styles</legend>
+              {Object.entries(EDGE_LABELS).map(([key, label]) => (
+                <div key={key} className="editor-sidebar__row" style={{ marginBottom: 6 }}>
+                  <label
+                    htmlFor={`zone-edge-${key}`}
+                    style={{ fontSize: "0.8rem", minWidth: 70, display: "inline-block" }}
+                  >
+                    {label}
+                  </label>
+                  <select
+                    id={`zone-edge-${key}`}
+                    className="editor-sidebar__input"
+                    value={zoneEdgeStyles[key]}
+                    onChange={(e) => onZoneStyleChange(key, e.target.value as "dashed" | "solid")}
+                    style={{ width: "auto", flex: 1 }}
+                  >
+                    <option value="dashed">Dashed</option>
+                    <option value="solid">Solid</option>
+                  </select>
+                </div>
+              ))}
+            </fieldset>
+          </div>
+        </aside>
+      )
+    }
     return (
       <aside className="editor-sidebar">
         <p className="editor-sidebar__empty">Select an entity to edit properties</p>
@@ -203,30 +244,6 @@ export function PropertiesSidebar({
             </select>
           </div>
         )}
-
-        <fieldset className="editor-sidebar__field">
-          <legend className="editor-sidebar__label">Border Styles</legend>
-          {Object.entries(EDGE_LABELS).map(([key, label]) => (
-            <div key={key} className="editor-sidebar__row" style={{ marginBottom: 6 }}>
-              <label
-                htmlFor={`edge-${key}`}
-                style={{ fontSize: "0.8rem", minWidth: 70, display: "inline-block" }}
-              >
-                {label}
-              </label>
-              <select
-                id={`edge-${key}`}
-                className="editor-sidebar__input"
-                value={edgeStyles[key]}
-                onChange={(e) => onEdgeStyleChange(key, e.target.value as "dashed" | "solid")}
-                style={{ width: "auto", flex: 1 }}
-              >
-                <option value="dashed">Dashed</option>
-                <option value="solid">Solid</option>
-              </select>
-            </div>
-          ))}
-        </fieldset>
 
         <button
           type="button"
