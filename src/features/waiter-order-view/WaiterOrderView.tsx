@@ -150,6 +150,24 @@ export function WaiterOrderView() {
     }
   }, [])
 
+  const refreshZones = useCallback(async () => {
+    try {
+      const res = await apiFetch(`/api/restaurants/zones/`)
+      if (res.ok) {
+        const data = (await res.json()) as { results?: ZoneApiResponse[] }
+        setZones(data.results ?? [])
+      }
+    } catch {
+      // keep current zones on failure
+    }
+  }, [])
+
+  // A publish may have added/removed a zone, so refresh zones (not just the floor)
+  // — otherwise a new zone's tab is missing until a manual page refresh.
+  const handleLayoutPublished = useCallback(async () => {
+    await Promise.all([refreshFloor(), refreshZones()])
+  }, [refreshFloor, refreshZones])
+
   const closeOverlay = useCallback(() => {
     setSelectedTableId(null)
     setOverlayDetail(null)
@@ -212,7 +230,7 @@ export function WaiterOrderView() {
   )
 
   useHallSubscription({
-    onLayoutPublished: refreshFloor,
+    onLayoutPublished: handleLayoutPublished,
     onTableStatusChanged: refreshFloor,
     onNewReservation: refreshFloor,
     onReservationCancelled: refreshFloor,

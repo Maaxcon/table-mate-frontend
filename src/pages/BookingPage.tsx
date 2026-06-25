@@ -163,7 +163,9 @@ export function BookingPage() {
 
   const handleLayoutPublished = useCallback(() => {
     loadTables()
-  }, [loadTables])
+    // A publish may have added/removed a zone; refresh zones so its tab appears live.
+    loadZones()
+  }, [loadTables, loadZones])
 
   useFloorSubscription({
     onTableStatusChanged: handleTableStatusChanged,
