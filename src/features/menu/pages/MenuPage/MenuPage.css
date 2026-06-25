@@ -602,6 +602,13 @@
   .menu-page--has-cart-bar {
     padding-bottom: 104px;
   }
+
+  /* The bottom cart bar (shown only when the cart has items) would sit under the
+     floating theme toggle. Hide the toggle while the bar is up; it returns once
+     the cart is empty. */
+  .theme-toggle--global:has(~ .menu-page--has-cart-bar) {
+    display: none;
+  }
 }
 
 @media (max-width: 560px) {
