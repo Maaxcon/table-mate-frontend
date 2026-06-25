@@ -373,7 +373,11 @@ function MenuPage() {
             aria-label={menuStrings.controls.cartAria}
           >
             <LuShoppingCart size={18} />
-            {totalCount > 0 && <span className="menu-page__cart-badge">{totalCount}</span>}
+            {totalCount > 0 && (
+              <span key={totalCount} className="menu-page__cart-badge">
+                {totalCount}
+              </span>
+            )}
           </button>
         </div>
         <CategoryRail
