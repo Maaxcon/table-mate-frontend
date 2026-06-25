@@ -11,8 +11,10 @@ import { ZoneHeader } from "./ZoneHeader"
 import { useEditorState } from "./hooks/useEditorState"
 import type { EditorState } from "./hooks/useEditorState"
 import { usePublish } from "./hooks/usePublish"
+import type { PublishResult } from "./hooks/usePublish"
 import { serializeEntities, deserializeLayout } from "./types"
 import type { EditorEntity, LayoutPayload } from "./types"
+import type { Layout } from "@/types/api"
 import "./Toolbar.css"
 import "./Canvas.css"
 import "./PropertiesSidebar.css"
@@ -77,7 +79,7 @@ function FloorPlanSection() {
     if (!restaurantId) return
     apiFetch(`/api/editor/layouts/?restaurant=${restaurantId}`)
       .then((res) => (res.ok ? res.json() : { results: [] }))
-      .then((data: { results?: Array<{ payload?: unknown }> }) => {
+      .then((data: { results?: Layout[] }) => {
         const layouts = data.results ?? []
         const latest = layouts[0]
         if (latest?.payload && typeof latest.payload === "object") {
@@ -111,10 +113,10 @@ function FloorPlanSection() {
   const noZones = zones.length === 0
 
   const { publish, publishing, error } = usePublish({
-    onSuccess: (result?: Record<string, unknown>) => {
+    onSuccess: (result?: PublishResult) => {
       // Apply the new tables' server ids and snapshot the published state in one
       // atomic action so the editor doesn't end up falsely dirty.
-      publishSuccess(result?.table_id_map as Record<string, string> | undefined)
+      publishSuccess(result?.table_id_map)
       setShowPublishModal(false)
     },
     onRollback: () => {

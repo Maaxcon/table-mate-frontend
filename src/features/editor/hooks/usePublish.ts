@@ -2,9 +2,19 @@ import { useCallback, useRef, useState } from "react"
 import { api } from "@/api/client"
 import { serializeEntities } from "../types"
 import type { EditorEntity } from "../types"
+import type { LayoutVersion, PublishLayout } from "@/types/api"
+
+/**
+ * The publish endpoint returns the new {@link LayoutVersion} plus a map of
+ * client entity id → server table id for tables created in this publish. The
+ * map is not part of the generated schema response, so it is modelled here.
+ */
+export interface PublishResult extends LayoutVersion {
+  table_id_map?: Record<string, string>
+}
 
 interface UsePublishOptions {
-  onSuccess: (result?: Record<string, unknown>) => void
+  onSuccess: (result?: PublishResult) => void
   onRollback?: () => void
 }
 
@@ -17,15 +27,15 @@ export function usePublish({ onSuccess, onRollback }: UsePublishOptions) {
     async (entities: EditorEntity[], deletedTableIds: string[] = []) => {
       setPublishing(true)
       setError(null)
-      const layoutJson = serializeEntities(entities)
+      const body: PublishLayout = {
+        ...(serializeEntities(entities) as PublishLayout),
+        deleted_table_ids: deletedTableIds,
+      }
 
       rollbackRef.current = onRollback ?? null
 
       try {
-        const data = await api.post<Record<string, unknown>>("/api/editor/layouts/publish/", {
-          ...layoutJson,
-          deleted_table_ids: deletedTableIds,
-        })
+        const data = await api.post<PublishResult>("/api/editor/layouts/publish/", body)
         onSuccess(data)
       } catch (err) {
         setError(err instanceof Error ? err.message : "Publish failed")
