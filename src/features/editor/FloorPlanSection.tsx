@@ -102,9 +102,11 @@ function FloorPlanSection() {
     setZones((prev) => [...prev, zone])
   }, [])
 
-  const visibleEntities = selectedZoneId
-    ? entities.filter((e) => e.zoneId === selectedZoneId)
-    : entities
+  // Strict filter: only ever show the selected zone's entities. The Canvas is
+  // gated behind `noZones`, so when `selectedZoneId` is momentarily null (load
+  // race, or a zone deselected via ZoneHeader) we render nothing rather than
+  // leaking other zones' grid -1 portals/thresholds into the padding area.
+  const visibleEntities = entities.filter((e) => e.zoneId === selectedZoneId)
 
   const noZones = zones.length === 0
 
