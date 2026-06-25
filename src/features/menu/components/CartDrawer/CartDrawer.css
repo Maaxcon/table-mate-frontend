@@ -415,25 +415,37 @@
 }
 
 /* ── Pay / bill ──────────────────────────────────────── */
-.cart-drawer__pay-entry {
-  width: 100%;
-  padding: 12px;
-  border: 1px solid var(--color-border-strong);
+.cart-drawer__tabs {
+  display: flex;
+  gap: 4px;
+  padding: 8px;
+  margin: 0 16px;
   border-radius: 14px;
+  background: var(--color-bg-page);
+  flex-shrink: 0;
+}
+
+.cart-drawer__tab {
+  flex: 1;
+  padding: 9px;
+  border: none;
+  border-radius: 10px;
   background: transparent;
-  color: var(--color-text-primary);
+  color: var(--color-text-secondary);
   font-family: var(--font-family-base);
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
   transition:
-    background 150ms ease,
-    color 150ms ease;
+    background 160ms ease,
+    color 160ms ease,
+    box-shadow 160ms ease;
 }
 
-.cart-drawer__pay-entry:hover {
-  background: var(--color-text-primary);
-  color: var(--color-bg-surface);
+.cart-drawer__tab--active {
+  background: var(--color-bg-surface);
+  color: var(--color-text-primary);
+  box-shadow: 0 2px 8px rgb(17 24 39 / 10%);
 }
 
 .cart-drawer__bill {

@@ -265,7 +265,7 @@ describe("CartDrawer checkout state machine", () => {
     const onLoadBill = vi.fn()
     renderDrawer({ onLoadBill })
 
-    await user.click(screen.getByRole("button", { name: S.pay }))
+    await user.click(screen.getByRole("tab", { name: S.billTitle }))
 
     expect(onLoadBill).toHaveBeenCalledTimes(1)
     expect(screen.getByText(S.billToPay)).toBeInTheDocument()
@@ -287,7 +287,7 @@ describe("CartDrawer checkout state machine", () => {
     ]
     renderDrawer({ billItems, onPayBill })
 
-    await user.click(screen.getByRole("button", { name: S.pay }))
+    await user.click(screen.getByRole("tab", { name: S.billTitle }))
     await user.click(screen.getByRole("button", { name: /Pizza/ }))
     await user.click(screen.getByRole("button", { name: S.pay }))
 

@@ -253,6 +253,28 @@ export function CartDrawer({
           </div>
         </div>
 
+        {/* ── Cart / Bill tabs ── */}
+        {(step === "cart" || step === "bill") && (
+          <div className="cart-drawer__tabs" role="tablist">
+            <button
+              className={`cart-drawer__tab${step === "cart" ? " cart-drawer__tab--active" : ""}`}
+              role="tab"
+              aria-selected={step === "cart"}
+              onClick={goToCart}
+            >
+              {menuStrings.cart.title}
+            </button>
+            <button
+              className={`cart-drawer__tab${step === "bill" ? " cart-drawer__tab--active" : ""}`}
+              role="tab"
+              aria-selected={step === "bill"}
+              onClick={openBill}
+            >
+              {menuStrings.cart.billTitle}
+            </button>
+          </div>
+        )}
+
         {/* ── Error toast ── */}
         {error && (
           <div className="cart-drawer__toast" role="alert">
@@ -487,9 +509,6 @@ export function CartDrawer({
               >
                 {paying ? menuStrings.cart.paying : menuStrings.cart.pay}
               </button>
-              <button className="cart-drawer__pay-entry" onClick={goToCart}>
-                {menuStrings.cart.backToCart}
-              </button>
             </div>
           </>
         ) : items.length === 0 ? (
@@ -584,9 +603,6 @@ export function CartDrawer({
                 disabled={items.length === 0}
               >
                 {menuStrings.cart.checkout}
-              </button>
-              <button className="cart-drawer__pay-entry" onClick={openBill}>
-                {menuStrings.cart.pay}
               </button>
             </div>
           </>
