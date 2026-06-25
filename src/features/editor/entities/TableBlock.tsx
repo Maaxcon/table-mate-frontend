@@ -1,5 +1,5 @@
 import type { EditorEntity } from "../types"
-import { GRID } from "../types"
+import { GRID, uprightContentStyle } from "../types"
 import { ResizeHandles } from "./ResizeHandles"
 import "./blocks.css"
 
@@ -52,8 +52,10 @@ export function TableBlock({
         if (e.key === "Enter") onClick(entity.id)
       }}
     >
-      <span className="editor-block__label">{entity.label ?? entity.id.slice(-4)}</span>
-      {entity.capacity && <span className="editor-block__capacity">{entity.capacity}P</span>}
+      <span style={uprightContentStyle(entity.rotation)}>
+        <span className="editor-block__label">{entity.label ?? entity.id.slice(-4)}</span>
+        {entity.capacity && <span className="editor-block__capacity">{entity.capacity}P</span>}
+      </span>
       {selected && onResize && onMove && (
         <ResizeHandles
           entityId={entity.id}

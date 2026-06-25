@@ -1,3 +1,5 @@
+import type { CSSProperties } from "react"
+
 export const GRID = 100
 export const CANVAS_W = 2000
 export const CANVAS_H = 2000
@@ -53,6 +55,25 @@ export function generateId(): string {
 
 export function snap(val: number): number {
   return Math.round(val / GRID) * GRID
+}
+
+/**
+ * Style for an entity's text wrapper so the text stays upright while the box is
+ * rotated: it counter-rotates by `-rotation`. With no rotation it is
+ * `display: contents`, leaving the original layout (and any custom content)
+ * completely untouched.
+ */
+export function uprightContentStyle(rotation?: number): CSSProperties {
+  return rotation
+    ? {
+        transform: `rotate(${-rotation}deg)`,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 2,
+      }
+    : { display: "contents" }
 }
 
 export function serializeEntities(entities: EditorEntity[]): object {

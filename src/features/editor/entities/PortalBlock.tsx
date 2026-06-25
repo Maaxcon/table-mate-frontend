@@ -1,5 +1,5 @@
 import type { EditorEntity } from "../types"
-import { GRID } from "../types"
+import { GRID, uprightContentStyle } from "../types"
 import { ResizeHandles } from "./ResizeHandles"
 import "./blocks.css"
 
@@ -45,7 +45,9 @@ export function PortalBlock({
         if (e.key === "Enter") onClick(entity.id)
       }}
     >
-      <span className="editor-block__zone-label">{entity.label ?? "Portal"}</span>
+      <span style={uprightContentStyle(entity.rotation)}>
+        <span className="editor-block__zone-label">{entity.label ?? "Portal"}</span>
+      </span>
       {selected && onResize && onMove && (
         <ResizeHandles
           entityId={entity.id}
