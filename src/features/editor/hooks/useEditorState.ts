@@ -30,7 +30,7 @@ type Action =
   | { type: "REMOVE_ENTITY"; id: string }
   | { type: "SELECT_ENTITY"; id: string | null }
   | { type: "SET_TOOL"; tool: string | null }
-  | { type: "PUBLISH_SUCCESS"; json: object }
+  | { type: "PUBLISH_SUCCESS"; tableIdMap?: Record<string, string> }
   | { type: "PUBLISH_ROLLBACK"; previousState: EditorState }
   | { type: "SET_DIRTY"; dirty: boolean }
   | { type: "LOAD_ENTITIES"; entities: EditorEntity[]; publishedJson: object }
@@ -122,8 +122,25 @@ function editorReducer(state: EditorState, action: Action): EditorState {
       return { ...state, selectedId: action.id }
     case "SET_TOOL":
       return { ...state, activeTool: action.tool, selectedId: null }
-    case "PUBLISH_SUCCESS":
-      return { ...state, lastPublishedJson: action.json, dirty: false, deletedServerIds: [] }
+    case "PUBLISH_SUCCESS": {
+      // Apply the server-assigned ids for newly created tables and snapshot the
+      // published JSON from the *resulting* entities in one step. Doing both
+      // atomically here (rather than snapshot-then-UPDATE_ENTITY in the caller)
+      // avoids a false dirty: serializeEntities writes a table id as
+      // `serverId || null`, so a snapshot taken before the ids land would differ
+      // from state once they do.
+      const map = action.tableIdMap
+      const entities = map
+        ? state.entities.map((e) => (map[e.id] ? { ...e, serverId: map[e.id] } : e))
+        : state.entities
+      return {
+        ...state,
+        entities,
+        lastPublishedJson: serializeEntities(entities),
+        dirty: false,
+        deletedServerIds: [],
+      }
+    }
     case "PUBLISH_ROLLBACK":
       return { ...action.previousState }
     case "SET_DIRTY":
@@ -219,10 +236,10 @@ export function useEditorState() {
     dispatch({ type: "SET_TOOL", tool })
   }, [])
 
-  const publishSuccess = useCallback(() => {
-    const json = serializeEntities(state.entities)
-    dispatch({ type: "PUBLISH_SUCCESS", json })
-  }, [state.entities])
+  const publishSuccess = useCallback(
+    (tableIdMap?: Record<string, string>) => dispatch({ type: "PUBLISH_SUCCESS", tableIdMap }),
+    [],
+  )
 
   const loadEntities = useCallback((entities: EditorEntity[], publishedJson: object) => {
     dispatch({ type: "LOAD_ENTITIES", entities, publishedJson })

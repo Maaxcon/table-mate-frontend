@@ -112,14 +112,10 @@ function FloorPlanSection() {
 
   const { publish, publishing, error } = usePublish({
     onSuccess: (result?: Record<string, unknown>) => {
-      publishSuccess()
+      // Apply the new tables' server ids and snapshot the published state in one
+      // atomic action so the editor doesn't end up falsely dirty.
+      publishSuccess(result?.table_id_map as Record<string, string> | undefined)
       setShowPublishModal(false)
-      if (result?.table_id_map) {
-        const tableIdMap = result.table_id_map as Record<string, string>
-        for (const [clientId, serverId] of Object.entries(tableIdMap)) {
-          dispatch({ type: "UPDATE_ENTITY", id: clientId, patch: { serverId } })
-        }
-      }
     },
     onRollback: () => {
       if (prePublishStateRef.current) {
