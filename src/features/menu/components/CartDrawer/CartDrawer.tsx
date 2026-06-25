@@ -26,6 +26,7 @@ type Props = {
   currencySymbol: string
   isConnected: boolean
   showConnectionStatus?: boolean
+  sessionExpired?: boolean
   error: string | null
   errorItemId: string | null
   displayName: string
@@ -85,6 +86,7 @@ export function CartDrawer({
   currencySymbol,
   isConnected,
   showConnectionStatus = true,
+  sessionExpired = false,
   error,
   errorItemId,
   displayName,
@@ -278,6 +280,14 @@ export function CartDrawer({
             >
               {menuStrings.cart.billTitle}
             </button>
+          </div>
+        )}
+
+        {/* ── Session-expired notice: the socket gave up refreshing the guest
+            token, so live cart sync is dead until the table is re-opened. ── */}
+        {sessionExpired && (
+          <div className="cart-drawer__toast" role="alert">
+            <span className="cart-drawer__toast-text">{menuStrings.cart.sessionExpired}</span>
           </div>
         )}
 

@@ -121,6 +121,7 @@ export const menuStrings = {
     connecting: "Підключення...",
     connected: "Підключено",
     disconnected: "Відключено",
+    sessionExpired: "Сесія завершена — відкрийте стіл заново",
     lobbyTitle: "Ласкаво просимо!",
     lobbySubtitle: "Як до вас звертатися?",
     lobbyPlaceholder: "Ваше ім'я",

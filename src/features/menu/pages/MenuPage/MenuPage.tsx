@@ -127,7 +127,7 @@ function MenuPage() {
     return result
   }, [cartSessionId, guestJwt, reinitGuestCart])
 
-  const { isConnected } = useCartSocket({
+  const { isConnected, sessionExpired } = useCartSocket({
     cartSessionId: guestAuth.cartSessionId,
     guestJwt: guestAuth.guestJwt,
     onCartUpdated: handleCartUpdated,
@@ -621,6 +621,7 @@ function MenuPage() {
           totalPrice={totalPrice}
           currencySymbol={currencySymbol}
           isConnected={isConnected}
+          sessionExpired={sessionExpired}
           showConnectionStatus={Boolean(guestAuth.cartSessionId && guestAuth.guestJwt)}
           error={cartAccessError ?? cartError}
           errorItemId={errorItemId}
