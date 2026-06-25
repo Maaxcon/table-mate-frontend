@@ -12,7 +12,7 @@ import {
   SIZE_CONSTRAINTS,
 } from "../types"
 
-interface EditorState {
+export interface EditorState {
   entities: EditorEntity[]
   selectedId: string | null
   lastPublishedJson: object | null

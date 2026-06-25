@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useAppSelector } from "@/store/hooks"
 import { fetchZones, updateZone } from "@/features/reservation/api"
 import type { Zone } from "@/features/reservation/api"
@@ -9,6 +9,7 @@ import { PropertiesSidebar } from "./PropertiesSidebar"
 import { PublishConfirmModal } from "./PublishConfirmModal"
 import { ZoneHeader } from "./ZoneHeader"
 import { useEditorState } from "./hooks/useEditorState"
+import type { EditorState } from "./hooks/useEditorState"
 import { usePublish } from "./hooks/usePublish"
 import { serializeEntities, deserializeLayout } from "./types"
 import type { EditorEntity, LayoutPayload } from "./types"
@@ -16,6 +17,7 @@ import "./Toolbar.css"
 import "./Canvas.css"
 import "./PropertiesSidebar.css"
 import "./FloorPlanSection.css"
+import { useToast } from "@/features/admin/hooks/toastContext"
 
 function FloorPlanSection() {
   const {
@@ -39,6 +41,8 @@ function FloorPlanSection() {
   const [showPublishModal, setShowPublishModal] = useState(false)
   const [zones, setZones] = useState<Zone[]>([])
   const [selectedZoneId, setSelectedZoneId] = useState<string | null>(null)
+  const prePublishStateRef = useRef<EditorState | null>(null)
+  const toast = useToast()
 
   const selectedZone = useMemo(
     () => zones.find((z) => z.public_id === selectedZoneId) ?? null,
@@ -103,7 +107,7 @@ function FloorPlanSection() {
 
   const noZones = zones.length === 0
 
-  const { publish, publishing } = usePublish({
+  const { publish, publishing, error } = usePublish({
     onSuccess: (result?: Record<string, unknown>) => {
       publishSuccess()
       setShowPublishModal(false)
@@ -114,11 +118,29 @@ function FloorPlanSection() {
         }
       }
     },
+    onRollback: () => {
+      if (prePublishStateRef.current) {
+        dispatch({ type: "PUBLISH_ROLLBACK", previousState: prePublishStateRef.current })
+        prePublishStateRef.current = null
+      }
+    },
   })
 
+  useEffect(() => {
+    if (error) toast.error(error)
+  }, [error, toast])
+
   const handlePublishConfirm = useCallback(() => {
+    prePublishStateRef.current = {
+      entities,
+      selectedId,
+      lastPublishedJson,
+      dirty,
+      activeTool,
+      deletedServerIds,
+    }
     publish(entities, deletedServerIds)
-  }, [publish, entities, deletedServerIds])
+  }, [publish, entities, selectedId, lastPublishedJson, dirty, activeTool, deletedServerIds])
 
   const selectedEntity = visibleEntities.find((e) => e.id === selectedId) ?? null
 
