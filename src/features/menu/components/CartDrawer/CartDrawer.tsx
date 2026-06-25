@@ -271,17 +271,21 @@ export function CartDrawer({
         {(step === "cart" || step === "bill") && (
           <div className="cart-drawer__tabs" role="tablist">
             <button
+              id="cart-drawer-tab-cart"
               className={`cart-drawer__tab${step === "cart" ? " cart-drawer__tab--active" : ""}`}
               role="tab"
               aria-selected={step === "cart"}
+              aria-controls="cart-drawer-panel-cart"
               onClick={goToCart}
             >
               {menuStrings.cart.title}
             </button>
             <button
+              id="cart-drawer-tab-bill"
               className={`cart-drawer__tab${step === "bill" ? " cart-drawer__tab--active" : ""}`}
               role="tab"
               aria-selected={step === "bill"}
+              aria-controls="cart-drawer-panel-bill"
               onClick={openBill}
             >
               {menuStrings.cart.billTitle}
@@ -444,7 +448,13 @@ export function CartDrawer({
         ) : step === "bill" ? (
           /* ── Bill: pick items to pay (simulated) ── */
           <>
-            <div className="cart-drawer__bill">
+            <div
+              className="cart-drawer__bill"
+              id="cart-drawer-panel-bill"
+              role="tabpanel"
+              aria-labelledby="cart-drawer-tab-bill"
+              tabIndex={0}
+            >
               {billItems.length === 0 ? (
                 <p className="cart-drawer__bill-empty">
                   {billLoading ? menuStrings.cart.billLoading : menuStrings.cart.billNoneToPay}
@@ -463,7 +473,10 @@ export function CartDrawer({
                         <div
                           className="cart-drawer__bill-progress"
                           role="progressbar"
+                          aria-label={menuStrings.cart.billProgressLabel}
                           aria-valuenow={paidPct}
+                          aria-valuemin={0}
+                          aria-valuemax={100}
                         >
                           <div
                             className="cart-drawer__bill-progress-fill"
@@ -483,7 +496,11 @@ export function CartDrawer({
 
                   {payableBill.length > 0 ? (
                     <>
-                      <button className="cart-drawer__bill-selectall" onClick={toggleSelectAll}>
+                      <button
+                        className="cart-drawer__bill-selectall"
+                        onClick={toggleSelectAll}
+                        aria-pressed={allBillSelected}
+                      >
                         <span className="cart-drawer__bill-checkbox" data-checked={allBillSelected}>
                           {allBillSelected && <LuCheck size={12} />}
                         </span>
@@ -609,7 +626,13 @@ export function CartDrawer({
         ) : (
           /* ── Item list grouped by guest ── */
           <>
-            <div className="cart-drawer__list">
+            <div
+              className="cart-drawer__list"
+              id="cart-drawer-panel-cart"
+              role="tabpanel"
+              aria-labelledby="cart-drawer-tab-cart"
+              tabIndex={0}
+            >
               {groupedItems.map((group) => (
                 <div key={group.key} className="cart-drawer__group">
                   <span className="cart-drawer__group-label">

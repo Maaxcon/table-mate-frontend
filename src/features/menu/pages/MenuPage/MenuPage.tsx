@@ -544,22 +544,19 @@ function MenuPage() {
       {showCartBar && !selectedItem && (
         <div
           className="menu-page__cart-bar"
-          role="button"
-          tabIndex={0}
-          onClick={handleCartBarClick}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" || e.key === " ") {
-              e.preventDefault()
-              setCartOpen(true)
-            }
-          }}
           onTouchStart={handleCartBarTouchStart}
           onTouchEnd={handleCartBarTouchEnd}
-          aria-label={menuStrings.cartBar.openAria}
         >
           <span className="menu-page__cart-bar-grabber" aria-hidden="true" />
-          <span className="menu-page__cart-bar-summary">{`${menuStrings.cartBar.items(totalCount)} · ${totalPriceLabel} ${currencySymbol}`}</span>
-          <span className="menu-page__cart-bar-action">{menuStrings.cartBar.action}</span>
+          <button
+            type="button"
+            className="menu-page__cart-bar-open"
+            onClick={handleCartBarClick}
+            aria-label={menuStrings.cartBar.openAria}
+          >
+            <span className="menu-page__cart-bar-summary">{`${menuStrings.cartBar.items(totalCount)} · ${totalPriceLabel} ${currencySymbol}`}</span>
+            <span className="menu-page__cart-bar-action">{menuStrings.cartBar.action}</span>
+          </button>
           <button
             type="button"
             className="menu-page__cart-bar-close"

@@ -630,6 +630,21 @@
   z-index: 120;
 }
 
+.menu-page__cart-bar-open {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
 .menu-page__cart-bar-summary {
   flex: 1;
   font-size: 0.88rem;

@@ -99,6 +99,7 @@ export const menuStrings = {
     billLoading: "Завантажуємо рахунок...",
     billPaidOf: (paid: string, total: string) => `Оплачено ${paid} з ${total}`,
     billSelected: "Обрано",
+    billProgressLabel: "Прогрес оплати рахунку",
     paying: "Оплачуємо...",
     payError: "Оплата не пройшла. Спробуйте ще раз.",
     groupedBy: "Замовлення",
