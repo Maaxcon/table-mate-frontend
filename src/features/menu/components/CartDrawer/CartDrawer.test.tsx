@@ -71,6 +71,9 @@ function renderDrawer(overrides: Overrides = {}) {
     onClose: vi.fn(),
     onClearError: vi.fn(),
     onCheckout: vi.fn<() => Promise<CheckoutResult>>(),
+    billItems: [],
+    onLoadBill: vi.fn(),
+    onPayBill: vi.fn<(ids: string[]) => Promise<void>>().mockResolvedValue(undefined),
     onCartChanged: vi.fn(),
     ...overrides,
   }
@@ -255,5 +258,39 @@ describe("CartDrawer checkout state machine", () => {
 
     expect(screen.queryByTitle(S.connected)).not.toBeInTheDocument()
     expect(screen.queryByTitle(S.disconnected)).not.toBeInTheDocument()
+  })
+
+  it("opens the bill and loads ordered items when Pay is tapped", async () => {
+    const user = userEvent.setup()
+    const onLoadBill = vi.fn()
+    renderDrawer({ onLoadBill })
+
+    await user.click(screen.getByRole("button", { name: S.pay }))
+
+    expect(onLoadBill).toHaveBeenCalledTimes(1)
+    expect(screen.getByText(S.billToPay)).toBeInTheDocument()
+  })
+
+  it("pays the selected ordered items by their order-item ids", async () => {
+    const user = userEvent.setup()
+    const onPayBill = vi.fn<(ids: string[]) => Promise<void>>().mockResolvedValue(undefined)
+    const billItems = [
+      {
+        id: "oi-1",
+        name: "Pizza",
+        guest_slot: 1,
+        quantity: 1,
+        total_price: "30.00",
+        is_paid: false,
+      },
+      { id: "oi-2", name: "Tea", guest_slot: 1, quantity: 2, total_price: "20.00", is_paid: false },
+    ]
+    renderDrawer({ billItems, onPayBill })
+
+    await user.click(screen.getByRole("button", { name: S.pay }))
+    await user.click(screen.getByRole("button", { name: /Pizza/ }))
+    await user.click(screen.getByRole("button", { name: S.pay }))
+
+    expect(onPayBill).toHaveBeenCalledWith(["oi-1"])
   })
 })

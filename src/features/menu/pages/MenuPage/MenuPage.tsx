@@ -15,6 +15,7 @@ import {
   RestaurantInfoPanel,
 } from "@/features/menu/components"
 import { checkout } from "@/features/menu/api"
+import { useBill } from "@/features/menu/hooks/useBill"
 import { useCart } from "@/features/menu/hooks/useCart"
 import { useCartSocket } from "@/features/menu/hooks/useCartSocket"
 import { useGuestAuth } from "@/features/menu/hooks/useGuestAuth"
@@ -99,9 +100,17 @@ function MenuPage() {
     onAuthError: guestAuth.initialize,
   })
 
+  const bill = useBill({
+    cartSessionId: guestAuth.cartSessionId,
+    guestJwt: guestAuth.guestJwt,
+  })
+  const refreshBill = bill.refresh
+
+  // A cart_updated push can mean another guest just paid, so refresh the bill too.
   const handleCartUpdated = useCallback(() => {
     syncFromServer()
-  }, [syncFromServer])
+    refreshBill()
+  }, [syncFromServer, refreshBill])
 
   // Destructure the stable fields so the callback deps are these values, not
   // the whole guestAuth object (which is a fresh object every render).
@@ -529,6 +538,9 @@ function MenuPage() {
           }}
           onRetry={cartAccessError ? undefined : syncFromServer}
           onCheckout={handleCheckout}
+          billItems={bill.items}
+          onLoadBill={bill.refresh}
+          onPayBill={bill.pay}
           onCartChanged={syncFromServer}
         />
       )}

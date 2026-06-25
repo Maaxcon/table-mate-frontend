@@ -351,3 +351,31 @@ export function deleteCartItem(sessionId: string, itemId: string, jwt: string): 
     method: "DELETE",
   })
 }
+
+// One line of the bill — an already-ordered item across the table's visit.
+export type BillItem = {
+  id: string
+  name: string
+  guest_slot: number
+  quantity: number
+  total_price: string
+  is_paid: boolean
+}
+
+// The bill: items already submitted to the kitchen for this table's visit.
+export function fetchBill(sessionId: string, jwt: string): Promise<BillItem[]> {
+  return authFetch<BillItem[]>(CART_API.bill(sessionId), jwt)
+}
+
+// Simulated payment: marks the selected ordered items as paid (no money moves).
+// Returns the updated bill.
+export function payOrderItems(
+  sessionId: string,
+  orderItemIds: string[],
+  jwt: string,
+): Promise<BillItem[]> {
+  return authFetch<BillItem[]>(CART_API.pay(sessionId), jwt, {
+    method: "POST",
+    body: JSON.stringify({ order_item_ids: orderItemIds }),
+  })
+}
