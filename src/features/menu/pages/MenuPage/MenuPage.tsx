@@ -541,7 +541,7 @@ function MenuPage() {
           aria-label={menuStrings.cartBar.openAria}
         >
           <span className="menu-page__cart-bar-grabber" aria-hidden="true" />
-          <span className="menu-page__cart-bar-summary">{`${totalCount} items · ${totalPriceLabel} ${currencySymbol}`}</span>
+          <span className="menu-page__cart-bar-summary">{`${menuStrings.cartBar.items(totalCount)} · ${totalPriceLabel} ${currencySymbol}`}</span>
           <span className="menu-page__cart-bar-action">{menuStrings.cartBar.action}</span>
           <button
             type="button"
