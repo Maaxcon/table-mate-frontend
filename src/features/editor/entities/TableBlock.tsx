@@ -1,5 +1,6 @@
 import type { EditorEntity } from "../types"
 import { GRID } from "../types"
+import { ResizeHandles } from "./ResizeHandles"
 import "./blocks.css"
 
 interface TableBlockProps {
@@ -7,9 +8,20 @@ interface TableBlockProps {
   selected: boolean
   onMouseDown: (e: React.MouseEvent, id: string) => void
   onClick: (id: string) => void
+  onResize?: (id: string, w: number, h: number) => void
+  onMove?: (id: string, x: number, y: number) => void
+  canvasScale?: number
 }
 
-export function TableBlock({ entity, selected, onMouseDown, onClick }: TableBlockProps) {
+export function TableBlock({
+  entity,
+  selected,
+  onMouseDown,
+  onClick,
+  onResize,
+  onMove,
+  canvasScale = 1,
+}: TableBlockProps) {
   const px = (v: number) => v * GRID
 
   return (
@@ -42,6 +54,19 @@ export function TableBlock({ entity, selected, onMouseDown, onClick }: TableBloc
     >
       <span className="editor-block__label">{entity.label ?? entity.id.slice(-4)}</span>
       {entity.capacity && <span className="editor-block__capacity">{entity.capacity}P</span>}
+      {selected && onResize && onMove && (
+        <ResizeHandles
+          entityId={entity.id}
+          entityType={entity.type}
+          entityX={entity.x}
+          entityY={entity.y}
+          entityW={entity.w}
+          entityH={entity.h}
+          onResize={onResize}
+          onMove={onMove}
+          scale={canvasScale}
+        />
+      )}
     </div>
   )
 }
