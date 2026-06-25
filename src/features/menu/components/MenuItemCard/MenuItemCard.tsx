@@ -1,3 +1,4 @@
+import { memo } from "react"
 import { LuHeart, LuMinus, LuPlus } from "react-icons/lu"
 import type { MenuItem } from "@/features/menu/types"
 import { formatPrice } from "@/features/menu/utils"
@@ -153,4 +154,6 @@ function MenuItemCard({
   )
 }
 
-export default MenuItemCard
+// Memoized: with stable handlers and per-card primitive props, only the cards
+// whose item/quantity/like/pending actually changed re-render.
+export default memo(MenuItemCard)

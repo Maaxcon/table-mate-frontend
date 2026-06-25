@@ -272,13 +272,23 @@ function MenuPage() {
     ],
   )
 
+  // Keep the latest cart in a ref so handleChangeQuantity stays referentially
+  // stable across quantity changes — otherwise every +/- would rebuild it and
+  // re-render every (memoized) card.
+  const cartItemsRef = useRef(cartItems)
+  useEffect(() => {
+    cartItemsRef.current = cartItems
+  }, [cartItems])
+
   const handleChangeQuantity = useCallback(
     (itemId: string, delta: number) => {
-      const cartItem = cartItems.find((ci) => ci.menuItemId === itemId || ci.id === itemId)
+      const cartItem = cartItemsRef.current.find(
+        (ci) => ci.menuItemId === itemId || ci.id === itemId,
+      )
       if (!cartItem) return
       changeQuantity(cartItem.id, delta)
     },
-    [cartItems, changeQuantity],
+    [changeQuantity],
   )
 
   const railActiveCategory = showAllGrouped ? scrollActiveCategory : activeCategory
