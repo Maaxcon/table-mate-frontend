@@ -170,6 +170,7 @@ export function BookingPage() {
               reservations={reservations}
               loading={reservationsLoading}
               workingHours={workingHours}
+              timeZone={timezone}
               onRefresh={reloadReservations}
             />
           ))}

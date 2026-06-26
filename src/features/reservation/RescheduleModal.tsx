@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
+import { useFocusTrap } from "@/hooks/useFocusTrap"
 import type { WorkingHoursDay } from "./api"
 import { fetchAvailableSlots, fetchRestaurantSettings, modifyReservation } from "./api"
+import { bookStrings } from "./strings"
 import {
   DAY_NAMES,
   generateTimeSlots,
@@ -8,6 +10,7 @@ import {
   MIN_DURATION,
   minutesToTime,
   timeToMinutes,
+  zonedWallTimeToUtcIso,
 } from "./utils"
 import "./BookModal.css"
 
@@ -22,6 +25,7 @@ interface RescheduleModalProps {
   tableCapacity: number
   restaurantId?: string
   workingHours: Record<string, WorkingHoursDay> | null
+  timeZone?: string | null
   excludeReservationIds?: string[]
   prolongOnly?: boolean
   endTimeOnly?: boolean
@@ -47,6 +51,7 @@ export function RescheduleModal({
   tableCapacity,
   restaurantId,
   workingHours,
+  timeZone,
   excludeReservationIds,
   prolongOnly = false,
   endTimeOnly = false,
@@ -57,14 +62,23 @@ export function RescheduleModal({
     string,
     WorkingHoursDay
   > | null>(null)
+  const [internalTimeZone, setInternalTimeZone] = useState<string | null>(null)
 
   useEffect(() => {
     if (!workingHours && restaurantId) {
       fetchRestaurantSettings(restaurantId)
-        .then((settings) => setInternalWorkingHours(settings.working_hours))
-        .catch(() => setInternalWorkingHours(null))
+        .then((settings) => {
+          setInternalWorkingHours(settings.working_hours)
+          setInternalTimeZone(settings.timezone)
+        })
+        .catch(() => {
+          setInternalWorkingHours(null)
+          setInternalTimeZone(null)
+        })
     }
   }, [workingHours, restaurantId])
+
+  const effectiveTimeZone = timeZone ?? internalTimeZone
 
   const currentStartTime = msToTime(new Date(currentStart).getTime())
   const currentEndTime = msToTime(new Date(currentEnd).getTime())
@@ -126,7 +140,7 @@ export function RescheduleModal({
       const openMins = timeToMinutes(dayConfig.open)
       const overnight = closeMins <= openMins
       if (!overnight && endMins > closeMins) {
-        return `End time exceeds closing time (${dayConfig.close})`
+        return bookStrings.modal.validation.closingExceeded(dayConfig.close)
       }
     }
 
@@ -135,7 +149,7 @@ export function RescheduleModal({
       for (let m = startMins; m < endMins; m += 30) {
         const slotTime = minutesToTime(m)
         if (!availableSlots.includes(slotTime)) {
-          return "The selected duration is not fully available at this time. Choose a shorter duration or different start time."
+          return bookStrings.modal.validation.durationUnavailable
         }
       }
     }
@@ -157,10 +171,11 @@ export function RescheduleModal({
     setSubmitting(true)
 
     try {
-      const startDt = new Date(`${dateStr}T${selectedTime}:00`)
-      const endDt = new Date(startDt.getTime() + durationMinutes * 60000)
-      const startISO = startDt.toISOString()
-      const endISO = endDt.toISOString()
+      // Interpret the picked slot in the restaurant timezone, not the browser's.
+      const startISO = effectiveTimeZone
+        ? zonedWallTimeToUtcIso(dateStr, selectedTime, effectiveTimeZone)
+        : new Date(`${dateStr}T${selectedTime}:00`).toISOString()
+      const endISO = new Date(new Date(startISO).getTime() + durationMinutes * 60000).toISOString()
 
       if (endTimeOnly) {
         await modifyReservation(publicId, { end_at: endISO })
@@ -174,227 +189,223 @@ export function RescheduleModal({
 
       setSuccess(true)
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to modify reservation")
+      setError(err instanceof Error ? err.message : bookStrings.reschedule.modifyFailed)
     } finally {
       setSubmitting(false)
     }
-  }, [selectedTime, dateStr, durationMinutes, guestCount, publicId, endTimeOnly])
+  }, [selectedTime, dateStr, durationMinutes, guestCount, publicId, endTimeOnly, effectiveTimeZone])
 
-  if (success) {
-    return (
-      <div
-        className="book-overlay"
-        onClick={(e) => {
-          if (e.target === e.currentTarget) {
-            onSuccess()
-            onClose()
-          }
-        }}
-        role="button"
-        tabIndex={0}
-        onKeyDown={(e) => {
-          if (e.key === "Escape") {
-            onSuccess()
-            onClose()
-          }
-        }}
-      >
-        <div className="book-modal">
-          <div className="book-modal__header">
-            <h2 className="book-modal__title">RESERVATION UPDATED</h2>
-            <button
-              className="book-modal__close"
-              onClick={() => {
-                onSuccess()
-                onClose()
-              }}
-              type="button"
-            >
-              &times;
-            </button>
-          </div>
-          <div className="book-modal__body">
-            <div className="book-modal__success-icon">&#10003;</div>
-            <p className="book-modal__success-text">
-              Your reservation at Table {tableNumber} has been updated.
-            </p>
-          </div>
-          <div className="book-modal__actions">
-            <button
-              className="book-modal__btn book-modal__btn--confirm"
-              onClick={() => {
-                onSuccess()
-                onClose()
-              }}
-              type="button"
-            >
-              OK
-            </button>
-          </div>
-        </div>
-      </div>
-    )
-  }
+  const handleDismiss = useCallback(() => {
+    if (success) onSuccess()
+    onClose()
+  }, [success, onSuccess, onClose])
+
+  const dialogRef = useFocusTrap<HTMLDivElement>({ onEscape: handleDismiss })
+
+  const formattedDate = parsedDate.toLocaleDateString("uk-UA", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  })
 
   return (
     <div
       className="book-overlay"
+      role="presentation"
       onClick={(e) => {
-        if (e.target === e.currentTarget) onClose()
-      }}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => {
-        if (e.key === "Escape") onClose()
+        if (e.target === e.currentTarget) handleDismiss()
       }}
     >
-      <div className="book-modal">
-        <div className="book-modal__header">
-          <h2 className="book-modal__title">RESCHEDULE TABLE {tableNumber}</h2>
-          <button className="book-modal__close" onClick={onClose} type="button">
-            &times;
-          </button>
-        </div>
+      <div
+        className="book-modal"
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="reschedule-modal-title"
+      >
+        {success ? (
+          <>
+            <div className="book-modal__header">
+              <h2 className="book-modal__title" id="reschedule-modal-title">
+                {bookStrings.reschedule.updatedTitle}
+              </h2>
+              <button className="book-modal__close" onClick={handleDismiss} type="button">
+                &times;
+              </button>
+            </div>
+            <div className="book-modal__body">
+              <div className="book-modal__success-icon">&#10003;</div>
+              <p className="book-modal__success-text">
+                {bookStrings.reschedule.updatedText(tableNumber)}
+              </p>
+            </div>
+            <div className="book-modal__actions">
+              <button
+                className="book-modal__btn book-modal__btn--confirm"
+                onClick={handleDismiss}
+                type="button"
+              >
+                {bookStrings.modal.actions.ok}
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="book-modal__header">
+              <h2 className="book-modal__title" id="reschedule-modal-title">
+                {bookStrings.reschedule.title(tableNumber)}
+              </h2>
+              <button className="book-modal__close" onClick={onClose} type="button">
+                &times;
+              </button>
+            </div>
 
-        <div className="book-modal__body">
-          <section className="book-modal__section">
-            <h3 className="book-modal__section-title">DATE</h3>
-            <p className="book-modal__empty">
-              {parsedDate.toLocaleDateString("en-US", {
-                weekday: "short",
-                month: "short",
-                day: "numeric",
-                year: "numeric",
-              })}
-            </p>
-          </section>
+            <div className="book-modal__body">
+              <section className="book-modal__section">
+                <h3 className="book-modal__section-title">
+                  {bookStrings.reschedule.sections.date}
+                </h3>
+                <p className="book-modal__empty">{formattedDate}</p>
+              </section>
 
-          <section className="book-modal__section">
-            <h3 className="book-modal__section-title">TIME</h3>
-            {prolongOnly || endTimeOnly ? (
-              <p className="book-modal__empty">Starting from {currentStartTime}</p>
-            ) : slotsLoading ? (
-              <p className="book-modal__empty">Loading available slots…</p>
-            ) : !dayConfig ? (
-              <p className="book-modal__empty">Restaurant closed on this day</p>
-            ) : timeSlots.length === 0 ? (
-              <p className="book-modal__empty">No available slots</p>
-            ) : (
-              <div className="book-modal__times">
-                {timeSlots.map((t) => (
+              <section className="book-modal__section">
+                <h3 className="book-modal__section-title">
+                  {bookStrings.reschedule.sections.time}
+                </h3>
+                {prolongOnly || endTimeOnly ? (
+                  <p className="book-modal__empty">
+                    {bookStrings.reschedule.startingFrom(currentStartTime)}
+                  </p>
+                ) : slotsLoading ? (
+                  <p className="book-modal__empty">{bookStrings.modal.slots.loading}</p>
+                ) : !dayConfig ? (
+                  <p className="book-modal__empty">{bookStrings.modal.slots.closed}</p>
+                ) : timeSlots.length === 0 ? (
+                  <p className="book-modal__empty">{bookStrings.modal.slots.none}</p>
+                ) : (
+                  <div className="book-modal__times">
+                    {timeSlots.map((t) => (
+                      <button
+                        key={t}
+                        type="button"
+                        className={[
+                          "book-modal__time-btn",
+                          selectedTime === t ? "book-modal__time-btn--active" : "",
+                        ]
+                          .filter(Boolean)
+                          .join(" ")}
+                        onClick={() => setSelectedTime(t)}
+                      >
+                        {t}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </section>
+
+              <section className="book-modal__section">
+                <h3 className="book-modal__section-title">
+                  {bookStrings.reschedule.sections.duration}
+                </h3>
+                <div className="book-modal__duration-input">
+                  <input
+                    type="number"
+                    className="book-modal__duration-field"
+                    min={MIN_DURATION}
+                    step={15}
+                    value={durationMinutes}
+                    onChange={(e) =>
+                      setDurationMinutes(Math.max(MIN_DURATION, Number(e.target.value)))
+                    }
+                  />
+                  {durationError && <p className="book-modal__hint">{durationError}</p>}
+                </div>
+              </section>
+
+              <section className="book-modal__section">
+                <h3 className="book-modal__section-title">
+                  {bookStrings.reschedule.sections.guests}
+                </h3>
+                <div className="book-modal__guests">
                   <button
-                    key={t}
                     type="button"
-                    className={[
-                      "book-modal__time-btn",
-                      selectedTime === t ? "book-modal__time-btn--active" : "",
-                    ]
-                      .filter(Boolean)
-                      .join(" ")}
-                    onClick={() => setSelectedTime(t)}
+                    className="book-modal__guest-btn"
+                    onClick={() => setGuestCount((g) => Math.max(1, g - 1))}
+                    disabled={guestCount <= 1}
                   >
-                    {t}
+                    &minus;
                   </button>
-                ))}
-              </div>
-            )}
-          </section>
+                  <span className="book-modal__guest-count">{guestCount}</span>
+                  <button
+                    type="button"
+                    className="book-modal__guest-btn"
+                    onClick={() => setGuestCount((g) => g + 1)}
+                    disabled={guestCount >= tableCapacity}
+                  >
+                    +
+                  </button>
+                </div>
+              </section>
 
-          <section className="book-modal__section">
-            <h3 className="book-modal__section-title">DURATION (minutes)</h3>
-            <div className="book-modal__duration-input">
-              <input
-                type="number"
-                className="book-modal__duration-field"
-                min={MIN_DURATION}
-                step={15}
-                value={durationMinutes}
-                onChange={(e) => setDurationMinutes(Math.max(MIN_DURATION, Number(e.target.value)))}
-              />
-              {durationError && <p className="book-modal__hint">{durationError}</p>}
+              {selectedTime && (
+                <section className="book-modal__section book-modal__section--summary">
+                  <h3 className="book-modal__section-title">
+                    {bookStrings.reschedule.sections.summary}
+                  </h3>
+                  <div className="book-modal__summary">
+                    <div className="book-modal__summary-row">
+                      <span>{bookStrings.modal.summary.table}</span>
+                      <span>#{tableNumber}</span>
+                    </div>
+                    <div className="book-modal__summary-row">
+                      <span>{bookStrings.modal.summary.date}</span>
+                      <span>{formattedDate}</span>
+                    </div>
+                    <div className="book-modal__summary-row">
+                      <span>{bookStrings.modal.summary.time}</span>
+                      <span>
+                        {selectedTime} &ndash; {endAt}
+                      </span>
+                    </div>
+                    <div className="book-modal__summary-row">
+                      <span>{bookStrings.modal.summary.duration}</span>
+                      <span>
+                        {durationMinutes} {bookStrings.modal.durationUnit}
+                      </span>
+                    </div>
+                    <div className="book-modal__summary-row">
+                      <span>{bookStrings.modal.summary.guests}</span>
+                      <span>{guestCount}</span>
+                    </div>
+                  </div>
+                </section>
+              )}
             </div>
-          </section>
 
-          <section className="book-modal__section">
-            <h3 className="book-modal__section-title">GUESTS</h3>
-            <div className="book-modal__guests">
+            {error && <p className="book-modal__error">{error}</p>}
+
+            <div className="book-modal__actions">
               <button
+                className="book-modal__btn book-modal__btn--cancel"
+                onClick={onClose}
                 type="button"
-                className="book-modal__guest-btn"
-                onClick={() => setGuestCount((g) => Math.max(1, g - 1))}
-                disabled={guestCount <= 1}
               >
-                &minus;
+                {bookStrings.reschedule.actions.cancel}
               </button>
-              <span className="book-modal__guest-count">{guestCount}</span>
               <button
+                className="book-modal__btn book-modal__btn--confirm"
+                onClick={handleSave}
+                disabled={!selectedTime || submitting || !!durationError}
                 type="button"
-                className="book-modal__guest-btn"
-                onClick={() => setGuestCount((g) => g + 1)}
-                disabled={guestCount >= tableCapacity}
               >
-                +
+                {submitting
+                  ? bookStrings.reschedule.actions.saving
+                  : bookStrings.reschedule.actions.save}
               </button>
             </div>
-          </section>
-
-          {selectedTime && (
-            <section className="book-modal__section book-modal__section--summary">
-              <h3 className="book-modal__section-title">SUMMARY</h3>
-              <div className="book-modal__summary">
-                <div className="book-modal__summary-row">
-                  <span>Table</span>
-                  <span>#{tableNumber}</span>
-                </div>
-                <div className="book-modal__summary-row">
-                  <span>Date</span>
-                  <span>
-                    {parsedDate.toLocaleDateString("en-US", {
-                      weekday: "short",
-                      month: "short",
-                      day: "numeric",
-                      year: "numeric",
-                    })}
-                  </span>
-                </div>
-                <div className="book-modal__summary-row">
-                  <span>Time</span>
-                  <span>
-                    {selectedTime} &ndash; {endAt}
-                  </span>
-                </div>
-                <div className="book-modal__summary-row">
-                  <span>Duration</span>
-                  <span>{durationMinutes} min</span>
-                </div>
-                <div className="book-modal__summary-row">
-                  <span>Guests</span>
-                  <span>{guestCount}</span>
-                </div>
-              </div>
-            </section>
-          )}
-        </div>
-
-        {error && <p className="book-modal__error">{error}</p>}
-
-        <div className="book-modal__actions">
-          <button
-            className="book-modal__btn book-modal__btn--cancel"
-            onClick={onClose}
-            type="button"
-          >
-            CANCEL
-          </button>
-          <button
-            className="book-modal__btn book-modal__btn--confirm"
-            onClick={handleSave}
-            disabled={!selectedTime || submitting || !!durationError}
-            type="button"
-          >
-            {submitting ? "SAVING..." : "SAVE"}
-          </button>
-        </div>
+          </>
+        )}
       </div>
     </div>
   )

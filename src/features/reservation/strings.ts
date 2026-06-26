@@ -97,6 +97,25 @@ export const bookStrings = {
       cancelling: "Скасування…",
     },
   },
+  reschedule: {
+    title: (table: string) => `Змінити бронь столу ${table}`,
+    updatedTitle: "Бронь оновлено",
+    updatedText: (table: string) => `Вашу бронь столу ${table} оновлено.`,
+    sections: {
+      date: "Дата",
+      time: "Час",
+      duration: "Тривалість (хв)",
+      guests: "Гості",
+      summary: "Підсумок",
+    },
+    startingFrom: (time: string) => `Початок о ${time}`,
+    actions: {
+      cancel: "Скасувати",
+      save: "Зберегти",
+      saving: "Збереження…",
+    },
+    modifyFailed: "Не вдалося змінити бронь",
+  },
   cancel: {
     title: "Скасувати бронь?",
     message: "Ви впевнені, що хочете скасувати цю бронь?",

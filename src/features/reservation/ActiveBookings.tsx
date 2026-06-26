@@ -10,6 +10,7 @@ interface ActiveBookingsProps {
   reservations: ReservationWithTable[]
   loading: boolean
   workingHours: Record<string, WorkingHoursDay> | null
+  timeZone: string | null
   onRefresh: () => void
 }
 
@@ -47,6 +48,7 @@ export function ActiveBookings({
   reservations,
   loading,
   workingHours,
+  timeZone,
   onRefresh,
 }: ActiveBookingsProps) {
   const [actionId, setActionId] = useState<string | null>(null)
@@ -105,6 +107,7 @@ export function ActiveBookings({
           currentGuests={rescheduleTarget.guest_count}
           tableCapacity={rescheduleTarget.table_info?.capacity ?? 10}
           workingHours={workingHours}
+          timeZone={timeZone}
           endTimeOnly={rescheduleTarget.status === "active"}
           onClose={() => setRescheduleTarget(null)}
           onSuccess={onRefresh}

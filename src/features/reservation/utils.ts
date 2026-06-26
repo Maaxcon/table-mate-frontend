@@ -2,15 +2,9 @@ import type { WorkingHoursDay } from "./api"
 
 export const MIN_DURATION = 30
 
-export const DAY_NAMES = [
-  "sunday",
-  "monday",
-  "tuesday",
-  "wednesday",
-  "thursday",
-  "friday",
-  "saturday",
-] as const
+// Keyed to match the stored working_hours format (3-letter, mon–sun), indexed
+// by Date.getDay() where 0 = Sunday.
+export const DAY_NAMES = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const
 
 export function localDateKey(d: Date): string {
   const y = d.getFullYear()
