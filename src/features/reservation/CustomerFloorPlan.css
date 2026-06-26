@@ -1,7 +1,7 @@
 .c-floor-plan {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
   height: 100%;
 }
 
@@ -9,9 +9,9 @@
   margin: 0;
   font-size: 0.72rem;
   font-weight: 700;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--color-text-secondary);
+  color: var(--color-text-muted);
 }
 
 .c-floor-plan__hint {
@@ -25,8 +25,15 @@
   position: relative;
   width: 100%;
   overflow: hidden;
-  border: 2px solid var(--color-border-default);
-  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-default);
+  border-radius: 20px;
+  background-color: var(--color-bg-surface);
+  background-image: radial-gradient(
+    color-mix(in srgb, var(--color-border-default) 60%, transparent) 1px,
+    transparent 1px
+  );
+  background-size: 26px 26px;
+  box-shadow: inset 0 1px 3px rgb(0 0 0 / 5%);
 }
 
 .c-floor-plan__canvas {
@@ -40,31 +47,33 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 4px;
+  gap: 5px;
   width: 140px;
   padding: 20px 12px;
-  border-width: 2px;
-  border-style: solid;
+  border: 1.5px solid var(--color-border-default);
+  border-radius: 18px;
   background: var(--color-bg-surface);
   cursor: pointer;
   font-family: inherit;
   text-align: center;
+  box-shadow: 0 2px 6px -2px rgb(0 0 0 / 12%);
   transition:
-    box-shadow 0.1s,
-    opacity 0.1s;
+    box-shadow 180ms ease,
+    transform 180ms ease,
+    border-color 180ms ease;
 }
 
 .c-floor-plan__table:hover:not(:disabled) {
-  box-shadow: 4px 4px 0 var(--color-text-primary);
+  transform: translateY(-3px);
+  box-shadow: 0 14px 26px -10px rgb(0 0 0 / 28%);
 }
 
 .c-floor-plan__table:disabled {
   cursor: default;
-  opacity: 0.55;
 }
 
 .c-floor-plan__table--square {
-  border-radius: 0;
+  border-radius: 18px;
 }
 
 .c-floor-plan__table--round {
@@ -75,49 +84,52 @@
 }
 
 .c-floor-plan__table--selected {
-  box-shadow: 4px 4px 0 var(--color-text-primary);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 28%, transparent);
 }
 
+/* Free — available to book */
 .c-floor-plan__table--free {
-  border-style: dashed;
-  border-color: var(--color-border-strong);
+  border-color: color-mix(in srgb, var(--color-success) 45%, var(--color-border-default));
+  background: color-mix(in srgb, var(--color-success-bg) 60%, var(--color-bg-surface));
 }
 
+/* Occupied — muted, not bookable now */
 .c-floor-plan__table--occupied {
-  border-style: solid;
   border-color: var(--color-border-default);
-}
-
-.c-floor-plan__table--reserved {
-  border-style: solid;
-  border-color: var(--color-text-primary);
+  background: var(--color-bg-surface-subtle);
   opacity: 0.7;
 }
 
+/* Reserved — held */
+.c-floor-plan__table--reserved {
+  border-color: color-mix(in srgb, var(--color-primary) 40%, var(--color-border-default));
+}
+
 .c-floor-plan__table-badge {
-  font-size: 0.6rem;
+  font-size: 0.58rem;
   font-weight: 700;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  padding: 2px 8px;
+  padding: 3px 10px;
+  border-radius: 100px;
   line-height: 1;
 }
 
 .c-floor-plan__table--free .c-floor-plan__table-badge {
-  border: 1px solid var(--color-border-strong);
-  color: var(--color-text-secondary);
-  background: var(--color-bg-surface);
+  color: var(--color-success-text);
+  background: color-mix(in srgb, var(--color-success-bg) 70%, var(--color-bg-surface));
 }
 
 .c-floor-plan__table--occupied .c-floor-plan__table-badge {
-  background: var(--color-text-primary);
+  background: var(--color-text-muted);
   color: var(--color-bg-surface);
 }
 
 .c-floor-plan__table--reserved .c-floor-plan__table-badge {
   background: transparent;
-  color: var(--color-text-primary);
-  border: 1px solid var(--color-text-primary);
+  color: var(--color-primary);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 50%, transparent);
 }
 
 .c-floor-plan__table-number {
@@ -159,13 +171,13 @@
 .c-floor-plan__zones {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 8px;
 }
 
 .c-floor-plan__zone {
-  padding: 6px 14px;
-  border: 1px solid var(--color-border-default);
-  border-radius: 20px;
+  padding: 8px 16px;
+  border: 1.5px solid var(--color-border-default);
+  border-radius: 100px;
   background: transparent;
   color: var(--color-text-secondary);
   font-size: 0.78rem;
@@ -173,16 +185,26 @@
   font-family: inherit;
   cursor: pointer;
   transition:
-    background 0.15s,
-    color 0.15s;
+    background 160ms ease,
+    color 160ms ease,
+    border-color 160ms ease,
+    transform 160ms ease;
 }
 
 .c-floor-plan__zone:hover {
-  background: var(--color-bg-surface-subtle);
+  border-color: var(--color-primary);
+  transform: translateY(-1px);
 }
 
 .c-floor-plan__zone--active {
-  background: var(--color-text-primary);
-  color: var(--color-bg-page);
-  border-color: var(--color-text-primary);
+  background: var(--color-primary);
+  color: var(--color-bg-surface);
+  border-color: var(--color-primary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .c-floor-plan__table,
+  .c-floor-plan__zone {
+    transition: none;
+  }
 }
