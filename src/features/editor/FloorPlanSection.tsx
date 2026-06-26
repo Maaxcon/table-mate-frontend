@@ -135,7 +135,25 @@ function FloorPlanSection() {
     }
   }, [dirty, loadEntities, toast])
 
-  useHallSubscription({ onLayoutPublished: handleOtherAdminPublished })
+  // Another admin created/renamed/deleted a zone: re-pull the zone list so this editor's
+  // zone tabs stay current without a manual refresh. Refetching (rather than patching from the
+  // event payload) also picks up fields the event doesn't carry, e.g. canvas dimensions, and
+  // mirrors the refreshZones/loadZones pattern used in WaiterOrderView and BookingPage.
+  const refreshZones = useCallback(async () => {
+    if (!restaurantId) return
+    try {
+      setZones(await fetchZones(String(restaurantId)))
+    } catch {
+      // keep current zones on failure
+    }
+  }, [restaurantId])
+
+  useHallSubscription({
+    onLayoutPublished: handleOtherAdminPublished,
+    onZoneCreated: refreshZones,
+    onZoneUpdated: refreshZones,
+    onZoneDeleted: refreshZones,
+  })
 
   const handleAddZone = useCallback(async (name: string) => {
     const res = await apiFetch("/api/restaurants/zones/", {
