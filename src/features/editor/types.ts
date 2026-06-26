@@ -76,6 +76,22 @@ export function uprightContentStyle(rotation?: number): CSSProperties {
     : { display: "contents" }
 }
 
+export function rotatedAABB(w: number, h: number, rotation?: number): { w: number; h: number } {
+  if (!rotation) return { w, h }
+  const r = ((rotation % 360) + 360) % 360
+  if (r === 0) return { w, h }
+  if (r === 90) return { w: h, h: w }
+  if (r === 180) return { w, h }
+  if (r === 270) return { w: h, h: w }
+  const rad = (r * Math.PI) / 180
+  const cos = Math.abs(Math.cos(rad))
+  const sin = Math.abs(Math.sin(rad))
+  return {
+    w: Math.ceil((w * cos + h * sin) * 100) / 100,
+    h: Math.ceil((w * sin + h * cos) * 100) / 100,
+  }
+}
+
 export function serializeEntities(entities: EditorEntity[]): object {
   const tables: object[] = []
   const obstacles: object[] = []
@@ -242,12 +258,20 @@ export function rectsOverlap(
 
 // Bounds are in GRID UNITS (columns/rows), matching `desired`/`others` — not pixels.
 export function findFreePosition(
-  desired: { x: number; y: number; w: number; h: number },
-  others: Array<{ x: number; y: number; w: number; h: number }>,
+  desired: { x: number; y: number; w: number; h: number; rotation?: number },
+  others: Array<{ x: number; y: number; w: number; h: number; rotation?: number }>,
   gridCols: number,
   gridRows: number,
 ): { x: number; y: number } {
-  if (!others.some((o) => rectsOverlap(desired, o))) {
+  const env = rotatedAABB(desired.w, desired.h, desired.rotation)
+  const desiredWithEnv = { x: desired.x, y: desired.y, w: env.w, h: env.h }
+  const othersWithEnv = others.map((o) => ({
+    x: o.x,
+    y: o.y,
+    ...rotatedAABB(o.w, o.h, o.rotation),
+  }))
+
+  if (!othersWithEnv.some((o) => rectsOverlap(desiredWithEnv, o))) {
     return { x: desired.x, y: desired.y }
   }
 
@@ -259,9 +283,8 @@ export function findFreePosition(
       { x: desired.x, y: desired.y - step },
     ]
     for (const pos of candidates) {
-      if (pos.x < 0 || pos.y < 0 || pos.x + desired.w > gridCols || pos.y + desired.h > gridRows)
-        continue
-      if (!others.some((o) => rectsOverlap({ ...desired, x: pos.x, y: pos.y }, o))) {
+      if (pos.x < 0 || pos.y < 0 || pos.x + env.w > gridCols || pos.y + env.h > gridRows) continue
+      if (!othersWithEnv.some((o) => rectsOverlap({ ...desiredWithEnv, x: pos.x, y: pos.y }, o))) {
         return pos
       }
     }

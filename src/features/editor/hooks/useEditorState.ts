@@ -7,6 +7,7 @@ import {
   generateId,
   GRID,
   minLabelSize,
+  rotatedAABB,
   serializeEntities,
   TABLE_PRESETS,
   SIZE_CONSTRAINTS,
@@ -49,7 +50,7 @@ function editorReducer(state: EditorState, action: Action): EditorState {
       const others = entityZoneId
         ? state.entities.filter((e) => e.zoneId === entityZoneId)
         : state.entities
-      const free = findFreePosition(action.entity, others, CANVAS_W / GRID, CANVAS_H / GRID)
+      const free = findFreePosition({ ...action.entity }, others, CANVAS_W / GRID, CANVAS_H / GRID)
       const placed = { ...action.entity, x: free.x, y: free.y }
       const entities = [...state.entities, placed]
       return {
@@ -78,6 +79,16 @@ function editorReducer(state: EditorState, action: Action): EditorState {
             updated.h = side
           }
         }
+        if (action.patch.rotation !== undefined && action.patch.rotation !== e.rotation) {
+          const env = rotatedAABB(updated.w, updated.h, updated.rotation)
+          if (updated.type === "threshold" || updated.type === "portal") {
+            updated.x = Math.max(-1, Math.min(updated.x, CANVAS_W / GRID + 1 - env.w))
+            updated.y = Math.max(-1, Math.min(updated.y, CANVAS_H / GRID + 1 - env.h))
+          } else {
+            updated.x = Math.max(0, Math.min(updated.x, CANVAS_W / GRID - env.w))
+            updated.y = Math.max(0, Math.min(updated.y, CANVAS_H / GRID - env.h))
+          }
+        }
         return updated
       })
       return { ...state, entities, dirty: computeDirty(entities, state.lastPublishedJson) }
@@ -90,15 +101,16 @@ function editorReducer(state: EditorState, action: Action): EditorState {
         (e) => e.id !== action.id && (!moveZoneId || e.zoneId === moveZoneId),
       )
       let { x, y } = action
+      const env = rotatedAABB(entity.w, entity.h, entity.rotation)
       if (entity.type === "threshold" || entity.type === "portal") {
-        x = Math.max(-1, Math.min(x, CANVAS_W / GRID + 1 - entity.w))
-        y = Math.max(-1, Math.min(y, CANVAS_H / GRID + 1 - entity.h))
+        x = Math.max(-1, Math.min(x, CANVAS_W / GRID + 1 - env.w))
+        y = Math.max(-1, Math.min(y, CANVAS_H / GRID + 1 - env.h))
       } else {
-        x = Math.max(0, Math.min(x, CANVAS_W / GRID - entity.w))
-        y = Math.max(0, Math.min(y, CANVAS_H / GRID - entity.h))
+        x = Math.max(0, Math.min(x, CANVAS_W / GRID - env.w))
+        y = Math.max(0, Math.min(y, CANVAS_H / GRID - env.h))
       }
       const free = findFreePosition(
-        { x, y, w: entity.w, h: entity.h },
+        { x, y, w: entity.w, h: entity.h, rotation: entity.rotation },
         others,
         CANVAS_W / GRID,
         CANVAS_H / GRID,

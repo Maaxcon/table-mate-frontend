@@ -1,8 +1,36 @@
 import { describe, it, expect } from "vitest"
-import { findFreePosition, CANVAS_W, CANVAS_H, GRID } from "./types"
+import { findFreePosition, rotatedAABB, CANVAS_W, CANVAS_H, GRID } from "./types"
 
 const GRID_COLS = CANVAS_W / GRID // 20
 const GRID_ROWS = CANVAS_H / GRID // 20
+
+describe("rotatedAABB", () => {
+  it("returns original dimensions when rotation is 0", () => {
+    expect(rotatedAABB(3, 1, 0)).toEqual({ w: 3, h: 1 })
+  })
+
+  it("returns original dimensions when rotation is undefined", () => {
+    expect(rotatedAABB(3, 1)).toEqual({ w: 3, h: 1 })
+  })
+
+  it("swaps w and h at 90 degrees", () => {
+    expect(rotatedAABB(3, 1, 90)).toEqual({ w: 1, h: 3 })
+  })
+
+  it("computes correct envelope at 45 degrees", () => {
+    const result = rotatedAABB(3, 1, 45)
+    expect(result.w).toBeCloseTo(2.83, 1)
+    expect(result.h).toBeCloseTo(2.83, 1)
+  })
+
+  it("handles 180 degrees same as 0", () => {
+    expect(rotatedAABB(3, 1, 180)).toEqual({ w: 3, h: 1 })
+  })
+
+  it("handles 270 degrees same as 90", () => {
+    expect(rotatedAABB(3, 1, 270)).toEqual({ w: 1, h: 3 })
+  })
+})
 
 describe("findFreePosition", () => {
   it("returns the desired position unchanged when there is no overlap", () => {
@@ -16,10 +44,6 @@ describe("findFreePosition", () => {
   })
 
   it("keeps the resolved position on-canvas when colliding at the right edge", () => {
-    // Desired sits flush against the right edge (right edge = 20) and overlaps an
-    // existing entity, forcing the step search. With the old pixel bound (2000) the
-    // search would happily step further right, off-canvas; with grid bounds it must
-    // move left and stay within [0, GRID_COLS].
     const desired = { x: 17, y: 0, w: 3, h: 3 }
     const others = [{ x: 17, y: 0, w: 3, h: 3 }]
 
@@ -39,5 +63,21 @@ describe("findFreePosition", () => {
 
     expect(pos.y + desired.h).toBeLessThanOrEqual(GRID_ROWS)
     expect(pos.x + desired.w).toBeLessThanOrEqual(GRID_COLS)
+  })
+
+  it("uses the rotated envelope for boundary checks", () => {
+    // A 3x1 entity rotated 90° has envelope 1x3, so x=19 is valid
+    const desired = { x: 19, y: 0, w: 3, h: 1, rotation: 90 }
+    const pos = findFreePosition(desired, [], GRID_COLS, GRID_ROWS)
+    expect(pos).toEqual({ x: 19, y: 0 })
+  })
+
+  it("uses the rotated envelope for collision checks", () => {
+    // A 3x1 entity at x=5,y=0 rotated 90° has envelope 1x3 (occupies x:5..6, y:0..3)
+    // A 1x3 entity at x=5,y=3 should NOT collide with it
+    const desired = { x: 5, y: 3, w: 1, h: 3 }
+    const others = [{ x: 5, y: 0, w: 3, h: 1, rotation: 90 }]
+    const pos = findFreePosition(desired, others, GRID_COLS, GRID_ROWS)
+    expect(pos).toEqual({ x: 5, y: 3 })
   })
 })
