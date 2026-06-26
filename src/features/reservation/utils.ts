@@ -24,6 +24,36 @@ export function timeToMinutes(t: string): number {
   return h * 60 + m
 }
 
+// Offset (minutes, east-positive) of `timeZone` at the given instant, read via Intl.
+function tzOffsetMinutes(instant: Date, timeZone: string): number {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    hour12: false,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  }).formatToParts(instant)
+  const map: Record<string, number> = {}
+  for (const p of parts) {
+    if (p.type !== "literal") map[p.type] = Number(p.value)
+  }
+  const asUtc = Date.UTC(map.year, map.month - 1, map.day, map.hour % 24, map.minute, map.second)
+  return (asUtc - instant.getTime()) / 60000
+}
+
+// Interprets `dateKey` (YYYY-MM-DD) + `time` (HH:MM) as wall-clock time in the
+// restaurant's `timeZone` and returns the matching UTC instant as an ISO string.
+export function zonedWallTimeToUtcIso(dateKey: string, time: string, timeZone: string): string {
+  const [y, mo, d] = dateKey.split("-").map(Number)
+  const [h, mi] = time.split(":").map(Number)
+  const naiveUtc = Date.UTC(y, mo - 1, d, h, mi)
+  const offset = tzOffsetMinutes(new Date(naiveUtc), timeZone)
+  return new Date(naiveUtc - offset * 60000).toISOString()
+}
+
 export function minutesToTime(minutes: number): string {
   const h = Math.floor(minutes / 60) % 24
   const m = minutes % 60

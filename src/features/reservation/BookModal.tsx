@@ -9,12 +9,14 @@ import {
   MIN_DURATION,
   minutesToTime,
   timeToMinutes,
+  zonedWallTimeToUtcIso,
 } from "./utils"
 import "./BookModal.css"
 
 interface BookModalProps {
   table: Table
   workingHours: Record<string, WorkingHoursDay> | null
+  timeZone: string | null
   restaurantId: string
   onClose: () => void
   onSuccess: () => void
@@ -23,6 +25,7 @@ interface BookModalProps {
 export function BookModal({
   table,
   workingHours,
+  timeZone,
   restaurantId,
   onClose,
   onSuccess,
@@ -72,6 +75,13 @@ export function BookModal({
   const dayConfig = workingHours?.[dayName]
 
   const dateKey = localDateKey(selectedDate)
+
+  // Only worth flagging when the guest's device clock is in a different zone.
+  const foreignTzNote = useMemo(() => {
+    if (!timeZone) return null
+    const browserTz = Intl.DateTimeFormat().resolvedOptions().timeZone
+    return browserTz === timeZone ? null : timeZone
+  }, [timeZone])
 
   const realSlots = useMemo(() => {
     if (!availableSlots) return null
@@ -124,10 +134,13 @@ export function BookModal({
     setSubmitting(true)
 
     try {
-      const startDt = new Date(`${localDateKey(selectedDate)}T${selectedTime}:00`)
-      const endDt = new Date(startDt.getTime() + durationMinutes * 60000)
-      const startISO = startDt.toISOString()
-      const endISO = endDt.toISOString()
+      const dateKey = localDateKey(selectedDate)
+      // Interpret the picked slot as the restaurant's wall-clock time, not the
+      // browser's — otherwise a guest in another timezone books the wrong instant.
+      const startISO = timeZone
+        ? zonedWallTimeToUtcIso(dateKey, selectedTime, timeZone)
+        : new Date(`${dateKey}T${selectedTime}:00`).toISOString()
+      const endISO = new Date(new Date(startISO).getTime() + durationMinutes * 60000).toISOString()
 
       const available = await checkAvailability(startISO, endISO, guestCount, restaurantId)
       const isAvailable = available.some((t) => t.public_id === table.public_id)
@@ -168,6 +181,7 @@ export function BookModal({
     guestCount,
     notes,
     restaurantId,
+    timeZone,
     table.public_id,
     table.table_number,
   ])
@@ -312,6 +326,11 @@ export function BookModal({
 
           <section className="book-modal__section">
             <h3 className="book-modal__section-title">TIME</h3>
+            {foreignTzNote && (
+              <p className="book-modal__tz-note">
+                Times are shown in restaurant time ({foreignTzNote})
+              </p>
+            )}
             {slotsLoading ? (
               <p className="book-modal__empty">Loading available slots…</p>
             ) : !dayConfig ? (

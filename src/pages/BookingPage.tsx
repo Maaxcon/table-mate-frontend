@@ -39,6 +39,7 @@ export function BookingPage() {
   const [selectedZone, setSelectedZone] = useState<string | null>(null)
 
   const [workingHours, setWorkingHours] = useState<Record<string, WorkingHoursDay> | null>(null)
+  const [timezone, setTimezone] = useState<string | null>(null)
 
   const [selectedTable, setSelectedTable] = useState<Table | null>(null)
   const [bookModalOpen, setBookModalOpen] = useState(false)
@@ -81,8 +82,10 @@ export function BookingPage() {
     try {
       const settings = await fetchRestaurantSettings(public_restaurant_id)
       setWorkingHours(settings.working_hours)
+      setTimezone(settings.timezone)
     } catch {
       setWorkingHours(null)
+      setTimezone(null)
     }
   }, [public_restaurant_id])
 
@@ -228,6 +231,7 @@ export function BookingPage() {
         <BookModal
           table={selectedTable}
           workingHours={workingHours}
+          timeZone={timezone}
           restaurantId={public_restaurant_id ?? ""}
           onClose={() => {
             setBookModalOpen(false)

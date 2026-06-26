@@ -278,6 +278,12 @@
   margin: 0;
 }
 
+.book-modal__tz-note {
+  font-size: 0.72rem;
+  color: var(--color-text-secondary, var(--color-text-primary));
+  margin: 0 0 8px;
+}
+
 .book-modal__error {
   margin: 0 24px 8px;
   padding: 8px 12px;
