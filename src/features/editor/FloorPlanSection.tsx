@@ -19,12 +19,12 @@ import {
   deserializeLayout,
 } from "./types"
 import type { EditorEntity, LayoutPayload } from "./types"
-import type { Layout } from "@/types/api"
 import "./Toolbar.css"
 import "./Canvas.css"
 import "./PropertiesSidebar.css"
 import "./FloorPlanSection.css"
 import { useToast } from "@/features/admin/hooks/toastContext"
+import { useHallSubscription } from "@/features/waiter-order-view/hooks/useHallSubscription"
 
 function FloorPlanSection() {
   const {
@@ -91,14 +91,12 @@ function FloorPlanSection() {
 
   useEffect(() => {
     if (!restaurantId) return
-    apiFetch(`/api/editor/layouts/?restaurant=${restaurantId}`)
-      .then((res) => (res.ok ? res.json() : { results: [] }))
-      .then((data: { results?: Layout[] }) => {
-        const layouts = data.results ?? []
-        const latest = layouts[0]
-        if (latest?.payload && typeof latest.payload === "object") {
-          const layoutPayload = latest.payload as LayoutPayload
-          const loaded = deserializeLayout(layoutPayload)
+    apiFetch(`/api/editor/layouts/latest/`)
+      .then((res) => (res.ok ? res.json() : { layout_json: null }))
+      .then((data: { layout_json?: LayoutPayload | null }) => {
+        const lp = data.layout_json
+        if (lp && typeof lp === "object") {
+          const loaded = deserializeLayout(lp as LayoutPayload)
           loadEntities(loaded, serializeEntities(loaded))
         } else {
           loadEntities([], {})
@@ -106,6 +104,35 @@ function FloorPlanSection() {
       })
       .catch(() => {})
   }, [restaurantId, loadEntities])
+
+  // When another admin publishes a layout, warn about stale work or silently reload.
+  const handleOtherAdminPublished = useCallback(async () => {
+    if (dirty) {
+      toast.action(
+        "Layout was updated by another admin. Reload to see changes (your unsaved work will be lost).",
+        "Reload now",
+        () => window.location.reload(),
+      )
+    } else {
+      try {
+        const res = await apiFetch(`/api/editor/layouts/latest/`)
+        if (res.ok) {
+          const data: { layout_json?: LayoutPayload | null } = await res.json()
+          const lp = data.layout_json
+          if (lp && typeof lp === "object") {
+            const loaded = deserializeLayout(lp as LayoutPayload)
+            loadEntities(loaded, serializeEntities(loaded))
+          } else {
+            loadEntities([], {})
+          }
+        }
+      } catch {
+        // keep current state
+      }
+    }
+  }, [dirty, loadEntities, toast])
+
+  useHallSubscription({ onLayoutPublished: handleOtherAdminPublished })
 
   const handleAddZone = useCallback(async (name: string) => {
     const res = await apiFetch("/api/restaurants/zones/", {
