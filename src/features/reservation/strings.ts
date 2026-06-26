@@ -4,6 +4,8 @@
 // here stays normal-case and localizable.
 
 export const bookStrings = {
+  pageTitle: "Бронювання",
+  backToMenu: "До меню",
   tabs: {
     floor: "План залу",
     bookings: "Мої броні",
@@ -56,6 +58,12 @@ export const bookStrings = {
     },
     durationUnit: "хв",
     success: (table: string) => `Вашу бронь столу ${table} створено.`,
+    ticket: {
+      label: "Електронна бронь",
+      tableLabel: "Стіл",
+      addToCalendar: "Додати в календар",
+      done: "Готово",
+    },
     actions: {
       ok: "Гаразд",
       cancel: "Скасувати",

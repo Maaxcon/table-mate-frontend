@@ -3,30 +3,31 @@
   inset: 0;
   z-index: 100;
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
-  padding: 16px;
   background: var(--color-overlay);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
   animation: book-overlay-in 180ms ease;
 }
 
+/* Booking opens as a bottom sheet that rises from the edge of the screen. */
 .book-modal {
   position: relative;
   background: var(--color-bg-elevated);
   border: 1px solid var(--color-border-default);
-  border-radius: 24px;
-  width: 480px;
+  border-bottom: none;
+  border-radius: 28px 28px 0 0;
+  width: 520px;
   max-width: 100%;
-  max-height: 90vh;
+  max-height: 92vh;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
   box-shadow:
-    0 24px 60px -12px rgb(0 0 0 / 32%),
-    0 8px 20px -8px rgb(0 0 0 / 20%);
-  animation: book-modal-in 220ms cubic-bezier(0.16, 1, 0.3, 1);
+    0 -16px 48px -12px rgb(0 0 0 / 34%),
+    0 -4px 16px -8px rgb(0 0 0 / 20%);
+  animation: book-sheet-in 320ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .book-modal__header {
@@ -36,8 +37,21 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 22px 26px 16px;
+  padding: 26px 26px 16px;
   background: var(--color-bg-elevated);
+}
+
+/* Grab handle */
+.book-modal__header::before {
+  content: "";
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 44px;
+  height: 5px;
+  border-radius: 100px;
+  background: var(--color-border-default);
 }
 
 .book-modal__title {
@@ -392,6 +406,163 @@
   margin: 16px 0;
 }
 
+/* Reservation pass / ticket */
+.book-ticket {
+  border-radius: 20px;
+  overflow: hidden;
+  border: 1px solid var(--color-border-default);
+  box-shadow: 0 14px 30px -16px rgb(0 0 0 / 32%);
+  animation: book-ticket-in 420ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.book-ticket__top {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 4px 12px;
+  padding: 26px 24px 24px;
+  color: var(--color-bg-surface);
+  background: linear-gradient(
+    135deg,
+    var(--color-primary),
+    color-mix(in srgb, var(--color-primary) 72%, #000)
+  );
+}
+
+.book-ticket__label {
+  grid-column: 1;
+  grid-row: 1;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+
+.book-ticket__success {
+  grid-column: 1;
+  grid-row: 2;
+  align-self: end;
+  font-size: 1.8rem;
+  line-height: 1;
+}
+
+.book-ticket__table-label {
+  grid-column: 2;
+  grid-row: 1;
+  text-align: right;
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+
+.book-ticket__table-num {
+  grid-column: 2;
+  grid-row: 2;
+  text-align: right;
+  font-family: var(--font-family-display, inherit);
+  font-size: 3.2rem;
+  font-weight: 900;
+  line-height: 0.85;
+  font-variant-numeric: tabular-nums;
+}
+
+.book-ticket__perf {
+  position: relative;
+  height: 0;
+  margin: 0 16px;
+  border-top: 2px dashed var(--color-border-default);
+}
+
+.book-ticket__perf::before,
+.book-ticket__perf::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--color-bg-elevated);
+  transform: translateY(-50%);
+}
+
+.book-ticket__perf::before {
+  left: -28px;
+}
+
+.book-ticket__perf::after {
+  right: -28px;
+}
+
+.book-ticket__stub {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 20px 24px 24px;
+  background: var(--color-bg-surface);
+}
+
+.book-ticket__cells {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.book-ticket__cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.book-ticket__cell span {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.book-ticket__cell strong {
+  font-size: 0.98rem;
+  font-weight: 800;
+  color: var(--color-text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.book-ticket__qr {
+  flex-shrink: 0;
+  width: 78px;
+  height: 78px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  gap: 5px;
+  padding: 9px;
+  border-radius: 14px;
+  background: var(--color-bg-surface-subtle);
+}
+
+.book-ticket__qr span {
+  background: var(--color-text-primary);
+  border-radius: 3px;
+}
+
+.book-ticket__qr span:nth-child(2),
+.book-ticket__qr span:nth-child(6),
+.book-ticket__qr span:nth-child(8) {
+  background: transparent;
+}
+
+@keyframes book-ticket-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.96);
+  }
+}
+
 /* Actions */
 .book-modal__actions {
   position: sticky;
@@ -450,10 +621,9 @@
   }
 }
 
-@keyframes book-modal-in {
+@keyframes book-sheet-in {
   from {
-    opacity: 0;
-    transform: translateY(16px) scale(0.97);
+    transform: translateY(100%);
   }
 }
 
@@ -467,7 +637,8 @@
 @media (prefers-reduced-motion: reduce) {
   .book-overlay,
   .book-modal,
-  .book-modal__success-icon {
+  .book-modal__success-icon,
+  .book-ticket {
     animation: none;
   }
 

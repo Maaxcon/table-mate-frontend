@@ -4,6 +4,7 @@ import { useFocusTrap } from "@/hooks/useFocusTrap"
 import type { WorkingHoursDay } from "./api"
 import { createReservation, fetchAvailableSlots } from "./api"
 import { SlotsSkeleton } from "./BookingSkeleton"
+import { downloadReservationIcs } from "./ics"
 import { bookStrings } from "./strings"
 import {
   DAY_NAMES,
@@ -44,6 +45,8 @@ export function BookModal({ table, workingHours, timeZone, onClose, onSuccess }:
     time: string
     endTime: string
     guests: number
+    startISO: string
+    endISO: string
   } | null>(null)
 
   const [availableSlots, setAvailableSlots] = useState<Record<string, string[]> | null>(null)
@@ -157,6 +160,8 @@ export function BookModal({ table, workingHours, timeZone, onClose, onSuccess }:
         time: selectedTime,
         endTime: endAt,
         guests: guestCount,
+        startISO,
+        endISO,
       })
     } catch (err) {
       setError(err instanceof Error ? err.message : bookStrings.modal.createFailed)
@@ -215,34 +220,72 @@ export function BookModal({ table, workingHours, timeZone, onClose, onSuccess }:
               </button>
             </div>
             <div className="book-modal__body">
-              <div className="book-modal__success-icon">&#10003;</div>
-              <p className="book-modal__success-text">
-                {bookStrings.modal.success(success.tableNumber)}
-              </p>
-              <div className="book-modal__summary">
-                <div className="book-modal__summary-row">
-                  <span>{bookStrings.modal.summary.date}</span>
-                  <span>{success.date}</span>
-                </div>
-                <div className="book-modal__summary-row">
-                  <span>{bookStrings.modal.summary.time}</span>
-                  <span>
-                    {success.time} &ndash; {success.endTime}
+              <div className="book-ticket">
+                <div className="book-ticket__top">
+                  <span className="book-ticket__label">{bookStrings.modal.ticket.label}</span>
+                  <span className="book-ticket__success" aria-hidden="true">
+                    &#10003;
                   </span>
+                  <span className="book-ticket__table-label">
+                    {bookStrings.modal.ticket.tableLabel}
+                  </span>
+                  <span className="book-ticket__table-num">{success.tableNumber}</span>
                 </div>
-                <div className="book-modal__summary-row">
-                  <span>{bookStrings.modal.summary.guests}</span>
-                  <span>{success.guests}</span>
+                <div className="book-ticket__perf" aria-hidden="true" />
+                <div className="book-ticket__stub">
+                  <div className="book-ticket__cells">
+                    <div className="book-ticket__cell">
+                      <span>{bookStrings.modal.summary.date}</span>
+                      <strong>{success.date}</strong>
+                    </div>
+                    <div className="book-ticket__cell">
+                      <span>{bookStrings.modal.summary.time}</span>
+                      <strong>
+                        {success.time}&ndash;{success.endTime}
+                      </strong>
+                    </div>
+                    <div className="book-ticket__cell">
+                      <span>{bookStrings.modal.summary.guests}</span>
+                      <strong>{success.guests}</strong>
+                    </div>
+                  </div>
+                  <div className="book-ticket__qr" aria-hidden="true">
+                    <span />
+                    <span />
+                    <span />
+                    <span />
+                    <span />
+                    <span />
+                    <span />
+                    <span />
+                    <span />
+                  </div>
                 </div>
               </div>
             </div>
             <div className="book-modal__actions">
               <button
+                className="book-modal__btn book-modal__btn--cancel"
+                onClick={() =>
+                  downloadReservationIcs({
+                    tableNumber: success.tableNumber,
+                    startISO: success.startISO,
+                    endISO: success.endISO,
+                    guests: success.guests,
+                    summary: bookStrings.modal.title(success.tableNumber),
+                    guestsLabel: bookStrings.modal.summary.guests,
+                  })
+                }
+                type="button"
+              >
+                {bookStrings.modal.ticket.addToCalendar}
+              </button>
+              <button
                 className="book-modal__btn book-modal__btn--confirm"
                 onClick={handleDismiss}
                 type="button"
               >
-                {bookStrings.modal.actions.ok}
+                {bookStrings.modal.ticket.done}
               </button>
             </div>
           </>

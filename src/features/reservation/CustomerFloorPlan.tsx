@@ -16,9 +16,22 @@ interface CustomerFloorPlanProps {
   upcomingReservations?: UpcomingReservation[]
 }
 
-// Footprint reserved per table (largest table box plus a little breathing room),
-// used to size the canvas so scaling never clips a table at the edges.
-const TABLE_FOOTPRINT = 160
+// Footprint reserved per table (table box + the seat ring around it), used to
+// size the canvas so scaling never clips a table or its chairs.
+const TABLE_FOOTPRINT = 184
+// Breathing room kept between the tables and the canvas edges.
+const CANVAS_PADDING = 32
+
+// CSS transforms that arrange `capacity` chairs evenly around a table centre.
+function seatTransforms(capacity: number, shape: string): string[] {
+  const n = Math.max(0, Math.min(capacity, 14))
+  const radius = shape === "round" ? 72 : 78
+  return Array.from(
+    { length: n },
+    (_, i) =>
+      `translate(-50%, -50%) rotate(${(360 / n) * i}deg) translateY(-${radius}px) rotate(${-(360 / n) * i}deg)`,
+  )
+}
 
 export function CustomerFloorPlan({
   tables,
@@ -51,14 +64,31 @@ export function CustomerFloorPlan({
     return () => observer.disconnect()
   }, [])
 
-  const { contentWidth, contentHeight } = useMemo(() => {
-    let maxX = 0
-    let maxY = 0
+  // Normalize raw backend positions so the layout always sits inset from the
+  // edges (no tables jammed into the corner) regardless of their coordinates.
+  const { offsetX, offsetY, contentWidth, contentHeight } = useMemo(() => {
+    let minX = Infinity
+    let minY = Infinity
+    let maxRight = 0
+    let maxBottom = 0
     for (const t of tables) {
-      maxX = Math.max(maxX, (t.position_x ?? 0) + TABLE_FOOTPRINT)
-      maxY = Math.max(maxY, (t.position_y ?? 0) + TABLE_FOOTPRINT)
+      const x = t.position_x ?? 0
+      const y = t.position_y ?? 0
+      minX = Math.min(minX, x)
+      minY = Math.min(minY, y)
+      maxRight = Math.max(maxRight, x + TABLE_FOOTPRINT)
+      maxBottom = Math.max(maxBottom, y + TABLE_FOOTPRINT)
     }
-    return { contentWidth: Math.max(maxX, 320), contentHeight: Math.max(maxY, 320) }
+    if (!Number.isFinite(minX)) {
+      minX = 0
+      minY = 0
+    }
+    return {
+      offsetX: CANVAS_PADDING - minX,
+      offsetY: CANVAS_PADDING - minY,
+      contentWidth: Math.max(maxRight - minX + CANVAS_PADDING * 2, 320),
+      contentHeight: Math.max(maxBottom - minY + CANVAS_PADDING * 2, 280),
+    }
   }, [tables])
 
   const scale = viewportWidth > 0 ? Math.min(1, viewportWidth / contentWidth) : 1
@@ -123,11 +153,17 @@ export function CustomerFloorPlan({
                   .filter(Boolean)
                   .join(" ")}
                 style={{
-                  left: table.position_x ?? undefined,
-                  top: table.position_y ?? undefined,
+                  left: (table.position_x ?? 0) + offsetX,
+                  top: (table.position_y ?? 0) + offsetY,
                 }}
                 onClick={() => onSelect(table)}
               >
+                <span className="c-floor-plan__seats" aria-hidden="true">
+                  {seatTransforms(table.capacity, table.shape ?? "rectangle").map((tr, i) => (
+                    <span key={i} className="c-floor-plan__seat" style={{ transform: tr }} />
+                  ))}
+                </span>
+
                 <span
                   className={`c-floor-plan__table-badge c-floor-plan__table-badge--${visualStatus}`}
                 >
@@ -145,6 +181,18 @@ export function CustomerFloorPlan({
             )
           })}
         </div>
+      </div>
+
+      <div className="c-floor-plan__legend">
+        <span className="c-floor-plan__legend-item c-floor-plan__legend-item--free">
+          {bookStrings.floorPlan.status.free}
+        </span>
+        <span className="c-floor-plan__legend-item c-floor-plan__legend-item--reserved">
+          {bookStrings.floorPlan.status.reserved}
+        </span>
+        <span className="c-floor-plan__legend-item c-floor-plan__legend-item--occupied">
+          {bookStrings.floorPlan.status.occupied}
+        </span>
       </div>
     </div>
   )

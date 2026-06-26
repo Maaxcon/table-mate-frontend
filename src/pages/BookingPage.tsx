@@ -1,5 +1,6 @@
 import { useCallback, useState } from "react"
-import { useParams } from "react-router-dom"
+import { useNavigate, useParams } from "react-router-dom"
+import { LuArrowLeft } from "react-icons/lu"
 import type { Table } from "@/types/api/types.gen"
 import { ActiveBookings } from "@/features/reservation/ActiveBookings"
 import { BookModal } from "@/features/reservation/BookModal"
@@ -21,7 +22,13 @@ type Tab = "floor" | "bookings"
 
 export function BookingPage() {
   const { public_restaurant_id } = useParams<{ public_restaurant_id: string }>()
+  const navigate = useNavigate()
   const user = useAppSelector((state) => state.auth.user)
+
+  const goToMenu = useCallback(() => {
+    if (public_restaurant_id) navigate(`/menu/${public_restaurant_id}`)
+    else navigate(-1)
+  }, [navigate, public_restaurant_id])
   const isAuthenticated = !!user
 
   const {
@@ -110,6 +117,15 @@ export function BookingPage() {
 
   return (
     <div className="bp">
+      <header className="bp__topbar">
+        <button type="button" className="bp__back" onClick={goToMenu}>
+          <LuArrowLeft aria-hidden="true" />
+          <span>{bookStrings.backToMenu}</span>
+        </button>
+        <span className="bp__topbar-title">{bookStrings.pageTitle}</span>
+        <span className="bp__topbar-spacer" aria-hidden="true" />
+      </header>
+
       <div className="bp__tabs">
         <button
           type="button"

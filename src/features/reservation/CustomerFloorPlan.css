@@ -132,7 +132,37 @@
   border: 1px solid color-mix(in srgb, var(--color-primary) 50%, transparent);
 }
 
+/* Chairs arranged around each table */
+.c-floor-plan__seats {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.c-floor-plan__seat {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 14px;
+  height: 14px;
+  border-radius: 5px;
+  background: var(--color-bg-surface-subtle);
+  border: 1.5px solid var(--color-border-default);
+}
+
+.c-floor-plan__table--free .c-floor-plan__seat {
+  border-color: color-mix(in srgb, var(--color-success) 40%, var(--color-border-default));
+}
+
+.c-floor-plan__table--occupied .c-floor-plan__seat {
+  opacity: 0.6;
+}
+
 .c-floor-plan__table-number {
+  position: relative;
   font-size: 2rem;
   font-weight: 900;
   line-height: 1;
@@ -200,6 +230,43 @@
   background: var(--color-primary);
   color: var(--color-bg-surface);
   border-color: var(--color-primary);
+}
+
+.c-floor-plan__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  padding: 2px 4px;
+}
+
+.c-floor-plan__legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.c-floor-plan__legend-item::before {
+  content: "";
+  width: 13px;
+  height: 13px;
+  border-radius: 4px;
+}
+
+.c-floor-plan__legend-item--free::before {
+  background: color-mix(in srgb, var(--color-success-bg) 60%, var(--color-bg-surface));
+  border: 1.5px solid color-mix(in srgb, var(--color-success) 45%, var(--color-border-default));
+}
+
+.c-floor-plan__legend-item--reserved::before {
+  border: 1.5px solid color-mix(in srgb, var(--color-primary) 50%, transparent);
+}
+
+.c-floor-plan__legend-item--occupied::before {
+  background: var(--color-bg-surface-subtle);
+  border: 1.5px solid var(--color-border-default);
 }
 
 @media (prefers-reduced-motion: reduce) {
