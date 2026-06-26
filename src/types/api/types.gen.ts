@@ -38,6 +38,10 @@ export type AdminMenuCategory = {
   menu: string
   name: string
   sort_order?: number
+  /**
+   * Hex color used for category theming.
+   */
+  color?: string | null
   readonly created_at: string
   readonly updated_at: string
 }
@@ -259,6 +263,10 @@ export type MenuCategory = {
   readonly menu: string
   name: string
   sort_order?: number
+  /**
+   * Hex color used for category theming.
+   */
+  color?: string | null
   readonly created_at: string
   readonly updated_at: string
 }
@@ -312,6 +320,7 @@ export type OrderItem = {
   readonly menu_item_name: string
   readonly menu_item_category_id: string | null
   readonly menu_item_category_name: string | null
+  readonly menu_item_category_color: string | null
   guest_slot: number
   quantity: number
   comment?: string | null
@@ -526,6 +535,10 @@ export type PatchedAdminMenuCategory = {
   menu?: string
   name?: string
   sort_order?: number
+  /**
+   * Hex color used for category theming.
+   */
+  color?: string | null
   readonly created_at?: string
   readonly updated_at?: string
 }
@@ -618,6 +631,7 @@ export type PatchedOrderItem = {
   readonly menu_item_name?: string
   readonly menu_item_category_id?: string | null
   readonly menu_item_category_name?: string | null
+  readonly menu_item_category_color?: string | null
   guest_slot?: number
   quantity?: number
   comment?: string | null
@@ -1072,6 +1086,10 @@ export type AdminMenuCategoryWritable = {
   menu: string
   name: string
   sort_order?: number
+  /**
+   * Hex color used for category theming.
+   */
+  color?: string | null
 }
 
 /**
@@ -1149,6 +1167,10 @@ export type MenuWritable = {
 export type MenuCategoryWritable = {
   name: string
   sort_order?: number
+  /**
+   * Hex color used for category theming.
+   */
+  color?: string | null
 }
 
 export type MenuItemWritable = {
@@ -1364,6 +1386,10 @@ export type PatchedAdminMenuCategoryWritable = {
   menu?: string
   name?: string
   sort_order?: number
+  /**
+   * Hex color used for category theming.
+   */
+  color?: string | null
 }
 
 /**

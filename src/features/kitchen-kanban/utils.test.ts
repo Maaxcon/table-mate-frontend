@@ -12,6 +12,7 @@ function makeOrderItem(overrides: Partial<OrderItem> = {}): OrderItem {
     menu_item_name: "Burger",
     menu_item_category_id: null,
     menu_item_category_name: null,
+    menu_item_category_color: "#F97316",
     guest_slot: 1,
     quantity: 2,
     comment: null,
@@ -91,21 +92,27 @@ describe("mapItem", () => {
     expect(result.modifiers).toBe("")
   })
 
-  it("maps a known category name to its colour", () => {
-    const result = mapItem(makeOrderItem({ menu_item_category_name: "Салати" }))
+  it("uses API provided category color when available", () => {
+    const result = mapItem(
+      makeOrderItem({ menu_item_category_name: "Салати", menu_item_category_color: "#22c55e" }),
+    )
     expect(result.categoryName).toBe("Салати")
-    expect(result.categoryColor).toBe("#22c55e")
+    expect(result.categoryColor).toBe("#22C55E")
   })
 
-  it("falls back to the default colour for an unmapped category", () => {
-    const result = mapItem(makeOrderItem({ menu_item_category_name: "Піца" }))
-    expect(result.categoryColor).toBe("#9ca3af")
+  it("falls back to the default colour when API returns null", () => {
+    const result = mapItem(
+      makeOrderItem({ menu_item_category_name: "Піца", menu_item_category_color: null }),
+    )
+    expect(result.categoryColor).toBe("#9CA3AF")
   })
 
-  it("falls back to the default colour and undefined name for a null category", () => {
-    const result = mapItem(makeOrderItem({ menu_item_category_name: null }))
+  it("falls back to the default colour and undefined name for missing category data", () => {
+    const result = mapItem(
+      makeOrderItem({ menu_item_category_name: null, menu_item_category_color: undefined }),
+    )
     expect(result.categoryName).toBeUndefined()
-    expect(result.categoryColor).toBe("#9ca3af")
+    expect(result.categoryColor).toBe("#9CA3AF")
   })
 })
 

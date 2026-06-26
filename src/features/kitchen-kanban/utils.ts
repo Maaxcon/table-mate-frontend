@@ -1,6 +1,7 @@
 import type { OrderItem } from "@/types/api/types.gen"
 import type { KitchenTicket } from "./api"
-import { colorFor } from "./categoryColors"
+
+const DEFAULT_CATEGORY_COLOR = "#9CA3AF"
 import type { KanbanItem, KanbanTicket } from "./types"
 
 export function elapsedMinutes(startedAt: number): number {
@@ -21,7 +22,7 @@ export function mapItem(item: OrderItem): KanbanItem {
     modifiers: item.comment ?? undefined,
     status: item.status === "ready" ? "ready" : "pending",
     categoryName: item.menu_item_category_name ?? undefined,
-    categoryColor: colorFor(item),
+    categoryColor: (item.menu_item_category_color ?? DEFAULT_CATEGORY_COLOR).toUpperCase(),
   }
 }
 
