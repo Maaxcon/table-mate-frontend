@@ -112,6 +112,7 @@ export function useHallSubscription({
   const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const connectRef = useRef<(() => void) | undefined>(undefined)
   const tokenRef = useRef(accessToken)
+  const mountedRef = useRef(false)
 
   const callbacksRef = useRef({
     onTableStatusChanged,
@@ -156,6 +157,7 @@ export function useHallSubscription({
     wsRef.current = ws
 
     ws.onopen = () => {
+      if (!mountedRef.current) return
       console.debug("[HallWS] Connected")
       setIsConnected(true)
     }
@@ -192,6 +194,7 @@ export function useHallSubscription({
     ws.onclose = (event) => {
       console.debug("[HallWS] Disconnected:", event.code, event.reason)
       wsRef.current = null
+      if (!mountedRef.current) return
       setIsConnected(false)
       callbacksRef.current.onClose?.()
 
@@ -210,9 +213,11 @@ export function useHallSubscription({
   }, [connect])
 
   useEffect(() => {
+    mountedRef.current = true
     connect()
 
     return () => {
+      mountedRef.current = false
       if (reconnectTimeoutRef.current) {
         clearTimeout(reconnectTimeoutRef.current)
       }

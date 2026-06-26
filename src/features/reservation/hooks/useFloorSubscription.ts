@@ -87,6 +87,7 @@ export function useFloorSubscription({
   const wsRef = useRef<WebSocket | null>(null)
   const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const connectRef = useRef<(() => void) | undefined>(undefined)
+  const mountedRef = useRef(false)
   const callbacksRef = useRef({
     onTableStatusChanged,
     onNewReservation,
@@ -135,6 +136,7 @@ export function useFloorSubscription({
     wsRef.current = ws
 
     ws.onopen = () => {
+      if (!mountedRef.current) return
       console.debug("[FloorWS] Connected")
       setIsConnected(true)
     }
@@ -171,6 +173,7 @@ export function useFloorSubscription({
     ws.onclose = (event) => {
       console.debug("[FloorWS] Disconnected:", event.code, event.reason)
       wsRef.current = null
+      if (!mountedRef.current) return
       setIsConnected(false)
       callbacksRef.current.onClose?.()
 
@@ -185,8 +188,10 @@ export function useFloorSubscription({
   }, [connect])
 
   useEffect(() => {
+    mountedRef.current = true
     connect()
     return () => {
+      mountedRef.current = false
       if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current)
       if (wsRef.current) {
         wsRef.current.close(1000, "Component unmounting")
