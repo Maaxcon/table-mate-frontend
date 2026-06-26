@@ -45,6 +45,7 @@ type Action =
       canvasRows?: number
     }
   | { type: "SET_CANVAS_SIZE"; cols: number; rows: number }
+  | { type: "REMOVE_ENTITIES_BY_ZONE"; zoneId: string }
   | { type: "CLEAR" }
 
 function computeDirty(entities: EditorEntity[], lastPublishedJson: object | null): boolean {
@@ -219,6 +220,18 @@ function editorReducer(state: EditorState, action: Action): EditorState {
       }
     case "SET_CANVAS_SIZE":
       return { ...state, canvasCols: action.cols, canvasRows: action.rows }
+    case "REMOVE_ENTITIES_BY_ZONE": {
+      const remaining = state.entities.filter((e) => e.zoneId !== action.zoneId)
+      return {
+        ...state,
+        entities: remaining,
+        dirty: computeDirty(remaining, state.lastPublishedJson),
+        selectedId:
+          state.selectedId && remaining.every((e) => e.id !== state.selectedId)
+            ? null
+            : state.selectedId,
+      }
+    }
     case "CLEAR":
       return {
         entities: [],
@@ -316,6 +329,10 @@ export function useEditorState() {
     dispatch({ type: "CLEAR" })
   }, [])
 
+  const removeEntitiesByZone = useCallback((zoneId: string) => {
+    dispatch({ type: "REMOVE_ENTITIES_BY_ZONE", zoneId })
+  }, [])
+
   return {
     ...state,
     addEntity,
@@ -327,6 +344,7 @@ export function useEditorState() {
     publishSuccess,
     loadEntities,
     clearAll,
+    removeEntitiesByZone,
     dispatch,
   }
 }

@@ -67,6 +67,16 @@ export async function updateZone(zoneId: string, data: Partial<Zone>): Promise<Z
   return res.json()
 }
 
+export async function deleteZone(zoneId: string): Promise<void> {
+  const res = await apiFetch(`/api/restaurants/zones/${zoneId}/`, {
+    method: "DELETE",
+  })
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}))
+    throw new Error(body.detail || "Failed to delete zone")
+  }
+}
+
 export async function fetchTables(restaurantId?: string): Promise<Table[]> {
   let url = "/api/restaurants/tables/"
   if (restaurantId) {

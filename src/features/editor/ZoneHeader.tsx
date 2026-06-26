@@ -7,9 +7,16 @@ interface ZoneHeaderProps {
   selectedZoneId: string | null
   onZoneSelect: (zoneId: string | null) => void
   onAddZone: (name: string) => Promise<void>
+  onDeleteZone?: (zoneId: string) => void
 }
 
-export function ZoneHeader({ zones, selectedZoneId, onZoneSelect, onAddZone }: ZoneHeaderProps) {
+export function ZoneHeader({
+  zones,
+  selectedZoneId,
+  onZoneSelect,
+  onAddZone,
+  onDeleteZone,
+}: ZoneHeaderProps) {
   const [adding, setAdding] = useState(false)
   const [inputValue, setInputValue] = useState("")
 
@@ -36,6 +43,26 @@ export function ZoneHeader({ zones, selectedZoneId, onZoneSelect, onAddZone }: Z
           onClick={() => onZoneSelect(z.public_id)}
         >
           {z.name.toUpperCase()}
+          {onDeleteZone && (
+            <span
+              className="editor-zone-header__delete"
+              role="button"
+              tabIndex={0}
+              onClick={(e) => {
+                e.stopPropagation()
+                onDeleteZone(z.public_id)
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.stopPropagation()
+                  onDeleteZone(z.public_id)
+                }
+              }}
+              title="Delete zone"
+            >
+              ×
+            </span>
+          )}
         </button>
       ))}
       {adding ? (

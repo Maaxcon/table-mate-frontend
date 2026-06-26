@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useAppSelector } from "@/store/hooks"
-import { fetchZones, updateZone } from "@/features/reservation/api"
+import { fetchZones, updateZone, deleteZone } from "@/features/reservation/api"
 import type { Zone } from "@/features/reservation/api"
 import { apiFetch } from "@/api/client"
 import { Toolbar } from "./Toolbar"
@@ -42,6 +42,7 @@ function FloorPlanSection() {
     publishSuccess,
     loadEntities,
     deletedServerIds,
+    removeEntitiesByZone,
     dispatch,
   } = useEditorState()
 
@@ -211,6 +212,23 @@ function FloorPlanSection() {
     [selectedZoneId],
   )
 
+  const handleDeleteZone = useCallback(
+    async (zoneId: string) => {
+      try {
+        await deleteZone(zoneId)
+        setZones((prev) => prev.filter((z) => z.public_id !== zoneId))
+        removeEntitiesByZone(zoneId)
+        if (selectedZoneId === zoneId) {
+          const remaining = zones.filter((z) => z.public_id !== zoneId)
+          setSelectedZoneId(remaining.length > 0 ? remaining[0].public_id : null)
+        }
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : "Failed to delete zone")
+      }
+    },
+    [selectedZoneId, zones, removeEntitiesByZone, toast],
+  )
+
   return (
     <div className="editor-page">
       <Toolbar
@@ -226,6 +244,7 @@ function FloorPlanSection() {
         selectedZoneId={selectedZoneId}
         onZoneSelect={setSelectedZoneId}
         onAddZone={handleAddZone}
+        onDeleteZone={handleDeleteZone}
       />
       <div className="editor-page__body">
         {noZones ? (
