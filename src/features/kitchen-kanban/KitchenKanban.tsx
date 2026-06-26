@@ -164,14 +164,21 @@ export function KitchenKanban() {
     [canManageTickets],
   )
 
-  const incoming = useMemo(() => tickets.filter((t) => t.status === "incoming"), [tickets])
-  const active = useMemo(() => tickets.filter((t) => t.status === "active"), [tickets])
+  const incoming = useMemo(
+    () => tickets.filter((t) => t.status === "incoming").sort((a, b) => a.startedAt - b.startedAt),
+    [tickets],
+  )
+  const active = useMemo(
+    () => tickets.filter((t) => t.status === "active").sort((a, b) => a.startedAt - b.startedAt),
+    [tickets],
+  )
 
   const batchCounts = useMemo<BatchCount[]>(() => {
     const counts = new Map<string, { label: string; count: number; color: string }>()
     for (const t of tickets) {
       if (t.status !== "active") continue
       for (const item of t.items) {
+        if (item.status === "ready") continue
         const key = item.name.toLowerCase()
         const existing = counts.get(key)
         if (existing) {
