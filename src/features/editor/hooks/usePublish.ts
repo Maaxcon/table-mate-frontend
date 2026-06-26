@@ -11,6 +11,7 @@ import type { LayoutVersion } from "@/types/api"
  */
 export interface PublishResult extends LayoutVersion {
   table_id_map?: Record<string, string>
+  public_number_map?: Record<string, string>
 }
 
 interface UsePublishOptions {

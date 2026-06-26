@@ -181,7 +181,7 @@ function FloorPlanSection() {
       publishingRef.current = false
       // Apply the new tables' server ids and snapshot the published state in one
       // atomic action so the editor doesn't end up falsely dirty.
-      publishSuccess(result?.table_id_map)
+      publishSuccess(result?.table_id_map, result?.public_number_map)
       setShowPublishModal(false)
     },
     onRollback: () => {

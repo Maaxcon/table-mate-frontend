@@ -34,7 +34,11 @@ type Action =
   | { type: "REMOVE_ENTITY"; id: string }
   | { type: "SELECT_ENTITY"; id: string | null }
   | { type: "SET_TOOL"; tool: string | null }
-  | { type: "PUBLISH_SUCCESS"; tableIdMap?: Record<string, string> }
+  | {
+      type: "PUBLISH_SUCCESS"
+      tableIdMap?: Record<string, string>
+      publicNumberMap?: Record<string, string>
+    }
   | { type: "PUBLISH_ROLLBACK"; previousState: EditorState }
   | { type: "SET_DIRTY"; dirty: boolean }
   | {
@@ -193,9 +197,19 @@ function editorReducer(state: EditorState, action: Action): EditorState {
       // `serverId || null`, so a snapshot taken before the ids land would differ
       // from state once they do.
       const map = action.tableIdMap
-      const entities = map
+      let entities = map
         ? state.entities.map((e) => (map[e.id] ? { ...e, serverId: map[e.id] } : e))
         : state.entities
+      // Apply public numbers from the publish response so tables without a
+      // user-entered label immediately show their server-assigned number.
+      const pnMap = action.publicNumberMap
+      if (pnMap) {
+        entities = entities.map((e) => {
+          const pn = pnMap[e.id]
+          if (pn) return { ...e, label: pn }
+          return e
+        })
+      }
       return {
         ...state,
         entities,
@@ -314,7 +328,8 @@ export function useEditorState() {
   }, [])
 
   const publishSuccess = useCallback(
-    (tableIdMap?: Record<string, string>) => dispatch({ type: "PUBLISH_SUCCESS", tableIdMap }),
+    (tableIdMap?: Record<string, string>, publicNumberMap?: Record<string, string>) =>
+      dispatch({ type: "PUBLISH_SUCCESS", tableIdMap, publicNumberMap }),
     [],
   )
 
