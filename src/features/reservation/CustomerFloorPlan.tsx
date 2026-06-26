@@ -18,18 +18,66 @@ interface CustomerFloorPlanProps {
 
 // Footprint reserved per table (table box + the seat ring around it), used to
 // size the canvas so scaling never clips a table or its chairs.
-const TABLE_FOOTPRINT = 184
+const TABLE_FOOTPRINT = 210
 // Breathing room kept between the tables and the canvas edges.
-const CANVAS_PADDING = 32
+const CANVAS_PADDING = 28
 
-// CSS transforms that arrange `capacity` chairs evenly around a table centre.
-function seatTransforms(capacity: number, shape: string): string[] {
+// Chairs arranged around a table. Round tables get an even ring; rectangular
+// ones seat guests along the top and bottom edges (banquet style) so the chairs
+// always sit right against the table regardless of its width/height.
+function TableSeats({ capacity, shape }: { capacity: number; shape: string }) {
   const n = Math.max(0, Math.min(capacity, 14))
-  const radius = shape === "round" ? 72 : 78
-  return Array.from(
-    { length: n },
-    (_, i) =>
-      `translate(-50%, -50%) rotate(${(360 / n) * i}deg) translateY(-${radius}px) rotate(${-(360 / n) * i}deg)`,
+
+  if (shape === "round") {
+    const radius = 82
+    return (
+      <span className="c-floor-plan__seats c-floor-plan__seats--ring" aria-hidden="true">
+        {Array.from({ length: n }, (_, i) => (
+          <span
+            key={i}
+            className="c-floor-plan__seat"
+            style={{
+              transform: `translate(-50%, -50%) rotate(${(360 / n) * i}deg) translateY(-${radius}px)`,
+            }}
+          />
+        ))}
+      </span>
+    )
+  }
+
+  // Square tables seat guests on all four sides for a balanced look; wider
+  // rectangles keep guests along the top and bottom edges.
+  let top: number
+  let bottom: number
+  let left = 0
+  let right = 0
+  if (shape === "square") {
+    const per = Math.floor(n / 4)
+    const counts = { top: per, bottom: per, left: per, right: per }
+    const order: (keyof typeof counts)[] = ["top", "bottom", "left", "right"]
+    for (let i = 0; i < n - per * 4; i++) counts[order[i]]++
+    ;({ top, bottom, left, right } = counts)
+  } else {
+    top = Math.ceil(n / 2)
+    bottom = n - top
+  }
+
+  const side = (cls: string, count: number) =>
+    count > 0 && (
+      <span className={`c-floor-plan__seats c-floor-plan__seats--${cls}`} aria-hidden="true">
+        {Array.from({ length: count }, (_, i) => (
+          <span key={i} className="c-floor-plan__seat" />
+        ))}
+      </span>
+    )
+
+  return (
+    <>
+      {side("top", top)}
+      {side("bottom", bottom)}
+      {side("left", left)}
+      {side("right", right)}
+    </>
   )
 }
 
@@ -158,25 +206,23 @@ export function CustomerFloorPlan({
                 }}
                 onClick={() => onSelect(table)}
               >
-                <span className="c-floor-plan__seats" aria-hidden="true">
-                  {seatTransforms(table.capacity, table.shape ?? "rectangle").map((tr, i) => (
-                    <span key={i} className="c-floor-plan__seat" style={{ transform: tr }} />
-                  ))}
-                </span>
+                <TableSeats capacity={table.capacity} shape={table.shape ?? "rectangle"} />
 
-                <span
-                  className={`c-floor-plan__table-badge c-floor-plan__table-badge--${visualStatus}`}
-                >
-                  {statusLabel[visualStatus] ?? visualStatus.toUpperCase()}
-                </span>
-
-                <span className="c-floor-plan__table-number">{table.table_number}</span>
-
-                <div className="c-floor-plan__table-meta">
-                  <span className="c-floor-plan__table-capacity">
-                    {bookStrings.floorPlan.seats(table.capacity)}
+                <span className="c-floor-plan__surface">
+                  <span
+                    className={`c-floor-plan__table-badge c-floor-plan__table-badge--${visualStatus}`}
+                  >
+                    {statusLabel[visualStatus] ?? visualStatus.toUpperCase()}
                   </span>
-                </div>
+
+                  <span className="c-floor-plan__table-number">{table.table_number}</span>
+
+                  <div className="c-floor-plan__table-meta">
+                    <span className="c-floor-plan__table-capacity">
+                      {bookStrings.floorPlan.seats(table.capacity)}
+                    </span>
+                  </div>
+                </span>
               </button>
             )
           })}

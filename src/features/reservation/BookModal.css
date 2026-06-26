@@ -242,6 +242,7 @@
 }
 
 .book-modal__duration-field {
+  box-sizing: border-box;
   width: 130px;
   padding: 11px 14px;
   border: 1.5px solid var(--color-border-default);
@@ -314,7 +315,9 @@
 
 /* Notes */
 .book-modal__notes {
+  box-sizing: border-box;
   width: 100%;
+  max-width: 100%;
   padding: 12px 14px;
   border: 1.5px solid var(--color-border-default);
   border-radius: 14px;
