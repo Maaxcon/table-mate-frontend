@@ -57,8 +57,8 @@ export const SIZE_CONSTRAINTS: Record<
   "table-square": { minW: 2, minH: 2, maxW: 8, maxH: 8 },
   "table-round": { minW: 2, minH: 2, maxW: 6, maxH: 6, lockAspect: true },
   obstacle: { minW: 1, minH: 1, maxW: 8, maxH: 8 },
-  threshold: { minW: 1, minH: 1, maxW: 8, maxH: 4 },
-  portal: { minW: 1, minH: 1, maxW: 4, maxH: 4 },
+  threshold: { minW: 1, minH: 1, maxW: 8, maxH: 8 },
+  portal: { minW: 1, minH: 1, maxW: 8, maxH: 8 },
 }
 
 export function generateId(): string {
