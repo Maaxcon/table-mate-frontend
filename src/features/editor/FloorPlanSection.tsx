@@ -7,6 +7,7 @@ import { Toolbar } from "./Toolbar"
 import { Canvas } from "./Canvas"
 import { PropertiesSidebar } from "./PropertiesSidebar"
 import { PublishConfirmModal } from "./PublishConfirmModal"
+import { ConfirmDeleteZoneModal } from "./ConfirmDeleteZoneModal"
 import { ZoneHeader } from "./ZoneHeader"
 import { useEditorState } from "./hooks/useEditorState"
 import type { EditorState } from "./hooks/useEditorState"
@@ -51,6 +52,8 @@ function FloorPlanSection() {
   const [zones, setZones] = useState<Zone[]>([])
   const [selectedZoneId, setSelectedZoneId] = useState<string | null>(null)
   const prePublishStateRef = useRef<EditorState | null>(null)
+  const [deleteZoneTarget, setDeleteZoneTarget] = useState<Zone | null>(null)
+  const [deleting, setDeleting] = useState(false)
   const toast = useToast()
 
   const selectedZone = useMemo(
@@ -196,6 +199,11 @@ function FloorPlanSection() {
     canvasRows,
   ])
 
+  const deleteZoneTableCount = deleteZoneTarget
+    ? entities.filter((e) => e.zoneId === deleteZoneTarget.public_id && e.type.startsWith("table-"))
+        .length
+    : 0
+
   const selectedEntity = visibleEntities.find((e) => e.id === selectedId) ?? null
 
   const handleCanvasClick = useCallback(
@@ -241,6 +249,7 @@ function FloorPlanSection() {
 
   const handleDeleteZone = useCallback(
     async (zoneId: string) => {
+      setDeleting(true)
       try {
         await deleteZone(zoneId)
         setZones((prev) => prev.filter((z) => z.public_id !== zoneId))
@@ -249,8 +258,11 @@ function FloorPlanSection() {
           const remaining = zones.filter((z) => z.public_id !== zoneId)
           setSelectedZoneId(remaining.length > 0 ? remaining[0].public_id : null)
         }
+        setDeleteZoneTarget(null)
       } catch (err) {
         toast.error(err instanceof Error ? err.message : "Failed to delete zone")
+      } finally {
+        setDeleting(false)
       }
     },
     [selectedZoneId, zones, removeEntitiesByZone, toast],
@@ -271,7 +283,10 @@ function FloorPlanSection() {
         selectedZoneId={selectedZoneId}
         onZoneSelect={setSelectedZoneId}
         onAddZone={handleAddZone}
-        onDeleteZone={handleDeleteZone}
+        onDeleteZone={(zoneId) => {
+          const zone = zones.find((z) => z.public_id === zoneId)
+          if (zone) setDeleteZoneTarget(zone)
+        }}
       />
       <div className="editor-page__body">
         {noZones ? (
@@ -312,6 +327,16 @@ function FloorPlanSection() {
           onConfirm={handlePublishConfirm}
           onClose={() => setShowPublishModal(false)}
           busy={publishing}
+        />
+      )}
+
+      {deleteZoneTarget && (
+        <ConfirmDeleteZoneModal
+          zoneName={deleteZoneTarget.name}
+          tableCount={deleteZoneTableCount}
+          onConfirm={() => handleDeleteZone(deleteZoneTarget.public_id)}
+          onClose={() => setDeleteZoneTarget(null)}
+          busy={deleting}
         />
       )}
     </div>

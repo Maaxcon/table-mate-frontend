@@ -236,6 +236,9 @@ export function WaiterOrderView() {
     onTableStatusChanged: refreshFloor,
     onNewReservation: refreshFloor,
     onReservationCancelled: refreshFloor,
+    onZoneCreated: refreshZones,
+    onZoneUpdated: refreshZones,
+    onZoneDeleted: refreshZones,
   })
 
   const buildOverlayDetail = async (

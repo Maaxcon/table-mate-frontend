@@ -172,6 +172,9 @@ export function BookingPage() {
     onNewReservation: handleNewReservation,
     onReservationCancelled: handleReservationCancelled,
     onLayoutPublished: handleLayoutPublished,
+    onZoneCreated: loadZones,
+    onZoneUpdated: loadZones,
+    onZoneDeleted: loadZones,
     restaurantPublicId: public_restaurant_id,
   })
 
