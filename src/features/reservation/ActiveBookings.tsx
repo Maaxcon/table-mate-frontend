@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useState } from "react"
+import { LuClock, LuPencil, LuUsers, LuX } from "react-icons/lu"
 import type { ReservationStatus, ReservationWithTable, WorkingHoursDay } from "./api"
 import { cancelReservation } from "./api"
 import { CancellationConfirmationModal } from "./CancellationConfirmationModal"
@@ -12,6 +13,15 @@ interface ActiveBookingsProps {
   workingHours: Record<string, WorkingHoursDay> | null
   timeZone: string | null
   onRefresh: () => void
+}
+
+function dateParts(iso: string) {
+  const d = new Date(iso)
+  return {
+    day: d.getDate(),
+    month: d.toLocaleDateString("uk-UA", { month: "short" }).replace(".", ""),
+    weekday: d.toLocaleDateString("uk-UA", { weekday: "short" }),
+  }
 }
 
 function formatDateTime(iso: string) {
@@ -135,68 +145,68 @@ export function ActiveBookings({
               {items.map((r) => {
                 const dt = formatDateTime(r.start_at)
                 const endDt = formatDateTime(r.end_at)
+                const dp = dateParts(r.start_at)
                 const isBusy = actionId === r.public_id
                 const phase = getTemporalPhase(r.start_at, r.end_at)
 
                 return (
-                  <div key={r.public_id} className="ab__card">
-                    <div className="ab__card-header">
-                      <span className="ab__card-table">
-                        {bookStrings.myBookings.card.table(r.table_info?.table_number ?? r.table)}
-                      </span>
-                      <span className={`ab__card-status ab__card-status--${statusKey}`}>
-                        {STATUS_LABELS[statusKey]}
-                      </span>
+                  <article key={r.public_id} className="ab__card">
+                    <div className={`ab__date ab__date--${statusKey}`}>
+                      <span className="ab__date-month">{dp.month}</span>
+                      <span className="ab__date-day">{dp.day}</span>
+                      <span className="ab__date-weekday">{dp.weekday}</span>
                     </div>
 
-                    <div className="ab__card-body">
-                      <div className="ab__card-row">
-                        <span className="ab__card-label">{bookStrings.myBookings.card.date}</span>
-                        <span className="ab__card-value">{dt.date}</span>
-                      </div>
-                      <div className="ab__card-row">
-                        <span className="ab__card-label">{bookStrings.myBookings.card.time}</span>
-                        <span className="ab__card-value">
-                          {dt.time} &ndash; {endDt.time}
+                    <div className="ab__card-main">
+                      <div className="ab__card-top">
+                        <span className="ab__card-table">
+                          {bookStrings.myBookings.card.table(r.table_info?.table_number ?? r.table)}
+                        </span>
+                        <span className={`ab__card-status ab__card-status--${statusKey}`}>
+                          {STATUS_LABELS[statusKey]}
                         </span>
                       </div>
-                      <div className="ab__card-row">
-                        <span className="ab__card-label">{bookStrings.myBookings.card.guests}</span>
-                        <span className="ab__card-value">{r.guest_count}</span>
+
+                      <div className="ab__card-meta">
+                        <span className="ab__meta">
+                          <LuClock aria-hidden="true" />
+                          {dt.time}&ndash;{endDt.time}
+                        </span>
+                        <span className="ab__meta">
+                          <LuUsers aria-hidden="true" />
+                          {r.guest_count}
+                        </span>
+                        {phase !== "past" && statusKey === "active" && (
+                          <span className="ab__meta ab__meta--phase">{PHASE_LABELS[phase]}</span>
+                        )}
                       </div>
-                      {phase !== "past" && statusKey === "active" && (
-                        <div className="ab__card-row">
-                          <span className="ab__card-label">
-                            {bookStrings.myBookings.card.phase}
-                          </span>
-                          <span className="ab__card-value">{PHASE_LABELS[phase]}</span>
+
+                      {canModify && (
+                        <div className="ab__card-actions">
+                          <button
+                            className="ab__action ab__action--edit"
+                            onClick={() => setRescheduleTarget(r)}
+                            disabled={isBusy}
+                            type="button"
+                          >
+                            <LuPencil aria-hidden="true" />
+                            {bookStrings.myBookings.actions.modify}
+                          </button>
+                          <button
+                            className="ab__action ab__action--cancel"
+                            onClick={() => setCancelTarget(r)}
+                            disabled={isBusy}
+                            type="button"
+                          >
+                            <LuX aria-hidden="true" />
+                            {isBusy
+                              ? bookStrings.myBookings.actions.cancelling
+                              : bookStrings.myBookings.actions.cancel}
+                          </button>
                         </div>
                       )}
                     </div>
-
-                    {canModify && (
-                      <div className="ab__card-actions">
-                        <button
-                          className="ab__action ab__action--edit"
-                          onClick={() => setRescheduleTarget(r)}
-                          disabled={isBusy}
-                          type="button"
-                        >
-                          {bookStrings.myBookings.actions.modify}
-                        </button>
-                        <button
-                          className={["ab__action", "ab__action--cancel"].filter(Boolean).join(" ")}
-                          onClick={() => setCancelTarget(r)}
-                          disabled={isBusy}
-                          type="button"
-                        >
-                          {isBusy
-                            ? bookStrings.myBookings.actions.cancelling
-                            : bookStrings.myBookings.actions.cancel}
-                        </button>
-                      </div>
-                    )}
-                  </div>
+                  </article>
                 )
               })}
             </div>

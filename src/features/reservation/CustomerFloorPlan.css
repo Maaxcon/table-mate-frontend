@@ -194,7 +194,7 @@
 }
 
 .c-floor-plan__seats--right {
-  left: calc(100% -1 3px);
+  left: calc(100% - 3px);
 }
 
 /* A chair seen from above: a rounded seat with a taller backrest, plus a seat
