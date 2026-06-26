@@ -1,5 +1,4 @@
 import { apiFetch } from "@/api/client"
-import type { Reservation } from "@/types/api"
 import type { Table } from "@/types/api/types.gen"
 import type { UpcomingReservation } from "@/features/waiter-order-view/data/waiterTypes"
 
@@ -110,6 +109,9 @@ export async function fetchAvailableSlots(
   return res.json() as Promise<Record<string, string[]>>
 }
 
+// There is no dedicated public endpoint for upcoming reservations yet, so we
+// piggyback on the floor-layout payload and pull the field out. Worth a proper
+// endpoint if the badges ever need their own filtering/pagination.
 export async function fetchUpcomingReservations(
   restaurantId?: string,
 ): Promise<UpcomingReservation[]> {
@@ -184,60 +186,4 @@ export async function modifyReservation(
     throw new Error((body as { detail?: string }).detail ?? "Failed to modify reservation")
   }
   return res.json() as Promise<ReservationWithTable>
-}
-
-export async function createStaffReservation(data: {
-  table: string
-  guest_count: number
-  start_at: string
-  end_at: string
-  guest_name: string
-  guest_phone?: string
-  notes?: string
-}): Promise<ReservationWithTable> {
-  const res = await apiFetch("/api/reservations/reservations/", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  })
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}))
-    throw new Error(extractErrorMessage(body, "Failed to create reservation"))
-  }
-  return res.json() as Promise<ReservationWithTable>
-}
-
-export async function moveTable(reservationId: string, tableId: string): Promise<void> {
-  const res = await apiFetch(`/api/reservations/reservations/${reservationId}/move-table/`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ table_id: tableId }),
-  })
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}))
-    throw new Error((body as { detail?: string }).detail ?? "Failed to move table")
-  }
-}
-
-export async function closeCheck(reservationId: string): Promise<void> {
-  const res = await apiFetch(`/api/reservations/reservations/${reservationId}/close-check/`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-  })
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}))
-    throw new Error((body as { detail?: string }).detail ?? "Failed to close check")
-  }
-}
-
-export async function activateReservation(reservationId: string): Promise<Reservation> {
-  const res = await apiFetch(`/api/reservations/reservations/${reservationId}/activate/`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-  })
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}))
-    throw new Error((body as { detail?: string }).detail ?? "Failed to activate reservation")
-  }
-  return res.json() as Promise<Reservation>
 }
