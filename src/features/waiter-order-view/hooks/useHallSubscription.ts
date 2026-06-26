@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from "react"
+import { useEffect, useRef, useCallback, useState } from "react"
 import { env } from "@/config/env"
 import { useAppSelector } from "@/store/hooks"
 
@@ -43,8 +43,8 @@ export interface HallLayoutPublishedEvent {
   event_name: "LAYOUT_PUBLISHED"
   schema_version: string
   event_id: string
-  layout_version_id: number
-  restaurant_id: number
+  layout_version_public_id: string
+  restaurant_public_id: string
   occurred_at: string
 }
 
@@ -72,6 +72,7 @@ export function useHallSubscription({
   onClose,
 }: UseHallSubscriptionOptions) {
   const accessToken = useAppSelector((state) => state.auth.accessToken)
+  const [isConnected, setIsConnected] = useState(false)
   const wsRef = useRef<WebSocket | null>(null)
   const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const connectRef = useRef<(() => void) | undefined>(undefined)
@@ -112,6 +113,7 @@ export function useHallSubscription({
 
     ws.onopen = () => {
       console.debug("[HallWS] Connected")
+      setIsConnected(true)
     }
 
     ws.onmessage = (event) => {
@@ -133,12 +135,14 @@ export function useHallSubscription({
 
     ws.onerror = (event) => {
       console.error("[HallWS] Error:", event)
+      setIsConnected(false)
       callbacksRef.current.onError?.(event)
     }
 
     ws.onclose = (event) => {
       console.debug("[HallWS] Disconnected:", event.code, event.reason)
       wsRef.current = null
+      setIsConnected(false)
       callbacksRef.current.onClose?.()
 
       if (event.code !== 1000 && tokenRef.current) {
@@ -179,5 +183,5 @@ export function useHallSubscription({
     }
   }, [])
 
-  return { disconnect }
+  return { disconnect, isConnected }
 }

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from "react"
+import { useEffect, useRef, useCallback, useState } from "react"
 import { env } from "@/config/env"
 
 export interface FloorTableStatusEvent {
@@ -25,8 +25,8 @@ export interface FloorReservationCancelledEvent {
 
 export interface FloorLayoutPublishedEvent {
   event_name: "LAYOUT_PUBLISHED"
-  layout_version_id: number
-  restaurant_id: number
+  layout_version_public_id: string
+  restaurant_public_id: string
   occurred_at: string
 }
 
@@ -54,6 +54,7 @@ export function useFloorSubscription({
   onError,
   restaurantPublicId,
 }: UseFloorSubscriptionOptions & { restaurantPublicId?: string }) {
+  const [isConnected, setIsConnected] = useState(false)
   const wsRef = useRef<WebSocket | null>(null)
   const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const connectRef = useRef<(() => void) | undefined>(undefined)
@@ -97,6 +98,7 @@ export function useFloorSubscription({
 
     ws.onopen = () => {
       console.debug("[FloorWS] Connected")
+      setIsConnected(true)
     }
 
     ws.onmessage = (event) => {
@@ -118,12 +120,14 @@ export function useFloorSubscription({
 
     ws.onerror = (error) => {
       console.error("[FloorWS] Error:", error)
+      setIsConnected(false)
       callbacksRef.current.onError?.(error)
     }
 
     ws.onclose = (event) => {
       console.debug("[FloorWS] Disconnected:", event.code, event.reason)
       wsRef.current = null
+      setIsConnected(false)
       callbacksRef.current.onClose?.()
 
       if (event.code !== 1000) {
@@ -155,5 +159,5 @@ export function useFloorSubscription({
     }
   }, [])
 
-  return { disconnect }
+  return { disconnect, isConnected }
 }
