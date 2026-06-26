@@ -48,17 +48,49 @@ export interface HallLayoutPublishedEvent {
   occurred_at: string
 }
 
+export interface HallZoneCreatedEvent {
+  event_name: "ZONE_CREATED"
+  schema_version: string
+  event_id: string
+  zone_public_id: string
+  zone_name: string
+  occurred_at: string
+}
+
+export interface HallZoneUpdatedEvent {
+  event_name: "ZONE_UPDATED"
+  schema_version: string
+  event_id: string
+  zone_public_id: string
+  zone_name: string
+  occurred_at: string
+}
+
+export interface HallZoneDeletedEvent {
+  event_name: "ZONE_DELETED"
+  schema_version: string
+  event_id: string
+  zone_public_id: string
+  occurred_at: string
+}
+
 export type HallEvent =
   | HallTableStatusChangedEvent
   | HallNewReservationEvent
   | HallReservationCancelledEvent
   | HallLayoutPublishedEvent
+  | HallZoneCreatedEvent
+  | HallZoneUpdatedEvent
+  | HallZoneDeletedEvent
 
 interface UseHallSubscriptionOptions {
   onTableStatusChanged?: (event: HallTableStatusChangedEvent) => void
   onNewReservation?: (event: HallNewReservationEvent) => void
   onReservationCancelled?: (event: HallReservationCancelledEvent) => void
   onLayoutPublished?: (event: HallLayoutPublishedEvent) => void
+  onZoneCreated?: (event: HallZoneCreatedEvent) => void
+  onZoneUpdated?: (event: HallZoneUpdatedEvent) => void
+  onZoneDeleted?: (event: HallZoneDeletedEvent) => void
   onError?: (error: Event) => void
   onClose?: () => void
 }
@@ -68,6 +100,9 @@ export function useHallSubscription({
   onNewReservation,
   onReservationCancelled,
   onLayoutPublished,
+  onZoneCreated,
+  onZoneUpdated,
+  onZoneDeleted,
   onError,
   onClose,
 }: UseHallSubscriptionOptions) {
@@ -83,6 +118,9 @@ export function useHallSubscription({
     onNewReservation,
     onReservationCancelled,
     onLayoutPublished,
+    onZoneCreated,
+    onZoneUpdated,
+    onZoneDeleted,
     onError,
     onClose,
   })
@@ -93,6 +131,9 @@ export function useHallSubscription({
       onNewReservation,
       onReservationCancelled,
       onLayoutPublished,
+      onZoneCreated,
+      onZoneUpdated,
+      onZoneDeleted,
       onError,
       onClose,
     }
@@ -101,6 +142,9 @@ export function useHallSubscription({
     onNewReservation,
     onReservationCancelled,
     onLayoutPublished,
+    onZoneCreated,
+    onZoneUpdated,
+    onZoneDeleted,
     onError,
     onClose,
   ])
@@ -127,6 +171,12 @@ export function useHallSubscription({
           callbacksRef.current.onReservationCancelled?.(data)
         } else if (data.event_name === "LAYOUT_PUBLISHED") {
           callbacksRef.current.onLayoutPublished?.(data)
+        } else if (data.event_name === "ZONE_CREATED") {
+          callbacksRef.current.onZoneCreated?.(data)
+        } else if (data.event_name === "ZONE_UPDATED") {
+          callbacksRef.current.onZoneUpdated?.(data)
+        } else if (data.event_name === "ZONE_DELETED") {
+          callbacksRef.current.onZoneDeleted?.(data)
         }
       } catch (err) {
         console.error("[HallWS] Failed to parse message:", err)
