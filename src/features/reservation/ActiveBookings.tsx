@@ -3,6 +3,7 @@ import type { ReservationStatus, ReservationWithTable, WorkingHoursDay } from ".
 import { cancelReservation } from "./api"
 import { CancellationConfirmationModal } from "./CancellationConfirmationModal"
 import { RescheduleModal } from "./RescheduleModal"
+import { bookStrings } from "./strings"
 import "./ActiveBookings.css"
 
 interface ActiveBookingsProps {
@@ -15,7 +16,7 @@ interface ActiveBookingsProps {
 function formatDateTime(iso: string) {
   const d = new Date(iso)
   return {
-    date: d.toLocaleDateString("en-US", {
+    date: d.toLocaleDateString("uk-UA", {
       weekday: "short",
       month: "short",
       day: "numeric",
@@ -36,20 +37,11 @@ function getTemporalPhase(startAt: string, endAt: string): TemporalPhase {
   return "past"
 }
 
-const PHASE_LABELS: Record<TemporalPhase, string> = {
-  upcoming: "UPCOMING",
-  in_progress: "IN PROGRESS",
-  past: "PAST",
-}
+const PHASE_LABELS: Record<TemporalPhase, string> = bookStrings.myBookings.phase
 
 const STATUS_ORDER: ReservationStatus[] = ["pending", "active"]
 
-const STATUS_LABELS: Record<ReservationStatus, string> = {
-  pending: "PENDING",
-  active: "ACTIVE",
-  completed: "COMPLETED",
-  cancelled: "CANCELLED",
-}
+const STATUS_LABELS: Record<ReservationStatus, string> = bookStrings.myBookings.status
 
 export function ActiveBookings({
   reservations,
@@ -71,7 +63,7 @@ export function ActiveBookings({
       setCancelTarget(null)
       onRefresh()
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to cancel")
+      setError(err instanceof Error ? err.message : bookStrings.myBookings.cancelFailed)
     } finally {
       setActionId(null)
     }
@@ -90,16 +82,16 @@ export function ActiveBookings({
   const hasItems = Object.keys(byStatus).length > 0
 
   if (loading) {
-    return <div className="ab__loading">LOADING...</div>
+    return <div className="ab__loading">{bookStrings.loading}</div>
   }
 
   return (
     <div className="ab">
-      <h2 className="ab__title">MY BOOKINGS</h2>
+      <h2 className="ab__title">{bookStrings.myBookings.title}</h2>
 
       {error && <p className="ab__error">{error}</p>}
 
-      {!hasItems && <p className="ab__empty">No bookings yet.</p>}
+      {!hasItems && <p className="ab__empty">{bookStrings.myBookings.empty}</p>}
 
       {rescheduleTarget && (
         <RescheduleModal
@@ -147,7 +139,7 @@ export function ActiveBookings({
                   <div key={r.public_id} className="ab__card">
                     <div className="ab__card-header">
                       <span className="ab__card-table">
-                        TABLE {r.table_info?.table_number ?? r.table}
+                        {bookStrings.myBookings.card.table(r.table_info?.table_number ?? r.table)}
                       </span>
                       <span className={`ab__card-status ab__card-status--${statusKey}`}>
                         {STATUS_LABELS[statusKey]}
@@ -156,22 +148,24 @@ export function ActiveBookings({
 
                     <div className="ab__card-body">
                       <div className="ab__card-row">
-                        <span className="ab__card-label">Date</span>
+                        <span className="ab__card-label">{bookStrings.myBookings.card.date}</span>
                         <span className="ab__card-value">{dt.date}</span>
                       </div>
                       <div className="ab__card-row">
-                        <span className="ab__card-label">Time</span>
+                        <span className="ab__card-label">{bookStrings.myBookings.card.time}</span>
                         <span className="ab__card-value">
                           {dt.time} &ndash; {endDt.time}
                         </span>
                       </div>
                       <div className="ab__card-row">
-                        <span className="ab__card-label">Guests</span>
+                        <span className="ab__card-label">{bookStrings.myBookings.card.guests}</span>
                         <span className="ab__card-value">{r.guest_count}</span>
                       </div>
                       {phase !== "past" && statusKey === "active" && (
                         <div className="ab__card-row">
-                          <span className="ab__card-label">Phase</span>
+                          <span className="ab__card-label">
+                            {bookStrings.myBookings.card.phase}
+                          </span>
                           <span className="ab__card-value">{PHASE_LABELS[phase]}</span>
                         </div>
                       )}
@@ -185,7 +179,7 @@ export function ActiveBookings({
                           disabled={isBusy}
                           type="button"
                         >
-                          MODIFY
+                          {bookStrings.myBookings.actions.modify}
                         </button>
                         <button
                           className={["ab__action", "ab__action--cancel"].filter(Boolean).join(" ")}
@@ -193,7 +187,9 @@ export function ActiveBookings({
                           disabled={isBusy}
                           type="button"
                         >
-                          {isBusy ? "CANCELLING..." : "CANCEL"}
+                          {isBusy
+                            ? bookStrings.myBookings.actions.cancelling
+                            : bookStrings.myBookings.actions.cancel}
                         </button>
                       </div>
                     )}

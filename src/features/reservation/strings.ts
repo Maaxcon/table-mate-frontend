@@ -69,4 +69,40 @@ export const bookStrings = {
     },
     createFailed: "Не вдалося створити бронь",
   },
+  myBookings: {
+    title: "Мої броні",
+    empty: "Броней поки немає.",
+    cancelFailed: "Не вдалося скасувати",
+    status: {
+      pending: "Очікує",
+      active: "Активна",
+      completed: "Завершена",
+      cancelled: "Скасована",
+    },
+    phase: {
+      upcoming: "Незабаром",
+      in_progress: "Триває",
+      past: "Минула",
+    },
+    card: {
+      table: (table: string) => `Стіл ${table}`,
+      date: "Дата",
+      time: "Час",
+      guests: "Гості",
+      phase: "Стан",
+    },
+    actions: {
+      modify: "Змінити",
+      cancel: "Скасувати",
+      cancelling: "Скасування…",
+    },
+  },
+  cancel: {
+    title: "Скасувати бронь?",
+    message: "Ви впевнені, що хочете скасувати цю бронь?",
+    close: "Закрити",
+    keep: "Залишити",
+    confirm: "Скасувати бронь",
+    submitting: "Скасування…",
+  },
 } as const
