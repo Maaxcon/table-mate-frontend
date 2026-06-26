@@ -20,14 +20,17 @@
   letter-spacing: 0.04em;
 }
 
-.c-floor-plan__canvas {
+.c-floor-plan__viewport {
   position: relative;
-  flex: 1;
-  min-height: 680px;
-  min-width: 680px;
+  width: 100%;
+  overflow: hidden;
   border: 2px solid var(--color-border-default);
   background: var(--color-bg-surface);
-  overflow: auto;
+}
+
+.c-floor-plan__canvas {
+  position: relative;
+  transform-origin: top left;
 }
 
 .c-floor-plan__table {
