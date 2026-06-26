@@ -71,6 +71,10 @@ function renderDrawer(overrides: Overrides = {}) {
     onClose: vi.fn(),
     onClearError: vi.fn(),
     onCheckout: vi.fn<() => Promise<CheckoutResult>>(),
+    billItems: [],
+    billLoading: false,
+    onLoadBill: vi.fn(),
+    onPayBill: vi.fn<(ids: string[]) => Promise<void>>().mockResolvedValue(undefined),
     onCartChanged: vi.fn(),
     ...overrides,
   }
@@ -255,5 +259,139 @@ describe("CartDrawer checkout state machine", () => {
 
     expect(screen.queryByTitle(S.connected)).not.toBeInTheDocument()
     expect(screen.queryByTitle(S.disconnected)).not.toBeInTheDocument()
+  })
+
+  it("opens the bill and loads ordered items when Pay is tapped", async () => {
+    const user = userEvent.setup()
+    const onLoadBill = vi.fn()
+    renderDrawer({ onLoadBill })
+
+    await user.click(screen.getByRole("tab", { name: S.billTitle }))
+
+    expect(onLoadBill).toHaveBeenCalledTimes(1)
+    expect(screen.getByText(S.billNoneToPay)).toBeInTheDocument()
+  })
+
+  it("pays the selected ordered items by their order-item ids", async () => {
+    const user = userEvent.setup()
+    const onPayBill = vi.fn<(ids: string[]) => Promise<void>>().mockResolvedValue(undefined)
+    const billItems = [
+      {
+        id: "oi-1",
+        name: "Pizza",
+        guest_slot: 1,
+        quantity: 1,
+        payable: "34.50",
+        is_paid: false,
+      },
+      {
+        id: "oi-2",
+        name: "Tea",
+        guest_slot: 1,
+        quantity: 2,
+        payable: "23.00",
+        is_paid: false,
+      },
+    ]
+    renderDrawer({ billItems, onPayBill })
+
+    await user.click(screen.getByRole("tab", { name: S.billTitle }))
+    await user.click(screen.getByRole("button", { name: /Pizza/ }))
+    await user.click(screen.getByRole("button", { name: new RegExp(`^${S.pay}`) }))
+
+    expect(onPayBill).toHaveBeenCalledWith(["oi-1"])
+  })
+
+  it("surfaces an error and keeps the selection when payment fails", async () => {
+    const user = userEvent.setup()
+    const onPayBill = vi.fn<(ids: string[]) => Promise<void>>().mockRejectedValue(new Error("boom"))
+    const billItems = [
+      {
+        id: "oi-1",
+        name: "Pizza",
+        guest_slot: 1,
+        quantity: 1,
+        payable: "34.50",
+        is_paid: false,
+      },
+    ]
+    renderDrawer({ billItems, onPayBill })
+
+    await user.click(screen.getByRole("tab", { name: S.billTitle }))
+    await user.click(screen.getByRole("button", { name: /Pizza/ }))
+    await user.click(screen.getByRole("button", { name: new RegExp(`^${S.pay}`) }))
+
+    // The failure is surfaced...
+    expect(await screen.findByRole("alert")).toHaveTextContent(S.payError)
+    // ...and the button is re-enabled, with the selection kept, so a retry
+    // re-sends the same id (the BE pay is idempotent).
+    const retry = screen.getByRole("button", { name: new RegExp(`^${S.pay}`) })
+    expect(retry).toBeEnabled()
+    await user.click(retry)
+    expect(onPayBill).toHaveBeenCalledTimes(2)
+    expect(onPayBill).toHaveBeenNthCalledWith(2, ["oi-1"])
+  })
+
+  it("exposes accessible bill controls (progressbar, select-all, tabpanel)", async () => {
+    const user = userEvent.setup()
+    const billItems = [
+      {
+        id: "oi-1",
+        name: "Pizza",
+        guest_slot: 1,
+        quantity: 1,
+        payable: "34.50",
+        is_paid: false,
+      },
+      {
+        id: "oi-2",
+        name: "Tea",
+        guest_slot: 1,
+        quantity: 1,
+        payable: "11.50",
+        is_paid: true,
+      },
+    ]
+    renderDrawer({ billItems })
+    await user.click(screen.getByRole("tab", { name: S.billTitle }))
+
+    // Progressbar has an accessible name and explicit bounds.
+    const progress = screen.getByRole("progressbar", { name: S.billProgressLabel })
+    expect(progress).toHaveAttribute("aria-valuemin", "0")
+    expect(progress).toHaveAttribute("aria-valuemax", "100")
+
+    // "Select all" is a toggle button, consistent with the per-item pay buttons.
+    const selectAll = screen.getByRole("button", { name: S.billSelectAll })
+    expect(selectAll).toHaveAttribute("aria-pressed", "false")
+    await user.click(selectAll)
+    expect(selectAll).toHaveAttribute("aria-pressed", "true")
+
+    // The bill tab is wired to a tabpanel.
+    expect(screen.getByRole("tab", { name: S.billTitle })).toHaveAttribute(
+      "aria-controls",
+      "cart-drawer-panel-bill",
+    )
+    expect(screen.getByRole("tabpanel")).toHaveAttribute("aria-labelledby", "cart-drawer-tab-bill")
+  })
+
+  it("sums the bill on payable (tax + service), not goods-only total_price", async () => {
+    const user = userEvent.setup()
+    const billItems = [
+      {
+        id: "oi-1",
+        name: "Pizza",
+        guest_slot: 1,
+        quantity: 1,
+        payable: "34.50",
+        is_paid: false,
+      },
+    ]
+    renderDrawer({ billItems })
+    await user.click(screen.getByRole("tab", { name: S.billTitle }))
+
+    // The bill shows the full payable (34.50), reconciling with the receipt —
+    // not the goods-only subtotal (30.00).
+    expect(screen.getAllByText(new RegExp(formatAmount(34.5))).length).toBeGreaterThan(0)
+    expect(screen.queryByText(new RegExp(formatAmount(30)))).not.toBeInTheDocument()
   })
 })

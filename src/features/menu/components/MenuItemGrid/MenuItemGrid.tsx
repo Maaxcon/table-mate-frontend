@@ -27,9 +27,10 @@ function MenuItemGrid({
 }: MenuItemGridProps) {
   return (
     <div className="menu-page__grid">
-      {items.map((item) => (
+      {items.map((item, index) => (
         <MenuItemCard
           key={item.public_id}
+          index={index}
           item={item}
           currencySymbol={currencySymbol}
           onClick={onSelect}

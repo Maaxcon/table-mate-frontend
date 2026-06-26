@@ -1,5 +1,6 @@
 import { Fragment, type ReactElement } from "react"
 import { Link } from "react-router-dom"
+import { LuCalendarCheck } from "react-icons/lu"
 import logo from "@/assets/logo.png"
 import type { AuthUser } from "@/store/auth/authSlice"
 import type { PublicRestaurantSettings } from "@/features/menu/types"
@@ -66,7 +67,8 @@ function MenuHeader({
         <div className="menu-page__topbar-right">
           {restaurantId && (
             <Link to={`/${restaurantId}/book`} className="menu-page__book-btn">
-              {menuStrings.header.book}
+              <LuCalendarCheck size={16} aria-hidden="true" />
+              <span>{menuStrings.header.book}</span>
             </Link>
           )}
           {user ? (
