@@ -3,6 +3,7 @@ import type { Table } from "@/types/api/types.gen"
 import type { FloorTable, UpcomingReservation } from "@/features/waiter-order-view/data/waiterTypes"
 import { getTableVisualStatus } from "@/features/waiter-order-view/data/waiterTypes"
 import type { Zone } from "@/features/reservation/api"
+import { bookStrings } from "@/features/reservation/strings"
 import "./CustomerFloorPlan.css"
 
 interface CustomerFloorPlanProps {
@@ -62,11 +63,7 @@ export function CustomerFloorPlan({
 
   const scale = viewportWidth > 0 ? Math.min(1, viewportWidth / contentWidth) : 1
 
-  const statusLabel: Record<string, string> = {
-    free: "FREE",
-    reserved: "RESERVED",
-    occupied: "OCCUPIED",
-  }
+  const statusLabel: Record<string, string> = { ...bookStrings.floorPlan.status }
 
   const floorTables: FloorTable[] = tables.map((t) => ({
     public_id: t.public_id,
@@ -82,7 +79,7 @@ export function CustomerFloorPlan({
 
   return (
     <div className="c-floor-plan">
-      <h2 className="c-floor-plan__title">FLOOR PLAN</h2>
+      <h2 className="c-floor-plan__title">{bookStrings.floorPlan.title}</h2>
       {zones.length > 1 && (
         <div className="c-floor-plan__zones">
           {zones.map((z) => (
@@ -140,7 +137,9 @@ export function CustomerFloorPlan({
                 <span className="c-floor-plan__table-number">{table.table_number}</span>
 
                 <div className="c-floor-plan__table-meta">
-                  <span className="c-floor-plan__table-capacity">{table.capacity} P</span>
+                  <span className="c-floor-plan__table-capacity">
+                    {bookStrings.floorPlan.seats(table.capacity)}
+                  </span>
                 </div>
               </button>
             )

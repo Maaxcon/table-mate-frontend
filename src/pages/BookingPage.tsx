@@ -5,6 +5,7 @@ import { ActiveBookings } from "@/features/reservation/ActiveBookings"
 import { BookModal } from "@/features/reservation/BookModal"
 import { CustomerFloorPlan } from "@/features/reservation/CustomerFloorPlan"
 import { LoginCtaModal } from "@/features/reservation/LoginCtaModal"
+import { bookStrings } from "@/features/reservation/strings"
 import { useBookingData } from "@/features/reservation/hooks/useBookingData"
 import { useFloorSubscription } from "@/features/reservation/hooks/useFloorSubscription"
 import type {
@@ -116,7 +117,7 @@ export function BookingPage() {
             .join(" ")}
           onClick={() => setTab("floor")}
         >
-          FLOOR PLAN
+          {bookStrings.tabs.floor}
         </button>
         {isAuthenticated && (
           <button
@@ -126,7 +127,7 @@ export function BookingPage() {
               .join(" ")}
             onClick={() => setTab("bookings")}
           >
-            MY BOOKINGS
+            {bookStrings.tabs.bookings}
           </button>
         )}
       </div>
@@ -134,12 +135,12 @@ export function BookingPage() {
       <div className="bp__content">
         {tab === "floor" &&
           (tablesLoading ? (
-            <p className="bp__loading">Loading…</p>
+            <p className="bp__loading">{bookStrings.loading}</p>
           ) : tablesError ? (
             <div className="bp__error" role="alert">
-              <p className="bp__error-text">Couldn't load the floor plan.</p>
+              <p className="bp__error-text">{bookStrings.errors.floor}</p>
               <button type="button" className="bp__retry" onClick={reloadTables}>
-                Try again
+                {bookStrings.retry}
               </button>
             </div>
           ) : (
@@ -158,9 +159,9 @@ export function BookingPage() {
           isAuthenticated &&
           (reservationsError ? (
             <div className="bp__error" role="alert">
-              <p className="bp__error-text">Couldn't load your bookings.</p>
+              <p className="bp__error-text">{bookStrings.errors.bookings}</p>
               <button type="button" className="bp__retry" onClick={reloadReservations}>
-                Try again
+                {bookStrings.retry}
               </button>
             </div>
           ) : (

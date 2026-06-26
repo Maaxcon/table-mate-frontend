@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react"
 import type { Table } from "@/types/api/types.gen"
 import type { WorkingHoursDay } from "./api"
 import { createReservation, fetchAvailableSlots } from "./api"
+import { bookStrings } from "./strings"
 import {
   DAY_NAMES,
   generateTimeSlots,
@@ -104,7 +105,7 @@ export function BookModal({ table, workingHours, timeZone, onClose, onSuccess }:
       const openMins = timeToMinutes(dayConfig.open)
       const overnight = closeMins <= openMins
       if (!overnight && endMins > closeMins) {
-        return `End time exceeds closing time (${dayConfig.close})`
+        return bookStrings.modal.validation.closingExceeded(dayConfig.close)
       }
     }
 
@@ -115,7 +116,7 @@ export function BookModal({ table, workingHours, timeZone, onClose, onSuccess }:
         for (let m = startMins; m < endMins; m += 30) {
           const slotTime = minutesToTime(m)
           if (!slots.includes(slotTime)) {
-            return "The selected duration is not fully available at this time. Choose a shorter duration or different start time."
+            return bookStrings.modal.validation.durationUnavailable
           }
         }
       }
@@ -156,7 +157,7 @@ export function BookModal({ table, workingHours, timeZone, onClose, onSuccess }:
         guests: guestCount,
       })
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create reservation")
+      setError(err instanceof Error ? err.message : bookStrings.modal.createFailed)
       // Someone may have just taken this slot; refresh so the grid reflects it.
       setSelectedTime(null)
       setSlotsLoading(true)
@@ -198,7 +199,7 @@ export function BookModal({ table, workingHours, timeZone, onClose, onSuccess }:
       >
         <div className="book-modal">
           <div className="book-modal__header">
-            <h2 className="book-modal__title">BOOKING CONFIRMED</h2>
+            <h2 className="book-modal__title">{bookStrings.modal.confirmedTitle}</h2>
             <button
               className="book-modal__close"
               onClick={() => {
@@ -213,21 +214,21 @@ export function BookModal({ table, workingHours, timeZone, onClose, onSuccess }:
           <div className="book-modal__body">
             <div className="book-modal__success-icon">&#10003;</div>
             <p className="book-modal__success-text">
-              Your reservation at Table {success.tableNumber} has been created.
+              {bookStrings.modal.success(success.tableNumber)}
             </p>
             <div className="book-modal__summary">
               <div className="book-modal__summary-row">
-                <span>Date</span>
+                <span>{bookStrings.modal.summary.date}</span>
                 <span>{success.date}</span>
               </div>
               <div className="book-modal__summary-row">
-                <span>Time</span>
+                <span>{bookStrings.modal.summary.time}</span>
                 <span>
                   {success.time} &ndash; {success.endTime}
                 </span>
               </div>
               <div className="book-modal__summary-row">
-                <span>Guests</span>
+                <span>{bookStrings.modal.summary.guests}</span>
                 <span>{success.guests}</span>
               </div>
             </div>
@@ -241,7 +242,7 @@ export function BookModal({ table, workingHours, timeZone, onClose, onSuccess }:
               }}
               type="button"
             >
-              OK
+              {bookStrings.modal.actions.ok}
             </button>
           </div>
         </div>
@@ -263,7 +264,7 @@ export function BookModal({ table, workingHours, timeZone, onClose, onSuccess }:
     >
       <div className="book-modal">
         <div className="book-modal__header">
-          <h2 className="book-modal__title">BOOK TABLE {table.table_number}</h2>
+          <h2 className="book-modal__title">{bookStrings.modal.title(table.table_number)}</h2>
           <button className="book-modal__close" onClick={onClose} type="button">
             &times;
           </button>
@@ -271,7 +272,7 @@ export function BookModal({ table, workingHours, timeZone, onClose, onSuccess }:
 
         <div className="book-modal__body">
           <section className="book-modal__section">
-            <h3 className="book-modal__section-title">DATE</h3>
+            <h3 className="book-modal__section-title">{bookStrings.modal.sections.date}</h3>
             <div className="book-modal__dates">
               {dates.map((d) => {
                 const isActive =
@@ -305,10 +306,12 @@ export function BookModal({ table, workingHours, timeZone, onClose, onSuccess }:
                     disabled={isGrayed}
                   >
                     <span className="book-modal__date-day">
-                      {d.toLocaleDateString("en-US", { weekday: "short" }).toUpperCase()}
+                      {d.toLocaleDateString("uk-UA", { weekday: "short" })}
                     </span>
                     <span className="book-modal__date-num">{d.getDate()}</span>
-                    {isToday && <span className="book-modal__date-today">TODAY</span>}
+                    {isToday && (
+                      <span className="book-modal__date-today">{bookStrings.modal.today}</span>
+                    )}
                   </button>
                 )
               })}
@@ -316,18 +319,16 @@ export function BookModal({ table, workingHours, timeZone, onClose, onSuccess }:
           </section>
 
           <section className="book-modal__section">
-            <h3 className="book-modal__section-title">TIME</h3>
+            <h3 className="book-modal__section-title">{bookStrings.modal.sections.time}</h3>
             {foreignTzNote && (
-              <p className="book-modal__tz-note">
-                Times are shown in restaurant time ({foreignTzNote})
-              </p>
+              <p className="book-modal__tz-note">{bookStrings.modal.tzNote(foreignTzNote)}</p>
             )}
             {slotsLoading ? (
-              <p className="book-modal__empty">Loading available slots…</p>
+              <p className="book-modal__empty">{bookStrings.modal.slots.loading}</p>
             ) : !dayConfig ? (
-              <p className="book-modal__empty">Restaurant closed on this day</p>
+              <p className="book-modal__empty">{bookStrings.modal.slots.closed}</p>
             ) : timeSlots.length === 0 ? (
-              <p className="book-modal__empty">No available slots</p>
+              <p className="book-modal__empty">{bookStrings.modal.slots.none}</p>
             ) : (
               <div className="book-modal__times">
                 {timeSlots.map((t) => (
@@ -350,7 +351,7 @@ export function BookModal({ table, workingHours, timeZone, onClose, onSuccess }:
           </section>
 
           <section className="book-modal__section">
-            <h3 className="book-modal__section-title">DURATION (minutes)</h3>
+            <h3 className="book-modal__section-title">{bookStrings.modal.sections.duration}</h3>
             <div className="book-modal__duration-input">
               <input
                 type="number"
@@ -365,7 +366,7 @@ export function BookModal({ table, workingHours, timeZone, onClose, onSuccess }:
           </section>
 
           <section className="book-modal__section">
-            <h3 className="book-modal__section-title">GUESTS</h3>
+            <h3 className="book-modal__section-title">{bookStrings.modal.sections.guests}</h3>
             <div className="book-modal__guests">
               <button
                 type="button"
@@ -388,10 +389,10 @@ export function BookModal({ table, workingHours, timeZone, onClose, onSuccess }:
           </section>
 
           <section className="book-modal__section">
-            <h3 className="book-modal__section-title">NOTES (optional)</h3>
+            <h3 className="book-modal__section-title">{bookStrings.modal.sections.notes}</h3>
             <textarea
               className="book-modal__notes"
-              placeholder="Guest name, phone number, special requests..."
+              placeholder={bookStrings.modal.notesPlaceholder}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={3}
@@ -400,16 +401,18 @@ export function BookModal({ table, workingHours, timeZone, onClose, onSuccess }:
 
           {selectedTime && (
             <section className="book-modal__section book-modal__section--summary">
-              <h3 className="book-modal__section-title">CONFIRMATION</h3>
+              <h3 className="book-modal__section-title">
+                {bookStrings.modal.sections.confirmation}
+              </h3>
               <div className="book-modal__summary">
                 <div className="book-modal__summary-row">
-                  <span>Table</span>
+                  <span>{bookStrings.modal.summary.table}</span>
                   <span>#{table.table_number}</span>
                 </div>
                 <div className="book-modal__summary-row">
-                  <span>Date</span>
+                  <span>{bookStrings.modal.summary.date}</span>
                   <span>
-                    {selectedDate.toLocaleDateString("en-US", {
+                    {selectedDate.toLocaleDateString("uk-UA", {
                       weekday: "short",
                       month: "short",
                       day: "numeric",
@@ -418,17 +421,19 @@ export function BookModal({ table, workingHours, timeZone, onClose, onSuccess }:
                   </span>
                 </div>
                 <div className="book-modal__summary-row">
-                  <span>Time</span>
+                  <span>{bookStrings.modal.summary.time}</span>
                   <span>
                     {selectedTime} &ndash; {endAt}
                   </span>
                 </div>
                 <div className="book-modal__summary-row">
-                  <span>Duration</span>
-                  <span>{durationMinutes} min</span>
+                  <span>{bookStrings.modal.summary.duration}</span>
+                  <span>
+                    {durationMinutes} {bookStrings.modal.durationUnit}
+                  </span>
                 </div>
                 <div className="book-modal__summary-row">
-                  <span>Guests</span>
+                  <span>{bookStrings.modal.summary.guests}</span>
                   <span>{guestCount}</span>
                 </div>
               </div>
@@ -444,7 +449,7 @@ export function BookModal({ table, workingHours, timeZone, onClose, onSuccess }:
             onClick={onClose}
             type="button"
           >
-            CANCEL
+            {bookStrings.modal.actions.cancel}
           </button>
           <button
             className="book-modal__btn book-modal__btn--confirm"
@@ -452,7 +457,7 @@ export function BookModal({ table, workingHours, timeZone, onClose, onSuccess }:
             disabled={!selectedTime || submitting || !!durationError}
             type="button"
           >
-            {submitting ? "BOOKING..." : "CONFIRM BOOKING"}
+            {submitting ? bookStrings.modal.actions.submitting : bookStrings.modal.actions.confirm}
           </button>
         </div>
       </div>

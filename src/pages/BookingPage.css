@@ -17,6 +17,7 @@
   background: none;
   font-size: 14px;
   font-weight: 600;
+  text-transform: uppercase;
   color: var(--color-text-muted);
   cursor: pointer;
   border-bottom: 2px solid transparent;
