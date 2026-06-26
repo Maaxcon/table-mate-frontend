@@ -167,7 +167,7 @@ export function BookingPage() {
     loadZones()
   }, [loadTables, loadZones])
 
-  useFloorSubscription({
+  const { isConnected } = useFloorSubscription({
     onTableStatusChanged: handleTableStatusChanged,
     onNewReservation: handleNewReservation,
     onReservationCancelled: handleReservationCancelled,
@@ -198,6 +198,11 @@ export function BookingPage() {
             MY BOOKINGS
           </button>
         )}
+        <span
+          className={`bp__connection ${isConnected ? "bp__connection--connected" : ""}`}
+          role="status"
+          aria-label={isConnected ? "Connected" : "Disconnected"}
+        />
       </div>
 
       <div className="bp__content">

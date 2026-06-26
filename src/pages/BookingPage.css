@@ -43,6 +43,20 @@
   overflow-y: auto;
 }
 
+.bp__connection {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #dc2626;
+  flex-shrink: 0;
+  align-self: center;
+  margin-left: auto;
+}
+
+.bp__connection--connected {
+  background: #16a34a;
+}
+
 .bp__loading {
   text-align: center;
   color: var(--color-text-muted, #888);
