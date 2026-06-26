@@ -98,7 +98,7 @@ function useMenuItems(
     const load = () => {
       dispatch({ type: "LOADING" })
       const promise = isSearching
-        ? searchItems(restaurantId, searchQuery.trim(), guestToken, signal)
+        ? searchItems(restaurantId, searchQuery.trim(), guestToken, signal, undefined, sortOrder)
         : fetchItems({
             restaurantId,
             categoryId: activeCategory ?? undefined,

@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { type TouchEvent, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useParams, useSearchParams } from "react-router-dom"
-import { LuArrowDownUp, LuShoppingCart } from "react-icons/lu"
+import { LuArrowDown, LuArrowDownUp, LuLoaderCircle, LuShoppingCart, LuX } from "react-icons/lu"
 import { apiFetch } from "@/api/client"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
 import { clearAuth } from "@/store/auth/authSlice"
@@ -16,6 +16,7 @@ import {
   RestaurantInfoPanel,
 } from "@/features/menu/components"
 import { checkout } from "@/features/menu/api"
+import { useBill } from "@/features/menu/hooks/useBill"
 import { useCart } from "@/features/menu/hooks/useCart"
 import { useCartSocket } from "@/features/menu/hooks/useCartSocket"
 import { useGuestAuth } from "@/features/menu/hooks/useGuestAuth"
@@ -33,10 +34,13 @@ function MenuPage() {
   const tableId = searchParams.get("table") ?? undefined
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null)
   const [cartOpen, setCartOpen] = useState(false)
+  const [cartBarDismissed, setCartBarDismissed] = useState(false)
   const [cartAccessError, setCartAccessError] = useState<string | null>(null)
   const [scrollActiveCategory, setScrollActiveCategory] = useState<string | null>(null)
+  const pendingScrollCategory = useRef<string | null>(null)
   const [lobbyName, setLobbyName] = useState("")
   const sectionRefs = useRef<Map<string, HTMLElement>>(new Map())
+  const stickyControlsRef = useRef<HTMLDivElement>(null)
   const user = useAppSelector((s) => s.auth.user)
   const dispatch = useAppDispatch()
 
@@ -107,9 +111,17 @@ function MenuPage() {
     onAuthError: guestAuth.initialize,
   })
 
+  const bill = useBill({
+    cartSessionId: guestAuth.cartSessionId,
+    guestJwt: guestAuth.guestJwt,
+  })
+  const refreshBill = bill.refresh
+
+  // A cart_updated push can mean another guest just paid, so refresh the bill too.
   const handleCartUpdated = useCallback(() => {
     syncFromServer()
-  }, [syncFromServer])
+    refreshBill()
+  }, [syncFromServer, refreshBill])
 
   // Destructure the stable fields so the callback deps are these values, not
   // the whole guestAuth object (which is a fresh object every render).
@@ -124,7 +136,7 @@ function MenuPage() {
     return result
   }, [cartSessionId, guestJwt, reinitGuestCart])
 
-  const { isConnected } = useCartSocket({
+  const { isConnected, sessionExpired } = useCartSocket({
     cartSessionId: guestAuth.cartSessionId,
     guestJwt: guestAuth.guestJwt,
     onCartUpdated: handleCartUpdated,
@@ -164,7 +176,11 @@ function MenuPage() {
     handleLiked,
   )
 
-  const showAllGrouped = activeCategory === null && !searchQuery
+  // Group by category only in the default order. A price sort is global, so the
+  // first page holds the cheapest items and whole (e.g. seafood) categories would
+  // render empty until more pages load — making dishes look "deleted". When
+  // sorting by price we show one flat, price-ordered list instead.
+  const showAllGrouped = activeCategory === null && !searchQuery && sortOrder === "sort_order"
 
   const groupedItems = useMemo(() => {
     if (!showAllGrouped || categories.length === 0) return null
@@ -210,17 +226,44 @@ function MenuPage() {
     return () => observer.disconnect()
   }, [groupedItems])
 
+  const scrollToCategory = useCallback((id: string) => {
+    const el = sectionRefs.current.get(id)
+    if (!el) return false
+    el.scrollIntoView({ behavior: "smooth", block: "start" })
+    return true
+  }, [])
+
   const handleCategorySelect = (id: string | null) => {
     if (id === null) {
       setActiveCategory(null)
       setScrollActiveCategory(null)
+      pendingScrollCategory.current = null
     } else if (showAllGrouped) {
-      const el = sectionRefs.current.get(id)
-      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" })
+      // The section may not be rendered yet because its items are still
+      // behind pagination. If so, remember it and load more until it appears.
+      if (!scrollToCategory(id)) {
+        pendingScrollCategory.current = id
+        if (hasMore && !loadingMore) loadMore()
+      }
     } else {
       setActiveCategory(id)
     }
   }
+
+  // Keep loading pages until the pending category's section exists, then scroll.
+  // Each page load updates groupedItems, which re-runs this effect.
+  useEffect(() => {
+    const target = pendingScrollCategory.current
+    if (!target) return
+    const catItems = groupedItems?.get(target)
+    if (catItems && catItems.length > 0 && scrollToCategory(target)) {
+      pendingScrollCategory.current = null
+    } else if (hasMore) {
+      if (!loadingMore) loadMore()
+    } else {
+      pendingScrollCategory.current = null
+    }
+  }, [groupedItems, hasMore, loadingMore, loadMore, scrollToCategory])
 
   const handleAddToCart = useCallback(
     (item: MenuItem, comment?: string) => {
@@ -253,14 +296,79 @@ function MenuPage() {
     ],
   )
 
+  // Keep the latest cart in a ref so handleChangeQuantity stays referentially
+  // stable across quantity changes — otherwise every +/- would rebuild it and
+  // re-render every (memoized) card.
+  const cartItemsRef = useRef(cartItems)
+  useEffect(() => {
+    cartItemsRef.current = cartItems
+  }, [cartItems])
+
   const handleChangeQuantity = useCallback(
     (itemId: string, delta: number) => {
-      const cartItem = cartItems.find((ci) => ci.menuItemId === itemId || ci.id === itemId)
+      const cartItem = cartItemsRef.current.find(
+        (ci) => ci.menuItemId === itemId || ci.id === itemId,
+      )
       if (!cartItem) return
       changeQuantity(cartItem.id, delta)
     },
-    [cartItems, changeQuantity],
+    [changeQuantity],
   )
+
+  // The cart bar can be dismissed (swipe down / ✕). Bring it back when the cart
+  // grows again so a new item is never hidden.
+  const prevTotalCount = useRef(totalCount)
+  useEffect(() => {
+    if (totalCount > prevTotalCount.current) setCartBarDismissed(false)
+    prevTotalCount.current = totalCount
+  }, [totalCount])
+
+  const cartBarTouchStartY = useRef<number | null>(null)
+  // A swipe ends in a synthesized click; this flag lets onClick ignore it so a
+  // dismiss gesture doesn't also open the cart.
+  const cartBarSwiped = useRef(false)
+  const handleCartBarTouchStart = (e: TouchEvent) => {
+    cartBarTouchStartY.current = e.touches[0].clientY
+  }
+  const handleCartBarTouchEnd = (e: TouchEvent) => {
+    const start = cartBarTouchStartY.current
+    cartBarTouchStartY.current = null
+    if (start !== null && e.changedTouches[0].clientY - start > 40) {
+      cartBarSwiped.current = true
+      setCartBarDismissed(true)
+    }
+  }
+  const handleCartBarClick = () => {
+    if (cartBarSwiped.current) {
+      cartBarSwiped.current = false
+      return
+    }
+    setCartOpen(true)
+  }
+
+  const showCartBar = totalCount > 0 && !cartBarDismissed
+
+  // The swipe sets cartBarSwiped to suppress the trailing synthetic click. When
+  // the swipe dismisses the bar, it unmounts before that click arrives, so the
+  // flag stays set and would swallow the first real tap after the bar returns.
+  // Clear it whenever the bar reappears.
+  useEffect(() => {
+    if (showCartBar) cartBarSwiped.current = false
+  }, [showCartBar])
+
+  // The controls row (search/sort/cart/categories) is sticky at the top. Expose
+  // its live height so the sticky "About" panel can sit right below it instead
+  // of being covered.
+  useEffect(() => {
+    const el = stickyControlsRef.current
+    if (!el) return
+    const update = () =>
+      document.documentElement.style.setProperty("--menu-sticky-h", `${el.offsetHeight}px`)
+    update()
+    const observer = new ResizeObserver(update)
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
 
   const railActiveCategory = showAllGrouped ? scrollActiveCategory : activeCategory
   const currencySymbol = restaurantSettings ? getCurrencySymbol(restaurantSettings.currency) : ""
@@ -294,13 +402,30 @@ function MenuPage() {
   }
 
   const loadMoreButton = hasMore ? (
-    <button className="menu-page__load-more" onClick={loadMore} disabled={loadingMore}>
-      {loadingMore ? menuStrings.grid.loadingMore : menuStrings.grid.loadMore}
-    </button>
+    <div className="menu-page__load-more-wrap">
+      <button
+        className="menu-page__load-more"
+        onClick={loadMore}
+        disabled={loadingMore}
+        aria-busy={loadingMore}
+      >
+        {loadingMore ? (
+          <>
+            <LuLoaderCircle className="menu-page__load-more-spinner" size={16} aria-hidden="true" />
+            {menuStrings.grid.loadingMore}
+          </>
+        ) : (
+          <>
+            {menuStrings.grid.loadMore}
+            <LuArrowDown size={15} aria-hidden="true" />
+          </>
+        )}
+      </button>
+    </div>
   ) : null
 
   return (
-    <main className={`menu-page${totalCount > 0 ? " menu-page--has-cart-bar" : ""}`}>
+    <main className={`menu-page${showCartBar ? " menu-page--has-cart-bar" : ""}`}>
       <MenuHeader
         name={restaurantName}
         coverImage={restaurantCoverImage}
@@ -310,7 +435,7 @@ function MenuPage() {
         onSignOut={handleSignOut}
       />
 
-      <div className="menu-page__sticky-controls">
+      <div className="menu-page__sticky-controls" ref={stickyControlsRef}>
         <div className="menu-page__searchrow">
           <input
             className="menu-page__search"
@@ -354,7 +479,11 @@ function MenuPage() {
             aria-label={menuStrings.controls.cartAria}
           >
             <LuShoppingCart size={18} />
-            {totalCount > 0 && <span className="menu-page__cart-badge">{totalCount}</span>}
+            {totalCount > 0 && (
+              <span key={totalCount} className="menu-page__cart-badge">
+                {totalCount}
+              </span>
+            )}
           </button>
         </div>
         <CategoryRail
@@ -413,8 +542,12 @@ function MenuPage() {
           address={restaurantAddress}
           phone={restaurantPhone}
           settings={restaurantSettings}
+          telegramUrl={restaurantTelegramUrl}
+          facebookUrl={restaurantFacebookUrl}
         />
       </div>
+
+      <MenuFooter restaurantName={restaurantName} />
 
       {selectedItem && (
         <MenuItemModal
@@ -425,15 +558,34 @@ function MenuPage() {
         />
       )}
 
-      {totalCount > 0 && !selectedItem && (
-        <button
+      {showCartBar && !selectedItem && (
+        <div
           className="menu-page__cart-bar"
-          onClick={() => setCartOpen(true)}
-          aria-label={menuStrings.cartBar.openAria}
+          onTouchStart={handleCartBarTouchStart}
+          onTouchEnd={handleCartBarTouchEnd}
         >
-          <span className="menu-page__cart-bar-summary">{`${totalCount} items · ${totalPriceLabel} ${currencySymbol}`}</span>
-          <span className="menu-page__cart-bar-action">{menuStrings.cartBar.action}</span>
-        </button>
+          <span className="menu-page__cart-bar-grabber" aria-hidden="true" />
+          <button
+            type="button"
+            className="menu-page__cart-bar-open"
+            onClick={handleCartBarClick}
+            aria-label={menuStrings.cartBar.openAria}
+          >
+            <span className="menu-page__cart-bar-summary">{`${menuStrings.cartBar.items(totalCount)} · ${totalPriceLabel} ${currencySymbol}`}</span>
+            <span className="menu-page__cart-bar-action">{menuStrings.cartBar.action}</span>
+          </button>
+          <button
+            type="button"
+            className="menu-page__cart-bar-close"
+            onClick={(e) => {
+              e.stopPropagation()
+              setCartBarDismissed(true)
+            }}
+            aria-label={menuStrings.cartBar.dismiss}
+          >
+            <LuX size={16} />
+          </button>
+        </div>
       )}
 
       {/* ── Lobby modal ── */}
@@ -483,6 +635,7 @@ function MenuPage() {
           totalPrice={totalPrice}
           currencySymbol={currencySymbol}
           isConnected={isConnected}
+          sessionExpired={sessionExpired}
           showConnectionStatus={Boolean(guestAuth.cartSessionId && guestAuth.guestJwt)}
           error={cartAccessError ?? cartError}
           errorItemId={errorItemId}
@@ -496,11 +649,13 @@ function MenuPage() {
           }}
           onRetry={cartAccessError ? guestAuth.initialize : syncFromServer}
           onCheckout={handleCheckout}
+          billItems={bill.items}
+          billLoading={bill.loading}
+          onLoadBill={bill.refresh}
+          onPayBill={bill.pay}
           onCartChanged={syncFromServer}
         />
       )}
-
-      <MenuFooter telegramUrl={restaurantTelegramUrl} facebookUrl={restaurantFacebookUrl} />
     </main>
   )
 }
