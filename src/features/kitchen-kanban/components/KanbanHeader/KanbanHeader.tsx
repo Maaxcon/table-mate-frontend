@@ -1,3 +1,4 @@
+import "./KanbanHeader.css"
 import { Link } from "react-router-dom"
 import { LuFlame } from "react-icons/lu"
 

@@ -1,3 +1,4 @@
+import "./KanbanFooter.css"
 import { LuMoon, LuSun, LuTimer } from "react-icons/lu"
 import { useTheme } from "@/hooks/useTheme"
 

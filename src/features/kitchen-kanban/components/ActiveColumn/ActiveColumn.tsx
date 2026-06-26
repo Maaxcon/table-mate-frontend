@@ -1,7 +1,8 @@
 import type { CSSProperties } from "react"
 import { LuCircleCheck } from "react-icons/lu"
-import type { KanbanTicket } from "../types"
-import { elapsedMinutes, timerUrgencyClass } from "../utils"
+import "./ActiveColumn.css"
+import type { KanbanTicket } from "../../types"
+import { elapsedMinutes, timerUrgencyClass } from "../../utils"
 
 interface ActiveColumnProps {
   tickets: KanbanTicket[]

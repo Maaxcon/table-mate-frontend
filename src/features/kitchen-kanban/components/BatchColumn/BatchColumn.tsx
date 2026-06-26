@@ -1,6 +1,7 @@
+import "./BatchColumn.css"
 import type { CSSProperties } from "react"
 import { LuLayoutGrid } from "react-icons/lu"
-import type { BatchCount } from "../types"
+import type { BatchCount } from "../../types"
 
 interface BatchColumnProps {
   batches: BatchCount[]

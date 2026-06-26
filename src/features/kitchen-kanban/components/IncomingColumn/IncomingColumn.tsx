@@ -1,6 +1,7 @@
+import "./IncomingColumn.css"
 import type { CSSProperties } from "react"
-import type { KanbanTicket } from "../types"
-import { elapsedMinutes, timerUrgencyClass } from "../utils"
+import type { KanbanTicket } from "../../types"
+import { elapsedMinutes, timerUrgencyClass } from "../../utils"
 
 interface IncomingColumnProps {
   tickets: KanbanTicket[]

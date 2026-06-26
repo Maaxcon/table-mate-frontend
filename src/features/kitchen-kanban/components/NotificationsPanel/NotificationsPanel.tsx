@@ -1,3 +1,4 @@
+import "./NotificationsPanel.css"
 import { useNotificationStream } from "@/features/notification-stream/hooks/useNotificationStream"
 
 function formatTime(date: Date): string {

@@ -1,5 +1,6 @@
+import "./CompletedColumn.css"
 import { LuCheck } from "react-icons/lu"
-import type { KanbanTicket } from "../types"
+import type { KanbanTicket } from "../../types"
 
 interface CompletedColumnProps {
   tickets: KanbanTicket[]

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest"
 import { render, screen } from "@testing-library/react"
 import { ActiveColumn } from "./ActiveColumn"
-import type { KanbanTicket } from "../types"
+import type { KanbanTicket } from "../../types"
 
 function makeTicket(overrides: Partial<KanbanTicket> = {}): KanbanTicket {
   return {
