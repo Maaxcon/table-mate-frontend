@@ -145,6 +145,7 @@ export function serializeEntities(entities: EditorEntity[]): object {
       tables.push({
         ...base,
         id: e.serverId || null,
+        _client_id: e.id,
         public_number: e.label ?? "",
         shape: e.type === "table-round" ? "round" : "square",
         capacity: e.capacity ?? 4,
