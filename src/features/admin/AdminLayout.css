@@ -16,6 +16,7 @@
   position: sticky;
   top: 0;
   height: 100vh;
+  box-sizing: border-box;
 }
 
 .admin-layout__brand {
@@ -77,6 +78,13 @@
   border-top: 1px solid var(--color-border-default);
 }
 
+.admin-layout__logout-error {
+  flex-basis: 100%;
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: var(--color-error-text);
+}
+
 .admin-layout__user {
   font-size: 13px;
   color: var(--color-text-secondary);
@@ -106,6 +114,10 @@
 .admin-layout__content {
   padding: 28px 32px;
   overflow-y: auto;
+}
+
+.admin-layout__content--flush {
+  padding: 0;
 }
 
 /* Mobile: sidebar becomes a top bar with horizontal nav */
@@ -153,5 +165,9 @@
 
   .admin-layout__content {
     padding: 20px 16px;
+  }
+
+  .admin-layout__content--flush {
+    padding: 0;
   }
 }

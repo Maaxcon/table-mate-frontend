@@ -50,9 +50,20 @@ export type PublicRestaurant = {
 
 // ── Cart API types ─────────────────────────────────────
 
+// A self-contained snapshot of the ordered menu item, so a cart line can render
+// without the menu item being present in the currently browsed/sorted list.
+export type CartMenuItemSnapshot = {
+  id: string
+  name: string
+  price: string
+  image: string | null
+  is_available: boolean
+}
+
 export type CartItemResponse = {
   readonly public_id: string
   menu_item: string
+  menu_item_detail?: CartMenuItemSnapshot
   quantity: number
   comment: string | null
   added_by: string | null

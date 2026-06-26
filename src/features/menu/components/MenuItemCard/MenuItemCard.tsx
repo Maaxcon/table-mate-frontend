@@ -1,3 +1,4 @@
+import { memo } from "react"
 import { LuHeart, LuMinus, LuPlus } from "react-icons/lu"
 import type { MenuItem } from "@/features/menu/types"
 import { formatPrice } from "@/features/menu/utils"
@@ -14,6 +15,7 @@ type MenuItemCardProps = {
   cartQuantity?: number
   likePending?: boolean
   pending?: boolean
+  index?: number
 }
 
 function MenuItemCard({
@@ -26,6 +28,7 @@ function MenuItemCard({
   cartQuantity = 0,
   likePending = false,
   pending = false,
+  index = 0,
 }: MenuItemCardProps) {
   const handleAdd = (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -52,6 +55,7 @@ function MenuItemCard({
   return (
     <div
       className={`menu-item-card${!item.is_available ? " menu-item-card--unavailable" : ""}`}
+      style={{ "--card-index": index } as React.CSSProperties}
       role="button"
       tabIndex={0}
       onClick={() => onClick(item)}
@@ -150,4 +154,6 @@ function MenuItemCard({
   )
 }
 
-export default MenuItemCard
+// Memoized: with stable handlers and per-card primitive props, only the cards
+// whose item/quantity/like/pending actually changed re-render.
+export default memo(MenuItemCard)

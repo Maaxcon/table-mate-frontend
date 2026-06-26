@@ -1,28 +1,38 @@
 .guest-access {
-  width: min(100%, 760px);
+  width: 100%;
   display: grid;
   justify-items: center;
-  gap: 14px;
+  gap: 10px;
   animation: guest-fade-up 540ms ease both;
   animation-delay: 140ms;
 }
 
 .guest-access__button {
   width: 100%;
-  min-height: 56px;
-  border-radius: 0;
-  background: var(--color-bg-surface);
-  border-color: var(--color-border-default);
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  min-height: 50px;
+  border-radius: 12px;
+  background: var(--auth-surface);
+  border: 1px solid var(--auth-surface-border);
+  color: var(--auth-text);
+  font-size: 0.98rem;
+  font-weight: 500;
+  transition:
+    background-color 140ms ease,
+    border-color 140ms ease;
+}
+
+.guest-access__button:hover {
+  background: var(--auth-surface-hover);
+  border-color: var(--auth-surface-border-hover);
 }
 
 .guest-access__note {
   margin: 0;
   text-align: center;
-  color: var(--color-text-muted);
-  max-width: 500px;
+  color: var(--auth-text-muted);
+  max-width: 300px;
   line-height: 1.45;
+  font-size: 0.78rem;
 }
 
 @keyframes guest-fade-up {

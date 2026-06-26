@@ -9,7 +9,12 @@ import {
   LuWifiOff,
   LuX,
 } from "react-icons/lu"
-import { CartChangedError, type CheckoutResult, type RemovedItem } from "@/features/menu/api"
+import {
+  CartChangedError,
+  type BillItem,
+  type CheckoutResult,
+  type RemovedItem,
+} from "@/features/menu/api"
 import type { CartItemWithDetails } from "@/features/menu/hooks/useCart"
 import { formatAmount } from "@/features/menu/utils"
 import { menuStrings } from "@/features/menu/strings"
@@ -21,6 +26,7 @@ type Props = {
   currencySymbol: string
   isConnected: boolean
   showConnectionStatus?: boolean
+  sessionExpired?: boolean
   error: string | null
   errorItemId: string | null
   displayName: string
@@ -30,6 +36,10 @@ type Props = {
   onClearError: () => void
   onRetry?: () => void
   onCheckout: () => Promise<CheckoutResult>
+  billItems: BillItem[]
+  billLoading: boolean
+  onLoadBill: () => void
+  onPayBill: (orderItemIds: string[]) => Promise<void>
   onCartChanged?: () => void
 }
 
@@ -80,6 +90,7 @@ export function CartDrawer({
   currencySymbol,
   isConnected,
   showConnectionStatus = true,
+  sessionExpired = false,
   error,
   errorItemId,
   displayName,
@@ -89,14 +100,21 @@ export function CartDrawer({
   onClearError,
   onRetry,
   onCheckout,
+  billItems,
+  billLoading,
+  onLoadBill,
+  onPayBill,
   onCartChanged,
 }: Props) {
-  const [step, setStep] = useState<"cart" | "confirming" | "confirmed" | "changed">("cart")
+  const [step, setStep] = useState<"cart" | "confirming" | "confirmed" | "changed" | "bill">("cart")
   const [confirmedItems, setConfirmedItems] = useState<CartItemWithDetails[]>([])
   const [confirmedTotals, setConfirmedTotals] = useState<ReceiptTotals>(EMPTY_TOTALS)
   const [submitting, setSubmitting] = useState(false)
   const [removedItems, setRemovedItems] = useState<RemovedItem[]>([])
   const [submitError, setSubmitError] = useState<string | null>(null)
+  const [selectedToPay, setSelectedToPay] = useState<Set<string>>(new Set())
+  const [paying, setPaying] = useState(false)
+  const [payError, setPayError] = useState<string | null>(null)
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -166,6 +184,53 @@ export function CartDrawer({
     setStep("confirming")
   }
 
+  // The bill is the already-ordered items; only unpaid ones are payable.
+  const payableBill = billItems.filter((b) => !b.is_paid)
+  const paidBill = billItems.filter((b) => b.is_paid)
+  const selectedBill = payableBill.filter((b) => selectedToPay.has(b.id))
+  const selectedTotal = selectedBill.reduce((s, b) => s + (parseFloat(b.payable) || 0), 0)
+  const allBillSelected = payableBill.length > 0 && selectedBill.length === payableBill.length
+  const billGroups = groupBillByGuest(payableBill)
+  const unpaidTotal = payableBill.reduce((s, b) => s + (parseFloat(b.payable) || 0), 0)
+  const paidTotal = paidBill.reduce((s, b) => s + (parseFloat(b.payable) || 0), 0)
+  const billGrandTotal = unpaidTotal + paidTotal
+  const paidPct = billGrandTotal > 0 ? Math.round((paidTotal / billGrandTotal) * 100) : 0
+
+  const openBill = () => {
+    setSelectedToPay(new Set())
+    setStep("bill")
+    onLoadBill()
+  }
+
+  const toggleSelected = (id: string) => {
+    setSelectedToPay((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  const toggleSelectAll = () => {
+    setSelectedToPay(allBillSelected ? new Set() : new Set(payableBill.map((b) => b.id)))
+  }
+
+  const handlePay = async () => {
+    if (paying || selectedBill.length === 0) return
+    setPaying(true)
+    setPayError(null)
+    try {
+      await onPayBill(selectedBill.map((b) => b.id))
+      setSelectedToPay(new Set())
+    } catch {
+      // Money action: surface the failure and keep the selection so the guest
+      // can retry. The BE pay is idempotent, so re-submitting is safe.
+      setPayError(menuStrings.cart.payError)
+    } finally {
+      setPaying(false)
+    }
+  }
+
   const totalCount = items.reduce((s, i) => s + i.quantity, 0)
 
   const groups = groupItemsByGuest(items)
@@ -206,13 +271,51 @@ export function CartDrawer({
           </div>
         </div>
 
+        {/* ── Cart / Bill tabs ── */}
+        {(step === "cart" || step === "bill") && (
+          <div className="cart-drawer__tabs" role="tablist">
+            <button
+              id="cart-drawer-tab-cart"
+              className={`cart-drawer__tab${step === "cart" ? " cart-drawer__tab--active" : ""}`}
+              role="tab"
+              aria-selected={step === "cart"}
+              aria-controls="cart-drawer-panel-cart"
+              onClick={goToCart}
+            >
+              {menuStrings.cart.title}
+            </button>
+            <button
+              id="cart-drawer-tab-bill"
+              className={`cart-drawer__tab${step === "bill" ? " cart-drawer__tab--active" : ""}`}
+              role="tab"
+              aria-selected={step === "bill"}
+              aria-controls="cart-drawer-panel-bill"
+              onClick={openBill}
+            >
+              {menuStrings.cart.billTitle}
+            </button>
+          </div>
+        )}
+
+        {/* ── Session-expired notice: the socket gave up refreshing the guest
+            token, so live cart sync is dead until the table is re-opened. ── */}
+        {sessionExpired && (
+          <div className="cart-drawer__toast" role="alert">
+            <span className="cart-drawer__toast-text">{menuStrings.cart.sessionExpired}</span>
+          </div>
+        )}
+
         {/* ── Error toast ── */}
         {error && (
           <div className="cart-drawer__toast" role="alert">
             <span className="cart-drawer__toast-text">{error}</span>
-            {onRetry && (
+            {onRetry ? (
               <button className="cart-drawer__toast-action" onClick={onRetry}>
                 {menuStrings.cart.retry}
+              </button>
+            ) : (
+              <button className="cart-drawer__toast-action" onClick={onClearError}>
+                {menuStrings.cart.close}
               </button>
             )}
           </div>
@@ -346,6 +449,176 @@ export function CartDrawer({
               {menuStrings.cart.close}
             </button>
           </div>
+        ) : step === "bill" ? (
+          /* ── Bill: pick items to pay (simulated) ── */
+          <>
+            <div
+              className="cart-drawer__bill"
+              id="cart-drawer-panel-bill"
+              role="tabpanel"
+              aria-labelledby="cart-drawer-tab-bill"
+              tabIndex={0}
+            >
+              {billItems.length === 0 ? (
+                <p className="cart-drawer__bill-empty">
+                  {billLoading ? menuStrings.cart.billLoading : menuStrings.cart.billNoneToPay}
+                </p>
+              ) : (
+                <>
+                  <div className="cart-drawer__bill-summary">
+                    <span className="cart-drawer__bill-summary-label">
+                      {menuStrings.cart.billToPay}
+                    </span>
+                    <span className="cart-drawer__bill-summary-total">
+                      {formatAmount(unpaidTotal)} {currencySymbol}
+                    </span>
+                    {paidTotal > 0 && (
+                      <>
+                        <div
+                          className="cart-drawer__bill-progress"
+                          role="progressbar"
+                          aria-label={menuStrings.cart.billProgressLabel}
+                          aria-valuenow={paidPct}
+                          aria-valuemin={0}
+                          aria-valuemax={100}
+                        >
+                          <div
+                            className="cart-drawer__bill-progress-fill"
+                            style={{ width: `${paidPct}%` }}
+                          />
+                        </div>
+                        <span className="cart-drawer__bill-summary-sub">
+                          {menuStrings.cart.billPaidOf(
+                            formatAmount(paidTotal),
+                            formatAmount(billGrandTotal),
+                          )}{" "}
+                          {currencySymbol}
+                        </span>
+                      </>
+                    )}
+                  </div>
+
+                  {payableBill.length > 0 ? (
+                    <>
+                      <button
+                        className="cart-drawer__bill-selectall"
+                        onClick={toggleSelectAll}
+                        aria-pressed={allBillSelected}
+                      >
+                        <span className="cart-drawer__bill-checkbox" data-checked={allBillSelected}>
+                          {allBillSelected && <LuCheck size={12} />}
+                        </span>
+                        {menuStrings.cart.billSelectAll}
+                      </button>
+                      {billGroups.map((group) => {
+                        const groupTotal = group.items.reduce(
+                          (s, b) => s + (parseFloat(b.payable) || 0),
+                          0,
+                        )
+                        return (
+                          <div key={group.slot} className="cart-drawer__group">
+                            <div className="cart-drawer__bill-group-head">
+                              <span className="cart-drawer__group-label">
+                                {menuStrings.cart.slotLabel(group.slot)}
+                              </span>
+                              <span className="cart-drawer__bill-group-total">
+                                {formatAmount(groupTotal)} {currencySymbol}
+                              </span>
+                            </div>
+                            <ul className="cart-drawer__bill-list">
+                              {group.items.map((b) => {
+                                const checked = selectedToPay.has(b.id)
+                                return (
+                                  <li key={b.id}>
+                                    <button
+                                      className={`cart-drawer__bill-item${checked ? " cart-drawer__bill-item--checked" : ""}`}
+                                      onClick={() => toggleSelected(b.id)}
+                                      aria-pressed={checked}
+                                    >
+                                      <span
+                                        className="cart-drawer__bill-checkbox"
+                                        data-checked={checked}
+                                      >
+                                        {checked && <LuCheck size={12} />}
+                                      </span>
+                                      <span className="cart-drawer__bill-name">
+                                        {b.name}
+                                        <span className="cart-drawer__receipt-qty">
+                                          {" "}
+                                          × {b.quantity}
+                                        </span>
+                                      </span>
+                                      <span className="cart-drawer__bill-price">
+                                        {formatAmount(parseFloat(b.payable) || 0)} {currencySymbol}
+                                      </span>
+                                    </button>
+                                  </li>
+                                )
+                              })}
+                            </ul>
+                          </div>
+                        )
+                      })}
+                    </>
+                  ) : (
+                    <p className="cart-drawer__bill-empty">{menuStrings.cart.billAllPaid}</p>
+                  )}
+
+                  {paidBill.length > 0 && (
+                    <>
+                      <span className="cart-drawer__bill-paid-label">
+                        {menuStrings.cart.billPaidLabel}
+                      </span>
+                      <ul className="cart-drawer__bill-list">
+                        {paidBill.map((b) => (
+                          <li
+                            key={b.id}
+                            className="cart-drawer__bill-item cart-drawer__bill-item--paid"
+                          >
+                            <span className="cart-drawer__bill-paid-check">
+                              <LuCheck size={13} />
+                            </span>
+                            <span className="cart-drawer__bill-name">
+                              {b.name}
+                              <span className="cart-drawer__receipt-qty"> × {b.quantity}</span>
+                            </span>
+                            <span className="cart-drawer__bill-price">
+                              {formatAmount(parseFloat(b.payable) || 0)} {currencySymbol}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    </>
+                  )}
+                </>
+              )}
+            </div>
+
+            <div className="cart-drawer__footer">
+              <div className="cart-drawer__total-row">
+                <span className="cart-drawer__total-label">{menuStrings.cart.billSelected}</span>
+                <span className="cart-drawer__total-value">
+                  {formatAmount(selectedTotal)} {currencySymbol}
+                </span>
+              </div>
+              {payError && (
+                <p className="cart-drawer__confirm-dialog-error" role="alert">
+                  {payError}
+                </p>
+              )}
+              <button
+                className="cart-drawer__order"
+                onClick={handlePay}
+                disabled={paying || selectedBill.length === 0}
+              >
+                {paying
+                  ? menuStrings.cart.paying
+                  : selectedBill.length > 0
+                    ? `${menuStrings.cart.pay} · ${formatAmount(selectedTotal)} ${currencySymbol}`
+                    : menuStrings.cart.pay}
+              </button>
+            </div>
+          </>
         ) : items.length === 0 ? (
           /* ── Empty ── */
           <div className="cart-drawer__empty">
@@ -356,7 +629,13 @@ export function CartDrawer({
         ) : (
           /* ── Item list grouped by guest ── */
           <>
-            <div className="cart-drawer__list">
+            <div
+              className="cart-drawer__list"
+              id="cart-drawer-panel-cart"
+              role="tabpanel"
+              aria-labelledby="cart-drawer-tab-cart"
+              tabIndex={0}
+            >
               {groupedItems.map((group) => (
                 <div key={group.key} className="cart-drawer__group">
                   <span className="cart-drawer__group-label">
@@ -454,6 +733,22 @@ type ItemGroup = {
   addedBy: string | null
   displayName: string | null
   items: CartItemWithDetails[]
+}
+
+type BillGroup = { slot: number; items: BillItem[] }
+
+// Group bill lines by the guest who ordered them (guest_slot), slot ascending.
+function groupBillByGuest(items: BillItem[]): BillGroup[] {
+  const groups = new Map<number, BillGroup>()
+  for (const item of items) {
+    let group = groups.get(item.guest_slot)
+    if (!group) {
+      group = { slot: item.guest_slot, items: [] }
+      groups.set(item.guest_slot, group)
+    }
+    group.items.push(item)
+  }
+  return Array.from(groups.values()).sort((a, b) => a.slot - b.slot)
 }
 
 function groupItemsByGuest(items: CartItemWithDetails[]): ItemGroup[] {

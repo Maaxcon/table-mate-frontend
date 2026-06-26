@@ -12,6 +12,7 @@ import type {
   MenuCategory,
   MenuItem,
   PublicRestaurant,
+  SortOrder,
   ToggleLikeResponse,
   UpdateCartItemRequest,
 } from "./types"
@@ -127,6 +128,7 @@ export function searchItems(
   guestToken?: string,
   signal?: AbortSignal,
   page?: number,
+  sortOrder: SortOrder = "sort_order",
 ): Promise<Paginated<MenuItem>> {
   return menuGet(
     MENU_API.itemsSearch,
@@ -134,6 +136,7 @@ export function searchItems(
       restaurant: restaurantId,
       q: query,
       guest_token: guestToken,
+      ordering: sortOrder,
       ...(page && page > 1 ? { page: String(page) } : {}),
     },
     signal,
@@ -353,5 +356,36 @@ export function setGuestName(sessionId: string, jwt: string, displayName: string
   return authFetch<void>(CART_API.guestName(sessionId), jwt, {
     method: "POST",
     body: JSON.stringify({ display_name: displayName }),
+  })
+}
+
+// One line of the bill — an already-ordered item across the table's visit.
+export type BillItem = {
+  id: string
+  name: string
+  guest_slot: number
+  quantity: number
+  // The amount owed for this line: goods + tax + its share of service charge.
+  // Summing it reconciles with the checkout receipt total. (The goods-only
+  // total_price is intentionally not part of the bill response.)
+  payable: string
+  is_paid: boolean
+}
+
+// The bill: items already submitted to the kitchen for this table's visit.
+export function fetchBill(sessionId: string, jwt: string): Promise<BillItem[]> {
+  return authFetch<BillItem[]>(CART_API.bill(sessionId), jwt)
+}
+
+// Simulated payment: marks the selected ordered items as paid (no money moves).
+// Returns the updated bill.
+export function payOrderItems(
+  sessionId: string,
+  orderItemIds: string[],
+  jwt: string,
+): Promise<BillItem[]> {
+  return authFetch<BillItem[]>(CART_API.pay(sessionId), jwt, {
+    method: "POST",
+    body: JSON.stringify({ order_item_ids: orderItemIds }),
   })
 }

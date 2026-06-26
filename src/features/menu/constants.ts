@@ -18,4 +18,6 @@ export const CART_API = {
     `/api/orders/cart/sessions/${sessionId}/items/${itemId}/`,
   checkout: (sessionId: string) => `/api/orders/cart/sessions/${sessionId}/checkout/`,
   guestName: (sessionId: string) => `/api/orders/cart/sessions/${sessionId}/guest-name/`,
+  bill: (sessionId: string) => `/api/orders/cart/sessions/${sessionId}/bill/`,
+  pay: (sessionId: string) => `/api/orders/cart/sessions/${sessionId}/pay/`,
 } as const

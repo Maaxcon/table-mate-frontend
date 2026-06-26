@@ -168,6 +168,22 @@ export function useGuestAuth({
     return () => clearTimeout(timer)
   }, [authState.guestJwt, initialize])
 
+  // A session can be unavailable when the page loads (table's session closed,
+  // booking not active yet) and then open later. While in that error state,
+  // retry on tab focus so the guest recovers without a full page reload.
+  useEffect(() => {
+    if (authState.status !== "error") return
+    const retry = () => {
+      if (document.visibilityState === "visible") initialize()
+    }
+    window.addEventListener("focus", retry)
+    document.addEventListener("visibilitychange", retry)
+    return () => {
+      window.removeEventListener("focus", retry)
+      document.removeEventListener("visibilitychange", retry)
+    }
+  }, [authState.status, initialize])
+
   return {
     deviceId,
     guestJwt: authState.guestJwt,
