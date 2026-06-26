@@ -80,13 +80,15 @@ function editorReducer(state: EditorState, action: Action): EditorState {
           }
         }
         if (action.patch.rotation !== undefined && action.patch.rotation !== e.rotation) {
-          const env = rotatedAABB(updated.w, updated.h, updated.rotation)
+          const aabb = rotatedAABB(updated.x, updated.y, updated.w, updated.h, updated.rotation)
+          const ox = (aabb.w - updated.w) / 2
+          const oy = (aabb.h - updated.h) / 2
           if (updated.type === "threshold" || updated.type === "portal") {
-            updated.x = Math.max(-1, Math.min(updated.x, CANVAS_W / GRID + 1 - env.w))
-            updated.y = Math.max(-1, Math.min(updated.y, CANVAS_H / GRID + 1 - env.h))
+            updated.x = Math.max(-1, Math.min(aabb.x, CANVAS_W / GRID + 1 - aabb.w)) + ox
+            updated.y = Math.max(-1, Math.min(aabb.y, CANVAS_H / GRID + 1 - aabb.h)) + oy
           } else {
-            updated.x = Math.max(0, Math.min(updated.x, CANVAS_W / GRID - env.w))
-            updated.y = Math.max(0, Math.min(updated.y, CANVAS_H / GRID - env.h))
+            updated.x = Math.max(0, Math.min(aabb.x, CANVAS_W / GRID - aabb.w)) + ox
+            updated.y = Math.max(0, Math.min(aabb.y, CANVAS_H / GRID - aabb.h)) + oy
           }
         }
         return updated
@@ -101,13 +103,18 @@ function editorReducer(state: EditorState, action: Action): EditorState {
         (e) => e.id !== action.id && (!moveZoneId || e.zoneId === moveZoneId),
       )
       let { x, y } = action
-      const env = rotatedAABB(entity.w, entity.h, entity.rotation)
+      // Clamp the entity's AABB to stay within canvas, then convert back to entity
+      // position. The offset between entity top-left and AABB top-left is constant
+      // for a given size + rotation:  entityX = aabbX + (envW - entityW) / 2.
+      const aabb = rotatedAABB(x, y, entity.w, entity.h, entity.rotation)
+      const offsetX = (aabb.w - entity.w) / 2
+      const offsetY = (aabb.h - entity.h) / 2
       if (entity.type === "threshold" || entity.type === "portal") {
-        x = Math.max(-1, Math.min(x, CANVAS_W / GRID + 1 - env.w))
-        y = Math.max(-1, Math.min(y, CANVAS_H / GRID + 1 - env.h))
+        x = Math.max(-1, Math.min(aabb.x, CANVAS_W / GRID + 1 - aabb.w)) + offsetX
+        y = Math.max(-1, Math.min(aabb.y, CANVAS_H / GRID + 1 - aabb.h)) + offsetY
       } else {
-        x = Math.max(0, Math.min(x, CANVAS_W / GRID - env.w))
-        y = Math.max(0, Math.min(y, CANVAS_H / GRID - env.h))
+        x = Math.max(0, Math.min(aabb.x, CANVAS_W / GRID - aabb.w)) + offsetX
+        y = Math.max(0, Math.min(aabb.y, CANVAS_H / GRID - aabb.h)) + offsetY
       }
       const free = findFreePosition(
         { x, y, w: entity.w, h: entity.h, rotation: entity.rotation },

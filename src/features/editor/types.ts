@@ -76,20 +76,41 @@ export function uprightContentStyle(rotation?: number): CSSProperties {
     : { display: "contents" }
 }
 
-export function rotatedAABB(w: number, h: number, rotation?: number): { w: number; h: number } {
-  if (!rotation) return { w, h }
+/**
+ * Minimum axis-aligned bounding box that encloses a rectangle of size `w×h`
+ * rotated by `rotation` degrees around its center. The returned `{x,y,w,h}`
+ * is the full AABB positioned on the canvas, *not* the entity position.
+ *
+ * When `rotation` is 0 / undefined the AABB equals the entity rect (`{x,y,w,h}`)
+ * unchanged.
+ */
+export function rotatedAABB(
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  rotation?: number,
+): { x: number; y: number; w: number; h: number } {
+  if (!rotation) return { x, y, w, h }
   const r = ((rotation % 360) + 360) % 360
-  if (r === 0) return { w, h }
-  if (r === 90) return { w: h, h: w }
-  if (r === 180) return { w, h }
-  if (r === 270) return { w: h, h: w }
+  if (r === 0) return { x, y, w, h }
+  if (r === 180) return { x, y, w, h }
+  if (r === 90 || r === 270) {
+    return {
+      x: x + (w - h) / 2,
+      y: y + (h - w) / 2,
+      w: h,
+      h: w,
+    }
+  }
+  const cx = x + w / 2
+  const cy = y + h / 2
   const rad = (r * Math.PI) / 180
   const cos = Math.abs(Math.cos(rad))
   const sin = Math.abs(Math.sin(rad))
-  return {
-    w: Math.ceil((w * cos + h * sin) * 100) / 100,
-    h: Math.ceil((w * sin + h * cos) * 100) / 100,
-  }
+  const envW = Math.ceil((w * cos + h * sin) * 100) / 100
+  const envH = Math.ceil((w * sin + h * cos) * 100) / 100
+  return { x: cx - envW / 2, y: cy - envH / 2, w: envW, h: envH }
 }
 
 export function serializeEntities(entities: EditorEntity[]): object {
@@ -257,22 +278,26 @@ export function rectsOverlap(
 }
 
 // Bounds are in GRID UNITS (columns/rows), matching `desired`/`others` — not pixels.
+// Both `desired` and `others` can carry an optional `rotation` — the AABB
+// envelope is used for overlap and boundary checks so rotated entities
+// collide visually rather than by their un‑rotated axis‑aligned box.
 export function findFreePosition(
   desired: { x: number; y: number; w: number; h: number; rotation?: number },
   others: Array<{ x: number; y: number; w: number; h: number; rotation?: number }>,
   gridCols: number,
   gridRows: number,
 ): { x: number; y: number } {
-  const env = rotatedAABB(desired.w, desired.h, desired.rotation)
-  const desiredWithEnv = { x: desired.x, y: desired.y, w: env.w, h: env.h }
-  const othersWithEnv = others.map((o) => ({
-    x: o.x,
-    y: o.y,
-    ...rotatedAABB(o.w, o.h, o.rotation),
-  }))
+  const othersAABB = others.map((o) => rotatedAABB(o.x, o.y, o.w, o.h, o.rotation))
+  const aabbAt = (pos: { x: number; y: number }) =>
+    rotatedAABB(pos.x, pos.y, desired.w, desired.h, desired.rotation)
 
-  if (!othersWithEnv.some((o) => rectsOverlap(desiredWithEnv, o))) {
-    return { x: desired.x, y: desired.y }
+  // Initial position: only reject if it overlaps another entity (boundary
+  // overhang from the caller is preserved). Step search below enforces both.
+  {
+    const aabb = aabbAt(desired)
+    if (!othersAABB.some((o) => rectsOverlap(aabb, o))) {
+      return { x: desired.x, y: desired.y }
+    }
   }
 
   for (let step = 1; step < 100; step++) {
@@ -283,8 +308,10 @@ export function findFreePosition(
       { x: desired.x, y: desired.y - step },
     ]
     for (const pos of candidates) {
-      if (pos.x < 0 || pos.y < 0 || pos.x + env.w > gridCols || pos.y + env.h > gridRows) continue
-      if (!othersWithEnv.some((o) => rectsOverlap({ ...desiredWithEnv, x: pos.x, y: pos.y }, o))) {
+      const aabb = aabbAt(pos)
+      if (aabb.x < 0 || aabb.y < 0 || aabb.x + aabb.w > gridCols || aabb.y + aabb.h > gridRows)
+        continue
+      if (!othersAABB.some((o) => rectsOverlap(aabb, o))) {
         return pos
       }
     }

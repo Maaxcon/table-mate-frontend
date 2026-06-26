@@ -5,30 +5,39 @@ const GRID_COLS = CANVAS_W / GRID // 20
 const GRID_ROWS = CANVAS_H / GRID // 20
 
 describe("rotatedAABB", () => {
-  it("returns original dimensions when rotation is 0", () => {
-    expect(rotatedAABB(3, 1, 0)).toEqual({ w: 3, h: 1 })
+  it("returns original rect when rotation is 0", () => {
+    expect(rotatedAABB(0, 0, 3, 1, 0)).toEqual({ x: 0, y: 0, w: 3, h: 1 })
   })
 
-  it("returns original dimensions when rotation is undefined", () => {
-    expect(rotatedAABB(3, 1)).toEqual({ w: 3, h: 1 })
+  it("returns original rect when rotation is undefined", () => {
+    expect(rotatedAABB(10, 5, 3, 1)).toEqual({ x: 10, y: 5, w: 3, h: 1 })
   })
 
   it("swaps w and h at 90 degrees", () => {
-    expect(rotatedAABB(3, 1, 90)).toEqual({ w: 1, h: 3 })
+    // 3×1 at (0,0) rotated 90° → AABB centered at (1.5, 0.5), size 1×3
+    const result = rotatedAABB(0, 0, 3, 1, 90)
+    expect(result.x).toBe(1)
+    expect(result.y).toBe(-1)
+    expect(result.w).toBe(1)
+    expect(result.h).toBe(3)
   })
 
   it("computes correct envelope at 45 degrees", () => {
-    const result = rotatedAABB(3, 1, 45)
+    const result = rotatedAABB(0, 0, 3, 1, 45)
     expect(result.w).toBeCloseTo(2.83, 1)
     expect(result.h).toBeCloseTo(2.83, 1)
   })
 
   it("handles 180 degrees same as 0", () => {
-    expect(rotatedAABB(3, 1, 180)).toEqual({ w: 3, h: 1 })
+    expect(rotatedAABB(0, 0, 3, 1, 180)).toEqual({ x: 0, y: 0, w: 3, h: 1 })
   })
 
   it("handles 270 degrees same as 90", () => {
-    expect(rotatedAABB(3, 1, 270)).toEqual({ w: 1, h: 3 })
+    const result = rotatedAABB(0, 0, 3, 1, 270)
+    expect(result.x).toBe(1)
+    expect(result.y).toBe(-1)
+    expect(result.w).toBe(1)
+    expect(result.h).toBe(3)
   })
 })
 
