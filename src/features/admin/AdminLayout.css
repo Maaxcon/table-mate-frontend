@@ -16,6 +16,7 @@
   position: sticky;
   top: 0;
   height: 100vh;
+  box-sizing: border-box;
 }
 
 .admin-layout__brand {
@@ -115,6 +116,10 @@
   overflow-y: auto;
 }
 
+.admin-layout__content--flush {
+  padding: 0;
+}
+
 /* Mobile: sidebar becomes a top bar with horizontal nav */
 @media (max-width: 720px) {
   .admin-layout {
@@ -160,5 +165,9 @@
 
   .admin-layout__content {
     padding: 20px 16px;
+  }
+
+  .admin-layout__content--flush {
+    padding: 0;
   }
 }

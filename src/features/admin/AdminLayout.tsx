@@ -1,9 +1,11 @@
 import { useMemo, useState } from "react"
-import { NavLink, Outlet, useNavigate } from "react-router-dom"
+import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom"
 import {
   LuArrowLeft,
+  LuChefHat,
   LuLayoutDashboard,
   LuLogOut,
+  LuMap,
   LuSettings,
   LuStore,
   LuUsers,
@@ -22,10 +24,13 @@ const NAV_ITEMS = [
   { to: "/admin/settings", label: "Settings", icon: LuSettings },
   { to: "/admin/staff", label: "Staff", icon: LuUsers },
   { to: "/admin/menu", label: "Menu", icon: LuUtensilsCrossed },
+  { to: "/admin/kitchen", label: "Kitchen", icon: LuChefHat },
+  { to: "/admin/floor", label: "Floor", icon: LuMap },
 ] as const
 
 function AdminLayout() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { logout, logoutFailed } = useLogout()
   const user = useAppSelector((state) => state.auth.user)
 
@@ -46,6 +51,12 @@ function AdminLayout() {
     setDirty(false)
     action?.()
   }
+
+  const isFullBleed = useMemo(() => {
+    return (
+      location.pathname.startsWith("/admin/kitchen") || location.pathname.startsWith("/admin/floor")
+    )
+  }, [location.pathname])
 
   return (
     <ToastProvider>
@@ -105,7 +116,9 @@ function AdminLayout() {
             </div>
           </aside>
 
-          <main className="admin-layout__content">
+          <main
+            className={`admin-layout__content${isFullBleed ? " admin-layout__content--flush" : ""}`}
+          >
             <Outlet />
           </main>
         </div>

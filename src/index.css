@@ -46,6 +46,18 @@
   --shadow: rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
 }
 
+html,
+body {
+  min-height: 100%;
+  background: var(--color-bg-page);
+  overscroll-behavior: none;
+}
+
+body {
+  margin: 0;
+  color: var(--color-text-primary);
+}
+
 #root {
   width: 100%;
   max-width: 100%;
@@ -55,10 +67,6 @@
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
-}
-
-body {
-  margin: 0;
 }
 
 .landing-page h1,
