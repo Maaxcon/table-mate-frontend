@@ -1,32 +1,33 @@
 .auth-hero {
-  width: min(100%, 760px);
+  width: min(100%, 420px);
   display: grid;
   justify-items: center;
-  gap: 16px;
+  gap: 12px;
   text-align: center;
   animation: auth-fade-up 360ms ease both;
 }
 
-.auth-hero__logo {
-  width: min(92vw, 340px);
-  height: auto;
-  display: block;
-  transition: transform 220ms ease;
+.auth-hero__brand {
+  margin: 0;
+  line-height: 0;
 }
 
-.auth-hero__logo:hover {
-  transform: translateY(-2px);
+.auth-hero__logo {
+  width: min(64vw, 200px);
+  height: auto;
+  display: block;
+  filter: drop-shadow(0 8px 24px rgba(var(--auth-accent), 0.25));
 }
 
 .auth-hero__subtitle {
   margin: 0;
-  max-width: 430px;
-  color: var(--color-text-subtle);
+  max-width: 360px;
+  color: var(--auth-text-muted);
   font-weight: 600;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
   line-height: 1.5;
-  font-size: 0.8rem;
+  font-size: 0.72rem;
 }
 
 @keyframes auth-fade-up {
