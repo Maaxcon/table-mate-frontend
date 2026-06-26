@@ -110,21 +110,6 @@ export async function fetchUpcomingReservations(
   return data.upcoming_reservations ?? []
 }
 
-export async function checkAvailability(
-  startAt: string,
-  endAt: string,
-  guestCount?: number,
-  restaurantId?: string,
-): Promise<Table[]> {
-  const params = new URLSearchParams({ start_at: startAt, end_at: endAt })
-  if (guestCount !== undefined) params.set("guest_count", String(guestCount))
-  if (restaurantId) params.set("restaurant", restaurantId)
-  const res = await apiFetch(`/api/editor/tables/available/?${params}`)
-  if (!res.ok) throw new Error("Failed to check availability")
-  const data = await res.json()
-  return data.results ?? data
-}
-
 export async function createReservation(data: {
   table: string
   guest_count: number

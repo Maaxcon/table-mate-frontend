@@ -232,7 +232,6 @@ export function BookingPage() {
           table={selectedTable}
           workingHours={workingHours}
           timeZone={timezone}
-          restaurantId={public_restaurant_id ?? ""}
           onClose={() => {
             setBookModalOpen(false)
             setSelectedTable(null)

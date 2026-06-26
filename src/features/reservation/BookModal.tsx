@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
 import type { Table } from "@/types/api/types.gen"
 import type { WorkingHoursDay } from "./api"
-import { checkAvailability, createReservation, fetchAvailableSlots } from "./api"
+import { createReservation, fetchAvailableSlots } from "./api"
 import {
   DAY_NAMES,
   generateTimeSlots,
@@ -17,19 +17,11 @@ interface BookModalProps {
   table: Table
   workingHours: Record<string, WorkingHoursDay> | null
   timeZone: string | null
-  restaurantId: string
   onClose: () => void
   onSuccess: () => void
 }
 
-export function BookModal({
-  table,
-  workingHours,
-  timeZone,
-  restaurantId,
-  onClose,
-  onSuccess,
-}: BookModalProps) {
+export function BookModal({ table, workingHours, timeZone, onClose, onSuccess }: BookModalProps) {
   const today = useMemo(() => {
     const d = new Date()
     d.setHours(0, 0, 0, 0)
@@ -54,12 +46,16 @@ export function BookModal({
   const [availableSlots, setAvailableSlots] = useState<Record<string, string[]> | null>(null)
   const [slotsLoading, setSlotsLoading] = useState(true)
 
-  useEffect(() => {
-    fetchAvailableSlots(table.public_id)
+  const loadSlots = useCallback(() => {
+    return fetchAvailableSlots(table.public_id)
       .then((data) => setAvailableSlots(data))
       .catch(() => setAvailableSlots({}))
       .finally(() => setSlotsLoading(false))
   }, [table.public_id])
+
+  useEffect(() => {
+    loadSlots()
+  }, [loadSlots])
 
   const dates = useMemo(() => {
     const days: Date[] = []
@@ -142,17 +138,8 @@ export function BookModal({
         : new Date(`${dateKey}T${selectedTime}:00`).toISOString()
       const endISO = new Date(new Date(startISO).getTime() + durationMinutes * 60000).toISOString()
 
-      const available = await checkAvailability(startISO, endISO, guestCount, restaurantId)
-      const isAvailable = available.some((t) => t.public_id === table.public_id)
-
-      if (!isAvailable) {
-        setError(
-          "This table is not available for the selected time. Please choose a different time or date.",
-        )
-        setSubmitting(false)
-        return
-      }
-
+      // The backend is the single source of truth: it re-checks the slot inside
+      // the create transaction and returns a clear 409 if the table was taken.
       await createReservation({
         table: table.public_id,
         guest_count: guestCount,
@@ -170,6 +157,10 @@ export function BookModal({
       })
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create reservation")
+      // Someone may have just taken this slot; refresh so the grid reflects it.
+      setSelectedTime(null)
+      setSlotsLoading(true)
+      loadSlots()
     } finally {
       setSubmitting(false)
     }
@@ -180,8 +171,8 @@ export function BookModal({
     endAt,
     guestCount,
     notes,
-    restaurantId,
     timeZone,
+    loadSlots,
     table.public_id,
     table.table_number,
   ])
