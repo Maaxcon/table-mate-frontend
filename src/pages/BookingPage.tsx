@@ -5,6 +5,7 @@ import { ActiveBookings } from "@/features/reservation/ActiveBookings"
 import { BookModal } from "@/features/reservation/BookModal"
 import { CustomerFloorPlan } from "@/features/reservation/CustomerFloorPlan"
 import { LoginCtaModal } from "@/features/reservation/LoginCtaModal"
+import { FloorPlanSkeleton } from "@/features/reservation/BookingSkeleton"
 import { bookStrings } from "@/features/reservation/strings"
 import { useBookingData } from "@/features/reservation/hooks/useBookingData"
 import { useFloorSubscription } from "@/features/reservation/hooks/useFloorSubscription"
@@ -135,7 +136,7 @@ export function BookingPage() {
       <div className="bp__content">
         {tab === "floor" &&
           (tablesLoading ? (
-            <p className="bp__loading">{bookStrings.loading}</p>
+            <FloorPlanSkeleton />
           ) : tablesError ? (
             <div className="bp__error" role="alert">
               <p className="bp__error-text">{bookStrings.errors.floor}</p>

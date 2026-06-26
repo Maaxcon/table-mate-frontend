@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react"
 import type { Table } from "@/types/api/types.gen"
 import type { WorkingHoursDay } from "./api"
 import { createReservation, fetchAvailableSlots } from "./api"
+import { SlotsSkeleton } from "./BookingSkeleton"
 import { bookStrings } from "./strings"
 import {
   DAY_NAMES,
@@ -324,7 +325,7 @@ export function BookModal({ table, workingHours, timeZone, onClose, onSuccess }:
               <p className="book-modal__tz-note">{bookStrings.modal.tzNote(foreignTzNote)}</p>
             )}
             {slotsLoading ? (
-              <p className="book-modal__empty">{bookStrings.modal.slots.loading}</p>
+              <SlotsSkeleton />
             ) : !dayConfig ? (
               <p className="book-modal__empty">{bookStrings.modal.slots.closed}</p>
             ) : timeSlots.length === 0 ? (

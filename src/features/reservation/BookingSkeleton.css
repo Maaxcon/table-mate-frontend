@@ -1,0 +1,58 @@
+.book-skeleton {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 16px;
+}
+
+.book-skeleton__table {
+  width: 140px;
+  height: 120px;
+  border-radius: 8px;
+}
+
+.book-skeleton__slots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.book-skeleton__chip {
+  width: 64px;
+  height: 36px;
+  border-radius: 6px;
+}
+
+.book-skeleton__table,
+.book-skeleton__chip {
+  background: var(--color-bg-surface-subtle);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Shimmer effect — same as the menu skeleton for a consistent feel. */
+.book-skeleton__table::after,
+.book-skeleton__chip::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent 0%, rgb(255 255 255 / 60%) 50%, transparent 100%);
+  background-size: 200% 100%;
+  animation: book-skeleton-shimmer 1.6s ease-in-out infinite;
+}
+
+@keyframes book-skeleton-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .book-skeleton__table::after,
+  .book-skeleton__chip::after {
+    animation: none;
+  }
+}

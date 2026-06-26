@@ -32,12 +32,6 @@
   border-bottom-color: var(--color-primary);
 }
 
-.bp__loading {
-  text-align: center;
-  color: var(--color-text-muted);
-  padding: 48px 0;
-}
-
 .bp__error {
   display: flex;
   flex-direction: column;
