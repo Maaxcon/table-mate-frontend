@@ -2,6 +2,7 @@ import { useMemo, useState } from "react"
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom"
 import {
   LuArrowLeft,
+  LuCalendarClock,
   LuChefHat,
   LuLayoutDashboard,
   LuLogOut,
@@ -25,6 +26,7 @@ const NAV_ITEMS = [
   { to: "/admin/settings", label: "Settings", icon: LuSettings },
   { to: "/admin/staff", label: "Staff", icon: LuUsers },
   { to: "/admin/menu", label: "Menu", icon: LuUtensilsCrossed },
+  { to: "/admin/scheduler", label: "Scheduler", icon: LuCalendarClock },
   { to: "/admin/floor-plan/edit", label: "Floor Plan", icon: LuPencilRuler },
   { to: "/admin/kitchen", label: "Kitchen", icon: LuChefHat },
   { to: "/admin/floor", label: "Floor", icon: LuMap },
@@ -56,7 +58,9 @@ function AdminLayout() {
 
   const isFullBleed = useMemo(() => {
     return (
-      location.pathname.startsWith("/admin/kitchen") || location.pathname.startsWith("/admin/floor")
+      location.pathname.startsWith("/admin/kitchen") ||
+      location.pathname.startsWith("/admin/floor") ||
+      location.pathname.startsWith("/admin/scheduler")
     )
   }, [location.pathname])
 
