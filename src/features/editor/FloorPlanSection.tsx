@@ -52,6 +52,7 @@ function FloorPlanSection() {
   const [zones, setZones] = useState<Zone[]>([])
   const [selectedZoneId, setSelectedZoneId] = useState<string | null>(null)
   const prePublishStateRef = useRef<EditorState | null>(null)
+  const publishingRef = useRef(false)
   const [deleteZoneTarget, setDeleteZoneTarget] = useState<Zone | null>(null)
   const [deleting, setDeleting] = useState(false)
   const toast = useToast()
@@ -110,6 +111,7 @@ function FloorPlanSection() {
 
   // When another admin publishes a layout, warn about stale work or silently reload.
   const handleOtherAdminPublished = useCallback(async () => {
+    if (publishingRef.current) return
     if (dirty) {
       toast.action(
         "Layout was updated by another admin. Reload to see changes (your unsaved work will be lost).",
@@ -176,12 +178,14 @@ function FloorPlanSection() {
 
   const { publish, publishing, error } = usePublish({
     onSuccess: (result?: PublishResult) => {
+      publishingRef.current = false
       // Apply the new tables' server ids and snapshot the published state in one
       // atomic action so the editor doesn't end up falsely dirty.
       publishSuccess(result?.table_id_map)
       setShowPublishModal(false)
     },
     onRollback: () => {
+      publishingRef.current = false
       if (prePublishStateRef.current) {
         dispatch({ type: "PUBLISH_ROLLBACK", previousState: prePublishStateRef.current })
         prePublishStateRef.current = null
@@ -194,6 +198,7 @@ function FloorPlanSection() {
   }, [error, toast])
 
   const handlePublishConfirm = useCallback(() => {
+    publishingRef.current = true
     prePublishStateRef.current = {
       entities,
       selectedId,
