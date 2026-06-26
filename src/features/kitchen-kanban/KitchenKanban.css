@@ -216,8 +216,10 @@
 }
 
 .kanban__right {
+  --kanban-right-completed-height: 52%;
   display: flex;
   flex-direction: column;
+  gap: 16px;
   min-height: 0;
   overflow: hidden;
 }
@@ -396,10 +398,30 @@
   font-weight: 500;
   color: var(--k-text);
   line-height: 1.45;
+  background: var(--kanban-item-chip-bg, transparent);
+  border: 1px solid var(--kanban-item-chip-border, transparent);
+  border-radius: calc(var(--k-radius-sm) / 1.6);
+  padding: 6px 10px;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease;
 }
 
 .kanban-card__item-qty {
   font-weight: 800;
+}
+
+.kanban-card__item--cat {
+  --kanban-item-chip-bg: color-mix(
+    in srgb,
+    var(--item-cat-color, var(--k-border)) 22%,
+    var(--k-card)
+  );
+  --kanban-item-chip-border: color-mix(
+    in srgb,
+    var(--item-cat-color, var(--k-border)) 45%,
+    var(--k-border)
+  );
 }
 
 /* ─── Active cards (hero) ─── */
@@ -521,6 +543,10 @@
   color: var(--k-active);
 }
 
+.kanban-card__item-block--cat {
+  border-left: 20px solid var(--item-cat-color, var(--k-border));
+}
+
 .kanban-card__modifier {
   font-style: italic;
   font-weight: 500;
@@ -550,17 +576,31 @@
 /* ─── Batch cards ─── */
 
 .kanban-card--batch {
+  --batch-accent: var(--batch-accent, var(--k-active));
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 10px;
-  padding: 14px 16px;
+  padding: 12px 14px 12px 18px;
+  background: color-mix(in srgb, var(--batch-accent) 12%, var(--k-card));
+  border: 1px solid color-mix(in srgb, var(--batch-accent) 45%, var(--k-border));
+  border-radius: var(--k-radius-sm);
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
+}
+
+.kanban-card__batch-indicator {
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  background: var(--batch-accent);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.18);
+  flex-shrink: 0;
 }
 
 .kanban-card__batch-label {
   font-size: 0.92rem;
   font-weight: 600;
   color: var(--k-text);
+  flex: 1;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -572,10 +612,10 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
   border-radius: var(--k-radius-pill);
-  background: var(--k-active);
+  background: var(--batch-accent);
   color: #fff;
   font-size: 0.85rem;
   font-weight: 800;
@@ -586,8 +626,9 @@
 
 .kanban__col--completed {
   --col-accent: var(--k-completed);
-  flex: 0 1 auto;
-  max-height: 52%;
+  flex: 0 0 var(--kanban-right-completed-height);
+  max-height: none;
+  min-height: 0;
 }
 
 .kanban__col--completed .kanban__col-header {
@@ -633,7 +674,7 @@
 .kanban__notifs {
   display: flex;
   flex-direction: column;
-  flex: 1 1 auto;
+  flex: 0 0 calc(100% - var(--kanban-right-completed-height));
   min-height: 0;
   border-top: 1px solid var(--k-divider);
   background: var(--k-bg);

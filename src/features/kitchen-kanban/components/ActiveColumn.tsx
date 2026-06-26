@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react"
 import { LuCircleCheck } from "react-icons/lu"
 import type { KanbanTicket } from "../types"
 import { elapsedMinutes, timerUrgencyClass } from "../utils"
@@ -66,7 +67,9 @@ export function ActiveColumn({ tickets, onToggleItem, onBump, canManage }: Activ
                   <button
                     key={item.id}
                     type="button"
-                    className={`kanban-card__item-block ${item.status === "ready" ? "kanban-card__item-block--ready" : ""}`}
+                    className={`kanban-card__item-block kanban-card__item-block--cat ${item.status === "ready" ? "kanban-card__item-block--ready" : ""}`}
+                    style={{ "--item-cat-color": item.categoryColor } as CSSProperties}
+                    title={item.categoryName}
                     onClick={() => {
                       if (!canManage) return
                       onToggleItem(ticket.id, item.id)

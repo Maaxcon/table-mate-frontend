@@ -10,6 +10,8 @@ function makeOrderItem(overrides: Partial<OrderItem> = {}): OrderItem {
     ticket: "t-1",
     menu_item: "mi-1",
     menu_item_name: "Burger",
+    menu_item_category_id: null,
+    menu_item_category_name: null,
     guest_slot: 1,
     quantity: 2,
     comment: null,
@@ -87,6 +89,23 @@ describe("mapItem", () => {
   it("passes empty string comment through as modifiers", () => {
     const result = mapItem(makeOrderItem({ comment: "" }))
     expect(result.modifiers).toBe("")
+  })
+
+  it("maps a known category name to its colour", () => {
+    const result = mapItem(makeOrderItem({ menu_item_category_name: "Салати" }))
+    expect(result.categoryName).toBe("Салати")
+    expect(result.categoryColor).toBe("#22c55e")
+  })
+
+  it("falls back to the default colour for an unmapped category", () => {
+    const result = mapItem(makeOrderItem({ menu_item_category_name: "Піца" }))
+    expect(result.categoryColor).toBe("#9ca3af")
+  })
+
+  it("falls back to the default colour and undefined name for a null category", () => {
+    const result = mapItem(makeOrderItem({ menu_item_category_name: null }))
+    expect(result.categoryName).toBeUndefined()
+    expect(result.categoryColor).toBe("#9ca3af")
   })
 })
 

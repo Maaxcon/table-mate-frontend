@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react"
 import type { KanbanTicket } from "../types"
 import { elapsedMinutes, timerUrgencyClass } from "../utils"
 
@@ -41,7 +42,12 @@ export function IncomingColumn({ tickets, onPromote, canManage }: IncomingColumn
               </div>
               <div className="kanban-card__items">
                 {ticket.items.map((item) => (
-                  <div key={item.id} className="kanban-card__item">
+                  <div
+                    key={item.id}
+                    className="kanban-card__item kanban-card__item--cat"
+                    style={{ "--item-cat-color": item.categoryColor } as CSSProperties}
+                    title={item.categoryName}
+                  >
                     <span className="kanban-card__item-qty">{item.quantity}X</span> {item.name}
                   </div>
                 ))}

@@ -9,8 +9,8 @@ function makeTicket(overrides: Partial<KanbanTicket> = {}): KanbanTicket {
     label: "T1",
     status: "active",
     items: [
-      { id: "i-1", name: "Burger", quantity: 2, status: "pending" },
-      { id: "i-2", name: "Fries", quantity: 1, status: "ready" },
+      { id: "i-1", name: "Burger", quantity: 2, status: "pending", categoryColor: "#9ca3af" },
+      { id: "i-2", name: "Fries", quantity: 1, status: "ready", categoryColor: "#9ca3af" },
     ],
     startedAt: Date.now() - 5 * 60 * 1000,
     guestCount: 3,
@@ -63,8 +63,8 @@ describe("ActiveColumn", () => {
   it("enables bump button when all items are ready", () => {
     const ticket = makeTicket({
       items: [
-        { id: "i-1", name: "Burger", quantity: 2, status: "ready" },
-        { id: "i-2", name: "Fries", quantity: 1, status: "ready" },
+        { id: "i-1", name: "Burger", quantity: 2, status: "ready", categoryColor: "#9ca3af" },
+        { id: "i-2", name: "Fries", quantity: 1, status: "ready", categoryColor: "#9ca3af" },
       ],
     })
     render(<ActiveColumn tickets={[ticket]} onToggleItem={vi.fn()} onBump={vi.fn()} canManage />)
@@ -74,7 +74,9 @@ describe("ActiveColumn", () => {
 
   it("renders checkmark SVG when all items are ready", () => {
     const ticket = makeTicket({
-      items: [{ id: "i-1", name: "Burger", quantity: 2, status: "ready" }],
+      items: [
+        { id: "i-1", name: "Burger", quantity: 2, status: "ready", categoryColor: "#9ca3af" },
+      ],
     })
     render(<ActiveColumn tickets={[ticket]} onToggleItem={vi.fn()} onBump={vi.fn()} canManage />)
     const bump = screen.getByRole("button", { name: "Complete order" })
@@ -91,7 +93,14 @@ describe("ActiveColumn", () => {
   it("renders modifier text when present", () => {
     const ticket = makeTicket({
       items: [
-        { id: "i-1", name: "Burger", quantity: 1, status: "pending", modifiers: "No onions" },
+        {
+          id: "i-1",
+          name: "Burger",
+          quantity: 1,
+          status: "pending",
+          modifiers: "No onions",
+          categoryColor: "#9ca3af",
+        },
       ],
     })
     render(<ActiveColumn tickets={[ticket]} onToggleItem={vi.fn()} onBump={vi.fn()} canManage />)

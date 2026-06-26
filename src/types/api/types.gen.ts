@@ -310,6 +310,8 @@ export type OrderItem = {
   ticket?: string | null
   menu_item: string
   readonly menu_item_name: string
+  readonly menu_item_category_id: string | null
+  readonly menu_item_category_name: string | null
   guest_slot: number
   quantity: number
   comment?: string | null
@@ -614,6 +616,8 @@ export type PatchedOrderItem = {
   ticket?: string | null
   menu_item?: string
   readonly menu_item_name?: string
+  readonly menu_item_category_id?: string | null
+  readonly menu_item_category_name?: string | null
   guest_slot?: number
   quantity?: number
   comment?: string | null
@@ -700,6 +704,8 @@ export type PatchedSession = {
 
 export type PatchedTicket = {
   readonly public_id?: string
+  readonly label?: string
+  readonly daily_number?: number | null
   readonly restaurant?: string
   session?: string
   order?: string
@@ -946,6 +952,8 @@ export type TableShape = "rectangle" | "round" | "square" | "booth"
 
 export type Ticket = {
   readonly public_id: string
+  readonly label: string
+  readonly daily_number: number | null
   readonly restaurant: string
   session: string
   order: string

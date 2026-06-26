@@ -168,7 +168,7 @@ export function KitchenKanban() {
   const active = useMemo(() => tickets.filter((t) => t.status === "active"), [tickets])
 
   const batchCounts = useMemo<BatchCount[]>(() => {
-    const counts = new Map<string, { label: string; count: number }>()
+    const counts = new Map<string, { label: string; count: number; color: string }>()
     for (const t of tickets) {
       if (t.status !== "active") continue
       for (const item of t.items) {
@@ -177,12 +177,16 @@ export function KitchenKanban() {
         if (existing) {
           existing.count += item.quantity
         } else {
-          counts.set(key, { label: item.name, count: item.quantity })
+          counts.set(key, {
+            label: item.name,
+            count: item.quantity,
+            color: item.categoryColor,
+          })
         }
       }
     }
     return Array.from(counts.values())
-      .map(({ label, count }) => ({ label, count }))
+      .map(({ label, count, color }) => ({ label, count, color }))
       .sort((a, b) => b.count - a.count)
   }, [tickets])
 

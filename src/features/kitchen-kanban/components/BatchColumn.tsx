@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react"
 import { LuLayoutGrid } from "react-icons/lu"
 import type { BatchCount } from "../types"
 
@@ -15,7 +16,12 @@ export function BatchColumn({ batches }: BatchColumnProps) {
       <div className="kanban__col-body">
         {batches.length === 0 && <div className="kanban-card kanban-card--empty">No batches</div>}
         {batches.map((batch) => (
-          <div key={batch.label} className="kanban-card kanban-card--batch">
+          <div
+            key={batch.label}
+            className="kanban-card kanban-card--batch"
+            style={{ "--batch-accent": batch.color } as CSSProperties}
+          >
+            <span className="kanban-card__batch-indicator" aria-hidden="true" />
             <span className="kanban-card__batch-label">{batch.label}</span>
             <span className="kanban-card__batch-count">{batch.count}</span>
           </div>
