@@ -6,6 +6,7 @@ interface TopNavProps {
   occupiedCount: number
   reservedCount: number
   freeCount: number
+  isConnected: boolean
 }
 
 function getTimeString(): string {
@@ -24,7 +25,7 @@ function useCurrentTime(): string {
   return time
 }
 
-export function TopNav({ occupiedCount, reservedCount, freeCount }: TopNavProps) {
+export function TopNav({ occupiedCount, reservedCount, freeCount, isConnected }: TopNavProps) {
   const currentTime = useCurrentTime()
 
   return (
@@ -55,6 +56,11 @@ export function TopNav({ occupiedCount, reservedCount, freeCount }: TopNavProps)
           FREE: {freeCount}
         </span>
         <span className="top-nav__time">{currentTime}</span>
+        <span
+          className={`top-nav__connection ${isConnected ? "top-nav__connection--connected" : ""}`}
+          role="status"
+          aria-label={isConnected ? "Connected" : "Disconnected"}
+        />
         <Link to="/staff/orders" className="top-nav__nav-link">
           KITCHEN
         </Link>

@@ -231,7 +231,7 @@ export function WaiterOrderView() {
     [tables, clearActionError],
   )
 
-  useHallSubscription({
+  const { isConnected } = useHallSubscription({
     onLayoutPublished: handleLayoutPublished,
     onTableStatusChanged: refreshFloor,
     onNewReservation: refreshFloor,
@@ -312,6 +312,7 @@ export function WaiterOrderView() {
         occupiedCount={visualOccupiedCount}
         reservedCount={visualReservedCount}
         freeCount={visualFreeCount}
+        isConnected={isConnected}
       />
 
       {zones.length > 1 && (
