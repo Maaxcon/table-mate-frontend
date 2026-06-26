@@ -1,0 +1,266 @@
+import { useCallback, useReducer } from "react"
+import type { PendingChange, SchedulerReservation } from "../types"
+
+export interface SchedulerState {
+  dates: string[]
+  reservations: SchedulerReservation[]
+  pendingChanges: PendingChange[]
+  conflictReservationId: string | null
+  saving: boolean
+}
+
+type Action =
+  | { type: "SET_DATES"; dates: string[] }
+  | { type: "SET_RESERVATIONS"; reservations: SchedulerReservation[] }
+  | {
+      type: "MOVE_RESERVATION"
+      reservationId: string
+      newTableId: string
+      newTableNumber: string
+      newDate: string
+      newStartTime: string
+      newEndTime: string
+    }
+  | {
+      type: "RESIZE_RESERVATION"
+      reservationId: string
+      edge: "start" | "end"
+      newTime: string
+    }
+  | { type: "RESET_CHANGES" }
+  | { type: "MARK_CONFLICT"; reservationId: string }
+  | { type: "CLEAR_CONFLICT" }
+  | { type: "SET_SAVING"; saving: boolean }
+  | { type: "COMMIT_CHANGES" }
+
+function toHHMM(iso: string): string {
+  const d = new Date(iso)
+  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`
+}
+
+function toDateKey(iso: string): string {
+  const d = new Date(iso)
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
+}
+
+function applyChange(
+  reservations: SchedulerReservation[],
+  change: PendingChange,
+): SchedulerReservation[] {
+  return reservations.map((r) => {
+    if (r.public_id !== change.reservation_id) return r
+    return {
+      ...r,
+      table: change.new_table_id,
+      table_number: change.new_table_number,
+      start_at: `${change.new_date}T${change.new_start_time}:00`,
+      end_at: `${change.new_date}T${change.new_end_time}:00`,
+    }
+  })
+}
+
+function reducer(state: SchedulerState, action: Action): SchedulerState {
+  switch (action.type) {
+    case "SET_DATES":
+      return { ...state, dates: action.dates }
+    case "SET_RESERVATIONS":
+      return { ...state, reservations: action.reservations }
+    case "MOVE_RESERVATION": {
+      const existing = state.reservations.find((r) => r.public_id === action.reservationId)
+      if (!existing) return state
+
+      const change: PendingChange = {
+        reservation_id: action.reservationId,
+        original_table: existing.table,
+        original_table_number: existing.table_number,
+        original_start_at: existing.start_at,
+        original_end_at: existing.end_at,
+        new_table_id: action.newTableId,
+        new_table_number: action.newTableNumber,
+        new_date: action.newDate,
+        new_start_time: action.newStartTime,
+        new_end_time: action.newEndTime,
+      }
+
+      const otherChanges = state.pendingChanges.filter(
+        (c) => c.reservation_id !== action.reservationId,
+      )
+      const newChanges = [...otherChanges, change]
+
+      const baseReservations = state.reservations.map((r) => {
+        const prevChange = state.pendingChanges.find((c) => c.reservation_id === r.public_id)
+        if (prevChange) {
+          return {
+            ...r,
+            table: prevChange.original_table,
+            table_number: prevChange.original_table_number,
+            start_at: prevChange.original_start_at,
+            end_at: prevChange.original_end_at,
+          }
+        }
+        return r
+      })
+
+      let updated = baseReservations
+      for (const c of newChanges) {
+        updated = applyChange(updated, c)
+      }
+
+      return { ...state, reservations: updated, pendingChanges: newChanges }
+    }
+    case "RESIZE_RESERVATION": {
+      const target = state.reservations.find((r) => r.public_id === action.reservationId)
+      if (!target) return state
+
+      const startDate = new Date(target.start_at)
+      const endDate = new Date(target.end_at)
+      let newStart = startDate
+      let newEnd = endDate
+
+      if (action.edge === "start") {
+        const [h, m] = action.newTime.split(":").map(Number)
+        newStart = new Date(startDate)
+        newStart.setHours(h, m, 0, 0)
+        if (newStart >= endDate) return state
+      } else {
+        const [h, m] = action.newTime.split(":").map(Number)
+        newEnd = new Date(endDate)
+        newEnd.setHours(h, m, 0, 0)
+        if (newEnd <= startDate) return state
+      }
+
+      const dateKey = toDateKey(newStart.toISOString())
+      const startHHMM = toHHMM(newStart.toISOString())
+      const endHHMM = toHHMM(newEnd.toISOString())
+
+      const change: PendingChange = {
+        reservation_id: action.reservationId,
+        original_table: target.table,
+        original_table_number: target.table_number,
+        original_start_at: target.start_at,
+        original_end_at: target.end_at,
+        new_table_id: target.table,
+        new_table_number: target.table_number,
+        new_date: dateKey,
+        new_start_time: startHHMM,
+        new_end_time: endHHMM,
+      }
+
+      const otherChanges = state.pendingChanges.filter(
+        (c) => c.reservation_id !== action.reservationId,
+      )
+      const newChanges = [...otherChanges, change]
+
+      const baseReservations = state.reservations.map((r) => {
+        const prevChange = state.pendingChanges.find((c) => c.reservation_id === r.public_id)
+        if (prevChange) {
+          return {
+            ...r,
+            table: prevChange.original_table,
+            table_number: prevChange.original_table_number,
+            start_at: prevChange.original_start_at,
+            end_at: prevChange.original_end_at,
+          }
+        }
+        return r
+      })
+
+      let updated = baseReservations
+      for (const c of newChanges) {
+        updated = applyChange(updated, c)
+      }
+
+      return { ...state, reservations: updated, pendingChanges: newChanges }
+    }
+    case "RESET_CHANGES": {
+      const restored = state.reservations.map((r) => {
+        const change = state.pendingChanges.find((c) => c.reservation_id === r.public_id)
+        if (change) {
+          return {
+            ...r,
+            table: change.original_table,
+            table_number: change.original_table_number,
+            start_at: change.original_start_at,
+            end_at: change.original_end_at,
+          }
+        }
+        return r
+      })
+      return { ...state, reservations: restored, pendingChanges: [], conflictReservationId: null }
+    }
+    case "MARK_CONFLICT":
+      return { ...state, conflictReservationId: action.reservationId }
+    case "CLEAR_CONFLICT":
+      return { ...state, conflictReservationId: null }
+    case "SET_SAVING":
+      return { ...state, saving: action.saving }
+    case "COMMIT_CHANGES":
+      return { ...state, pendingChanges: [], conflictReservationId: null }
+    default:
+      return state
+  }
+}
+
+const initialState: SchedulerState = {
+  dates: [],
+  reservations: [],
+  pendingChanges: [],
+  conflictReservationId: null,
+  saving: false,
+}
+
+export function useSchedulerState() {
+  const [state, dispatch] = useReducer(reducer, initialState)
+
+  const setDates = useCallback((dates: string[]) => dispatch({ type: "SET_DATES", dates }), [])
+  const setReservations = useCallback(
+    (reservations: SchedulerReservation[]) => dispatch({ type: "SET_RESERVATIONS", reservations }),
+    [],
+  )
+  const moveReservation = useCallback(
+    (
+      reservationId: string,
+      newTableId: string,
+      newTableNumber: string,
+      newDate: string,
+      newStartTime: string,
+      newEndTime: string,
+    ) =>
+      dispatch({
+        type: "MOVE_RESERVATION",
+        reservationId,
+        newTableId,
+        newTableNumber,
+        newDate,
+        newStartTime,
+        newEndTime,
+      }),
+    [],
+  )
+  const resizeReservation = useCallback(
+    (reservationId: string, edge: "start" | "end", newTime: string) =>
+      dispatch({ type: "RESIZE_RESERVATION", reservationId, edge, newTime }),
+    [],
+  )
+  const resetChanges = useCallback(() => dispatch({ type: "RESET_CHANGES" }), [])
+  const markConflict = useCallback(
+    (reservationId: string) => dispatch({ type: "MARK_CONFLICT", reservationId }),
+    [],
+  )
+  const clearConflict = useCallback(() => dispatch({ type: "CLEAR_CONFLICT" }), [])
+  const setSaving = useCallback((saving: boolean) => dispatch({ type: "SET_SAVING", saving }), [])
+  const commitChanges = useCallback(() => dispatch({ type: "COMMIT_CHANGES" }), [])
+
+  return {
+    state,
+    setDates,
+    setReservations,
+    moveReservation,
+    resizeReservation,
+    resetChanges,
+    markConflict,
+    clearConflict,
+    setSaving,
+    commitChanges,
+  }
+}
