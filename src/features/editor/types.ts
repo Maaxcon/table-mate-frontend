@@ -1,9 +1,21 @@
 import type { CSSProperties } from "react"
 
 export const GRID = 100
-export const CANVAS_W = 2000
-export const CANVAS_H = 2000
 export const OVERHANG = GRID
+
+// Default canvas dimensions (in grid units / columns & rows).
+export const DEFAULT_CANVAS_COLS = 20
+export const DEFAULT_CANVAS_ROWS = 20
+
+// Legacy pixel constants (derived from defaults — prefer consuming CANVAS_COLS/CANVAS_ROWS).
+export const CANVAS_W = GRID * DEFAULT_CANVAS_COLS
+export const CANVAS_H = GRID * DEFAULT_CANVAS_ROWS
+
+// Min/max canvas dimensions (grid units).
+export const CANVAS_MIN_COLS = 8
+export const CANVAS_MIN_ROWS = 8
+export const CANVAS_MAX_COLS = 50
+export const CANVAS_MAX_ROWS = 50
 
 // Bounds for pinch/ctrl-wheel zoom of the editor canvas.
 export const EDITOR_MIN_SCALE = 0.4
@@ -331,4 +343,39 @@ export function entityHasLabel(type: EntityType): boolean {
 
 export function entityHasProperties(type: EntityType): boolean {
   return type.startsWith("table")
+}
+
+/**
+ * Clamp an entity's raw position so its pixel coordinates do not exceed the
+ * backend's MaxValueValidator limits.  The backend computes these from the
+ * canvas dimensions (canvas_cols * GRID, canvas_rows * GRID), so we derive the
+ * same limits here from the grid-unit canvas size.
+ *
+ *  • Tables / Obstacles:  x,y ≤ canvasCols-2  (for tables),  y ≤ canvasRows-1 (obstacles)
+ *  • Thresholds / Portals: x,y ≤ canvasCols / canvasRows
+ */
+export function clampEntityToBackendLimits(
+  x: number,
+  y: number,
+  entityType: EntityType,
+  canvasCols: number,
+  canvasRows: number,
+): { x: number; y: number } {
+  let maxX: number
+  let maxY: number
+  if (entityType === "threshold" || entityType === "portal") {
+    maxX = canvasCols
+    maxY = canvasRows
+  } else if (entityType === "obstacle") {
+    maxX = canvasCols - 2
+    maxY = canvasRows - 1
+  } else {
+    // tables
+    maxX = canvasCols - 2
+    maxY = canvasRows - 2
+  }
+  return {
+    x: Math.max(-1, Math.min(x, maxX)),
+    y: Math.max(-1, Math.min(y, maxY)),
+  }
 }

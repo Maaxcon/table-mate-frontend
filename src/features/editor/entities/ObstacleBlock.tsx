@@ -11,6 +11,8 @@ interface ObstacleBlockProps {
   onResize?: (id: string, w: number, h: number) => void
   onMove?: (id: string, x: number, y: number) => void
   canvasScale?: number
+  canvasCols: number
+  canvasRows: number
 }
 
 export function ObstacleBlock({
@@ -21,6 +23,8 @@ export function ObstacleBlock({
   onResize,
   onMove,
   canvasScale = 1,
+  canvasCols,
+  canvasRows,
 }: ObstacleBlockProps) {
   const px = (v: number) => v * GRID
 
@@ -60,6 +64,8 @@ export function ObstacleBlock({
           onResize={onResize}
           onMove={onMove}
           scale={canvasScale}
+          canvasCols={canvasCols}
+          canvasRows={canvasRows}
         />
       )}
     </div>

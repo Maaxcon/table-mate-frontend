@@ -14,6 +14,8 @@ interface FloorPlanProps {
   currentTime: Date
   onSelect: (table: FloorTable) => void
   onZoneChange?: (zoneId: string) => void
+  canvasCols?: number
+  canvasRows?: number
 }
 
 const statusLabel: Record<string, string> = {
@@ -31,6 +33,8 @@ export function FloorPlan({
   currentTime,
   onSelect,
   onZoneChange,
+  canvasCols,
+  canvasRows,
 }: FloorPlanProps) {
   // Join a layout table to its live table by public_id, falling back to public_number.
   const { byId, byNumber } = useMemo(() => {
@@ -61,6 +65,8 @@ export function FloorPlan({
         payload={payload}
         selectedZoneId={selectedZoneId}
         selectedId={selectedId}
+        canvasCols={canvasCols}
+        canvasRows={canvasRows}
         onTableSelect={(ref) => {
           const table = resolve(ref)
           if (table) onSelect(table)

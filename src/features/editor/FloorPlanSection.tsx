@@ -12,7 +12,12 @@ import { useEditorState } from "./hooks/useEditorState"
 import type { EditorState } from "./hooks/useEditorState"
 import { usePublish } from "./hooks/usePublish"
 import type { PublishResult } from "./hooks/usePublish"
-import { serializeEntities, deserializeLayout } from "./types"
+import {
+  DEFAULT_CANVAS_COLS,
+  DEFAULT_CANVAS_ROWS,
+  serializeEntities,
+  deserializeLayout,
+} from "./types"
 import type { EditorEntity, LayoutPayload } from "./types"
 import type { Layout } from "@/types/api"
 import "./Toolbar.css"
@@ -62,6 +67,14 @@ function FloorPlanSection() {
       },
     [selectedZone],
   )
+
+  const canvasCols = selectedZone?.canvas_cols ?? DEFAULT_CANVAS_COLS
+  const canvasRows = selectedZone?.canvas_rows ?? DEFAULT_CANVAS_ROWS
+
+  // Keep editor state in sync when zone changes canvas dimensions.
+  useEffect(() => {
+    dispatch({ type: "SET_CANVAS_SIZE", cols: canvasCols, rows: canvasRows })
+  }, [canvasCols, canvasRows, dispatch])
 
   useEffect(() => {
     if (!restaurantId) return
@@ -139,9 +152,21 @@ function FloorPlanSection() {
       dirty,
       activeTool,
       deletedServerIds,
+      canvasCols,
+      canvasRows,
     }
-    publish(entities, deletedServerIds)
-  }, [publish, entities, selectedId, lastPublishedJson, dirty, activeTool, deletedServerIds])
+    publish(entities, deletedServerIds, canvasCols, canvasRows)
+  }, [
+    publish,
+    entities,
+    selectedId,
+    lastPublishedJson,
+    dirty,
+    activeTool,
+    deletedServerIds,
+    canvasCols,
+    canvasRows,
+  ])
 
   const selectedEntity = visibleEntities.find((e) => e.id === selectedId) ?? null
 
@@ -171,6 +196,19 @@ function FloorPlanSection() {
       await updateZone(selectedZoneId, { edge_styles: updated })
     },
     [selectedZoneId, zones],
+  )
+
+  const handleCanvasSizeChange = useCallback(
+    async (cols: number, rows: number) => {
+      if (!selectedZoneId) return
+      setZones((prev) =>
+        prev.map((z) =>
+          z.public_id === selectedZoneId ? { ...z, canvas_cols: cols, canvas_rows: rows } : z,
+        ),
+      )
+      await updateZone(selectedZoneId, { canvas_cols: cols, canvas_rows: rows })
+    },
+    [selectedZoneId],
   )
 
   return (
@@ -205,6 +243,8 @@ function FloorPlanSection() {
               onCanvasClick={handleCanvasClick}
               onEntityResize={(id, w, h) => updateEntity(id, { w, h })}
               edgeStyles={edgeStyles}
+              canvasCols={canvasCols}
+              canvasRows={canvasRows}
             />
             <PropertiesSidebar
               entity={selectedEntity}
@@ -213,6 +253,9 @@ function FloorPlanSection() {
               zones={zones}
               selectedZone={selectedZone}
               onZoneStyleChange={handleZoneStyleChange}
+              canvasCols={canvasCols}
+              canvasRows={canvasRows}
+              onCanvasSizeChange={handleCanvasSizeChange}
             />
           </>
         )}

@@ -11,6 +11,8 @@ interface TableBlockProps {
   onResize?: (id: string, w: number, h: number) => void
   onMove?: (id: string, x: number, y: number) => void
   canvasScale?: number
+  canvasCols: number
+  canvasRows: number
 }
 
 export function TableBlock({
@@ -21,6 +23,8 @@ export function TableBlock({
   onResize,
   onMove,
   canvasScale = 1,
+  canvasCols,
+  canvasRows,
 }: TableBlockProps) {
   const px = (v: number) => v * GRID
 
@@ -67,6 +71,8 @@ export function TableBlock({
           onResize={onResize}
           onMove={onMove}
           scale={canvasScale}
+          canvasCols={canvasCols}
+          canvasRows={canvasRows}
         />
       )}
     </div>

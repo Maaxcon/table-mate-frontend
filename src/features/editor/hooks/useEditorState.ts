@@ -1,11 +1,11 @@
 import { useCallback, useReducer } from "react"
 import type { EditorEntity } from "../types"
 import {
-  CANVAS_H,
-  CANVAS_W,
+  DEFAULT_CANVAS_COLS,
+  DEFAULT_CANVAS_ROWS,
+  clampEntityToBackendLimits,
   findFreePosition,
   generateId,
-  GRID,
   minLabelSize,
   rotatedAABB,
   serializeEntities,
@@ -22,6 +22,9 @@ export interface EditorState {
   // serverIds of tables the admin explicitly removed since the last load/publish.
   // Sent to the publish endpoint so only genuine deletions are conflict-checked.
   deletedServerIds: string[]
+  /** Canvas dimensions in grid units (columns & rows). */
+  canvasCols: number
+  canvasRows: number
 }
 
 type Action =
@@ -34,7 +37,14 @@ type Action =
   | { type: "PUBLISH_SUCCESS"; tableIdMap?: Record<string, string> }
   | { type: "PUBLISH_ROLLBACK"; previousState: EditorState }
   | { type: "SET_DIRTY"; dirty: boolean }
-  | { type: "LOAD_ENTITIES"; entities: EditorEntity[]; publishedJson: object }
+  | {
+      type: "LOAD_ENTITIES"
+      entities: EditorEntity[]
+      publishedJson: object
+      canvasCols?: number
+      canvasRows?: number
+    }
+  | { type: "SET_CANVAS_SIZE"; cols: number; rows: number }
   | { type: "CLEAR" }
 
 function computeDirty(entities: EditorEntity[], lastPublishedJson: object | null): boolean {
@@ -50,8 +60,20 @@ function editorReducer(state: EditorState, action: Action): EditorState {
       const others = entityZoneId
         ? state.entities.filter((e) => e.zoneId === entityZoneId)
         : state.entities
-      const free = findFreePosition({ ...action.entity }, others, CANVAS_W / GRID, CANVAS_H / GRID)
-      const placed = { ...action.entity, x: free.x, y: free.y }
+      const free = findFreePosition(
+        { ...action.entity },
+        others,
+        state.canvasCols,
+        state.canvasRows,
+      )
+      const clamped = clampEntityToBackendLimits(
+        free.x,
+        free.y,
+        action.entity.type,
+        state.canvasCols,
+        state.canvasRows,
+      )
+      const placed = { ...action.entity, x: clamped.x, y: clamped.y }
       const entities = [...state.entities, placed]
       return {
         ...state,
@@ -84,12 +106,21 @@ function editorReducer(state: EditorState, action: Action): EditorState {
           const ox = (aabb.w - updated.w) / 2
           const oy = (aabb.h - updated.h) / 2
           if (updated.type === "threshold" || updated.type === "portal") {
-            updated.x = Math.max(-1, Math.min(aabb.x, CANVAS_W / GRID + 1 - aabb.w)) + ox
-            updated.y = Math.max(-1, Math.min(aabb.y, CANVAS_H / GRID + 1 - aabb.h)) + oy
+            updated.x = Math.max(-1, Math.min(aabb.x, state.canvasCols + 1 - aabb.w)) + ox
+            updated.y = Math.max(-1, Math.min(aabb.y, state.canvasRows + 1 - aabb.h)) + oy
           } else {
-            updated.x = Math.max(0, Math.min(aabb.x, CANVAS_W / GRID - aabb.w)) + ox
-            updated.y = Math.max(0, Math.min(aabb.y, CANVAS_H / GRID - aabb.h)) + oy
+            updated.x = Math.max(0, Math.min(aabb.x, state.canvasCols - aabb.w)) + ox
+            updated.y = Math.max(0, Math.min(aabb.y, state.canvasRows - aabb.h)) + oy
           }
+          const clamped = clampEntityToBackendLimits(
+            updated.x,
+            updated.y,
+            updated.type,
+            state.canvasCols,
+            state.canvasRows,
+          )
+          updated.x = clamped.x
+          updated.y = clamped.y
         }
         return updated
       })
@@ -110,20 +141,27 @@ function editorReducer(state: EditorState, action: Action): EditorState {
       const offsetX = (aabb.w - entity.w) / 2
       const offsetY = (aabb.h - entity.h) / 2
       if (entity.type === "threshold" || entity.type === "portal") {
-        x = Math.max(-1, Math.min(aabb.x, CANVAS_W / GRID + 1 - aabb.w)) + offsetX
-        y = Math.max(-1, Math.min(aabb.y, CANVAS_H / GRID + 1 - aabb.h)) + offsetY
+        x = Math.max(-1, Math.min(aabb.x, state.canvasCols + 1 - aabb.w)) + offsetX
+        y = Math.max(-1, Math.min(aabb.y, state.canvasRows + 1 - aabb.h)) + offsetY
       } else {
-        x = Math.max(0, Math.min(aabb.x, CANVAS_W / GRID - aabb.w)) + offsetX
-        y = Math.max(0, Math.min(aabb.y, CANVAS_H / GRID - aabb.h)) + offsetY
+        x = Math.max(0, Math.min(aabb.x, state.canvasCols - aabb.w)) + offsetX
+        y = Math.max(0, Math.min(aabb.y, state.canvasRows - aabb.h)) + offsetY
       }
       const free = findFreePosition(
         { x, y, w: entity.w, h: entity.h, rotation: entity.rotation },
         others,
-        CANVAS_W / GRID,
-        CANVAS_H / GRID,
+        state.canvasCols,
+        state.canvasRows,
+      )
+      const clamped = clampEntityToBackendLimits(
+        free.x,
+        free.y,
+        entity.type,
+        state.canvasCols,
+        state.canvasRows,
       )
       const entities = state.entities.map((e) =>
-        e.id === action.id ? { ...e, x: free.x, y: free.y } : e,
+        e.id === action.id ? { ...e, x: clamped.x, y: clamped.y } : e,
       )
       return { ...state, entities, dirty: computeDirty(entities, state.lastPublishedJson) }
     }
@@ -176,7 +214,11 @@ function editorReducer(state: EditorState, action: Action): EditorState {
         lastPublishedJson: action.publishedJson,
         dirty: false,
         deletedServerIds: [],
+        canvasCols: action.canvasCols ?? state.canvasCols,
+        canvasRows: action.canvasRows ?? state.canvasRows,
       }
+    case "SET_CANVAS_SIZE":
+      return { ...state, canvasCols: action.cols, canvasRows: action.rows }
     case "CLEAR":
       return {
         entities: [],
@@ -185,6 +227,8 @@ function editorReducer(state: EditorState, action: Action): EditorState {
         dirty: false,
         activeTool: null,
         deletedServerIds: [],
+        canvasCols: DEFAULT_CANVAS_COLS,
+        canvasRows: DEFAULT_CANVAS_ROWS,
       }
     default:
       return state
@@ -198,6 +242,8 @@ const initialState: EditorState = {
   dirty: false,
   activeTool: null,
   deletedServerIds: [],
+  canvasCols: DEFAULT_CANVAS_COLS,
+  canvasRows: DEFAULT_CANVAS_ROWS,
 }
 
 export function useEditorState() {
@@ -213,14 +259,8 @@ export function useEditorState() {
     (type: EditorEntity["type"], gridX: number, gridY: number, extra?: Partial<EditorEntity>) => {
       const preset = TABLE_PRESETS[type]
       const defaultSize = preset ?? DEFAULT_SIZES[type]
-      let x = gridX
-      let y = gridY
-      if (type !== "threshold" && type !== "portal") {
-        const w = defaultSize?.w ?? 2
-        const h = defaultSize?.h ?? 2
-        x = Math.max(0, Math.min(x, CANVAS_W / GRID - w))
-        y = Math.max(0, Math.min(y, CANVAS_H / GRID - h))
-      }
+      const x = gridX
+      const y = gridY
       const entity: EditorEntity = {
         id: generateId(),
         type,
@@ -265,9 +305,12 @@ export function useEditorState() {
     [],
   )
 
-  const loadEntities = useCallback((entities: EditorEntity[], publishedJson: object) => {
-    dispatch({ type: "LOAD_ENTITIES", entities, publishedJson })
-  }, [])
+  const loadEntities = useCallback(
+    (entities: EditorEntity[], publishedJson: object, canvasCols?: number, canvasRows?: number) => {
+      dispatch({ type: "LOAD_ENTITIES", entities, publishedJson, canvasCols, canvasRows })
+    },
+    [],
+  )
 
   const clearAll = useCallback(() => {
     dispatch({ type: "CLEAR" })

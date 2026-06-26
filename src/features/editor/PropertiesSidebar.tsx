@@ -1,6 +1,7 @@
 import { useCallback } from "react"
 import type { Zone } from "@/features/reservation/api"
 import type { EditorEntity } from "./types"
+import { CANVAS_MIN_COLS, CANVAS_MIN_ROWS, CANVAS_MAX_COLS, CANVAS_MAX_ROWS } from "./types"
 import "./PropertiesSidebar.css"
 
 interface PropertiesSidebarProps {
@@ -10,6 +11,9 @@ interface PropertiesSidebarProps {
   zones: Zone[]
   selectedZone: Zone | null
   onZoneStyleChange: (edge: string, style: "dashed" | "solid") => void
+  canvasCols: number
+  canvasRows: number
+  onCanvasSizeChange: (cols: number, rows: number) => void
 }
 
 const METADATA_TAGS = ["Window Seat", "Quiet", "Wheelchair Accessible"]
@@ -28,6 +32,9 @@ export function PropertiesSidebar({
   zones,
   selectedZone,
   onZoneStyleChange,
+  canvasCols,
+  canvasRows,
+  onCanvasSizeChange,
 }: PropertiesSidebarProps) {
   const handleTargetZoneChange = useCallback(
     (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -59,6 +66,60 @@ export function PropertiesSidebar({
             <span className="editor-sidebar__id">Zone</span>
           </div>
           <div className="editor-sidebar__body">
+            <fieldset className="editor-sidebar__field">
+              <legend className="editor-sidebar__label">Canvas Size (grid units)</legend>
+              <div className="editor-sidebar__row">
+                <label
+                  htmlFor="canvas-cols"
+                  style={{ fontSize: "0.8rem", minWidth: 50, display: "inline-block" }}
+                >
+                  Columns
+                </label>
+                <input
+                  id="canvas-cols"
+                  type="number"
+                  className="editor-sidebar__input"
+                  min={CANVAS_MIN_COLS}
+                  max={CANVAS_MAX_COLS}
+                  value={canvasCols}
+                  onChange={(e) => {
+                    const v = Math.max(
+                      CANVAS_MIN_COLS,
+                      Math.min(CANVAS_MAX_COLS, Number(e.target.value)),
+                    )
+                    onCanvasSizeChange(v, canvasRows)
+                  }}
+                  style={{ width: 60 }}
+                />
+                <label
+                  htmlFor="canvas-rows"
+                  style={{
+                    fontSize: "0.8rem",
+                    minWidth: 50,
+                    display: "inline-block",
+                    marginLeft: 8,
+                  }}
+                >
+                  Rows
+                </label>
+                <input
+                  id="canvas-rows"
+                  type="number"
+                  className="editor-sidebar__input"
+                  min={CANVAS_MIN_ROWS}
+                  max={CANVAS_MAX_ROWS}
+                  value={canvasRows}
+                  onChange={(e) => {
+                    const v = Math.max(
+                      CANVAS_MIN_ROWS,
+                      Math.min(CANVAS_MAX_ROWS, Number(e.target.value)),
+                    )
+                    onCanvasSizeChange(canvasCols, v)
+                  }}
+                  style={{ width: 60 }}
+                />
+              </div>
+            </fieldset>
             <fieldset className="editor-sidebar__field">
               <legend className="editor-sidebar__label">Border Styles</legend>
               {Object.entries(EDGE_LABELS).map(([key, label]) => (

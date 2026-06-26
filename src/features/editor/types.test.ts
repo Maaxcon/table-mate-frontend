@@ -1,8 +1,8 @@
 import { describe, it, expect } from "vitest"
-import { findFreePosition, rotatedAABB, CANVAS_W, CANVAS_H, GRID } from "./types"
+import { findFreePosition, rotatedAABB, DEFAULT_CANVAS_COLS, DEFAULT_CANVAS_ROWS } from "./types"
 
-const GRID_COLS = CANVAS_W / GRID // 20
-const GRID_ROWS = CANVAS_H / GRID // 20
+const GRID_COLS = DEFAULT_CANVAS_COLS
+const GRID_ROWS = DEFAULT_CANVAS_ROWS
 
 describe("rotatedAABB", () => {
   it("returns original rect when rotation is 0", () => {

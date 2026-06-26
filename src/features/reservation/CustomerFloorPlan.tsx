@@ -86,6 +86,8 @@ export function CustomerFloorPlan({
         selectedZoneId={selectedZone}
         selectedId={selectedId}
         edgeStyles={zones.find((z) => z.public_id === selectedZone)?.edge_styles ?? undefined}
+        canvasCols={zones.find((z) => z.public_id === selectedZone)?.canvas_cols}
+        canvasRows={zones.find((z) => z.public_id === selectedZone)?.canvas_rows}
         onTableSelect={(ref) => {
           const table = resolve(ref)
           if (table) onSelect(table)

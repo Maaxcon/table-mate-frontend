@@ -29,6 +29,8 @@ interface ZoneApiResponse {
   public_id: string
   name: string
   sort_order: number
+  canvas_cols?: number
+  canvas_rows?: number
 }
 
 function mapTableToFloorTable(t: Table): FloorTable {
@@ -338,6 +340,8 @@ export function WaiterOrderView() {
             currentTime={currentTime}
             onSelect={handleTableSelect}
             onZoneChange={setSelectedZoneId}
+            canvasCols={zones.find((z) => z.public_id === selectedZoneId)?.canvas_cols}
+            canvasRows={zones.find((z) => z.public_id === selectedZoneId)?.canvas_rows}
           />
         </div>
 

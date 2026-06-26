@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react"
 import {
-  CANVAS_H,
-  CANVAS_W,
+  DEFAULT_CANVAS_COLS,
+  DEFAULT_CANVAS_ROWS,
   GRID,
   deserializeLayout,
   uprightContentStyle,
@@ -32,6 +32,9 @@ interface FloorPlanViewProps {
   selectedId?: string | null
   /** Per-zone edge styles override (computed externally from zone data). */
   edgeStyles?: Record<string, "dashed" | "solid">
+  /** Per-zone canvas dimensions in grid units. Falls back to defaults. */
+  canvasCols?: number
+  canvasRows?: number
   onTableSelect?: (table: FloorPlanTableRef) => void
   /** Resolve a table's visual status (defaults to "free"). */
   tableStatus?: (table: FloorPlanTableRef) => FloorVisualStatus
@@ -56,6 +59,8 @@ export function FloorPlanView({
   selectedZoneId = null,
   selectedId = null,
   edgeStyles: edgeStylesProp,
+  canvasCols: canvasColsProp,
+  canvasRows: canvasRowsProp,
   onTableSelect,
   tableStatus,
   renderTableContent,
@@ -65,18 +70,23 @@ export function FloorPlanView({
   const containerRef = useRef<HTMLDivElement>(null)
   const [scale, setScale] = useState(1)
 
+  const canvasCols = canvasColsProp ?? DEFAULT_CANVAS_COLS
+  const canvasRows = canvasRowsProp ?? DEFAULT_CANVAS_ROWS
+  const canvasPxW = canvasCols * GRID
+  const canvasPxH = canvasRows * GRID
+
   useEffect(() => {
     const el = containerRef.current
     if (!el) return
     // Fit the canvas plus its proportional overhang (one grid cell each side, where
     // grid -1 portals/thresholds live). With padding = GRID * scale the scale factors
-    // out cleanly: clientWidth = (CANVAS_W + 2 * GRID) * scale.
-    const update = () => setScale(Math.max(el.clientWidth / (CANVAS_W + 2 * GRID), 0.3))
+    // out cleanly: clientWidth = (canvasPxW + 2 * GRID) * scale.
+    const update = () => setScale(Math.max(el.clientWidth / (canvasPxW + 2 * GRID), 0.3))
     update()
     const observer = new ResizeObserver(update)
     observer.observe(el)
     return () => observer.disconnect()
-  }, [])
+  }, [canvasPxW])
 
   const entities = useMemo<EditorEntity[]>(
     () => (payload ? deserializeLayout(payload) : []),
@@ -104,8 +114,8 @@ export function FloorPlanView({
   }
 
   const pad = GRID * scale
-  const scaledW = CANVAS_W * scale + 2 * pad
-  const scaledH = CANVAS_H * scale + 2 * pad
+  const scaledW = canvasPxW * scale + 2 * pad
+  const scaledH = canvasPxH * scale + 2 * pad
 
   return (
     <div className="fp-view" ref={containerRef}>
@@ -124,8 +134,8 @@ export function FloorPlanView({
           position: "absolute",
           top: pad,
           left: pad,
-          width: CANVAS_W,
-          height: CANVAS_H,
+          width: canvasPxW,
+          height: canvasPxH,
           transform: `scale(${scale})`,
           transformOrigin: "top left",
         }}

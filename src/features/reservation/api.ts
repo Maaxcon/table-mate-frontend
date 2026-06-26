@@ -42,6 +42,8 @@ export type Zone = {
   name: string
   sort_order: number
   edge_styles?: Record<string, "dashed" | "solid">
+  canvas_cols?: number
+  canvas_rows?: number
 }
 
 export async function fetchZones(restaurantId?: string): Promise<Zone[]> {

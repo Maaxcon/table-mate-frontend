@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef } from "react"
-import { GRID, CANVAS_W, CANVAS_H, snap, SIZE_CONSTRAINTS } from "../types"
+import { GRID, snap, SIZE_CONSTRAINTS } from "../types"
 import type { EntityType } from "../types"
 import "./blocks.css"
 
@@ -13,6 +13,8 @@ interface ResizeHandlesProps {
   onResize: (id: string, w: number, h: number) => void
   onMove: (id: string, x: number, y: number) => void
   scale: number
+  canvasCols: number
+  canvasRows: number
 }
 
 type Corner = "nw" | "ne" | "sw" | "se"
@@ -27,6 +29,8 @@ export function ResizeHandles({
   onResize,
   onMove,
   scale,
+  canvasCols,
+  canvasRows,
 }: ResizeHandlesProps) {
   const dragRef = useRef<{
     corner: Corner
@@ -100,9 +104,9 @@ export function ResizeHandles({
   }, [entityId, entityType, onResize, onMove, scale])
 
   const atTop = entityY <= 0
-  const atBottom = entityY + entityH >= CANVAS_H / GRID
+  const atBottom = entityY + entityH >= canvasRows
   const atLeft = entityX <= 0
-  const atRight = entityX + entityW >= CANVAS_W / GRID
+  const atRight = entityX + entityW >= canvasCols
 
   const cornerLabels: Record<Corner, string> = {
     nw: "top-left",

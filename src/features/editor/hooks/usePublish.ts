@@ -2,7 +2,7 @@ import { useCallback, useRef, useState } from "react"
 import { api } from "@/api/client"
 import { serializeEntities } from "../types"
 import type { EditorEntity } from "../types"
-import type { LayoutVersion, PublishLayout } from "@/types/api"
+import type { LayoutVersion } from "@/types/api"
 
 /**
  * The publish endpoint returns the new {@link LayoutVersion} plus a map of
@@ -24,13 +24,20 @@ export function usePublish({ onSuccess, onRollback }: UsePublishOptions) {
   const rollbackRef = useRef<(() => void) | null>(null)
 
   const publish = useCallback(
-    async (entities: EditorEntity[], deletedTableIds: string[] = []) => {
+    async (
+      entities: EditorEntity[],
+      deletedTableIds: string[] = [],
+      canvasCols?: number,
+      canvasRows?: number,
+    ) => {
       setPublishing(true)
       setError(null)
-      const body: PublishLayout = {
-        ...(serializeEntities(entities) as PublishLayout),
+      const body: Record<string, unknown> = {
+        ...serializeEntities(entities),
         deleted_table_ids: deletedTableIds,
       }
+      if (canvasCols !== undefined) body.canvas_cols = canvasCols
+      if (canvasRows !== undefined) body.canvas_rows = canvasRows
 
       rollbackRef.current = onRollback ?? null
 

@@ -11,6 +11,8 @@ interface ThresholdBlockProps {
   onResize?: (id: string, w: number, h: number) => void
   onMove?: (id: string, x: number, y: number) => void
   canvasScale?: number
+  canvasCols: number
+  canvasRows: number
 }
 
 export function ThresholdBlock({
@@ -21,6 +23,8 @@ export function ThresholdBlock({
   onResize,
   onMove,
   canvasScale = 1,
+  canvasCols,
+  canvasRows,
 }: ThresholdBlockProps) {
   const px = (v: number) => v * GRID
 
@@ -63,6 +67,8 @@ export function ThresholdBlock({
           onResize={onResize}
           onMove={onMove}
           scale={canvasScale}
+          canvasCols={canvasCols}
+          canvasRows={canvasRows}
         />
       )}
     </div>

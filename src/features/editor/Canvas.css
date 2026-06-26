@@ -10,10 +10,6 @@
 
 .editor-canvas {
   position: relative;
-  width: 2000px;
-  height: 2000px;
-  min-width: 2000px;
-  min-height: 2000px;
   background-image: radial-gradient(circle, var(--color-text-primary) 1px, transparent 1px);
   background-size: 100px 100px;
   background-color: var(--color-bg-surface);

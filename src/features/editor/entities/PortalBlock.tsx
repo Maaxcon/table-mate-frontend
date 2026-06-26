@@ -11,6 +11,8 @@ interface PortalBlockProps {
   onResize?: (id: string, w: number, h: number) => void
   onMove?: (id: string, x: number, y: number) => void
   canvasScale?: number
+  canvasCols: number
+  canvasRows: number
 }
 
 export function PortalBlock({
@@ -21,6 +23,8 @@ export function PortalBlock({
   onResize,
   onMove,
   canvasScale = 1,
+  canvasCols,
+  canvasRows,
 }: PortalBlockProps) {
   const px = (v: number) => v * GRID
 
@@ -59,6 +63,8 @@ export function PortalBlock({
           onResize={onResize}
           onMove={onMove}
           scale={canvasScale}
+          canvasCols={canvasCols}
+          canvasRows={canvasRows}
         />
       )}
     </div>

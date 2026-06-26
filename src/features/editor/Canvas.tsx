@@ -18,6 +18,8 @@ interface CanvasProps {
   onCanvasClick: (gridX: number, gridY: number) => void
   onEntityResize: (id: string, w: number, h: number) => void
   edgeStyles: Record<string, "dashed" | "solid">
+  canvasCols: number
+  canvasRows: number
 }
 
 export function Canvas({
@@ -29,6 +31,8 @@ export function Canvas({
   onCanvasClick,
   onEntityResize,
   edgeStyles,
+  canvasCols,
+  canvasRows,
 }: CanvasProps) {
   const canvasRef = useRef<HTMLDivElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -172,6 +176,8 @@ export function Canvas({
       onResize: onEntityResize,
       onMove: onEntityMove,
       canvasScale: scale,
+      canvasCols,
+      canvasRows,
     }
 
     switch (entity.type) {
@@ -237,7 +243,11 @@ export function Canvas({
       <div
         ref={canvasRef}
         className="editor-canvas"
-        style={{ transform: `scale(${scale})` }}
+        style={{
+          width: canvasCols * GRID,
+          height: canvasRows * GRID,
+          transform: `scale(${scale})`,
+        }}
         onMouseDown={handleCanvasMouseDown}
         role="application"
         aria-label="Floor plan editor"
