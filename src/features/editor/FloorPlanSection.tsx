@@ -247,6 +247,11 @@ function FloorPlanSection() {
     [selectedZoneId],
   )
 
+  const handleRenameZone = useCallback(async (zoneId: string, name: string) => {
+    await updateZone(zoneId, { name })
+    setZones((prev) => prev.map((z) => (z.public_id === zoneId ? { ...z, name } : z)))
+  }, [])
+
   const handleDeleteZone = useCallback(
     async (zoneId: string) => {
       setDeleting(true)
@@ -283,6 +288,7 @@ function FloorPlanSection() {
         selectedZoneId={selectedZoneId}
         onZoneSelect={setSelectedZoneId}
         onAddZone={handleAddZone}
+        onRenameZone={handleRenameZone}
         onDeleteZone={(zoneId) => {
           const zone = zones.find((z) => z.public_id === zoneId)
           if (zone) setDeleteZoneTarget(zone)

@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useRef, useState } from "react"
 import type { Zone } from "@/features/reservation/api"
 import "./ZoneHeader.css"
 
@@ -8,6 +8,7 @@ interface ZoneHeaderProps {
   onZoneSelect: (zoneId: string | null) => void
   onAddZone: (name: string) => Promise<void>
   onDeleteZone?: (zoneId: string) => void
+  onRenameZone?: (zoneId: string, name: string) => Promise<void>
 }
 
 export function ZoneHeader({
@@ -16,9 +17,13 @@ export function ZoneHeader({
   onZoneSelect,
   onAddZone,
   onDeleteZone,
+  onRenameZone,
 }: ZoneHeaderProps) {
   const [adding, setAdding] = useState(false)
   const [inputValue, setInputValue] = useState("")
+  const [editingZoneId, setEditingZoneId] = useState<string | null>(null)
+  const [editValue, setEditValue] = useState("")
+  const editInputRef = useRef<HTMLInputElement | null>(null)
 
   const handleAdd = async () => {
     const name = inputValue.trim()
@@ -28,42 +33,80 @@ export function ZoneHeader({
     await onAddZone(name)
   }
 
+  const handleStartRename = (zone: Zone) => {
+    setEditingZoneId(zone.public_id)
+    setEditValue(zone.name)
+    // Focus the input on next tick after render
+    setTimeout(() => editInputRef.current?.focus(), 0)
+  }
+
+  const handleFinishRename = async () => {
+    const id = editingZoneId
+    const name = editValue.trim()
+    setEditingZoneId(null)
+    setEditValue("")
+    if (!id || !name || !onRenameZone) return
+    await onRenameZone(id, name)
+  }
+
+  const handleRenameKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") handleFinishRename()
+    if (e.key === "Escape") {
+      setEditingZoneId(null)
+      setEditValue("")
+    }
+  }
+
   return (
     <div className="editor-zone-header">
       {zones.map((z) => (
-        <button
-          key={z.public_id}
-          type="button"
-          className={[
-            "editor-zone-header__tab",
-            selectedZoneId === z.public_id ? "editor-zone-header__tab--active" : "",
-          ]
-            .filter(Boolean)
-            .join(" ")}
-          onClick={() => onZoneSelect(z.public_id)}
-        >
-          {z.name.toUpperCase()}
-          {onDeleteZone && (
-            <span
-              className="editor-zone-header__delete"
-              role="button"
-              tabIndex={0}
-              onClick={(e) => {
-                e.stopPropagation()
-                onDeleteZone(z.public_id)
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.stopPropagation()
-                  onDeleteZone(z.public_id)
-                }
-              }}
-              title="Delete zone"
+        <div key={z.public_id} className="editor-zone-header__tab-wrapper">
+          {editingZoneId === z.public_id ? (
+            <input
+              ref={editInputRef}
+              className="editor-zone-header__rename-input"
+              type="text"
+              value={editValue}
+              onChange={(e) => setEditValue(e.target.value)}
+              onBlur={handleFinishRename}
+              onKeyDown={handleRenameKeyDown}
+            />
+          ) : (
+            <button
+              type="button"
+              className={[
+                "editor-zone-header__tab",
+                selectedZoneId === z.public_id ? "editor-zone-header__tab--active" : "",
+              ]
+                .filter(Boolean)
+                .join(" ")}
+              onClick={() => onZoneSelect(z.public_id)}
+              onDoubleClick={() => onRenameZone && handleStartRename(z)}
             >
-              ×
-            </span>
+              {z.name.toUpperCase()}
+              {onDeleteZone && (
+                <span
+                  className="editor-zone-header__delete"
+                  role="button"
+                  tabIndex={0}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onDeleteZone(z.public_id)
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.stopPropagation()
+                      onDeleteZone(z.public_id)
+                    }
+                  }}
+                  title="Delete zone"
+                >
+                  ×
+                </span>
+              )}
+            </button>
           )}
-        </button>
+        </div>
       ))}
       {adding ? (
         <div className="editor-zone-header__add-form">
