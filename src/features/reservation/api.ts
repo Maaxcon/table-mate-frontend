@@ -3,6 +3,19 @@ import type { Reservation } from "@/types/api"
 import type { Table } from "@/types/api/types.gen"
 import type { UpcomingReservation } from "@/features/waiter-order-view/data/waiterTypes"
 
+// Turns a DRF error body into a human message: a string `detail`, otherwise the
+// first field error, falling back to a generic message — never raw JSON.
+function extractErrorMessage(body: unknown, fallback: string): string {
+  if (body && typeof body === "object") {
+    const detail = (body as { detail?: unknown }).detail
+    if (typeof detail === "string") return detail
+    const firstValue = Object.values(body as Record<string, unknown>).find(Boolean)
+    if (typeof firstValue === "string") return firstValue
+    if (Array.isArray(firstValue) && typeof firstValue[0] === "string") return firstValue[0]
+  }
+  return fallback
+}
+
 export type WorkingHoursDay = {
   open: string
   close: string
@@ -124,9 +137,7 @@ export async function createReservation(data: {
   })
   if (!res.ok) {
     const body = await res.json().catch(() => ({}))
-    const detail = (body as { detail?: string | Record<string, string[]> }).detail
-    const message = typeof detail === "string" ? detail : JSON.stringify(detail ?? body)
-    throw new Error(message ?? "Failed to create reservation")
+    throw new Error(extractErrorMessage(body, "Failed to create reservation"))
   }
   return res.json() as Promise<ReservationWithTable>
 }
@@ -191,9 +202,7 @@ export async function createStaffReservation(data: {
   })
   if (!res.ok) {
     const body = await res.json().catch(() => ({}))
-    const detail = (body as { detail?: string | Record<string, string[]> }).detail
-    const message = typeof detail === "string" ? detail : JSON.stringify(detail ?? body)
-    throw new Error(message ?? "Failed to create reservation")
+    throw new Error(extractErrorMessage(body, "Failed to create reservation"))
   }
   return res.json() as Promise<ReservationWithTable>
 }

@@ -34,6 +34,7 @@ export function BookingPage() {
 
   const [tables, setTables] = useState<Table[]>([])
   const [tablesLoading, setTablesLoading] = useState(true)
+  const [tablesError, setTablesError] = useState(false)
 
   const [zones, setZones] = useState<Zone[]>([])
   const [selectedZone, setSelectedZone] = useState<string | null>(null)
@@ -47,16 +48,19 @@ export function BookingPage() {
 
   const [reservations, setReservations] = useState<ReservationWithTable[]>([])
   const [reservationsLoading, setReservationsLoading] = useState(false)
+  const [reservationsError, setReservationsError] = useState(false)
   const [upcomingReservations, setUpcomingReservations] = useState<UpcomingReservation[]>([])
 
   const loadTables = useCallback(async () => {
     if (!public_restaurant_id) return
     setTablesLoading(true)
+    setTablesError(false)
     try {
       const data = await fetchTables(public_restaurant_id)
       setTables(data)
     } catch {
       setTables([])
+      setTablesError(true)
     } finally {
       setTablesLoading(false)
     }
@@ -69,6 +73,7 @@ export function BookingPage() {
       setZones(data)
       if (data.length > 0) setSelectedZone(data[0].public_id)
     } catch {
+      // Zones only drive an optional filter; the floor plan still works without them.
       setZones([])
     }
   }, [public_restaurant_id])
@@ -84,6 +89,7 @@ export function BookingPage() {
       setWorkingHours(settings.working_hours)
       setTimezone(settings.timezone)
     } catch {
+      // Hours/timezone only refine the booking modal; slots come from the server either way.
       setWorkingHours(null)
       setTimezone(null)
     }
@@ -92,11 +98,13 @@ export function BookingPage() {
   const loadReservations = useCallback(async () => {
     if (!public_restaurant_id || !isAuthenticated) return
     setReservationsLoading(true)
+    setReservationsError(false)
     try {
       const data = await fetchMyReservations(public_restaurant_id)
       setReservations(data)
     } catch {
       setReservations([])
+      setReservationsError(true)
     } finally {
       setReservationsLoading(false)
     }
@@ -108,6 +116,7 @@ export function BookingPage() {
       const data = await fetchUpcomingReservations(public_restaurant_id)
       setUpcomingReservations(data)
     } catch {
+      // Upcoming-reservation badges are cosmetic; an empty list just hides them.
       setUpcomingReservations([])
     }
   }, [public_restaurant_id])
@@ -204,7 +213,14 @@ export function BookingPage() {
       <div className="bp__content">
         {tab === "floor" &&
           (tablesLoading ? (
-            <p className="bp__loading">LOADING...</p>
+            <p className="bp__loading">Loading…</p>
+          ) : tablesError ? (
+            <div className="bp__error" role="alert">
+              <p className="bp__error-text">Couldn't load the floor plan.</p>
+              <button type="button" className="bp__retry" onClick={loadTables}>
+                Try again
+              </button>
+            </div>
           ) : (
             <CustomerFloorPlan
               tables={filteredTables}
@@ -217,14 +233,23 @@ export function BookingPage() {
             />
           ))}
 
-        {tab === "bookings" && isAuthenticated && (
-          <ActiveBookings
-            reservations={reservations}
-            loading={reservationsLoading}
-            workingHours={workingHours}
-            onRefresh={handleRefresh}
-          />
-        )}
+        {tab === "bookings" &&
+          isAuthenticated &&
+          (reservationsError ? (
+            <div className="bp__error" role="alert">
+              <p className="bp__error-text">Couldn't load your bookings.</p>
+              <button type="button" className="bp__retry" onClick={handleRefresh}>
+                Try again
+              </button>
+            </div>
+          ) : (
+            <ActiveBookings
+              reservations={reservations}
+              loading={reservationsLoading}
+              workingHours={workingHours}
+              onRefresh={handleRefresh}
+            />
+          ))}
       </div>
 
       {bookModalOpen && selectedTable && (
