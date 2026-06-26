@@ -3,7 +3,6 @@
   flex-direction: column;
   gap: 12px;
   height: 100%;
-  min-height: 70vh;
 }
 
 .c-floor-plan__title {

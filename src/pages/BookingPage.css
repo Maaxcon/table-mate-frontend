@@ -3,7 +3,8 @@
   max-width: 1400px;
   margin: 0 auto;
   padding: 24px 16px;
-  min-height: 100vh;
+  height: 100svh;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
 }
@@ -38,6 +39,7 @@
 .bp__content {
   flex: 1;
   min-height: 0;
+  overflow-y: auto;
 }
 
 .bp__loading {
