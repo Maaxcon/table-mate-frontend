@@ -5,7 +5,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.5);
+  background: var(--color-overlay);
 }
 
 .book-modal {
@@ -114,7 +114,7 @@
 .book-modal__success-icon {
   text-align: center;
   font-size: 2.5rem;
-  color: var(--color-success, #2e7d32);
+  color: var(--color-success);
   margin: 8px 0;
 }
 
