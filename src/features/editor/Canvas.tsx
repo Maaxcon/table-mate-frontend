@@ -45,6 +45,13 @@ export function Canvas({
     moved: boolean
   } | null>(null)
 
+  const panDragRef = useRef<{
+    startX: number
+    startY: number
+    startScrollLeft: number
+    startScrollTop: number
+  } | null>(null)
+
   const [scale, setScale] = useState(1)
   // Mirror scale into a ref so the (once-bound) gesture listeners read the live
   // value without re-subscribing on every zoom step.
@@ -117,6 +124,15 @@ export function Canvas({
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
+      const pan = panDragRef.current
+      if (pan) {
+        const el = containerRef.current
+        if (!el) return
+        el.scrollLeft = pan.startScrollLeft - (e.clientX - pan.startX)
+        el.scrollTop = pan.startScrollTop - (e.clientY - pan.startY)
+        return
+      }
+
       const drag = dragRef.current
       if (!drag) return
 
@@ -134,6 +150,10 @@ export function Canvas({
     }
 
     const handleMouseUp = () => {
+      if (panDragRef.current) {
+        panDragRef.current = null
+        if (containerRef.current) containerRef.current.style.cursor = ""
+      }
       dragRef.current = null
     }
 
@@ -223,6 +243,20 @@ export function Canvas({
     return () => window.removeEventListener("keydown", handleKeyDown)
   }, [selectedId, entities, onEntityMove, onEntityResize])
 
+  const handleContainerMouseDown = useCallback((e: React.MouseEvent) => {
+    if (e.button !== 1) return
+    e.preventDefault()
+    const el = containerRef.current
+    if (!el) return
+    panDragRef.current = {
+      startX: e.clientX,
+      startY: e.clientY,
+      startScrollLeft: el.scrollLeft,
+      startScrollTop: el.scrollTop,
+    }
+    el.style.cursor = "grabbing"
+  }, [])
+
   useEffect(() => {
     if (activeTool && activeTool !== "select" && activeTool !== "pan") {
       if (canvasRef.current) {
@@ -236,7 +270,12 @@ export function Canvas({
   }, [activeTool])
 
   return (
-    <div ref={containerRef} className="editor-canvas__container">
+    <div
+      ref={containerRef}
+      className="editor-canvas__container"
+      onMouseDown={handleContainerMouseDown}
+      role="presentation"
+    >
       {/* The canvas is an application widget: it owns pointer placement and (below)
           keyboard move/resize, so it legitimately carries interaction handlers. */}
       {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions */}
