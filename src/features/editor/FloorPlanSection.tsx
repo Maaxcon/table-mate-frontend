@@ -137,6 +137,24 @@ function FloorPlanSection() {
     }
   }, [dirty, loadEntities, toast])
 
+  const handleDiscard = useCallback(async () => {
+    try {
+      const res = await apiFetch(`/api/editor/layouts/latest/`)
+      if (res.ok) {
+        const data: { layout_json?: LayoutPayload | null } = await res.json()
+        const lp = data.layout_json
+        if (lp && typeof lp === "object") {
+          const loaded = deserializeLayout(lp as LayoutPayload)
+          loadEntities(loaded, serializeEntities(loaded))
+        } else {
+          loadEntities([], {})
+        }
+      }
+    } catch {
+      // keep current state on network failure
+    }
+  }, [loadEntities])
+
   // Another admin created/renamed/deleted a zone: re-pull the zone list so this editor's
   // zone tabs stay current without a manual refresh. Refetching (rather than patching from the
   // event payload) also picks up fields the event doesn't carry, e.g. canvas dimensions, and
@@ -304,7 +322,7 @@ function FloorPlanSection() {
         activeTool={activeTool}
         onToolSelect={setTool}
         onPublish={() => setShowPublishModal(true)}
-        onDiscard={() => loadEntities([], {})}
+        onDiscard={handleDiscard}
       />
       <ZoneHeader
         zones={zones}
