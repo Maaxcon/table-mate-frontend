@@ -68,6 +68,7 @@ export function TableBlock({
           entityY={entity.y}
           entityW={entity.w}
           entityH={entity.h}
+          entityRotation={entity.rotation}
           onResize={onResize}
           onMove={onMove}
           scale={canvasScale}
