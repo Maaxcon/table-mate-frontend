@@ -148,7 +148,7 @@ export function WaiterOrderView() {
     try {
       const res = await apiFetch(`/api/restaurants/zones/`)
       if (res.ok) {
-        const data = (await res.json()) as { results?: ZoneApiResponse[] }
+        const data = (await res.json()) as { results?: Zone[] }
         setZones(data.results ?? [])
       }
     } catch {

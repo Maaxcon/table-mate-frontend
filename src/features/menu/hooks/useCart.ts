@@ -272,6 +272,7 @@ export function useCart({
           guest_slot: null,
           is_mine: true,
           is_paid: false,
+          display_name: null,
           cart_session: cartSessionId,
           restaurant: "",
           created_at: new Date().toISOString(),

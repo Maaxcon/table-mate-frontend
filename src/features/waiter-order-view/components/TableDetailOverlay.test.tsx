@@ -6,7 +6,7 @@ import type { FloorTable, OverlayDetail, OverlayOrderItem } from "../data/waiter
 function makeTable(overrides: Partial<FloorTable> = {}): FloorTable {
   return {
     public_id: "t-1",
-    table_number: "5",
+    public_number: "5",
     capacity: 4,
     shape: "square",
     is_occupied: true,
@@ -29,6 +29,7 @@ function makeOrderItem(overrides: Partial<OverlayOrderItem> = {}): OverlayOrderI
     is_wasted: false,
     void_reason: null,
     comment: null,
+    guest_display_name: null,
     ...overrides,
   }
 }
