@@ -133,10 +133,10 @@ export function serializeEntities(entities: EditorEntity[]): object {
 
   for (const e of entities) {
     const base = {
-      x: e.x * GRID,
-      y: e.y * GRID,
-      width: e.w * GRID,
-      height: e.h * GRID,
+      x: Math.round(e.x) * GRID,
+      y: Math.round(e.y) * GRID,
+      width: Math.round(e.w) * GRID,
+      height: Math.round(e.h) * GRID,
       rotation: e.rotation ?? 0,
       zone_id: e.zoneId || null,
     }
