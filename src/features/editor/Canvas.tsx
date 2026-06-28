@@ -95,7 +95,9 @@ export function Canvas({
     const onTouchMove = (e: TouchEvent) => {
       if (pinchStart && e.touches.length === 2) {
         e.preventDefault()
-        setScale(clampScale(pinchStart.scale * (distance(e.touches) / pinchStart.dist)))
+        const d = distance(e.touches)
+        if (pinchStart.dist === 0 || d === 0) return
+        setScale(clampScale(pinchStart.scale * (d / pinchStart.dist)))
       }
     }
     const onTouchEnd = (e: TouchEvent) => {
