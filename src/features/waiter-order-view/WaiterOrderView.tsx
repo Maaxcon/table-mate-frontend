@@ -10,7 +10,7 @@ import { ModifyReservationModal } from "./components/ModifyReservationModal"
 import { MoveTableModal } from "./components/MoveTableModal"
 import { BookModal } from "@/features/reservation/BookModal"
 import { fetchRestaurantSettings } from "@/features/reservation/api"
-import type { WorkingHoursDay } from "@/features/reservation/api"
+import type { WorkingHoursDay, Zone } from "@/features/reservation/api"
 import { useTableActions } from "./hooks/useTableActions"
 import type {
   FloorTable,
@@ -24,14 +24,6 @@ import { apiFetch } from "@/api/client"
 import type { LayoutResponse, Table } from "@/types/api"
 import type { LayoutPayload } from "@/features/editor/types"
 import "./WaiterOrderView.css"
-
-interface ZoneApiResponse {
-  public_id: string
-  name: string
-  sort_order: number
-  canvas_cols?: number
-  canvas_rows?: number
-}
 
 function mapTableToFloorTable(t: Table): FloorTable {
   const item = t as Table & { shape: string; position_x: number | null; position_y: number | null }
@@ -52,7 +44,7 @@ export function WaiterOrderView() {
   const [selectedTableId, setSelectedTableId] = useState<string | null>(null)
   const [tables, setTables] = useState<FloorTable[]>([])
   const [layoutPayload, setLayoutPayload] = useState<LayoutPayload | null>(null)
-  const [zones, setZones] = useState<ZoneApiResponse[]>([])
+  const [zones, setZones] = useState<Zone[]>([])
   const [selectedZoneId, setSelectedZoneId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -99,7 +91,7 @@ export function WaiterOrderView() {
         )
         setLayoutReservations(layoutData.upcoming_reservations ?? [])
         if (zonesRes.ok) {
-          const zonesData = (await zonesRes.json()) as { results?: ZoneApiResponse[] }
+          const zonesData = (await zonesRes.json()) as { results?: Zone[] }
           const zonesList = zonesData.results ?? []
           setZones(zonesList)
           if (zonesList.length > 0) setSelectedZoneId(zonesList[0].public_id)
@@ -346,6 +338,7 @@ export function WaiterOrderView() {
             onZoneChange={setSelectedZoneId}
             canvasCols={zones.find((z) => z.public_id === selectedZoneId)?.canvas_cols}
             canvasRows={zones.find((z) => z.public_id === selectedZoneId)?.canvas_rows}
+            edgeStyles={zones.find((z) => z.public_id === selectedZoneId)?.edge_styles}
           />
         </div>
 

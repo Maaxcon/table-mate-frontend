@@ -16,6 +16,7 @@ interface FloorPlanProps {
   onZoneChange?: (zoneId: string) => void
   canvasCols?: number
   canvasRows?: number
+  edgeStyles?: Record<string, "dashed" | "solid">
 }
 
 const statusLabel: Record<string, string> = {
@@ -35,6 +36,7 @@ export function FloorPlan({
   onZoneChange,
   canvasCols,
   canvasRows,
+  edgeStyles,
 }: FloorPlanProps) {
   // Join a layout table to its live table by public_id, falling back to public_number.
   const { byId, byNumber } = useMemo(() => {
@@ -65,6 +67,7 @@ export function FloorPlan({
         payload={payload}
         selectedZoneId={selectedZoneId}
         selectedId={selectedId}
+        edgeStyles={edgeStyles}
         canvasCols={canvasCols}
         canvasRows={canvasRows}
         onTableSelect={(ref) => {
