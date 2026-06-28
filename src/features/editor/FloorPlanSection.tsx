@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useAppSelector } from "@/store/hooks"
-import { fetchZones, updateZone, deleteZone } from "@/features/reservation/api"
+import { fetchZones } from "@/features/reservation/api"
 import type { Zone } from "@/features/reservation/api"
 import { apiFetch } from "@/api/client"
 import { Toolbar } from "./Toolbar"
@@ -43,7 +43,11 @@ function FloorPlanSection() {
     publishSuccess,
     loadEntities,
     deletedServerIds,
-    removeEntitiesByZone,
+    createZone,
+    updateZoneMeta,
+    deleteZone: deleteZoneMeta,
+    clearPendingZones,
+    pendingZones,
     dispatch,
   } = useEditorState()
 
@@ -57,9 +61,40 @@ function FloorPlanSection() {
   const [deleting, setDeleting] = useState(false)
   const toast = useToast()
 
+  // Merge server zones with pending local zone changes so the UI always shows
+  // the latest state (including un-published zone creates, renames, deletes).
+  const allZones = useMemo((): Zone[] => {
+    const serverZones: Zone[] = zones.map((z) => {
+      const patch = pendingZones.updated[z.public_id]
+      return patch
+        ? {
+            ...z,
+            name: patch.name ?? z.name,
+            edge_styles: patch.edge_styles ?? z.edge_styles,
+            canvas_cols: patch.canvas_cols ?? z.canvas_cols,
+            canvas_rows: patch.canvas_rows ?? z.canvas_rows,
+          }
+        : z
+    })
+    const localZones: Zone[] = pendingZones.created.map((z) => {
+      const patch = pendingZones.updated[z._clientId]
+      return {
+        public_id: z._clientId,
+        name: patch?.name ?? z.name,
+        sort_order: 0,
+        edge_styles: patch?.edge_styles ?? z.edge_styles,
+        canvas_cols: patch?.canvas_cols ?? z.canvas_cols,
+        canvas_rows: patch?.canvas_rows ?? z.canvas_rows,
+      }
+    })
+    return [...serverZones, ...localZones].filter(
+      (z) => !pendingZones.deleted.includes(z.public_id),
+    )
+  }, [zones, pendingZones])
+
   const selectedZone = useMemo(
-    () => zones.find((z) => z.public_id === selectedZoneId) ?? null,
-    [zones, selectedZoneId],
+    () => allZones.find((z) => z.public_id === selectedZoneId) ?? null,
+    [allZones, selectedZoneId],
   )
 
   const edgeStyles = useMemo(
@@ -86,8 +121,8 @@ function FloorPlanSection() {
     fetchZones(String(restaurantId))
       .then((z) => {
         setZones(z)
-        if (z.length > 0 && !selectedZoneId) {
-          setSelectedZoneId(z[0].public_id)
+        if (z.length > 0) {
+          setSelectedZoneId((prev) => prev ?? z[0].public_id)
         }
       })
       .catch(() => setZones([]))
@@ -108,6 +143,19 @@ function FloorPlanSection() {
       })
       .catch(() => {})
   }, [restaurantId, loadEntities])
+
+  // Another admin created/renamed/deleted a zone: re-pull the zone list so this editor's
+  // zone tabs stay current without a manual refresh. Refetching (rather than patching from the
+  // event payload) also picks up fields the event doesn't carry, e.g. canvas dimensions, and
+  // mirrors the refreshZones/loadZones pattern used in WaiterOrderView and BookingPage.
+  const refreshZones = useCallback(async () => {
+    if (!restaurantId) return
+    try {
+      setZones(await fetchZones(String(restaurantId)))
+    } catch {
+      // keep current zones on failure
+    }
+  }, [restaurantId])
 
   // When another admin publishes a layout, warn about stale work or silently reload.
   const handleOtherAdminPublished = useCallback(async () => {
@@ -134,14 +182,19 @@ function FloorPlanSection() {
       } catch {
         // keep current state
       }
+      refreshZones()
     }
-  }, [dirty, loadEntities, toast])
+  }, [dirty, loadEntities, toast, refreshZones])
 
   const handleDiscard = useCallback(async () => {
+    clearPendingZones()
     try {
-      const res = await apiFetch(`/api/editor/layouts/latest/`)
-      if (res.ok) {
-        const data: { layout_json?: LayoutPayload | null } = await res.json()
+      const [layoutRes, freshZones] = await Promise.all([
+        apiFetch(`/api/editor/layouts/latest/`),
+        restaurantId ? fetchZones(String(restaurantId)) : Promise.resolve([] as Zone[]),
+      ])
+      if (layoutRes.ok) {
+        const data: { layout_json?: LayoutPayload | null } = await layoutRes.json()
         const lp = data.layout_json
         if (lp && typeof lp === "object") {
           const loaded = deserializeLayout(lp as LayoutPayload)
@@ -150,23 +203,11 @@ function FloorPlanSection() {
           loadEntities([], {})
         }
       }
+      setZones(freshZones)
     } catch {
       // keep current state on network failure
     }
-  }, [loadEntities])
-
-  // Another admin created/renamed/deleted a zone: re-pull the zone list so this editor's
-  // zone tabs stay current without a manual refresh. Refetching (rather than patching from the
-  // event payload) also picks up fields the event doesn't carry, e.g. canvas dimensions, and
-  // mirrors the refreshZones/loadZones pattern used in WaiterOrderView and BookingPage.
-  const refreshZones = useCallback(async () => {
-    if (!restaurantId) return
-    try {
-      setZones(await fetchZones(String(restaurantId)))
-    } catch {
-      // keep current zones on failure
-    }
-  }, [restaurantId])
+  }, [loadEntities, clearPendingZones, restaurantId])
 
   useHallSubscription({
     onLayoutPublished: handleOtherAdminPublished,
@@ -175,16 +216,14 @@ function FloorPlanSection() {
     onZoneDeleted: refreshZones,
   })
 
-  const handleAddZone = useCallback(async (name: string) => {
-    const res = await apiFetch("/api/restaurants/zones/", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name }),
-    })
-    if (!res.ok) throw new Error("Failed to create zone")
-    const zone = (await res.json()) as Zone
-    setZones((prev) => [...prev, zone])
-  }, [])
+  const handleAddZone = useCallback(
+    (name: string) => {
+      const clientId = crypto.randomUUID()
+      createZone(clientId, name)
+      setSelectedZoneId(clientId)
+    },
+    [createZone],
+  )
 
   // Strict filter: only ever show the selected zone's entities. The Canvas is
   // gated behind `noZones`, so when `selectedZoneId` is momentarily null (load
@@ -192,15 +231,29 @@ function FloorPlanSection() {
   // leaking other zones' grid -1 portals/thresholds into the padding area.
   const visibleEntities = entities.filter((e) => e.zoneId === selectedZoneId)
 
-  const noZones = zones.length === 0
+  const noZones = allZones.length === 0
 
   const { publish, publishing, error } = usePublish({
-    onSuccess: (result?: PublishResult) => {
+    onSuccess: async (result?: PublishResult) => {
       publishingRef.current = false
+      // Remap client zone IDs to server zone IDs in entities.
+      if (result?.zone_id_map) {
+        for (const [clientId, serverId] of Object.entries(result.zone_id_map)) {
+          dispatch({ type: "REMAP_ZONE_ID", from: clientId, to: serverId })
+        }
+      }
       // Apply the new tables' server ids and snapshot the published state in one
       // atomic action so the editor doesn't end up falsely dirty.
       publishSuccess(result?.table_id_map, result?.public_number_map)
       setShowPublishModal(false)
+      // Refresh zones from the server (newly created zones now exist, etc.)
+      if (restaurantId) {
+        try {
+          setZones(await fetchZones(String(restaurantId)))
+        } catch {
+          // keep current zones on failure
+        }
+      }
     },
     onRollback: () => {
       publishingRef.current = false
@@ -226,8 +279,9 @@ function FloorPlanSection() {
       deletedServerIds,
       canvasCols,
       canvasRows,
+      pendingZones,
     }
-    publish(entities, deletedServerIds, canvasCols, canvasRows)
+    publish(entities, deletedServerIds, canvasCols, canvasRows, pendingZones)
   }, [
     publish,
     entities,
@@ -238,6 +292,7 @@ function FloorPlanSection() {
     deletedServerIds,
     canvasCols,
     canvasRows,
+    pendingZones,
   ])
 
   const deleteZoneTableCount = deleteZoneTarget
@@ -262,56 +317,51 @@ function FloorPlanSection() {
   )
 
   const handleZoneStyleChange = useCallback(
-    async (edge: string, style: "dashed" | "solid") => {
+    (edge: string, style: "dashed" | "solid") => {
       if (!selectedZoneId) return
-      const zone = zones.find((z) => z.public_id === selectedZoneId)
-      if (!zone) return
-      const updated = { ...(zone.edge_styles ?? {}), [edge]: style }
+      const updated = { ...edgeStyles, [edge]: style }
       setZones((prev) =>
         prev.map((z) => (z.public_id === selectedZoneId ? { ...z, edge_styles: updated } : z)),
       )
-      await updateZone(selectedZoneId, { edge_styles: updated })
+      updateZoneMeta(selectedZoneId, { edge_styles: updated })
     },
-    [selectedZoneId, zones],
+    [selectedZoneId, edgeStyles, updateZoneMeta],
   )
 
   const handleCanvasSizeChange = useCallback(
-    async (cols: number, rows: number) => {
+    (cols: number, rows: number) => {
       if (!selectedZoneId) return
       setZones((prev) =>
         prev.map((z) =>
           z.public_id === selectedZoneId ? { ...z, canvas_cols: cols, canvas_rows: rows } : z,
         ),
       )
-      await updateZone(selectedZoneId, { canvas_cols: cols, canvas_rows: rows })
+      updateZoneMeta(selectedZoneId, { canvas_cols: cols, canvas_rows: rows })
     },
-    [selectedZoneId],
+    [selectedZoneId, updateZoneMeta],
   )
 
-  const handleRenameZone = useCallback(async (zoneId: string, name: string) => {
-    await updateZone(zoneId, { name })
-    setZones((prev) => prev.map((z) => (z.public_id === zoneId ? { ...z, name } : z)))
-  }, [])
+  const handleRenameZone = useCallback(
+    (zoneId: string, name: string) => {
+      updateZoneMeta(zoneId, { name })
+      setZones((prev) => prev.map((z) => (z.public_id === zoneId ? { ...z, name } : z)))
+    },
+    [updateZoneMeta],
+  )
 
   const handleDeleteZone = useCallback(
-    async (zoneId: string) => {
+    (zoneId: string) => {
       setDeleting(true)
-      try {
-        await deleteZone(zoneId)
-        setZones((prev) => prev.filter((z) => z.public_id !== zoneId))
-        removeEntitiesByZone(zoneId)
-        if (selectedZoneId === zoneId) {
-          const remaining = zones.filter((z) => z.public_id !== zoneId)
-          setSelectedZoneId(remaining.length > 0 ? remaining[0].public_id : null)
-        }
-        setDeleteZoneTarget(null)
-      } catch (err) {
-        toast.error(err instanceof Error ? err.message : "Failed to delete zone")
-      } finally {
-        setDeleting(false)
+      deleteZoneMeta(zoneId)
+      setZones((prev) => prev.filter((z) => z.public_id !== zoneId))
+      if (selectedZoneId === zoneId) {
+        const remaining = allZones.filter((z) => z.public_id !== zoneId)
+        setSelectedZoneId(remaining.length > 0 ? remaining[0].public_id : null)
       }
+      setDeleteZoneTarget(null)
+      setDeleting(false)
     },
-    [selectedZoneId, zones, removeEntitiesByZone, toast],
+    [selectedZoneId, allZones, deleteZoneMeta],
   )
 
   return (
@@ -325,13 +375,13 @@ function FloorPlanSection() {
         onDiscard={handleDiscard}
       />
       <ZoneHeader
-        zones={zones}
+        zones={allZones}
         selectedZoneId={selectedZoneId}
         onZoneSelect={setSelectedZoneId}
         onAddZone={handleAddZone}
         onRenameZone={handleRenameZone}
         onDeleteZone={(zoneId) => {
-          const zone = zones.find((z) => z.public_id === zoneId)
+          const zone = allZones.find((z) => z.public_id === zoneId)
           if (zone) setDeleteZoneTarget(zone)
         }}
       />
@@ -358,7 +408,7 @@ function FloorPlanSection() {
               entity={selectedEntity}
               onUpdate={updateEntity}
               onDelete={removeEntity}
-              zones={zones}
+              zones={allZones}
               selectedZone={selectedZone}
               onZoneStyleChange={handleZoneStyleChange}
               canvasCols={canvasCols}

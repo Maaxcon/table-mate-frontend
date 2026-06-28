@@ -13,6 +13,28 @@ import {
   SIZE_CONSTRAINTS,
 } from "../types"
 
+export interface PendingZoneCreate {
+  _clientId: string
+  name: string
+  edge_styles: Record<string, "dashed" | "solid">
+  canvas_cols: number
+  canvas_rows: number
+}
+
+export type PendingZones = {
+  created: PendingZoneCreate[]
+  updated: Record<
+    string,
+    {
+      name?: string
+      edge_styles?: Record<string, "dashed" | "solid">
+      canvas_cols?: number
+      canvas_rows?: number
+    }
+  >
+  deleted: string[]
+}
+
 export interface EditorState {
   entities: EditorEntity[]
   selectedId: string | null
@@ -25,6 +47,8 @@ export interface EditorState {
   /** Canvas dimensions in grid units (columns & rows). */
   canvasCols: number
   canvasRows: number
+  /** Zone changes deferred to publish. */
+  pendingZones: PendingZones
 }
 
 type Action =
@@ -51,6 +75,11 @@ type Action =
   | { type: "SET_CANVAS_SIZE"; cols: number; rows: number }
   | { type: "REMOVE_ENTITIES_BY_ZONE"; zoneId: string }
   | { type: "CLEAR" }
+  | { type: "CREATE_ZONE"; zone: PendingZoneCreate }
+  | { type: "UPDATE_ZONE_META"; zoneId: string; patch: Record<string, unknown> }
+  | { type: "DELETE_ZONE"; zoneId: string }
+  | { type: "CLEAR_PENDING_ZONES" }
+  | { type: "REMAP_ZONE_ID"; from: string; to: string }
 
 function computeDirty(entities: EditorEntity[], lastPublishedJson: object | null): boolean {
   if (!lastPublishedJson) return entities.length > 0
@@ -216,6 +245,7 @@ function editorReducer(state: EditorState, action: Action): EditorState {
         lastPublishedJson: serializeEntities(entities),
         dirty: false,
         deletedServerIds: [],
+        pendingZones: { created: [], updated: {}, deleted: [] },
       }
     }
     case "PUBLISH_ROLLBACK":
@@ -231,6 +261,7 @@ function editorReducer(state: EditorState, action: Action): EditorState {
         deletedServerIds: [],
         canvasCols: action.canvasCols ?? state.canvasCols,
         canvasRows: action.canvasRows ?? state.canvasRows,
+        pendingZones: { created: [], updated: {}, deleted: [] },
       }
     case "SET_CANVAS_SIZE":
       return { ...state, canvasCols: action.cols, canvasRows: action.rows }
@@ -246,6 +277,77 @@ function editorReducer(state: EditorState, action: Action): EditorState {
             : state.selectedId,
       }
     }
+    case "CREATE_ZONE": {
+      return {
+        ...state,
+        pendingZones: {
+          ...state.pendingZones,
+          created: [...state.pendingZones.created, action.zone],
+        },
+        dirty: true,
+      }
+    }
+    case "UPDATE_ZONE_META": {
+      const createdIndex = state.pendingZones.created.findIndex(
+        (z) => z._clientId === action.zoneId,
+      )
+      if (createdIndex >= 0) {
+        const created = [...state.pendingZones.created]
+        created[createdIndex] = { ...created[createdIndex], ...action.patch }
+        return { ...state, pendingZones: { ...state.pendingZones, created }, dirty: true }
+      }
+      return {
+        ...state,
+        pendingZones: {
+          ...state.pendingZones,
+          updated: {
+            ...state.pendingZones.updated,
+            [action.zoneId]: {
+              ...state.pendingZones.updated[action.zoneId],
+              ...action.patch,
+            },
+          },
+        },
+        dirty: true,
+      }
+    }
+    case "DELETE_ZONE": {
+      const inCreated = state.pendingZones.created.some((z) => z._clientId === action.zoneId)
+      const pendingZones = inCreated
+        ? {
+            ...state.pendingZones,
+            created: state.pendingZones.created.filter((z) => z._clientId !== action.zoneId),
+          }
+        : {
+            ...state.pendingZones,
+            deleted: state.pendingZones.deleted.includes(action.zoneId)
+              ? state.pendingZones.deleted
+              : [...state.pendingZones.deleted, action.zoneId],
+          }
+      const entities = state.entities.filter((e) => e.zoneId !== action.zoneId)
+      return {
+        ...state,
+        entities,
+        pendingZones,
+        selectedId:
+          state.selectedId && entities.every((e) => e.id !== state.selectedId)
+            ? null
+            : state.selectedId,
+        dirty: true,
+      }
+    }
+    case "CLEAR_PENDING_ZONES":
+      return {
+        ...state,
+        pendingZones: { created: [], updated: {}, deleted: [] },
+        dirty: computeDirty(state.entities, state.lastPublishedJson),
+      }
+    case "REMAP_ZONE_ID": {
+      const entities = state.entities.map((e) =>
+        e.zoneId === action.from ? { ...e, zoneId: action.to } : e,
+      )
+      return { ...state, entities }
+    }
     case "CLEAR":
       return {
         entities: [],
@@ -256,6 +358,7 @@ function editorReducer(state: EditorState, action: Action): EditorState {
         deletedServerIds: [],
         canvasCols: DEFAULT_CANVAS_COLS,
         canvasRows: DEFAULT_CANVAS_ROWS,
+        pendingZones: { created: [], updated: {}, deleted: [] },
       }
     default:
       return state
@@ -271,6 +374,7 @@ const initialState: EditorState = {
   deletedServerIds: [],
   canvasCols: DEFAULT_CANVAS_COLS,
   canvasRows: DEFAULT_CANVAS_ROWS,
+  pendingZones: { created: [], updated: {}, deleted: [] },
 }
 
 export function useEditorState() {
@@ -348,6 +452,29 @@ export function useEditorState() {
     dispatch({ type: "REMOVE_ENTITIES_BY_ZONE", zoneId })
   }, [])
 
+  const createZone = useCallback((clientId: string, name: string) => {
+    const zone: PendingZoneCreate = {
+      _clientId: clientId,
+      name,
+      edge_styles: { top: "dashed", right: "dashed", bottom: "dashed", left: "dashed" },
+      canvas_cols: DEFAULT_CANVAS_COLS,
+      canvas_rows: DEFAULT_CANVAS_ROWS,
+    }
+    dispatch({ type: "CREATE_ZONE", zone })
+  }, [])
+
+  const updateZoneMeta = useCallback((zoneId: string, patch: Record<string, unknown>) => {
+    dispatch({ type: "UPDATE_ZONE_META", zoneId, patch })
+  }, [])
+
+  const deleteZone = useCallback((zoneId: string) => {
+    dispatch({ type: "DELETE_ZONE", zoneId })
+  }, [])
+
+  const clearPendingZones = useCallback(() => {
+    dispatch({ type: "CLEAR_PENDING_ZONES" })
+  }, [])
+
   return {
     ...state,
     addEntity,
@@ -360,6 +487,10 @@ export function useEditorState() {
     loadEntities,
     clearAll,
     removeEntitiesByZone,
+    createZone,
+    updateZoneMeta,
+    deleteZone,
+    clearPendingZones,
     dispatch,
   }
 }

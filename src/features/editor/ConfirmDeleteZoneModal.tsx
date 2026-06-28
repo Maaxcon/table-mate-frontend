@@ -15,11 +15,9 @@ export function ConfirmDeleteZoneModal({
   onClose,
   busy,
 }: ConfirmDeleteZoneModalProps) {
-  const canDelete = tableCount === 0
-
   return (
     <Modal
-      title={canDelete ? "Delete zone" : "Cannot delete zone"}
+      title="Delete zone"
       onClose={onClose}
       role="alertdialog"
       showClose={!busy}
@@ -28,42 +26,28 @@ export function ConfirmDeleteZoneModal({
       overlayClassName="admin-confirm__overlay"
       backdropLabel="Cancel"
     >
-      {canDelete ? (
-        <>
-          <p className="admin-modal__message">
-            Are you sure you want to delete zone <strong>{zoneName}</strong>?
-          </p>
-          <div className="admin-modal__actions">
-            <button type="button" className="admin-modal__btn" onClick={onClose} disabled={busy}>
-              Cancel
-            </button>
-            <button
-              type="button"
-              className="admin-modal__btn admin-modal__btn--danger"
-              onClick={onConfirm}
-              disabled={busy}
-            >
-              {busy ? "Deleting..." : "Delete"}
-            </button>
-          </div>
-        </>
-      ) : (
-        <>
-          <p className="admin-modal__message">
-            Zone <strong>{zoneName}</strong> has {tableCount} table{tableCount !== 1 ? "s" : ""}.
-            Remove or move all tables before deleting this zone.
-          </p>
-          <div className="admin-modal__actions">
-            <button
-              type="button"
-              className="admin-modal__btn admin-modal__btn--primary"
-              onClick={onClose}
-            >
-              Close
-            </button>
-          </div>
-        </>
+      <p className="admin-modal__message">
+        Are you sure you want to delete zone <strong>{zoneName}</strong>?
+      </p>
+      {tableCount > 0 && (
+        <p className="admin-modal__message admin-modal__message--warning">
+          This zone has {tableCount} table{tableCount !== 1 ? "s" : ""}. They will be deactivated
+          when you publish.
+        </p>
       )}
+      <div className="admin-modal__actions">
+        <button type="button" className="admin-modal__btn" onClick={onClose} disabled={busy}>
+          Cancel
+        </button>
+        <button
+          type="button"
+          className="admin-modal__btn admin-modal__btn--danger"
+          onClick={onConfirm}
+          disabled={busy}
+        >
+          {busy ? "Deleting..." : "Delete"}
+        </button>
+      </div>
     </Modal>
   )
 }
