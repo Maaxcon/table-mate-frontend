@@ -135,7 +135,11 @@ function editorReducer(state: EditorState, action: Action): EditorState {
             updated.h = side
           }
         }
-        if (action.patch.rotation !== undefined && action.patch.rotation !== e.rotation) {
+        if (
+          action.patch.rotation !== undefined ||
+          action.patch.w !== undefined ||
+          action.patch.h !== undefined
+        ) {
           const aabb = rotatedAABB(updated.x, updated.y, updated.w, updated.h, updated.rotation)
           const ox = (aabb.w - updated.w) / 2
           const oy = (aabb.h - updated.h) / 2
@@ -146,9 +150,18 @@ function editorReducer(state: EditorState, action: Action): EditorState {
             updated.x = Math.max(0, Math.min(aabb.x, state.canvasCols - aabb.w)) + ox
             updated.y = Math.max(0, Math.min(aabb.y, state.canvasRows - aabb.h)) + oy
           }
+          const others = state.entities.filter(
+            (e) => e.id !== action.id && e.zoneId === updated.zoneId,
+          )
+          const free = findFreePosition(
+            { x: updated.x, y: updated.y, w: updated.w, h: updated.h, rotation: updated.rotation },
+            others,
+            state.canvasCols,
+            state.canvasRows,
+          )
           const clamped = clampEntityToBackendLimits(
-            updated.x,
-            updated.y,
+            free.x,
+            free.y,
             updated.type,
             state.canvasCols,
             state.canvasRows,
@@ -263,8 +276,25 @@ function editorReducer(state: EditorState, action: Action): EditorState {
         canvasRows: action.canvasRows ?? state.canvasRows,
         pendingZones: { created: [], updated: {}, deleted: [] },
       }
-    case "SET_CANVAS_SIZE":
-      return { ...state, canvasCols: action.cols, canvasRows: action.rows }
+    case "SET_CANVAS_SIZE": {
+      const reclamped = state.entities.map((e) => {
+        const { x, y } = clampEntityToBackendLimits(e.x, e.y, e.type, action.cols, action.rows)
+        let { w, h } = e
+        if (x + w > action.cols) w = Math.max(1, action.cols - x)
+        if (y + h > action.rows) h = Math.max(1, action.rows - y)
+        if (w !== e.w || h !== e.h || x !== e.x || y !== e.y) {
+          return { ...e, x, y, w, h }
+        }
+        return e
+      })
+      return {
+        ...state,
+        canvasCols: action.cols,
+        canvasRows: action.rows,
+        entities: reclamped,
+        dirty: computeDirty(reclamped, state.lastPublishedJson),
+      }
+    }
     case "REMOVE_ENTITIES_BY_ZONE": {
       const remaining = state.entities.filter((e) => e.zoneId !== action.zoneId)
       return {
