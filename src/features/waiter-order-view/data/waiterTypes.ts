@@ -1,30 +1,37 @@
 import type { Table, Reservation, OrderItemStatusEnum } from "@/types/api/types.gen"
 
+export interface TableReservationInfo {
+  public_id: string
+  guest_name: string
+  guest_count: number
+  start_at: string
+}
+
+export interface TableSessionInfo {
+  public_id: string
+  opened_at: string
+  guest_count: number
+}
+
 export type FloorTable = Pick<
   Table,
-  | "public_id"
-  | "table_number"
-  | "capacity"
-  | "shape"
-  | "is_occupied"
-  | "position_x"
-  | "position_y"
-  | "active"
+  "public_id" | "public_number" | "capacity" | "is_occupied" | "active"
 > & {
+  shape: string
+  position_x: number | null
+  position_y: number | null
   zone?: { public_id: string; name: string } | null
-  activeReservation?: {
-    guest_name: string
-    start_at: string
-  } | null
-  activeSession?: {
-    opened_at: string
-  } | null
+  activeReservation?: TableReservationInfo | null
+  activeSession?: TableSessionInfo | null
 }
 
 export interface UpcomingReservation {
   public_id: string
   table_id: string
   start_at: string
+  end_at?: string
+  customer_name?: string
+  guest_count?: number
 }
 
 export type VisualTableStatus = "free" | "occupied" | "reserved"
@@ -40,6 +47,7 @@ export type ReservationItem = Pick<
 export interface OverlayOrderItem {
   public_id: string
   guest_slot: number
+  guest_display_name: string | null
   quantity: number
   name: string
   unit_price: string
@@ -115,12 +123,19 @@ export function getTableVisualStatus(
   currentTime: Date,
 ): VisualTableStatus {
   if (table.is_occupied) return "occupied"
-  const hasImminentReservation = upcomingReservations.some(
-    (r) =>
-      r.table_id === table.public_id &&
-      new Date(r.start_at).getTime() - currentTime.getTime() <= FIFTEEN_MINUTES_MS &&
-      new Date(r.start_at).getTime() > currentTime.getTime(),
-  )
-  if (hasImminentReservation) return "reserved"
+  const now = currentTime.getTime()
+  const hasRelevantReservation = upcomingReservations.some((r) => {
+    if (r.table_id !== table.public_id) return false
+    const start = new Date(r.start_at).getTime()
+    if (start > now && start - now <= FIFTEEN_MINUTES_MS) return true
+    if (start <= now) {
+      if (r.end_at) {
+        const end = new Date(r.end_at).getTime()
+        if (now < end) return true
+      }
+    }
+    return false
+  })
+  if (hasRelevantReservation) return "reserved"
   return "free"
 }

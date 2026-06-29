@@ -352,6 +352,13 @@ export function deleteCartItem(sessionId: string, itemId: string, jwt: string): 
   })
 }
 
+export function setGuestName(sessionId: string, jwt: string, displayName: string): Promise<void> {
+  return authFetch<void>(CART_API.guestName(sessionId), jwt, {
+    method: "POST",
+    body: JSON.stringify({ display_name: displayName }),
+  })
+}
+
 // One line of the bill — an already-ordered item across the table's visit.
 export type BillItem = {
   id: string

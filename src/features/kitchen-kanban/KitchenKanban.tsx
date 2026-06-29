@@ -44,7 +44,11 @@ function useCurrentTime(): string {
   return time
 }
 
-export function KitchenKanban() {
+interface KitchenKanbanProps {
+  isConnected?: boolean
+}
+
+export function KitchenKanban({ isConnected = false }: KitchenKanbanProps) {
   const currentTime = useCurrentTime()
   const [tick, setTick] = useState(0)
   const [tickets, setTickets] = useState<KanbanTicket[]>([])
@@ -188,7 +192,7 @@ export function KitchenKanban() {
   if (error) {
     return (
       <div className="kanban">
-        <KanbanHeader currentTime={currentTime} />
+        <KanbanHeader currentTime={currentTime} isConnected={isConnected} />
         <div className="kanban__error">{error}</div>
       </div>
     )
@@ -197,7 +201,7 @@ export function KitchenKanban() {
   if (loading) {
     return (
       <div className="kanban">
-        <KanbanHeader currentTime={currentTime} />
+        <KanbanHeader currentTime={currentTime} isConnected={isConnected} />
         <div className="kanban__loading">Loading tickets...</div>
       </div>
     )
@@ -205,7 +209,7 @@ export function KitchenKanban() {
 
   return (
     <div className="kanban" aria-live="polite">
-      <KanbanHeader currentTime={currentTime} />
+      <KanbanHeader currentTime={currentTime} isConnected={isConnected} />
 
       {mutationError && <div className="kanban__toast">{mutationError}</div>}
 

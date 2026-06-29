@@ -38,6 +38,7 @@ function makeItem(overrides: Partial<CartItemWithDetails> = {}): CartItemWithDet
     guestSlot: null,
     isMine: true,
     addedBy: null,
+    displayName: null,
     isPaid: false,
     item: makeMenuItem(),
     ...overrides,

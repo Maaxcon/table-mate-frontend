@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from "react"
+import { useEffect, useRef, useCallback, useState } from "react"
 import { env } from "@/config/env"
 import { useAppSelector } from "@/store/hooks"
 
@@ -39,15 +39,58 @@ export interface HallReservationCancelledEvent {
   occurred_at: string
 }
 
+export interface HallLayoutPublishedEvent {
+  event_name: "LAYOUT_PUBLISHED"
+  schema_version: string
+  event_id: string
+  layout_version_public_id: string
+  restaurant_public_id: string
+  occurred_at: string
+}
+
+export interface HallZoneCreatedEvent {
+  event_name: "ZONE_CREATED"
+  schema_version: string
+  event_id: string
+  zone_public_id: string
+  zone_name: string
+  occurred_at: string
+}
+
+export interface HallZoneUpdatedEvent {
+  event_name: "ZONE_UPDATED"
+  schema_version: string
+  event_id: string
+  zone_public_id: string
+  zone_name: string
+  occurred_at: string
+}
+
+export interface HallZoneDeletedEvent {
+  event_name: "ZONE_DELETED"
+  schema_version: string
+  event_id: string
+  zone_public_id: string
+  occurred_at: string
+}
+
 export type HallEvent =
   | HallTableStatusChangedEvent
   | HallNewReservationEvent
   | HallReservationCancelledEvent
+  | HallLayoutPublishedEvent
+  | HallZoneCreatedEvent
+  | HallZoneUpdatedEvent
+  | HallZoneDeletedEvent
 
 interface UseHallSubscriptionOptions {
   onTableStatusChanged?: (event: HallTableStatusChangedEvent) => void
   onNewReservation?: (event: HallNewReservationEvent) => void
   onReservationCancelled?: (event: HallReservationCancelledEvent) => void
+  onLayoutPublished?: (event: HallLayoutPublishedEvent) => void
+  onZoneCreated?: (event: HallZoneCreatedEvent) => void
+  onZoneUpdated?: (event: HallZoneUpdatedEvent) => void
+  onZoneDeleted?: (event: HallZoneDeletedEvent) => void
   onError?: (error: Event) => void
   onClose?: () => void
 }
@@ -56,18 +99,29 @@ export function useHallSubscription({
   onTableStatusChanged,
   onNewReservation,
   onReservationCancelled,
+  onLayoutPublished,
+  onZoneCreated,
+  onZoneUpdated,
+  onZoneDeleted,
   onError,
   onClose,
 }: UseHallSubscriptionOptions) {
   const accessToken = useAppSelector((state) => state.auth.accessToken)
+  const [isConnected, setIsConnected] = useState(false)
   const wsRef = useRef<WebSocket | null>(null)
   const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const connectRef = useRef<(() => void) | undefined>(undefined)
+  const tokenRef = useRef(accessToken)
+  const mountedRef = useRef(false)
 
   const callbacksRef = useRef({
     onTableStatusChanged,
     onNewReservation,
     onReservationCancelled,
+    onLayoutPublished,
+    onZoneCreated,
+    onZoneUpdated,
+    onZoneDeleted,
     onError,
     onClose,
   })
@@ -77,10 +131,24 @@ export function useHallSubscription({
       onTableStatusChanged,
       onNewReservation,
       onReservationCancelled,
+      onLayoutPublished,
+      onZoneCreated,
+      onZoneUpdated,
+      onZoneDeleted,
       onError,
       onClose,
     }
-  }, [onTableStatusChanged, onNewReservation, onReservationCancelled, onError, onClose])
+  }, [
+    onTableStatusChanged,
+    onNewReservation,
+    onReservationCancelled,
+    onLayoutPublished,
+    onZoneCreated,
+    onZoneUpdated,
+    onZoneDeleted,
+    onError,
+    onClose,
+  ])
 
   const connect = useCallback(() => {
     if (!accessToken || env.wsUrl === "Not configured") return
@@ -89,7 +157,9 @@ export function useHallSubscription({
     wsRef.current = ws
 
     ws.onopen = () => {
+      if (!mountedRef.current) return
       console.debug("[HallWS] Connected")
+      setIsConnected(true)
     }
 
     ws.onmessage = (event) => {
@@ -101,6 +171,14 @@ export function useHallSubscription({
           callbacksRef.current.onNewReservation?.(data)
         } else if (data.event_name === "HALL_RESERVATION_CANCELLED") {
           callbacksRef.current.onReservationCancelled?.(data)
+        } else if (data.event_name === "LAYOUT_PUBLISHED") {
+          callbacksRef.current.onLayoutPublished?.(data)
+        } else if (data.event_name === "ZONE_CREATED") {
+          callbacksRef.current.onZoneCreated?.(data)
+        } else if (data.event_name === "ZONE_UPDATED") {
+          callbacksRef.current.onZoneUpdated?.(data)
+        } else if (data.event_name === "ZONE_DELETED") {
+          callbacksRef.current.onZoneDeleted?.(data)
         }
       } catch (err) {
         console.error("[HallWS] Failed to parse message:", err)
@@ -109,18 +187,25 @@ export function useHallSubscription({
 
     ws.onerror = (event) => {
       console.error("[HallWS] Error:", event)
+      setIsConnected(false)
       callbacksRef.current.onError?.(event)
     }
 
     ws.onclose = (event) => {
       console.debug("[HallWS] Disconnected:", event.code, event.reason)
       wsRef.current = null
+      if (!mountedRef.current) return
+      setIsConnected(false)
       callbacksRef.current.onClose?.()
 
-      if (event.code !== 1000 && accessToken) {
+      if (event.code !== 1000 && tokenRef.current) {
         reconnectTimeoutRef.current = setTimeout(() => connectRef.current?.(), 3000)
       }
     }
+  }, [accessToken])
+
+  useEffect(() => {
+    tokenRef.current = accessToken
   }, [accessToken])
 
   useEffect(() => {
@@ -128,9 +213,11 @@ export function useHallSubscription({
   }, [connect])
 
   useEffect(() => {
+    mountedRef.current = true
     connect()
 
     return () => {
+      mountedRef.current = false
       if (reconnectTimeoutRef.current) {
         clearTimeout(reconnectTimeoutRef.current)
       }
@@ -151,5 +238,5 @@ export function useHallSubscription({
     }
   }, [])
 
-  return { disconnect }
+  return { disconnect, isConnected }
 }

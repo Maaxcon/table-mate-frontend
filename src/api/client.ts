@@ -122,13 +122,30 @@ export type Paginated<T> = {
   results: T[]
 }
 
+/** Recursively finds the first string message in a nested DRF error. */
+function findFirstString(value: unknown): string | undefined {
+  if (typeof value === "string") return value
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      const found = findFirstString(item)
+      if (found) return found
+    }
+  }
+  if (value !== null && typeof value === "object") {
+    for (const v of Object.values(value as Record<string, unknown>)) {
+      const found = findFirstString(v)
+      if (found) return found
+    }
+  }
+  return undefined
+}
+
 /** Reads the first field error DRF returns, e.g. {"email": ["already exists"]}. */
 export async function firstError(res: Response, fallback: string): Promise<string> {
   try {
     const data = (await res.json()) as Record<string, unknown>
-    const first = Object.values(data)[0]
-    if (Array.isArray(first) && typeof first[0] === "string") return first[0]
-    if (typeof first === "string") return first
+    const found = findFirstString(data)
+    if (found) return found
   } catch {
     // ignore parse errors
   }

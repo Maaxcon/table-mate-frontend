@@ -1,13 +1,18 @@
 import { apiFetch } from "@/api/client"
-import type { FloorTable, OverlayDetail, OverlayOrderItem, ReservationItem } from "./waiterTypes"
-import { formatDuration } from "./waiterTypes"
+import {
+  formatDuration,
+  type FloorTable,
+  type OverlayDetail,
+  type OverlayOrderItem,
+  type ReservationItem,
+} from "./waiterTypes"
 
 // ── API response shapes ──────────────────────────────────────────────
 interface ReservationApiItem {
   public_id: string
   start_at: string
   end_at: string
-  table_info: { table_number: string } | null
+  table_info: { public_number: string } | null
   guest_count: number
   status: string
   notes?: string | null
@@ -31,6 +36,7 @@ interface SessionApiItem {
 interface OrderItemApiItem {
   public_id: string
   guest_slot: number
+  guest_display_name?: string | null
   quantity: number
   status: string
   is_wasted: boolean
@@ -46,7 +52,7 @@ function mapReservationItem(r: ReservationApiItem): ReservationItem {
     public_id: r.public_id,
     start_at: r.start_at,
     end_at: r.end_at,
-    table: r.table_info?.table_number ?? "",
+    table: r.table_info?.public_number ?? "",
     guest_count: r.guest_count,
     status: r.status as ReservationItem["status"],
     notes: r.notes,
@@ -56,7 +62,7 @@ function mapReservationItem(r: ReservationApiItem): ReservationItem {
 
 export async function fetchReservations(signal?: AbortSignal): Promise<ReservationItem[] | null> {
   const res = await apiFetch(
-    `/api/reservations/reservations/?status=pending&status=active`,
+    `/api/reservations/reservations/?status__in=pending,active`,
     signal ? { signal } : undefined,
   )
   if (!res.ok) return null
@@ -69,6 +75,7 @@ function mapOrderItem(oi: OrderItemApiItem): OverlayOrderItem {
   return {
     public_id: oi.public_id,
     guest_slot: oi.guest_slot,
+    guest_display_name: oi.guest_display_name ?? null,
     quantity: oi.quantity,
     name: oi.menu_item_name ?? oi.public_id,
     unit_price: oi.unit_price,
@@ -126,7 +133,7 @@ export async function fetchOverlayDetail(
   const orderItems = await fetchSessionOrderItems(session.public_id)
 
   const selTable = tables.find((t) => t.public_id === tablePublicId)
-  const resForTable = reservations.find((r) => r.table === selTable?.table_number)
+  const resForTable = reservations.find((r) => r.table === selTable?.public_number)
 
   // Trust the BE-recomputed Session totals instead of re-summing order items
   // client-side: re-summing over-counted voided/wasted items and diverged from
@@ -134,7 +141,7 @@ export async function fetchOverlayDetail(
   // (voided rows are rendered greyed by OrderItemRow).
   return {
     public_id: session.public_id,
-    table_number: selTable?.table_number ?? "",
+    table_number: selTable?.public_number ?? "",
     guest_name: resForTable?.name ?? "Guest",
     guest_count: session.guest_count,
     duration: formatDuration(session.opened_at),

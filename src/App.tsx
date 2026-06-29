@@ -18,6 +18,7 @@ import RestaurantSection from "@/features/admin/pages/RestaurantSection"
 import SettingsSection from "@/features/admin/pages/SettingsSection"
 import StaffSection from "@/features/admin/pages/StaffSection"
 import MenuSection from "@/features/admin/pages/MenuSection"
+import FloorPlanSection from "@/features/editor/FloorPlanSection"
 import { KitchenKanban } from "@/features/kitchen-kanban/KitchenKanban"
 import { WaiterOrderView } from "@/features/waiter-order-view/WaiterOrderView"
 import AdminRoute from "@/routes/AdminRoute"
@@ -84,6 +85,7 @@ function App() {
                   <Route path="settings" element={<SettingsSection />} />
                   <Route path="staff" element={<StaffSection />} />
                   <Route path="menu" element={<MenuSection />} />
+                  <Route path="floor-plan/edit" element={<FloorPlanSection />} />
                   <Route path="kitchen" element={<KitchenKanban />} />
                   <Route path="floor" element={<WaiterOrderView />} />
                 </Route>

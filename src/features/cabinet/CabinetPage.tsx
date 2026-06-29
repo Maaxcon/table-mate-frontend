@@ -114,7 +114,7 @@ function CabinetPage() {
       {modifyTarget && (
         <RescheduleModal
           publicId={modifyTarget.public_id}
-          tableNumber={modifyTarget.table_info?.table_number ?? modifyTarget.table ?? ""}
+          tableNumber={modifyTarget.table_info?.public_number ?? modifyTarget.table ?? ""}
           tablePublicId={modifyTarget.table_info?.public_id ?? modifyTarget.table ?? ""}
           restaurantId={modifyTarget.restaurant_info?.public_id ?? modifyTarget.restaurant}
           currentDate={modifyTarget.start_at}
@@ -123,6 +123,7 @@ function CabinetPage() {
           currentGuests={modifyTarget.guest_count}
           tableCapacity={modifyTarget.table_info?.capacity ?? 10}
           workingHours={null}
+          endTimeOnly={modifyTarget.status === "active"}
           onClose={() => setModifyTarget(null)}
           onSuccess={() => {
             setModifyTarget(null)

@@ -56,6 +56,18 @@
   color: var(--color-bg);
 }
 
+.kanban__connection {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #dc2626;
+  flex-shrink: 0;
+}
+
+.kanban__connection--connected {
+  background: #16a34a;
+}
+
 .kanban__header-right {
   display: flex;
   align-items: center;

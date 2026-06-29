@@ -104,7 +104,7 @@ export function ActiveBookings({
       {rescheduleTarget && (
         <RescheduleModal
           publicId={rescheduleTarget.public_id}
-          tableNumber={rescheduleTarget.table_info?.table_number ?? rescheduleTarget.table}
+          tableNumber={rescheduleTarget.table_info?.public_number ?? rescheduleTarget.table}
           tablePublicId={rescheduleTarget.table_info?.public_id ?? rescheduleTarget.table}
           restaurantId={rescheduleTarget.restaurant}
           currentDate={rescheduleTarget.start_at}
@@ -147,7 +147,7 @@ export function ActiveBookings({
                   <div key={r.public_id} className="ab__card">
                     <div className="ab__card-header">
                       <span className="ab__card-table">
-                        TABLE {r.table_info?.table_number ?? r.table}
+                        TABLE {r.table_info?.public_number ?? r.table}
                       </span>
                       <span className={`ab__card-status ab__card-status--${statusKey}`}>
                         {STATUS_LABELS[statusKey]}

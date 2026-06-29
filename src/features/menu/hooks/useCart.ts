@@ -19,6 +19,7 @@ export type CartItemWithDetails = {
   guestSlot: number | null
   isMine: boolean
   addedBy: string | null
+  displayName: string | null
   isPaid: boolean
   item: CartLineItem | null
 }
@@ -169,6 +170,7 @@ function buildDetails(
     guestSlot: ci.guest_slot,
     isMine: ci.is_mine,
     addedBy: ci.added_by,
+    displayName: ci.display_name,
     isPaid: ci.is_paid,
     // Prefer the live menu item (likes, latest price); fall back to the line's
     // own snapshot so the cart still renders when the item isn't in the browsed
@@ -270,6 +272,7 @@ export function useCart({
           guest_slot: null,
           is_mine: true,
           is_paid: false,
+          display_name: null,
           cart_session: cartSessionId,
           restaurant: "",
           created_at: new Date().toISOString(),
