@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import type { Dispatch, SetStateAction } from "react"
 import type { Table } from "@/types/api/types.gen"
 import type { UpcomingReservation } from "@/features/waiter-order-view/data/waiterTypes"
@@ -58,40 +58,60 @@ export function useBookingData(
 
   const [upcomingReservations, setUpcomingReservations] = useState<UpcomingReservation[]>([])
 
+  // Guards every fetch callback so we never set state after the page unmounts
+  // (the user may leave while a request is still in flight). Reset on (re)mount
+  // so React StrictMode's mount/unmount/mount cycle keeps it accurate.
+  const mountedRef = useRef(true)
+  useEffect(() => {
+    mountedRef.current = true
+    return () => {
+      mountedRef.current = false
+    }
+  }, [])
+
   // Loaders only fetch and store results — no synchronous setState — so the
   // mount effect below stays clean. The reload wrappers own the loading flag.
   const loadTables = useCallback(() => {
     if (!restaurantId) return Promise.resolve()
     return fetchTables(restaurantId)
       .then((data) => {
+        if (!mountedRef.current) return
         setTables(data)
         setTablesError(false)
       })
       .catch(() => {
+        if (!mountedRef.current) return
         setTables([])
         setTablesError(true)
       })
-      .finally(() => setTablesLoading(false))
+      .finally(() => {
+        if (mountedRef.current) setTablesLoading(false)
+      })
   }, [restaurantId])
 
   const loadZones = useCallback(() => {
     if (!restaurantId) return Promise.resolve()
     return fetchZones(restaurantId)
       .then((data) => {
+        if (!mountedRef.current) return
         setZones(data)
         if (data.length > 0) setSelectedZone(data[0].public_id)
       })
-      .catch(() => setZones([]))
+      .catch(() => {
+        if (mountedRef.current) setZones([])
+      })
   }, [restaurantId])
 
   const loadSettings = useCallback(() => {
     if (!restaurantId) return Promise.resolve()
     return fetchRestaurantSettings(restaurantId)
       .then((settings) => {
+        if (!mountedRef.current) return
         setWorkingHours(settings.working_hours)
         setTimezone(settings.timezone)
       })
       .catch(() => {
+        if (!mountedRef.current) return
         setWorkingHours(null)
         setTimezone(null)
       })
@@ -101,21 +121,29 @@ export function useBookingData(
     if (!restaurantId || !isAuthenticated) return Promise.resolve()
     return fetchMyReservations(restaurantId)
       .then((data) => {
+        if (!mountedRef.current) return
         setReservations(data)
         setReservationsError(false)
       })
       .catch(() => {
+        if (!mountedRef.current) return
         setReservations([])
         setReservationsError(true)
       })
-      .finally(() => setReservationsLoading(false))
+      .finally(() => {
+        if (mountedRef.current) setReservationsLoading(false)
+      })
   }, [restaurantId, isAuthenticated])
 
   const loadUpcoming = useCallback(() => {
     if (!restaurantId) return Promise.resolve()
     return fetchUpcomingReservations(restaurantId)
-      .then(setUpcomingReservations)
-      .catch(() => setUpcomingReservations([]))
+      .then((data) => {
+        if (mountedRef.current) setUpcomingReservations(data)
+      })
+      .catch(() => {
+        if (mountedRef.current) setUpcomingReservations([])
+      })
   }, [restaurantId])
 
   useEffect(() => {
