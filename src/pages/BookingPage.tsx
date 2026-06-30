@@ -5,10 +5,10 @@ import type { ReservationWithTable, WorkingHoursDay, Zone } from "@/features/res
 import {
   fetchMyReservations,
   fetchRestaurantSettings,
-  fetchTables,
-  fetchUpcomingReservations,
+  fetchLayoutData,
   fetchZones,
 } from "@/features/reservation/api"
+import type { LayoutPayload } from "@/features/editor/types"
 import type { UpcomingReservation } from "@/features/waiter-order-view/data/waiterTypes"
 import { ActiveBookings } from "@/features/reservation/ActiveBookings"
 import { BookModal } from "@/features/reservation/BookModal"
@@ -47,13 +47,22 @@ export function BookingPage() {
   const [reservations, setReservations] = useState<ReservationWithTable[]>([])
   const [reservationsLoading, setReservationsLoading] = useState(false)
   const [upcomingReservations, setUpcomingReservations] = useState<UpcomingReservation[]>([])
+  const [layoutPayload, setLayoutPayload] = useState<LayoutPayload | null>(null)
 
+  // Source the floor from the layout endpoint: it returns ALL active tables
+  // (unpaginated) plus the layout payload and upcoming reservations together, so
+  // every table the layout references is present to join against. /tables/ is
+  // paginated (PAGE_SIZE 20) and would drop tables for larger restaurants.
   const loadTables = useCallback(async () => {
     if (!public_restaurant_id) return
     setTablesLoading(true)
     try {
-      const data = await fetchTables(public_restaurant_id)
-      setTables(data)
+      const data = await fetchLayoutData(public_restaurant_id)
+      setTables(data.tables)
+      setUpcomingReservations(data.upcoming_reservations)
+      setLayoutPayload(
+        data.layout && typeof data.layout === "object" ? (data.layout as LayoutPayload) : null,
+      )
     } catch {
       setTables([])
     } finally {
@@ -71,10 +80,6 @@ export function BookingPage() {
       setZones([])
     }
   }, [public_restaurant_id])
-
-  const filteredTables = selectedZone
-    ? tables.filter((t) => t.zone?.public_id === selectedZone)
-    : tables
 
   const loadSettings = useCallback(async () => {
     if (!public_restaurant_id) return
@@ -99,25 +104,14 @@ export function BookingPage() {
     }
   }, [public_restaurant_id, isAuthenticated])
 
-  const loadUpcoming = useCallback(async () => {
-    if (!public_restaurant_id) return
-    try {
-      const data = await fetchUpcomingReservations(public_restaurant_id)
-      setUpcomingReservations(data)
-    } catch {
-      setUpcomingReservations([])
-    }
-  }, [public_restaurant_id])
-
   useEffect(() => {
     /* eslint-disable react-hooks/set-state-in-effect */
     loadTables()
     loadSettings()
     loadReservations()
-    loadUpcoming()
     loadZones()
     /* eslint-enable react-hooks/set-state-in-effect */
-  }, [loadTables, loadSettings, loadReservations, loadUpcoming, loadZones])
+  }, [loadTables, loadSettings, loadReservations, loadZones])
 
   const handleTableSelect = useCallback(
     (table: Table) => {
@@ -167,10 +161,21 @@ export function BookingPage() {
     setUpcomingReservations((prev) => prev.filter((r) => r.public_id !== event.reservation_id))
   }, [])
 
-  useFloorSubscription({
+  const handleLayoutPublished = useCallback(() => {
+    loadTables()
+    // A publish may have added/removed a zone; refresh zones so its tab appears live.
+    loadZones()
+  }, [loadTables, loadZones])
+
+  const { isConnected } = useFloorSubscription({
     onTableStatusChanged: handleTableStatusChanged,
     onNewReservation: handleNewReservation,
     onReservationCancelled: handleReservationCancelled,
+    onLayoutPublished: handleLayoutPublished,
+    onZoneCreated: loadZones,
+    onZoneUpdated: loadZones,
+    onZoneDeleted: loadZones,
+    restaurantPublicId: public_restaurant_id,
   })
 
   return (
@@ -196,6 +201,11 @@ export function BookingPage() {
             MY BOOKINGS
           </button>
         )}
+        <span
+          className={`bp__connection ${isConnected ? "bp__connection--connected" : ""}`}
+          role="status"
+          aria-label={isConnected ? "Connected" : "Disconnected"}
+        />
       </div>
 
       <div className="bp__content">
@@ -204,13 +214,14 @@ export function BookingPage() {
             <p className="bp__loading">LOADING...</p>
           ) : (
             <CustomerFloorPlan
-              tables={filteredTables}
+              tables={tables}
               zones={zones}
               selectedZone={selectedZone}
               onZoneChange={setSelectedZone}
               selectedId={selectedTable?.public_id ?? null}
               onSelect={handleTableSelect}
               upcomingReservations={upcomingReservations}
+              payload={layoutPayload}
             />
           ))}
 

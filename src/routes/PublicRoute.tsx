@@ -7,7 +7,10 @@ function PublicRoute() {
     if (user.role === "cook") {
       return <Navigate to="/staff/orders" replace />
     }
-    if (user.role === "admin" || user.role === "waiter") {
+    if (user.role === "admin") {
+      return <Navigate to="/admin" replace />
+    }
+    if (user.role === "waiter") {
       return <Navigate to="/waiter-order" replace />
     }
     return <Navigate to="/restaurants" replace />

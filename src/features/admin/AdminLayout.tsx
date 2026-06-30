@@ -6,14 +6,14 @@ import {
   LuLayoutDashboard,
   LuLogOut,
   LuMap,
+  LuPencilRuler,
   LuSettings,
   LuStore,
   LuUsers,
   LuUtensilsCrossed,
 } from "react-icons/lu"
-import { apiFetch } from "@/api/client"
-import { clearAuth } from "@/store/auth/authSlice"
-import { useAppDispatch, useAppSelector } from "@/store/hooks"
+import { useAppSelector } from "@/store/hooks"
+import { useLogout } from "@/features/auth/hooks/useLogout"
 import { ToastProvider } from "./components/toast"
 import ConfirmDialog from "./components/ConfirmDialog"
 import { UnsavedChangesContext } from "./hooks/unsavedChanges"
@@ -25,6 +25,7 @@ const NAV_ITEMS = [
   { to: "/admin/settings", label: "Settings", icon: LuSettings },
   { to: "/admin/staff", label: "Staff", icon: LuUsers },
   { to: "/admin/menu", label: "Menu", icon: LuUtensilsCrossed },
+  { to: "/admin/floor-plan/edit", label: "Floor Plan", icon: LuPencilRuler },
   { to: "/admin/kitchen", label: "Kitchen", icon: LuChefHat },
   { to: "/admin/floor", label: "Floor", icon: LuMap },
 ] as const
@@ -32,7 +33,7 @@ const NAV_ITEMS = [
 function AdminLayout() {
   const navigate = useNavigate()
   const location = useLocation()
-  const dispatch = useAppDispatch()
+  const { logout, logoutFailed } = useLogout()
   const user = useAppSelector((state) => state.auth.user)
 
   const [dirty, setDirty] = useState(false)
@@ -58,15 +59,6 @@ function AdminLayout() {
       location.pathname.startsWith("/admin/kitchen") || location.pathname.startsWith("/admin/floor")
     )
   }, [location.pathname])
-
-  const handleLogout = async () => {
-    try {
-      await apiFetch("/api/auth/logout/", { method: "POST" })
-    } finally {
-      dispatch(clearAuth())
-      navigate("/", { replace: true })
-    }
-  }
 
   return (
     <ToastProvider>
@@ -113,11 +105,16 @@ function AdminLayout() {
               <button
                 type="button"
                 className="admin-layout__icon-btn"
-                onClick={() => guarded(() => void handleLogout())}
+                onClick={() => guarded(() => void logout())}
                 aria-label="Log out"
               >
                 <LuLogOut aria-hidden="true" />
               </button>
+              {logoutFailed && (
+                <p className="admin-layout__logout-error" role="alert">
+                  Couldn't sign you out. Please try again.
+                </p>
+              )}
             </div>
           </aside>
 

@@ -1,12 +1,13 @@
 export const googleAuthMessage = {
-  successFromRedirect: "Google sign-in success. Completing backend authorization...",
-  exchangingCode: "Exchanging Google code with backend...",
-  backendAuthSuccess: "Signed in successfully.",
-  backendAuthFailed: "Google sign-in succeeded, but backend authorization failed.",
-  missingApiBaseUrl: "Set VITE_API_BASE_URL in .env to enable backend authorization.",
-  missingClientId: "Set VITE_GOOGLE_CLIENT_ID in .env to enable Google sign-in.",
-  redirecting: "Redirecting to Google...",
+  signingIn: "Signing you in…",
+  backendAuthSuccess: "You're signed in.",
+  backendAuthFailed: "Couldn't sign you in. Please try again.",
+  redirectFailed: "Couldn't sign you in with Google. Please try again.",
+  unavailable: "Sign-in is unavailable right now. Please try again later.",
+  redirecting: "Taking you to Google…",
 } as const
+
+export const googleAuthStateStorageKey = "tablemate.auth.google_state"
 
 export const googleAuthCleanupQueryParams = [
   "code",
@@ -14,4 +15,5 @@ export const googleAuthCleanupQueryParams = [
   "authuser",
   "prompt",
   "error",
+  "state",
 ] as const

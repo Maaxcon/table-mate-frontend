@@ -1,3 +1,4 @@
+import { useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { useNotificationStream } from "../hooks/useNotificationStream"
 import type { NotificationEvent } from "../types"
@@ -7,9 +8,17 @@ function formatTime(date: Date): string {
   return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
 }
 
-export function NotificationStreamSidebar() {
+interface NotificationStreamSidebarProps {
+  onConnectionChange?: (connected: boolean) => void
+}
+
+export function NotificationStreamSidebar({ onConnectionChange }: NotificationStreamSidebarProps) {
   const { events, isConnected } = useNotificationStream()
   const navigate = useNavigate()
+
+  useEffect(() => {
+    onConnectionChange?.(isConnected)
+  }, [isConnected, onConnectionChange])
 
   const clientEvents = events.filter((e) => e.stream === "client")
   const kitchenEvents = events.filter((e) => e.stream === "kitchen")

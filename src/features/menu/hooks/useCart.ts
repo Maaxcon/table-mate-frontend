@@ -3,6 +3,14 @@ import { addCartItem, deleteCartItem, fetchCartItems, updateCartItem } from "@/f
 import type { CartItemResponse, MenuItem } from "@/features/menu/types"
 import { menuStrings } from "@/features/menu/strings"
 
+// The bits of a menu item a cart line needs to render. Satisfied both by a full
+// MenuItem (from the browsed list) and by the cart line's own snapshot.
+export type CartLineItem = {
+  name: string
+  price: string
+  image?: string | null
+}
+
 export type CartItemWithDetails = {
   id: string
   menuItemId: string
@@ -11,8 +19,9 @@ export type CartItemWithDetails = {
   guestSlot: number | null
   isMine: boolean
   addedBy: string | null
+  displayName: string | null
   isPaid: boolean
-  item: MenuItem | null
+  item: CartLineItem | null
 }
 
 type State = {
@@ -161,8 +170,12 @@ function buildDetails(
     guestSlot: ci.guest_slot,
     isMine: ci.is_mine,
     addedBy: ci.added_by,
+    displayName: ci.display_name,
     isPaid: ci.is_paid,
-    item: itemsById[ci.menu_item] ?? null,
+    // Prefer the live menu item (likes, latest price); fall back to the line's
+    // own snapshot so the cart still renders when the item isn't in the browsed
+    // list (e.g. sorted by price, searching, or a different category).
+    item: itemsById[ci.menu_item] ?? ci.menu_item_detail ?? null,
   }))
 }
 
@@ -259,6 +272,7 @@ export function useCart({
           guest_slot: null,
           is_mine: true,
           is_paid: false,
+          display_name: null,
           cart_session: cartSessionId,
           restaurant: "",
           created_at: new Date().toISOString(),

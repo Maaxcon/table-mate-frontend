@@ -1,7 +1,13 @@
 .bp {
-  max-width: 900px;
+  width: 100%;
+  max-width: 1400px;
   margin: 0 auto;
   padding: 24px 16px;
+  height: 100svh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
 }
 
 .bp__tabs {
@@ -23,12 +29,32 @@
   margin-bottom: -2px;
   transition:
     color 0.2s,
-    border-color 0.2s;
+    border-bottom-color 0.2s;
 }
 
 .bp__tab--active {
   color: var(--color-primary, #1976d2);
   border-bottom-color: var(--color-primary, #1976d2);
+}
+
+.bp__content {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.bp__connection {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #dc2626;
+  flex-shrink: 0;
+  align-self: center;
+  margin-left: auto;
+}
+
+.bp__connection--connected {
+  background: #16a34a;
 }
 
 .bp__loading {

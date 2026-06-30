@@ -1,43 +1,18 @@
-import { FaTelegram, FaFacebook } from "react-icons/fa"
 import { menuStrings } from "@/features/menu/strings"
+import "./MenuFooter.css"
 
 type MenuFooterProps = {
-  telegramUrl: string
-  facebookUrl: string
+  restaurantName: string | null
 }
 
-/** Social links footer; renders nothing when no links are set. */
-function MenuFooter({ telegramUrl, facebookUrl }: MenuFooterProps) {
-  if (!telegramUrl && !facebookUrl) return null
+/** Minimal closing footer: brand wordmark, tagline and copyright. */
+function MenuFooter({ restaurantName }: MenuFooterProps) {
+  const year = new Date().getFullYear()
   return (
-    <footer className="menu-page__footer">
-      <span className="menu-page__footer-label">{menuStrings.footer.social}</span>
-      <div className="menu-page__footer-links">
-        {telegramUrl && (
-          <a
-            className="menu-page__footer-link menu-page__footer-link--telegram"
-            href={telegramUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="Telegram"
-          >
-            <FaTelegram size={20} />
-            <span>Telegram</span>
-          </a>
-        )}
-        {facebookUrl && (
-          <a
-            className="menu-page__footer-link menu-page__footer-link--facebook"
-            href={facebookUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="Facebook"
-          >
-            <FaFacebook size={20} />
-            <span>Facebook</span>
-          </a>
-        )}
-      </div>
+    <footer className="menu-footer">
+      <span className="menu-footer__brand">{menuStrings.footer.brand}</span>
+      <span className="menu-footer__tagline">{menuStrings.footer.tagline}</span>
+      <span className="menu-footer__rights">{menuStrings.footer.rights(year, restaurantName)}</span>
     </footer>
   )
 }

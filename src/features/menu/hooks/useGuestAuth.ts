@@ -1,5 +1,10 @@
 import { useCallback, useEffect, useReducer, useRef } from "react"
-import { guestInit, ReservationNotYetActiveError, verifyScan } from "@/features/menu/api"
+import {
+  guestInit,
+  ReservationNotYetActiveError,
+  setGuestName,
+  verifyScan,
+} from "@/features/menu/api"
 import { getGuestToken } from "@/features/menu/guestToken"
 import { decodeJwtPayload } from "@/features/menu/jwt"
 import { menuStrings } from "@/features/menu/strings"
@@ -91,14 +96,23 @@ export function useGuestAuth({
     guestJwtRef.current = authState.guestJwt
   }, [authState.guestJwt])
 
-  const setDisplayName = useCallback((name: string) => {
-    setDisplayNameState(name)
-    try {
-      localStorage.setItem(DISPLAY_NAME_KEY, name)
-    } catch {
-      // ignore
-    }
-  }, [])
+  const setDisplayName = useCallback(
+    (name: string) => {
+      setDisplayNameState(name)
+      try {
+        localStorage.setItem(DISPLAY_NAME_KEY, name)
+      } catch {
+        // ignore
+      }
+      // Persist to backend so other guests and the waiter can see the name.
+      if (authState.cartSessionId && authState.guestJwt) {
+        setGuestName(authState.cartSessionId, authState.guestJwt, name).catch(() => {
+          // Best-effort: don't block the UI if this fails.
+        })
+      }
+    },
+    [authState.cartSessionId, authState.guestJwt],
+  )
 
   const initialize = useCallback(() => {
     if ((!reservationId && !tableId) || initializing.current) return
@@ -153,6 +167,22 @@ export function useGuestAuth({
     const timer = setTimeout(() => initialize(), Math.max(msUntilRefresh, 0))
     return () => clearTimeout(timer)
   }, [authState.guestJwt, initialize])
+
+  // A session can be unavailable when the page loads (table's session closed,
+  // booking not active yet) and then open later. While in that error state,
+  // retry on tab focus so the guest recovers without a full page reload.
+  useEffect(() => {
+    if (authState.status !== "error") return
+    const retry = () => {
+      if (document.visibilityState === "visible") initialize()
+    }
+    window.addEventListener("focus", retry)
+    document.addEventListener("visibilitychange", retry)
+    return () => {
+      window.removeEventListener("focus", retry)
+      document.removeEventListener("visibilitychange", retry)
+    }
+  }, [authState.status, initialize])
 
   return {
     deviceId,

@@ -1,7 +1,11 @@
-import { useCallback, useEffect, useMemo, useState } from "react"
-import type { Table } from "@/types/api/types.gen"
-import type { WorkingHoursDay } from "./api"
-import { checkAvailability, createReservation, fetchAvailableSlots } from "./api"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import type { WorkingHoursDay, ReservationWithTable } from "./api"
+import {
+  checkAvailability,
+  createReservation,
+  fetchAvailableSlots,
+  fetchRestaurantSettings,
+} from "./api"
 import {
   DAY_NAMES,
   generateTimeSlots,
@@ -12,12 +16,19 @@ import {
 } from "./utils"
 import "./BookModal.css"
 
+interface BookTable {
+  public_id: string
+  public_number: string
+  capacity: number
+}
+
 interface BookModalProps {
-  table: Table
+  table: BookTable
   workingHours: Record<string, WorkingHoursDay> | null
   restaurantId: string
   onClose: () => void
-  onSuccess: () => void
+  onSuccess: (data?: ReservationWithTable) => void
+  showNameField?: boolean
 }
 
 export function BookModal({
@@ -26,7 +37,9 @@ export function BookModal({
   restaurantId,
   onClose,
   onSuccess,
+  showNameField,
 }: BookModalProps) {
+  const reservationRef = useRef<ReservationWithTable | null>(null)
   const today = useMemo(() => {
     const d = new Date()
     d.setHours(0, 0, 0, 0)
@@ -37,6 +50,7 @@ export function BookModal({
   const [selectedTime, setSelectedTime] = useState<string | null>(null)
   const [durationMinutes, setDurationMinutes] = useState(120)
   const [guestCount, setGuestCount] = useState(2)
+  const [guestName, setGuestName] = useState("")
   const [notes, setNotes] = useState("")
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -50,6 +64,29 @@ export function BookModal({
 
   const [availableSlots, setAvailableSlots] = useState<Record<string, string[]> | null>(null)
   const [slotsLoading, setSlotsLoading] = useState(true)
+
+  const [fallbackWorkingHours, setFallbackWorkingHours] = useState<Record<
+    string,
+    WorkingHoursDay
+  > | null>(null)
+  const [fallbackResolved, setFallbackResolved] = useState(false)
+
+  const needsFallback = workingHours === null && !!restaurantId
+  const fallbackHoursLoading = needsFallback && !fallbackResolved
+  const effectiveWorkingHours = workingHours ?? fallbackWorkingHours
+
+  useEffect(() => {
+    if (workingHours !== null || !restaurantId) return
+    fetchRestaurantSettings(restaurantId)
+      .then((settings) => {
+        setFallbackWorkingHours(settings.working_hours)
+        setFallbackResolved(true)
+      })
+      .catch(() => {
+        setFallbackWorkingHours(null)
+        setFallbackResolved(true)
+      })
+  }, [workingHours, restaurantId])
 
   useEffect(() => {
     fetchAvailableSlots(table.public_id)
@@ -69,7 +106,7 @@ export function BookModal({
   }, [today])
 
   const dayName = DAY_NAMES[selectedDate.getDay()]
-  const dayConfig = workingHours?.[dayName]
+  const dayConfig = effectiveWorkingHours?.[dayName]
 
   const dateKey = localDateKey(selectedDate)
 
@@ -140,16 +177,22 @@ export function BookModal({
         return
       }
 
-      await createReservation({
+      const body: Record<string, unknown> = {
         table: table.public_id,
         guest_count: guestCount,
         start_at: startISO,
         end_at: endISO,
         notes: notes || undefined,
-      })
+      }
+      if (showNameField && guestName) {
+        body.guest_name = guestName
+      }
+      reservationRef.current = await createReservation(
+        body as Parameters<typeof createReservation>[0],
+      )
 
       setSuccess({
-        tableNumber: table.table_number,
+        tableNumber: table.public_number,
         date: localDateKey(selectedDate),
         time: selectedTime,
         endTime: endAt,
@@ -166,49 +209,45 @@ export function BookModal({
     durationMinutes,
     endAt,
     guestCount,
+    guestName,
     notes,
+    showNameField,
     restaurantId,
     table.public_id,
-    table.table_number,
+    table.public_number,
   ])
+
+  const dismissWithSuccess = useCallback(() => {
+    onSuccess(reservationRef.current ?? undefined)
+    onClose()
+  }, [onSuccess, onClose])
 
   if (success) {
     return (
       <div
         className="book-overlay"
         onClick={(e) => {
-          if (e.target === e.currentTarget) {
-            onSuccess()
-            onClose()
-          }
+          if (e.target === e.currentTarget) dismissWithSuccess()
         }}
         role="button"
         tabIndex={0}
         onKeyDown={(e) => {
-          if (e.key === "Escape") {
-            onSuccess()
-            onClose()
-          }
+          if (e.key === "Escape") dismissWithSuccess()
         }}
       >
         <div className="book-modal">
           <div className="book-modal__header">
             <h2 className="book-modal__title">BOOKING CONFIRMED</h2>
-            <button
-              className="book-modal__close"
-              onClick={() => {
-                onSuccess()
-                onClose()
-              }}
-              type="button"
-            >
+            <button className="book-modal__close" onClick={dismissWithSuccess} type="button">
               &times;
             </button>
           </div>
           <div className="book-modal__body">
             <div className="book-modal__success-icon">&#10003;</div>
             <p className="book-modal__success-text">
-              Your reservation at Table {success.tableNumber} has been created.
+              {showNameField
+                ? `Reservation for Table ${success.tableNumber} has been created.`
+                : `Your reservation at Table ${success.tableNumber} has been created.`}
             </p>
             <div className="book-modal__summary">
               <div className="book-modal__summary-row">
@@ -230,10 +269,7 @@ export function BookModal({
           <div className="book-modal__actions">
             <button
               className="book-modal__btn book-modal__btn--confirm"
-              onClick={() => {
-                onSuccess()
-                onClose()
-              }}
+              onClick={dismissWithSuccess}
               type="button"
             >
               OK
@@ -258,7 +294,7 @@ export function BookModal({
     >
       <div className="book-modal">
         <div className="book-modal__header">
-          <h2 className="book-modal__title">BOOK TABLE {table.table_number}</h2>
+          <h2 className="book-modal__title">BOOK TABLE {table.public_number}</h2>
           <button className="book-modal__close" onClick={onClose} type="button">
             &times;
           </button>
@@ -312,12 +348,12 @@ export function BookModal({
 
           <section className="book-modal__section">
             <h3 className="book-modal__section-title">TIME</h3>
-            {slotsLoading ? (
+            {slotsLoading || fallbackHoursLoading ? (
               <p className="book-modal__empty">Loading available slots…</p>
-            ) : !dayConfig ? (
-              <p className="book-modal__empty">Restaurant closed on this day</p>
             ) : timeSlots.length === 0 ? (
-              <p className="book-modal__empty">No available slots</p>
+              <p className="book-modal__empty">
+                {!realSlots && !dayConfig ? "Restaurant closed on this day" : "No available slots"}
+              </p>
             ) : (
               <div className="book-modal__times">
                 {timeSlots.map((t) => (
@@ -377,11 +413,24 @@ export function BookModal({
             </div>
           </section>
 
+          {showNameField && (
+            <section className="book-modal__section">
+              <h3 className="book-modal__section-title">GUEST NAME</h3>
+              <input
+                type="text"
+                className="book-modal__notes"
+                placeholder="Guest name"
+                value={guestName}
+                onChange={(e) => setGuestName(e.target.value)}
+              />
+            </section>
+          )}
+
           <section className="book-modal__section">
             <h3 className="book-modal__section-title">NOTES (optional)</h3>
             <textarea
               className="book-modal__notes"
-              placeholder="Guest name, phone number, special requests..."
+              placeholder="Special requests..."
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={3}
@@ -394,7 +443,7 @@ export function BookModal({
               <div className="book-modal__summary">
                 <div className="book-modal__summary-row">
                   <span>Table</span>
-                  <span>#{table.table_number}</span>
+                  <span>#{table.public_number}</span>
                 </div>
                 <div className="book-modal__summary-row">
                   <span>Date</span>

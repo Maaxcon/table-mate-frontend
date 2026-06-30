@@ -1,6 +1,7 @@
 import { useState } from "react"
 import type { ReservationItem } from "../data/waiterTypes"
 import { formatTimeRange } from "../data/waiterTypes"
+import { ConfirmCancelModal } from "./ConfirmCancelModal"
 import "./ReservationSidebar.css"
 
 interface ReservationSidebarProps {
@@ -8,6 +9,7 @@ interface ReservationSidebarProps {
   onCancel: (reservationId: string) => void
   onModify: (reservation: ReservationItem) => void
   actionLoading: boolean
+  error?: string | null
 }
 
 export function ReservationSidebar({
@@ -15,8 +17,10 @@ export function ReservationSidebar({
   onCancel,
   onModify,
   actionLoading,
+  error = null,
 }: ReservationSidebarProps) {
   const [searchQuery, setSearchQuery] = useState("")
+  const [confirmingId, setConfirmingId] = useState<string | null>(null)
 
   const sorted = [...reservations].sort(
     (a, b) => new Date(a.start_at).getTime() - new Date(b.start_at).getTime(),
@@ -53,6 +57,12 @@ export function ReservationSidebar({
         />
       </div>
 
+      {error && (
+        <p className="reservation-sidebar__error" role="alert">
+          {error}
+        </p>
+      )}
+
       <div className="reservation-sidebar__list">
         {filtered.map((r, i) => (
           <div
@@ -69,9 +79,7 @@ export function ReservationSidebar({
               </div>
             </div>
             <div className="reservation-sidebar__item-right">
-              <span className="reservation-sidebar__item-table">
-                T-{r.table.replace("T-", "").padStart(2, "0")}
-              </span>
+              <span className="reservation-sidebar__item-table">{r.table}</span>
               <div className="reservation-sidebar__item-actions">
                 <button
                   type="button"
@@ -84,7 +92,7 @@ export function ReservationSidebar({
                 <button
                   type="button"
                   className="reservation-sidebar__action-btn reservation-sidebar__action-btn--cancel"
-                  onClick={() => onCancel(r.public_id)}
+                  onClick={() => setConfirmingId(r.public_id)}
                   disabled={actionLoading}
                 >
                   CANCEL
@@ -98,6 +106,20 @@ export function ReservationSidebar({
       <button type="button" className="reservation-sidebar__action">
         GENERATE SHIFT REPORT
       </button>
+
+      {confirmingId && (
+        <ConfirmCancelModal
+          title="Cancel Reservation"
+          message="Are you sure you want to cancel this reservation? This action cannot be undone."
+          confirmLabel="Cancel Reservation"
+          busy={actionLoading}
+          onConfirm={() => {
+            onCancel(confirmingId)
+            setConfirmingId(null)
+          }}
+          onClose={() => setConfirmingId(null)}
+        />
+      )}
     </aside>
   )
 }

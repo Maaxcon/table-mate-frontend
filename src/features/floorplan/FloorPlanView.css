@@ -1,0 +1,253 @@
+/* Shared read-only floor renderer. Geometry mirrors the editor canvas
+   (features/editor/Canvas.css + entities/blocks.css); status coloring is layered
+   on top for the customer/waiter views. */
+
+.fp-view {
+  position: relative;
+  display: flex;
+  width: 100%;
+  overflow: auto;
+  background-color: var(--color-bg-surface);
+  border: 2px solid var(--color-border-strong);
+  box-sizing: border-box;
+}
+
+.fp-view--empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 240px;
+  background-image: none;
+}
+
+.fp-view__empty-text {
+  color: var(--color-text-secondary);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.fp-view__stage {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: top left;
+}
+
+.fp-block {
+  position: absolute;
+  box-sizing: border-box;
+}
+
+.fp-block--table {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  border: 2px solid var(--color-border-strong);
+  background: var(--color-bg-surface);
+  font-family: inherit;
+  text-align: center;
+  cursor: pointer;
+  transition: box-shadow 0.1s;
+}
+
+.fp-block--table:hover {
+  box-shadow: 4px 4px 0 var(--color-border-strong);
+}
+
+.fp-block--table-square {
+  border-radius: 0;
+}
+
+.fp-block--table-round {
+  border-radius: 50%;
+  border-width: 3px;
+}
+
+.fp-block--selected {
+  outline: 3px solid var(--color-text-primary);
+  outline-offset: 3px;
+}
+
+/* Status tinting (free / reserved / occupied). */
+.fp-block--reserved {
+  border-color: var(--color-text-primary);
+}
+
+.fp-block--occupied {
+  background: var(--color-text-primary);
+  color: var(--color-bg-surface);
+}
+
+.fp-block--occupied .fp-block__label,
+.fp-block--occupied .fp-block__capacity {
+  color: var(--color-bg-surface);
+}
+
+.fp-block__label {
+  font-weight: 900;
+  font-size: 1.4rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  line-height: 1;
+  color: var(--color-text-primary);
+}
+
+.fp-block__capacity {
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--color-text-primary);
+  opacity: 0.6;
+}
+
+.fp-block__zone-label {
+  font-weight: 900;
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--color-text-primary);
+  pointer-events: none;
+}
+
+.fp-block--obstacle {
+  background: var(--color-text-primary);
+  border: none;
+}
+
+.fp-block--threshold {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed var(--color-border-strong);
+  background: var(--color-bg-surface);
+  opacity: 0.85;
+}
+
+.fp-block--portal {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border: 2px solid var(--color-border-strong);
+  background: var(--color-bg-surface);
+}
+
+.fp-block--portal-link {
+  cursor: pointer;
+  border-style: dashed;
+  font-family: inherit;
+  transition: box-shadow 0.1s;
+}
+
+.fp-block--portal-link:hover {
+  box-shadow: 4px 4px 0 var(--color-border-strong);
+}
+
+.fp-block__portal-arrow {
+  font-size: 1.6rem;
+  font-weight: 900;
+  line-height: 1;
+  color: var(--color-text-primary);
+}
+
+/* Optional status badge + guest info, injected via renderTableContent. */
+.fp-block__badge {
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  padding: 2px 8px;
+  line-height: 1;
+}
+
+.fp-block__badge--free {
+  border: 1px solid var(--color-border-strong);
+  color: var(--color-text-secondary);
+  background: var(--color-bg-surface);
+}
+
+.fp-block__badge--reserved {
+  background: transparent;
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-text-primary);
+}
+
+.fp-block__badge--occupied {
+  background: var(--color-bg-surface);
+  color: var(--color-text-primary);
+}
+
+.fp-block__info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.fp-block__info-name {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.fp-block__info-sub {
+  font-size: 0.9rem;
+  opacity: 0.7;
+}
+
+/* Canvas edge borders (mirrors editor-canvas__edge). */
+.fp-view__edge {
+  position: absolute;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.fp-view__edge--top {
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 0;
+  border-top: 3px dashed var(--color-border-strong);
+}
+
+.fp-view__edge--top.fp-view__edge--solid {
+  border-top-style: solid;
+}
+
+.fp-view__edge--right {
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 0;
+  border-right: 3px dashed var(--color-border-strong);
+}
+
+.fp-view__edge--right.fp-view__edge--solid {
+  border-right-style: solid;
+}
+
+.fp-view__edge--bottom {
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 0;
+  border-bottom: 3px dashed var(--color-border-strong);
+}
+
+.fp-view__edge--bottom.fp-view__edge--solid {
+  border-bottom-style: solid;
+}
+
+.fp-view__edge--left {
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 0;
+  border-left: 3px dashed var(--color-border-strong);
+}
+
+.fp-view__edge--left.fp-view__edge--solid {
+  border-left-style: solid;
+}
