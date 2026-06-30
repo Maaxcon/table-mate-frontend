@@ -3435,6 +3435,12 @@ components:
           type: integer
           maximum: 2147483647
           minimum: 0
+        color:
+          type: string
+          nullable: true
+          description: Hex color used for category theming.
+          pattern: ^#[0-9a-fA-F]{6}$
+          maxLength: 7
         created_at:
           type: string
           format: date-time
@@ -4088,6 +4094,12 @@ components:
           type: integer
           maximum: 2147483647
           minimum: 0
+        color:
+          type: string
+          nullable: true
+          description: Hex color used for category theming.
+          pattern: ^#[0-9a-fA-F]{6}$
+          maxLength: 7
         created_at:
           type: string
           format: date-time
@@ -4309,6 +4321,19 @@ components:
         menu_item_name:
           type: string
           readOnly: true
+        menu_item_category_id:
+          type: string
+          format: uuid
+          readOnly: true
+          nullable: true
+        menu_item_category_name:
+          type: string
+          readOnly: true
+          nullable: true
+        menu_item_category_color:
+          type: string
+          readOnly: true
+          nullable: true
         guest_slot:
           type: integer
           maximum: 2147483647
@@ -4373,6 +4398,9 @@ components:
       - created_at
       - guest_slot
       - menu_item
+      - menu_item_category_color
+      - menu_item_category_id
+      - menu_item_category_name
       - menu_item_name
       - order
       - public_id
@@ -4965,6 +4993,12 @@ components:
           type: integer
           maximum: 2147483647
           minimum: 0
+        color:
+          type: string
+          nullable: true
+          description: Hex color used for category theming.
+          pattern: ^#[0-9a-fA-F]{6}$
+          maxLength: 7
         created_at:
           type: string
           format: date-time
@@ -5196,6 +5230,19 @@ components:
         menu_item_name:
           type: string
           readOnly: true
+        menu_item_category_id:
+          type: string
+          format: uuid
+          readOnly: true
+          nullable: true
+        menu_item_category_name:
+          type: string
+          readOnly: true
+          nullable: true
+        menu_item_category_color:
+          type: string
+          readOnly: true
+          nullable: true
         guest_slot:
           type: integer
           maximum: 2147483647
@@ -5478,6 +5525,13 @@ components:
           type: string
           format: uuid
           readOnly: true
+        label:
+          type: string
+          readOnly: true
+        daily_number:
+          type: integer
+          readOnly: true
+          nullable: true
         restaurant:
           type: string
           format: uuid
@@ -6362,6 +6416,13 @@ components:
           type: string
           format: uuid
           readOnly: true
+        label:
+          type: string
+          readOnly: true
+        daily_number:
+          type: integer
+          readOnly: true
+          nullable: true
         restaurant:
           type: string
           format: uuid
@@ -6407,9 +6468,17 @@ components:
           readOnly: true
       required:
       - created_at
+<<<<<<< HEAD
+      - daily_number
       - guest_count
       - injected_at
       - items_count
+      - label
+=======
+      - guest_count
+      - injected_at
+      - items_count
+>>>>>>> origin/dev
       - order
       - public_id
       - restaurant

@@ -38,6 +38,10 @@ export type AdminMenuCategory = {
   menu: string
   name: string
   sort_order?: number
+  /**
+   * Hex color used for category theming.
+   */
+  color?: string | null
   readonly created_at: string
   readonly updated_at: string
 }
@@ -269,6 +273,10 @@ export type MenuCategory = {
   readonly menu: string
   name: string
   sort_order?: number
+  /**
+   * Hex color used for category theming.
+   */
+  color?: string | null
   readonly created_at: string
   readonly updated_at: string
 }
@@ -329,6 +337,9 @@ export type OrderItem = {
   ticket?: string | null
   menu_item: string
   readonly menu_item_name: string
+  readonly menu_item_category_id: string | null
+  readonly menu_item_category_name: string | null
+  readonly menu_item_category_color: string | null
   guest_slot: number
   guest_display_name?: string | null
   quantity: number
@@ -544,6 +555,10 @@ export type PatchedAdminMenuCategory = {
   menu?: string
   name?: string
   sort_order?: number
+  /**
+   * Hex color used for category theming.
+   */
+  color?: string | null
   readonly created_at?: string
   readonly updated_at?: string
 }
@@ -632,6 +647,9 @@ export type PatchedOrderItem = {
   ticket?: string | null
   menu_item?: string
   readonly menu_item_name?: string
+  readonly menu_item_category_id?: string | null
+  readonly menu_item_category_name?: string | null
+  readonly menu_item_category_color?: string | null
   guest_slot?: number
   guest_display_name?: string | null
   quantity?: number
@@ -719,6 +737,8 @@ export type PatchedSession = {
 
 export type PatchedTicket = {
   readonly public_id?: string
+  readonly label?: string
+  readonly daily_number?: number | null
   readonly restaurant?: string
   session?: string
   order?: string
@@ -1013,6 +1033,8 @@ export type ThresholdEntity = {
 
 export type Ticket = {
   readonly public_id: string
+  readonly label: string
+  readonly daily_number: number | null
   readonly restaurant: string
   session: string
   order: string
@@ -1133,6 +1155,10 @@ export type AdminMenuCategoryWritable = {
   menu: string
   name: string
   sort_order?: number
+  /**
+   * Hex color used for category theming.
+   */
+  color?: string | null
 }
 
 /**
@@ -1208,6 +1234,10 @@ export type MenuWritable = {
 export type MenuCategoryWritable = {
   name: string
   sort_order?: number
+  /**
+   * Hex color used for category theming.
+   */
+  color?: string | null
 }
 
 export type MenuItemWritable = {
@@ -1424,6 +1454,10 @@ export type PatchedAdminMenuCategoryWritable = {
   menu?: string
   name?: string
   sort_order?: number
+  /**
+   * Hex color used for category theming.
+   */
+  color?: string | null
 }
 
 /**
