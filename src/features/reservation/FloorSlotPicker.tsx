@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from "react"
-import { LuMinus, LuPlus } from "react-icons/lu"
+import { LuCalendarDays, LuClock, LuMinus, LuPlus, LuSparkles, LuUsers } from "react-icons/lu"
 import type { WorkingHoursDay } from "./api"
 import { bookStrings } from "./strings"
 import { DAY_NAMES, generateTimeSlots, localDateKey } from "./utils"
@@ -60,8 +60,21 @@ export function FloorSlotPicker({
 
   return (
     <div className="c-slot-picker">
+      <div className="c-slot-picker__header">
+        <span className="c-slot-picker__badge" aria-hidden="true">
+          <LuSparkles />
+        </span>
+        <div className="c-slot-picker__intro">
+          <h3 className="c-slot-picker__title">{bookStrings.floorPlan.slot.title}</h3>
+          <p className="c-slot-picker__hint">{bookStrings.floorPlan.slot.hint}</p>
+        </div>
+      </div>
+
       <div className="c-slot-picker__field">
-        <span className="c-slot-picker__label">{bookStrings.floorPlan.slot.date}</span>
+        <span className="c-slot-picker__label">
+          <LuCalendarDays aria-hidden="true" />
+          {bookStrings.floorPlan.slot.date}
+        </span>
         <div className="c-slot-picker__chips">
           {dates.map((d) => {
             const closed = !workingHours?.[DAY_NAMES[d.getDay()]]
@@ -94,7 +107,10 @@ export function FloorSlotPicker({
       </div>
 
       <div className="c-slot-picker__field">
-        <span className="c-slot-picker__label">{bookStrings.floorPlan.slot.time}</span>
+        <span className="c-slot-picker__label">
+          <LuClock aria-hidden="true" />
+          {bookStrings.floorPlan.slot.time}
+        </span>
         {timeSlots.length === 0 ? (
           <p className="c-slot-picker__empty">{bookStrings.floorPlan.slot.noTimes}</p>
         ) : (
@@ -116,7 +132,10 @@ export function FloorSlotPicker({
       </div>
 
       <div className="c-slot-picker__field c-slot-picker__field--guests">
-        <span className="c-slot-picker__label">{bookStrings.floorPlan.slot.guests}</span>
+        <span className="c-slot-picker__label">
+          <LuUsers aria-hidden="true" />
+          {bookStrings.floorPlan.slot.guests}
+        </span>
         <div className="c-slot-picker__guests">
           <button
             type="button"
