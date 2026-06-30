@@ -99,6 +99,22 @@ export function BookModal({
 
   const dateKey = localDateKey(selectedDate)
 
+  // Cap the booking length to the time left before close, so a late slot (e.g.
+  // 20:30 with a 22:00 close) is bookable for the 90 min that remain instead of
+  // forcing the guest to shrink the default 2h by hand. The desired duration is
+  // kept and re-applied automatically when an earlier slot leaves room again.
+  const maxDuration = useMemo(() => {
+    if (!selectedTime || !dayConfig) return Infinity
+    const closeMins = timeToMinutes(dayConfig.close)
+    const openMins = timeToMinutes(dayConfig.open)
+    if (closeMins <= openMins) return Infinity // overnight: don't clamp
+    return Math.max(MIN_DURATION, closeMins - timeToMinutes(selectedTime))
+  }, [selectedTime, dayConfig])
+
+  const effectiveDuration = Number.isFinite(maxDuration)
+    ? Math.min(durationMinutes, maxDuration)
+    : durationMinutes
+
   // Only worth flagging when the guest's device clock is in a different zone.
   const foreignTzNote = useMemo(() => {
     if (!timeZone) return null
@@ -117,14 +133,14 @@ export function BookModal({
   }, [realSlots, selectedDate, dayConfig])
 
   const endAt = useMemo(() => {
-    if (!selectedTime || !durationMinutes) return ""
-    return minutesToTime(timeToMinutes(selectedTime) + durationMinutes)
-  }, [selectedTime, durationMinutes])
+    if (!selectedTime || !effectiveDuration) return ""
+    return minutesToTime(timeToMinutes(selectedTime) + effectiveDuration)
+  }, [selectedTime, effectiveDuration])
 
   const durationError = useMemo(() => {
-    if (!selectedTime || !durationMinutes) return null
+    if (!selectedTime || !effectiveDuration) return null
 
-    const endMins = timeToMinutes(selectedTime) + durationMinutes
+    const endMins = timeToMinutes(selectedTime) + effectiveDuration
 
     if (dayConfig) {
       const closeMins = timeToMinutes(dayConfig.close)
@@ -149,7 +165,7 @@ export function BookModal({
     }
 
     return null
-  }, [selectedTime, durationMinutes, dayConfig, availableSlots, dateKey])
+  }, [selectedTime, effectiveDuration, dayConfig, availableSlots, dateKey])
 
   const handleConfirm = useCallback(async () => {
     if (!selectedTime) return
@@ -163,7 +179,9 @@ export function BookModal({
       const startISO = timeZone
         ? zonedWallTimeToUtcIso(dateKey, selectedTime, timeZone)
         : new Date(`${dateKey}T${selectedTime}:00`).toISOString()
-      const endISO = new Date(new Date(startISO).getTime() + durationMinutes * 60000).toISOString()
+      const endISO = new Date(
+        new Date(startISO).getTime() + effectiveDuration * 60000,
+      ).toISOString()
 
       // The backend is the single source of truth: it re-checks the slot inside
       // the create transaction and returns a clear 409 if the table was taken.
@@ -196,7 +214,7 @@ export function BookModal({
   }, [
     selectedTime,
     selectedDate,
-    durationMinutes,
+    effectiveDuration,
     endAt,
     guestCount,
     notes,
@@ -408,10 +426,13 @@ export function BookModal({
                     type="number"
                     className="book-modal__duration-field"
                     min={MIN_DURATION}
+                    max={Number.isFinite(maxDuration) ? maxDuration : undefined}
                     step={15}
-                    value={durationMinutes}
+                    value={effectiveDuration}
                     onChange={(e) =>
-                      setDurationMinutes(Math.max(MIN_DURATION, Number(e.target.value)))
+                      setDurationMinutes(
+                        Math.max(MIN_DURATION, Math.min(Number(e.target.value), maxDuration)),
+                      )
                     }
                   />
                   {durationError && <p className="book-modal__hint">{durationError}</p>}
@@ -482,7 +503,7 @@ export function BookModal({
                     <div className="book-modal__summary-row">
                       <span>{bookStrings.modal.summary.duration}</span>
                       <span>
-                        {durationMinutes} {bookStrings.modal.durationUnit}
+                        {effectiveDuration} {bookStrings.modal.durationUnit}
                       </span>
                     </div>
                     <div className="book-modal__summary-row">
