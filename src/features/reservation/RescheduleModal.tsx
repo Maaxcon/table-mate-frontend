@@ -151,8 +151,8 @@ function RescheduleForm({
 
   const timeSlots = useMemo(() => {
     if (availableSlots) return availableSlots
-    return generateTimeSlots(parsedDate, dayConfig)
-  }, [availableSlots, parsedDate, dayConfig])
+    return generateTimeSlots(parsedDate, dayConfig, effectiveTimeZone)
+  }, [availableSlots, parsedDate, dayConfig, effectiveTimeZone])
 
   const endAt = useMemo(() => {
     if (!selectedTime) return ""

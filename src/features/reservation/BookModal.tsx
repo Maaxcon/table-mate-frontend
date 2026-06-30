@@ -153,8 +153,8 @@ export function BookModal({
 
   const timeSlots = useMemo(() => {
     if (realSlots) return realSlots
-    return generateTimeSlots(selectedDate, dayConfig)
-  }, [realSlots, selectedDate, dayConfig])
+    return generateTimeSlots(selectedDate, dayConfig, timeZone)
+  }, [realSlots, selectedDate, dayConfig, timeZone])
 
   const endAt = useMemo(() => {
     if (!selectedTime || !effectiveDuration) return ""

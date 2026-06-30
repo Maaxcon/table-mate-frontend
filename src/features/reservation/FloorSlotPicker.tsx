@@ -13,6 +13,8 @@ interface FloorSlotPickerProps {
   // Largest party the venue can seat — its biggest table's capacity. Caps the
   // stepper so the guest can't pick a count no table fits.
   maxGuests: number
+  // Restaurant timezone, so the past-slot filter uses the venue's clock.
+  timeZone: string | null
   onChange: (next: { date?: Date; time?: string | null; guests?: number }) => void
 }
 
@@ -24,6 +26,7 @@ export function FloorSlotPicker({
   time,
   guests,
   maxGuests,
+  timeZone,
   onChange,
 }: FloorSlotPickerProps) {
   // Keyed on the calendar day so "today" (and the 14-day window) refreshes after
@@ -45,7 +48,10 @@ export function FloorSlotPicker({
   }, [today])
 
   const dayConfig = workingHours?.[DAY_NAMES[date.getDay()]]
-  const timeSlots = useMemo(() => generateTimeSlots(date, dayConfig), [date, dayConfig])
+  const timeSlots = useMemo(
+    () => generateTimeSlots(date, dayConfig, timeZone),
+    [date, dayConfig, timeZone],
+  )
 
   // Keep a valid time selected: pick the first open slot whenever the current
   // one is gone (e.g. after switching to a different day).

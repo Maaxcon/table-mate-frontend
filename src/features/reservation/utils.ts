@@ -74,7 +74,45 @@ export function formatTimeInTz(iso: string, timeZone: string | null): string {
   })
 }
 
-export function generateTimeSlots(date: Date, dayConfig: WorkingHoursDay | undefined): string[] {
+// "Now" as wall-clock calendar parts in `timeZone` (falls back to the browser's
+// zone) — so the past-slot filter below compares the venue's clock, not the
+// guest's device clock.
+function nowInTz(timeZone: string | null): {
+  year: number
+  month: number
+  day: number
+  minutes: number
+} {
+  const now = new Date()
+  if (!timeZone) {
+    return {
+      year: now.getFullYear(),
+      month: now.getMonth() + 1,
+      day: now.getDate(),
+      minutes: now.getHours() * 60 + now.getMinutes(),
+    }
+  }
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    hour12: false,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).formatToParts(now)
+  const m: Record<string, number> = {}
+  for (const p of parts) {
+    if (p.type !== "literal") m[p.type] = Number(p.value)
+  }
+  return { year: m.year, month: m.month, day: m.day, minutes: (m.hour % 24) * 60 + m.minute }
+}
+
+export function generateTimeSlots(
+  date: Date,
+  dayConfig: WorkingHoursDay | undefined,
+  timeZone: string | null = null,
+): string[] {
   if (!dayConfig) return []
 
   const parseTime = (t: string) => {
@@ -85,11 +123,13 @@ export function generateTimeSlots(date: Date, dayConfig: WorkingHoursDay | undef
   const open = parseTime(dayConfig.open)
   const close = parseTime(dayConfig.close)
 
-  const now = new Date()
+  // The slots are the restaurant's wall-clock times, so "today" and the past
+  // cutoff must be measured in the restaurant's timezone too.
+  const now = nowInTz(timeZone)
   const isToday =
-    date.getFullYear() === now.getFullYear() &&
-    date.getMonth() === now.getMonth() &&
-    date.getDate() === now.getDate()
+    date.getFullYear() === now.year &&
+    date.getMonth() + 1 === now.month &&
+    date.getDate() === now.day
 
   const slots: string[] = []
   let hour = open.h
@@ -105,7 +145,7 @@ export function generateTimeSlots(date: Date, dayConfig: WorkingHoursDay | undef
     const mm = String(minute).padStart(2, "0")
     const slotTotal = hour * 60 + minute
 
-    if (!isToday || slotTotal > now.getHours() * 60 + now.getMinutes()) {
+    if (!isToday || slotTotal > now.minutes) {
       slots.push(`${hh}:${mm}`)
     }
 

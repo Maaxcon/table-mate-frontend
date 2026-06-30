@@ -224,6 +224,7 @@ export function BookingPage() {
                 time={slotTime}
                 guests={slotGuests}
                 maxGuests={maxGuests}
+                timeZone={timezone}
                 onChange={handleSlotChange}
               />
               <CustomerFloorPlan
