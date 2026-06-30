@@ -10,10 +10,11 @@ interface FloorSlotPickerProps {
   date: Date
   time: string | null
   guests: number
+  // Largest party the venue can seat — its biggest table's capacity. Caps the
+  // stepper so the guest can't pick a count no table fits.
+  maxGuests: number
   onChange: (next: { date?: Date; time?: string | null; guests?: number }) => void
 }
-
-const MAX_GUESTS = 20
 
 // Date + time + guests selector that sits above the floor plan so table statuses
 // reflect the slot the guest actually wants, not "right now".
@@ -22,6 +23,7 @@ export function FloorSlotPicker({
   date,
   time,
   guests,
+  maxGuests,
   onChange,
 }: FloorSlotPickerProps) {
   const today = useMemo(() => {
@@ -151,8 +153,8 @@ export function FloorSlotPicker({
             type="button"
             className="c-slot-picker__guest-btn"
             aria-label="+"
-            onClick={() => onChange({ guests: Math.min(MAX_GUESTS, guests + 1) })}
-            disabled={guests >= MAX_GUESTS}
+            onClick={() => onChange({ guests: Math.min(maxGuests, guests + 1) })}
+            disabled={guests >= maxGuests}
           >
             <LuPlus aria-hidden="true" />
           </button>

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import { LuArrowLeft } from "react-icons/lu"
 import type { Table } from "@/types/api/types.gen"
@@ -103,6 +103,13 @@ export function BookingPage() {
   const filteredTables = selectedZone
     ? tables.filter((t) => t.zone?.public_id === selectedZone)
     : tables
+
+  // Largest party the venue can seat = its biggest table. Caps the guest stepper
+  // per restaurant; falls back to 20 until tables load.
+  const maxGuests = useMemo(
+    () => tables.reduce((m, t) => Math.max(m, t.capacity ?? 0), 0) || 20,
+    [tables],
+  )
 
   const handleTableSelect = useCallback(
     (table: Table) => {
@@ -216,6 +223,7 @@ export function BookingPage() {
                 date={slotDate}
                 time={slotTime}
                 guests={slotGuests}
+                maxGuests={maxGuests}
                 onChange={handleSlotChange}
               />
               <CustomerFloorPlan
