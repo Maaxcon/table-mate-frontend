@@ -4,7 +4,7 @@
   justify-content: space-between;
   gap: 16px;
   padding: 12px 0;
-  border-bottom: 1px solid var(--color-border-light);
+  border-bottom: 1px solid var(--w-divider);
 }
 
 .order-item-row--voided {
@@ -21,13 +21,13 @@
 .order-item-row__name {
   font-size: 0.88rem;
   font-weight: 600;
-  color: var(--color-text);
+  color: var(--w-text);
 }
 
 .order-item-row__comment {
   font-size: 0.74rem;
   font-style: italic;
-  color: var(--color-text-muted);
+  color: var(--w-text-muted);
   white-space: pre-wrap;
   word-break: break-word;
 }
@@ -35,7 +35,7 @@
 .order-item-row__void-reason {
   font-size: 0.62rem;
   font-weight: 600;
-  color: var(--badge-voided-text);
+  color: var(--w-danger);
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
@@ -50,7 +50,7 @@
 .order-item-row__price {
   font-size: 0.85rem;
   font-weight: 700;
-  color: var(--color-text);
+  color: var(--w-text);
   font-variant-numeric: tabular-nums;
   min-width: 60px;
   text-align: right;
@@ -62,10 +62,10 @@
   text-transform: uppercase;
   letter-spacing: 0.05em;
   padding: 3px 8px;
-  border: 1px solid var(--color-danger);
-  border-radius: 4px;
+  border: 1px solid var(--w-danger);
+  border-radius: 6px;
   background: transparent;
-  color: var(--color-danger);
+  color: var(--w-danger);
   cursor: pointer;
   transition:
     background 0.15s,
@@ -73,6 +73,6 @@
 }
 
 .order-item-row__void-btn:hover {
-  background: var(--color-danger);
-  color: var(--color-bg-page);
+  background: var(--w-danger);
+  color: #fff;
 }

@@ -1,7 +1,7 @@
 .ocm-backdrop {
   position: fixed;
   inset: 0;
-  background: var(--color-overlay);
+  background: rgba(0, 0, 0, 0.5);
   z-index: 1100;
   display: flex;
   align-items: center;
@@ -9,14 +9,15 @@
 }
 
 .ocm {
-  background: var(--color-bg);
-  border-radius: 12px;
+  background: var(--w-panel);
+  border-radius: var(--w-radius);
   width: 90vw;
   max-width: 1200px;
   height: 80vh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  box-shadow: var(--w-shadow-lg);
 }
 
 .ocm__header {
@@ -24,21 +25,23 @@
   justify-content: space-between;
   align-items: center;
   padding: 16px 24px;
-  border-bottom: 1px solid var(--color-border-light);
+  border-bottom: 1px solid var(--w-divider);
 }
 
 .ocm__title {
-  font-size: 18px;
-  font-weight: 700;
+  font-size: 0.9rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
   margin: 0;
+  color: var(--w-text);
 }
 
 .ocm__close {
   background: none;
   border: none;
-  font-size: 28px;
+  font-size: 1.5rem;
   cursor: pointer;
-  color: var(--color-text-secondary);
+  color: var(--w-text-muted);
   line-height: 1;
 }
 
@@ -50,7 +53,7 @@
 
 .ocm__sidebar {
   width: 220px;
-  border-right: 1px solid var(--color-border-light);
+  border-right: 1px solid var(--w-divider);
   display: flex;
   flex-direction: column;
   overflow-y: auto;
@@ -63,10 +66,18 @@
 .ocm__search-input {
   width: 100%;
   padding: 8px 12px;
-  border: 1px solid var(--color-border-default);
-  border-radius: 6px;
-  font-size: 14px;
+  border: 1px solid var(--w-border);
+  border-radius: var(--w-radius-sm);
+  font-size: 0.85rem;
+  font-family: inherit;
+  background: var(--w-card);
+  color: var(--w-text);
   box-sizing: border-box;
+}
+
+.ocm__search-input:focus {
+  outline: none;
+  border-color: var(--w-text-muted);
 }
 
 .ocm__categories {
@@ -82,18 +93,20 @@
   border: none;
   background: none;
   cursor: pointer;
-  border-radius: 6px;
-  font-size: 14px;
-  color: var(--color-text);
+  border-radius: var(--w-radius-sm);
+  font-size: 0.85rem;
+  color: var(--w-text);
+  font-family: inherit;
+  transition: background 0.15s;
 }
 
 .ocm__category:hover {
-  background: var(--color-bg-secondary);
+  background: var(--w-bg);
 }
 
 .ocm__category--active {
-  background: var(--color-bg-secondary);
-  color: var(--color-text);
+  background: var(--w-text);
+  color: var(--w-bg);
   font-weight: 600;
 }
 
@@ -110,23 +123,24 @@
 .ocm__item-card {
   display: flex;
   flex-direction: column;
-  background: var(--color-bg-secondary);
-  border: 1px solid var(--color-border-light);
-  border-radius: 8px;
+  background: var(--w-card);
+  border: 1px solid var(--w-border);
+  border-radius: var(--w-radius-sm);
   cursor: pointer;
   overflow: hidden;
   text-align: left;
   padding: 0;
   transition: box-shadow 0.15s;
+  font-family: inherit;
 }
 
 .ocm__item-card:hover {
-  box-shadow: 0 2px 8px var(--color-overlay-dim);
+  box-shadow: var(--w-shadow-md);
 }
 
 .ocm__item-image {
   height: 80px;
-  background: var(--color-border-light);
+  background: var(--w-border);
 }
 
 .ocm__item-info {
@@ -137,19 +151,19 @@
 }
 
 .ocm__item-name {
-  font-size: 13px;
+  font-size: 0.82rem;
   font-weight: 600;
-  color: var(--color-text);
+  color: var(--w-text);
 }
 
 .ocm__item-price {
-  font-size: 13px;
-  color: var(--color-text-secondary);
+  font-size: 0.82rem;
+  color: var(--w-text-muted);
 }
 
 .ocm__summary {
   width: 320px;
-  border-left: 1px solid var(--color-border-light);
+  border-left: 1px solid var(--w-divider);
   display: flex;
   flex-direction: column;
   overflow-y: auto;
@@ -157,11 +171,12 @@
 }
 
 .ocm__summary-title {
-  font-size: 14px;
+  font-size: 0.85rem;
   font-weight: 700;
+  letter-spacing: 0.08em;
   margin: 0 0 12px;
   text-transform: uppercase;
-  color: var(--color-text);
+  color: var(--w-text);
 }
 
 .ocm__summary-items {
@@ -172,9 +187,9 @@
 }
 
 .ocm__summary-item {
-  background: var(--color-bg-secondary);
-  border: 1px solid var(--color-border-light);
-  border-radius: 8px;
+  background: var(--w-card);
+  border: 1px solid var(--w-border);
+  border-radius: var(--w-radius-sm);
   padding: 10px;
   display: flex;
   flex-direction: column;
@@ -188,16 +203,17 @@
 }
 
 .ocm__summary-item-name {
-  font-size: 13px;
+  font-size: 0.82rem;
   font-weight: 600;
+  color: var(--w-text);
 }
 
 .ocm__summary-remove {
   background: none;
   border: none;
-  font-size: 18px;
+  font-size: 1.1rem;
   cursor: pointer;
-  color: var(--color-text-muted);
+  color: var(--w-text-muted);
   line-height: 1;
 }
 
@@ -216,79 +232,96 @@
 .ocm__qty-btn {
   width: 24px;
   height: 24px;
-  border: 1px solid var(--color-border-default);
-  border-radius: 4px;
-  background: var(--color-bg);
+  border: 1px solid var(--w-border);
+  border-radius: 6px;
+  background: var(--w-bg);
   cursor: pointer;
-  font-size: 14px;
+  font-size: 0.85rem;
   display: flex;
   align-items: center;
   justify-content: center;
+  font-family: inherit;
+  color: var(--w-text);
 }
 
 .ocm__qty-value {
   min-width: 20px;
   text-align: center;
-  font-size: 14px;
+  font-size: 0.85rem;
   font-weight: 600;
+  color: var(--w-text);
 }
 
 .ocm__guest-slot {
   padding: 4px 6px;
-  border: 1px solid var(--color-border-default);
-  border-radius: 4px;
-  font-size: 12px;
+  border: 1px solid var(--w-border);
+  border-radius: 6px;
+  font-size: 0.75rem;
+  background: var(--w-bg);
+  color: var(--w-text);
+  font-family: inherit;
 }
 
 .ocm__comment-input {
   width: 100%;
   padding: 6px 8px;
-  border: 1px solid var(--color-border-default);
-  border-radius: 4px;
-  font-size: 12px;
+  border: 1px solid var(--w-border);
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-family: inherit;
+  background: var(--w-bg);
+  color: var(--w-text);
   box-sizing: border-box;
 }
 
 .ocm__summary-item-price {
-  font-size: 13px;
+  font-size: 0.82rem;
   font-weight: 600;
   text-align: right;
-  color: var(--color-text);
+  color: var(--w-text);
 }
 
 .ocm__summary-total {
   display: flex;
   justify-content: space-between;
   padding: 12px 0;
-  border-top: 2px solid var(--color-border);
-  font-size: 16px;
+  border-top: 2px solid var(--w-border);
+  font-size: 1rem;
   font-weight: 700;
+  color: var(--w-text);
   margin-top: auto;
 }
 
 .ocm__submit {
   width: 100%;
   padding: 12px;
-  background: var(--color-text);
-  color: var(--color-bg);
+  background: var(--w-text);
+  color: var(--w-bg);
   border: none;
-  border-radius: 8px;
-  font-size: 15px;
-  font-weight: 700;
+  border-radius: var(--w-radius-sm);
+  font-size: 0.9rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
   cursor: pointer;
   text-transform: uppercase;
+  font-family: inherit;
+  transition: opacity 0.15s;
+}
+
+.ocm__submit:hover:not(:disabled) {
+  opacity: 0.85;
 }
 
 .ocm__submit:disabled {
-  background: var(--color-text-muted);
+  opacity: 0.4;
   cursor: not-allowed;
 }
 
 .ocm__loading,
 .ocm__empty {
   text-align: center;
-  color: var(--color-text-muted);
-  font-size: 14px;
+  color: var(--w-text-muted);
+  font-size: 0.85rem;
   padding: 40px 0;
   grid-column: 1 / -1;
 }

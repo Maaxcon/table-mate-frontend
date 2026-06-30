@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { Link } from "react-router-dom"
+import type { Zone } from "@/features/reservation/api"
 import "./TopNav.css"
 
 interface TopNavProps {
@@ -7,6 +8,9 @@ interface TopNavProps {
   reservedCount: number
   freeCount: number
   isConnected: boolean
+  zones: Zone[]
+  selectedZoneId: string | null
+  onZoneChange?: (zoneId: string) => void
 }
 
 function getTimeString(): string {
@@ -25,46 +29,81 @@ function useCurrentTime(): string {
   return time
 }
 
-export function TopNav({ occupiedCount, reservedCount, freeCount, isConnected }: TopNavProps) {
+export function TopNav({
+  occupiedCount,
+  reservedCount,
+  freeCount,
+  isConnected,
+  zones,
+  selectedZoneId,
+  onZoneChange,
+}: TopNavProps) {
   const currentTime = useCurrentTime()
 
   return (
     <nav className="top-nav">
       <div className="top-nav__left">
-        <div className="top-nav__logo">
-          <span className="top-nav__logo-grid">
-            <span />
-            <span />
-            <span />
-            <span />
+        <div className="top-nav__brand">
+          <span className="top-nav__logo" aria-hidden="true">
+            <span className="top-nav__logo-dot" />
           </span>
-          <span className="top-nav__logo-text">LIVE OCCUPANCY</span>
+          <div className="top-nav__brand-copy">
+            <span className="top-nav__brand-title">LIVE OCCUPANCY</span>
+            <span className="top-nav__brand-subtitle">STATION · FLOOR</span>
+          </div>
         </div>
+
+        {zones.length > 0 && (
+          <div className="top-nav__zones" role="tablist" aria-label="Dining rooms">
+            {zones.map((zone) => (
+              <button
+                key={zone.public_id}
+                type="button"
+                role="tab"
+                className={`top-nav__zone ${selectedZoneId === zone.public_id ? "top-nav__zone--active" : ""}`}
+                onClick={() => onZoneChange?.(zone.public_id)}
+                aria-selected={selectedZoneId === zone.public_id}
+              >
+                {zone.name}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="top-nav__right">
-        <span className="top-nav__stat">
-          <span className="top-nav__stat-icon top-nav__stat-icon--filled" />
-          OCCUPIED: {occupiedCount}
-        </span>
-        <span className="top-nav__stat">
-          <span className="top-nav__stat-icon top-nav__stat-icon--reserved" />
-          RESERVED: {reservedCount}
-        </span>
-        <span className="top-nav__stat">
-          <span className="top-nav__stat-icon" />
-          FREE: {freeCount}
-        </span>
-        <span className="top-nav__time">{currentTime}</span>
+        <div className="top-nav__stats">
+          <div className="top-nav__stat">
+            <span className="top-nav__stat-chip top-nav__stat-chip--occupied" aria-hidden="true" />
+            <span className="top-nav__stat-label">OCCUPIED</span>
+            <span className="top-nav__stat-value">{occupiedCount}</span>
+          </div>
+          <div className="top-nav__stat">
+            <span className="top-nav__stat-chip top-nav__stat-chip--reserved" aria-hidden="true" />
+            <span className="top-nav__stat-label">RESERVED</span>
+            <span className="top-nav__stat-value">{reservedCount}</span>
+          </div>
+          <div className="top-nav__stat">
+            <span className="top-nav__stat-chip top-nav__stat-chip--free" aria-hidden="true" />
+            <span className="top-nav__stat-label">FREE</span>
+            <span className="top-nav__stat-value">{freeCount}</span>
+          </div>
+        </div>
+
+        <div className="top-nav__time-wrap">
+          <span className="top-nav__time">{currentTime}</span>
+          <span className="top-nav__time-label">LOCAL TIME</span>
+        </div>
+
         <span
           className={`top-nav__connection ${isConnected ? "top-nav__connection--connected" : ""}`}
           role="status"
           aria-label={isConnected ? "Connected" : "Disconnected"}
         />
+
         <Link to="/staff/orders" className="top-nav__nav-link">
           KITCHEN
         </Link>
-        <div className="top-nav__avatar" />
       </div>
     </nav>
   )

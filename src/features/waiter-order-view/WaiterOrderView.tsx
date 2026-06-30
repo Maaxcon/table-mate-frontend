@@ -308,25 +308,13 @@ export function WaiterOrderView() {
         reservedCount={visualReservedCount}
         freeCount={visualFreeCount}
         isConnected={isConnected}
+        zones={zones}
+        selectedZoneId={selectedZoneId}
+        onZoneChange={(zoneId) => setSelectedZoneId(zoneId)}
       />
 
-      {zones.length > 1 && (
-        <div className="waiter-view__zones">
-          {zones.map((z) => (
-            <button
-              key={z.public_id}
-              type="button"
-              className={`waiter-view__zone ${selectedZoneId === z.public_id ? "waiter-view__zone--active" : ""}`}
-              onClick={() => setSelectedZoneId(z.public_id)}
-            >
-              {z.name}
-            </button>
-          ))}
-        </div>
-      )}
-
-      <div className="waiter-view__layout">
-        <div className="waiter-view__main">
+      <div className="waiter-view__content">
+        <div className="waiter-view__floor-card">
           <FloorPlan
             payload={layoutPayload}
             tables={tables}
@@ -342,15 +330,17 @@ export function WaiterOrderView() {
           />
         </div>
 
-        <ReservationSidebar
-          reservations={pendingTodayReservations}
-          onCancel={handleCancel}
-          onModify={handleModify}
-          actionLoading={sidebarActionLoading}
-          error={sidebarError}
-        />
+        <div className="waiter-view__side-grid">
+          <ReservationSidebar
+            reservations={pendingTodayReservations}
+            onCancel={handleCancel}
+            onModify={handleModify}
+            actionLoading={sidebarActionLoading}
+            error={sidebarError}
+          />
 
-        <NotificationStreamSidebar />
+          <NotificationStreamSidebar />
+        </div>
       </div>
 
       {selectedTable && (

@@ -1,24 +1,97 @@
+/* ===========================================================================
+   Waiter Order View — "Soft UI" design system
+   Aligned with the Kitchen Kanban visual language: rounded surfaces,
+   diffuse shadows, scoped tokens, full light/dark support.
+   ========================================================================= */
+
 .waiter-view {
+  --w-bg: #f8f9fa;
+  --w-panel: #ffffff;
+  --w-card: #ffffff;
+  --w-border: #e2e8f0;
+  --w-divider: #eef1f5;
+  --w-text: #0f172a;
+  --w-text-muted: #64748b;
+  --w-text-faint: #cbd5e1;
+
+  --w-accent: #2563eb;
+  --w-accent-soft: #eff6ff;
+  --w-success: #16a34a;
+  --w-success-soft: #f0fdf4;
+  --w-warning: #f97316;
+  --w-warning-soft: #fff7ed;
+  --w-danger: #dc2626;
+  --w-danger-soft: #fef2f2;
+
+  --w-shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(15, 23, 42, 0.06);
+  --w-shadow-md: 0 2px 4px rgba(15, 23, 42, 0.05), 0 6px 16px rgba(15, 23, 42, 0.08);
+  --w-shadow-lg: 0 4px 6px rgba(15, 23, 42, 0.04), 0 16px 32px rgba(15, 23, 42, 0.12);
+
+  --w-radius: 16px;
+  --w-radius-sm: 12px;
+  --w-radius-pill: 999px;
+
   display: flex;
   flex-direction: column;
   height: 100svh;
-  background: var(--color-bg);
-  color: var(--color-text);
+  background: var(--w-bg);
+  color: var(--w-text);
+  font-family: "Inter", var(--font-family-base), system-ui, sans-serif;
 }
 
-.waiter-view__layout {
-  display: grid;
-  grid-template-columns: 1fr 300px 320px;
+[data-theme="dark"] .waiter-view {
+  --w-bg: #0e1014;
+  --w-panel: #14171d;
+  --w-card: #181b22;
+  --w-border: #262b35;
+  --w-divider: #20242c;
+  --w-text: #f1f5f9;
+  --w-text-muted: #94a3b8;
+  --w-text-faint: #475569;
+  --w-accent: #3b82f6;
+  --w-accent-soft: rgba(59, 130, 246, 0.14);
+  --w-success: #22c55e;
+  --w-success-soft: rgba(34, 197, 94, 0.14);
+  --w-warning: #fb923c;
+  --w-warning-soft: rgba(251, 146, 60, 0.14);
+  --w-danger: #f87171;
+  --w-danger-soft: rgba(248, 113, 113, 0.14);
+  --w-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --w-shadow-md: 0 4px 14px rgba(0, 0, 0, 0.45);
+  --w-shadow-lg: 0 16px 32px rgba(0, 0, 0, 0.55);
+}
+
+.waiter-view__content {
   flex: 1;
   min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 0.9fr);
+  gap: clamp(16px, 2vw, 24px);
+  padding: clamp(16px, 1.8vw, 28px);
+  align-items: stretch;
   overflow: hidden;
 }
 
-.waiter-view__main {
-  padding: 24px;
+.waiter-view__floor-card {
+  background: var(--w-card);
+  border-radius: var(--w-radius);
+  box-shadow: var(--w-shadow-lg);
+  padding: clamp(16px, 2vw, 22px);
   min-height: 0;
-  overflow-y: auto;
-  overflow-x: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  flex: 1 1 auto;
+}
+
+.waiter-view__side-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  min-height: 0;
+  height: 100%;
+  grid-auto-rows: 1fr;
+  align-items: stretch;
 }
 
 .waiter-view__message {
@@ -27,14 +100,14 @@
   justify-content: center;
   height: 100%;
   min-height: 300px;
-  color: var(--color-text-secondary);
+  color: var(--w-text-muted);
   font-size: 0.95rem;
   font-weight: 600;
   padding: 24px;
 }
 
 .waiter-view__message--error {
-  color: var(--color-text-primary);
+  color: var(--w-danger);
 }
 
 .waiter-view__placeholder {
@@ -43,88 +116,294 @@
   justify-content: center;
   height: 100%;
   min-height: 300px;
-  color: var(--color-text-secondary);
+  color: var(--w-text-muted);
   font-size: 0.85rem;
   font-weight: 600;
   letter-spacing: 0.05em;
 }
 
-.waiter-view__zones {
+.waiter-view__content > * {
+  min-height: 0;
+}
+
+.waiter-view__floor-card .floor-plan {
+  height: 100%;
   display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  padding: 12px 24px;
-  border-bottom: 2px solid var(--color-border);
+  flex-direction: column;
+  min-height: 0;
+  flex: 1 1 auto;
 }
 
-.waiter-view__zone {
-  padding: 6px 14px;
-  border: 1px solid var(--color-border-default);
-  border-radius: 20px;
-  background: transparent;
-  color: var(--color-text-secondary);
-  font-size: 0.78rem;
-  font-weight: 600;
-  font-family: inherit;
-  cursor: pointer;
+.waiter-view__floor-card .fp-view {
+  position: relative;
+  overflow: hidden;
+  border: none;
+  border-radius: var(--w-radius);
+  background: linear-gradient(180deg, var(--w-card) 0%, var(--w-bg) 100%);
+  box-shadow:
+    inset 0 0 0 1px var(--w-divider),
+    0 20px 40px rgba(15, 23, 42, 0.08);
+  flex: 0 1 auto;
+  min-height: 0;
+  width: 100%;
+  height: auto;
+  aspect-ratio: var(--fp-aspect, 1);
+  align-self: stretch;
+}
+
+.waiter-view__floor-card .fp-view__stage {
+  background-image:
+    radial-gradient(rgba(15, 23, 42, 0.15) 1px, transparent 1px),
+    radial-gradient(rgba(15, 23, 42, 0.08) 1px, transparent 1px);
+  background-size:
+    34px 34px,
+    68px 68px;
+  background-position:
+    0 0,
+    17px 17px;
+}
+
+.waiter-view__floor-card .fp-view--empty {
+  background: none;
+}
+
+.waiter-view__floor-card .fp-block--table {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 28px;
+  border: 3px solid rgba(15, 23, 42, 0.15);
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.96), rgba(247, 248, 250, 0.92)) padding-box,
+    linear-gradient(145deg, rgba(15, 23, 42, 0.1), rgba(15, 23, 42, 0)) border-box;
+  color: var(--w-text);
+  box-shadow:
+    0 18px 38px rgba(15, 23, 42, 0.12),
+    inset 0 0 16px rgba(15, 23, 42, 0.04);
   transition:
-    background 0.15s,
-    color 0.15s;
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    border-color 0.18s ease,
+    background 0.18s ease;
+  padding: 22px 20px;
 }
 
-.waiter-view__zone:hover {
-  background: var(--color-bg-surface-subtle);
+.waiter-view__floor-card .fp-block--table:hover {
+  transform: translateY(-4px);
+  border-color: rgba(15, 23, 42, 0.25);
+  box-shadow:
+    0 24px 50px rgba(15, 23, 42, 0.18),
+    inset 0 0 25px rgba(15, 23, 42, 0.08);
 }
 
-.waiter-view__zone--active {
-  background: var(--color-text-primary);
-  color: var(--color-bg-page);
-  border-color: var(--color-text-primary);
+.waiter-view__floor-card .fp-block--table-square {
+  border-radius: 32px;
 }
 
-.waiter-view__zone {
-  padding: 6px 14px;
-  border: 1px solid var(--color-border);
-  border-radius: 20px;
-  background: transparent;
-  color: var(--color-text-secondary);
-  font-size: 0.78rem;
-  font-weight: 600;
-  font-family: inherit;
-  cursor: pointer;
-  transition:
-    background 0.15s,
-    color 0.15s;
+.waiter-view__floor-card .fp-block--free {
+  border-color: #16a34a;
+  box-shadow: 0 0 0 4px rgba(22, 163, 74, 0.12);
 }
 
-.waiter-view__zone:hover {
-  background: var(--color-bg-secondary);
+.waiter-view__floor-card .fp-block--reserved {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
 }
 
-.waiter-view__zone--active {
-  background: var(--color-text);
-  color: var(--color-bg);
-  border-color: var(--color-text);
+.waiter-view__floor-card .fp-block--occupied {
+  border-color: #dc2626;
+  box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.15);
+  background:
+    linear-gradient(145deg, rgba(255, 235, 235, 0.96), rgba(255, 245, 245, 0.9)) padding-box,
+    linear-gradient(145deg, rgba(220, 38, 38, 0.25), rgba(220, 38, 38, 0)) border-box;
+  color: var(--w-text);
 }
 
-@media (max-width: 1200px) {
-  .waiter-view__layout {
-    grid-template-columns: 1fr 260px 280px;
+.waiter-view__floor-card .fp-block--occupied .fp-block__label,
+.waiter-view__floor-card .fp-block--occupied .fp-block__capacity {
+  color: var(--w-text);
+}
+
+.waiter-view__floor-card .fp-block__badge--reserved {
+  background: rgba(37, 99, 235, 0.1);
+  color: #2563eb;
+  border-color: rgba(37, 99, 235, 0.4);
+}
+
+.waiter-view__floor-card .fp-block__badge--occupied {
+  background: rgba(220, 38, 38, 0.12);
+  color: #dc2626;
+  border-color: rgba(220, 38, 38, 0.4);
+}
+
+.waiter-view__floor-card .fp-block__label {
+  font-size: 1.8rem;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+}
+
+.waiter-view__floor-card .fp-block__capacity {
+  font-size: 1.15rem;
+  letter-spacing: 0.08em;
+  opacity: 0.8;
+}
+
+.waiter-view__floor-card .fp-block__badge {
+  font-size: 0.95rem;
+  padding: 8px 20px;
+  letter-spacing: 0.15em;
+}
+
+.waiter-view__floor-card .fp-block__badge {
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  padding: 6px 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  color: var(--w-text-muted);
+  background: rgba(15, 23, 42, 0.05);
+}
+
+.waiter-view__floor-card .fp-block__badge--free {
+  border-color: rgba(22, 163, 74, 0.3);
+  color: var(--w-success);
+  background: rgba(22, 163, 74, 0.08);
+}
+
+.waiter-view__floor-card .fp-block__badge--reserved {
+  border-color: rgba(249, 115, 22, 0.25);
+  color: var(--w-warning);
+  background: rgba(249, 115, 22, 0.08);
+}
+
+.waiter-view__floor-card .fp-block__badge--occupied {
+  border-color: rgba(37, 99, 235, 0.25);
+  color: var(--w-accent);
+  background: rgba(37, 99, 235, 0.08);
+}
+
+[data-theme="dark"] .waiter-view__floor-card .fp-view {
+  background: linear-gradient(180deg, rgba(20, 24, 32, 0.85), rgba(11, 13, 19, 0.95));
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04),
+    0 24px 50px rgba(0, 0, 0, 0.5);
+}
+
+[data-theme="dark"] .waiter-view__floor-card .fp-view__stage {
+  background-image:
+    radial-gradient(rgba(62, 217, 133, 0.18) 1px, transparent 1px),
+    radial-gradient(rgba(99, 179, 237, 0.12) 1px, transparent 1px);
+  background-size:
+    32px 32px,
+    64px 64px;
+  background-position:
+    0 0,
+    16px 16px;
+  opacity: 0.8;
+}
+
+[data-theme="dark"] .waiter-view__floor-card .fp-block--table {
+  border: 2px solid rgba(255, 255, 255, 0.08);
+  background:
+    linear-gradient(145deg, rgba(41, 48, 60, 0.95), rgba(24, 28, 38, 0.95)) padding-box,
+    linear-gradient(145deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0)) border-box;
+  color: rgba(255, 255, 255, 0.92);
+  box-shadow:
+    0 12px 32px rgba(0, 0, 0, 0.55),
+    inset 0 0 20px rgba(255, 255, 255, 0.04);
+}
+
+[data-theme="dark"] .waiter-view__floor-card .fp-block--table:hover {
+  border-color: rgba(255, 255, 255, 0.18);
+  box-shadow:
+    0 18px 42px rgba(0, 0, 0, 0.65),
+    inset 0 0 24px rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="dark"] .waiter-view__floor-card .fp-block__label {
+  color: inherit;
+}
+
+[data-theme="dark"] .waiter-view__floor-card .fp-block__capacity {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+[data-theme="dark"] .waiter-view__floor-card .fp-block__badge {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.82);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+[data-theme="dark"] .waiter-view__floor-card .fp-block__badge--free {
+  border-color: rgba(34, 197, 94, 0.45);
+  color: rgba(34, 197, 94, 0.9);
+  background: rgba(34, 197, 94, 0.15);
+}
+
+[data-theme="dark"] .waiter-view__floor-card .fp-block__badge--reserved {
+  border-color: rgba(249, 115, 22, 0.4);
+  color: rgba(249, 115, 22, 0.88);
+  background: rgba(249, 115, 22, 0.16);
+}
+
+[data-theme="dark"] .waiter-view__floor-card .fp-block__badge--occupied {
+  border-color: rgba(59, 130, 246, 0.4);
+  color: rgba(99, 179, 237, 0.9);
+  background: rgba(59, 130, 246, 0.18);
+}
+
+@media (max-width: 1100px) {
+  .waiter-view__content {
+    grid-template-columns: 1fr;
   }
 
-  .waiter-view__main {
-    padding: 20px;
-  }
-}
-
-@media (max-width: 900px) {
-  .waiter-view__layout {
+  .waiter-view__side-grid {
     grid-template-columns: 1fr;
   }
 }
 
-@media (max-width: 480px) {
-  .waiter-view__main {
-    padding: 12px;
+@media (max-width: 640px) {
+  .waiter-view__content {
+    padding: 16px;
   }
+}
+[data-theme="light"] .waiter-view__floor-card .fp-block--table::before,
+[data-theme="dark"] .waiter-view__floor-card .fp-block--table::before {
+  content: "";
+  position: absolute;
+  inset: 8px;
+  border-radius: inherit;
+  border: 1px dashed rgba(15, 23, 42, 0.12);
+  pointer-events: none;
+}
+
+[data-theme="dark"] .waiter-view__floor-card .fp-block--table::before {
+  border-color: rgba(255, 255, 255, 0.2);
+}
+.waiter-view__floor-card .fp-block__seats {
+  position: absolute;
+  inset: 8px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  pointer-events: none;
+}
+
+.waiter-view__floor-card .fp-block__seats-row {
+  display: flex;
+  justify-content: space-between;
+}
+
+.waiter-view__floor-card .fp-block__seat-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(15, 23, 42, 0.1);
+}
+
+[data-theme="dark"] .waiter-view__floor-card .fp-block__seat-dot {
+  background: rgba(255, 255, 255, 0.25);
 }
