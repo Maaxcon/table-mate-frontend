@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { LuCalendarPlus, LuClock, LuPencil, LuUsers, LuX } from "react-icons/lu"
 import type { ReservationStatus, ReservationWithTable, WorkingHoursDay } from "./api"
 import { cancelReservation, fetchMyReservations } from "./api"
@@ -73,10 +73,23 @@ export function ActiveBookings({
   // endpoint only returns active bookings unless asked for ?status=past.
   const [pastItems, setPastItems] = useState<ReservationWithTable[]>([])
 
+  // Guards the history fetch from setting state after the tab unmounts.
+  const mountedRef = useRef(true)
+  useEffect(() => {
+    mountedRef.current = true
+    return () => {
+      mountedRef.current = false
+    }
+  }, [])
+
   const loadPast = useCallback(() => {
     fetchMyReservations(restaurantId, "past")
-      .then((data) => setPastItems([...data].sort(byStartDesc)))
-      .catch(() => setPastItems([]))
+      .then((data) => {
+        if (mountedRef.current) setPastItems([...data].sort(byStartDesc))
+      })
+      .catch(() => {
+        if (mountedRef.current) setPastItems([])
+      })
   }, [restaurantId])
 
   useEffect(() => {

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import type { Table } from "@/types/api/types.gen"
 import { useFocusTrap } from "@/hooks/useFocusTrap"
 import type { WorkingHoursDay } from "./api"
@@ -73,11 +73,26 @@ export function BookModal({
   const [availableSlots, setAvailableSlots] = useState<Record<string, string[]> | null>(null)
   const [slotsLoading, setSlotsLoading] = useState(true)
 
+  // Guards the slot fetch from setting state after the modal closes/unmounts.
+  const mountedRef = useRef(true)
+  useEffect(() => {
+    mountedRef.current = true
+    return () => {
+      mountedRef.current = false
+    }
+  }, [])
+
   const loadSlots = useCallback(() => {
     return fetchAvailableSlots(table.public_id)
-      .then((data) => setAvailableSlots(data))
-      .catch(() => setAvailableSlots({}))
-      .finally(() => setSlotsLoading(false))
+      .then((data) => {
+        if (mountedRef.current) setAvailableSlots(data)
+      })
+      .catch(() => {
+        if (mountedRef.current) setAvailableSlots({})
+      })
+      .finally(() => {
+        if (mountedRef.current) setSlotsLoading(false)
+      })
   }, [table.public_id])
 
   useEffect(() => {
