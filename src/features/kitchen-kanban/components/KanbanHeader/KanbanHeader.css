@@ -24,7 +24,7 @@
   background: var(--k-active);
   color: #fff;
   font-size: 1.1rem;
-  box-shadow: 0 4px 10px rgba(22, 163, 74, 0.35);
+  box-shadow: 0 4px 10px color-mix(in srgb, var(--k-active) 35%, transparent);
 }
 
 .kanban__brand {

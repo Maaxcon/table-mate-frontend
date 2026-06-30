@@ -11,7 +11,7 @@
   background: color-mix(in srgb, var(--batch-accent) 12%, var(--k-card));
   border: 1px solid color-mix(in srgb, var(--batch-accent) 45%, var(--k-border));
   border-radius: var(--k-radius-sm);
-  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
+  box-shadow: var(--k-shadow-md);
 }
 
 .kanban-card__batch-indicator {
@@ -19,7 +19,7 @@
   height: 26px;
   border-radius: 999px;
   background: var(--batch-accent);
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.18);
+  box-shadow: var(--k-shadow-sm);
   flex-shrink: 0;
 }
 
