@@ -534,11 +534,28 @@
   flex-shrink: 0;
 }
 
-.c-floor-plan__card-chevron {
+/* Explicit "book this table" action — a real CTA, not a navigation chevron */
+.c-floor-plan__card-cta {
   flex-shrink: 0;
-  width: 20px;
-  height: 20px;
-  color: var(--color-text-muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 14px;
+  border-radius: 100px;
+  background: var(--color-primary);
+  color: var(--color-bg-surface);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.c-floor-plan__card-cta svg {
+  width: 15px;
+  height: 15px;
+}
+
+.c-floor-plan__card:active .c-floor-plan__card-cta {
+  background: color-mix(in srgb, var(--color-primary) 85%, #000);
 }
 
 @media (prefers-reduced-motion: reduce) {

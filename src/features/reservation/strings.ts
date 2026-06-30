@@ -30,6 +30,7 @@ export const bookStrings = {
     },
     seats: (n: number) => `${n} міс.`,
     tableShort: "Стіл",
+    choose: "Обрати",
     filterAll: "Усі",
     filterFree: "Вільні",
     noFree: "Немає вільних столів",

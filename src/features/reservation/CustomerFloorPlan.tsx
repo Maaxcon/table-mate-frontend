@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react"
-import { LuChevronRight, LuUsers } from "react-icons/lu"
+import { LuPlus, LuUsers } from "react-icons/lu"
 import type { Table } from "@/types/api/types.gen"
 import type { FloorTable, UpcomingReservation } from "@/features/waiter-order-view/data/waiterTypes"
 import { getTableVisualStatus } from "@/features/waiter-order-view/data/waiterTypes"
@@ -306,13 +306,17 @@ export function CustomerFloorPlan({
                       {bookStrings.floorPlan.seats(table.capacity)}
                     </span>
 
-                    <span
-                      className={`c-floor-plan__table-badge c-floor-plan__table-badge--${tone} c-floor-plan__card-badge`}
-                    >
-                      {label}
-                    </span>
-                    {bookable && (
-                      <LuChevronRight className="c-floor-plan__card-chevron" aria-hidden="true" />
+                    {bookable ? (
+                      <span className="c-floor-plan__card-cta">
+                        <LuPlus aria-hidden="true" />
+                        {bookStrings.floorPlan.choose}
+                      </span>
+                    ) : (
+                      <span
+                        className={`c-floor-plan__table-badge c-floor-plan__table-badge--${tone} c-floor-plan__card-badge`}
+                      >
+                        {label}
+                      </span>
                     )}
                   </button>
                 </li>
