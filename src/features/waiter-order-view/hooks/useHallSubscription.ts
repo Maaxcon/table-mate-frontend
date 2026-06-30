@@ -74,6 +74,13 @@ export interface HallZoneDeletedEvent {
   occurred_at: string
 }
 
+export interface HallReservationsUpdatedEvent {
+  event_name: "HALL_RESERVATIONS_UPDATED"
+  schema_version: string
+  table_ids: string[]
+  occurred_at: string
+}
+
 export type HallEvent =
   | HallTableStatusChangedEvent
   | HallNewReservationEvent
@@ -82,11 +89,13 @@ export type HallEvent =
   | HallZoneCreatedEvent
   | HallZoneUpdatedEvent
   | HallZoneDeletedEvent
+  | HallReservationsUpdatedEvent
 
 interface UseHallSubscriptionOptions {
   onTableStatusChanged?: (event: HallTableStatusChangedEvent) => void
   onNewReservation?: (event: HallNewReservationEvent) => void
   onReservationCancelled?: (event: HallReservationCancelledEvent) => void
+  onReservationsUpdated?: (event: HallReservationsUpdatedEvent) => void
   onLayoutPublished?: (event: HallLayoutPublishedEvent) => void
   onZoneCreated?: (event: HallZoneCreatedEvent) => void
   onZoneUpdated?: (event: HallZoneUpdatedEvent) => void
@@ -118,6 +127,7 @@ export function useHallSubscription({
     onTableStatusChanged,
     onNewReservation,
     onReservationCancelled,
+    onReservationsUpdated,
     onLayoutPublished,
     onZoneCreated,
     onZoneUpdated,
@@ -131,6 +141,7 @@ export function useHallSubscription({
       onTableStatusChanged,
       onNewReservation,
       onReservationCancelled,
+      onReservationsUpdated,
       onLayoutPublished,
       onZoneCreated,
       onZoneUpdated,
@@ -142,6 +153,7 @@ export function useHallSubscription({
     onTableStatusChanged,
     onNewReservation,
     onReservationCancelled,
+    onReservationsUpdated,
     onLayoutPublished,
     onZoneCreated,
     onZoneUpdated,
@@ -171,6 +183,8 @@ export function useHallSubscription({
           callbacksRef.current.onNewReservation?.(data)
         } else if (data.event_name === "HALL_RESERVATION_CANCELLED") {
           callbacksRef.current.onReservationCancelled?.(data)
+        } else if (data.event_name === "HALL_RESERVATIONS_UPDATED") {
+          callbacksRef.current.onReservationsUpdated?.(data as HallReservationsUpdatedEvent)
         } else if (data.event_name === "LAYOUT_PUBLISHED") {
           callbacksRef.current.onLayoutPublished?.(data)
         } else if (data.event_name === "ZONE_CREATED") {
