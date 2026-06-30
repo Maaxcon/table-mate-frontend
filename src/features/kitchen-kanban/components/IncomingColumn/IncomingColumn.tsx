@@ -47,9 +47,11 @@ export function IncomingColumn({ tickets, onPromote, canManage }: IncomingColumn
                     key={item.id}
                     className="kanban-card__item kanban-card__item--cat"
                     style={{ "--item-cat-color": item.categoryColor } as CSSProperties}
-                    title={item.categoryName}
                   >
                     <span className="kanban-card__item-qty">{item.quantity}X</span> {item.name}
+                    {item.categoryName && (
+                      <span className="kanban-card__item-cat-tag">{item.categoryName}</span>
+                    )}
                   </div>
                 ))}
               </div>

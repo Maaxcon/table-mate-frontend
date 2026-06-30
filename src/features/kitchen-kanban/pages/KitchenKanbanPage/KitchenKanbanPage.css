@@ -305,6 +305,19 @@
   );
 }
 
+/* Visible, non-color category label so category isn't conveyed by color
+   (or a hover-only title) alone — keeps the board color-vision safe and
+   readable by screen readers. */
+.kanban-card__item-cat-tag {
+  display: block;
+  margin-top: 3px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--k-text-muted);
+}
+
 /* ─── Loading / error / toast ─── */
 
 .kanban__loading,
