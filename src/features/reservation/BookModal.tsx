@@ -130,6 +130,11 @@ export function BookModal({
     return Math.max(MIN_DURATION, closeMins - timeToMinutes(selectedTime))
   }, [selectedTime, dayConfig])
 
+  // Two values on purpose: `durationMinutes` is the guest's *desired* length
+  // (state, persists across slot changes); `effectiveDuration` is what's actually
+  // shown in the input, validated and booked — the desired value capped to what
+  // fits before close. Read/use `effectiveDuration` everywhere (input, summary,
+  // endAt, confirm); only the duration <input> onChange writes `durationMinutes`.
   const effectiveDuration = Number.isFinite(maxDuration)
     ? Math.min(durationMinutes, maxDuration)
     : durationMinutes
