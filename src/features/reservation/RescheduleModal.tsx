@@ -111,7 +111,12 @@ function RescheduleForm({
 
   const currentStartTime = formatTimeInTz(currentStart, effectiveTimeZone)
   const currentEndTime = formatTimeInTz(currentEnd, effectiveTimeZone)
-  const currentDurationMinutes = timeToMinutes(currentEndTime) - timeToMinutes(currentStartTime)
+  // Derive duration from the actual instants, not the wall-clock HH:MM strings,
+  // so a booking that crosses midnight (e.g. 23:00–01:00) isn't computed as a
+  // negative span and clamped to the minimum.
+  const currentDurationMinutes = Math.round(
+    (new Date(currentEnd).getTime() - new Date(currentStart).getTime()) / 60000,
+  )
 
   const parsedDate = useMemo(() => new Date(currentDate), [currentDate])
 
