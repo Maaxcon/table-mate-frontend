@@ -362,3 +362,9 @@
     transform: translateY(0);
   }
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .kanban__toast {
+    animation: none;
+  }
+}
