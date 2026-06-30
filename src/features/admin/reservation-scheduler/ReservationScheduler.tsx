@@ -1,13 +1,17 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { DndContext, DragOverlay, PointerSensor, useSensor, useSensors } from "@dnd-kit/core"
+import type { DragStartEvent } from "@dnd-kit/core"
 import { LuChevronLeft, LuChevronRight } from "react-icons/lu"
 import { useAppSelector } from "@/store/hooks"
 import { useToast } from "@/features/admin/hooks/toastContext"
+import { fetchRestaurantSettings } from "@/features/reservation/api"
 import { batchUpdateReservations } from "./api"
 import { useSchedulerState } from "./hooks/useSchedulerState"
 import { useSchedulerData } from "./hooks/useSchedulerData"
 import { useScrollSync } from "./hooks/useScrollSync"
 import { useDragAndDrop } from "./hooks/useDragAndDrop"
+import { checkOverlap } from "./hooks/useOverlapCheck"
+import { isoToDateKey } from "./types"
 import { DayPanel } from "./DayPanel"
 import { SaveBar } from "./SaveBar"
 import "./ReservationScheduler.css"
@@ -48,6 +52,18 @@ export function ReservationScheduler() {
     return formatDateKey(today)
   })
   const [showSecondDay, setShowSecondDay] = useState(false)
+  const [restaurantTimezone, setRestaurantTimezone] = useState<string>(
+    Intl.DateTimeFormat().resolvedOptions().timeZone,
+  )
+
+  useEffect(() => {
+    if (!restaurantId) return
+    fetchRestaurantSettings(restaurantId)
+      .then((settings) => {
+        if (settings?.timezone) setRestaurantTimezone(settings.timezone)
+      })
+      .catch(() => {})
+  }, [restaurantId])
 
   const dates = useMemo(() => {
     if (showSecondDay) {
@@ -70,21 +86,29 @@ export function ReservationScheduler() {
   } = useSchedulerData(dates)
 
   useEffect(() => {
-    if (fetchedReservations.length > 0) {
-      setReservations(fetchedReservations)
-    }
+    setReservations(fetchedReservations)
   }, [fetchedReservations, setReservations])
 
   const scrollRefA = useRef<HTMLDivElement>(null)
   const scrollRefB = useRef<HTMLDivElement>(null)
   useScrollSync(scrollRefA, scrollRefB)
 
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }))
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 5 },
+    }),
+  )
 
   const modifiedIds = useMemo(
     () => new Set(state.pendingChanges.map((c) => c.reservation_id)),
     [state.pendingChanges],
   )
+
+  const [activeDragId, setActiveDragId] = useState<string | null>(null)
+
+  const handleDragStart = useCallback((event: DragStartEvent) => {
+    setActiveDragId(String(event.active.id))
+  }, [])
 
   const { handleDragEnd } = useDragAndDrop({
     tables,
@@ -97,6 +121,23 @@ export function ReservationScheduler() {
     onConflict: markConflict,
   })
 
+  const handleDragEndWithClear = useCallback(
+    (args: Parameters<typeof handleDragEnd>[0]) => {
+      handleDragEnd(args)
+      setActiveDragId(null)
+    },
+    [handleDragEnd],
+  )
+
+  const reservationsRef = useRef(state.reservations)
+  const pendingChangesRef = useRef(state.pendingChanges)
+  useEffect(() => {
+    reservationsRef.current = state.reservations
+  }, [state.reservations])
+  useEffect(() => {
+    pendingChangesRef.current = state.pendingChanges
+  }, [state.pendingChanges])
+
   const handleResizeStart = useCallback(
     (reservationId: string, edge: "start" | "end", e: React.MouseEvent) => {
       e.preventDefault()
@@ -104,7 +145,9 @@ export function ReservationScheduler() {
       if (!reservation) return
 
       const startX = e.clientX
-      const startDt = new Date(edge === "start" ? reservation.start_at : reservation.end_at)
+      const edgeTime = new Date(edge === "start" ? reservation.start_at : reservation.end_at)
+      const startLocalHours = edgeTime.getHours()
+      const startLocalMinutes = edgeTime.getMinutes()
       const totalMinutes = (HOUR_END - HOUR_START) * 60
 
       const dayEl = (e.target as HTMLElement).closest(".scheduler__day-panel-body")
@@ -117,23 +160,57 @@ export function ReservationScheduler() {
         const dx = moveEvt.clientX - startX
         const dMinute = Math.round(((dx / rowWidth) * totalMinutes) / SLOT_MINUTES) * SLOT_MINUTES
 
-        const newDt = new Date(startDt)
-        newDt.setMinutes(newDt.getMinutes() + dMinute)
+        const totalMin = startLocalHours * 60 + startLocalMinutes + dMinute
+        const clamped = Math.max(HOUR_START * 60, Math.min(totalMin, HOUR_END * 60 - SLOT_MINUTES))
+        const hh = String(Math.floor(clamped / 60)).padStart(2, "0")
+        const mm = String(clamped % 60).padStart(2, "0")
 
-        const hh = String(newDt.getHours()).padStart(2, "0")
-        const mm = String(newDt.getMinutes()).padStart(2, "0")
+        const currentRes = reservationsRef.current
+        const currentChanges = pendingChangesRef.current
+        const res = currentRes.find((r) => r.public_id === reservationId)
+        if (!res) return
+
+        const curStart = new Date(res.start_at)
+        const curEnd = new Date(res.end_at)
+        const proposed = {
+          table_id: res.table,
+          date: isoToDateKey(res.start_at),
+          start_minutes:
+            edge === "start" ? clamped : curStart.getHours() * 60 + curStart.getMinutes(),
+          end_minutes: edge === "end" ? clamped : curEnd.getHours() * 60 + curEnd.getMinutes(),
+        }
+        if (checkOverlap(proposed, currentRes, currentChanges, reservationId)) return
+
         resizeReservation(reservationId, edge, `${hh}:${mm}`)
       }
 
       const onMouseUp = () => {
         document.removeEventListener("mousemove", onMouseMove)
         document.removeEventListener("mouseup", onMouseUp)
+
+        const currentRes = reservationsRef.current
+        const currentChanges = pendingChangesRef.current
+        const updated = currentRes.find((r) => r.public_id === reservationId)
+        if (updated) {
+          const start = new Date(updated.start_at)
+          const end = new Date(updated.end_at)
+          const dateStr = `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, "0")}-${String(start.getDate()).padStart(2, "0")}`
+          const proposed = {
+            table_id: updated.table,
+            date: dateStr,
+            start_minutes: start.getHours() * 60 + start.getMinutes(),
+            end_minutes: end.getHours() * 60 + end.getMinutes(),
+          }
+          if (checkOverlap(proposed, currentRes, currentChanges, reservationId)) {
+            markConflict(reservationId)
+          }
+        }
       }
 
       document.addEventListener("mousemove", onMouseMove)
       document.addEventListener("mouseup", onMouseUp)
     },
-    [state.reservations, resizeReservation],
+    [state.reservations, resizeReservation, markConflict],
   )
 
   const handleSave = useCallback(async () => {
@@ -208,6 +285,7 @@ export function ReservationScheduler() {
           </button>
         </div>
         <div className="scheduler__toolbar-actions">
+          <span className="scheduler__timezone-label">{restaurantTimezone}</span>
           <button
             type="button"
             className={`scheduler__split-btn${showSecondDay ? " scheduler__split-btn--active" : ""}`}
@@ -222,7 +300,11 @@ export function ReservationScheduler() {
       {error && <div className="scheduler__error">{error}</div>}
 
       {!loading && !error && (
-        <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+        <DndContext
+          sensors={sensors}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEndWithClear}
+        >
           <div className={`scheduler__grid scheduler__grid--${dates.length}`}>
             {dates.map((date, i) => (
               <DayPanel
@@ -240,7 +322,23 @@ export function ReservationScheduler() {
             ))}
           </div>
           <DragOverlay>
-            <div className="scheduler__drag-overlay" />
+            {activeDragId
+              ? (() => {
+                  const r = state.reservations.find((res) => res.public_id === activeDragId)
+                  if (!r) return null
+                  const start = new Date(r.start_at)
+                  const hh = String(start.getHours()).padStart(2, "0")
+                  const mm = String(start.getMinutes()).padStart(2, "0")
+                  return (
+                    <div className="scheduler__drag-overlay">
+                      <span className="scheduler__drag-overlay-name">{r.customer_name}</span>
+                      <span className="scheduler__drag-overlay-meta">
+                        {r.guest_count}p &middot; {hh}:{mm}
+                      </span>
+                    </div>
+                  )
+                })()
+              : null}
           </DragOverlay>
         </DndContext>
       )}
