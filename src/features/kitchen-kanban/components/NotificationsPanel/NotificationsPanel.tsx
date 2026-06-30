@@ -37,7 +37,11 @@ export function NotificationsPanel() {
           aria-label={isConnected ? "Connected" : "Disconnected"}
         />
       </div>
-      <div className="kanban__col-body kanban__notifs-list">
+      <div
+        className="kanban__col-body kanban__notifs-list"
+        aria-live="polite"
+        aria-relevant="additions"
+      >
         {events.length === 0 && <p className="kanban__notif-empty">No notifications yet</p>}
         {events.map((event) => (
           <div key={event.id} className="kanban__notif">

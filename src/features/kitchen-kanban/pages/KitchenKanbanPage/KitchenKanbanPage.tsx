@@ -216,10 +216,12 @@ export function KitchenKanbanPage() {
   }
 
   return (
-    <div className="kanban" aria-live="polite">
+    <div className="kanban">
       <KanbanHeader currentTime={currentTime} />
 
-      {mutationError && <div className="kanban__toast">{mutationError}</div>}
+      <div className="kanban__toast-region" role="status" aria-live="polite">
+        {mutationError && <div className="kanban__toast">{mutationError}</div>}
+      </div>
 
       <div className="kanban__columns">
         <IncomingColumn
