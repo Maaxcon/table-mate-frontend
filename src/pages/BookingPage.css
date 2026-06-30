@@ -76,6 +76,19 @@
   }
 }
 
+/* On phones shrink the page side gutter so the table list runs nearly edge to
+   edge; the topbar still bleeds full width. */
+@media (max-width: 640px) {
+  .bp {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+  .bp__topbar {
+    margin-left: -8px;
+    margin-right: -8px;
+  }
+}
+
 .bp__tabs {
   display: inline-flex;
   gap: 4px;

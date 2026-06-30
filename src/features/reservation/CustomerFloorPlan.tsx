@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react"
+import { LuChevronRight, LuUsers } from "react-icons/lu"
 import type { Table } from "@/types/api/types.gen"
 import type { FloorTable, UpcomingReservation } from "@/features/waiter-order-view/data/waiterTypes"
 import { getTableVisualStatus } from "@/features/waiter-order-view/data/waiterTypes"
@@ -21,6 +22,25 @@ interface CustomerFloorPlanProps {
 const TABLE_FOOTPRINT = 210
 // Breathing room kept between the tables and the canvas edges.
 const CANVAS_PADDING = 28
+// Below this width the spatial floor map shrinks too far to be usable, so we
+// swap it for a tappable list of table cards instead.
+const MOBILE_BREAKPOINT = 640
+
+// Tracks whether the viewport is in the mobile (card-list) range.
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(() =>
+    typeof window !== "undefined"
+      ? window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT}px)`).matches
+      : false,
+  )
+  useEffect(() => {
+    const mq = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT}px)`)
+    const onChange = (e: MediaQueryListEvent) => setIsMobile(e.matches)
+    mq.addEventListener("change", onChange)
+    return () => mq.removeEventListener("change", onChange)
+  }, [])
+  return isMobile
+}
 
 // Chairs arranged around a table. Round tables get an even ring; rectangular
 // ones seat guests along the top and bottom edges (banquet style) so the chairs
@@ -91,6 +111,8 @@ export function CustomerFloorPlan({
   upcomingReservations = [],
 }: CustomerFloorPlanProps) {
   const [currentTime, setCurrentTime] = useState(new Date())
+  const [onlyFree, setOnlyFree] = useState(false)
+  const isMobile = useIsMobile()
 
   useEffect(() => {
     const id = setInterval(() => setCurrentTime(new Date()), 60_000)
@@ -110,7 +132,7 @@ export function CustomerFloorPlan({
     })
     observer.observe(el)
     return () => observer.disconnect()
-  }, [])
+  }, [isMobile])
 
   // Normalize raw backend positions so the layout always sits inset from the
   // edges (no tables jammed into the corner) regardless of their coordinates.
@@ -143,17 +165,48 @@ export function CustomerFloorPlan({
 
   const statusLabel: Record<string, string> = { ...bookStrings.floorPlan.status }
 
-  const floorTables: FloorTable[] = tables.map((t) => ({
-    public_id: t.public_id,
-    table_number: t.table_number,
-    capacity: t.capacity,
-    shape: t.shape ?? "rectangle",
-    is_occupied: t.is_occupied ?? false,
-    position_x: t.position_x ?? null,
-    position_y: t.position_y ?? null,
-    active: t.active ?? true,
-    zone: t.zone ?? null,
-  }))
+  // Each table paired with its live visual status, reused by both the desktop
+  // map and the mobile card list.
+  const tableViews = useMemo(
+    () =>
+      tables.map((t) => {
+        const ft: FloorTable = {
+          public_id: t.public_id,
+          table_number: t.table_number,
+          capacity: t.capacity,
+          shape: t.shape ?? "rectangle",
+          is_occupied: t.is_occupied ?? false,
+          position_x: t.position_x ?? null,
+          position_y: t.position_y ?? null,
+          active: t.active ?? true,
+          zone: t.zone ?? null,
+        }
+        return {
+          table: t,
+          visualStatus: getTableVisualStatus(ft, upcomingReservations, currentTime),
+        }
+      }),
+    [tables, upcomingReservations, currentTime],
+  )
+
+  // Stable order for the mobile list so it never feels shuffled between renders.
+  const sortedTableViews = useMemo(
+    () =>
+      [...tableViews].sort((a, b) =>
+        String(a.table.table_number).localeCompare(String(b.table.table_number), undefined, {
+          numeric: true,
+        }),
+      ),
+    [tableViews],
+  )
+
+  const freeCount = useMemo(
+    () => tableViews.filter((v) => v.visualStatus === "free").length,
+    [tableViews],
+  )
+  const visibleTableViews = onlyFree
+    ? sortedTableViews.filter((v) => v.visualStatus === "free")
+    : sortedTableViews
 
   return (
     <div className="c-floor-plan">
@@ -172,23 +225,84 @@ export function CustomerFloorPlan({
           ))}
         </div>
       )}
-      <div
-        className="c-floor-plan__viewport"
-        ref={viewportRef}
-        style={{ height: contentHeight * scale }}
-      >
+
+      {isMobile ? (
+        <>
+          <div className="c-floor-plan__filters" role="group">
+            <button
+              type="button"
+              className={`c-floor-plan__filter ${!onlyFree ? "c-floor-plan__filter--active" : ""}`}
+              onClick={() => setOnlyFree(false)}
+            >
+              {bookStrings.floorPlan.filterAll}
+              <span className="c-floor-plan__filter-count">{sortedTableViews.length}</span>
+            </button>
+            <button
+              type="button"
+              className={`c-floor-plan__filter ${onlyFree ? "c-floor-plan__filter--active" : ""}`}
+              onClick={() => setOnlyFree(true)}
+            >
+              {bookStrings.floorPlan.filterFree}
+              <span className="c-floor-plan__filter-count">{freeCount}</span>
+            </button>
+          </div>
+
+          {visibleTableViews.length === 0 ? (
+            <p className="c-floor-plan__empty">{bookStrings.floorPlan.noFree}</p>
+          ) : (
+            <ul className="c-floor-plan__list">
+              {visibleTableViews.map(({ table, visualStatus }) => (
+                <li key={table.public_id}>
+                  <button
+                    type="button"
+                    className={[
+                      "c-floor-plan__card",
+                      `c-floor-plan__card--${visualStatus}`,
+                      selectedId === table.public_id ? "c-floor-plan__card--selected" : "",
+                    ]
+                      .filter(Boolean)
+                      .join(" ")}
+                    onClick={() => onSelect(table)}
+                  >
+                    <span className="c-floor-plan__card-chip">
+                      <span className="c-floor-plan__card-chip-label">
+                        {bookStrings.floorPlan.tableShort}
+                      </span>
+                      <span className="c-floor-plan__card-chip-num">{table.table_number}</span>
+                    </span>
+
+                    <span className="c-floor-plan__card-cap">
+                      <LuUsers aria-hidden="true" />
+                      {bookStrings.floorPlan.seats(table.capacity)}
+                    </span>
+
+                    <span
+                      className={`c-floor-plan__table-badge c-floor-plan__table-badge--${visualStatus} c-floor-plan__card-badge`}
+                    >
+                      {statusLabel[visualStatus] ?? visualStatus.toUpperCase()}
+                    </span>
+                    <LuChevronRight className="c-floor-plan__card-chevron" aria-hidden="true" />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </>
+      ) : (
         <div
-          className="c-floor-plan__canvas"
-          style={{
-            width: contentWidth,
-            height: contentHeight,
-            transform: `scale(${scale})`,
-          }}
+          className="c-floor-plan__viewport"
+          ref={viewportRef}
+          style={{ height: contentHeight * scale }}
         >
-          {tables.map((table) => {
-            const ft = floorTables.find((ft) => ft.public_id === table.public_id)!
-            const visualStatus = getTableVisualStatus(ft, upcomingReservations, currentTime)
-            return (
+          <div
+            className="c-floor-plan__canvas"
+            style={{
+              width: contentWidth,
+              height: contentHeight,
+              transform: `scale(${scale})`,
+            }}
+          >
+            {tableViews.map(({ table, visualStatus }) => (
               <button
                 key={table.public_id}
                 type="button"
@@ -224,10 +338,10 @@ export function CustomerFloorPlan({
                   </div>
                 </span>
               </button>
-            )
-          })}
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="c-floor-plan__legend">
         <span className="c-floor-plan__legend-item c-floor-plan__legend-item--free">

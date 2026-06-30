@@ -29,6 +29,10 @@ export const bookStrings = {
       occupied: "Зайнято",
     },
     seats: (n: number) => `${n} міс.`,
+    tableShort: "Стіл",
+    filterAll: "Усі",
+    filterFree: "Вільні",
+    noFree: "Немає вільних столів",
   },
   modal: {
     title: (table: string) => `Бронь столу ${table}`,
