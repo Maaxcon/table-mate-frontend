@@ -304,6 +304,7 @@
 
 .ab__card-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   margin-top: 2px;
 }
@@ -361,6 +362,15 @@
 .ab__action--cancel:hover:not(:disabled) {
   border-color: var(--color-error-text);
   background: var(--color-error-bg);
+}
+
+.ab__action--calendar {
+  color: var(--color-text-secondary);
+}
+
+.ab__action--calendar:hover:not(:disabled) {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -4,6 +4,7 @@ import type { ReservationStatus, ReservationWithTable, WorkingHoursDay } from ".
 import { cancelReservation, fetchMyReservations } from "./api"
 import { BookingsSkeleton } from "./BookingSkeleton"
 import { CancellationConfirmationModal } from "./CancellationConfirmationModal"
+import { downloadReservationIcs } from "./ics"
 import { RescheduleModal } from "./RescheduleModal"
 import { bookStrings } from "./strings"
 import "./ActiveBookings.css"
@@ -187,6 +188,23 @@ export function ActiveBookings({
                   {isBusy
                     ? bookStrings.myBookings.actions.cancelling
                     : bookStrings.myBookings.actions.cancel}
+                </button>
+                <button
+                  className="ab__action ab__action--calendar"
+                  onClick={() =>
+                    downloadReservationIcs({
+                      tableNumber: r.table_info?.table_number ?? r.table,
+                      startISO: r.start_at,
+                      endISO: r.end_at,
+                      guests: r.guest_count,
+                      summary: bookStrings.modal.title(r.table_info?.table_number ?? r.table),
+                      guestsLabel: bookStrings.modal.summary.guests,
+                    })
+                  }
+                  type="button"
+                >
+                  <LuCalendarPlus aria-hidden="true" />
+                  {bookStrings.modal.ticket.addToCalendar}
                 </button>
               </div>
             )}
