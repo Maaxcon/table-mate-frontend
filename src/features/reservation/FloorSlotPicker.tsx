@@ -26,11 +26,13 @@ export function FloorSlotPicker({
   maxGuests,
   onChange,
 }: FloorSlotPickerProps) {
+  // Keyed on the calendar day so "today" (and the 14-day window) refreshes after
+  // midnight if the page is left open, instead of sticking to a stale date.
+  const todayKey = localDateKey(new Date())
   const today = useMemo(() => {
-    const d = new Date()
-    d.setHours(0, 0, 0, 0)
-    return d
-  }, [])
+    const [y, m, d] = todayKey.split("-").map(Number)
+    return new Date(y, m - 1, d)
+  }, [todayKey])
 
   const dates = useMemo(() => {
     const days: Date[] = []

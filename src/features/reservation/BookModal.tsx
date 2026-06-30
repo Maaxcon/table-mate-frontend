@@ -42,11 +42,13 @@ export function BookModal({
   initialTime,
   initialGuests,
 }: BookModalProps) {
+  // Keyed on the calendar day so "today" refreshes after midnight if the modal
+  // is left open, instead of sticking to a stale date.
+  const todayKey = localDateKey(new Date())
   const today = useMemo(() => {
-    const d = new Date()
-    d.setHours(0, 0, 0, 0)
-    return d
-  }, [])
+    const [y, m, d] = todayKey.split("-").map(Number)
+    return new Date(y, m - 1, d)
+  }, [todayKey])
 
   const [selectedDate, setSelectedDate] = useState(() => {
     if (!initialDate) return today
