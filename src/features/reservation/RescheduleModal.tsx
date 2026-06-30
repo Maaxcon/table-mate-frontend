@@ -5,6 +5,7 @@ import { fetchAvailableSlots, fetchRestaurantSettings, modifyReservation } from 
 import { bookStrings } from "./strings"
 import {
   DAY_NAMES,
+  formatTimeInTz,
   generateTimeSlots,
   localDateKey,
   MIN_DURATION,
@@ -31,13 +32,6 @@ interface RescheduleModalProps {
   endTimeOnly?: boolean
   onClose: () => void
   onSuccess: () => void
-}
-
-function msToTime(ms: number): string {
-  const d = new Date(ms)
-  const h = d.getHours()
-  const m = d.getMinutes()
-  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`
 }
 
 export function RescheduleModal({
@@ -80,8 +74,8 @@ export function RescheduleModal({
 
   const effectiveTimeZone = timeZone ?? internalTimeZone
 
-  const currentStartTime = msToTime(new Date(currentStart).getTime())
-  const currentEndTime = msToTime(new Date(currentEnd).getTime())
+  const currentStartTime = formatTimeInTz(currentStart, effectiveTimeZone)
+  const currentEndTime = formatTimeInTz(currentEnd, effectiveTimeZone)
   const currentDurationMinutes = timeToMinutes(currentEndTime) - timeToMinutes(currentStartTime)
 
   const parsedDate = useMemo(() => new Date(currentDate), [currentDate])

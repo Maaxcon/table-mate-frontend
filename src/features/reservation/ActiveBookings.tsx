@@ -7,6 +7,7 @@ import { CancellationConfirmationModal } from "./CancellationConfirmationModal"
 import { downloadReservationIcs } from "./ics"
 import { RescheduleModal } from "./RescheduleModal"
 import { bookStrings } from "./strings"
+import { formatTimeInTz } from "./utils"
 import "./ActiveBookings.css"
 
 interface ActiveBookingsProps {
@@ -29,15 +30,6 @@ function dateParts(iso: string, timeZone: string | null) {
     month: d.toLocaleDateString("uk-UA", { timeZone: tz, month: "short" }).replace(".", ""),
     weekday: d.toLocaleDateString("uk-UA", { timeZone: tz, weekday: "short" }),
   }
-}
-
-function formatTime(iso: string, timeZone: string | null) {
-  return new Date(iso).toLocaleTimeString("uk-UA", {
-    timeZone: timeZone ?? undefined,
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  })
 }
 
 type TemporalPhase = "upcoming" | "in_progress" | "past"
@@ -130,8 +122,8 @@ export function ActiveBookings({
   const renderCard = useCallback(
     (r: ReservationWithTable, statusKey: ReservationStatus, withActions: boolean) => {
       const dp = dateParts(r.start_at, timeZone)
-      const startTime = formatTime(r.start_at, timeZone)
-      const endTime = formatTime(r.end_at, timeZone)
+      const startTime = formatTimeInTz(r.start_at, timeZone)
+      const endTime = formatTimeInTz(r.end_at, timeZone)
       const isBusy = actionId === r.public_id
       const phase = getTemporalPhase(r.start_at, r.end_at)
 

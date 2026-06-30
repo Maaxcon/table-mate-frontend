@@ -120,10 +120,14 @@ export function CustomerFloorPlan({
   const [onlyFree, setOnlyFree] = useState(false)
   const isMobile = useIsMobile()
 
+  // The minute tick only matters for the now-based fallback status; when slot
+  // availability drives the statuses, currentTime is unused, so skip the timer
+  // (and the per-minute re-render of the whole list).
   useEffect(() => {
+    if (slotAvailability) return
     const id = setInterval(() => setCurrentTime(new Date()), 60_000)
     return () => clearInterval(id)
-  }, [])
+  }, [slotAvailability])
 
   // Tables come positioned in raw backend pixels, so we measure the viewport and
   // scale the whole canvas down to fit — keeping the spatial layout on any screen.

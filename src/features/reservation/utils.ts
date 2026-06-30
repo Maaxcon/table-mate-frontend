@@ -54,6 +54,17 @@ export function minutesToTime(minutes: number): string {
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`
 }
 
+// Format an ISO instant as HH:MM in the restaurant's timezone (falls back to the
+// browser's zone when unknown), so a guest in another zone sees the venue's time.
+export function formatTimeInTz(iso: string, timeZone: string | null): string {
+  return new Date(iso).toLocaleTimeString("uk-UA", {
+    timeZone: timeZone ?? undefined,
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  })
+}
+
 export function generateTimeSlots(date: Date, dayConfig: WorkingHoursDay | undefined): string[] {
   if (!dayConfig) return []
 
