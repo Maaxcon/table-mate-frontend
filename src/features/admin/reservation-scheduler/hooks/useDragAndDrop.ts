@@ -44,36 +44,49 @@ export function useDragAndDrop({
 
       if (!activeData || !overData) return
 
-      const { reservationId, durationMinutes } = activeData
+      const { reservationId } = activeData
 
       const draggedReservation = reservations.find((r) => r.public_id === reservationId)
-      if (
-        draggedReservation &&
-        (draggedReservation.status === "active" || draggedReservation.status === "completed")
-      )
-        return
+      if (draggedReservation && draggedReservation.status === "completed") return
       const { tableId, date } = overData
 
-      const rect = over.rect
-      if (!rect) return
+      let startTime: string
+      let endTime: string
+      let startMinute: number
+      let endMinute: number
 
-      const blockLeft = event.active.rect.current?.translated?.left
-      if (blockLeft == null) return
-      const pointerX = blockLeft - rect.left
+      if (draggedReservation && draggedReservation.status === "active") {
+        if (draggedReservation.table === tableId) return
 
-      const totalMinutes = (hourEnd - hourStart) * 60
-      const minuteOffset =
-        Math.round(((pointerX / rect.width) * totalMinutes) / slotMinutes) * slotMinutes
-      const startMinute =
-        hourStart * 60 + Math.max(0, Math.min(minuteOffset, totalMinutes - durationMinutes))
-      const endMinute = startMinute + durationMinutes
+        const origStart = new Date(draggedReservation.start_at)
+        const origEnd = new Date(draggedReservation.end_at)
+        startMinute = origStart.getHours() * 60 + origStart.getMinutes()
+        endMinute = origEnd.getHours() * 60 + origEnd.getMinutes()
+        startTime = `${String(origStart.getHours()).padStart(2, "0")}:${String(origStart.getMinutes()).padStart(2, "0")}`
+        endTime = `${String(origEnd.getHours()).padStart(2, "0")}:${String(origEnd.getMinutes()).padStart(2, "0")}`
+      } else {
+        const { durationMinutes } = activeData
+        const rect = over.rect
+        if (!rect) return
 
-      const startHH = String(Math.floor(startMinute / 60)).padStart(2, "0")
-      const startMM = String(startMinute % 60).padStart(2, "0")
-      const endHH = String(Math.floor(endMinute / 60)).padStart(2, "0")
-      const endMM = String(endMinute % 60).padStart(2, "0")
-      const startTime = `${startHH}:${startMM}`
-      const endTime = `${endHH}:${endMM}`
+        const blockLeft = event.active.rect.current?.translated?.left
+        if (blockLeft == null) return
+        const pointerX = blockLeft - rect.left
+
+        const totalMinutes = (hourEnd - hourStart) * 60
+        const minuteOffset =
+          Math.round(((pointerX / rect.width) * totalMinutes) / slotMinutes) * slotMinutes
+        startMinute =
+          hourStart * 60 + Math.max(0, Math.min(minuteOffset, totalMinutes - durationMinutes))
+        endMinute = startMinute + durationMinutes
+
+        const startHH = String(Math.floor(startMinute / 60)).padStart(2, "0")
+        const startMM = String(startMinute % 60).padStart(2, "0")
+        const endHH = String(Math.floor(endMinute / 60)).padStart(2, "0")
+        const endMM = String(endMinute % 60).padStart(2, "0")
+        startTime = `${startHH}:${startMM}`
+        endTime = `${endHH}:${endMM}`
+      }
 
       const proposed = {
         table_id: tableId,

@@ -28,7 +28,7 @@ export function ReservationBlock({
   const left = ((startMinutes - hourStart * 60) / totalMinutes) * 100
   const width = ((endMinutes - startMinutes) / totalMinutes) * 100
 
-  const notEditable = reservation.status === "active" || reservation.status === "completed"
+  const dragDisabled = reservation.status === "completed"
 
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: reservation.public_id,
@@ -36,7 +36,7 @@ export function ReservationBlock({
       reservationId: reservation.public_id,
       durationMinutes: endMinutes - startMinutes,
     },
-    disabled: notEditable,
+    disabled: dragDisabled,
   })
 
   const style: React.CSSProperties = {
