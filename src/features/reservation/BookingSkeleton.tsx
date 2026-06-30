@@ -13,6 +13,25 @@ export function FloorPlanSkeleton() {
   )
 }
 
+// Placeholder cards shown while the guest's bookings load, mirroring the
+// ActiveBookings card (date block + content lines) for a consistent feel.
+export function BookingsSkeleton() {
+  return (
+    <div className="book-skeleton__bookings" role="status" aria-label={bookStrings.loading}>
+      {Array.from({ length: 3 }).map((_, i) => (
+        <div key={i} className="book-skeleton__booking" aria-hidden="true">
+          <div className="book-skeleton__booking-date" />
+          <div className="book-skeleton__booking-body">
+            <div className="book-skeleton__line book-skeleton__line--title" />
+            <div className="book-skeleton__line book-skeleton__line--meta" />
+            <div className="book-skeleton__line book-skeleton__line--actions" />
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 // Placeholder chips shown while the booking modal fetches available time slots.
 export function SlotsSkeleton() {
   return (

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react"
 import { LuCalendarPlus, LuClock, LuPencil, LuUsers, LuX } from "react-icons/lu"
 import type { ReservationStatus, ReservationWithTable, WorkingHoursDay } from "./api"
 import { cancelReservation, fetchMyReservations } from "./api"
+import { BookingsSkeleton } from "./BookingSkeleton"
 import { CancellationConfirmationModal } from "./CancellationConfirmationModal"
 import { RescheduleModal } from "./RescheduleModal"
 import { bookStrings } from "./strings"
@@ -197,7 +198,7 @@ export function ActiveBookings({
   )
 
   if (loading) {
-    return <div className="ab__loading">{bookStrings.loading}</div>
+    return <BookingsSkeleton />
   }
 
   return (
