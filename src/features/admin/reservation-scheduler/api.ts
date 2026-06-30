@@ -17,20 +17,30 @@ export async function fetchReservationsForRange(
     status__in: "pending,active",
     ordering: "start_at",
   })
-  const res = await apiFetch(`/api/reservations/reservations/?${params}`)
-  if (!res.ok) throw new Error("Failed to fetch reservations")
-  const data = await res.json()
-  const results: unknown[] = data.results ?? data
-  return results.map((r: Record<string, unknown>) => ({
-    public_id: r.public_id as string,
-    table: r.table as string,
-    table_number: (r.table_info as Record<string, string>)?.public_number ?? "",
-    customer_name: (r.customer_name as string) ?? "Guest",
-    guest_count: r.guest_count as number,
-    start_at: r.start_at as string,
-    end_at: r.end_at as string,
-    status: r.status as SchedulerReservation["status"],
-  }))
+
+  let allResults: SchedulerReservation[] = []
+  let url: string | null = `/api/reservations/reservations/?${params}`
+
+  while (url) {
+    const res = await apiFetch(url)
+    if (!res.ok) throw new Error("Failed to fetch reservations")
+    const data = await res.json()
+    const results: unknown[] = data.results ?? data
+    const mapped = results.map((r: Record<string, unknown>) => ({
+      public_id: r.public_id as string,
+      table: r.table as string,
+      table_number: (r.table_info as Record<string, string>)?.public_number ?? "",
+      customer_name: (r.customer_name as string) ?? "Guest",
+      guest_count: r.guest_count as number,
+      start_at: r.start_at as string,
+      end_at: r.end_at as string,
+      status: r.status as SchedulerReservation["status"],
+    }))
+    allResults = allResults.concat(mapped)
+    url = data.next ?? null
+  }
+
+  return allResults
 }
 
 export async function batchUpdateReservations(
