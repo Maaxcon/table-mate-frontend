@@ -72,6 +72,9 @@ export function ActiveBookings({
   // History (completed/cancelled) is a separate, lazy-loaded list: the /my/
   // endpoint only returns active bookings unless asked for ?status=past.
   const [pastItems, setPastItems] = useState<ReservationWithTable[]>([])
+  // Held until the first history fetch resolves so the empty state doesn't flash
+  // before we know whether the guest has any past bookings.
+  const [pastLoading, setPastLoading] = useState(true)
 
   // Guards the history fetch from setting state after the tab unmounts.
   const mountedRef = useRef(true)
@@ -89,6 +92,9 @@ export function ActiveBookings({
       })
       .catch(() => {
         if (mountedRef.current) setPastItems([])
+      })
+      .finally(() => {
+        if (mountedRef.current) setPastLoading(false)
       })
   }, [restaurantId])
 
@@ -234,7 +240,7 @@ export function ActiveBookings({
         <p className="ab__tznote">{bookStrings.myBookings.tzNote(foreignTz)}</p>
       )}
 
-      {!hasActive && !hasPast && (
+      {!hasActive && !hasPast && !pastLoading && (
         <div className="ab__empty-state">
           <p className="ab__empty">{bookStrings.myBookings.empty}</p>
           {onBrowseTables && (
