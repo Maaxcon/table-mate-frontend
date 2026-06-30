@@ -156,13 +156,17 @@ function RescheduleForm({
 
   const endAt = useMemo(() => {
     if (!selectedTime) return ""
-    return minutesToTime(timeToMinutes(selectedTime) + durationMinutes)
-  }, [selectedTime, durationMinutes])
+    // When only the end moves (active booking), the start stays at its real,
+    // unsnapped value — anchor the end there, not on the snapped selectedTime.
+    const baseMins = endTimeOnly ? timeToMinutes(currentStartTime) : timeToMinutes(selectedTime)
+    return minutesToTime(baseMins + durationMinutes)
+  }, [selectedTime, durationMinutes, endTimeOnly, currentStartTime])
 
   const durationError = useMemo(() => {
     if (!selectedTime || !durationMinutes) return null
 
-    const endMins = timeToMinutes(selectedTime) + durationMinutes
+    const baseMins = endTimeOnly ? timeToMinutes(currentStartTime) : timeToMinutes(selectedTime)
+    const endMins = baseMins + durationMinutes
 
     if (dayConfig) {
       const closeMins = timeToMinutes(dayConfig.close)
@@ -191,6 +195,7 @@ function RescheduleForm({
     availableSlots,
     prolongOnly,
     currentEndTime,
+    currentStartTime,
     endTimeOnly,
   ])
 
@@ -204,7 +209,13 @@ function RescheduleForm({
       const startISO = effectiveTimeZone
         ? zonedWallTimeToUtcIso(dateStr, selectedTime, effectiveTimeZone)
         : new Date(`${dateStr}T${selectedTime}:00`).toISOString()
-      const endISO = new Date(new Date(startISO).getTime() + durationMinutes * 60000).toISOString()
+      // Extending an active booking only moves the end: anchor it to the real,
+      // unsnapped start so the stored duration is exactly what the guest picked
+      // (selectedTime is the start snapped to 30 min and would skew it by ±15m).
+      const endBaseMs = endTimeOnly
+        ? new Date(currentStart).getTime()
+        : new Date(startISO).getTime()
+      const endISO = new Date(endBaseMs + durationMinutes * 60000).toISOString()
 
       if (endTimeOnly) {
         await modifyReservation(publicId, { end_at: endISO })
@@ -222,7 +233,16 @@ function RescheduleForm({
     } finally {
       setSubmitting(false)
     }
-  }, [selectedTime, dateStr, durationMinutes, guestCount, publicId, endTimeOnly, effectiveTimeZone])
+  }, [
+    selectedTime,
+    dateStr,
+    durationMinutes,
+    guestCount,
+    publicId,
+    endTimeOnly,
+    currentStart,
+    effectiveTimeZone,
+  ])
 
   const handleDismiss = useCallback(() => {
     if (success) onSuccess()
