@@ -61,8 +61,12 @@ export function ReservationBlock({
     <div ref={setNodeRef} className={classNames} style={style} {...attributes} {...listeners}>
       <button
         type="button"
+        data-resize-handle
         className="scheduler__block-resize-handle scheduler__block-resize-handle--left"
         aria-label="Resize start"
+        onPointerDown={(e) => {
+          e.stopPropagation()
+        }}
         onMouseDown={(e) => {
           e.stopPropagation()
           onResizeStart(reservation.public_id, "start", e)
@@ -76,8 +80,12 @@ export function ReservationBlock({
       </div>
       <button
         type="button"
+        data-resize-handle
         className="scheduler__block-resize-handle scheduler__block-resize-handle--right"
         aria-label="Resize end"
+        onPointerDown={(e) => {
+          e.stopPropagation()
+        }}
         onMouseDown={(e) => {
           e.stopPropagation()
           onResizeStart(reservation.public_id, "end", e)
