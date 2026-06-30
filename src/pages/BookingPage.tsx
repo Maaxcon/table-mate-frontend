@@ -156,6 +156,7 @@ export function BookingPage() {
   )
 
   useFloorSubscription({
+    restaurantId: public_restaurant_id,
     onTableStatusChanged: handleTableStatusChanged,
     onNewReservation: handleNewReservation,
     onReservationCancelled: handleReservationCancelled,

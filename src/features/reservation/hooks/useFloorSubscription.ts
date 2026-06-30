@@ -35,7 +35,13 @@ interface UseFloorSubscriptionOptions {
   onReservationCancelled?: (event: FloorReservationCancelledEvent) => void
   onClose?: () => void
   onError?: (error: Event) => void
+  // Customers carry no restaurant in their token, so the restaurant they're
+  // viewing is passed explicitly to scope the floor stream.
+  restaurantId?: string | null
 }
+
+// Close codes the server uses to reject auth/scope — reconnecting would just loop.
+const NO_RETRY_CLOSE_CODES = new Set([4001, 4003])
 
 export function useFloorSubscription({
   onTableStatusChanged,
@@ -43,6 +49,7 @@ export function useFloorSubscription({
   onReservationCancelled,
   onClose,
   onError,
+  restaurantId,
 }: UseFloorSubscriptionOptions) {
   const accessToken = useAppSelector((s) => s.auth.accessToken)
   const wsRef = useRef<WebSocket | null>(null)
@@ -74,7 +81,9 @@ export function useFloorSubscription({
       wsRef.current = null
     }
 
-    const ws = new WebSocket(`${env.wsUrl}/floor/?token=${accessToken}`)
+    const params = new URLSearchParams({ token: accessToken })
+    if (restaurantId) params.set("restaurant", restaurantId)
+    const ws = new WebSocket(`${env.wsUrl}/floor/?${params}`)
     wsRef.current = ws
 
     ws.onopen = () => {
@@ -97,7 +106,7 @@ export function useFloorSubscription({
     }
 
     ws.onerror = (error) => {
-      console.error("[FloorWS] Error:", error)
+      console.debug("[FloorWS] Error:", error)
       callbacksRef.current.onError?.(error)
     }
 
@@ -106,11 +115,12 @@ export function useFloorSubscription({
       wsRef.current = null
       callbacksRef.current.onClose?.()
 
-      if (event.code !== 1000 && accessToken) {
+      // Retry transient drops, but never loop on auth/scope rejections.
+      if (event.code !== 1000 && !NO_RETRY_CLOSE_CODES.has(event.code) && accessToken) {
         reconnectTimeoutRef.current = setTimeout(() => connectRef.current?.(), 3000)
       }
     }
-  }, [accessToken])
+  }, [accessToken, restaurantId])
 
   useEffect(() => {
     connectRef.current = connect
