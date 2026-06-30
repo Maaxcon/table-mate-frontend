@@ -50,9 +50,9 @@ export function useDragAndDrop({
       const rect = over.rect
       if (!rect) return
 
-      const pointerX = event.activatorEvent
-        ? (event.activatorEvent as MouseEvent).clientX - rect.left
-        : rect.width / 2
+      const blockLeft = event.active.rect.current?.translated?.left
+      if (blockLeft == null) return
+      const pointerX = blockLeft - rect.left
 
       const totalMinutes = (hourEnd - hourStart) * 60
       const minuteOffset =
