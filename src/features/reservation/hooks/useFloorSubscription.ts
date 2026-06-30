@@ -43,6 +43,11 @@ interface UseFloorSubscriptionOptions {
 // Close codes the server uses to reject auth/scope — reconnecting would just loop.
 const NO_RETRY_CLOSE_CODES = new Set([4001, 4003])
 
+// WS diagnostics, dev-only so production consoles stay quiet.
+const wsLog: (...args: unknown[]) => void = import.meta.env.DEV
+  ? (...args) => console.debug("[FloorWS]", ...args)
+  : () => {}
+
 export function useFloorSubscription({
   onTableStatusChanged,
   onNewReservation,
@@ -87,7 +92,7 @@ export function useFloorSubscription({
     wsRef.current = ws
 
     ws.onopen = () => {
-      console.debug("[FloorWS] Connected")
+      wsLog("Connected")
     }
 
     ws.onmessage = (event) => {
@@ -101,17 +106,17 @@ export function useFloorSubscription({
           callbacksRef.current.onReservationCancelled?.(data as FloorReservationCancelledEvent)
         }
       } catch (err) {
-        console.warn("[FloorWS] Failed to parse message:", err)
+        wsLog("Failed to parse message:", err)
       }
     }
 
     ws.onerror = (error) => {
-      console.debug("[FloorWS] Error:", error)
+      wsLog("Error:", error)
       callbacksRef.current.onError?.(error)
     }
 
     ws.onclose = (event) => {
-      console.debug("[FloorWS] Disconnected:", event.code, event.reason)
+      wsLog("Disconnected:", event.code, event.reason)
       wsRef.current = null
       callbacksRef.current.onClose?.()
 
