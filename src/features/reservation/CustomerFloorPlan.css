@@ -404,11 +404,47 @@
 }
 
 .c-floor-plan__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
   margin: 0;
   padding: 36px 16px;
   text-align: center;
+}
+
+.c-floor-plan__empty-text {
+  margin: 0;
   color: var(--color-text-muted);
   font-size: 0.88rem;
+}
+
+.c-floor-plan__empty-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 18px;
+  border: 1.5px solid var(--color-primary);
+  border-radius: 100px;
+  background: transparent;
+  color: var(--color-primary);
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background 160ms ease,
+    color 160ms ease;
+}
+
+.c-floor-plan__empty-btn:hover {
+  background: var(--color-primary);
+  color: var(--color-bg-surface);
+}
+
+.c-floor-plan__empty-btn:hover .c-floor-plan__filter-count {
+  background: color-mix(in srgb, var(--color-bg-surface) 28%, transparent);
+  color: var(--color-bg-surface);
 }
 
 .c-floor-plan__list {

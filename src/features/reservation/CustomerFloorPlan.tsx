@@ -276,7 +276,19 @@ export function CustomerFloorPlan({
           </div>
 
           {visibleTableViews.length === 0 ? (
-            <p className="c-floor-plan__empty">{bookStrings.floorPlan.noFree}</p>
+            <div className="c-floor-plan__empty">
+              <p className="c-floor-plan__empty-text">{bookStrings.floorPlan.noFree}</p>
+              {onlyFree && sortedTableViews.length > 0 && (
+                <button
+                  type="button"
+                  className="c-floor-plan__empty-btn"
+                  onClick={() => setOnlyFree(false)}
+                >
+                  {bookStrings.floorPlan.showAll}
+                  <span className="c-floor-plan__filter-count">{sortedTableViews.length}</span>
+                </button>
+              )}
+            </div>
           ) : (
             <ul className="c-floor-plan__list">
               {visibleTableViews.map(({ table, tone, label, bookable }) => (
