@@ -1,4 +1,5 @@
 import type { PendingChange, SchedulerReservation } from "../types"
+import { isoToDateKey } from "../types"
 
 interface TimeRange {
   table_id: string
@@ -42,9 +43,7 @@ export function checkOverlap(
 ): boolean {
   for (const r of reservations) {
     if (r.public_id === excludeReservationId) continue
-    const d = new Date(r.start_at)
-    const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
-    if (overlaps(proposed, reservationToRange(r, dateStr))) return true
+    if (overlaps(proposed, reservationToRange(r, isoToDateKey(r.start_at)))) return true
   }
   for (const c of pendingChanges) {
     if (c.reservation_id === excludeReservationId) continue

@@ -1,5 +1,6 @@
 import type { RefObject } from "react"
 import type { SchedulerReservation, SchedulerTable } from "./types"
+import { isoToDateKey } from "./types"
 import { TimelineHeader } from "./TimelineHeader"
 import { TableRow } from "./TableRow"
 
@@ -33,11 +34,7 @@ export function DayPanel({
     day: "numeric",
   })
 
-  const dateReservations = reservations.filter((r) => {
-    const rd = new Date(r.start_at)
-    const rdKey = `${rd.getFullYear()}-${String(rd.getMonth() + 1).padStart(2, "0")}-${String(rd.getDate()).padStart(2, "0")}`
-    return rdKey === date
-  })
+  const dateReservations = reservations.filter((r) => isoToDateKey(r.start_at) === date)
 
   return (
     <div className="scheduler__day-panel">

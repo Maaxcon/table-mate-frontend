@@ -50,3 +50,8 @@ export type SchedulerTable = {
   capacity: number
   zone?: string
 }
+
+export function isoToDateKey(iso: string): string {
+  const d = new Date(iso)
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
+}
