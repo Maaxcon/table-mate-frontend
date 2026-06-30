@@ -108,6 +108,7 @@ export function useHallSubscription({
   onTableStatusChanged,
   onNewReservation,
   onReservationCancelled,
+  onReservationsUpdated,
   onLayoutPublished,
   onZoneCreated,
   onZoneUpdated,

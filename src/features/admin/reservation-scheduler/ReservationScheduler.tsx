@@ -4,6 +4,7 @@ import type { DragStartEvent } from "@dnd-kit/core"
 import { LuChevronLeft, LuChevronRight } from "react-icons/lu"
 import { useAppSelector } from "@/store/hooks"
 import { useToast } from "@/features/admin/hooks/toastContext"
+import type { WorkingHoursDay } from "@/features/reservation/api"
 import { fetchRestaurantSettings } from "@/features/reservation/api"
 import { batchUpdateReservations } from "./api"
 import { useSchedulerState } from "./hooks/useSchedulerState"
@@ -16,9 +17,33 @@ import { DayPanel } from "./DayPanel"
 import { SaveBar } from "./SaveBar"
 import "./ReservationScheduler.css"
 
-const HOUR_START = 8
-const HOUR_END = 23
 const SLOT_MINUTES = 15
+
+function toMinutes(hhmm: string): number {
+  const [h, m] = hhmm.split(":").map(Number)
+  return h * 60 + m
+}
+
+function computeHourRange(workingHours: Record<string, WorkingHoursDay> | null): {
+  hourStart: number
+  hourEnd: number
+} {
+  if (!workingHours) return { hourStart: 8, hourEnd: 23 }
+  let minOpen = Infinity
+  let maxClose = -Infinity
+  for (const dayHours of Object.values(workingHours)) {
+    if (!dayHours) continue
+    const openMin = toMinutes(dayHours.open)
+    const closeMin = toMinutes(dayHours.close)
+    if (closeMin <= openMin) continue
+    minOpen = Math.min(minOpen, openMin)
+    maxClose = Math.max(maxClose, closeMin)
+  }
+  return {
+    hourStart: minOpen === Infinity ? 8 : Math.floor(minOpen / 60),
+    hourEnd: maxClose === -Infinity ? 23 : Math.ceil(maxClose / 60),
+  }
+}
 
 function formatDateKey(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
@@ -28,6 +53,12 @@ function addDays(d: Date, n: number): Date {
   const result = new Date(d)
   result.setDate(result.getDate() + n)
   return result
+}
+
+function localToISOString(dateStr: string, timeHHMM: string): string {
+  const [y, m, d] = dateStr.split("-").map(Number)
+  const [h, min] = timeHHMM.split(":").map(Number)
+  return new Date(y, m - 1, d, h, min, 0, 0).toISOString()
 }
 
 export function ReservationScheduler() {
@@ -55,12 +86,16 @@ export function ReservationScheduler() {
   const [restaurantTimezone, setRestaurantTimezone] = useState<string>(
     Intl.DateTimeFormat().resolvedOptions().timeZone,
   )
+  const [workingHours, setWorkingHours] = useState<Record<string, WorkingHoursDay> | null>(null)
+
+  const { hourStart, hourEnd } = useMemo(() => computeHourRange(workingHours), [workingHours])
 
   useEffect(() => {
     if (!restaurantId) return
     fetchRestaurantSettings(restaurantId)
       .then((settings) => {
         if (settings?.timezone) setRestaurantTimezone(settings.timezone)
+        if (settings?.working_hours) setWorkingHours(settings.working_hours)
       })
       .catch(() => {})
   }, [restaurantId])
@@ -114,8 +149,8 @@ export function ReservationScheduler() {
     tables,
     reservations: state.reservations,
     pendingChanges: state.pendingChanges,
-    hourStart: HOUR_START,
-    hourEnd: HOUR_END,
+    hourStart,
+    hourEnd,
     slotMinutes: SLOT_MINUTES,
     onMove: moveReservation,
     onConflict: markConflict,
@@ -151,7 +186,7 @@ export function ReservationScheduler() {
       const edgeTime = new Date(edge === "start" ? reservation.start_at : reservation.end_at)
       const startLocalHours = edgeTime.getHours()
       const startLocalMinutes = edgeTime.getMinutes()
-      const totalMinutes = (HOUR_END - HOUR_START) * 60
+      const totalMinutes = (hourEnd - hourStart) * 60
 
       const dayEl = (e.target as HTMLElement).closest(".scheduler__day-panel-body")
       if (!dayEl) return
@@ -164,7 +199,7 @@ export function ReservationScheduler() {
         const dMinute = Math.round(((dx / rowWidth) * totalMinutes) / SLOT_MINUTES) * SLOT_MINUTES
 
         const totalMin = startLocalHours * 60 + startLocalMinutes + dMinute
-        const clamped = Math.max(HOUR_START * 60, Math.min(totalMin, HOUR_END * 60 - SLOT_MINUTES))
+        const clamped = Math.max(hourStart * 60, Math.min(totalMin, hourEnd * 60 - SLOT_MINUTES))
 
         const currentRes = reservationsRef.current
         const currentChanges = pendingChangesRef.current
@@ -223,7 +258,7 @@ export function ReservationScheduler() {
       document.addEventListener("mousemove", onMouseMove)
       document.addEventListener("mouseup", onMouseUp)
     },
-    [state.reservations, resizeReservation, markConflict],
+    [state.reservations, resizeReservation, markConflict, hourStart, hourEnd],
   )
 
   const handleSave = useCallback(async () => {
@@ -234,13 +269,17 @@ export function ReservationScheduler() {
 
     try {
       const payload = {
-        changes: state.pendingChanges.map((c) => ({
-          reservation_id: c.reservation_id,
-          new_table_id: c.new_table_id,
-          new_date: c.new_date,
-          new_start_time: c.new_start_time,
-          new_end_time: c.new_end_time,
-        })),
+        changes: state.pendingChanges.map((c) => {
+          const utcStart = localToISOString(c.new_date, c.new_start_time)
+          const utcEnd = localToISOString(c.new_date, c.new_end_time)
+          return {
+            reservation_id: c.reservation_id,
+            new_table_id: c.new_table_id,
+            new_date: utcStart.slice(0, 10),
+            new_start_time: utcStart.slice(11, 16),
+            new_end_time: utcEnd.slice(11, 16),
+          }
+        }),
       }
 
       const result = await batchUpdateReservations(payload)
@@ -329,8 +368,8 @@ export function ReservationScheduler() {
                 date={date}
                 tables={tables}
                 reservations={state.reservations}
-                hourStart={HOUR_START}
-                hourEnd={HOUR_END}
+                hourStart={hourStart}
+                hourEnd={hourEnd}
                 conflictReservationId={state.conflictReservationId}
                 modifiedIds={modifiedIds}
                 onResizeStart={handleResizeStart}
