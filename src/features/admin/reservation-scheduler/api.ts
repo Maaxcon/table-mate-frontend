@@ -14,7 +14,7 @@ export async function fetchReservationsForRange(
   const params = new URLSearchParams({
     start_at__date__gte: dateFrom,
     start_at__date__lte: dateTo,
-    status__in: "pending,active",
+    status__in: "pending,active,completed",
     ordering: "start_at",
   })
 
