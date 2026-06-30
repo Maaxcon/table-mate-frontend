@@ -2,6 +2,11 @@ import type { WorkingHoursDay } from "./api"
 
 export const MIN_DURATION = 30
 
+// Default booking length (minutes). Shared so the floor-plan availability probe
+// and the booking modal's initial duration stay in lockstep — otherwise the map
+// could mark a slot free/taken on a different window than the modal validates.
+export const DEFAULT_DURATION = 120
+
 // Keyed to match the stored working_hours format (3-letter, mon–sun), indexed
 // by Date.getDay() where 0 = Sunday.
 export const DAY_NAMES = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const

@@ -8,6 +8,7 @@ import { downloadReservationIcs } from "./ics"
 import { bookStrings } from "./strings"
 import {
   DAY_NAMES,
+  DEFAULT_DURATION,
   generateTimeSlots,
   localDateKey,
   MIN_DURATION,
@@ -53,7 +54,7 @@ export function BookModal({
     return d
   })
   const [selectedTime, setSelectedTime] = useState<string | null>(initialTime ?? null)
-  const [durationMinutes, setDurationMinutes] = useState(120)
+  const [durationMinutes, setDurationMinutes] = useState(DEFAULT_DURATION)
   const [guestCount, setGuestCount] = useState(() =>
     initialGuests ? Math.min(initialGuests, table.capacity) : 2,
   )

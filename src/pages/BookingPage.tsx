@@ -9,7 +9,7 @@ import { FloorSlotPicker } from "@/features/reservation/FloorSlotPicker"
 import { LoginCtaModal } from "@/features/reservation/LoginCtaModal"
 import { FloorPlanSkeleton } from "@/features/reservation/BookingSkeleton"
 import { fetchSlotAvailability } from "@/features/reservation/api"
-import { localDateKey } from "@/features/reservation/utils"
+import { DEFAULT_DURATION, localDateKey } from "@/features/reservation/utils"
 import { bookStrings } from "@/features/reservation/strings"
 import { useBookingData } from "@/features/reservation/hooks/useBookingData"
 import { useFloorSubscription } from "@/features/reservation/hooks/useFloorSubscription"
@@ -86,7 +86,9 @@ export function BookingPage() {
   useEffect(() => {
     if (!public_restaurant_id || !slotTime) return
     let cancelled = false
-    fetchSlotAvailability(public_restaurant_id, localDateKey(slotDate), slotTime)
+    // Probe the same default duration the booking modal opens with, so a table's
+    // free/taken state on the map matches what the modal will accept.
+    fetchSlotAvailability(public_restaurant_id, localDateKey(slotDate), slotTime, DEFAULT_DURATION)
       .then((a) => {
         if (!cancelled) setAvailability(a)
       })

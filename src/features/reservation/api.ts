@@ -1,6 +1,7 @@
 import { apiFetch } from "@/api/client"
 import type { Table } from "@/types/api/types.gen"
 import type { UpcomingReservation } from "@/features/waiter-order-view/data/waiterTypes"
+import { DEFAULT_DURATION } from "./utils"
 
 // Turns a DRF error body into a human message: a string `detail`, otherwise the
 // first field error, falling back to a generic message — never raw JSON.
@@ -116,7 +117,7 @@ export async function fetchSlotAvailability(
   restaurantId: string,
   date: string,
   time: string,
-  duration = 120,
+  duration = DEFAULT_DURATION,
 ): Promise<Record<string, boolean>> {
   const params = new URLSearchParams({
     restaurant: restaurantId,
