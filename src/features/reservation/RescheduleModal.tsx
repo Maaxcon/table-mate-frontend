@@ -34,7 +34,63 @@ interface RescheduleModalProps {
   onSuccess: () => void
 }
 
-export function RescheduleModal({
+// Loads restaurant settings when the caller doesn't supply them (e.g. the
+// cabinet passes workingHours=null), then renders the form only once the
+// timezone is known — so the form's tz-derived initial state isn't first
+// computed in the browser's zone and then stuck.
+export function RescheduleModal(props: RescheduleModalProps) {
+  const { workingHours, timeZone, restaurantId, onClose } = props
+  const [fetched, setFetched] = useState<{
+    workingHours: Record<string, WorkingHoursDay> | null
+    timeZone: string | null
+  } | null>(null)
+
+  const needsSettings = !workingHours && !!restaurantId
+
+  useEffect(() => {
+    if (!needsSettings || !restaurantId) return
+    let cancelled = false
+    fetchRestaurantSettings(restaurantId)
+      .then((s) => {
+        if (!cancelled) setFetched({ workingHours: s.working_hours, timeZone: s.timezone })
+      })
+      .catch(() => {
+        if (!cancelled) setFetched({ workingHours: null, timeZone: null })
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [needsSettings, restaurantId])
+
+  if (needsSettings && !fetched) {
+    return (
+      <div
+        className="book-overlay"
+        role="presentation"
+        onClick={(e) => {
+          if (e.target === e.currentTarget) onClose()
+        }}
+      >
+        <div className="book-modal" role="dialog" aria-modal="true" aria-busy="true">
+          <p className="book-modal__empty">{bookStrings.loading}</p>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <RescheduleForm
+      {...props}
+      workingHours={workingHours ?? fetched?.workingHours ?? null}
+      timeZone={timeZone ?? fetched?.timeZone ?? null}
+    />
+  )
+}
+
+// Inner form. By the time it mounts, workingHours/timeZone are resolved (from
+// props or the wrapper's fetch), so its tz-derived initial state — snapped start
+// time and duration — is computed in the correct zone.
+function RescheduleForm({
   publicId,
   tableNumber,
   tablePublicId,
@@ -43,7 +99,6 @@ export function RescheduleModal({
   currentEnd,
   currentGuests,
   tableCapacity,
-  restaurantId,
   workingHours,
   timeZone,
   excludeReservationIds,
@@ -52,27 +107,7 @@ export function RescheduleModal({
   onClose,
   onSuccess,
 }: RescheduleModalProps) {
-  const [internalWorkingHours, setInternalWorkingHours] = useState<Record<
-    string,
-    WorkingHoursDay
-  > | null>(null)
-  const [internalTimeZone, setInternalTimeZone] = useState<string | null>(null)
-
-  useEffect(() => {
-    if (!workingHours && restaurantId) {
-      fetchRestaurantSettings(restaurantId)
-        .then((settings) => {
-          setInternalWorkingHours(settings.working_hours)
-          setInternalTimeZone(settings.timezone)
-        })
-        .catch(() => {
-          setInternalWorkingHours(null)
-          setInternalTimeZone(null)
-        })
-    }
-  }, [workingHours, restaurantId])
-
-  const effectiveTimeZone = timeZone ?? internalTimeZone
+  const effectiveTimeZone = timeZone ?? null
 
   const currentStartTime = formatTimeInTz(currentStart, effectiveTimeZone)
   const currentEndTime = formatTimeInTz(currentEnd, effectiveTimeZone)
@@ -112,7 +147,7 @@ export function RescheduleModal({
   }, [tablePublicId, dateStr, publicId, excludeReservationIds])
 
   const dayName = DAY_NAMES[parsedDate.getDay()]
-  const dayConfig = workingHours?.[dayName] || internalWorkingHours?.[dayName]
+  const dayConfig = workingHours?.[dayName]
 
   const timeSlots = useMemo(() => {
     if (availableSlots) return availableSlots
