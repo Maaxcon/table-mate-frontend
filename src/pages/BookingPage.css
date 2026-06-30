@@ -1,7 +1,12 @@
 .bp {
+  /* width:100% stops the auto margins from shrink-wrapping the page to its
+     content width inside the flex #root (which left a content-dependent side
+     gutter); max-width still caps + centers it on desktop. */
+  width: 100%;
   max-width: 900px;
   margin: 0 auto;
   padding: 0 16px 24px;
+  box-sizing: border-box;
 }
 
 .bp__topbar {
@@ -76,16 +81,16 @@
   }
 }
 
-/* On phones shrink the page side gutter so the table list runs nearly edge to
-   edge; the topbar still bleeds full width. */
+/* On phones keep only a slim, consistent side gutter so the list runs nearly
+   edge to edge while cards stay off the very screen edge. */
 @media (max-width: 640px) {
   .bp {
-    padding-left: 8px;
-    padding-right: 8px;
+    padding-left: 10px;
+    padding-right: 10px;
   }
   .bp__topbar {
-    margin-left: -8px;
-    margin-right: -8px;
+    margin-left: -10px;
+    margin-right: -10px;
   }
 }
 
