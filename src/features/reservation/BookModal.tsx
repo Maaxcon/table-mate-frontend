@@ -9,6 +9,7 @@ import { bookStrings } from "./strings"
 import {
   DAY_NAMES,
   DEFAULT_DURATION,
+  DEFAULT_GUESTS,
   generateTimeSlots,
   localDateKey,
   MIN_DURATION,
@@ -56,7 +57,7 @@ export function BookModal({
   const [selectedTime, setSelectedTime] = useState<string | null>(initialTime ?? null)
   const [durationMinutes, setDurationMinutes] = useState(DEFAULT_DURATION)
   const [guestCount, setGuestCount] = useState(() =>
-    initialGuests ? Math.min(initialGuests, table.capacity) : 2,
+    initialGuests ? Math.min(initialGuests, table.capacity) : DEFAULT_GUESTS,
   )
   const [notes, setNotes] = useState("")
   const [submitting, setSubmitting] = useState(false)

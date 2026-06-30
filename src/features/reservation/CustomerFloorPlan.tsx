@@ -5,6 +5,7 @@ import type { FloorTable, UpcomingReservation } from "@/features/waiter-order-vi
 import { getTableVisualStatus } from "@/features/waiter-order-view/data/waiterTypes"
 import type { Zone } from "@/features/reservation/api"
 import { bookStrings } from "@/features/reservation/strings"
+import { DEFAULT_GUESTS } from "@/features/reservation/utils"
 import "./CustomerFloorPlan.css"
 
 interface CustomerFloorPlanProps {
@@ -114,7 +115,7 @@ export function CustomerFloorPlan({
   onSelect,
   upcomingReservations = [],
   slotAvailability = null,
-  guests = 1,
+  guests = DEFAULT_GUESTS,
 }: CustomerFloorPlanProps) {
   const [currentTime, setCurrentTime] = useState(new Date())
   const [onlyFree, setOnlyFree] = useState(false)

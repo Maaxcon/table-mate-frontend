@@ -7,6 +7,10 @@ export const MIN_DURATION = 30
 // could mark a slot free/taken on a different window than the modal validates.
 export const DEFAULT_DURATION = 120
 
+// Default party size — shared across the floor picker, the floor plan's capacity
+// filter and the booking modal so they all start from the same number.
+export const DEFAULT_GUESTS = 2
+
 // Keyed to match the stored working_hours format (3-letter, mon–sun), indexed
 // by Date.getDay() where 0 = Sunday.
 export const DAY_NAMES = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const

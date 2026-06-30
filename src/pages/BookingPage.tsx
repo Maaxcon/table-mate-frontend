@@ -9,7 +9,7 @@ import { FloorSlotPicker } from "@/features/reservation/FloorSlotPicker"
 import { LoginCtaModal } from "@/features/reservation/LoginCtaModal"
 import { FloorPlanSkeleton } from "@/features/reservation/BookingSkeleton"
 import { fetchSlotAvailability } from "@/features/reservation/api"
-import { DEFAULT_DURATION, localDateKey } from "@/features/reservation/utils"
+import { DEFAULT_DURATION, DEFAULT_GUESTS, localDateKey } from "@/features/reservation/utils"
 import { bookStrings } from "@/features/reservation/strings"
 import { useBookingData } from "@/features/reservation/hooks/useBookingData"
 import { useFloorSubscription } from "@/features/reservation/hooks/useFloorSubscription"
@@ -66,7 +66,7 @@ export function BookingPage() {
     return d
   })
   const [slotTime, setSlotTime] = useState<string | null>(null)
-  const [slotGuests, setSlotGuests] = useState(2)
+  const [slotGuests, setSlotGuests] = useState(DEFAULT_GUESTS)
   const [availability, setAvailability] = useState<Record<string, boolean> | null>(null)
   const [availabilityNonce, setAvailabilityNonce] = useState(0)
 
