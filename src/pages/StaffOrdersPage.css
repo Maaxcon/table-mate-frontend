@@ -2,6 +2,14 @@
   display: flex;
   flex-direction: column;
   height: 100svh;
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+.staff-orders__body {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  flex: 1;
   min-height: 0;
   overflow: hidden;
 }

@@ -19,6 +19,7 @@ import { BatchColumn } from "../../components/BatchColumn"
 import { CompletedColumn } from "../../components/CompletedColumn"
 import { NotificationsPanel } from "../../components/NotificationsPanel"
 import { KanbanFooter } from "../../components/KanbanFooter"
+import { useNotificationStream } from "@/features/notification-stream/hooks/useNotificationStream"
 
 function useCurrentTime(): string {
   const [time, setTime] = useState(() =>
@@ -47,6 +48,7 @@ function useCurrentTime(): string {
 
 export function KitchenKanbanPage() {
   const currentTime = useCurrentTime()
+  const { isConnected } = useNotificationStream()
   const [tick, setTick] = useState(0)
   const [tickets, setTickets] = useState<KanbanTicket[]>([])
   const [completed, setCompleted] = useState<KanbanTicket[]>([])
@@ -200,7 +202,7 @@ export function KitchenKanbanPage() {
   if (error) {
     return (
       <div className="kanban">
-        <KanbanHeader currentTime={currentTime} />
+        <KanbanHeader currentTime={currentTime} isConnected={isConnected} />
         <div className="kanban__error">{error}</div>
       </div>
     )
@@ -209,7 +211,7 @@ export function KitchenKanbanPage() {
   if (loading) {
     return (
       <div className="kanban">
-        <KanbanHeader currentTime={currentTime} />
+        <KanbanHeader currentTime={currentTime} isConnected={isConnected} />
         <div className="kanban__loading">Loading tickets...</div>
       </div>
     )
@@ -217,7 +219,7 @@ export function KitchenKanbanPage() {
 
   return (
     <div className="kanban">
-      <KanbanHeader currentTime={currentTime} />
+      <KanbanHeader currentTime={currentTime} isConnected={isConnected} />
 
       <div className="kanban__toast-region" role="status" aria-live="polite">
         {mutationError && <div className="kanban__toast">{mutationError}</div>}
