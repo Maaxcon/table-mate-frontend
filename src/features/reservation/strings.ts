@@ -95,6 +95,11 @@ export const bookStrings = {
   myBookings: {
     title: "Мої броні",
     empty: "Броней поки немає.",
+    emptyCta: "Забронювати стіл",
+    bookCta: "Забронювати стіл",
+    tzNote: (tz: string) => `Час показано за часом ресторану (${tz})`,
+    pastShow: (n: number) => `Показати минулі (${n})`,
+    pastHide: "Сховати минулі",
     cancelFailed: "Не вдалося скасувати",
     status: {
       pending: "Очікує",

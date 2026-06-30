@@ -246,6 +246,7 @@ export function BookingPage() {
               workingHours={workingHours}
               timeZone={timezone}
               onRefresh={reloadReservations}
+              onBrowseTables={() => setTab("floor")}
             />
           ))}
       </div>
