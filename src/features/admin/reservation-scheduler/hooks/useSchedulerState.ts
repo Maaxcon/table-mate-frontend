@@ -1,5 +1,6 @@
 import { useCallback, useReducer } from "react"
 import type { PendingChange, SchedulerReservation } from "../types"
+import { isoToDateKey } from "../types"
 
 export interface SchedulerState {
   dates: string[]
@@ -38,9 +39,10 @@ function toHHMM(iso: string): string {
   return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`
 }
 
-function toDateKey(iso: string): string {
-  const d = new Date(iso)
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
+function localToISOString(dateStr: string, timeHHMM: string): string {
+  const [y, m, d] = dateStr.split("-").map(Number)
+  const [h, min] = timeHHMM.split(":").map(Number)
+  return new Date(y, m - 1, d, h, min, 0, 0).toISOString()
 }
 
 function applyChange(
@@ -53,8 +55,8 @@ function applyChange(
       ...r,
       table: change.new_table_id,
       table_number: change.new_table_number,
-      start_at: `${change.new_date}T${change.new_start_time}:00`,
-      end_at: `${change.new_date}T${change.new_end_time}:00`,
+      start_at: localToISOString(change.new_date, change.new_start_time),
+      end_at: localToISOString(change.new_date, change.new_end_time),
     }
   })
 }
@@ -69,12 +71,16 @@ function reducer(state: SchedulerState, action: Action): SchedulerState {
       const existing = state.reservations.find((r) => r.public_id === action.reservationId)
       if (!existing) return state
 
+      const existingChange = state.pendingChanges.find(
+        (c) => c.reservation_id === action.reservationId,
+      )
+
       const change: PendingChange = {
         reservation_id: action.reservationId,
-        original_table: existing.table,
-        original_table_number: existing.table_number,
-        original_start_at: existing.start_at,
-        original_end_at: existing.end_at,
+        original_table: existingChange?.original_table ?? existing.table,
+        original_table_number: existingChange?.original_table_number ?? existing.table_number,
+        original_start_at: existingChange?.original_start_at ?? existing.start_at,
+        original_end_at: existingChange?.original_end_at ?? existing.end_at,
         new_table_id: action.newTableId,
         new_table_number: action.newTableNumber,
         new_date: action.newDate,
@@ -112,33 +118,45 @@ function reducer(state: SchedulerState, action: Action): SchedulerState {
       const target = state.reservations.find((r) => r.public_id === action.reservationId)
       if (!target) return state
 
-      const startDate = new Date(target.start_at)
-      const endDate = new Date(target.end_at)
-      let newStart = startDate
-      let newEnd = endDate
+      const oldStart = new Date(target.start_at)
+      const oldEnd = new Date(target.end_at)
+      const [h, m] = action.newTime.split(":").map(Number)
+
+      let newStart: Date
+      let newEnd: Date
 
       if (action.edge === "start") {
-        const [h, m] = action.newTime.split(":").map(Number)
-        newStart = new Date(startDate)
-        newStart.setHours(h, m, 0, 0)
-        if (newStart >= endDate) return state
+        newStart = new Date(
+          oldStart.getFullYear(),
+          oldStart.getMonth(),
+          oldStart.getDate(),
+          h,
+          m,
+          0,
+          0,
+        )
+        newEnd = oldEnd
+        if (newStart >= oldEnd) return state
       } else {
-        const [h, m] = action.newTime.split(":").map(Number)
-        newEnd = new Date(endDate)
-        newEnd.setHours(h, m, 0, 0)
-        if (newEnd <= startDate) return state
+        newStart = oldStart
+        newEnd = new Date(oldEnd.getFullYear(), oldEnd.getMonth(), oldEnd.getDate(), h, m, 0, 0)
+        if (newEnd <= oldStart) return state
       }
 
-      const dateKey = toDateKey(newStart.toISOString())
+      const dateKey = isoToDateKey(newStart.toISOString())
       const startHHMM = toHHMM(newStart.toISOString())
       const endHHMM = toHHMM(newEnd.toISOString())
 
+      const existingChange = state.pendingChanges.find(
+        (c) => c.reservation_id === action.reservationId,
+      )
+
       const change: PendingChange = {
         reservation_id: action.reservationId,
-        original_table: target.table,
-        original_table_number: target.table_number,
-        original_start_at: target.start_at,
-        original_end_at: target.end_at,
+        original_table: existingChange?.original_table ?? target.table,
+        original_table_number: existingChange?.original_table_number ?? target.table_number,
+        original_start_at: existingChange?.original_start_at ?? target.start_at,
+        original_end_at: existingChange?.original_end_at ?? target.end_at,
         new_table_id: target.table,
         new_table_number: target.table_number,
         new_date: dateKey,
