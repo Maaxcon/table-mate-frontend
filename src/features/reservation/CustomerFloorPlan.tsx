@@ -182,19 +182,26 @@ export function CustomerFloorPlan({
       tables.map((t) => {
         let tone: "free" | "reserved" | "occupied"
         let label: string
+        let bookable: boolean
 
         if (slotAvailability) {
           if (guests > t.capacity) {
             tone = "occupied"
             label = bookStrings.floorPlan.statusSmall
+            bookable = false
           } else if (slotAvailability[t.public_id]) {
             tone = "free"
             label = bookStrings.floorPlan.status.free
+            bookable = true
           } else {
             tone = "reserved"
             label = bookStrings.floorPlan.statusBooked
+            bookable = false
           }
         } else {
+          // Availability unknown (loading or the endpoint failed): show the
+          // now-based status for color, but keep tables clickable — occupied
+          // *now* doesn't preclude a future booking, and the modal validates.
           const ft: FloorTable = {
             public_id: t.public_id,
             table_number: t.table_number,
@@ -208,9 +215,10 @@ export function CustomerFloorPlan({
           }
           tone = getTableVisualStatus(ft, upcomingReservations, currentTime)
           label = bookStrings.floorPlan.status[tone] ?? tone
+          bookable = true
         }
 
-        return { table: t, tone, label, bookable: tone === "free" }
+        return { table: t, tone, label, bookable }
       }),
     [tables, slotAvailability, guests, upcomingReservations, currentTime],
   )
