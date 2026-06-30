@@ -51,6 +51,7 @@ export function useSchedulerData(dates: string[]): UseSchedulerDataReturn {
               public_number: t.public_number,
               capacity: t.capacity,
               zone: t.zone,
+              active: t.active,
             })),
         )
         setReservations(reservationsData)
