@@ -134,6 +134,12 @@
   color: var(--color-primary);
 }
 
+.bp__floor {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
 .bp__error {
   display: flex;
   flex-direction: column;

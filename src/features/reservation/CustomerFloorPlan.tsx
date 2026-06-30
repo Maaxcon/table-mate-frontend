@@ -15,6 +15,10 @@ interface CustomerFloorPlanProps {
   selectedId: string | null
   onSelect: (table: Table) => void
   upcomingReservations?: UpcomingReservation[]
+  // Per-table availability for the slot the guest picked (table public_id -> free).
+  // When present, statuses reflect that slot instead of the current moment.
+  slotAvailability?: Record<string, boolean> | null
+  guests?: number
 }
 
 // Footprint reserved per table (table box + the seat ring around it), used to
@@ -109,6 +113,8 @@ export function CustomerFloorPlan({
   selectedId,
   onSelect,
   upcomingReservations = [],
+  slotAvailability = null,
+  guests = 1,
 }: CustomerFloorPlanProps) {
   const [currentTime, setCurrentTime] = useState(new Date())
   const [onlyFree, setOnlyFree] = useState(false)
@@ -163,30 +169,46 @@ export function CustomerFloorPlan({
 
   const scale = viewportWidth > 0 ? Math.min(1, viewportWidth / contentWidth) : 1
 
-  const statusLabel: Record<string, string> = { ...bookStrings.floorPlan.status }
-
-  // Each table paired with its live visual status, reused by both the desktop
-  // map and the mobile card list.
+  // Each table paired with a visual tone (free/reserved/occupied — drives the
+  // colors), a status label, and whether it can be booked for the chosen slot.
+  // With slot availability we reflect that slot; otherwise we fall back to the
+  // current-moment status while it loads.
   const tableViews = useMemo(
     () =>
       tables.map((t) => {
-        const ft: FloorTable = {
-          public_id: t.public_id,
-          table_number: t.table_number,
-          capacity: t.capacity,
-          shape: t.shape ?? "rectangle",
-          is_occupied: t.is_occupied ?? false,
-          position_x: t.position_x ?? null,
-          position_y: t.position_y ?? null,
-          active: t.active ?? true,
-          zone: t.zone ?? null,
+        let tone: "free" | "reserved" | "occupied"
+        let label: string
+
+        if (slotAvailability) {
+          if (guests > t.capacity) {
+            tone = "occupied"
+            label = bookStrings.floorPlan.statusSmall
+          } else if (slotAvailability[t.public_id]) {
+            tone = "free"
+            label = bookStrings.floorPlan.status.free
+          } else {
+            tone = "reserved"
+            label = bookStrings.floorPlan.statusBooked
+          }
+        } else {
+          const ft: FloorTable = {
+            public_id: t.public_id,
+            table_number: t.table_number,
+            capacity: t.capacity,
+            shape: t.shape ?? "rectangle",
+            is_occupied: t.is_occupied ?? false,
+            position_x: t.position_x ?? null,
+            position_y: t.position_y ?? null,
+            active: t.active ?? true,
+            zone: t.zone ?? null,
+          }
+          tone = getTableVisualStatus(ft, upcomingReservations, currentTime)
+          label = bookStrings.floorPlan.status[tone] ?? tone
         }
-        return {
-          table: t,
-          visualStatus: getTableVisualStatus(ft, upcomingReservations, currentTime),
-        }
+
+        return { table: t, tone, label, bookable: tone === "free" }
       }),
-    [tables, upcomingReservations, currentTime],
+    [tables, slotAvailability, guests, upcomingReservations, currentTime],
   )
 
   // Stable order for the mobile list so it never feels shuffled between renders.
@@ -200,13 +222,8 @@ export function CustomerFloorPlan({
     [tableViews],
   )
 
-  const freeCount = useMemo(
-    () => tableViews.filter((v) => v.visualStatus === "free").length,
-    [tableViews],
-  )
-  const visibleTableViews = onlyFree
-    ? sortedTableViews.filter((v) => v.visualStatus === "free")
-    : sortedTableViews
+  const freeCount = useMemo(() => tableViews.filter((v) => v.bookable).length, [tableViews])
+  const visibleTableViews = onlyFree ? sortedTableViews.filter((v) => v.bookable) : sortedTableViews
 
   return (
     <div className="c-floor-plan">
@@ -251,18 +268,20 @@ export function CustomerFloorPlan({
             <p className="c-floor-plan__empty">{bookStrings.floorPlan.noFree}</p>
           ) : (
             <ul className="c-floor-plan__list">
-              {visibleTableViews.map(({ table, visualStatus }) => (
+              {visibleTableViews.map(({ table, tone, label, bookable }) => (
                 <li key={table.public_id}>
                   <button
                     type="button"
                     className={[
                       "c-floor-plan__card",
-                      `c-floor-plan__card--${visualStatus}`,
+                      `c-floor-plan__card--${tone}`,
                       selectedId === table.public_id ? "c-floor-plan__card--selected" : "",
                     ]
                       .filter(Boolean)
                       .join(" ")}
                     onClick={() => onSelect(table)}
+                    disabled={!bookable}
+                    aria-label={`${bookStrings.floorPlan.tableShort} ${table.table_number}, ${bookStrings.floorPlan.seats(table.capacity)}, ${label}`}
                   >
                     <span className="c-floor-plan__card-chip">
                       <span className="c-floor-plan__card-chip-label">
@@ -277,11 +296,13 @@ export function CustomerFloorPlan({
                     </span>
 
                     <span
-                      className={`c-floor-plan__table-badge c-floor-plan__table-badge--${visualStatus} c-floor-plan__card-badge`}
+                      className={`c-floor-plan__table-badge c-floor-plan__table-badge--${tone} c-floor-plan__card-badge`}
                     >
-                      {statusLabel[visualStatus] ?? visualStatus.toUpperCase()}
+                      {label}
                     </span>
-                    <LuChevronRight className="c-floor-plan__card-chevron" aria-hidden="true" />
+                    {bookable && (
+                      <LuChevronRight className="c-floor-plan__card-chevron" aria-hidden="true" />
+                    )}
                   </button>
                 </li>
               ))}
@@ -302,13 +323,13 @@ export function CustomerFloorPlan({
               transform: `scale(${scale})`,
             }}
           >
-            {tableViews.map(({ table, visualStatus }) => (
+            {tableViews.map(({ table, tone, label, bookable }) => (
               <button
                 key={table.public_id}
                 type="button"
                 className={[
                   "c-floor-plan__table",
-                  `c-floor-plan__table--${visualStatus}`,
+                  `c-floor-plan__table--${tone}`,
                   `c-floor-plan__table--${table.shape}`,
                   selectedId === table.public_id ? "c-floor-plan__table--selected" : "",
                 ]
@@ -319,14 +340,13 @@ export function CustomerFloorPlan({
                   top: (table.position_y ?? 0) + offsetY,
                 }}
                 onClick={() => onSelect(table)}
+                disabled={!bookable}
               >
                 <TableSeats capacity={table.capacity} shape={table.shape ?? "rectangle"} />
 
                 <span className="c-floor-plan__surface">
-                  <span
-                    className={`c-floor-plan__table-badge c-floor-plan__table-badge--${visualStatus}`}
-                  >
-                    {statusLabel[visualStatus] ?? visualStatus.toUpperCase()}
+                  <span className={`c-floor-plan__table-badge c-floor-plan__table-badge--${tone}`}>
+                    {label}
                   </span>
 
                   <span className="c-floor-plan__table-number">{table.table_number}</span>

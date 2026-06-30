@@ -1,0 +1,144 @@
+import { useEffect, useMemo } from "react"
+import { LuMinus, LuPlus } from "react-icons/lu"
+import type { WorkingHoursDay } from "./api"
+import { bookStrings } from "./strings"
+import { DAY_NAMES, generateTimeSlots, localDateKey } from "./utils"
+import "./FloorSlotPicker.css"
+
+interface FloorSlotPickerProps {
+  workingHours: Record<string, WorkingHoursDay> | null
+  date: Date
+  time: string | null
+  guests: number
+  onChange: (next: { date?: Date; time?: string | null; guests?: number }) => void
+}
+
+const MAX_GUESTS = 20
+
+// Date + time + guests selector that sits above the floor plan so table statuses
+// reflect the slot the guest actually wants, not "right now".
+export function FloorSlotPicker({
+  workingHours,
+  date,
+  time,
+  guests,
+  onChange,
+}: FloorSlotPickerProps) {
+  const today = useMemo(() => {
+    const d = new Date()
+    d.setHours(0, 0, 0, 0)
+    return d
+  }, [])
+
+  const dates = useMemo(() => {
+    const days: Date[] = []
+    for (let i = 0; i < 14; i++) {
+      const d = new Date(today)
+      d.setDate(d.getDate() + i)
+      days.push(d)
+    }
+    return days
+  }, [today])
+
+  const dayConfig = workingHours?.[DAY_NAMES[date.getDay()]]
+  const timeSlots = useMemo(() => generateTimeSlots(date, dayConfig), [date, dayConfig])
+
+  // Keep a valid time selected: pick the first open slot whenever the current
+  // one is gone (e.g. after switching to a different day).
+  useEffect(() => {
+    if (timeSlots.length === 0) {
+      if (time !== null) onChange({ time: null })
+    } else if (!time || !timeSlots.includes(time)) {
+      onChange({ time: timeSlots[0] })
+    }
+  }, [timeSlots, time, onChange])
+
+  const isSameDay = (a: Date, b: Date) =>
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate()
+
+  return (
+    <div className="c-slot-picker">
+      <div className="c-slot-picker__field">
+        <span className="c-slot-picker__label">{bookStrings.floorPlan.slot.date}</span>
+        <div className="c-slot-picker__chips">
+          {dates.map((d) => {
+            const closed = !workingHours?.[DAY_NAMES[d.getDay()]]
+            const active = isSameDay(d, date)
+            return (
+              <button
+                key={localDateKey(d)}
+                type="button"
+                className={[
+                  "c-slot-picker__chip",
+                  "c-slot-picker__chip--date",
+                  active ? "c-slot-picker__chip--active" : "",
+                  closed ? "c-slot-picker__chip--closed" : "",
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
+                disabled={closed}
+                onClick={() => onChange({ date: d, time: null })}
+              >
+                <span className="c-slot-picker__chip-dow">
+                  {isSameDay(d, today)
+                    ? bookStrings.floorPlan.slot.today
+                    : d.toLocaleDateString("uk-UA", { weekday: "short" })}
+                </span>
+                <span className="c-slot-picker__chip-day">{d.getDate()}</span>
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
+      <div className="c-slot-picker__field">
+        <span className="c-slot-picker__label">{bookStrings.floorPlan.slot.time}</span>
+        {timeSlots.length === 0 ? (
+          <p className="c-slot-picker__empty">{bookStrings.floorPlan.slot.noTimes}</p>
+        ) : (
+          <div className="c-slot-picker__chips">
+            {timeSlots.map((t) => (
+              <button
+                key={t}
+                type="button"
+                className={["c-slot-picker__chip", time === t ? "c-slot-picker__chip--active" : ""]
+                  .filter(Boolean)
+                  .join(" ")}
+                onClick={() => onChange({ time: t })}
+              >
+                {t}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="c-slot-picker__field c-slot-picker__field--guests">
+        <span className="c-slot-picker__label">{bookStrings.floorPlan.slot.guests}</span>
+        <div className="c-slot-picker__guests">
+          <button
+            type="button"
+            className="c-slot-picker__guest-btn"
+            aria-label="−"
+            onClick={() => onChange({ guests: Math.max(1, guests - 1) })}
+            disabled={guests <= 1}
+          >
+            <LuMinus aria-hidden="true" />
+          </button>
+          <span className="c-slot-picker__guest-count">{guests}</span>
+          <button
+            type="button"
+            className="c-slot-picker__guest-btn"
+            aria-label="+"
+            onClick={() => onChange({ guests: Math.min(MAX_GUESTS, guests + 1) })}
+            disabled={guests >= MAX_GUESTS}
+          >
+            <LuPlus aria-hidden="true" />
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}

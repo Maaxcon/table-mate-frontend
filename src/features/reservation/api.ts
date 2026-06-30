@@ -109,6 +109,27 @@ export async function fetchAvailableSlots(
   return res.json() as Promise<Record<string, string[]>>
 }
 
+// Per-table availability for one slot (date + time + duration) across the whole
+// restaurant — one request powering the time-aware floor plan. Returns a map of
+// table public_id -> is the table free for that slot.
+export async function fetchSlotAvailability(
+  restaurantId: string,
+  date: string,
+  time: string,
+  duration = 120,
+): Promise<Record<string, boolean>> {
+  const params = new URLSearchParams({
+    restaurant: restaurantId,
+    date,
+    time,
+    duration: String(duration),
+  })
+  const res = await apiFetch(`/api/reservations/reservations/availability/?${params}`)
+  if (!res.ok) throw new Error("Failed to fetch availability")
+  const data = (await res.json()) as { availability?: Record<string, boolean> }
+  return data.availability ?? {}
+}
+
 // There is no dedicated public endpoint for upcoming reservations yet, so we
 // piggyback on the floor-layout payload and pull the field out. Worth a proper
 // endpoint if the badges ever need their own filtering/pagination.

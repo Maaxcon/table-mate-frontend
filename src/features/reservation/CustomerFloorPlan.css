@@ -69,6 +69,15 @@
   cursor: default;
 }
 
+/* Not bookable for the chosen slot (booked or too small) — clearly muted */
+.c-floor-plan__table:disabled .c-floor-plan__surface {
+  opacity: 0.6;
+}
+
+.c-floor-plan__table:disabled:hover {
+  transform: none;
+}
+
 .c-floor-plan__surface {
   box-sizing: border-box;
   position: relative;
@@ -436,6 +445,15 @@
 
 .c-floor-plan__card:active {
   transform: scale(0.99);
+}
+
+.c-floor-plan__card:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.c-floor-plan__card:disabled:active {
+  transform: none;
 }
 
 .c-floor-plan__card--free {

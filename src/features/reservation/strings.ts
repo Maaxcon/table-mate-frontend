@@ -33,6 +33,15 @@ export const bookStrings = {
     filterAll: "Усі",
     filterFree: "Вільні",
     noFree: "Немає вільних столів",
+    statusBooked: "Зайнято",
+    statusSmall: "Замало місць",
+    slot: {
+      date: "Дата",
+      time: "Час",
+      guests: "Гості",
+      noTimes: "Цього дня немає вільного часу",
+      today: "Сьогодні",
+    },
   },
   modal: {
     title: (table: string) => `Бронь столу ${table}`,

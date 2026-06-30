@@ -23,19 +23,40 @@ interface BookModalProps {
   timeZone: string | null
   onClose: () => void
   onSuccess: () => void
+  // Prefill from the floor-plan slot picker so the guest lands on the slot they
+  // already chose instead of starting over.
+  initialDate?: Date
+  initialTime?: string | null
+  initialGuests?: number
 }
 
-export function BookModal({ table, workingHours, timeZone, onClose, onSuccess }: BookModalProps) {
+export function BookModal({
+  table,
+  workingHours,
+  timeZone,
+  onClose,
+  onSuccess,
+  initialDate,
+  initialTime,
+  initialGuests,
+}: BookModalProps) {
   const today = useMemo(() => {
     const d = new Date()
     d.setHours(0, 0, 0, 0)
     return d
   }, [])
 
-  const [selectedDate, setSelectedDate] = useState(today)
-  const [selectedTime, setSelectedTime] = useState<string | null>(null)
+  const [selectedDate, setSelectedDate] = useState(() => {
+    if (!initialDate) return today
+    const d = new Date(initialDate)
+    d.setHours(0, 0, 0, 0)
+    return d
+  })
+  const [selectedTime, setSelectedTime] = useState<string | null>(initialTime ?? null)
   const [durationMinutes, setDurationMinutes] = useState(120)
-  const [guestCount, setGuestCount] = useState(2)
+  const [guestCount, setGuestCount] = useState(() =>
+    initialGuests ? Math.min(initialGuests, table.capacity) : 2,
+  )
   const [notes, setNotes] = useState("")
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)

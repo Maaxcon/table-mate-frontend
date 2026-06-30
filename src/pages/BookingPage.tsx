@@ -1,12 +1,15 @@
-import { useCallback, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import { LuArrowLeft } from "react-icons/lu"
 import type { Table } from "@/types/api/types.gen"
 import { ActiveBookings } from "@/features/reservation/ActiveBookings"
 import { BookModal } from "@/features/reservation/BookModal"
 import { CustomerFloorPlan } from "@/features/reservation/CustomerFloorPlan"
+import { FloorSlotPicker } from "@/features/reservation/FloorSlotPicker"
 import { LoginCtaModal } from "@/features/reservation/LoginCtaModal"
 import { FloorPlanSkeleton } from "@/features/reservation/BookingSkeleton"
+import { fetchSlotAvailability } from "@/features/reservation/api"
+import { localDateKey } from "@/features/reservation/utils"
 import { bookStrings } from "@/features/reservation/strings"
 import { useBookingData } from "@/features/reservation/hooks/useBookingData"
 import { useFloorSubscription } from "@/features/reservation/hooks/useFloorSubscription"
@@ -55,6 +58,46 @@ export function BookingPage() {
   const [bookModalOpen, setBookModalOpen] = useState(false)
   const [loginCtaOpen, setLoginCtaOpen] = useState(false)
 
+  // Slot the guest is browsing for. Table statuses on the floor reflect this slot
+  // (not "now"), and the booking modal opens prefilled with it.
+  const [slotDate, setSlotDate] = useState(() => {
+    const d = new Date()
+    d.setHours(0, 0, 0, 0)
+    return d
+  })
+  const [slotTime, setSlotTime] = useState<string | null>(null)
+  const [slotGuests, setSlotGuests] = useState(2)
+  const [availability, setAvailability] = useState<Record<string, boolean> | null>(null)
+  const [availabilityNonce, setAvailabilityNonce] = useState(0)
+
+  const handleSlotChange = useCallback(
+    (next: { date?: Date; time?: string | null; guests?: number }) => {
+      // Switching day clears the now-stale availability until the new slot loads.
+      if (next.date !== undefined) {
+        setSlotDate(next.date)
+        setAvailability(null)
+      }
+      if (next.time !== undefined) setSlotTime(next.time)
+      if (next.guests !== undefined) setSlotGuests(next.guests)
+    },
+    [],
+  )
+
+  useEffect(() => {
+    if (!public_restaurant_id || !slotTime) return
+    let cancelled = false
+    fetchSlotAvailability(public_restaurant_id, localDateKey(slotDate), slotTime)
+      .then((a) => {
+        if (!cancelled) setAvailability(a)
+      })
+      .catch(() => {
+        if (!cancelled) setAvailability(null)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [public_restaurant_id, slotDate, slotTime, availabilityNonce])
+
   const filteredTables = selectedZone
     ? tables.filter((t) => t.zone?.public_id === selectedZone)
     : tables
@@ -76,6 +119,7 @@ export function BookingPage() {
     setSelectedTable(null)
     reloadTables()
     reloadReservations()
+    setAvailabilityNonce((n) => n + 1)
   }, [reloadTables, reloadReservations])
 
   const handleTableStatusChanged = useCallback(
@@ -98,6 +142,7 @@ export function BookingPage() {
           start_at: event.start_at,
         },
       ])
+      setAvailabilityNonce((n) => n + 1)
     },
     [setUpcomingReservations],
   )
@@ -105,6 +150,7 @@ export function BookingPage() {
   const handleReservationCancelled = useCallback(
     (event: FloorReservationCancelledEvent) => {
       setUpcomingReservations((prev) => prev.filter((r) => r.public_id !== event.reservation_id))
+      setAvailabilityNonce((n) => n + 1)
     },
     [setUpcomingReservations],
   )
@@ -161,15 +207,26 @@ export function BookingPage() {
               </button>
             </div>
           ) : (
-            <CustomerFloorPlan
-              tables={filteredTables}
-              zones={zones}
-              selectedZone={selectedZone}
-              onZoneChange={setSelectedZone}
-              selectedId={selectedTable?.public_id ?? null}
-              onSelect={handleTableSelect}
-              upcomingReservations={upcomingReservations}
-            />
+            <div className="bp__floor">
+              <FloorSlotPicker
+                workingHours={workingHours}
+                date={slotDate}
+                time={slotTime}
+                guests={slotGuests}
+                onChange={handleSlotChange}
+              />
+              <CustomerFloorPlan
+                tables={filteredTables}
+                zones={zones}
+                selectedZone={selectedZone}
+                onZoneChange={setSelectedZone}
+                selectedId={selectedTable?.public_id ?? null}
+                onSelect={handleTableSelect}
+                upcomingReservations={upcomingReservations}
+                slotAvailability={availability}
+                guests={slotGuests}
+              />
+            </div>
           ))}
 
         {tab === "bookings" &&
@@ -197,6 +254,9 @@ export function BookingPage() {
           table={selectedTable}
           workingHours={workingHours}
           timeZone={timezone}
+          initialDate={slotDate}
+          initialTime={slotTime}
+          initialGuests={slotGuests}
           onClose={() => {
             setBookModalOpen(false)
             setSelectedTable(null)
