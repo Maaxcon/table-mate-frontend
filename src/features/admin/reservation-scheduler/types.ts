@@ -49,6 +49,7 @@ export type SchedulerTable = {
   public_number: string
   capacity: number
   zone?: string
+  active?: boolean
 }
 
 export function isoToDateKey(iso: string): string {
