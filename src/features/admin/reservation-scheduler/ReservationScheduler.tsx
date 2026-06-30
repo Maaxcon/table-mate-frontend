@@ -219,30 +219,34 @@ export function ReservationScheduler() {
     setSaving(true)
     clearConflict()
 
-    const payload = {
-      changes: state.pendingChanges.map((c) => ({
-        reservation_id: c.reservation_id,
-        new_table_id: c.new_table_id,
-        new_date: c.new_date,
-        new_start_time: c.new_start_time,
-        new_end_time: c.new_end_time,
-      })),
-    }
-
-    const result = await batchUpdateReservations(payload)
-
-    if (result.ok) {
-      commitChanges()
-      refetch()
-      toast.success("Reservations updated successfully.")
-    } else {
-      if (result.conflicting_reservation_id) {
-        markConflict(result.conflicting_reservation_id)
+    try {
+      const payload = {
+        changes: state.pendingChanges.map((c) => ({
+          reservation_id: c.reservation_id,
+          new_table_id: c.new_table_id,
+          new_date: c.new_date,
+          new_start_time: c.new_start_time,
+          new_end_time: c.new_end_time,
+        })),
       }
-      toast.error(result.message)
-    }
 
-    setSaving(false)
+      const result = await batchUpdateReservations(payload)
+
+      if (result.ok) {
+        commitChanges()
+        refetch()
+        toast.success("Reservations updated successfully.")
+      } else {
+        if (result.conflicting_reservation_id) {
+          markConflict(result.conflicting_reservation_id)
+        }
+        toast.error(result.message)
+      }
+    } catch {
+      toast.error("Failed to save changes.")
+    } finally {
+      setSaving(false)
+    }
   }, [
     restaurantId,
     state.pendingChanges,
