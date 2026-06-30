@@ -305,6 +305,27 @@
   gap: 0.5rem;
 }
 
+.scheduler__block--active {
+  background: var(--color-active, #d97706);
+  border-color: var(--color-active, #d97706);
+  box-shadow: 0 0 0 1px var(--color-active, #d97706);
+}
+
+.scheduler__block--completed {
+  background: var(--color-completed, #9ca3af);
+  border-color: var(--color-completed, #6b7280);
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.scheduler__block--completed .scheduler__block-content {
+  text-decoration: line-through;
+}
+
+.scheduler__block--completed .scheduler__block-name {
+  text-decoration: line-through;
+}
+
 @keyframes scheduler-pulse {
   0%,
   100% {

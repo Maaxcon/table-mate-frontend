@@ -144,6 +144,9 @@ export function ReservationScheduler() {
       const reservation = state.reservations.find((r) => r.public_id === reservationId)
       if (!reservation) return
 
+      if (reservation.status === "completed") return
+      if (reservation.status === "active" && edge === "start") return
+
       const startX = e.clientX
       const edgeTime = new Date(edge === "start" ? reservation.start_at : reservation.end_at)
       const startLocalHours = edgeTime.getHours()
@@ -162,8 +165,6 @@ export function ReservationScheduler() {
 
         const totalMin = startLocalHours * 60 + startLocalMinutes + dMinute
         const clamped = Math.max(HOUR_START * 60, Math.min(totalMin, HOUR_END * 60 - SLOT_MINUTES))
-        const hh = String(Math.floor(clamped / 60)).padStart(2, "0")
-        const mm = String(clamped % 60).padStart(2, "0")
 
         const currentRes = reservationsRef.current
         const currentChanges = pendingChangesRef.current
@@ -172,16 +173,28 @@ export function ReservationScheduler() {
 
         const curStart = new Date(res.start_at)
         const curEnd = new Date(res.end_at)
+
+        let effectiveClamped = clamped
+        if (res.status === "active" && edge === "end") {
+          const now = new Date()
+          const nowMinutes = now.getHours() * 60 + now.getMinutes()
+          effectiveClamped = Math.max(clamped, nowMinutes + 15)
+        }
+
+        const ehh = String(Math.floor(effectiveClamped / 60)).padStart(2, "0")
+        const emm = String(effectiveClamped % 60).padStart(2, "0")
+
         const proposed = {
           table_id: res.table,
           date: isoToDateKey(res.start_at),
           start_minutes:
-            edge === "start" ? clamped : curStart.getHours() * 60 + curStart.getMinutes(),
-          end_minutes: edge === "end" ? clamped : curEnd.getHours() * 60 + curEnd.getMinutes(),
+            edge === "start" ? effectiveClamped : curStart.getHours() * 60 + curStart.getMinutes(),
+          end_minutes:
+            edge === "end" ? effectiveClamped : curEnd.getHours() * 60 + curEnd.getMinutes(),
         }
         if (checkOverlap(proposed, currentRes, currentChanges, reservationId)) return
 
-        resizeReservation(reservationId, edge, `${hh}:${mm}`)
+        resizeReservation(reservationId, edge, `${ehh}:${emm}`)
       }
 
       const onMouseUp = () => {

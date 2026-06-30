@@ -45,6 +45,13 @@ export function useDragAndDrop({
       if (!activeData || !overData) return
 
       const { reservationId, durationMinutes } = activeData
+
+      const draggedReservation = reservations.find((r) => r.public_id === reservationId)
+      if (
+        draggedReservation &&
+        (draggedReservation.status === "active" || draggedReservation.status === "completed")
+      )
+        return
       const { tableId, date } = overData
 
       const rect = over.rect

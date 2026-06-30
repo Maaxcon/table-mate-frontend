@@ -28,12 +28,15 @@ export function ReservationBlock({
   const left = ((startMinutes - hourStart * 60) / totalMinutes) * 100
   const width = ((endMinutes - startMinutes) / totalMinutes) * 100
 
+  const notEditable = reservation.status === "active" || reservation.status === "completed"
+
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: reservation.public_id,
     data: {
       reservationId: reservation.public_id,
       durationMinutes: endMinutes - startMinutes,
     },
+    disabled: notEditable,
   })
 
   const style: React.CSSProperties = {
@@ -48,6 +51,8 @@ export function ReservationBlock({
     "scheduler__block",
     isConflict && "scheduler__block--conflict",
     isModified && "scheduler__block--modified",
+    reservation.status === "active" && "scheduler__block--active",
+    reservation.status === "completed" && "scheduler__block--completed",
   ]
     .filter(Boolean)
     .join(" ")
@@ -59,38 +64,42 @@ export function ReservationBlock({
 
   return (
     <div ref={setNodeRef} className={classNames} style={style} {...attributes} {...listeners}>
-      <button
-        type="button"
-        data-resize-handle
-        className="scheduler__block-resize-handle scheduler__block-resize-handle--left"
-        aria-label="Resize start"
-        onPointerDown={(e) => {
-          e.stopPropagation()
-        }}
-        onMouseDown={(e) => {
-          e.stopPropagation()
-          onResizeStart(reservation.public_id, "start", e)
-        }}
-      />
+      {reservation.status === "pending" && (
+        <button
+          type="button"
+          data-resize-handle
+          className="scheduler__block-resize-handle scheduler__block-resize-handle--left"
+          aria-label="Resize start"
+          onPointerDown={(e) => {
+            e.stopPropagation()
+          }}
+          onMouseDown={(e) => {
+            e.stopPropagation()
+            onResizeStart(reservation.public_id, "start", e)
+          }}
+        />
+      )}
       <div className="scheduler__block-content">
         <span className="scheduler__block-name">{reservation.customer_name}</span>
         <span className="scheduler__block-meta">
           {reservation.guest_count}p &middot; {durationLabel}
         </span>
       </div>
-      <button
-        type="button"
-        data-resize-handle
-        className="scheduler__block-resize-handle scheduler__block-resize-handle--right"
-        aria-label="Resize end"
-        onPointerDown={(e) => {
-          e.stopPropagation()
-        }}
-        onMouseDown={(e) => {
-          e.stopPropagation()
-          onResizeStart(reservation.public_id, "end", e)
-        }}
-      />
+      {reservation.status !== "completed" && (
+        <button
+          type="button"
+          data-resize-handle
+          className="scheduler__block-resize-handle scheduler__block-resize-handle--right"
+          aria-label="Resize end"
+          onPointerDown={(e) => {
+            e.stopPropagation()
+          }}
+          onMouseDown={(e) => {
+            e.stopPropagation()
+            onResizeStart(reservation.public_id, "end", e)
+          }}
+        />
+      )}
     </div>
   )
 }
