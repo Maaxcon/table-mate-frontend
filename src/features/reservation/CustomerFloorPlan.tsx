@@ -292,7 +292,11 @@ export function CustomerFloorPlan({
                       .join(" ")}
                     onClick={() => onSelect(table)}
                     disabled={!bookable}
-                    aria-label={`${bookStrings.floorPlan.tableShort} ${table.table_number}, ${bookStrings.floorPlan.seats(table.capacity)}, ${label}`}
+                    aria-label={bookStrings.floorPlan.tableAria(
+                      table.table_number,
+                      table.capacity,
+                      label,
+                    )}
                   >
                     <span className="c-floor-plan__card-chip">
                       <span className="c-floor-plan__card-chip-label">
@@ -356,6 +360,11 @@ export function CustomerFloorPlan({
                 }}
                 onClick={() => onSelect(table)}
                 disabled={!bookable}
+                aria-label={bookStrings.floorPlan.tableAria(
+                  table.table_number,
+                  table.capacity,
+                  label,
+                )}
               >
                 <TableSeats capacity={table.capacity} shape={table.shape ?? "rectangle"} />
 

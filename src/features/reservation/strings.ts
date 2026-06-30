@@ -31,6 +31,19 @@ export const bookStrings = {
     seats: (n: number) => `${n} міс.`,
     tableShort: "Стіл",
     choose: "Обрати",
+    // Spoken label so screen readers announce a table as one phrase, with the
+    // correct Ukrainian plural for "seat".
+    tableAria: (n: string | number, capacity: number, status: string) => {
+      const m10 = capacity % 10
+      const m100 = capacity % 100
+      const word =
+        m10 === 1 && m100 !== 11
+          ? "місце"
+          : m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)
+            ? "місця"
+            : "місць"
+      return `Стіл ${n}, ${capacity} ${word}, ${status}`
+    },
     filterAll: "Усі",
     filterFree: "Вільні",
     noFree: "Немає вільних столів",
