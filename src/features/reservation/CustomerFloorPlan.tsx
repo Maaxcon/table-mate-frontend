@@ -211,16 +211,27 @@ export function CustomerFloorPlan({
     [tables, slotAvailability, guests, upcomingReservations, currentTime],
   )
 
-  // Stable order for the mobile list so it never feels shuffled between renders.
-  const sortedTableViews = useMemo(
-    () =>
-      [...tableViews].sort((a, b) =>
-        String(a.table.table_number).localeCompare(String(b.table.table_number), undefined, {
-          numeric: true,
-        }),
-      ),
-    [tableViews],
-  )
+  // Mobile order: tables that seat the party first, tightest fit on top (a 6-top
+  // shows before a 12-top), free before booked, then by number. Too-small tables
+  // sink to the bottom so the guest scans the right options first.
+  const sortedTableViews = useMemo(() => {
+    const fits = (capacity: number) => capacity >= guests
+    const byNumber = (a: { table: Table }, b: { table: Table }) =>
+      String(a.table.table_number).localeCompare(String(b.table.table_number), undefined, {
+        numeric: true,
+      })
+
+    return [...tableViews].sort((a, b) => {
+      const aFits = fits(a.table.capacity)
+      const bFits = fits(b.table.capacity)
+      if (aFits !== bFits) return aFits ? -1 : 1
+      if (aFits) {
+        if (a.table.capacity !== b.table.capacity) return a.table.capacity - b.table.capacity
+        if (a.bookable !== b.bookable) return a.bookable ? -1 : 1
+      }
+      return byNumber(a, b)
+    })
+  }, [tableViews, guests])
 
   const freeCount = useMemo(() => tableViews.filter((v) => v.bookable).length, [tableViews])
   const visibleTableViews = onlyFree ? sortedTableViews.filter((v) => v.bookable) : sortedTableViews
