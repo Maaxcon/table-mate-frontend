@@ -245,6 +245,7 @@ export function BookingPage() {
               loading={reservationsLoading}
               workingHours={workingHours}
               timeZone={timezone}
+              restaurantId={public_restaurant_id}
               onRefresh={reloadReservations}
               onBrowseTables={() => setTab("floor")}
             />

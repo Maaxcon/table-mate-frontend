@@ -165,12 +165,15 @@ export async function createReservation(data: {
   return res.json() as Promise<ReservationWithTable>
 }
 
-export async function fetchMyReservations(restaurantId?: string): Promise<ReservationWithTable[]> {
-  let url = "/api/reservations/reservations/my/"
-  if (restaurantId) {
-    url += `?restaurant=${restaurantId}`
-  }
-  const res = await apiFetch(url)
+export async function fetchMyReservations(
+  restaurantId?: string,
+  status?: "past",
+): Promise<ReservationWithTable[]> {
+  const params = new URLSearchParams()
+  if (restaurantId) params.set("restaurant", restaurantId)
+  if (status) params.set("status", status)
+  const qs = params.toString()
+  const res = await apiFetch(`/api/reservations/reservations/my/${qs ? `?${qs}` : ""}`)
   if (!res.ok) throw new Error("Failed to fetch reservations")
   const data = await res.json()
   return data.results ?? data

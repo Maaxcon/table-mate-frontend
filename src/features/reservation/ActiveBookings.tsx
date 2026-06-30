@@ -1,7 +1,7 @@
-import { useCallback, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { LuCalendarPlus, LuClock, LuPencil, LuUsers, LuX } from "react-icons/lu"
 import type { ReservationStatus, ReservationWithTable, WorkingHoursDay } from "./api"
-import { cancelReservation } from "./api"
+import { cancelReservation, fetchMyReservations } from "./api"
 import { CancellationConfirmationModal } from "./CancellationConfirmationModal"
 import { RescheduleModal } from "./RescheduleModal"
 import { bookStrings } from "./strings"
@@ -12,6 +12,7 @@ interface ActiveBookingsProps {
   loading: boolean
   workingHours: Record<string, WorkingHoursDay> | null
   timeZone: string | null
+  restaurantId?: string
   onRefresh: () => void
   onBrowseTables?: () => void
 }
@@ -51,7 +52,6 @@ function getTemporalPhase(startAt: string, endAt: string): TemporalPhase {
 const PHASE_LABELS: Record<TemporalPhase, string> = bookStrings.myBookings.phase
 
 const STATUS_ORDER: ReservationStatus[] = ["pending", "active"]
-const PAST_STATUSES: ReservationStatus[] = ["completed", "cancelled"]
 
 const STATUS_LABELS: Record<ReservationStatus, string> = bookStrings.myBookings.status
 
@@ -65,6 +65,7 @@ export function ActiveBookings({
   loading,
   workingHours,
   timeZone,
+  restaurantId,
   onRefresh,
   onBrowseTables,
 }: ActiveBookingsProps) {
@@ -74,6 +75,20 @@ export function ActiveBookings({
   const [cancelTarget, setCancelTarget] = useState<ReservationWithTable | null>(null)
   const [showPast, setShowPast] = useState(false)
 
+  // History (completed/cancelled) is a separate, lazy-loaded list: the /my/
+  // endpoint only returns active bookings unless asked for ?status=past.
+  const [pastItems, setPastItems] = useState<ReservationWithTable[]>([])
+
+  const loadPast = useCallback(() => {
+    fetchMyReservations(restaurantId, "past")
+      .then((data) => setPastItems([...data].sort(byStartDesc)))
+      .catch(() => setPastItems([]))
+  }, [restaurantId])
+
+  useEffect(() => {
+    loadPast()
+  }, [loadPast])
+
   const handleCancel = useCallback(async () => {
     if (!cancelTarget) return
     setError(null)
@@ -82,22 +97,22 @@ export function ActiveBookings({
       await cancelReservation(cancelTarget.public_id)
       setCancelTarget(null)
       onRefresh()
+      loadPast()
     } catch (err) {
       setError(err instanceof Error ? err.message : bookStrings.myBookings.cancelFailed)
     } finally {
       setActionId(null)
     }
-  }, [cancelTarget, onRefresh])
+  }, [cancelTarget, onRefresh, loadPast])
 
-  const { byStatus, pastItems } = useMemo(() => {
+  const byStatus = useMemo(() => {
     const grouped: Record<string, ReservationWithTable[]> = {}
     for (const s of STATUS_ORDER) {
       const bucket = reservations.filter((r) => r.status === s)
       if (bucket.length === 0) continue
       grouped[s] = bucket.sort(byStartAsc)
     }
-    const past = reservations.filter((r) => PAST_STATUSES.includes(r.status)).sort(byStartDesc)
-    return { byStatus: grouped, pastItems: past }
+    return grouped
   }, [reservations])
 
   const hasActive = Object.keys(byStatus).length > 0
