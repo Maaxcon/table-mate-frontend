@@ -50,6 +50,12 @@ export interface FloorZoneDeletedEvent {
   occurred_at: string
 }
 
+export interface FloorReservationsUpdatedEvent {
+  event_name: "HALL_RESERVATIONS_UPDATED"
+  table_ids: string[]
+  occurred_at: string
+}
+
 export type FloorEvent =
   | FloorTableStatusEvent
   | FloorNewReservationEvent
@@ -58,6 +64,7 @@ export type FloorEvent =
   | FloorZoneCreatedEvent
   | FloorZoneUpdatedEvent
   | FloorZoneDeletedEvent
+  | FloorReservationsUpdatedEvent
 
 interface UseFloorSubscriptionOptions {
   onTableStatusChanged?: (event: FloorTableStatusEvent) => void
@@ -67,6 +74,7 @@ interface UseFloorSubscriptionOptions {
   onZoneCreated?: (event: FloorZoneCreatedEvent) => void
   onZoneUpdated?: (event: FloorZoneUpdatedEvent) => void
   onZoneDeleted?: (event: FloorZoneDeletedEvent) => void
+  onReservationsUpdated?: (event: FloorReservationsUpdatedEvent) => void
   onClose?: () => void
   onError?: (error: Event) => void
 }
@@ -79,6 +87,7 @@ export function useFloorSubscription({
   onZoneCreated,
   onZoneUpdated,
   onZoneDeleted,
+  onReservationsUpdated,
   onClose,
   onError,
   restaurantPublicId,
@@ -96,6 +105,7 @@ export function useFloorSubscription({
     onZoneCreated,
     onZoneUpdated,
     onZoneDeleted,
+    onReservationsUpdated,
     onClose,
     onError,
   })
@@ -109,6 +119,7 @@ export function useFloorSubscription({
       onZoneCreated,
       onZoneUpdated,
       onZoneDeleted,
+      onReservationsUpdated,
       onClose,
       onError,
     }
@@ -120,6 +131,7 @@ export function useFloorSubscription({
     onZoneCreated,
     onZoneUpdated,
     onZoneDeleted,
+    onReservationsUpdated,
     onClose,
     onError,
   ])
@@ -158,6 +170,8 @@ export function useFloorSubscription({
           callbacksRef.current.onZoneUpdated?.(data as FloorZoneUpdatedEvent)
         } else if (data.event_name === "ZONE_DELETED") {
           callbacksRef.current.onZoneDeleted?.(data as FloorZoneDeletedEvent)
+        } else if (data.event_name === "HALL_RESERVATIONS_UPDATED") {
+          callbacksRef.current.onReservationsUpdated?.(data as FloorReservationsUpdatedEvent)
         }
       } catch (err) {
         console.warn("[FloorWS] Failed to parse message:", err)
