@@ -11,7 +11,7 @@ import { useSchedulerState } from "./hooks/useSchedulerState"
 import { useSchedulerData } from "./hooks/useSchedulerData"
 import { useScrollSync } from "./hooks/useScrollSync"
 import { useDragAndDrop } from "./hooks/useDragAndDrop"
-import { checkOverlap } from "./hooks/useOverlapCheck"
+import { checkOverlap, checkOrderingViolation } from "./hooks/useOverlapCheck"
 import { isoToDateKey } from "./types"
 import { DayPanel } from "./DayPanel"
 import { SaveBar } from "./SaveBar"
@@ -63,7 +63,7 @@ function localToISOString(dateStr: string, timeHHMM: string): string {
 
 export function ReservationScheduler() {
   const restaurantId = useAppSelector((state) => state.auth.user?.restaurantId)
-  const { toast } = useToast()
+  const toast = useToast()
 
   const {
     state,
@@ -153,7 +153,10 @@ export function ReservationScheduler() {
     hourEnd,
     slotMinutes: SLOT_MINUTES,
     onMove: moveReservation,
-    onConflict: markConflict,
+    onConflict: (id: string, reason?: string) => {
+      markConflict(id)
+      toast.error(reason ?? "Cannot place reservation here")
+    },
   })
 
   const handleDragEndWithClear = useCallback(
@@ -229,6 +232,9 @@ export function ReservationScheduler() {
         }
         if (checkOverlap(proposed, currentRes, currentChanges, reservationId)) return
 
+        const orderingReason = checkOrderingViolation(proposed, currentRes, reservationId)
+        if (orderingReason) return
+
         resizeReservation(reservationId, edge, `${ehh}:${emm}`)
       }
 
@@ -251,6 +257,13 @@ export function ReservationScheduler() {
           }
           if (checkOverlap(proposed, currentRes, currentChanges, reservationId)) {
             markConflict(reservationId)
+            toast.error("Time slot overlaps with another reservation")
+            return
+          }
+          const orderingReason = checkOrderingViolation(proposed, currentRes, reservationId)
+          if (orderingReason) {
+            markConflict(reservationId)
+            toast.error(orderingReason)
           }
         }
       }
@@ -258,7 +271,7 @@ export function ReservationScheduler() {
       document.addEventListener("mousemove", onMouseMove)
       document.addEventListener("mouseup", onMouseUp)
     },
-    [state.reservations, resizeReservation, markConflict, hourStart, hourEnd],
+    [state.reservations, resizeReservation, markConflict, toast, hourStart, hourEnd],
   )
 
   const handleSave = useCallback(async () => {

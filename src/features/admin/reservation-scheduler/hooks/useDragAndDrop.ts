@@ -1,7 +1,7 @@
 import { useCallback } from "react"
 import type { DragEndEvent } from "@dnd-kit/core"
 import type { SchedulerReservation, SchedulerTable } from "../types"
-import { checkOverlap } from "./useOverlapCheck"
+import { checkOverlap, checkOrderingViolation } from "./useOverlapCheck"
 import type { PendingChange } from "../types"
 
 interface UseDragAndDropOptions {
@@ -19,7 +19,7 @@ interface UseDragAndDropOptions {
     newStartTime: string,
     newEndTime: string,
   ) => void
-  onConflict: (reservationId: string) => void
+  onConflict: (reservationId: string, reason?: string) => void
 }
 
 export function useDragAndDrop({
@@ -96,7 +96,13 @@ export function useDragAndDrop({
       }
 
       if (checkOverlap(proposed, reservations, pendingChanges, reservationId)) {
-        onConflict(reservationId)
+        onConflict(reservationId, "Time slot overlaps with another reservation")
+        return
+      }
+
+      const orderingReason = checkOrderingViolation(proposed, reservations, reservationId)
+      if (orderingReason) {
+        onConflict(reservationId, orderingReason)
         return
       }
 

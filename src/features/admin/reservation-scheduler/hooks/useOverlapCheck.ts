@@ -52,4 +52,24 @@ export function checkOverlap(
   return false
 }
 
+export function checkOrderingViolation(
+  proposed: TimeRange,
+  reservations: SchedulerReservation[],
+  excludeReservationId?: string,
+): string | null {
+  for (const r of reservations) {
+    if (r.public_id === excludeReservationId) continue
+    if (r.status !== "active") continue
+    if (r.table !== proposed.table_id) continue
+    if (!r.opened_at) continue
+    if (isoToDateKey(r.start_at) !== proposed.date) continue
+    const openedAt = new Date(r.opened_at)
+    const openedMinutes = openedAt.getHours() * 60 + openedAt.getMinutes()
+    if (openedMinutes > proposed.start_minutes) {
+      return "Cannot place before a seated party"
+    }
+  }
+  return null
+}
+
 export type { TimeRange }
