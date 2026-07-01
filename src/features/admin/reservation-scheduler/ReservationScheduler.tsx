@@ -11,7 +11,11 @@ import { useSchedulerState } from "./hooks/useSchedulerState"
 import { useSchedulerData } from "./hooks/useSchedulerData"
 import { useScrollSync } from "./hooks/useScrollSync"
 import { useDragAndDrop } from "./hooks/useDragAndDrop"
-import { checkOverlap, checkOrderingViolation } from "./hooks/useOverlapCheck"
+import {
+  checkOverlap,
+  checkOrderingViolation,
+  checkPastTimeViolation,
+} from "./hooks/useOverlapCheck"
 import { isoToDateKey } from "./types"
 import { DayPanel } from "./DayPanel"
 import { SaveBar } from "./SaveBar"
@@ -235,6 +239,9 @@ export function ReservationScheduler() {
         const orderingReason = checkOrderingViolation(proposed, currentRes, reservationId)
         if (orderingReason) return
 
+        const pastReason = checkPastTimeViolation(proposed)
+        if (pastReason) return
+
         resizeReservation(reservationId, edge, `${ehh}:${emm}`)
       }
 
@@ -264,6 +271,12 @@ export function ReservationScheduler() {
           if (orderingReason) {
             markConflict(reservationId)
             toast.error(orderingReason)
+            return
+          }
+          const pastReason = checkPastTimeViolation(proposed)
+          if (pastReason) {
+            markConflict(reservationId)
+            toast.error(pastReason)
           }
         }
       }
