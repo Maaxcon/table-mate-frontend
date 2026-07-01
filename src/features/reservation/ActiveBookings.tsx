@@ -157,7 +157,7 @@ export function ActiveBookings({
           <div className="ab__card-main">
             <div className="ab__card-top">
               <span className="ab__card-table">
-                {bookStrings.myBookings.card.table(r.table_info?.table_number ?? r.table)}
+                {bookStrings.myBookings.card.table(r.table_info?.public_number ?? r.table)}
               </span>
               <span className={`ab__card-status ab__card-status--${statusKey}`}>
                 {STATUS_LABELS[statusKey]}
@@ -204,11 +204,11 @@ export function ActiveBookings({
                   className="ab__action ab__action--calendar"
                   onClick={() =>
                     downloadReservationIcs({
-                      tableNumber: r.table_info?.table_number ?? r.table,
+                      tableNumber: r.table_info?.public_number ?? r.table,
                       startISO: r.start_at,
                       endISO: r.end_at,
                       guests: r.guest_count,
-                      summary: bookStrings.modal.title(r.table_info?.table_number ?? r.table),
+                      summary: bookStrings.modal.title(r.table_info?.public_number ?? r.table),
                       guestsLabel: bookStrings.modal.summary.guests,
                     })
                   }

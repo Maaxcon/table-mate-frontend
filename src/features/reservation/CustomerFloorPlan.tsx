@@ -25,6 +25,8 @@ interface CustomerFloorPlanProps {
 // Footprint reserved per table (table box + the seat ring around it), used to
 // size the canvas so scaling never clips a table or its chairs.
 const TABLE_FOOTPRINT = 210
+// Centre-to-centre spacing between tables in the auto grid (footprint + a gap).
+const GRID_SPACING = 240
 // Breathing room kept between the tables and the canvas edges.
 const CANVAS_PADDING = 28
 // Below this width the spatial floor map shrinks too far to be usable, so we
@@ -130,8 +132,7 @@ export function CustomerFloorPlan({
     return () => clearInterval(id)
   }, [slotAvailability])
 
-  // Tables come positioned in raw backend pixels, so we measure the viewport and
-  // scale the whole canvas down to fit — keeping the spatial layout on any screen.
+  // Measure the viewport so the canvas can be scaled down to fit on any screen.
   const viewportRef = useRef<HTMLDivElement>(null)
   const [viewportWidth, setViewportWidth] = useState(0)
 
@@ -145,30 +146,22 @@ export function CustomerFloorPlan({
     return () => observer.disconnect()
   }, [isMobile])
 
-  // Normalize raw backend positions so the layout always sits inset from the
-  // edges (no tables jammed into the corner) regardless of their coordinates.
-  const { offsetX, offsetY, contentWidth, contentHeight } = useMemo(() => {
-    let minX = Infinity
-    let minY = Infinity
-    let maxRight = 0
-    let maxBottom = 0
-    for (const t of tables) {
-      const x = t.position_x ?? 0
-      const y = t.position_y ?? 0
-      minX = Math.min(minX, x)
-      minY = Math.min(minY, y)
-      maxRight = Math.max(maxRight, x + TABLE_FOOTPRINT)
-      maxBottom = Math.max(maxBottom, y + TABLE_FOOTPRINT)
-    }
-    if (!Number.isFinite(minX)) {
-      minX = 0
-      minY = 0
-    }
+  // The backend no longer stores table coordinates, so lay the tables out in a
+  // tidy auto grid (slightly wider than tall so it fills wide screens nicely).
+  const { positionById, contentWidth, contentHeight } = useMemo(() => {
+    const cols = Math.max(1, Math.round(Math.sqrt(tables.length * 1.6)))
+    const rows = Math.max(1, Math.ceil(tables.length / cols))
+    const positionById = new Map<string, { x: number; y: number }>()
+    tables.forEach((t, i) => {
+      positionById.set(t.public_id, {
+        x: CANVAS_PADDING + (i % cols) * GRID_SPACING,
+        y: CANVAS_PADDING + Math.floor(i / cols) * GRID_SPACING,
+      })
+    })
     return {
-      offsetX: CANVAS_PADDING - minX,
-      offsetY: CANVAS_PADDING - minY,
-      contentWidth: Math.max(maxRight - minX + CANVAS_PADDING * 2, 320),
-      contentHeight: Math.max(maxBottom - minY + CANVAS_PADDING * 2, 280),
+      positionById,
+      contentWidth: (cols - 1) * GRID_SPACING + TABLE_FOOTPRINT + CANVAS_PADDING * 2,
+      contentHeight: (rows - 1) * GRID_SPACING + TABLE_FOOTPRINT + CANVAS_PADDING * 2,
     }
   }, [tables])
 
@@ -205,12 +198,12 @@ export function CustomerFloorPlan({
           // *now* doesn't preclude a future booking, and the modal validates.
           const ft: FloorTable = {
             public_id: t.public_id,
-            table_number: t.table_number,
+            public_number: t.public_number,
             capacity: t.capacity,
-            shape: t.shape ?? "rectangle",
+            shape: "square",
             is_occupied: t.is_occupied ?? false,
-            position_x: t.position_x ?? null,
-            position_y: t.position_y ?? null,
+            position_x: null,
+            position_y: null,
             active: t.active ?? true,
             zone: t.zone ?? null,
           }
@@ -230,7 +223,7 @@ export function CustomerFloorPlan({
   const sortedTableViews = useMemo(() => {
     const fits = (capacity: number) => capacity >= guests
     const byNumber = (a: { table: Table }, b: { table: Table }) =>
-      String(a.table.table_number).localeCompare(String(b.table.table_number), undefined, {
+      String(a.table.public_number).localeCompare(String(b.table.public_number), undefined, {
         numeric: true,
       })
 
@@ -318,7 +311,7 @@ export function CustomerFloorPlan({
                     onClick={() => onSelect(table)}
                     disabled={!bookable}
                     aria-label={bookStrings.floorPlan.tableAria(
-                      table.table_number,
+                      table.public_number,
                       table.capacity,
                       label,
                     )}
@@ -327,7 +320,7 @@ export function CustomerFloorPlan({
                       <span className="c-floor-plan__card-chip-label">
                         {bookStrings.floorPlan.tableShort}
                       </span>
-                      <span className="c-floor-plan__card-chip-num">{table.table_number}</span>
+                      <span className="c-floor-plan__card-chip-num">{table.public_number}</span>
                     </span>
 
                     <span className="c-floor-plan__card-cap">
@@ -367,47 +360,52 @@ export function CustomerFloorPlan({
               transform: `scale(${scale})`,
             }}
           >
-            {tableViews.map(({ table, tone, label, bookable }) => (
-              <button
-                key={table.public_id}
-                type="button"
-                className={[
-                  "c-floor-plan__table",
-                  `c-floor-plan__table--${tone}`,
-                  `c-floor-plan__table--${table.shape}`,
-                  selectedId === table.public_id ? "c-floor-plan__table--selected" : "",
-                ]
-                  .filter(Boolean)
-                  .join(" ")}
-                style={{
-                  left: (table.position_x ?? 0) + offsetX,
-                  top: (table.position_y ?? 0) + offsetY,
-                }}
-                onClick={() => onSelect(table)}
-                disabled={!bookable}
-                aria-label={bookStrings.floorPlan.tableAria(
-                  table.table_number,
-                  table.capacity,
-                  label,
-                )}
-              >
-                <TableSeats capacity={table.capacity} shape={table.shape ?? "rectangle"} />
+            {tableViews.map(({ table, tone, label, bookable }) => {
+              const pos = positionById.get(table.public_id) ?? {
+                x: CANVAS_PADDING,
+                y: CANVAS_PADDING,
+              }
+              return (
+                <button
+                  key={table.public_id}
+                  type="button"
+                  className={[
+                    "c-floor-plan__table",
+                    `c-floor-plan__table--${tone}`,
+                    "c-floor-plan__table--square",
+                    selectedId === table.public_id ? "c-floor-plan__table--selected" : "",
+                  ]
+                    .filter(Boolean)
+                    .join(" ")}
+                  style={{ left: pos.x, top: pos.y }}
+                  onClick={() => onSelect(table)}
+                  disabled={!bookable}
+                  aria-label={bookStrings.floorPlan.tableAria(
+                    table.public_number,
+                    table.capacity,
+                    label,
+                  )}
+                >
+                  <TableSeats capacity={table.capacity} shape="square" />
 
-                <span className="c-floor-plan__surface">
-                  <span className={`c-floor-plan__table-badge c-floor-plan__table-badge--${tone}`}>
-                    {label}
-                  </span>
-
-                  <span className="c-floor-plan__table-number">{table.table_number}</span>
-
-                  <div className="c-floor-plan__table-meta">
-                    <span className="c-floor-plan__table-capacity">
-                      {bookStrings.floorPlan.seats(table.capacity)}
+                  <span className="c-floor-plan__surface">
+                    <span
+                      className={`c-floor-plan__table-badge c-floor-plan__table-badge--${tone}`}
+                    >
+                      {label}
                     </span>
-                  </div>
-                </span>
-              </button>
-            ))}
+
+                    <span className="c-floor-plan__table-number">{table.public_number}</span>
+
+                    <div className="c-floor-plan__table-meta">
+                      <span className="c-floor-plan__table-capacity">
+                        {bookStrings.floorPlan.seats(table.capacity)}
+                      </span>
+                    </div>
+                  </span>
+                </button>
+              )
+            })}
           </div>
         </div>
       )}

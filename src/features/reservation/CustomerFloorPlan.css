@@ -65,6 +65,12 @@
   height: 144px;
 }
 
+/* Square tables: an even box with chairs seated along all four edges. */
+.c-floor-plan__table--square {
+  width: 150px;
+  height: 150px;
+}
+
 .c-floor-plan__table:disabled {
   cursor: default;
 }
@@ -107,6 +113,12 @@
   padding: 0;
   border-radius: 50%;
   gap: 5px;
+}
+
+.c-floor-plan__table--square .c-floor-plan__surface {
+  height: 100%;
+  padding: 12px;
+  gap: 6px;
 }
 
 .c-floor-plan__table--selected .c-floor-plan__surface {

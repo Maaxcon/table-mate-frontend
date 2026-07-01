@@ -20,9 +20,11 @@ import {
 import "./BookModal.css"
 
 interface BookModalProps {
-  table: Table
+  // Only the identity + size is needed, so both a full Table (customer flow) and a
+  // FloorTable (waiter view) can be passed.
+  table: Pick<Table, "public_id" | "public_number" | "capacity">
   workingHours: Record<string, WorkingHoursDay> | null
-  timeZone: string | null
+  timeZone?: string | null
   onClose: () => void
   onSuccess: (data?: ReservationWithTable) => void
   // Prefill from the floor-plan slot picker so the guest lands on the slot they
@@ -256,7 +258,7 @@ export function BookModal({
       reservationRef.current = await createReservation(body)
 
       setSuccess({
-        tableNumber: table.table_number,
+        tableNumber: table.public_number,
         date: localDateKey(selectedDate),
         time: selectedTime,
         endTime: endAt,
@@ -285,7 +287,7 @@ export function BookModal({
     timeZone,
     loadSlots,
     table.public_id,
-    table.table_number,
+    table.public_number,
   ])
 
   // After a successful booking, dismissing must also notify the parent so it can
@@ -396,7 +398,7 @@ export function BookModal({
           <>
             <div className="book-modal__header">
               <h2 className="book-modal__title" id="book-modal-title">
-                {bookStrings.modal.title(table.table_number)}
+                {bookStrings.modal.title(table.public_number)}
               </h2>
               <button className="book-modal__close" onClick={onClose} type="button">
                 &times;
@@ -558,7 +560,7 @@ export function BookModal({
                   <div className="book-modal__summary">
                     <div className="book-modal__summary-row">
                       <span>{bookStrings.modal.summary.table}</span>
-                      <span>#{table.table_number}</span>
+                      <span>#{table.public_number}</span>
                     </div>
                     <div className="book-modal__summary-row">
                       <span>{bookStrings.modal.summary.date}</span>

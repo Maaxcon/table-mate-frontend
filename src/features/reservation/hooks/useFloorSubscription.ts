@@ -145,7 +145,7 @@ export function useFloorSubscription({
       wsRef.current = null
     }
 
-    const params = new URLSearchParams({ token: accessToken })
+    const params = new URLSearchParams({ token: accessToken ?? "" })
     if (restaurantId) params.set("restaurant", restaurantId)
     const ws = new WebSocket(`${env.wsUrl}/floor/?${params}`)
     wsRef.current = ws
