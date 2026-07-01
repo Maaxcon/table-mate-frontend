@@ -5,7 +5,7 @@ import {
   type OverlayDetail,
   type OverlayOrderItem,
   type ReservationItem,
-} from "./waiterTypes"
+} from "./types"
 
 // ── API response shapes ──────────────────────────────────────────────
 interface ReservationApiItem {

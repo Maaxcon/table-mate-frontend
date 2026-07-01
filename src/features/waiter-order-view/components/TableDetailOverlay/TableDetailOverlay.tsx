@@ -1,14 +1,9 @@
 import { useState } from "react"
-import { formatTimeRange } from "../data/waiterTypes"
-import type {
-  FloorTable,
-  ReservationItem,
-  OverlayDetail,
-  VisualTableStatus,
-} from "../data/waiterTypes"
+import { formatTimeRange } from "../../types"
+import type { FloorTable, ReservationItem, OverlayDetail, VisualTableStatus } from "../../types"
 import { getCurrencySymbol } from "@/features/menu/utils"
-import { OrderItemRow } from "./OrderItemRow"
-import { CloseCheckModal } from "./CloseCheckModal"
+import { OrderItemRow } from "../OrderItemRow"
+import { CloseCheckModal } from "../CloseCheckModal"
 import "./TableDetailOverlay.css"
 
 interface TableDetailOverlayProps {

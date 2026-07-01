@@ -1,29 +1,26 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
-import { useHallSubscription } from "./hooks/useHallSubscription"
-import { TopNav } from "./components/TopNav"
-import { FloorPlan } from "./components/FloorPlan"
-import { ReservationSidebar } from "./components/ReservationSidebar"
-import { TableDetailOverlay } from "./components/TableDetailOverlay"
+import { useHallSubscription } from "../../hooks/useHallSubscription"
+import {
+  TopNav,
+  FloorPlan,
+  ReservationSidebar,
+  TableDetailOverlay,
+  OrderCreationModal,
+  ModifyReservationModal,
+  MoveTableModal,
+} from "../../components"
 import { NotificationStreamSidebar } from "@/features/notification-stream/components/NotificationStreamSidebar"
-import { OrderCreationModal } from "./components/OrderCreationModal"
-import { ModifyReservationModal } from "./components/ModifyReservationModal"
-import { MoveTableModal } from "./components/MoveTableModal"
 import { BookModal } from "@/features/reservation/BookModal"
 import { fetchRestaurantSettings } from "@/features/reservation/api"
 import type { WorkingHoursDay, Zone } from "@/features/reservation/api"
-import { useTableActions } from "./hooks/useTableActions"
-import type {
-  FloorTable,
-  ReservationItem,
-  OverlayDetail,
-  UpcomingReservation,
-} from "./data/waiterTypes"
-import { getTableVisualStatus } from "./data/waiterTypes"
-import { fetchOverlayDetail, fetchReservations } from "./data/waiterApi"
+import { useTableActions } from "../../hooks/useTableActions"
+import type { FloorTable, ReservationItem, OverlayDetail, UpcomingReservation } from "../../types"
+import { getTableVisualStatus } from "../../types"
+import { fetchOverlayDetail, fetchReservations } from "../../api"
 import { apiFetch } from "@/api/client"
 import type { LayoutResponse, Table } from "@/types/api"
 import type { LayoutPayload } from "@/features/editor/types"
-import "./WaiterOrderView.css"
+import "./WaiterOrderPage.css"
 
 function mapTableToFloorTable(t: Table): FloorTable {
   const item = t as Table & { shape: string; position_x: number | null; position_y: number | null }
@@ -40,7 +37,7 @@ function mapTableToFloorTable(t: Table): FloorTable {
   }
 }
 
-export function WaiterOrderView() {
+export function WaiterOrderPage() {
   const [selectedTableId, setSelectedTableId] = useState<string | null>(null)
   const [tables, setTables] = useState<FloorTable[]>([])
   const [layoutPayload, setLayoutPayload] = useState<LayoutPayload | null>(null)
@@ -456,3 +453,5 @@ export function WaiterOrderView() {
     </div>
   )
 }
+
+export default WaiterOrderPage

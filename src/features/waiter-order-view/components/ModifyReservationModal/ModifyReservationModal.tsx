@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react"
 import { apiFetch } from "@/api/client"
-import type { ReservationItem } from "../data/waiterTypes"
+import type { ReservationItem } from "../../types"
 import "./ModifyReservationModal.css"
 
 interface ModifyReservationModalProps {

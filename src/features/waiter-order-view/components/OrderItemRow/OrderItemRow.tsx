@@ -1,6 +1,6 @@
 import { StatusChip } from "@/components/StatusChip/StatusChip"
-import type { OverlayOrderItem } from "../data/waiterTypes"
-import { VOID_REASON_LABELS } from "../data/waiterTypes"
+import type { OverlayOrderItem } from "../../types"
+import { VOID_REASON_LABELS } from "../../types"
 import "./OrderItemRow.css"
 
 interface OrderItemRowProps {

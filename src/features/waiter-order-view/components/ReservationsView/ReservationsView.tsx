@@ -1,5 +1,5 @@
-import { formatTimeRange } from "../data/waiterTypes"
-import type { ReservationItem } from "../data/waiterTypes"
+import { formatTimeRange } from "../../types"
+import type { ReservationItem } from "../../types"
 import "./ReservationsView.css"
 
 interface ReservationsViewProps {

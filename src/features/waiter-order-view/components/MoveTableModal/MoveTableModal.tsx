@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { apiFetch } from "@/api/client"
-import type { ReservationItem } from "../data/waiterTypes"
-import "./ModifyReservationModal.css"
+import type { ReservationItem } from "../../types"
+import "../ModifyReservationModal/ModifyReservationModal.css"
 
 interface MoveTableModalProps {
   reservation: ReservationItem

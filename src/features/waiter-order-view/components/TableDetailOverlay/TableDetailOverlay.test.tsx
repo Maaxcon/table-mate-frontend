@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest"
 import { render, screen } from "@testing-library/react"
 import { TableDetailOverlay } from "./TableDetailOverlay"
-import type { FloorTable, OverlayDetail, OverlayOrderItem } from "../data/waiterTypes"
+import type { FloorTable, OverlayDetail, OverlayOrderItem } from "../../types"
 
 function makeTable(overrides: Partial<FloorTable> = {}): FloorTable {
   return {

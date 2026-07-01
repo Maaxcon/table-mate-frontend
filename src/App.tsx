@@ -20,7 +20,7 @@ import StaffSection from "@/features/admin/pages/StaffSection"
 import MenuSection from "@/features/admin/pages/MenuSection"
 import FloorPlanSection from "@/features/editor/FloorPlanSection"
 import { KitchenKanban } from "@/features/kitchen-kanban/KitchenKanban"
-import { WaiterOrderView } from "@/features/waiter-order-view/WaiterOrderView"
+import { WaiterOrderPage as WaiterOrderFeature } from "@/features/waiter-order-view"
 import AdminRoute from "@/routes/AdminRoute"
 import ProtectedRoute from "@/routes/ProtectedRoute"
 import PublicRoute from "@/routes/PublicRoute"
@@ -87,7 +87,7 @@ function App() {
                   <Route path="menu" element={<MenuSection />} />
                   <Route path="floor-plan/edit" element={<FloorPlanSection />} />
                   <Route path="kitchen" element={<KitchenKanban />} />
-                  <Route path="floor" element={<WaiterOrderView />} />
+                  <Route path="floor" element={<WaiterOrderFeature />} />
                 </Route>
               </Route>
             </Route>

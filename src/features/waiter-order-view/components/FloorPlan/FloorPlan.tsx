@@ -1,8 +1,8 @@
 import { useMemo } from "react"
 import { FloorPlanView, type FloorPlanTableRef } from "@/features/floorplan/FloorPlanView"
 import type { LayoutPayload } from "@/features/editor/types"
-import type { FloorTable, ReservationItem, UpcomingReservation } from "../data/waiterTypes"
-import { getTableVisualStatus, formatDuration, formatETA } from "../data/waiterTypes"
+import type { FloorTable, ReservationItem, UpcomingReservation } from "../../types"
+import { getTableVisualStatus, formatDuration, formatETA } from "../../types"
 import "./FloorPlan.css"
 
 interface FloorPlanProps {

@@ -6,7 +6,7 @@ import {
   fetchMenuItems,
   searchMenuItems,
   type CreateOrderItem,
-} from "../api/orderApi"
+} from "../../api/orderApi"
 import "./OrderCreationModal.css"
 
 interface OrderCreationModalProps {

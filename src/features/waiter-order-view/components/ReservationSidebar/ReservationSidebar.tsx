@@ -1,7 +1,7 @@
 import { useState } from "react"
-import type { ReservationItem } from "../data/waiterTypes"
-import { formatTimeRange } from "../data/waiterTypes"
-import { ConfirmCancelModal } from "./ConfirmCancelModal"
+import type { ReservationItem } from "../../types"
+import { formatTimeRange } from "../../types"
+import { ConfirmCancelModal } from "../ConfirmCancelModal"
 import "./ReservationSidebar.css"
 
 interface ReservationSidebarProps {
