@@ -56,10 +56,29 @@
   color: var(--color-bg);
 }
 
+.kanban__connection {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #dc2626;
+  flex-shrink: 0;
+}
+
+.kanban__connection--connected {
+  background: #16a34a;
+}
+
 .kanban__header-right {
   display: flex;
   align-items: center;
   gap: 18px;
+}
+
+.kanban__clock-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
 }
 
 .kanban__clock {
@@ -68,6 +87,14 @@
   font-variant-numeric: tabular-nums;
   color: var(--color-text);
   font-family: var(--font-family-display);
+  line-height: 1.1;
+}
+
+.kanban__clock-label {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--color-text-secondary);
 }
 
 .kanban__floor-link {

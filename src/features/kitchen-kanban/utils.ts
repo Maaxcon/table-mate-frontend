@@ -1,5 +1,7 @@
 import type { OrderItem } from "@/types/api/types.gen"
 import type { KitchenTicket } from "./api"
+
+const DEFAULT_CATEGORY_COLOR = "#9CA3AF"
 import type { KanbanItem, KanbanTicket } from "./types"
 
 export function elapsedMinutes(startedAt: number): number {
@@ -19,6 +21,8 @@ export function mapItem(item: OrderItem): KanbanItem {
     quantity: item.quantity,
     modifiers: item.comment ?? undefined,
     status: item.status === "ready" ? "ready" : "pending",
+    categoryName: item.menu_item_category_name ?? undefined,
+    categoryColor: (item.menu_item_category_color ?? DEFAULT_CATEGORY_COLOR).toUpperCase(),
   }
 }
 
@@ -26,6 +30,7 @@ export function mapTicket(ticket: KitchenTicket, items: OrderItem[]): KanbanTick
   const ticketItems = items.filter((it) => it.ticket === ticket.public_id)
   return {
     id: ticket.public_id,
+    label: ticket.label || ticket.public_id.slice(0, 8),
     status: (ticket.status ?? "incoming") as KanbanTicket["status"],
     startedAt:
       ticket.status === "incoming"
@@ -47,6 +52,7 @@ export function mapTicket(ticket: KitchenTicket, items: OrderItem[]): KanbanTick
 export function mapTicketShort(ticket: KitchenTicket): KanbanTicket {
   return {
     id: ticket.public_id,
+    label: ticket.label || ticket.public_id.slice(0, 8),
     status: "completed",
     startedAt: new Date(ticket.started_at ?? ticket.injected_at).getTime(),
     guestCount: ticket.guest_count,

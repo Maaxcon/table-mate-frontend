@@ -21,6 +21,7 @@ export interface BookingData {
   zones: Zone[]
   selectedZone: string | null
   setSelectedZone: (id: string | null) => void
+  reloadZones: () => void
 
   workingHours: Record<string, WorkingHoursDay> | null
   timezone: string | null
@@ -164,6 +165,10 @@ export function useBookingData(
     loadReservations()
   }, [loadReservations])
 
+  const reloadZones = useCallback(() => {
+    loadZones()
+  }, [loadZones])
+
   return {
     tables,
     setTables,
@@ -173,6 +178,7 @@ export function useBookingData(
     zones,
     selectedZone,
     setSelectedZone,
+    reloadZones,
     workingHours,
     timezone,
     reservations,

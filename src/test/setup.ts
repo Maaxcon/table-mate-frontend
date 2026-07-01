@@ -2,6 +2,17 @@ import "@testing-library/jest-dom/vitest"
 import { cleanup } from "@testing-library/react"
 import { afterEach, vi } from "vitest"
 
+// jsdom has no ResizeObserver; components that observe layout (e.g. FloorPlanView)
+// need a stub.
+vi.stubGlobal(
+  "ResizeObserver",
+  class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  },
+)
+
 // jsdom in this setup ships a non-functional localStorage stub, so provide a
 // minimal in-memory implementation for tests that touch it.
 function createMemoryStorage(): Storage {

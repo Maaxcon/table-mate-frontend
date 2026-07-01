@@ -168,3 +168,24 @@
   background: var(--color-primary);
   color: var(--color-bg-surface);
 }
+
+.bp__content {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+/* Live-connection dot in the tab row (green = connected, red = dropped). */
+.bp__connection {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #dc2626;
+  flex-shrink: 0;
+  align-self: center;
+  margin-left: auto;
+}
+
+.bp__connection--connected {
+  background: #16a34a;
+}

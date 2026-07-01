@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import type { Table } from "@/types/api/types.gen"
 import { useFocusTrap } from "@/hooks/useFocusTrap"
-import type { WorkingHoursDay } from "./api"
-import { createReservation, fetchAvailableSlots } from "./api"
+import type { WorkingHoursDay, ReservationWithTable } from "./api"
+import { createReservation, fetchAvailableSlots, fetchRestaurantSettings } from "./api"
 import { SlotsSkeleton } from "./BookingSkeleton"
 import { downloadReservationIcs } from "./ics"
 import { bookStrings } from "./strings"
@@ -24,12 +24,16 @@ interface BookModalProps {
   workingHours: Record<string, WorkingHoursDay> | null
   timeZone: string | null
   onClose: () => void
-  onSuccess: () => void
+  onSuccess: (data?: ReservationWithTable) => void
   // Prefill from the floor-plan slot picker so the guest lands on the slot they
   // already chose instead of starting over.
   initialDate?: Date
   initialTime?: string | null
   initialGuests?: number
+  // Staff booking on behalf of a guest (waiter view): shows a guest-name field and
+  // fetches working hours from the restaurant when the caller passes none.
+  restaurantId?: string | null
+  showNameField?: boolean
 }
 
 export function BookModal({
@@ -41,6 +45,8 @@ export function BookModal({
   initialDate,
   initialTime,
   initialGuests,
+  restaurantId,
+  showNameField,
 }: BookModalProps) {
   // Keyed on the calendar day so "today" refreshes after midnight if the modal
   // is left open, instead of sticking to a stale date.
@@ -62,6 +68,10 @@ export function BookModal({
     initialGuests ? Math.min(initialGuests, table.capacity) : DEFAULT_GUESTS,
   )
   const [notes, setNotes] = useState("")
+  const [guestName, setGuestName] = useState("")
+  // Holds the created reservation so we can hand it back to the caller (waiter
+  // view) when the confirmation is dismissed.
+  const reservationRef = useRef<ReservationWithTable | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<{
@@ -76,6 +86,30 @@ export function BookModal({
 
   const [availableSlots, setAvailableSlots] = useState<Record<string, string[]> | null>(null)
   const [slotsLoading, setSlotsLoading] = useState(true)
+
+  // The waiter view opens the modal without working hours; fetch them from the
+  // restaurant so the time grid still knows open/close.
+  const [fallbackWorkingHours, setFallbackWorkingHours] = useState<Record<
+    string,
+    WorkingHoursDay
+  > | null>(null)
+  const [fallbackResolved, setFallbackResolved] = useState(false)
+  const needsFallback = workingHours === null && !!restaurantId
+  const fallbackHoursLoading = needsFallback && !fallbackResolved
+  const effectiveWorkingHours = workingHours ?? fallbackWorkingHours
+
+  useEffect(() => {
+    if (workingHours !== null || !restaurantId) return
+    fetchRestaurantSettings(restaurantId)
+      .then((settings) => {
+        setFallbackWorkingHours(settings.working_hours)
+        setFallbackResolved(true)
+      })
+      .catch(() => {
+        setFallbackWorkingHours(null)
+        setFallbackResolved(true)
+      })
+  }, [workingHours, restaurantId])
 
   // Guards the slot fetch from setting state after the modal closes/unmounts.
   const mountedRef = useRef(true)
@@ -114,7 +148,7 @@ export function BookModal({
   }, [today])
 
   const dayName = DAY_NAMES[selectedDate.getDay()]
-  const dayConfig = workingHours?.[dayName]
+  const dayConfig = effectiveWorkingHours?.[dayName]
 
   const dateKey = localDateKey(selectedDate)
 
@@ -209,13 +243,17 @@ export function BookModal({
 
       // The backend is the single source of truth: it re-checks the slot inside
       // the create transaction and returns a clear 409 if the table was taken.
-      await createReservation({
+      const body: Parameters<typeof createReservation>[0] = {
         table: table.public_id,
         guest_count: guestCount,
         start_at: startISO,
         end_at: endISO,
         notes: notes || undefined,
-      })
+      }
+      if (showNameField && guestName) {
+        body.guest_name = guestName
+      }
+      reservationRef.current = await createReservation(body)
 
       setSuccess({
         tableNumber: table.table_number,
@@ -242,6 +280,8 @@ export function BookModal({
     endAt,
     guestCount,
     notes,
+    guestName,
+    showNameField,
     timeZone,
     loadSlots,
     table.public_id,
@@ -251,7 +291,7 @@ export function BookModal({
   // After a successful booking, dismissing must also notify the parent so it can
   // refresh. Backdrop click and Escape share this.
   const handleDismiss = useCallback(() => {
-    if (success) onSuccess()
+    if (success) onSuccess(reservationRef.current ?? undefined)
     onClose()
   }, [success, onSuccess, onClose])
 
@@ -416,7 +456,7 @@ export function BookModal({
                 {foreignTzNote && (
                   <p className="book-modal__tz-note">{bookStrings.modal.tzNote(foreignTzNote)}</p>
                 )}
-                {slotsLoading ? (
+                {slotsLoading || fallbackHoursLoading ? (
                   <SlotsSkeleton />
                 ) : !dayConfig ? (
                   <p className="book-modal__empty">{bookStrings.modal.slots.closed}</p>
@@ -485,6 +525,19 @@ export function BookModal({
                   </button>
                 </div>
               </section>
+
+              {showNameField && (
+                <section className="book-modal__section">
+                  <h3 className="book-modal__section-title">GUEST NAME</h3>
+                  <input
+                    type="text"
+                    className="book-modal__notes"
+                    placeholder="Guest name"
+                    value={guestName}
+                    onChange={(e) => setGuestName(e.target.value)}
+                  />
+                </section>
+              )}
 
               <section className="book-modal__section">
                 <h3 className="book-modal__section-title">{bookStrings.modal.sections.notes}</h3>

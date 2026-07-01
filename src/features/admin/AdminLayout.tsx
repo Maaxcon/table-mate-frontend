@@ -6,6 +6,7 @@ import {
   LuLayoutDashboard,
   LuLogOut,
   LuMap,
+  LuPencilRuler,
   LuSettings,
   LuStore,
   LuUsers,
@@ -24,6 +25,7 @@ const NAV_ITEMS = [
   { to: "/admin/settings", label: "Settings", icon: LuSettings },
   { to: "/admin/staff", label: "Staff", icon: LuUsers },
   { to: "/admin/menu", label: "Menu", icon: LuUtensilsCrossed },
+  { to: "/admin/floor-plan/edit", label: "Floor Plan", icon: LuPencilRuler },
   { to: "/admin/kitchen", label: "Kitchen", icon: LuChefHat },
   { to: "/admin/floor", label: "Floor", icon: LuMap },
 ] as const

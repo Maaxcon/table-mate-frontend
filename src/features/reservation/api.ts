@@ -34,12 +34,12 @@ export type ReservationWithTable = {
   public_id: string
   restaurant: string
   customer: string | null
+  customer_name?: string
   table: string
   table_info?: {
     public_id: string
-    table_number: string
+    public_number: string
     capacity: number
-    shape: string
   }
   guest_count: number
   start_at: string
@@ -54,6 +54,9 @@ export type Zone = {
   public_id: string
   name: string
   sort_order: number
+  edge_styles?: Record<string, "dashed" | "solid">
+  canvas_cols?: number
+  canvas_rows?: number
 }
 
 export async function fetchZones(restaurantId?: string): Promise<Zone[]> {
@@ -65,6 +68,26 @@ export async function fetchZones(restaurantId?: string): Promise<Zone[]> {
   if (!res.ok) throw new Error("Failed to fetch zones")
   const data = await res.json()
   return data.results ?? data
+}
+
+export async function updateZone(zoneId: string, data: Partial<Zone>): Promise<Zone> {
+  const res = await apiFetch(`/api/restaurants/zones/${zoneId}/`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  })
+  if (!res.ok) throw new Error("Failed to update zone")
+  return res.json()
+}
+
+export async function deleteZone(zoneId: string): Promise<void> {
+  const res = await apiFetch(`/api/restaurants/zones/${zoneId}/`, {
+    method: "DELETE",
+  })
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}))
+    throw new Error(body.detail || "Failed to delete zone")
+  }
 }
 
 export async function fetchTables(restaurantId?: string): Promise<Table[]> {
@@ -131,20 +154,27 @@ export async function fetchSlotAvailability(
   return data.availability ?? {}
 }
 
-// There is no dedicated public endpoint for upcoming reservations yet, so we
-// piggyback on the floor-layout payload and pull the field out. Worth a proper
-// endpoint if the badges ever need their own filtering/pagination.
-export async function fetchUpcomingReservations(
-  restaurantId?: string,
-): Promise<UpcomingReservation[]> {
+export type LayoutDataResponse = {
+  tables: Table[]
+  layout: unknown
+  upcoming_reservations: UpcomingReservation[]
+}
+
+export async function fetchLayoutData(restaurantId?: string): Promise<LayoutDataResponse> {
   let url = "/api/restaurants/tables/layout/"
   if (restaurantId) {
     url += `?restaurant=${restaurantId}`
   }
   const res = await apiFetch(url)
-  if (!res.ok) return []
-  const data = (await res.json()) as { upcoming_reservations?: UpcomingReservation[] }
-  return data.upcoming_reservations ?? []
+  if (!res.ok) return { tables: [], layout: null, upcoming_reservations: [] }
+  return res.json() as Promise<LayoutDataResponse>
+}
+
+export async function fetchUpcomingReservations(
+  restaurantId?: string,
+): Promise<UpcomingReservation[]> {
+  const data = await fetchLayoutData(restaurantId)
+  return data.upcoming_reservations
 }
 
 export async function createReservation(data: {
@@ -153,6 +183,7 @@ export async function createReservation(data: {
   start_at: string
   end_at: string
   notes?: string
+  guest_name?: string
 }): Promise<ReservationWithTable> {
   const res = await apiFetch("/api/reservations/reservations/", {
     method: "POST",

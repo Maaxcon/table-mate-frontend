@@ -1,5 +1,7 @@
-import type { KanbanTicket } from "../types"
-import { elapsedMinutes, timerUrgencyClass } from "../utils"
+import "./IncomingColumn.css"
+import type { CSSProperties } from "react"
+import type { KanbanTicket } from "../../types"
+import { elapsedMinutes, timerUrgencyClass } from "../../utils"
 
 interface IncomingColumnProps {
   tickets: KanbanTicket[]
@@ -24,7 +26,7 @@ export function IncomingColumn({ tickets, onPromote, canManage }: IncomingColumn
             <button
               key={ticket.id}
               type="button"
-              className={`kanban-card kanban-card--clickable ${elapsed > 7 ? "kanban-card--aged" : ""}`}
+              className="kanban-card kanban-card--incoming kanban-card--clickable"
               onClick={() => {
                 if (!canManage) return
                 onPromote(ticket.id)
@@ -34,15 +36,22 @@ export function IncomingColumn({ tickets, onPromote, canManage }: IncomingColumn
               aria-disabled={!canManage}
             >
               <div className="kanban-card__header">
-                <span className="kanban-card__id">{ticket.id.slice(0, 8)}</span>
+                <span className="kanban-card__id">{ticket.label}</span>
                 <span className={`kanban-card__timer ${timerUrgencyClass(elapsed)}`}>
                   {elapsed}m
                 </span>
               </div>
               <div className="kanban-card__items">
                 {ticket.items.map((item) => (
-                  <div key={item.id} className="kanban-card__item">
-                    {item.quantity}X {item.name}
+                  <div
+                    key={item.id}
+                    className="kanban-card__item kanban-card__item--cat"
+                    style={{ "--item-cat-color": item.categoryColor } as CSSProperties}
+                  >
+                    <span className="kanban-card__item-qty">{item.quantity}X</span> {item.name}
+                    {item.categoryName && (
+                      <span className="kanban-card__item-cat-tag">{item.categoryName}</span>
+                    )}
                   </div>
                 ))}
               </div>

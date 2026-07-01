@@ -43,6 +43,7 @@ export function BookingPage() {
     zones,
     selectedZone,
     setSelectedZone,
+    reloadZones,
     workingHours,
     timezone,
     reservations,
@@ -164,11 +165,21 @@ export function BookingPage() {
     [setUpcomingReservations],
   )
 
-  useFloorSubscription({
-    restaurantId: public_restaurant_id,
+  const handleLayoutPublished = useCallback(() => {
+    reloadTables()
+    // A publish may have added/removed a zone; refresh zones so its tab appears live.
+    reloadZones()
+  }, [reloadTables, reloadZones])
+
+  const { isConnected } = useFloorSubscription({
     onTableStatusChanged: handleTableStatusChanged,
     onNewReservation: handleNewReservation,
     onReservationCancelled: handleReservationCancelled,
+    onLayoutPublished: handleLayoutPublished,
+    onZoneCreated: reloadZones,
+    onZoneUpdated: reloadZones,
+    onZoneDeleted: reloadZones,
+    restaurantId: public_restaurant_id,
   })
 
   return (
@@ -203,6 +214,11 @@ export function BookingPage() {
             {bookStrings.tabs.bookings}
           </button>
         )}
+        <span
+          className={`bp__connection ${isConnected ? "bp__connection--connected" : ""}`}
+          role="status"
+          aria-label={isConnected ? "Connected" : "Disconnected"}
+        />
       </div>
 
       <div className="bp__content">

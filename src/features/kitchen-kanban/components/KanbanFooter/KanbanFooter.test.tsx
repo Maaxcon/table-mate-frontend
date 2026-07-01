@@ -14,7 +14,7 @@ describe("KanbanFooter", () => {
     )
     expect(screen.getByText("INCOMING: 3")).toBeInTheDocument()
     expect(screen.getByText("ACTIVE: 5")).toBeInTheDocument()
-    expect(screen.getByText("COMPLETED (TODAY): 12")).toBeInTheDocument()
+    expect(screen.getByText("COMPLETED: 12")).toBeInTheDocument()
   })
 
   it("renders avg prep time in minutes", () => {
@@ -27,7 +27,7 @@ describe("KanbanFooter", () => {
       />,
     )
     // 900 seconds = 15 minutes
-    expect(screen.getByText("AVG PREP TIME: 15m")).toBeInTheDocument()
+    expect(screen.getByText("PREP TIME: 15m")).toBeInTheDocument()
   })
 
   it("rounds avg prep time to nearest minute", () => {
@@ -40,7 +40,7 @@ describe("KanbanFooter", () => {
       />,
     )
     // 1250 seconds ≈ 20.83 minutes → rounds to 21
-    expect(screen.getByText("AVG PREP TIME: 21m")).toBeInTheDocument()
+    expect(screen.getByText("PREP TIME: 21m")).toBeInTheDocument()
   })
 
   it("renders em dash when avg prep time is null", () => {
@@ -52,6 +52,6 @@ describe("KanbanFooter", () => {
         avgPrepTimeSeconds={null}
       />,
     )
-    expect(screen.getByText("AVG PREP TIME: —")).toBeInTheDocument()
+    expect(screen.getByText("PREP TIME: —")).toBeInTheDocument()
   })
 })

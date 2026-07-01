@@ -38,6 +38,10 @@ export type AdminMenuCategory = {
   menu: string
   name: string
   sort_order?: number
+  /**
+   * Hex color used for category theming.
+   */
+  color?: string | null
   readonly created_at: string
   readonly updated_at: string
 }
@@ -106,6 +110,7 @@ export type CartItem = {
   readonly guest_slot: number | null
   readonly is_mine: boolean
   readonly is_paid: boolean
+  readonly display_name: string | null
   readonly cart_session: string
   readonly restaurant: string
   readonly created_at: string
@@ -158,12 +163,10 @@ export type CustomerContext = {
 export type EditorTable = {
   readonly public_id: string
   readonly restaurant: string
-  readonly table_number: string
+  readonly zone: string | null
+  readonly public_number: string
   readonly capacity: number
-  shape?: TableShape
   active?: boolean
-  position_x?: number | null
-  position_y?: number | null
   readonly created_at: string
   readonly updated_at: string
 }
@@ -226,7 +229,18 @@ export type Layout = {
 
 export type LayoutResponse = {
   tables: Array<Table>
+  layout?: unknown
   upcoming_reservations: Array<UpcomingReservation>
+}
+
+export type LayoutVersion = {
+  readonly public_id: string
+  readonly restaurant: string
+  readonly parent_version: number | null
+  readonly layout_json: unknown
+  readonly published_at: string
+  readonly published_by: string
+  readonly created_at: string
 }
 
 /**
@@ -259,6 +273,10 @@ export type MenuCategory = {
   readonly menu: string
   name: string
   sort_order?: number
+  /**
+   * Hex color used for category theming.
+   */
+  color?: string | null
   readonly created_at: string
   readonly updated_at: string
 }
@@ -281,6 +299,15 @@ export type MenuItem = {
   sort_order?: number
   readonly created_at: string
   readonly updated_at: string
+}
+
+export type ObstacleEntity = {
+  x: number
+  y: number
+  width: number
+  height: number
+  rotation?: number
+  zone_id: string
 }
 
 export type Order = {
@@ -310,7 +337,11 @@ export type OrderItem = {
   ticket?: string | null
   menu_item: string
   readonly menu_item_name: string
+  readonly menu_item_category_id: string | null
+  readonly menu_item_category_name: string | null
+  readonly menu_item_category_color: string | null
   guest_slot: number
+  guest_display_name?: string | null
   quantity: number
   comment?: string | null
   modifiers?: unknown
@@ -524,6 +555,10 @@ export type PatchedAdminMenuCategory = {
   menu?: string
   name?: string
   sort_order?: number
+  /**
+   * Hex color used for category theming.
+   */
+  color?: string | null
   readonly created_at?: string
   readonly updated_at?: string
 }
@@ -553,12 +588,10 @@ export type PatchedAdminMenuItem = {
 export type PatchedEditorTable = {
   readonly public_id?: string
   readonly restaurant?: string
-  readonly table_number?: string
+  readonly zone?: string | null
+  readonly public_number?: string
   readonly capacity?: number
-  shape?: TableShape
   active?: boolean
-  position_x?: number | null
-  position_y?: number | null
   readonly created_at?: string
   readonly updated_at?: string
 }
@@ -614,7 +647,11 @@ export type PatchedOrderItem = {
   ticket?: string | null
   menu_item?: string
   readonly menu_item_name?: string
+  readonly menu_item_category_id?: string | null
+  readonly menu_item_category_name?: string | null
+  readonly menu_item_category_color?: string | null
   guest_slot?: number
+  guest_display_name?: string | null
   quantity?: number
   comment?: string | null
   modifiers?: unknown
@@ -700,6 +737,8 @@ export type PatchedSession = {
 
 export type PatchedTicket = {
   readonly public_id?: string
+  readonly label?: string
+  readonly daily_number?: number | null
   readonly restaurant?: string
   session?: string
   order?: string
@@ -719,6 +758,13 @@ export type PatchedUpdateCartItem = {
   quantity?: number
   comment?: string | null
   guest_slot?: number | null
+}
+
+export type PatchedZone = {
+  readonly public_id?: string
+  name?: string
+  sort_order?: number
+  edge_styles?: unknown
 }
 
 export type Payment = {
@@ -756,6 +802,16 @@ export type PaymentStatusEnum =
   | "refunded"
   | "cancelled"
 
+export type PortalEntity = {
+  x: number
+  y: number
+  width: number
+  height: number
+  target_zone_id?: string | null
+  portal_label?: string
+  zone_id: string
+}
+
 export type PublicRestaurant = {
   readonly public_id: string
   readonly name: string
@@ -775,6 +831,14 @@ export type PublicRestaurantSettings = {
   readonly eta_min_minutes: number
   readonly eta_max_minutes: number
   readonly price_band: number
+}
+
+export type PublishLayout = {
+  tables?: Array<TableEntity>
+  obstacles?: Array<ObstacleEntity>
+  thresholds?: Array<ThresholdEntity>
+  portals?: Array<PortalEntity>
+  deleted_table_ids?: Array<string>
 }
 
 export type Receipt = {
@@ -908,6 +972,18 @@ export type Session = {
  */
 export type SessionStatusEnum = "open" | "closed" | "voided"
 
+export type SetGuestName = {
+  display_name: string
+}
+
+/**
+ * * `rectangle` - rectangle
+ * * `round` - round
+ * * `square` - square
+ * * `booth` - booth
+ */
+export type ShapeEnum = "rectangle" | "round" | "square" | "booth"
+
 /**
  * * `waiter_manual` - Waiter manual
  * * `customer_prepaid` - Customer prepaid
@@ -917,35 +993,48 @@ export type SourceEnum = "waiter_manual" | "customer_prepaid"
 export type Table = {
   readonly public_id: string
   readonly restaurant: string
-  table_number: string
+  public_number: string
   capacity: number
   readonly is_occupied: boolean
-  shape?: TableShape
   active?: boolean
-  position_x?: number | null
-  position_y?: number | null
   zone: Zone | null
   readonly created_at: string
   readonly updated_at: string
 }
 
-export type TableInfo = {
-  readonly public_id: string
-  table_number: string
+export type TableEntity = {
+  id?: string | null
+  public_number?: string
+  x: number
+  y: number
+  width: number
+  height: number
+  rotation?: number
+  shape: ShapeEnum
   capacity: number
-  shape?: TableShape
+  zone_id: string
+  tags?: Array<string>
 }
 
-/**
- * * `rectangle` - Rectangle
- * * `round` - Round
- * * `square` - Square
- * * `booth` - Booth
- */
-export type TableShape = "rectangle" | "round" | "square" | "booth"
+export type TableInfo = {
+  readonly public_id: string
+  public_number: string
+  capacity: number
+}
+
+export type ThresholdEntity = {
+  x: number
+  y: number
+  width: number
+  height: number
+  threshold_label?: string
+  zone_id: string
+}
 
 export type Ticket = {
   readonly public_id: string
+  readonly label: string
+  readonly daily_number: number | null
   readonly restaurant: string
   session: string
   order: string
@@ -998,6 +1087,7 @@ export type UpcomingReservation = {
   public_id: string
   table_id: string
   start_at: string
+  end_at: string
 }
 
 export type User = {
@@ -1044,8 +1134,9 @@ export type WorkingHoursDay = {
 
 export type Zone = {
   readonly public_id: string
-  readonly name: string
-  readonly sort_order: number
+  name: string
+  sort_order?: number
+  edge_styles?: unknown
 }
 
 /**
@@ -1064,6 +1155,10 @@ export type AdminMenuCategoryWritable = {
   menu: string
   name: string
   sort_order?: number
+  /**
+   * Hex color used for category theming.
+   */
+  color?: string | null
 }
 
 /**
@@ -1100,10 +1195,7 @@ export type CustomTokenObtainPairWritable = {
 }
 
 export type EditorTableWritable = {
-  shape?: TableShape
   active?: boolean
-  position_x?: number | null
-  position_y?: number | null
 }
 
 export type EmployeeWritable = {
@@ -1130,6 +1222,7 @@ export type LayoutWritable = {
 
 export type LayoutResponseWritable = {
   tables: Array<TableWritable>
+  layout?: unknown
   upcoming_reservations: Array<UpcomingReservation>
 }
 
@@ -1141,6 +1234,10 @@ export type MenuWritable = {
 export type MenuCategoryWritable = {
   name: string
   sort_order?: number
+  /**
+   * Hex color used for category theming.
+   */
+  color?: string | null
 }
 
 export type MenuItemWritable = {
@@ -1173,6 +1270,7 @@ export type OrderItemWritable = {
   ticket?: string | null
   menu_item: string
   guest_slot: number
+  guest_display_name?: string | null
   quantity: number
   comment?: string | null
   modifiers?: unknown
@@ -1337,7 +1435,7 @@ export type PaginatedZoneListWritable = {
   count: number
   next?: string | null
   previous?: string | null
-  results: Array<unknown>
+  results: Array<ZoneWritable>
 }
 
 /**
@@ -1356,6 +1454,10 @@ export type PatchedAdminMenuCategoryWritable = {
   menu?: string
   name?: string
   sort_order?: number
+  /**
+   * Hex color used for category theming.
+   */
+  color?: string | null
 }
 
 /**
@@ -1377,10 +1479,7 @@ export type PatchedAdminMenuItemWritable = {
 }
 
 export type PatchedEditorTableWritable = {
-  shape?: TableShape
   active?: boolean
-  position_x?: number | null
-  position_y?: number | null
 }
 
 export type PatchedEmployeeWritable = {
@@ -1411,6 +1510,7 @@ export type PatchedOrderItemWritable = {
   ticket?: string | null
   menu_item?: string
   guest_slot?: number
+  guest_display_name?: string | null
   quantity?: number
   comment?: string | null
   modifiers?: unknown
@@ -1469,6 +1569,12 @@ export type PatchedTicketWritable = {
   injected_at?: string
   started_at?: string | null
   completed_at?: string | null
+}
+
+export type PatchedZoneWritable = {
+  name?: string
+  sort_order?: number
+  edge_styles?: unknown
 }
 
 export type PaymentWritable = {
@@ -1544,18 +1650,14 @@ export type SessionWritable = {
 }
 
 export type TableWritable = {
-  table_number: string
+  public_number: string
   capacity: number
-  shape?: TableShape
   active?: boolean
-  position_x?: number | null
-  position_y?: number | null
 }
 
 export type TableInfoWritable = {
-  table_number: string
+  public_number: string
   capacity: number
-  shape?: TableShape
 }
 
 export type TicketWritable = {
@@ -1574,6 +1676,12 @@ export type UserWritable = {
   phone?: string | null
   role?: RoleEnum
   is_active?: boolean
+}
+
+export type ZoneWritable = {
+  name: string
+  sort_order?: number
+  edge_styles?: unknown
 }
 
 export type AuthCustomerContextCreateData = {
@@ -1771,6 +1879,20 @@ export type EditorLayoutsRetrieveResponses = {
 export type EditorLayoutsRetrieveResponse =
   EditorLayoutsRetrieveResponses[keyof EditorLayoutsRetrieveResponses]
 
+export type EditorLayoutsPublishCreateData = {
+  body?: PublishLayout
+  path?: never
+  query?: never
+  url: "/api/editor/layouts/publish/"
+}
+
+export type EditorLayoutsPublishCreateResponses = {
+  201: LayoutVersion
+}
+
+export type EditorLayoutsPublishCreateResponse =
+  EditorLayoutsPublishCreateResponses[keyof EditorLayoutsPublishCreateResponses]
+
 export type EditorTablesListData = {
   body?: never
   path?: never
@@ -1785,13 +1907,6 @@ export type EditorTablesListData = {
      * A page number within the paginated result set.
      */
     page?: number
-    /**
-     * * `rectangle` - Rectangle
-     * * `round` - Round
-     * * `square` - Square
-     * * `booth` - Booth
-     */
-    shape?: "booth" | "rectangle" | "round" | "square"
   }
   url: "/api/editor/tables/"
 }
@@ -2497,6 +2612,22 @@ export type OrdersCartSessionsCheckoutCreateResponses = {
 export type OrdersCartSessionsCheckoutCreateResponse =
   OrdersCartSessionsCheckoutCreateResponses[keyof OrdersCartSessionsCheckoutCreateResponses]
 
+export type OrdersCartSessionsGuestNameCreateData = {
+  body: SetGuestName
+  path: {
+    session_pk: string
+  }
+  query?: never
+  url: "/api/orders/cart/sessions/{session_pk}/guest-name/"
+}
+
+export type OrdersCartSessionsGuestNameCreateResponses = {
+  /**
+   * No response body
+   */
+  200: unknown
+}
+
 export type OrdersCartSessionsItemsListData = {
   body?: never
   path: {
@@ -3089,6 +3220,7 @@ export type ReservationsReservationsListData = {
      * * `cancelled` - Cancelled
      */
     status?: "active" | "cancelled" | "completed" | "pending"
+    status__in?: string
     table?: number
   }
   url: "/api/reservations/reservations/"
@@ -3231,6 +3363,7 @@ export type ReservationsReservationsMyListData = {
      * * `cancelled` - Cancelled
      */
     status?: "active" | "cancelled" | "completed" | "pending"
+    status__in?: string
     table?: number
   }
   url: "/api/reservations/reservations/my/"
@@ -3603,6 +3736,20 @@ export type RestaurantsZonesListResponses = {
 export type RestaurantsZonesListResponse =
   RestaurantsZonesListResponses[keyof RestaurantsZonesListResponses]
 
+export type RestaurantsZonesCreateData = {
+  body: ZoneWritable
+  path?: never
+  query?: never
+  url: "/api/restaurants/zones/"
+}
+
+export type RestaurantsZonesCreateResponses = {
+  201: Zone
+}
+
+export type RestaurantsZonesCreateResponse =
+  RestaurantsZonesCreateResponses[keyof RestaurantsZonesCreateResponses]
+
 export type RestaurantsZonesRetrieveData = {
   body?: never
   path: {
@@ -3618,3 +3765,35 @@ export type RestaurantsZonesRetrieveResponses = {
 
 export type RestaurantsZonesRetrieveResponse =
   RestaurantsZonesRetrieveResponses[keyof RestaurantsZonesRetrieveResponses]
+
+export type RestaurantsZonesPartialUpdateData = {
+  body?: PatchedZoneWritable
+  path: {
+    public_id: string
+  }
+  query?: never
+  url: "/api/restaurants/zones/{public_id}/"
+}
+
+export type RestaurantsZonesPartialUpdateResponses = {
+  200: Zone
+}
+
+export type RestaurantsZonesPartialUpdateResponse =
+  RestaurantsZonesPartialUpdateResponses[keyof RestaurantsZonesPartialUpdateResponses]
+
+export type RestaurantsZonesUpdateData = {
+  body: ZoneWritable
+  path: {
+    public_id: string
+  }
+  query?: never
+  url: "/api/restaurants/zones/{public_id}/"
+}
+
+export type RestaurantsZonesUpdateResponses = {
+  200: Zone
+}
+
+export type RestaurantsZonesUpdateResponse =
+  RestaurantsZonesUpdateResponses[keyof RestaurantsZonesUpdateResponses]

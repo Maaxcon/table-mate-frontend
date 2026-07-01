@@ -2,14 +2,11 @@ import { useEffect, useState } from "react"
 import { Link } from "react-router-dom"
 import "./TopNav.css"
 
-const TABS = ["FLOOR PLAN", "WAITLIST", "ANALYTICS"]
-
 interface TopNavProps {
   occupiedCount: number
   reservedCount: number
   freeCount: number
-  activeTab: string
-  onTabChange: (tab: string) => void
+  isConnected: boolean
 }
 
 function getTimeString(): string {
@@ -28,13 +25,7 @@ function useCurrentTime(): string {
   return time
 }
 
-export function TopNav({
-  occupiedCount,
-  reservedCount,
-  freeCount,
-  activeTab,
-  onTabChange,
-}: TopNavProps) {
+export function TopNav({ occupiedCount, reservedCount, freeCount, isConnected }: TopNavProps) {
   const currentTime = useCurrentTime()
 
   return (
@@ -51,19 +42,6 @@ export function TopNav({
         </div>
       </div>
 
-      <div className="top-nav__tabs">
-        {TABS.map((tab) => (
-          <button
-            key={tab}
-            type="button"
-            className={`top-nav__tab ${activeTab === tab ? "top-nav__tab--active" : ""}`}
-            onClick={() => onTabChange(tab)}
-          >
-            {tab}
-          </button>
-        ))}
-      </div>
-
       <div className="top-nav__right">
         <span className="top-nav__stat">
           <span className="top-nav__stat-icon top-nav__stat-icon--filled" />
@@ -78,6 +56,11 @@ export function TopNav({
           FREE: {freeCount}
         </span>
         <span className="top-nav__time">{currentTime}</span>
+        <span
+          className={`top-nav__connection ${isConnected ? "top-nav__connection--connected" : ""}`}
+          role="status"
+          aria-label={isConnected ? "Connected" : "Disconnected"}
+        />
         <Link to="/staff/orders" className="top-nav__nav-link">
           KITCHEN
         </Link>

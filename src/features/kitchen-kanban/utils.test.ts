@@ -10,6 +10,9 @@ function makeOrderItem(overrides: Partial<OrderItem> = {}): OrderItem {
     ticket: "t-1",
     menu_item: "mi-1",
     menu_item_name: "Burger",
+    menu_item_category_id: null,
+    menu_item_category_name: null,
+    menu_item_category_color: "#F97316",
     guest_slot: 1,
     quantity: 2,
     comment: null,
@@ -35,6 +38,8 @@ function makeTicket(overrides: Partial<KitchenTicket> = {}): KitchenTicket {
     completed_at: null,
     created_at: "2026-06-23T10:00:00Z",
     updated_at: "2026-06-23T10:00:00Z",
+    label: "T1",
+    daily_number: 1,
     table_number: "5",
     server_name: "Alice",
     guest_count: 3,
@@ -85,6 +90,29 @@ describe("mapItem", () => {
   it("passes empty string comment through as modifiers", () => {
     const result = mapItem(makeOrderItem({ comment: "" }))
     expect(result.modifiers).toBe("")
+  })
+
+  it("uses API provided category color when available", () => {
+    const result = mapItem(
+      makeOrderItem({ menu_item_category_name: "Салати", menu_item_category_color: "#22c55e" }),
+    )
+    expect(result.categoryName).toBe("Салати")
+    expect(result.categoryColor).toBe("#22C55E")
+  })
+
+  it("falls back to the default colour when API returns null", () => {
+    const result = mapItem(
+      makeOrderItem({ menu_item_category_name: "Піца", menu_item_category_color: null }),
+    )
+    expect(result.categoryColor).toBe("#9CA3AF")
+  })
+
+  it("falls back to the default colour and undefined name for missing category data", () => {
+    const result = mapItem(
+      makeOrderItem({ menu_item_category_name: null, menu_item_category_color: undefined }),
+    )
+    expect(result.categoryName).toBeUndefined()
+    expect(result.categoryColor).toBe("#9CA3AF")
   })
 })
 

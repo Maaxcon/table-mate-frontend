@@ -69,6 +69,10 @@ function getGroupLabel(group: ItemGroup, displayName: string): string {
     return displayName ? `${menuStrings.cart.you} · ${displayName}` : menuStrings.cart.you
   }
 
+  if (group.displayName) {
+    return group.displayName
+  }
+
   if (group.addedBy) {
     return group.addedBy
   }
@@ -727,6 +731,7 @@ type ItemGroup = {
   guestSlot: number | null
   isMine: boolean
   addedBy: string | null
+  displayName: string | null
   items: CartItemWithDetails[]
 }
 
@@ -752,11 +757,13 @@ function groupItemsByGuest(items: CartItemWithDetails[]): ItemGroup[] {
   for (const item of items) {
     const key = item.isMine
       ? "mine"
-      : item.addedBy
-        ? `user-${item.addedBy}`
-        : item.guestSlot != null
-          ? `slot-${item.guestSlot}`
-          : "ungrouped"
+      : item.displayName
+        ? `name-${item.displayName}`
+        : item.addedBy
+          ? `user-${item.addedBy}`
+          : item.guestSlot != null
+            ? `slot-${item.guestSlot}`
+            : "ungrouped"
 
     let group = groups.get(key)
     if (!group) {
@@ -765,6 +772,7 @@ function groupItemsByGuest(items: CartItemWithDetails[]): ItemGroup[] {
         guestSlot: item.guestSlot,
         isMine: item.isMine,
         addedBy: item.addedBy,
+        displayName: item.displayName,
         items: [],
       }
       groups.set(key, group)

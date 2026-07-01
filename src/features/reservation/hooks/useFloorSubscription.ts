@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from "react"
+import { useEffect, useRef, useCallback, useState } from "react"
 import { env } from "@/config/env"
 import { useAppSelector } from "@/store/hooks"
 
@@ -24,15 +24,50 @@ export interface FloorReservationCancelledEvent {
   occurred_at: string
 }
 
+export interface FloorLayoutPublishedEvent {
+  event_name: "LAYOUT_PUBLISHED"
+  layout_version_public_id: string
+  restaurant_public_id: string
+  occurred_at: string
+}
+
+export interface FloorZoneCreatedEvent {
+  event_name: "ZONE_CREATED"
+  zone_public_id: string
+  zone_name: string
+  occurred_at: string
+}
+
+export interface FloorZoneUpdatedEvent {
+  event_name: "ZONE_UPDATED"
+  zone_public_id: string
+  zone_name: string
+  occurred_at: string
+}
+
+export interface FloorZoneDeletedEvent {
+  event_name: "ZONE_DELETED"
+  zone_public_id: string
+  occurred_at: string
+}
+
 export type FloorEvent =
   | FloorTableStatusEvent
   | FloorNewReservationEvent
   | FloorReservationCancelledEvent
+  | FloorLayoutPublishedEvent
+  | FloorZoneCreatedEvent
+  | FloorZoneUpdatedEvent
+  | FloorZoneDeletedEvent
 
 interface UseFloorSubscriptionOptions {
   onTableStatusChanged?: (event: FloorTableStatusEvent) => void
   onNewReservation?: (event: FloorNewReservationEvent) => void
   onReservationCancelled?: (event: FloorReservationCancelledEvent) => void
+  onLayoutPublished?: (event: FloorLayoutPublishedEvent) => void
+  onZoneCreated?: (event: FloorZoneCreatedEvent) => void
+  onZoneUpdated?: (event: FloorZoneUpdatedEvent) => void
+  onZoneDeleted?: (event: FloorZoneDeletedEvent) => void
   onClose?: () => void
   onError?: (error: Event) => void
   // Customers carry no restaurant in their token, so the restaurant they're
@@ -52,18 +87,28 @@ export function useFloorSubscription({
   onTableStatusChanged,
   onNewReservation,
   onReservationCancelled,
+  onLayoutPublished,
+  onZoneCreated,
+  onZoneUpdated,
+  onZoneDeleted,
   onClose,
   onError,
   restaurantId,
 }: UseFloorSubscriptionOptions) {
   const accessToken = useAppSelector((s) => s.auth.accessToken)
+  const [isConnected, setIsConnected] = useState(false)
   const wsRef = useRef<WebSocket | null>(null)
   const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const connectRef = useRef<(() => void) | null>(null)
+  const connectRef = useRef<(() => void) | undefined>(undefined)
+  const mountedRef = useRef(false)
   const callbacksRef = useRef({
     onTableStatusChanged,
     onNewReservation,
     onReservationCancelled,
+    onLayoutPublished,
+    onZoneCreated,
+    onZoneUpdated,
+    onZoneDeleted,
     onClose,
     onError,
   })
@@ -73,13 +118,27 @@ export function useFloorSubscription({
       onTableStatusChanged,
       onNewReservation,
       onReservationCancelled,
+      onLayoutPublished,
+      onZoneCreated,
+      onZoneUpdated,
+      onZoneDeleted,
       onClose,
       onError,
     }
-  }, [onTableStatusChanged, onNewReservation, onReservationCancelled, onClose, onError])
+  }, [
+    onTableStatusChanged,
+    onNewReservation,
+    onReservationCancelled,
+    onLayoutPublished,
+    onZoneCreated,
+    onZoneUpdated,
+    onZoneDeleted,
+    onClose,
+    onError,
+  ])
 
   const connect = useCallback(() => {
-    if (!accessToken || env.wsUrl === "Not configured") return
+    if (env.wsUrl === "Not configured" || !restaurantId) return
 
     if (wsRef.current) {
       wsRef.current.close(1000, "Reconnecting")
@@ -92,7 +151,9 @@ export function useFloorSubscription({
     wsRef.current = ws
 
     ws.onopen = () => {
+      if (!mountedRef.current) return
       wsLog("Connected")
+      setIsConnected(true)
     }
 
     ws.onmessage = (event) => {
@@ -104,6 +165,14 @@ export function useFloorSubscription({
           callbacksRef.current.onNewReservation?.(data as FloorNewReservationEvent)
         } else if (data.event_name === "HALL_RESERVATION_CANCELLED") {
           callbacksRef.current.onReservationCancelled?.(data as FloorReservationCancelledEvent)
+        } else if (data.event_name === "LAYOUT_PUBLISHED") {
+          callbacksRef.current.onLayoutPublished?.(data as FloorLayoutPublishedEvent)
+        } else if (data.event_name === "ZONE_CREATED") {
+          callbacksRef.current.onZoneCreated?.(data as FloorZoneCreatedEvent)
+        } else if (data.event_name === "ZONE_UPDATED") {
+          callbacksRef.current.onZoneUpdated?.(data as FloorZoneUpdatedEvent)
+        } else if (data.event_name === "ZONE_DELETED") {
+          callbacksRef.current.onZoneDeleted?.(data as FloorZoneDeletedEvent)
         }
       } catch (err) {
         wsLog("Failed to parse message:", err)
@@ -112,12 +181,15 @@ export function useFloorSubscription({
 
     ws.onerror = (error) => {
       wsLog("Error:", error)
+      setIsConnected(false)
       callbacksRef.current.onError?.(error)
     }
 
     ws.onclose = (event) => {
       wsLog("Disconnected:", event.code, event.reason)
       wsRef.current = null
+      if (!mountedRef.current) return
+      setIsConnected(false)
       callbacksRef.current.onClose?.()
 
       // Retry transient drops, but never loop on auth/scope rejections.
@@ -132,8 +204,10 @@ export function useFloorSubscription({
   }, [connect])
 
   useEffect(() => {
+    mountedRef.current = true
     connect()
     return () => {
+      mountedRef.current = false
       if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current)
       if (wsRef.current) {
         wsRef.current.close(1000, "Component unmounting")
@@ -150,5 +224,5 @@ export function useFloorSubscription({
     }
   }, [])
 
-  return { disconnect }
+  return { disconnect, isConnected }
 }
