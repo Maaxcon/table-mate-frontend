@@ -75,10 +75,12 @@ export function checkOrderingViolation(
 export function checkPastTimeViolation(proposed: TimeRange): string | null {
   const now = new Date()
   const todayKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`
-  if (proposed.date !== todayKey) return null
-  const nowMinutes = now.getHours() * 60 + now.getMinutes()
-  if (proposed.start_minutes < nowMinutes) {
-    return "Cannot move to a past time"
+  if (proposed.date < todayKey) return "Cannot move to a past date"
+  if (proposed.date === todayKey) {
+    const nowMinutes = now.getHours() * 60 + now.getMinutes()
+    if (proposed.start_minutes < nowMinutes) {
+      return "Cannot move to a past time"
+    }
   }
   return null
 }

@@ -82,11 +82,7 @@ export function ReservationScheduler() {
     commitChanges,
   } = useSchedulerState()
 
-  const [baseDate, setBaseDate] = useState(() => {
-    const today = new Date()
-    return formatDateKey(today)
-  })
-  const [showSecondDay, setShowSecondDay] = useState(false)
+  const [dates, setDatesState] = useState<string[]>(() => [formatDateKey(new Date())])
   const [restaurantTimezone, setRestaurantTimezone] = useState<string>(
     Intl.DateTimeFormat().resolvedOptions().timeZone,
   )
@@ -104,17 +100,38 @@ export function ReservationScheduler() {
       .catch(() => {})
   }, [restaurantId])
 
-  const dates = useMemo(() => {
-    if (showSecondDay) {
-      const d2 = formatDateKey(addDays(new Date(baseDate + "T00:00:00"), 1))
-      return [baseDate, d2]
-    }
-    return [baseDate]
-  }, [baseDate, showSecondDay])
-
   useEffect(() => {
     setDates(dates)
   }, [dates, setDates])
+
+  const toggleSplitView = useCallback(() => {
+    setDatesState((prev) => {
+      if (prev.length === 2) return [prev[0]]
+      const secondDate = formatDateKey(addDays(new Date(prev[0] + "T00:00:00"), 1))
+      return [prev[0], secondDate]
+    })
+  }, [])
+
+  const shiftDate = useCallback((index: number, delta: number) => {
+    setDatesState((prev) => {
+      const next = [...prev]
+      next[index] = formatDateKey(addDays(new Date(next[index] + "T00:00:00"), delta))
+      return next
+    })
+  }, [])
+
+  const shiftAllDates = useCallback((delta: number) => {
+    setDatesState((prev) =>
+      prev.map((d) => formatDateKey(addDays(new Date(d + "T00:00:00"), delta))),
+    )
+  }, [])
+
+  const setTodayAll = useCallback(() => {
+    const today = formatDateKey(new Date())
+    setDatesState((prev) =>
+      prev.length === 2 ? [today, formatDateKey(addDays(new Date(), 1))] : [today],
+    )
+  }, [])
 
   const {
     tables,
@@ -336,18 +353,6 @@ export function ReservationScheduler() {
     markConflict,
   ])
 
-  const handlePrevDay = () => {
-    setBaseDate(formatDateKey(addDays(new Date(baseDate + "T00:00:00"), -1)))
-  }
-
-  const handleNextDay = () => {
-    setBaseDate(formatDateKey(addDays(new Date(baseDate + "T00:00:00"), 1)))
-  }
-
-  const handleToday = () => {
-    setBaseDate(formatDateKey(new Date()))
-  }
-
   if (!restaurantId) {
     return <div className="scheduler__empty">No restaurant selected.</div>
   }
@@ -356,13 +361,13 @@ export function ReservationScheduler() {
     <div className="scheduler">
       <div className="scheduler__toolbar">
         <div className="scheduler__toolbar-nav">
-          <button type="button" className="scheduler__nav-btn" onClick={handlePrevDay}>
+          <button type="button" className="scheduler__nav-btn" onClick={() => shiftAllDates(-1)}>
             <LuChevronLeft aria-hidden="true" />
           </button>
-          <button type="button" className="scheduler__today-btn" onClick={handleToday}>
+          <button type="button" className="scheduler__today-btn" onClick={setTodayAll}>
             Today
           </button>
-          <button type="button" className="scheduler__nav-btn" onClick={handleNextDay}>
+          <button type="button" className="scheduler__nav-btn" onClick={() => shiftAllDates(1)}>
             <LuChevronRight aria-hidden="true" />
           </button>
         </div>
@@ -370,10 +375,10 @@ export function ReservationScheduler() {
           <span className="scheduler__timezone-label">{restaurantTimezone}</span>
           <button
             type="button"
-            className={`scheduler__split-btn${showSecondDay ? " scheduler__split-btn--active" : ""}`}
-            onClick={() => setShowSecondDay((v) => !v)}
+            className={`scheduler__split-btn${dates.length === 2 ? " scheduler__split-btn--active" : ""}`}
+            onClick={toggleSplitView}
           >
-            {showSecondDay ? "Single View" : "Split View"}
+            {dates.length === 2 ? "Single View" : "Split View"}
           </button>
         </div>
       </div>
@@ -400,6 +405,9 @@ export function ReservationScheduler() {
                 modifiedIds={modifiedIds}
                 onResizeStart={handleResizeStart}
                 scrollRef={i === 0 ? scrollRefA : scrollRefB}
+                showNav={dates.length === 2}
+                onPrevDay={() => shiftDate(i, -1)}
+                onNextDay={() => shiftDate(i, 1)}
               />
             ))}
           </div>

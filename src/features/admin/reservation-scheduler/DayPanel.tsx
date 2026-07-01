@@ -1,4 +1,5 @@
 import type { RefObject } from "react"
+import { LuChevronLeft, LuChevronRight } from "react-icons/lu"
 import type { SchedulerReservation, SchedulerTable } from "./types"
 import { isoToDateKey } from "./types"
 import { TimelineHeader } from "./TimelineHeader"
@@ -14,6 +15,9 @@ interface DayPanelProps {
   modifiedIds: Set<string>
   onResizeStart: (reservationId: string, edge: "start" | "end", e: React.MouseEvent) => void
   scrollRef?: RefObject<HTMLDivElement | null>
+  showNav?: boolean
+  onPrevDay?: () => void
+  onNextDay?: () => void
 }
 
 export function DayPanel({
@@ -26,6 +30,9 @@ export function DayPanel({
   modifiedIds,
   onResizeStart,
   scrollRef,
+  showNav,
+  onPrevDay,
+  onNextDay,
 }: DayPanelProps) {
   const d = new Date(date + "T00:00:00")
   const dayLabel = d.toLocaleDateString("en-US", {
@@ -38,7 +45,29 @@ export function DayPanel({
 
   return (
     <div className="scheduler__day-panel">
-      <div className="scheduler__day-panel-header">{dayLabel}</div>
+      {showNav ? (
+        <div className="scheduler__day-header">
+          <button
+            type="button"
+            className="scheduler__day-header-nav"
+            onClick={onPrevDay}
+            aria-label="Previous day"
+          >
+            <LuChevronLeft aria-hidden="true" />
+          </button>
+          <span className="scheduler__day-header-label">{dayLabel}</span>
+          <button
+            type="button"
+            className="scheduler__day-header-nav"
+            onClick={onNextDay}
+            aria-label="Next day"
+          >
+            <LuChevronRight aria-hidden="true" />
+          </button>
+        </div>
+      ) : (
+        <div className="scheduler__day-panel-header">{dayLabel}</div>
+      )}
       <div className="scheduler__day-panel-body" ref={scrollRef}>
         <TimelineHeader hourStart={hourStart} hourEnd={hourEnd} />
         {tables.map((table) => (
