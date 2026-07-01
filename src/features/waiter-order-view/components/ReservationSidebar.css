@@ -94,7 +94,7 @@
 }
 
 .reservation-sidebar__item-time {
-  font-size: 0.78rem;
+  font-size: 0.95rem;
   font-weight: 800;
   color: var(--w-text);
   font-variant-numeric: tabular-nums;
@@ -107,13 +107,13 @@
 }
 
 .reservation-sidebar__item-name {
-  font-size: 0.85rem;
+  font-size: 1.05rem;
   font-weight: 700;
   color: var(--w-text);
 }
 
 .reservation-sidebar__item-meta {
-  font-size: 0.62rem;
+  font-size: 0.78rem;
   font-weight: 600;
   letter-spacing: 0.08em;
   color: var(--w-text-muted);
@@ -139,7 +139,7 @@
 }
 
 .reservation-sidebar__item-table {
-  font-size: 0.72rem;
+  font-size: 0.9rem;
   font-weight: 800;
   color: var(--w-text);
   padding: 4px 10px;
@@ -154,8 +154,8 @@
 }
 
 .reservation-sidebar__action-btn {
-  padding: 3px 8px;
-  font-size: 0.55rem;
+  padding: 4px 10px;
+  font-size: 0.7rem;
   font-weight: 700;
   letter-spacing: 0.06em;
   border: none;

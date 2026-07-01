@@ -109,17 +109,50 @@ export function TableDetailOverlay({
               </svg>
             </button>
           </div>
-          <p className="overlay__subtitle">
-            {loading
-              ? ""
-              : isReserved
-                ? `Reserved ${nearestReservation ? `• ${nearestReservation.name} ${formatTimeRange(nearestReservation.start_at, nearestReservation.end_at)}` : ""}`
-                : isOccupied && detail
-                  ? `Current Party: ${detail.guest_name} • ${detail.guest_count} Guests • Duration: ${detail.duration}${nextReservation ? ` • Next: ${nextReservation.name} ${formatTimeRange(nextReservation.start_at, nextReservation.end_at)}` : ""}`
-                  : nextReservation
-                    ? `Capacity: ${table.capacity} • Next: ${nextReservation.name} ${formatTimeRange(nextReservation.start_at, nextReservation.end_at)}`
-                    : `Capacity: ${table.capacity} • Available`}
-          </p>
+          <div className="overlay__status-cards">
+            <div className="overlay__status-card">
+              <p className="overlay__status-label">
+                {isReserved ? "Reserved" : isOccupied ? "Current Party" : "Capacity"}
+              </p>
+              <p className="overlay__status-value">
+                {loading
+                  ? ""
+                  : isReserved
+                    ? nearestReservation
+                      ? `${nearestReservation.name}`
+                      : "Upcoming"
+                    : isOccupied && detail
+                      ? detail.guest_name
+                      : `${table.capacity} guests`}
+              </p>
+            </div>
+            <div className="overlay__status-card">
+              <p className="overlay__status-label">Details</p>
+              <p className="overlay__status-value">
+                {loading
+                  ? ""
+                  : isOccupied && detail
+                    ? `${detail.guest_count} guests • ${detail.duration}`
+                    : nextReservation
+                      ? `${formatTimeRange(nextReservation.start_at, nextReservation.end_at)}`
+                      : "Available"}
+              </p>
+            </div>
+            {(nextReservation || (isOccupied && detail)) && (
+              <div className="overlay__status-card overlay__status-card--muted">
+                <p className="overlay__status-label">{isOccupied ? "Next Booking" : "Next"}</p>
+                <p className="overlay__status-value">
+                  {isOccupied && detail
+                    ? nextReservation
+                      ? `${nextReservation.name} • ${formatTimeRange(nextReservation.start_at, nextReservation.end_at)}`
+                      : detail.duration
+                    : nextReservation
+                      ? `${nextReservation.name} • ${formatTimeRange(nextReservation.start_at, nextReservation.end_at)}`
+                      : "None"}
+                </p>
+              </div>
+            )}
+          </div>
         </div>
 
         {!isOccupied && !loading && (
@@ -208,7 +241,7 @@ export function TableDetailOverlay({
           <>
             {detail ? (
               <>
-                <div className="overlay__actions">
+                <div className="overlay__actions overlay__actions--pill">
                   <button type="button" className="overlay__action-btn" onClick={onAddItem}>
                     ADD ITEM
                   </button>
@@ -309,7 +342,10 @@ export function TableDetailOverlay({
               <p className="overlay__empty">No reservations for this table.</p>
             ) : (
               dayReservations.map((r) => (
-                <div key={r.public_id} className="overlay__reservation-row">
+                <div
+                  key={r.public_id}
+                  className={`overlay__reservation-row overlay__reservation-row--${r.status}`}
+                >
                   <div className="overlay__reservation-info">
                     <span className="overlay__reservation-name">
                       {r.name}

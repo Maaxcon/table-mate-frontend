@@ -1,7 +1,7 @@
 import { useMemo } from "react"
 import { FloorPlanView, type FloorPlanTableRef } from "@/features/floorplan/FloorPlanView"
 import type { LayoutPayload } from "@/features/editor/types"
-import type { FloorTable, UpcomingReservation } from "../data/waiterTypes"
+import type { FloorTable, ReservationItem, UpcomingReservation } from "../data/waiterTypes"
 import { getTableVisualStatus, formatDuration, formatETA } from "../data/waiterTypes"
 import "./FloorPlan.css"
 
@@ -12,6 +12,7 @@ interface FloorPlanProps {
   selectedId: string | null
   upcomingReservations?: UpcomingReservation[]
   currentTime: Date
+  activeReservationsByTable?: Record<string, ReservationItem>
   onSelect: (table: FloorTable) => void
   onZoneChange?: (zoneId: string) => void
   canvasCols?: number
@@ -33,6 +34,7 @@ export function FloorPlan({
   selectedId,
   upcomingReservations = [],
   currentTime,
+  activeReservationsByTable = {},
   onSelect,
   onZoneChange,
   canvasCols,
@@ -87,8 +89,19 @@ export function FloorPlan({
           const visualStatus = table
             ? getTableVisualStatus(table, upcomingReservations, currentTime)
             : "free"
-          const number = table?.public_number ?? ref.publicNumber
+          const number = table?.public_number ?? ref.publicNumber ?? ""
           const capacity = table?.capacity ?? ref.capacity
+          const capacityDisplay = capacity ?? null
+          const activeReservationForTable =
+            number && activeReservationsByTable ? activeReservationsByTable[number] : undefined
+          const seatedGuests =
+            visualStatus === "occupied"
+              ? (table?.activeSession?.guest_count ??
+                table?.activeReservation?.guest_count ??
+                activeReservationForTable?.guest_count ??
+                null)
+              : null
+
           return (
             <>
               <span className={`fp-block__badge fp-block__badge--${visualStatus}`}>
@@ -107,20 +120,28 @@ export function FloorPlan({
                   ) : null
                 })()}
 
-              {visualStatus === "occupied" && table?.activeSession && (
-                <div className="fp-block__info">
-                  {table.activeReservation && (
-                    <span className="fp-block__info-name">
-                      {table.activeReservation.guest_name}
-                    </span>
-                  )}
-                  <span className="fp-block__info-sub">
-                    {formatDuration(table.activeSession.opened_at)}
-                  </span>
-                </div>
+              {visualStatus === "occupied" &&
+                (table?.activeSession || activeReservationForTable) && (
+                  <div className="fp-block__info">
+                    {(table?.activeReservation?.guest_name ?? activeReservationForTable?.name) && (
+                      <span className="fp-block__info-name">
+                        {table?.activeReservation?.guest_name ?? activeReservationForTable?.name}
+                      </span>
+                    )}
+                    {table?.activeSession && (
+                      <span className="fp-block__info-sub">
+                        {formatDuration(table.activeSession.opened_at)}
+                      </span>
+                    )}
+                  </div>
+                )}
+              {capacityDisplay != null && (
+                <span className="fp-block__capacity">
+                  {seatedGuests != null && visualStatus === "occupied"
+                    ? `${seatedGuests}/${capacityDisplay}P`
+                    : `${capacityDisplay}P`}
+                </span>
               )}
-
-              {capacity != null && <span className="fp-block__capacity">{capacity}P</span>}
             </>
           )
         }}

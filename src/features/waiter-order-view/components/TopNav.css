@@ -124,11 +124,11 @@
 }
 
 .top-nav__stat-chip--occupied {
-  color: #dc2626;
+  color: var(--w-danger);
 }
 
 .top-nav__stat-chip--reserved {
-  color: #2563eb;
+  color: var(--w-accent);
 }
 
 .top-nav__stat-chip--free {

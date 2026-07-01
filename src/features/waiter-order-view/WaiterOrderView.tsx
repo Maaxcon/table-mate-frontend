@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { useHallSubscription } from "./hooks/useHallSubscription"
 import { TopNav } from "./components/TopNav"
 import { FloorPlan } from "./components/FloorPlan"
@@ -247,9 +247,19 @@ export function WaiterOrderView() {
     }
   }
 
-  const filteredTables = selectedZoneId
-    ? tables.filter((t) => t.zone?.public_id === selectedZoneId)
-    : tables
+  const filteredTables = useMemo(() => {
+    if (!selectedZoneId) return tables
+    const layoutTables = layoutPayload?.tables ?? []
+    const numbersInZone = new Set(
+      layoutTables
+        .filter((table) => table.zone_id === selectedZoneId)
+        .map((table) => table.public_number),
+    )
+    if (numbersInZone.size > 0) {
+      return tables.filter((table) => numbersInZone.has(table.public_number))
+    }
+    return tables.filter((table) => table.zone?.public_id === selectedZoneId)
+  }, [tables, layoutPayload, selectedZoneId])
 
   const selectedTable = selectedTableId
     ? (filteredTables.find((t) => t.public_id === selectedTableId) ?? null)
@@ -270,13 +280,13 @@ export function WaiterOrderView() {
     }
   }
 
-  const visualOccupiedCount = tables.filter(
+  const visualOccupiedCount = filteredTables.filter(
     (t) => getTableVisualStatus(t, layoutReservations, currentTime) === "occupied",
   ).length
-  const visualReservedCount = tables.filter(
+  const visualReservedCount = filteredTables.filter(
     (t) => getTableVisualStatus(t, layoutReservations, currentTime) === "reserved",
   ).length
-  const visualFreeCount = tables.filter(
+  const visualFreeCount = filteredTables.filter(
     (t) => getTableVisualStatus(t, layoutReservations, currentTime) === "free",
   ).length
   const selectedTableVisualStatus = selectedTable
@@ -287,6 +297,16 @@ export function WaiterOrderView() {
     (r) =>
       r.status === "pending" && new Date(r.start_at).toDateString() === currentTime.toDateString(),
   )
+
+  const activeReservationsByTable = useMemo(() => {
+    const map: Record<string, ReservationItem> = {}
+    for (const res of reservations) {
+      if (res.status === "active" && res.table) {
+        map[res.table] = res
+      }
+    }
+    return map
+  }, [reservations])
 
   if (loading)
     return (
@@ -322,6 +342,7 @@ export function WaiterOrderView() {
             selectedId={selectedTableId}
             upcomingReservations={layoutReservations}
             currentTime={currentTime}
+            activeReservationsByTable={activeReservationsByTable}
             onSelect={handleTableSelect}
             onZoneChange={setSelectedZoneId}
             canvasCols={zones.find((z) => z.public_id === selectedZoneId)?.canvas_cols}

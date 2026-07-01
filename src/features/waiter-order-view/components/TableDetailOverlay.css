@@ -20,6 +20,11 @@
   overflow-y: auto;
 }
 
+[data-theme="dark"] .overlay {
+  background: color-mix(in srgb, #0a0c12 90%, var(--w-panel) 10%);
+  border-left-color: rgba(255, 255, 255, 0.08);
+}
+
 @media (max-width: 520px) {
   .overlay {
     width: 100vw;
@@ -27,7 +32,7 @@
 }
 
 .overlay__header {
-  padding: 28px 28px 0;
+  padding: 32px 32px 4px;
 }
 
 .overlay__header-top {
@@ -63,10 +68,59 @@
 }
 
 .overlay__subtitle {
-  margin: 6px 0 0;
-  font-size: 0.82rem;
+  margin: 10px 0 0;
+  font-size: 0.85rem;
   font-weight: 500;
   color: var(--w-text-muted);
+  line-height: 1.4;
+}
+
+.overlay__status-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
+  margin: 16px 0 0;
+}
+
+.overlay__status-card {
+  padding: 12px 14px;
+  border: 1px solid var(--w-border);
+  border-radius: var(--w-radius-sm);
+  background: var(--w-card);
+  box-shadow: var(--w-shadow-sm);
+}
+
+.overlay__status-card--muted {
+  background: color-mix(in srgb, var(--w-card) 80%, var(--w-bg) 20%);
+}
+
+[data-theme="dark"] .overlay__status-card {
+  background: color-mix(in srgb, var(--w-card) 70%, #111622 30%);
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.55);
+}
+
+[data-theme="dark"] .overlay__status-card--muted {
+  background: color-mix(in srgb, #0f1522 75%, var(--w-card) 25%);
+}
+
+.overlay__status-label {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--w-text-muted);
+}
+
+.overlay__status-value {
+  margin: 4px 0 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--w-text);
+}
+
+[data-theme="dark"] .overlay__status-value {
+  color: rgba(255, 255, 255, 0.92);
 }
 
 .overlay__actions {
@@ -75,9 +129,24 @@
   padding: 20px 28px 0;
 }
 
+.overlay__actions--pill {
+  background: color-mix(in srgb, var(--w-bg) 80%, white 20%);
+  padding: 20px 28px;
+  margin: 12px 28px 0;
+  border-radius: var(--w-radius);
+  box-shadow: var(--w-shadow-md);
+  border: 1px solid var(--w-border);
+}
+
+[data-theme="dark"] .overlay__actions--pill {
+  background: color-mix(in srgb, #0f1624 85%, var(--w-card) 15%);
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.7);
+}
+
 .overlay__action-btn {
   padding: 8px 16px;
-  font-size: 0.68rem;
+  font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.06em;
   color: var(--w-text);
@@ -89,6 +158,12 @@
   transition:
     box-shadow 0.15s,
     border-color 0.15s;
+}
+
+[data-theme="dark"] .overlay__action-btn {
+  color: rgba(255, 255, 255, 0.92);
+  background: color-mix(in srgb, #111827 80%, var(--w-card) 20%);
+  border-color: rgba(255, 255, 255, 0.08);
 }
 
 .overlay__action-btn:hover {
@@ -104,6 +179,16 @@
 .overlay__body {
   padding: 0 28px;
   flex: 1;
+}
+
+.overlay__body-footer {
+  padding: 24px 0 32px;
+  margin-top: 24px;
+  border-top: 1px solid var(--w-divider);
+}
+
+.overlay__body-footer .overlay__cta {
+  margin-top: 0;
 }
 
 .overlay__slot + .overlay__slot {
@@ -188,7 +273,7 @@
 .overlay__tabs {
   display: flex;
   border-bottom: 1px solid var(--w-divider);
-  margin: 0 28px;
+  margin: 8px 28px 16px;
 }
 
 .overlay__tab {
@@ -231,14 +316,61 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 0;
-  border-bottom: 1px solid var(--w-divider);
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 18px 20px;
+  border: 1px solid var(--w-border);
+  border-radius: var(--w-radius-sm);
+  background: color-mix(in srgb, var(--w-card) 88%, var(--w-bg) 12%);
+  box-shadow: var(--w-shadow-sm);
+  margin-bottom: 14px;
+}
+
+.overlay__reservation-row:last-child {
+  margin-bottom: 0;
+}
+
+.overlay__reservation-row--pending {
+  border-color: rgba(var(--w-warning-rgb), 0.4);
+  background: rgba(var(--w-warning-rgb), 0.08);
+}
+
+.overlay__reservation-row--active {
+  border-color: rgba(var(--w-success-rgb), 0.5);
+  background: rgba(var(--w-success-rgb), 0.12);
+}
+
+.overlay__reservation-row--cancelled {
+  border-color: rgba(var(--w-danger-rgb), 0.35);
+  background: rgba(var(--w-danger-rgb), 0.08);
+  opacity: 0.85;
+}
+
+[data-theme="dark"] .overlay__reservation-row {
+  border-color: rgba(255, 255, 255, 0.08);
+  background: color-mix(in srgb, #131926 80%, var(--w-card) 20%);
+  box-shadow: 0 18px 32px rgba(0, 0, 0, 0.65);
+}
+
+[data-theme="dark"] .overlay__reservation-row--pending {
+  border-color: rgba(var(--w-warning-rgb), 0.45);
+  background: rgba(var(--w-warning-rgb), 0.18);
+}
+
+[data-theme="dark"] .overlay__reservation-row--active {
+  border-color: rgba(var(--w-success-rgb), 0.6);
+  background: rgba(var(--w-success-rgb), 0.2);
+}
+
+[data-theme="dark"] .overlay__reservation-row--cancelled {
+  border-color: rgba(var(--w-danger-rgb), 0.5);
+  background: rgba(var(--w-danger-rgb), 0.2);
 }
 
 .overlay__reservation-info {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
 }
 
 .overlay__reservation-name {
@@ -260,9 +392,16 @@
 }
 
 .overlay__reservation-meta {
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   font-weight: 600;
   color: var(--w-text-muted);
+}
+
+.overlay__reservation-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 @keyframes overlay-shimmer {
@@ -374,8 +513,8 @@
 }
 
 .overlay__seat-btn {
-  padding: 8px 16px;
-  font-size: 0.72rem;
+  padding: 10px 20px;
+  font-size: 0.78rem;
   font-weight: 800;
   letter-spacing: 0.06em;
   color: var(--w-bg);
