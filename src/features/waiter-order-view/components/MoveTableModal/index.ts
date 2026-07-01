@@ -1,1 +1,1 @@
-export * from "./$comp"
+export * from "./MoveTableModal"
