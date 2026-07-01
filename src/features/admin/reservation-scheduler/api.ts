@@ -26,16 +26,24 @@ export async function fetchReservationsForRange(
     if (!res.ok) throw new Error("Failed to fetch reservations")
     const data = await res.json()
     const results: unknown[] = data.results ?? data
-    const mapped = results.map((r: Record<string, unknown>) => ({
-      public_id: r.public_id as string,
-      table: r.table as string,
-      table_number: (r.table_info as Record<string, string>)?.public_number ?? "",
-      customer_name: (r.customer_name as string) ?? "Guest",
-      guest_count: r.guest_count as number,
-      start_at: r.start_at as string,
-      end_at: r.end_at as string,
-      status: r.status as SchedulerReservation["status"],
-    }))
+    const mapped = results.map((r: Record<string, unknown>) => {
+      const isActive = r.status === "active"
+      return {
+        public_id: r.public_id as string,
+        table: isActive && r.session_table ? (r.session_table as string) : (r.table as string),
+        table_number:
+          isActive && r.session_table_number
+            ? (r.session_table_number as string)
+            : ((r.table_info as Record<string, string>)?.public_number ?? ""),
+        customer_name: (r.customer_name as string) ?? "Guest",
+        guest_count: r.guest_count as number,
+        start_at: r.start_at as string,
+        end_at:
+          isActive && r.session_ends_at ? (r.session_ends_at as string) : (r.end_at as string),
+        opened_at: (r.opened_at as string) ?? null,
+        status: r.status as SchedulerReservation["status"],
+      }
+    })
     allResults = allResults.concat(mapped)
     url = data.next ?? null
   }

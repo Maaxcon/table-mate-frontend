@@ -8,6 +8,7 @@ export interface SchedulerReservation {
   guest_count: number
   start_at: string
   end_at: string
+  opened_at: string | null
   status: ReservationStatus
 }
 

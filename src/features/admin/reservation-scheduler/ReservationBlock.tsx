@@ -19,9 +19,12 @@ export function ReservationBlock({
   isModified,
   onResizeStart,
 }: ReservationBlockProps) {
-  const start = new Date(reservation.start_at)
+  const displayStart =
+    reservation.status === "active" && reservation.opened_at
+      ? new Date(reservation.opened_at)
+      : new Date(reservation.start_at)
   const end = new Date(reservation.end_at)
-  const startMinutes = start.getHours() * 60 + start.getMinutes()
+  const startMinutes = displayStart.getHours() * 60 + displayStart.getMinutes()
   const endMinutes = end.getHours() * 60 + end.getMinutes()
   const totalMinutes = (hourEnd - hourStart) * 60
 
