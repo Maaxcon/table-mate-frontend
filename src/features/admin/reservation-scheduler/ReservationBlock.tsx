@@ -66,7 +66,17 @@ export function ReservationBlock({
   const durationLabel = hours > 0 ? `${hours}h${mins > 0 ? `${mins}m` : ""}` : `${mins}m`
 
   return (
-    <div ref={setNodeRef} className={classNames} style={style} {...attributes} {...listeners}>
+    <div
+      ref={setNodeRef}
+      className={classNames}
+      style={style}
+      tabIndex={0}
+      role="button"
+      aria-label={`${reservation.customer_name}, ${reservation.guest_count} guests, ${reservation.status}`}
+      aria-grabbed={isDragging}
+      {...attributes}
+      {...listeners}
+    >
       {reservation.status === "pending" && (
         <button
           type="button"
