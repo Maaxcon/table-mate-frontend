@@ -25,8 +25,13 @@
   position: relative;
   width: 100%;
   max-width: 100%;
+  /* Keep the floor readable: never squash below MIN_SCALE — instead scroll/pan
+     inside a fixed-height frame. */
+  max-height: 64vh;
   box-sizing: border-box;
-  overflow: hidden;
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
   /* Walls: a thick, slightly darkened frame reads as the room's perimeter. */
   border: 3px solid
     color-mix(in srgb, var(--color-border-default) 78%, var(--color-text-primary) 10%);
@@ -80,8 +85,17 @@
   color: var(--color-primary);
 }
 
-.c-floor-plan__canvas {
+/* Sized to the SCALED canvas so the scroll area matches what's visible (a
+   transform:scale keeps the untransformed layout size, which would otherwise
+   add empty scroll space). */
+.c-floor-plan__canvas-wrap {
   position: relative;
+}
+
+.c-floor-plan__canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
   transform-origin: top left;
 }
 
@@ -477,11 +491,13 @@
   color: var(--color-text-primary);
 }
 
-/* Keep the number / status label upright when the table is rotated. */
+/* Keep the number / status label / seats chip upright when the table rotates. */
 .c-floor-plan__table--square .c-floor-plan__table-badge,
 .c-floor-plan__table--square .c-floor-plan__table-number,
+.c-floor-plan__table--square .c-floor-plan__table-capacity,
 .c-floor-plan__table--round .c-floor-plan__table-badge,
-.c-floor-plan__table--round .c-floor-plan__table-number {
+.c-floor-plan__table--round .c-floor-plan__table-number,
+.c-floor-plan__table--round .c-floor-plan__table-capacity {
   transform: rotate(calc(-1 * var(--rot, 0deg)));
 }
 
@@ -492,11 +508,36 @@
   margin-top: 6px;
 }
 
+/* Seats — a clear chip (people icon + count) so capacity reads at a glance. */
 .c-floor-plan__table-capacity {
-  font-size: 0.65rem;
-  font-weight: 600;
-  color: var(--color-text-muted);
-  letter-spacing: 0.05em;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 6px;
+  padding: 4px 12px;
+  border-radius: 100px;
+  background: color-mix(in srgb, var(--color-text-primary) 9%, var(--color-bg-surface));
+  color: var(--color-text-primary);
+  font-size: 1.1rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.c-floor-plan__table-capacity svg {
+  width: 16px;
+  height: 16px;
+  opacity: 0.65;
+}
+
+.c-floor-plan__table--free .c-floor-plan__table-capacity {
+  background: color-mix(in srgb, var(--color-success-bg) 75%, var(--color-bg-surface));
+  color: var(--color-success-text);
+}
+
+.c-floor-plan__table--occupied .c-floor-plan__table-capacity,
+.c-floor-plan__table--reserved .c-floor-plan__table-capacity {
+  background: color-mix(in srgb, var(--color-text-primary) 12%, var(--color-bg-surface));
+  color: var(--color-text-secondary);
 }
 
 .c-floor-plan__table-available {
