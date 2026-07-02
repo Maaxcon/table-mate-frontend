@@ -173,6 +173,8 @@
   flex: 1;
   min-height: 0;
   overflow-y: auto;
+  /* Clip any sub-pixel child overflow so the page never scrolls sideways. */
+  overflow-x: hidden;
 }
 
 /* Live-connection dot in the tab row (green = connected, red = dropped). */
