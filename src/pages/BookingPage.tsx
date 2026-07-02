@@ -45,7 +45,6 @@ export function BookingPage() {
     setSelectedZone,
     reloadZones,
     layoutPayload,
-    reloadLayout,
     workingHours,
     timezone,
     reservations,
@@ -185,12 +184,11 @@ export function BookingPage() {
   )
 
   const handleLayoutPublished = useCallback(() => {
+    // reloadTables now refreshes tables + layout + upcoming in one call.
     reloadTables()
     // A publish may have added/removed a zone; refresh zones so its tab appears live.
     reloadZones()
-    // Pull the freshly published layout so the floor map matches the editor live.
-    reloadLayout()
-  }, [reloadTables, reloadZones, reloadLayout])
+  }, [reloadTables, reloadZones])
 
   const { isConnected } = useFloorSubscription({
     onTableStatusChanged: handleTableStatusChanged,
