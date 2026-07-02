@@ -155,7 +155,7 @@
   min-height: 0;
   width: 100%;
   height: auto;
-  aspect-ratio: var(--fp-aspect, 1);
+
   align-self: stretch;
 }
 
