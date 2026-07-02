@@ -96,6 +96,15 @@ export function ReservationScheduler() {
 
   const { hourStart, hourEnd } = useMemo(() => computeHourRange(workingHours), [workingHours])
 
+  const reservationsRef = useRef(state.reservations)
+  const pendingChangesRef = useRef(state.pendingChanges)
+  useEffect(() => {
+    reservationsRef.current = state.reservations
+  }, [state.reservations])
+  useEffect(() => {
+    pendingChangesRef.current = state.pendingChanges
+  }, [state.pendingChanges])
+
   useEffect(() => {
     if (!restaurantId) return
     fetchRestaurantSettings(restaurantId)
@@ -124,6 +133,7 @@ export function ReservationScheduler() {
   }, [state.pendingChanges])
 
   const [pendingNavAction, setPendingNavAction] = useState<(() => void) | null>(null)
+  const [externalUpdate, setExternalUpdate] = useState(false)
 
   const guardedNav = useCallback(
     (action: () => void) => {
@@ -148,9 +158,36 @@ export function ReservationScheduler() {
     setReservations(fetchedReservations)
   }, [fetchedReservations, setReservations])
 
+  const handleExternalUpdate = useCallback(async () => {
+    await refetch()
+    if (pendingChangesRef.current.length > 0) {
+      setExternalUpdate(true)
+    }
+  }, [refetch])
+
   useHallSubscription({
-    onReservationsUpdated: refetch,
+    onReservationsUpdated: handleExternalUpdate,
   })
+
+  const handleCommitChanges = useCallback(() => {
+    commitChanges()
+    setExternalUpdate(false)
+  }, [commitChanges])
+
+  const handleResetChanges = useCallback(() => {
+    resetChanges()
+    setExternalUpdate(false)
+  }, [resetChanges])
+
+  const discardExternalUpdate = useCallback(() => {
+    clearPending()
+    setExternalUpdate(false)
+    refetch()
+  }, [clearPending, refetch])
+
+  const dismissExternalUpdate = useCallback(() => {
+    setExternalUpdate(false)
+  }, [])
 
   const confirmNav = useCallback(() => {
     const action = pendingNavAction
@@ -250,15 +287,6 @@ export function ReservationScheduler() {
     },
     [handleDragEnd],
   )
-
-  const reservationsRef = useRef(state.reservations)
-  const pendingChangesRef = useRef(state.pendingChanges)
-  useEffect(() => {
-    reservationsRef.current = state.reservations
-  }, [state.reservations])
-  useEffect(() => {
-    pendingChangesRef.current = state.pendingChanges
-  }, [state.pendingChanges])
 
   const handleResizeStart = useCallback(
     (reservationId: string, edge: "start" | "end", e: React.MouseEvent) => {
@@ -409,7 +437,7 @@ export function ReservationScheduler() {
       const result = await batchUpdateReservations(payload)
 
       if (result.ok) {
-        commitChanges()
+        handleCommitChanges()
         refetch()
         toast.success("Reservations updated successfully.")
       } else {
@@ -417,12 +445,12 @@ export function ReservationScheduler() {
           markConflict(result.conflicting_reservation_id)
           toast.error(result.message)
         } else {
-          resetChanges()
+          handleResetChanges()
           toast.error(result.message)
         }
       }
     } catch {
-      resetChanges()
+      handleResetChanges()
       toast.error("Failed to save changes.")
     } finally {
       setSaving(false)
@@ -432,11 +460,11 @@ export function ReservationScheduler() {
     state.pendingChanges,
     setSaving,
     clearConflict,
-    commitChanges,
+    handleCommitChanges,
     refetch,
     toast,
     markConflict,
-    resetChanges,
+    handleResetChanges,
   ])
 
   if (!restaurantId) {
@@ -468,6 +496,30 @@ export function ReservationScheduler() {
           </button>
         </div>
       </div>
+
+      {externalUpdate && (
+        <div className="scheduler__stale-banner">
+          <span className="scheduler__stale-banner-text">
+            Reservation data changed externally. Your unsaved changes may conflict.
+          </span>
+          <div className="scheduler__stale-banner-actions">
+            <button
+              type="button"
+              className="scheduler__stale-banner-btn scheduler__stale-banner-btn--primary"
+              onClick={discardExternalUpdate}
+            >
+              Discard &amp; reload
+            </button>
+            <button
+              type="button"
+              className="scheduler__stale-banner-btn"
+              onClick={dismissExternalUpdate}
+            >
+              Continue editing
+            </button>
+          </div>
+        </div>
+      )}
 
       {loading && <div className="scheduler__loading">Loading...</div>}
       {error && <div className="scheduler__error">{error}</div>}
@@ -523,7 +575,7 @@ export function ReservationScheduler() {
         changeCount={state.pendingChanges.length}
         saving={state.saving}
         onSave={handleSave}
-        onReset={resetChanges}
+        onReset={handleResetChanges}
       />
 
       {pendingNavAction && (

@@ -371,6 +371,52 @@
   text-decoration: line-through;
 }
 
+.scheduler__stale-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.5rem 1rem;
+  background: color-mix(in srgb, var(--color-warning-icon, #dd6b20) 12%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--color-warning-icon, #dd6b20) 30%, transparent);
+  font-size: 0.8125rem;
+}
+
+.scheduler__stale-banner-text {
+  color: var(--color-text-primary, #1a202c);
+}
+
+.scheduler__stale-banner-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.scheduler__stale-banner-btn {
+  padding: 0.25rem 0.625rem;
+  border: 1px solid var(--color-border-default, #e2e8f0);
+  border-radius: 0.25rem;
+  background: var(--color-bg-surface, #fff);
+  cursor: pointer;
+  font-size: 0.75rem;
+  color: var(--color-text-primary, #1a202c);
+  white-space: nowrap;
+}
+
+.scheduler__stale-banner-btn--primary {
+  background: var(--color-primary, #3182ce);
+  color: #fff;
+  border-color: var(--color-primary, #3182ce);
+}
+
+.scheduler__stale-banner-btn:hover {
+  filter: brightness(0.95);
+}
+
+.scheduler__stale-banner-btn--primary:hover {
+  filter: brightness(1.1);
+}
+
 @keyframes scheduler-pulse {
   0%,
   100% {
