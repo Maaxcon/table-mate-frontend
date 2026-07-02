@@ -85,6 +85,105 @@
   transform-origin: top left;
 }
 
+/* ===== Non-table layout elements from the editor: walls, doorways, portals ===== */
+
+/* Shared base for EVERY non-table element: position + rotation via --rot. Any
+   future shape just needs this class + pieceStyle() and it rotates for free. */
+.c-floor-plan__piece {
+  position: absolute;
+  transform: rotate(var(--rot, 0deg));
+  transform-origin: center;
+}
+
+/* Walls / pillars — hatched solid blocks guests can't sit at. */
+.c-floor-plan__obstacle {
+  position: absolute;
+  box-sizing: border-box;
+  border-radius: 8px;
+  border: 1.5px solid color-mix(in srgb, var(--color-text-primary) 28%, var(--color-border-default));
+  background-image: repeating-linear-gradient(
+    45deg,
+    color-mix(in srgb, var(--color-text-primary) 13%, var(--color-bg-surface)),
+    color-mix(in srgb, var(--color-text-primary) 13%, var(--color-bg-surface)) 8px,
+    color-mix(in srgb, var(--color-text-primary) 20%, var(--color-bg-surface)) 8px,
+    color-mix(in srgb, var(--color-text-primary) 20%, var(--color-bg-surface)) 16px
+  );
+  box-shadow: inset 0 2px 6px rgb(0 0 0 / 12%);
+  transform-origin: center;
+}
+
+/* Thresholds — doorways / open passages in a wall. */
+.c-floor-plan__threshold {
+  position: absolute;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed color-mix(in srgb, var(--color-primary) 45%, var(--color-border-default));
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--color-primary) 5%, transparent);
+  transform-origin: center;
+}
+
+.c-floor-plan__threshold-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  pointer-events: none;
+}
+
+/* Portals — tap to jump to the linked zone (terrace, VIP, …). */
+.c-floor-plan__portal {
+  position: absolute;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 6px;
+  border: 2px solid color-mix(in srgb, var(--color-primary) 55%, transparent);
+  border-radius: 14px;
+  background: linear-gradient(
+    145deg,
+    color-mix(in srgb, var(--color-primary) 22%, var(--color-bg-surface)),
+    color-mix(in srgb, var(--color-primary) 8%, var(--color-bg-surface))
+  );
+  color: var(--color-primary);
+  font-family: inherit;
+  cursor: pointer;
+  transform-origin: center;
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.c-floor-plan__portal:hover:not(:disabled) {
+  transform: translateY(-3px) rotate(var(--rot, 0deg));
+  box-shadow: 0 10px 22px -10px color-mix(in srgb, var(--color-primary) 60%, transparent);
+}
+
+.c-floor-plan__portal:disabled {
+  cursor: default;
+  opacity: 0.7;
+}
+
+.c-floor-plan__portal svg {
+  width: 26px;
+  height: 26px;
+}
+
+.c-floor-plan__portal-label {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-align: center;
+  line-height: 1.1;
+}
+
 /* The button is just the hit area + positioning; the visible table is the
    surface, which paints over the chairs so they tuck under the edge. */
 .c-floor-plan__table {
@@ -96,6 +195,9 @@
   cursor: pointer;
   font-family: inherit;
   text-align: center;
+  /* --rot carries the table's editor rotation; keep it in every transform so it
+     survives hover and the entrance animation. */
+  transform: rotate(var(--rot, 0deg));
   transition: transform 180ms ease;
   /* Tables float up on load, staggered via an inline animation-delay per table.
      `backwards` hides them until their turn, then reverts to base so hover works. */
@@ -104,17 +206,17 @@
 
 /* The whole table (chairs included) lifts + grows a touch on hover. */
 .c-floor-plan__table:hover:not(:disabled) {
-  transform: translateY(-5px) scale(1.04);
+  transform: translateY(-5px) scale(1.04) rotate(var(--rot, 0deg));
 }
 
 @keyframes c-fp-rise {
   from {
     opacity: 0;
-    transform: translateY(12px) scale(0.94);
+    transform: translateY(12px) scale(0.94) rotate(var(--rot, 0deg));
   }
   to {
     opacity: 1;
-    transform: none;
+    transform: rotate(var(--rot, 0deg));
   }
 }
 
@@ -147,7 +249,7 @@
 }
 
 .c-floor-plan__table:disabled:hover {
-  transform: none;
+  transform: rotate(var(--rot, 0deg));
 }
 
 .c-floor-plan__surface {
@@ -373,6 +475,14 @@
   font-weight: 900;
   line-height: 1;
   color: var(--color-text-primary);
+}
+
+/* Keep the number / status label upright when the table is rotated. */
+.c-floor-plan__table--square .c-floor-plan__table-badge,
+.c-floor-plan__table--square .c-floor-plan__table-number,
+.c-floor-plan__table--round .c-floor-plan__table-badge,
+.c-floor-plan__table--round .c-floor-plan__table-number {
+  transform: rotate(calc(-1 * var(--rot, 0deg)));
 }
 
 .c-floor-plan__table-meta {

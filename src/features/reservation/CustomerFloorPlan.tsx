@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react"
-import { LuPlus, LuUsers, LuDoorOpen } from "react-icons/lu"
+import type { CSSProperties } from "react"
+import { LuPlus, LuUsers, LuDoorOpen, LuArrowRight } from "react-icons/lu"
 import type { Table } from "@/types/api/types.gen"
 import type { FloorTable, UpcomingReservation } from "@/features/waiter-order-view/data/waiterTypes"
 import { getTableVisualStatus } from "@/features/waiter-order-view/data/waiterTypes"
@@ -48,6 +49,7 @@ interface Tile {
   y: number
   w: number
   h: number
+  rotation: number
   shape: "square" | "round"
   tone: Tone
   label: string
@@ -69,6 +71,25 @@ function findLayoutTableMatch(tables: Table[], layoutTable: LayoutPayload["table
     tables.find((table) => table.public_number === layoutTable.public_number)
   )
 }
+
+// Position + rotation style for ANY layout element (walls, doorways, portals,
+// and future shapes). Rotation goes through the --rot CSS variable so a single
+// `.c-floor-plan__piece` rule handles it for every element type — add a new shape
+// and it can rotate with no extra JS.
+const pieceStyle = (el: {
+  x: number
+  y: number
+  width: number
+  height: number
+  rotation?: number
+}): CSSProperties =>
+  ({
+    left: el.x,
+    top: el.y,
+    width: el.width,
+    height: el.height,
+    "--rot": `${el.rotation ?? 0}deg`,
+  }) as CSSProperties
 
 // Tracks whether the viewport is in the mobile (card-list) range.
 function useIsMobile() {
@@ -239,9 +260,11 @@ export function CustomerFloorPlan({
     [tableViews],
   )
 
+  const zoneNameById = useMemo(() => new Map(zones.map((z) => [z.public_id, z.name])), [zones])
+
   // Spatial layout: real coordinates from the published editor layout when present,
   // otherwise a tidy auto grid. Both render the same visual table tiles.
-  const { tiles, canvasWidth, canvasHeight } = useMemo(() => {
+  const { tiles, obstacles, thresholds, portals, canvasWidth, canvasHeight } = useMemo(() => {
     const layoutTables = payload?.tables ?? []
     if (layoutTables.length > 0) {
       const activeZone = zones.find((z) => z.public_id === selectedZone) ?? zones[0]
@@ -261,6 +284,7 @@ export function CustomerFloorPlan({
             y: lt.y,
             w: lt.width,
             h: lt.height,
+            rotation: lt.rotation ?? 0,
             shape: lt.shape === "round" ? "round" : "square",
             tone: view?.tone ?? "free",
             label: view?.label ?? bookStrings.floorPlan.status.free,
@@ -268,8 +292,13 @@ export function CustomerFloorPlan({
             perfect: view?.perfect ?? (capacity === guests && Boolean(table)),
           }
         })
+      const inZone = <T extends { zone_id: string | null }>(e: T) =>
+        !selectedZone || e.zone_id === selectedZone
       return {
         tiles,
+        obstacles: (payload?.obstacles ?? []).filter(inZone),
+        thresholds: (payload?.thresholds ?? []).filter(inZone),
+        portals: (payload?.portals ?? []).filter(inZone),
         canvasWidth: (activeZone?.canvas_cols ?? 20) * GRID,
         canvasHeight: (activeZone?.canvas_rows ?? 20) * GRID,
       }
@@ -287,6 +316,7 @@ export function CustomerFloorPlan({
       y: CANVAS_PADDING + Math.floor(i / cols) * GRID_SPACING,
       w: 200,
       h: 200,
+      rotation: 0,
       shape: "square",
       tone: v.tone,
       label: v.label,
@@ -295,10 +325,13 @@ export function CustomerFloorPlan({
     }))
     return {
       tiles,
+      obstacles: [] as LayoutPayload["obstacles"],
+      thresholds: [] as LayoutPayload["thresholds"],
+      portals: [] as LayoutPayload["portals"],
       canvasWidth: (cols - 1) * GRID_SPACING + TABLE_FOOTPRINT + CANVAS_PADDING * 2,
       canvasHeight: (rows - 1) * GRID_SPACING + TABLE_FOOTPRINT + CANVAS_PADDING * 2,
     }
-  }, [payload, zones, selectedZone, tables, tableViews, viewByPublicId])
+  }, [payload, zones, selectedZone, tables, tableViews, viewByPublicId, guests])
 
   const scale = viewportWidth > 0 ? Math.min(1, viewportWidth / canvasWidth) : 1
 
@@ -457,6 +490,45 @@ export function CustomerFloorPlan({
             className="c-floor-plan__canvas"
             style={{ width: canvasWidth, height: canvasHeight, transform: `scale(${scale})` }}
           >
+            {/* Walls / pillars — solid blocks the guests can't sit at. */}
+            {obstacles.map((o, i) => (
+              <div
+                key={`obstacle-${i}`}
+                className="c-floor-plan__piece c-floor-plan__obstacle"
+                aria-hidden="true"
+                style={pieceStyle(o)}
+              />
+            ))}
+
+            {/* Thresholds — doorways / passages. */}
+            {thresholds.map((t, i) => (
+              <div
+                key={`threshold-${i}`}
+                className="c-floor-plan__piece c-floor-plan__threshold"
+                aria-hidden="true"
+                style={pieceStyle(t)}
+              >
+                {t.label ? <span className="c-floor-plan__threshold-label">{t.label}</span> : null}
+              </div>
+            ))}
+
+            {/* Portals — tap to jump to the linked zone (terrace, etc.). */}
+            {portals.map((p, i) => (
+              <button
+                key={`portal-${i}`}
+                type="button"
+                className="c-floor-plan__piece c-floor-plan__portal"
+                onClick={() => p.target_zone_id && onZoneChange(p.target_zone_id)}
+                disabled={!p.target_zone_id}
+                style={pieceStyle(p)}
+              >
+                <LuArrowRight aria-hidden="true" />
+                <span className="c-floor-plan__portal-label">
+                  {p.portal_label || p.label || zoneNameById.get(p.target_zone_id ?? "") || "→"}
+                </span>
+              </button>
+            ))}
+
             {tiles.map((tile, i) => (
               <button
                 key={tile.key}
@@ -471,13 +543,16 @@ export function CustomerFloorPlan({
                 ]
                   .filter(Boolean)
                   .join(" ")}
-                style={{
-                  left: tile.x,
-                  top: tile.y,
-                  width: tile.w,
-                  height: tile.h,
-                  animationDelay: `${Math.min(i, 24) * 35}ms`,
-                }}
+                style={
+                  {
+                    left: tile.x,
+                    top: tile.y,
+                    width: tile.w,
+                    height: tile.h,
+                    animationDelay: `${Math.min(i, 24) * 35}ms`,
+                    "--rot": `${tile.rotation}deg`,
+                  } as CSSProperties
+                }
                 onClick={() => tile.table && onSelect(tile.table)}
                 disabled={!tile.bookable || !tile.table}
                 aria-label={bookStrings.floorPlan.tableAria(
