@@ -6,12 +6,16 @@ import { useAppSelector } from "@/store/hooks"
 import { useToast } from "@/features/admin/hooks/toastContext"
 import type { WorkingHoursDay } from "@/features/reservation/api"
 import { fetchRestaurantSettings } from "@/features/reservation/api"
+import ConfirmDialog from "@/features/admin/components/ConfirmDialog"
+import { useUnsavedChanges } from "@/features/admin/hooks/unsavedChanges"
+import { useHallSubscription } from "@/features/waiter-order-view/hooks/useHallSubscription"
 import { batchUpdateReservations } from "./api"
 import { useSchedulerState } from "./hooks/useSchedulerState"
 import { useSchedulerData } from "./hooks/useSchedulerData"
 import { useScrollSync } from "./hooks/useScrollSync"
 import { useDragAndDrop } from "./hooks/useDragAndDrop"
 import {
+  checkOperatingHours,
   checkOverlap,
   checkOrderingViolation,
   checkPastTimeViolation,
@@ -68,6 +72,7 @@ function localToISOString(dateStr: string, timeHHMM: string): string {
 export function ReservationScheduler() {
   const restaurantId = useAppSelector((state) => state.auth.user?.restaurantId)
   const toast = useToast()
+  const { setDirty } = useUnsavedChanges()
 
   const {
     state,
@@ -76,6 +81,7 @@ export function ReservationScheduler() {
     moveReservation,
     resizeReservation,
     resetChanges,
+    clearPending,
     markConflict,
     clearConflict,
     setSaving,
@@ -104,34 +110,31 @@ export function ReservationScheduler() {
     setDates(dates)
   }, [dates, setDates])
 
-  const toggleSplitView = useCallback(() => {
-    setDatesState((prev) => {
-      if (prev.length === 2) return [prev[0]]
-      const secondDate = formatDateKey(addDays(new Date(prev[0] + "T00:00:00"), 1))
-      return [prev[0], secondDate]
-    })
-  }, [])
+  useEffect(() => {
+    setDirty(state.pendingChanges.length > 0)
+  }, [state.pendingChanges, setDirty])
 
-  const shiftDate = useCallback((index: number, delta: number) => {
-    setDatesState((prev) => {
-      const next = [...prev]
-      next[index] = formatDateKey(addDays(new Date(next[index] + "T00:00:00"), delta))
-      return next
-    })
-  }, [])
+  useEffect(() => {
+    if (state.pendingChanges.length === 0) return
+    const onBefore = (e: BeforeUnloadEvent) => {
+      e.preventDefault()
+    }
+    window.addEventListener("beforeunload", onBefore)
+    return () => window.removeEventListener("beforeunload", onBefore)
+  }, [state.pendingChanges])
 
-  const shiftAllDates = useCallback((delta: number) => {
-    setDatesState((prev) =>
-      prev.map((d) => formatDateKey(addDays(new Date(d + "T00:00:00"), delta))),
-    )
-  }, [])
+  const [pendingNavAction, setPendingNavAction] = useState<(() => void) | null>(null)
 
-  const setTodayAll = useCallback(() => {
-    const today = formatDateKey(new Date())
-    setDatesState((prev) =>
-      prev.length === 2 ? [today, formatDateKey(addDays(new Date(), 1))] : [today],
-    )
-  }, [])
+  const guardedNav = useCallback(
+    (action: () => void) => {
+      if (state.pendingChanges.length > 0) {
+        setPendingNavAction(() => action)
+      } else {
+        action()
+      }
+    },
+    [state.pendingChanges],
+  )
 
   const {
     tables,
@@ -144,6 +147,64 @@ export function ReservationScheduler() {
   useEffect(() => {
     setReservations(fetchedReservations)
   }, [fetchedReservations, setReservations])
+
+  useHallSubscription({
+    onReservationsUpdated: refetch,
+  })
+
+  const confirmNav = useCallback(() => {
+    const action = pendingNavAction
+    setPendingNavAction(null)
+    clearPending()
+    action?.()
+  }, [pendingNavAction, clearPending])
+
+  const cancelNav = useCallback(() => {
+    setPendingNavAction(null)
+  }, [])
+
+  const toggleSplitView = useCallback(() => {
+    guardedNav(() => {
+      setDatesState((prev) => {
+        if (prev.length === 2) return [prev[0]]
+        const secondDate = formatDateKey(addDays(new Date(prev[0] + "T00:00:00"), 1))
+        return [prev[0], secondDate]
+      })
+    })
+  }, [guardedNav])
+
+  const shiftDate = useCallback(
+    (index: number, delta: number) => {
+      guardedNav(() => {
+        setDatesState((prev) => {
+          const next = [...prev]
+          next[index] = formatDateKey(addDays(new Date(next[index] + "T00:00:00"), delta))
+          return next
+        })
+      })
+    },
+    [guardedNav],
+  )
+
+  const shiftAllDates = useCallback(
+    (delta: number) => {
+      guardedNav(() => {
+        setDatesState((prev) =>
+          prev.map((d) => formatDateKey(addDays(new Date(d + "T00:00:00"), delta))),
+        )
+      })
+    },
+    [guardedNav],
+  )
+
+  const setTodayAll = useCallback(() => {
+    guardedNav(() => {
+      const today = formatDateKey(new Date())
+      setDatesState((prev) =>
+        prev.length === 2 ? [today, formatDateKey(addDays(new Date(), 1))] : [today],
+      )
+    })
+  }, [guardedNav])
 
   const scrollRefA = useRef<HTMLDivElement>(null)
   const scrollRefB = useRef<HTMLDivElement>(null)
@@ -173,6 +234,8 @@ export function ReservationScheduler() {
     hourStart,
     hourEnd,
     slotMinutes: SLOT_MINUTES,
+    restaurantTimezone,
+    workingHours,
     onMove: moveReservation,
     onConflict: (id: string, reason?: string) => {
       markConflict(id)
@@ -256,8 +319,11 @@ export function ReservationScheduler() {
         const orderingReason = checkOrderingViolation(proposed, currentRes, reservationId)
         if (orderingReason) return
 
-        const pastReason = checkPastTimeViolation(proposed)
+        const pastReason = checkPastTimeViolation(proposed, res.status, restaurantTimezone)
         if (pastReason) return
+
+        const hoursReason = checkOperatingHours(proposed, workingHours)
+        if (hoursReason) return
 
         resizeReservation(reservationId, edge, `${ehh}:${emm}`)
       }
@@ -290,10 +356,16 @@ export function ReservationScheduler() {
             toast.error(orderingReason)
             return
           }
-          const pastReason = checkPastTimeViolation(proposed)
+          const pastReason = checkPastTimeViolation(proposed, updated.status, restaurantTimezone)
           if (pastReason) {
             markConflict(reservationId)
             toast.error(pastReason)
+            return
+          }
+          const hoursReason = checkOperatingHours(proposed, workingHours)
+          if (hoursReason) {
+            markConflict(reservationId)
+            toast.error(hoursReason)
           }
         }
       }
@@ -301,7 +373,16 @@ export function ReservationScheduler() {
       document.addEventListener("mousemove", onMouseMove)
       document.addEventListener("mouseup", onMouseUp)
     },
-    [state.reservations, resizeReservation, markConflict, toast, hourStart, hourEnd],
+    [
+      state.reservations,
+      resizeReservation,
+      markConflict,
+      toast,
+      hourStart,
+      hourEnd,
+      restaurantTimezone,
+      workingHours,
+    ],
   )
 
   const handleSave = useCallback(async () => {
@@ -334,10 +415,14 @@ export function ReservationScheduler() {
       } else {
         if (result.conflicting_reservation_id) {
           markConflict(result.conflicting_reservation_id)
+          toast.error(result.message)
+        } else {
+          resetChanges()
+          toast.error(result.message)
         }
-        toast.error(result.message)
       }
     } catch {
+      resetChanges()
       toast.error("Failed to save changes.")
     } finally {
       setSaving(false)
@@ -351,6 +436,7 @@ export function ReservationScheduler() {
     refetch,
     toast,
     markConflict,
+    resetChanges,
   ])
 
   if (!restaurantId) {
@@ -439,6 +525,17 @@ export function ReservationScheduler() {
         onSave={handleSave}
         onReset={resetChanges}
       />
+
+      {pendingNavAction && (
+        <ConfirmDialog
+          title="Discard unsaved changes?"
+          message="You have unsaved changes. Navigate without saving?"
+          confirmLabel="Discard"
+          tone="danger"
+          onConfirm={confirmNav}
+          onClose={cancelNav}
+        />
+      )}
     </div>
   )
 }
