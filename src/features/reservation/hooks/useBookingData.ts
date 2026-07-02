@@ -107,7 +107,12 @@ export function useBookingData(
       .then((data) => {
         if (!mountedRef.current) return
         setZones(data)
-        if (data.length > 0) setSelectedZone(data[0].public_id)
+        // Keep the guest on the zone they're viewing across reloads (WS zone
+        // events, layout publishes) — only pick the first when none is selected
+        // or the current one was removed.
+        setSelectedZone((prev) =>
+          prev && data.some((z) => z.public_id === prev) ? prev : (data[0]?.public_id ?? null),
+        )
       })
       .catch(() => {
         if (mountedRef.current) setZones([])
