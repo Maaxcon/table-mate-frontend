@@ -61,6 +61,21 @@ function FloorPlanSection() {
   const [deleting, setDeleting] = useState(false)
   const toast = useToast()
 
+  // Tables that currently have guests seated (open session). Deleting one is
+  // blocked up front — the publish would reject it anyway — so we warn instead.
+  const [occupiedTableIds, setOccupiedTableIds] = useState<Set<string>>(new Set())
+  useEffect(() => {
+    if (!restaurantId) return
+    apiFetch(`/api/restaurants/tables/?restaurant=${restaurantId}`)
+      .then((res) => (res.ok ? res.json() : { results: [] }))
+      .then((data: { results?: { public_id: string; is_occupied?: boolean }[] }) => {
+        setOccupiedTableIds(
+          new Set((data.results ?? []).filter((t) => t.is_occupied).map((t) => t.public_id)),
+        )
+      })
+      .catch(() => setOccupiedTableIds(new Set()))
+  }, [restaurantId])
+
   // Merge server zones with pending local zone changes so the UI always shows
   // the latest state (including un-published zone creates, renames, deletes).
   const allZones = useMemo((): Zone[] => {
@@ -214,6 +229,14 @@ function FloorPlanSection() {
     onZoneCreated: refreshZones,
     onZoneUpdated: refreshZones,
     onZoneDeleted: refreshZones,
+    onTableStatusChanged: (event) => {
+      setOccupiedTableIds((prev) => {
+        const next = new Set(prev)
+        if (event.current_status === "occupied") next.add(event.table_id)
+        else next.delete(event.table_id)
+        return next
+      })
+    },
   })
 
   const handleAddZone = useCallback(
@@ -223,6 +246,21 @@ function FloorPlanSection() {
       setSelectedZoneId(clientId)
     },
     [createZone],
+  )
+
+  // Block deleting a table that currently has guests seated, with an up-front
+  // warning — otherwise the removal only fails later, at publish time.
+  const handleDeleteEntity = useCallback(
+    (id: string) => {
+      const entity = entities.find((e) => e.id === id)
+      const isTable = entity?.type === "table-square" || entity?.type === "table-round"
+      if (isTable && entity?.serverId && occupiedTableIds.has(entity.serverId)) {
+        toast.error("Can't delete an occupied table — close its visit first.")
+        return
+      }
+      removeEntity(id)
+    },
+    [entities, occupiedTableIds, removeEntity, toast],
   )
 
   // Strict filter: only ever show the selected zone's entities. The Canvas is
@@ -407,7 +445,7 @@ function FloorPlanSection() {
             <PropertiesSidebar
               entity={selectedEntity}
               onUpdate={updateEntity}
-              onDelete={removeEntity}
+              onDelete={handleDeleteEntity}
               zones={allZones}
               selectedZone={selectedZone}
               onZoneStyleChange={handleZoneStyleChange}

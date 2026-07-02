@@ -68,11 +68,21 @@ function useIsMobile() {
 
 // Chairs arranged around a table. Round tables get an even ring; square/rectangular
 // ones seat guests along each edge so the chairs sit right against the table.
-function TableSeats({ capacity, shape }: { capacity: number; shape: string }) {
+function TableSeats({
+  capacity,
+  shape,
+  size = 150,
+}: {
+  capacity: number
+  shape: string
+  size?: number
+}) {
   const n = Math.max(0, Math.min(capacity, 14))
 
   if (shape === "round") {
-    const radius = 82
+    // Radius scales with the table so chairs sit just outside the edge at any
+    // size (a fixed radius tucked them under larger tables).
+    const radius = size / 2 + 10
     return (
       <span className="c-floor-plan__seats c-floor-plan__seats--ring" aria-hidden="true">
         {Array.from({ length: n }, (_, i) => (
@@ -419,7 +429,7 @@ export function CustomerFloorPlan({
                   tile.label,
                 )}
               >
-                <TableSeats capacity={tile.table?.capacity ?? 0} shape={tile.shape} />
+                <TableSeats capacity={tile.table?.capacity ?? 0} shape={tile.shape} size={tile.w} />
 
                 <span className="c-floor-plan__surface">
                   <span
