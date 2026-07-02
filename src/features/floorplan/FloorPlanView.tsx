@@ -82,7 +82,7 @@ export function FloorPlanView({
   const { scale, width: containerWidth, height: containerHeight } = viewBox
   const aspectRatio = canvasPxH === 0 ? 1 : canvasPxW / canvasPxH
   const containerStyle = useMemo<CSSProperties>(
-    () => ({ "--fp-aspect": `${aspectRatio}` }),
+    () => ({ "--fp-aspect": `${aspectRatio}` }) as CSSProperties,
     [aspectRatio],
   )
 
