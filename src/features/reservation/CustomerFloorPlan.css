@@ -57,34 +57,6 @@
     inset 0 0 0 1px color-mix(in srgb, var(--color-bg-surface) 55%, transparent);
 }
 
-/* Entrance marker sitting on the bottom wall. */
-.c-floor-plan__entrance {
-  position: absolute;
-  bottom: -2px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 2;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 5px 14px 6px;
-  border-radius: 12px 12px 0 0;
-  background: color-mix(in srgb, var(--color-primary) 12%, var(--color-bg-surface));
-  color: var(--color-text-secondary);
-  font-size: 0.6rem;
-  font-weight: 800;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  box-shadow: 0 -2px 8px -4px rgb(0 0 0 / 20%);
-  pointer-events: none;
-}
-
-.c-floor-plan__entrance svg {
-  width: 14px;
-  height: 14px;
-  color: var(--color-primary);
-}
-
 /* Sized to the SCALED canvas so the scroll area matches what's visible (a
    transform:scale keeps the untransformed layout size, which would otherwise
    add empty scroll space). */

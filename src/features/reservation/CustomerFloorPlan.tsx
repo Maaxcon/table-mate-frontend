@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 import type { CSSProperties } from "react"
-import { LuPlus, LuUsers, LuDoorOpen, LuArrowRight } from "react-icons/lu"
+import { LuPlus, LuUsers, LuArrowRight } from "react-icons/lu"
 import type { Table } from "@/types/api/types.gen"
 import type { FloorTable, UpcomingReservation } from "@/features/waiter-order-view/data/waiterTypes"
 import { getTableVisualStatus } from "@/features/waiter-order-view/data/waiterTypes"
@@ -593,10 +593,6 @@ export function CustomerFloorPlan({
               ))}
             </div>
           </div>
-          <span className="c-floor-plan__entrance">
-            <LuDoorOpen aria-hidden="true" />
-            Вхід
-          </span>
         </div>
       )}
 
