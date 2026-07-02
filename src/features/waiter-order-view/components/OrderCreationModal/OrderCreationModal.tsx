@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
+import { useFocusTrap } from "@/hooks/useFocusTrap"
 import type { MenuCategory, MenuItem } from "@/types/api/types.gen"
 import {
   createOrderWithItems,
@@ -37,34 +38,20 @@ export function OrderCreationModal({
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null)
   const [menuItems, setMenuItems] = useState<MenuItem[]>([])
   const [loadingItems, setLoadingItems] = useState(true)
-
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose()
-    }
-    document.addEventListener("keydown", handler)
-    return () => document.removeEventListener("keydown", handler)
-  }, [onClose])
   const [searchQuery, setSearchQuery] = useState("")
-  const modalRef = useRef<HTMLDivElement>(null)
   const [draftItems, setDraftItems] = useState<DraftItem[]>([])
   const [submitting, setSubmitting] = useState(false)
+  const dialogRef = useFocusTrap<HTMLDivElement>({
+    onEscape: () => {
+      if (!submitting) onClose()
+    },
+  })
 
   useEffect(() => {
     fetchCategories(restaurantId)
       .then(setCategories)
       .catch(() => {})
   }, [restaurantId])
-
-  useEffect(() => {
-    const handleMouseDown = (e: MouseEvent) => {
-      if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
-        onClose()
-      }
-    }
-    document.addEventListener("mousedown", handleMouseDown)
-    return () => document.removeEventListener("mousedown", handleMouseDown)
-  }, [onClose])
 
   useEffect(() => {
     if (searchQuery.trim()) {
@@ -141,10 +128,24 @@ export function OrderCreationModal({
   }
 
   return (
-    <div className="ocm-backdrop">
-      <div className="ocm" ref={modalRef} role="dialog" aria-label="Create order">
+    <div
+      className="ocm-backdrop"
+      role="presentation"
+      onClick={(event) => {
+        if (event.target === event.currentTarget && !submitting) onClose()
+      }}
+    >
+      <div
+        className="ocm"
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="ocm-title"
+      >
         <div className="ocm__header">
-          <h2 className="ocm__title">NEW ORDER</h2>
+          <h2 id="ocm-title" className="ocm__title">
+            NEW ORDER
+          </h2>
           <button type="button" className="ocm__close" onClick={onClose} aria-label="Close">
             &times;
           </button>

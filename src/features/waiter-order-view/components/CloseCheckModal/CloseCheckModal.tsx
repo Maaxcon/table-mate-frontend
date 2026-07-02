@@ -1,3 +1,4 @@
+import { useFocusTrap } from "@/hooks/useFocusTrap"
 import "./CloseCheckModal.css"
 
 interface CloseCheckModalProps {
@@ -15,21 +16,30 @@ export function CloseCheckModal({
   onConfirm,
   onClose,
 }: CloseCheckModalProps) {
+  const dialogRef = useFocusTrap<HTMLDivElement>({
+    onEscape: () => {
+      if (!busy) onClose()
+    },
+  })
   return (
     <div
       className="close-check"
+      role="presentation"
       onClick={(event) => {
         if (event.target === event.currentTarget && !busy) onClose()
       }}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(event) => {
-        if (event.key === "Escape" && !busy) onClose()
-      }}
     >
-      <div className="close-check__dialog" role="dialog" aria-modal="true">
+      <div
+        className="close-check__dialog"
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="close-check-title"
+      >
         <div className="close-check__header">
-          <h2 className="close-check__title">Close check</h2>
+          <h2 id="close-check-title" className="close-check__title">
+            Close check
+          </h2>
           <button
             type="button"
             className="close-check__close"

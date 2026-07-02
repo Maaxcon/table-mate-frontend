@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react"
 import { apiFetch } from "@/api/client"
+import { useFocusTrap } from "@/hooks/useFocusTrap"
 import type { ReservationItem } from "../../types"
 import "./ModifyReservationModal.css"
 
@@ -68,6 +69,11 @@ export function ModifyReservationModal({
   const [guestCount, setGuestCount] = useState(reservation.guest_count)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const dialogRef = useFocusTrap<HTMLDivElement>({
+    onEscape: () => {
+      if (!busy) onClose()
+    },
+  })
 
   const [availableSlots, setAvailableSlots] = useState<string[] | null>(null)
   const [slotsLoading, setSlotsLoading] = useState(true)
@@ -159,18 +165,22 @@ export function ModifyReservationModal({
   return (
     <div
       className="modify-res"
+      role="presentation"
       onClick={(event) => {
         if (event.target === event.currentTarget && !busy) onClose()
       }}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(event) => {
-        if (event.key === "Escape" && !busy) onClose()
-      }}
     >
-      <div className="modify-res__dialog" role="dialog" aria-modal="true">
+      <div
+        className="modify-res__dialog"
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modify-res-title"
+      >
         <div className="modify-res__header">
-          <h2 className="modify-res__title">Modify Reservation</h2>
+          <h2 id="modify-res-title" className="modify-res__title">
+            Modify Reservation
+          </h2>
           <button
             type="button"
             className="modify-res__close"

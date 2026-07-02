@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { useFocusTrap } from "@/hooks/useFocusTrap"
 import { formatTimeRange } from "../../types"
 import type { FloorTable, ReservationItem, OverlayDetail, VisualTableStatus } from "../../types"
 import { getCurrencySymbol } from "@/features/menu/utils"
@@ -54,6 +55,7 @@ export function TableDetailOverlay({
   )
   const [guestCount, setGuestCount] = useState(2)
   const [showCloseCheck, setShowCloseCheck] = useState(false)
+  const dialogRef = useFocusTrap<HTMLDivElement>({ onEscape: onClose })
 
   // Use the bill's real currency rather than a hardcoded symbol.
   const currencySymbol = detail ? getCurrencySymbol(detail.currency) : ""
@@ -75,20 +77,19 @@ export function TableDetailOverlay({
 
   return (
     <>
+      <div className="overlay-backdrop" role="presentation" onClick={onClose} />
       <div
-        className="overlay-backdrop"
-        onClick={onClose}
-        role="button"
-        tabIndex={0}
-        aria-label="Close table detail overlay"
-        onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") onClose()
-        }}
-      />
-      <div className="overlay">
+        className="overlay"
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="table-detail-title"
+      >
         <div className="overlay__header">
           <div className="overlay__header-top">
-            <h2 className="overlay__title">TABLE {table.public_number}</h2>
+            <h2 id="table-detail-title" className="overlay__title">
+              TABLE {table.public_number}
+            </h2>
             <button type="button" className="overlay__close" onClick={onClose} aria-label="Close">
               <svg
                 width="20"

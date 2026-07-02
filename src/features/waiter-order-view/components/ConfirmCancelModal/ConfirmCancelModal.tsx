@@ -1,3 +1,4 @@
+import { useFocusTrap } from "@/hooks/useFocusTrap"
 import "./ConfirmCancelModal.css"
 
 interface ConfirmCancelModalProps {
@@ -21,21 +22,30 @@ export function ConfirmCancelModal({
   onConfirm,
   onClose,
 }: ConfirmCancelModalProps) {
+  const dialogRef = useFocusTrap<HTMLDivElement>({
+    onEscape: () => {
+      if (!busy) onClose()
+    },
+  })
   return (
     <div
       className="confirm-cancel"
+      role="presentation"
       onClick={(event) => {
         if (event.target === event.currentTarget && !busy) onClose()
       }}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(event) => {
-        if (event.key === "Escape" && !busy) onClose()
-      }}
     >
-      <div className="confirm-cancel__dialog" role="dialog" aria-modal="true">
+      <div
+        className="confirm-cancel__dialog"
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="confirm-cancel-title"
+      >
         <div className="confirm-cancel__header">
-          <h2 className="confirm-cancel__title">{title}</h2>
+          <h2 id="confirm-cancel-title" className="confirm-cancel__title">
+            {title}
+          </h2>
           <button
             type="button"
             className="confirm-cancel__close"

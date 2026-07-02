@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { apiFetch } from "@/api/client"
+import { useFocusTrap } from "@/hooks/useFocusTrap"
 import type { ReservationItem } from "../../types"
 import "../ModifyReservationModal/ModifyReservationModal.css"
 
@@ -14,6 +15,11 @@ export function MoveTableModal({ reservation, tables, onClose, onSuccess }: Move
   const [targetTableId, setTargetTableId] = useState("")
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const dialogRef = useFocusTrap<HTMLDivElement>({
+    onEscape: () => {
+      if (!busy) onClose()
+    },
+  })
 
   const otherTables = tables.filter((t) => t.public_number !== reservation.table)
 
@@ -45,18 +51,22 @@ export function MoveTableModal({ reservation, tables, onClose, onSuccess }: Move
   return (
     <div
       className="modify-res"
+      role="presentation"
       onClick={(event) => {
         if (event.target === event.currentTarget && !busy) onClose()
       }}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(event) => {
-        if (event.key === "Escape" && !busy) onClose()
-      }}
     >
-      <div className="modify-res__dialog" role="dialog" aria-modal="true">
+      <div
+        className="modify-res__dialog"
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="move-table-title"
+      >
         <div className="modify-res__header">
-          <h2 className="modify-res__title">Move Reservation</h2>
+          <h2 id="move-table-title" className="modify-res__title">
+            Move Reservation
+          </h2>
           <button
             type="button"
             className="modify-res__close"
