@@ -40,7 +40,7 @@ export function useSchedulerData(dates: string[]): UseSchedulerDataReturn {
         const dateTo = addDays(dates[dates.length - 1], 0)
         const [tablesData, reservationsData] = await Promise.all([
           fetchTables(restaurantId!),
-          fetchReservationsForRange(restaurantId!, dateFrom, dateTo),
+          fetchReservationsForRange(dateFrom, dateTo),
         ])
         if (controller.signal.aborted) return
         setTables(
@@ -50,7 +50,7 @@ export function useSchedulerData(dates: string[]): UseSchedulerDataReturn {
               public_id: t.public_id,
               public_number: t.public_number,
               capacity: t.capacity,
-              zone: t.zone,
+              zone: t.zone?.public_id ?? t.zone?.name,
               active: t.active,
             })),
         )

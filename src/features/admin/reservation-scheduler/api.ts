@@ -6,8 +6,22 @@ import type {
   SchedulerReservation,
 } from "./types"
 
+interface ApiReservation {
+  public_id: string
+  table: string
+  session_table?: string
+  table_info?: { public_number: string }
+  session_table_number?: string
+  customer_name?: string
+  guest_count: number
+  start_at: string
+  end_at: string
+  session_ends_at?: string
+  opened_at?: string | null
+  status: string
+}
+
 export async function fetchReservationsForRange(
-  restaurantId: string,
   dateFrom: string,
   dateTo: string,
 ): Promise<SchedulerReservation[]> {
@@ -25,22 +39,21 @@ export async function fetchReservationsForRange(
     const res = await apiFetch(url)
     if (!res.ok) throw new Error("Failed to fetch reservations")
     const data = await res.json()
-    const results: unknown[] = data.results ?? data
-    const mapped = results.map((r: Record<string, unknown>) => {
+    const results: ApiReservation[] = data.results ?? data
+    const mapped = results.map((r) => {
       const isActive = r.status === "active"
       return {
-        public_id: r.public_id as string,
-        table: isActive && r.session_table ? (r.session_table as string) : (r.table as string),
+        public_id: r.public_id,
+        table: isActive && r.session_table ? r.session_table : r.table,
         table_number:
           isActive && r.session_table_number
-            ? (r.session_table_number as string)
-            : ((r.table_info as Record<string, string>)?.public_number ?? ""),
-        customer_name: (r.customer_name as string) ?? "Guest",
-        guest_count: r.guest_count as number,
-        start_at: r.start_at as string,
-        end_at:
-          isActive && r.session_ends_at ? (r.session_ends_at as string) : (r.end_at as string),
-        opened_at: (r.opened_at as string) ?? null,
+            ? r.session_table_number
+            : (r.table_info?.public_number ?? ""),
+        customer_name: r.customer_name ?? "Guest",
+        guest_count: r.guest_count,
+        start_at: r.start_at,
+        end_at: isActive && r.session_ends_at ? r.session_ends_at : r.end_at,
+        opened_at: r.opened_at ?? null,
         status: r.status as SchedulerReservation["status"],
       }
     })
