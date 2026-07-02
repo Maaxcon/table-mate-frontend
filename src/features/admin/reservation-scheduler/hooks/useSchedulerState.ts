@@ -29,6 +29,7 @@ type Action =
       newTime: string
     }
   | { type: "RESET_CHANGES" }
+  | { type: "CLEAR_PENDING" }
   | { type: "MARK_CONFLICT"; reservationId: string }
   | { type: "CLEAR_CONFLICT" }
   | { type: "SET_SAVING"; saving: boolean }
@@ -206,6 +207,8 @@ function reducer(state: SchedulerState, action: Action): SchedulerState {
       })
       return { ...state, reservations: restored, pendingChanges: [], conflictReservationId: null }
     }
+    case "CLEAR_PENDING":
+      return { ...state, pendingChanges: [], conflictReservationId: null }
     case "MARK_CONFLICT":
       return { ...state, conflictReservationId: action.reservationId }
     case "CLEAR_CONFLICT":
@@ -261,6 +264,7 @@ export function useSchedulerState() {
     [],
   )
   const resetChanges = useCallback(() => dispatch({ type: "RESET_CHANGES" }), [])
+  const clearPending = useCallback(() => dispatch({ type: "CLEAR_PENDING" }), [])
   const markConflict = useCallback(
     (reservationId: string) => dispatch({ type: "MARK_CONFLICT", reservationId }),
     [],
@@ -276,6 +280,7 @@ export function useSchedulerState() {
     moveReservation,
     resizeReservation,
     resetChanges,
+    clearPending,
     markConflict,
     clearConflict,
     setSaving,
