@@ -3,9 +3,9 @@
      content width inside the flex #root (which left a content-dependent side
      gutter); max-width still caps + centers it on desktop. */
   width: 100%;
-  max-width: 900px;
+  max-width: 1240px;
   margin: 0 auto;
-  padding: 0 16px 24px;
+  padding: 0 10px 20px;
   box-sizing: border-box;
 }
 
@@ -17,8 +17,8 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin: 0 -16px 20px;
-  padding: 14px 16px;
+  margin: 0 -10px 20px;
+  padding: 14px 10px;
   background: var(--color-bg-frosted);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);

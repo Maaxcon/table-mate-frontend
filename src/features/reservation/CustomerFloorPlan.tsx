@@ -37,9 +37,6 @@ const GRID_SPACING = 240
 const CANVAS_PADDING = 28
 // Below this width the spatial map is too cramped, so we swap to a card list.
 const MOBILE_BREAKPOINT = 640
-// Never shrink the floor below this scale — a big room stays readable and the
-// viewport scrolls/pans instead of squashing everything to fit the width.
-const MIN_SCALE = 0.62
 
 type Tone = "free" | "reserved" | "occupied"
 
@@ -336,14 +333,13 @@ export function CustomerFloorPlan({
     }
   }, [payload, zones, selectedZone, tables, tableViews, viewByPublicId, guests])
 
-  // Base scale fits the room to the width (never below MIN_SCALE); the user zoom
-  // multiplies on top of that so guests can enlarge/overview the plan.
+  // Start zoomed out to fit the whole room (overview); the user zooms IN from
+  // there. zoom=1 is the fit; buttons multiply on top.
   const [zoom, setZoom] = useState(1)
-  const fitScale =
-    viewportWidth > 0 ? Math.min(1, Math.max(MIN_SCALE, viewportWidth / canvasWidth)) : 1
-  const scale = Math.min(2.4, Math.max(0.4, fitScale * zoom))
-  const zoomIn = () => setZoom((z) => Math.min(3, z * 1.25))
-  const zoomOut = () => setZoom((z) => Math.max(0.5, z / 1.25))
+  const fitScale = viewportWidth > 0 ? Math.min(1, viewportWidth / canvasWidth) : 1
+  const scale = Math.min(2.6, fitScale * zoom)
+  const zoomIn = () => setZoom((z) => Math.min(4, z * 1.25))
+  const zoomOut = () => setZoom((z) => Math.max(1, z / 1.25))
   const zoomFit = () => setZoom(1)
 
   // Refit when the room (zone) changes.
@@ -378,6 +374,11 @@ export function CustomerFloorPlan({
     panRef.current = null
   }
 
+  // Table hovered on the floor — drives the big info tooltip.
+  const [hovered, setHovered] = useState<Tile | null>(null)
+  // Desktop "only free" — dims tables you can't book so free ones pop.
+  const [dimTaken, setDimTaken] = useState(false)
+
   // Mobile order: tables that seat the party first, tightest fit on top, free
   // before booked, then by number.
   const sortedTableViews = useMemo(() => {
@@ -399,17 +400,35 @@ export function CustomerFloorPlan({
     })
   }, [tableViews, guests])
 
-  const freeCount = useMemo(() => tableViews.filter((v) => v.bookable).length, [tableViews])
+  const freeCount = useMemo(
+    () =>
+      tableViews.filter(
+        (v) => v.bookable && (!selectedZone || v.table.zone?.public_id === selectedZone),
+      ).length,
+    [tableViews, selectedZone],
+  )
   const visibleTableViews = onlyFree ? sortedTableViews.filter((v) => v.bookable) : sortedTableViews
 
   return (
     <div className="c-floor-plan">
       <div className="c-floor-plan__head">
         <h2 className="c-floor-plan__title">{bookStrings.floorPlan.title}</h2>
-        <span className="c-floor-plan__count">
-          <span className="c-floor-plan__count-num">{freeCount}</span>
-          вільно{slotTime ? ` на ${slotTime}` : ""}
-        </span>
+        <div className="c-floor-plan__head-right">
+          {!isMobile && (
+            <button
+              type="button"
+              className={`c-floor-plan__only-free ${dimTaken ? "c-floor-plan__only-free--active" : ""}`}
+              onClick={() => setDimTaken((v) => !v)}
+              aria-pressed={dimTaken}
+            >
+              {bookStrings.floorPlan.filterFree}
+            </button>
+          )}
+          <span className="c-floor-plan__count">
+            <span className="c-floor-plan__count-num">{freeCount}</span>
+            вільно{slotTime ? ` на ${slotTime}` : ""}
+          </span>
+        </div>
       </div>
       {zones.length > 1 && (
         <div className="c-floor-plan__zones">
@@ -592,12 +611,14 @@ export function CustomerFloorPlan({
                       `c-floor-plan__table--${tile.shape}`,
                       selectedId === tile.table?.public_id ? "c-floor-plan__table--selected" : "",
                       tile.perfect ? "c-floor-plan__table--perfect" : "",
-                      statusFilter && tile.tone !== statusFilter
+                      (statusFilter && tile.tone !== statusFilter) || (dimTaken && !tile.bookable)
                         ? "c-floor-plan__table--dimmed"
                         : "",
                     ]
                       .filter(Boolean)
                       .join(" ")}
+                    onMouseEnter={() => setHovered(tile)}
+                    onMouseLeave={() => setHovered((h) => (h?.key === tile.key ? null : h))}
                     style={
                       {
                         left: tile.x,
@@ -646,6 +667,22 @@ export function CustomerFloorPlan({
               </div>
             </div>
           </div>
+          {hovered && (
+            <div className="c-floor-plan__tooltip" aria-hidden="true">
+              <span className="c-floor-plan__tooltip-num">
+                {bookStrings.floorPlan.tableShort} {hovered.publicNumber}
+              </span>
+              <span className="c-floor-plan__tooltip-cap">
+                <LuUsers aria-hidden="true" />
+                {hovered.capacity}
+              </span>
+              <span
+                className={`c-floor-plan__tooltip-status c-floor-plan__tooltip-status--${hovered.tone}`}
+              >
+                {hovered.label}
+              </span>
+            </div>
+          )}
           <div className="c-floor-plan__zoom">
             <button
               type="button"
