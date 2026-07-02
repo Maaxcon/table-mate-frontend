@@ -60,6 +60,14 @@
   transform: translateY(-4px);
 }
 
+/* Wrapper for the published-layout floor map (FloorPlanView) — centre it and let
+   it scroll if the arrangement is wider than the page. */
+.c-floor-plan__stage {
+  display: flex;
+  justify-content: center;
+  overflow: auto;
+}
+
 .c-floor-plan__table--round {
   width: 144px;
   height: 144px;

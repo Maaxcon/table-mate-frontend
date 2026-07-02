@@ -3,6 +3,8 @@ import { LuPlus, LuUsers } from "react-icons/lu"
 import type { Table } from "@/types/api/types.gen"
 import type { FloorTable, UpcomingReservation } from "@/features/waiter-order-view/data/waiterTypes"
 import { getTableVisualStatus } from "@/features/waiter-order-view/data/waiterTypes"
+import { GRID } from "@/features/editor/types"
+import type { LayoutPayload } from "@/features/editor/types"
 import type { Zone } from "@/features/reservation/api"
 import { bookStrings } from "@/features/reservation/strings"
 import { DEFAULT_GUESTS } from "@/features/reservation/utils"
@@ -20,18 +22,33 @@ interface CustomerFloorPlanProps {
   // When present, statuses reflect that slot instead of the current moment.
   slotAvailability?: Record<string, boolean> | null
   guests?: number
+  // The published editor layout. When present the tables sit at their real
+  // positions; otherwise they fall back to a tidy auto grid.
+  payload?: LayoutPayload | null
 }
 
-// Footprint reserved per table (table box + the seat ring around it), used to
-// size the canvas so scaling never clips a table or its chairs.
+// Auto-grid fallback (no published layout): table box + seat ring footprint, and
+// the gap between tables, in px.
 const TABLE_FOOTPRINT = 210
-// Centre-to-centre spacing between tables in the auto grid (footprint + a gap).
 const GRID_SPACING = 240
-// Breathing room kept between the tables and the canvas edges.
 const CANVAS_PADDING = 28
-// Below this width the spatial floor map shrinks too far to be usable, so we
-// swap it for a tappable list of table cards instead.
+// Below this width the spatial map is too cramped, so we swap to a card list.
 const MOBILE_BREAKPOINT = 640
+
+type Tone = "free" | "reserved" | "occupied"
+
+interface Tile {
+  key: string
+  table: Table | undefined
+  x: number
+  y: number
+  w: number
+  h: number
+  shape: "square" | "round"
+  tone: Tone
+  label: string
+  bookable: boolean
+}
 
 // Tracks whether the viewport is in the mobile (card-list) range.
 function useIsMobile() {
@@ -49,9 +66,8 @@ function useIsMobile() {
   return isMobile
 }
 
-// Chairs arranged around a table. Round tables get an even ring; rectangular
-// ones seat guests along the top and bottom edges (banquet style) so the chairs
-// always sit right against the table regardless of its width/height.
+// Chairs arranged around a table. Round tables get an even ring; square/rectangular
+// ones seat guests along each edge so the chairs sit right against the table.
 function TableSeats({ capacity, shape }: { capacity: number; shape: string }) {
   const n = Math.max(0, Math.min(capacity, 14))
 
@@ -72,22 +88,12 @@ function TableSeats({ capacity, shape }: { capacity: number; shape: string }) {
     )
   }
 
-  // Square tables seat guests on all four sides for a balanced look; wider
-  // rectangles keep guests along the top and bottom edges.
-  let top: number
-  let bottom: number
-  let left = 0
-  let right = 0
-  if (shape === "square") {
-    const per = Math.floor(n / 4)
-    const counts = { top: per, bottom: per, left: per, right: per }
-    const order: (keyof typeof counts)[] = ["top", "bottom", "left", "right"]
-    for (let i = 0; i < n - per * 4; i++) counts[order[i]]++
-    ;({ top, bottom, left, right } = counts)
-  } else {
-    top = Math.ceil(n / 2)
-    bottom = n - top
-  }
+  // Square tables seat guests on all four sides for a balanced look.
+  const per = Math.floor(n / 4)
+  const counts = { top: per, bottom: per, left: per, right: per }
+  const order: (keyof typeof counts)[] = ["top", "bottom", "left", "right"]
+  for (let i = 0; i < n - per * 4; i++) counts[order[i]]++
+  const { top, bottom, left, right } = counts
 
   const side = (cls: string, count: number) =>
     count > 0 && (
@@ -118,21 +124,21 @@ export function CustomerFloorPlan({
   upcomingReservations = [],
   slotAvailability = null,
   guests = DEFAULT_GUESTS,
+  payload = null,
 }: CustomerFloorPlanProps) {
   const [currentTime, setCurrentTime] = useState(new Date())
   const [onlyFree, setOnlyFree] = useState(false)
   const isMobile = useIsMobile()
 
   // The minute tick only matters for the now-based fallback status; when slot
-  // availability drives the statuses, currentTime is unused, so skip the timer
-  // (and the per-minute re-render of the whole list).
+  // availability drives the statuses, currentTime is unused, so skip the timer.
   useEffect(() => {
     if (slotAvailability) return
     const id = setInterval(() => setCurrentTime(new Date()), 60_000)
     return () => clearInterval(id)
   }, [slotAvailability])
 
-  // Measure the viewport so the canvas can be scaled down to fit on any screen.
+  // Measure the viewport so the canvas can be scaled down to fit any screen.
   const viewportRef = useRef<HTMLDivElement>(null)
   const [viewportWidth, setViewportWidth] = useState(0)
 
@@ -146,35 +152,13 @@ export function CustomerFloorPlan({
     return () => observer.disconnect()
   }, [isMobile])
 
-  // The backend no longer stores table coordinates, so lay the tables out in a
-  // tidy auto grid (slightly wider than tall so it fills wide screens nicely).
-  const { positionById, contentWidth, contentHeight } = useMemo(() => {
-    const cols = Math.max(1, Math.round(Math.sqrt(tables.length * 1.6)))
-    const rows = Math.max(1, Math.ceil(tables.length / cols))
-    const positionById = new Map<string, { x: number; y: number }>()
-    tables.forEach((t, i) => {
-      positionById.set(t.public_id, {
-        x: CANVAS_PADDING + (i % cols) * GRID_SPACING,
-        y: CANVAS_PADDING + Math.floor(i / cols) * GRID_SPACING,
-      })
-    })
-    return {
-      positionById,
-      contentWidth: (cols - 1) * GRID_SPACING + TABLE_FOOTPRINT + CANVAS_PADDING * 2,
-      contentHeight: (rows - 1) * GRID_SPACING + TABLE_FOOTPRINT + CANVAS_PADDING * 2,
-    }
-  }, [tables])
-
-  const scale = viewportWidth > 0 ? Math.min(1, viewportWidth / contentWidth) : 1
-
-  // Each table paired with a visual tone (free/reserved/occupied — drives the
-  // colors), a status label, and whether it can be booked for the chosen slot.
-  // With slot availability we reflect that slot; otherwise we fall back to the
-  // current-moment status while it loads.
+  // Each table paired with a visual tone (free/reserved/occupied), a status label,
+  // and whether it can be booked for the chosen slot. With slot availability we
+  // reflect that slot; otherwise we fall back to the current-moment status.
   const tableViews = useMemo(
     () =>
       tables.map((t) => {
-        let tone: "free" | "reserved" | "occupied"
+        let tone: Tone
         let label: string
         let bookable: boolean
 
@@ -193,9 +177,6 @@ export function CustomerFloorPlan({
             bookable = false
           }
         } else {
-          // Availability unknown (loading or the endpoint failed): show the
-          // now-based status for color, but keep tables clickable — occupied
-          // *now* doesn't preclude a future booking, and the modal validates.
           const ft: FloorTable = {
             public_id: t.public_id,
             public_number: t.public_number,
@@ -217,9 +198,70 @@ export function CustomerFloorPlan({
     [tables, slotAvailability, guests, upcomingReservations, currentTime],
   )
 
-  // Mobile order: tables that seat the party first, tightest fit on top (a 6-top
-  // shows before a 12-top), free before booked, then by number. Too-small tables
-  // sink to the bottom so the guest scans the right options first.
+  const viewByPublicId = useMemo(
+    () => new Map(tableViews.map((v) => [v.table.public_id, v])),
+    [tableViews],
+  )
+
+  // Spatial layout: real coordinates from the published editor layout when present,
+  // otherwise a tidy auto grid. Both render the same visual table tiles.
+  const { tiles, canvasWidth, canvasHeight } = useMemo(() => {
+    const layoutTables = payload?.tables ?? []
+    if (layoutTables.length > 0) {
+      const activeZone = zones.find((z) => z.public_id === selectedZone) ?? zones[0]
+      const tiles: Tile[] = layoutTables
+        .filter((lt) => !selectedZone || lt.zone_id === selectedZone)
+        .map((lt) => {
+          const table =
+            tables.find((t) => t.public_id === lt.id) ??
+            tables.find((t) => t.public_number === lt.public_number)
+          const view = table ? viewByPublicId.get(table.public_id) : undefined
+          return {
+            key: lt.id ?? lt.public_number,
+            table,
+            x: lt.x,
+            y: lt.y,
+            w: lt.width,
+            h: lt.height,
+            shape: lt.shape === "round" ? "round" : "square",
+            tone: view?.tone ?? "free",
+            label: view?.label ?? bookStrings.floorPlan.status.free,
+            bookable: view?.bookable ?? false,
+          }
+        })
+      return {
+        tiles,
+        canvasWidth: (activeZone?.canvas_cols ?? 20) * GRID,
+        canvasHeight: (activeZone?.canvas_rows ?? 20) * GRID,
+      }
+    }
+
+    // Fallback: auto grid over the tables we have (no positions in the backend).
+    const cols = Math.max(1, Math.round(Math.sqrt(tableViews.length * 1.6)))
+    const rows = Math.max(1, Math.ceil(tableViews.length / cols))
+    const tiles: Tile[] = tableViews.map((v, i) => ({
+      key: v.table.public_id,
+      table: v.table,
+      x: CANVAS_PADDING + (i % cols) * GRID_SPACING,
+      y: CANVAS_PADDING + Math.floor(i / cols) * GRID_SPACING,
+      w: 200,
+      h: 200,
+      shape: "square",
+      tone: v.tone,
+      label: v.label,
+      bookable: v.bookable,
+    }))
+    return {
+      tiles,
+      canvasWidth: (cols - 1) * GRID_SPACING + TABLE_FOOTPRINT + CANVAS_PADDING * 2,
+      canvasHeight: (rows - 1) * GRID_SPACING + TABLE_FOOTPRINT + CANVAS_PADDING * 2,
+    }
+  }, [payload, zones, selectedZone, tables, tableViews, viewByPublicId])
+
+  const scale = viewportWidth > 0 ? Math.min(1, viewportWidth / canvasWidth) : 1
+
+  // Mobile order: tables that seat the party first, tightest fit on top, free
+  // before booked, then by number.
   const sortedTableViews = useMemo(() => {
     const fits = (capacity: number) => capacity >= guests
     const byNumber = (a: { table: Table }, b: { table: Table }) =>
@@ -350,62 +392,54 @@ export function CustomerFloorPlan({
         <div
           className="c-floor-plan__viewport"
           ref={viewportRef}
-          style={{ height: contentHeight * scale }}
+          style={{ height: canvasHeight * scale }}
         >
           <div
             className="c-floor-plan__canvas"
-            style={{
-              width: contentWidth,
-              height: contentHeight,
-              transform: `scale(${scale})`,
-            }}
+            style={{ width: canvasWidth, height: canvasHeight, transform: `scale(${scale})` }}
           >
-            {tableViews.map(({ table, tone, label, bookable }) => {
-              const pos = positionById.get(table.public_id) ?? {
-                x: CANVAS_PADDING,
-                y: CANVAS_PADDING,
-              }
-              return (
-                <button
-                  key={table.public_id}
-                  type="button"
-                  className={[
-                    "c-floor-plan__table",
-                    `c-floor-plan__table--${tone}`,
-                    "c-floor-plan__table--square",
-                    selectedId === table.public_id ? "c-floor-plan__table--selected" : "",
-                  ]
-                    .filter(Boolean)
-                    .join(" ")}
-                  style={{ left: pos.x, top: pos.y }}
-                  onClick={() => onSelect(table)}
-                  disabled={!bookable}
-                  aria-label={bookStrings.floorPlan.tableAria(
-                    table.public_number,
-                    table.capacity,
-                    label,
-                  )}
-                >
-                  <TableSeats capacity={table.capacity} shape="square" />
+            {tiles.map((tile) => (
+              <button
+                key={tile.key}
+                type="button"
+                className={[
+                  "c-floor-plan__table",
+                  `c-floor-plan__table--${tile.tone}`,
+                  `c-floor-plan__table--${tile.shape}`,
+                  selectedId === tile.table?.public_id ? "c-floor-plan__table--selected" : "",
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
+                style={{ left: tile.x, top: tile.y, width: tile.w, height: tile.h }}
+                onClick={() => tile.table && onSelect(tile.table)}
+                disabled={!tile.bookable || !tile.table}
+                aria-label={bookStrings.floorPlan.tableAria(
+                  tile.table?.public_number ?? "",
+                  tile.table?.capacity ?? 0,
+                  tile.label,
+                )}
+              >
+                <TableSeats capacity={tile.table?.capacity ?? 0} shape={tile.shape} />
 
-                  <span className="c-floor-plan__surface">
-                    <span
-                      className={`c-floor-plan__table-badge c-floor-plan__table-badge--${tone}`}
-                    >
-                      {label}
-                    </span>
-
-                    <span className="c-floor-plan__table-number">{table.public_number}</span>
-
-                    <div className="c-floor-plan__table-meta">
-                      <span className="c-floor-plan__table-capacity">
-                        {bookStrings.floorPlan.seats(table.capacity)}
-                      </span>
-                    </div>
+                <span className="c-floor-plan__surface">
+                  <span
+                    className={`c-floor-plan__table-badge c-floor-plan__table-badge--${tile.tone}`}
+                  >
+                    {tile.label}
                   </span>
-                </button>
-              )
-            })}
+
+                  <span className="c-floor-plan__table-number">
+                    {tile.table?.public_number ?? ""}
+                  </span>
+
+                  <div className="c-floor-plan__table-meta">
+                    <span className="c-floor-plan__table-capacity">
+                      {bookStrings.floorPlan.seats(tile.table?.capacity ?? 0)}
+                    </span>
+                  </div>
+                </span>
+              </button>
+            ))}
           </div>
         </div>
       )}

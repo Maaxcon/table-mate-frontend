@@ -44,6 +44,8 @@ export function BookingPage() {
     selectedZone,
     setSelectedZone,
     reloadZones,
+    layoutPayload,
+    reloadLayout,
     workingHours,
     timezone,
     reservations,
@@ -132,6 +134,23 @@ export function BookingPage() {
     setAvailabilityNonce((n) => n + 1)
   }, [reloadTables, reloadReservations])
 
+  // Guests get no live floor updates (that WebSocket needs a staff token), so a
+  // table a waiter just seated/booked in another tab would look stale here.
+  // Refresh occupancy + slot availability whenever the tab regains focus.
+  useEffect(() => {
+    const refresh = () => {
+      if (document.visibilityState === "hidden") return
+      reloadTables()
+      setAvailabilityNonce((n) => n + 1)
+    }
+    window.addEventListener("focus", refresh)
+    document.addEventListener("visibilitychange", refresh)
+    return () => {
+      window.removeEventListener("focus", refresh)
+      document.removeEventListener("visibilitychange", refresh)
+    }
+  }, [reloadTables])
+
   const handleTableStatusChanged = useCallback(
     (event: FloorTableStatusEvent) => {
       const isOccupied = event.current_status === "occupied"
@@ -169,7 +188,9 @@ export function BookingPage() {
     reloadTables()
     // A publish may have added/removed a zone; refresh zones so its tab appears live.
     reloadZones()
-  }, [reloadTables, reloadZones])
+    // Pull the freshly published layout so the floor map matches the editor live.
+    reloadLayout()
+  }, [reloadTables, reloadZones, reloadLayout])
 
   const { isConnected } = useFloorSubscription({
     onTableStatusChanged: handleTableStatusChanged,
@@ -253,6 +274,7 @@ export function BookingPage() {
                 upcomingReservations={upcomingReservations}
                 slotAvailability={availability}
                 guests={slotGuests}
+                payload={layoutPayload}
               />
             </div>
           ))}

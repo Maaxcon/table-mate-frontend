@@ -186,6 +186,9 @@ export function useHallSubscription({
     }
 
     ws.onerror = (event) => {
+      // A socket torn down on unmount (StrictMode's double-mount in dev) fires a
+      // detail-less error event — ignore it; only surface errors while mounted.
+      if (!mountedRef.current) return
       console.error("[HallWS] Error:", event)
       setIsConnected(false)
       callbacksRef.current.onError?.(event)
@@ -222,6 +225,10 @@ export function useHallSubscription({
         clearTimeout(reconnectTimeoutRef.current)
       }
       if (wsRef.current) {
+        // Detach handlers first so the teardown close doesn't fire onerror/onclose
+        // (which would otherwise log a spurious error and schedule a reconnect).
+        wsRef.current.onerror = null
+        wsRef.current.onclose = null
         wsRef.current.close(1000, "Component unmounting")
         wsRef.current = null
       }

@@ -2,8 +2,10 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import type { Dispatch, SetStateAction } from "react"
 import type { Table } from "@/types/api/types.gen"
 import type { UpcomingReservation } from "@/features/waiter-order-view/data/waiterTypes"
+import type { LayoutPayload } from "@/features/editor/types"
 import type { ReservationWithTable, WorkingHoursDay, Zone } from "../api"
 import {
+  fetchLayoutData,
   fetchMyReservations,
   fetchRestaurantSettings,
   fetchTables,
@@ -22,6 +24,11 @@ export interface BookingData {
   selectedZone: string | null
   setSelectedZone: (id: string | null) => void
   reloadZones: () => void
+
+  // The published floor layout (table coordinates) — null until an admin publishes
+  // one in the editor. Drives the spatial floor map; the view falls back to a grid.
+  layoutPayload: LayoutPayload | null
+  reloadLayout: () => void
 
   workingHours: Record<string, WorkingHoursDay> | null
   timezone: string | null
@@ -49,6 +56,8 @@ export function useBookingData(
 
   const [zones, setZones] = useState<Zone[]>([])
   const [selectedZone, setSelectedZone] = useState<string | null>(null)
+
+  const [layoutPayload, setLayoutPayload] = useState<LayoutPayload | null>(null)
 
   const [workingHours, setWorkingHours] = useState<Record<string, WorkingHoursDay> | null>(null)
   const [timezone, setTimezone] = useState<string | null>(null)
@@ -147,13 +156,28 @@ export function useBookingData(
       })
   }, [restaurantId])
 
+  const loadLayout = useCallback(() => {
+    if (!restaurantId) return Promise.resolve()
+    return fetchLayoutData(restaurantId)
+      .then((data) => {
+        if (!mountedRef.current) return
+        setLayoutPayload(
+          data.layout && typeof data.layout === "object" ? (data.layout as LayoutPayload) : null,
+        )
+      })
+      .catch(() => {
+        if (mountedRef.current) setLayoutPayload(null)
+      })
+  }, [restaurantId])
+
   useEffect(() => {
     loadTables()
     loadZones()
     loadSettings()
     loadReservations()
     loadUpcoming()
-  }, [loadTables, loadZones, loadSettings, loadReservations, loadUpcoming])
+    loadLayout()
+  }, [loadTables, loadZones, loadSettings, loadReservations, loadUpcoming, loadLayout])
 
   const reloadTables = useCallback(() => {
     setTablesLoading(true)
@@ -169,6 +193,10 @@ export function useBookingData(
     loadZones()
   }, [loadZones])
 
+  const reloadLayout = useCallback(() => {
+    loadLayout()
+  }, [loadLayout])
+
   return {
     tables,
     setTables,
@@ -179,6 +207,8 @@ export function useBookingData(
     selectedZone,
     setSelectedZone,
     reloadZones,
+    layoutPayload,
+    reloadLayout,
     workingHours,
     timezone,
     reservations,
