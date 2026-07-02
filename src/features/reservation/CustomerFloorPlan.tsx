@@ -1,6 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react"
-import type { CSSProperties } from "react"
-import { LuPlus, LuMinus, LuMaximize, LuUsers, LuArrowRight } from "react-icons/lu"
+import { useEffect, useMemo, useState } from "react"
 import type { Table } from "@/types/api/types.gen"
 import type { FloorTable, UpcomingReservation } from "@/features/waiter-order-view/data/waiterTypes"
 import { getTableVisualStatus } from "@/features/waiter-order-view/data/waiterTypes"
@@ -9,6 +7,9 @@ import type { LayoutPayload } from "@/features/editor/types"
 import type { Zone } from "@/features/reservation/api"
 import { bookStrings } from "@/features/reservation/strings"
 import { DEFAULT_GUESTS } from "@/features/reservation/utils"
+import { FloorCardList } from "./floor/FloorCardList"
+import { FloorMap } from "./floor/FloorMap"
+import type { Tile, Tone } from "./floor/types"
 import "./CustomerFloorPlan.css"
 
 interface CustomerFloorPlanProps {
@@ -38,25 +39,6 @@ const CANVAS_PADDING = 28
 // Below this width the spatial map is too cramped, so we swap to a card list.
 const MOBILE_BREAKPOINT = 640
 
-type Tone = "free" | "reserved" | "occupied"
-
-interface Tile {
-  key: string
-  table: Table | undefined
-  publicNumber: string
-  capacity: number
-  x: number
-  y: number
-  w: number
-  h: number
-  rotation: number
-  shape: "square" | "round"
-  tone: Tone
-  label: string
-  bookable: boolean
-  perfect: boolean
-}
-
 function tableZoneId(table: Table): string | null {
   return table.zone?.public_id ?? null
 }
@@ -71,25 +53,6 @@ function findLayoutTableMatch(tables: Table[], layoutTable: LayoutPayload["table
     tables.find((table) => table.public_number === layoutTable.public_number)
   )
 }
-
-// Position + rotation style for ANY layout element (walls, doorways, portals,
-// and future shapes). Rotation goes through the --rot CSS variable so a single
-// `.c-floor-plan__piece` rule handles it for every element type — add a new shape
-// and it can rotate with no extra JS.
-const pieceStyle = (el: {
-  x: number
-  y: number
-  width: number
-  height: number
-  rotation?: number
-}): CSSProperties =>
-  ({
-    left: el.x,
-    top: el.y,
-    width: el.width,
-    height: el.height,
-    "--rot": `${el.rotation ?? 0}deg`,
-  }) as CSSProperties
 
 // Tracks whether the viewport is in the mobile (card-list) range.
 function useIsMobile() {
@@ -107,64 +70,9 @@ function useIsMobile() {
   return isMobile
 }
 
-// Chairs arranged around a table. Round tables get an even ring; square/rectangular
-// ones seat guests along each edge so the chairs sit right against the table.
-function TableSeats({
-  capacity,
-  shape,
-  size = 150,
-}: {
-  capacity: number
-  shape: string
-  size?: number
-}) {
-  const n = Math.max(0, Math.min(capacity, 14))
-
-  if (shape === "round") {
-    // Radius scales with the table so chairs sit just outside the edge at any
-    // size (a fixed radius tucked them under larger tables).
-    const radius = size / 2 + 10
-    return (
-      <span className="c-floor-plan__seats c-floor-plan__seats--ring" aria-hidden="true">
-        {Array.from({ length: n }, (_, i) => (
-          <span
-            key={i}
-            className="c-floor-plan__seat"
-            style={{
-              transform: `translate(-50%, -50%) rotate(${(360 / n) * i}deg) translateY(-${radius}px)`,
-            }}
-          />
-        ))}
-      </span>
-    )
-  }
-
-  // Square tables seat guests on all four sides for a balanced look.
-  const per = Math.floor(n / 4)
-  const counts = { top: per, bottom: per, left: per, right: per }
-  const order: (keyof typeof counts)[] = ["top", "bottom", "left", "right"]
-  for (let i = 0; i < n - per * 4; i++) counts[order[i]]++
-  const { top, bottom, left, right } = counts
-
-  const side = (cls: string, count: number) =>
-    count > 0 && (
-      <span className={`c-floor-plan__seats c-floor-plan__seats--${cls}`} aria-hidden="true">
-        {Array.from({ length: count }, (_, i) => (
-          <span key={i} className="c-floor-plan__seat" />
-        ))}
-      </span>
-    )
-
-  return (
-    <>
-      {side("top", top)}
-      {side("bottom", bottom)}
-      {side("left", left)}
-      {side("right", right)}
-    </>
-  )
-}
-
+// Orchestrates the customer floor: computes each table's slot-aware state and the
+// spatial tiles/decor, then renders the header, zones, the map (desktop) or card
+// list (mobile), and the status legend/filter. Heavy pieces live in ./floor/*.
 export function CustomerFloorPlan({
   tables,
   zones,
@@ -182,6 +90,8 @@ export function CustomerFloorPlan({
   const [onlyFree, setOnlyFree] = useState(false)
   // Legend doubles as a filter: pick a status and the rest dim out.
   const [statusFilter, setStatusFilter] = useState<Tone | null>(null)
+  // Desktop "only free" — dims tables you can't book so free ones pop.
+  const [dimTaken, setDimTaken] = useState(false)
   const isMobile = useIsMobile()
 
   // The minute tick only matters for the now-based fallback status; when slot
@@ -191,20 +101,6 @@ export function CustomerFloorPlan({
     const id = setInterval(() => setCurrentTime(new Date()), 60_000)
     return () => clearInterval(id)
   }, [slotAvailability])
-
-  // Measure the viewport so the canvas can be scaled down to fit any screen.
-  const viewportRef = useRef<HTMLDivElement>(null)
-  const [viewportWidth, setViewportWidth] = useState(0)
-
-  useEffect(() => {
-    const el = viewportRef.current
-    if (!el) return
-    const observer = new ResizeObserver((entries) => {
-      setViewportWidth(entries[0].contentRect.width)
-    })
-    observer.observe(el)
-    return () => observer.disconnect()
-  }, [isMobile])
 
   // Each table paired with a visual tone (free/reserved/occupied), a status label,
   // and whether it can be booked for the chosen slot. With slot availability we
@@ -333,52 +229,6 @@ export function CustomerFloorPlan({
     }
   }, [payload, zones, selectedZone, tables, tableViews, viewByPublicId, guests])
 
-  // Start zoomed out to fit the whole room (overview); the user zooms IN from
-  // there. zoom=1 is the fit; buttons multiply on top.
-  const [zoom, setZoom] = useState(1)
-  const fitScale = viewportWidth > 0 ? Math.min(1, viewportWidth / canvasWidth) : 1
-  const scale = Math.min(2.6, fitScale * zoom)
-  const zoomIn = () => setZoom((z) => Math.min(4, z * 1.25))
-  const zoomOut = () => setZoom((z) => Math.max(1, z / 1.25))
-  const zoomFit = () => setZoom(1)
-
-  // Refit when the room (zone) changes.
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setZoom(1)
-  }, [selectedZone])
-
-  // Drag-to-pan the floor. A small threshold lets a plain tap still book a table
-  // (didPanRef suppresses the table click when the pointer was actually dragged).
-  const panRef = useRef<{ x: number; y: number; left: number; top: number } | null>(null)
-  const didPanRef = useRef(false)
-  const onPanStart = (e: React.PointerEvent) => {
-    const el = viewportRef.current
-    // Only mouse drags to pan; touch keeps native scrolling (no double-move).
-    if (!el || e.pointerType !== "mouse") return
-    didPanRef.current = false
-    panRef.current = { x: e.clientX, y: e.clientY, left: el.scrollLeft, top: el.scrollTop }
-  }
-  const onPanMove = (e: React.PointerEvent) => {
-    const el = viewportRef.current
-    const p = panRef.current
-    if (!el || !p) return
-    const dx = e.clientX - p.x
-    const dy = e.clientY - p.y
-    if (!didPanRef.current && Math.hypot(dx, dy) < 6) return
-    didPanRef.current = true
-    el.scrollLeft = p.left - dx
-    el.scrollTop = p.top - dy
-  }
-  const onPanEnd = () => {
-    panRef.current = null
-  }
-
-  // Table hovered on the floor — drives the big info tooltip.
-  const [hovered, setHovered] = useState<Tile | null>(null)
-  // Desktop "only free" — dims tables you can't book so free ones pop.
-  const [dimTaken, setDimTaken] = useState(false)
-
   // Mobile order: tables that seat the party first, tightest fit on top, free
   // before booked, then by number.
   const sortedTableViews = useMemo(() => {
@@ -446,270 +296,35 @@ export function CustomerFloorPlan({
       )}
 
       {isMobile ? (
-        <>
-          <div className="c-floor-plan__filters" role="group">
-            <button
-              type="button"
-              className={`c-floor-plan__filter ${!onlyFree ? "c-floor-plan__filter--active" : ""}`}
-              onClick={() => setOnlyFree(false)}
-            >
-              {bookStrings.floorPlan.filterAll}
-              <span className="c-floor-plan__filter-count">{sortedTableViews.length}</span>
-            </button>
-            <button
-              type="button"
-              className={`c-floor-plan__filter ${onlyFree ? "c-floor-plan__filter--active" : ""}`}
-              onClick={() => setOnlyFree(true)}
-            >
-              {bookStrings.floorPlan.filterFree}
-              <span className="c-floor-plan__filter-count">{freeCount}</span>
-            </button>
-          </div>
-
-          {visibleTableViews.length === 0 ? (
-            <div className="c-floor-plan__empty">
-              <p className="c-floor-plan__empty-text">{bookStrings.floorPlan.noFree}</p>
-              {onlyFree && sortedTableViews.length > 0 && (
-                <button
-                  type="button"
-                  className="c-floor-plan__empty-btn"
-                  onClick={() => setOnlyFree(false)}
-                >
-                  {bookStrings.floorPlan.showAll}
-                  <span className="c-floor-plan__filter-count">{sortedTableViews.length}</span>
-                </button>
-              )}
-            </div>
-          ) : (
-            <ul className="c-floor-plan__list">
-              {visibleTableViews.map(({ table, tone, label, bookable, perfect }, i) => (
-                <li key={table.public_id}>
-                  <button
-                    type="button"
-                    className={[
-                      "c-floor-plan__card",
-                      `c-floor-plan__card--${tone}`,
-                      selectedId === table.public_id ? "c-floor-plan__card--selected" : "",
-                      perfect ? "c-floor-plan__card--perfect" : "",
-                      statusFilter && tone !== statusFilter ? "c-floor-plan__card--dimmed" : "",
-                    ]
-                      .filter(Boolean)
-                      .join(" ")}
-                    style={{ animationDelay: `${Math.min(i, 20) * 45}ms` }}
-                    onClick={() => onSelect(table)}
-                    disabled={!bookable}
-                    aria-label={bookStrings.floorPlan.tableAria(
-                      table.public_number,
-                      table.capacity,
-                      label,
-                    )}
-                  >
-                    {perfect && (
-                      <span className="c-floor-plan__card-perfect" title={`Саме на ${guests}`}>
-                        ★ {guests}
-                      </span>
-                    )}
-                    <span
-                      className={`c-floor-plan__card-table c-floor-plan__table--${tone}`}
-                      aria-hidden="true"
-                    >
-                      <TableSeats capacity={table.capacity} shape="square" size={60} />
-                      <span className="c-floor-plan__surface c-floor-plan__card-surface">
-                        <span className="c-floor-plan__card-table-num">{table.public_number}</span>
-                      </span>
-                    </span>
-
-                    <span className="c-floor-plan__card-cap">
-                      <LuUsers aria-hidden="true" />
-                      {bookStrings.floorPlan.seats(table.capacity)}
-                    </span>
-
-                    {bookable ? (
-                      <span className="c-floor-plan__card-cta">
-                        <LuPlus aria-hidden="true" />
-                        {bookStrings.floorPlan.choose}
-                      </span>
-                    ) : (
-                      <span
-                        className={`c-floor-plan__table-badge c-floor-plan__table-badge--${tone} c-floor-plan__card-badge`}
-                      >
-                        {label}
-                      </span>
-                    )}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </>
+        <FloorCardList
+          sortedTableViews={sortedTableViews}
+          visibleTableViews={visibleTableViews}
+          onlyFree={onlyFree}
+          setOnlyFree={setOnlyFree}
+          freeCount={freeCount}
+          selectedId={selectedId}
+          onSelect={onSelect}
+          statusFilter={statusFilter}
+          guests={guests}
+        />
       ) : (
-        <div className="c-floor-plan__stage">
-          <div
-            className="c-floor-plan__viewport"
-            ref={viewportRef}
-            onPointerDown={onPanStart}
-            onPointerMove={onPanMove}
-            onPointerUp={onPanEnd}
-            onPointerLeave={onPanEnd}
-          >
-            <div
-              className="c-floor-plan__canvas-wrap"
-              style={{ width: canvasWidth * scale, height: canvasHeight * scale }}
-            >
-              <div
-                className="c-floor-plan__canvas"
-                style={{ width: canvasWidth, height: canvasHeight, transform: `scale(${scale})` }}
-              >
-                {/* Walls / pillars — solid blocks the guests can't sit at. */}
-                {obstacles.map((o, i) => (
-                  <div
-                    key={`obstacle-${i}`}
-                    className="c-floor-plan__piece c-floor-plan__obstacle"
-                    aria-hidden="true"
-                    style={pieceStyle(o)}
-                  />
-                ))}
-
-                {/* Thresholds — doorways / passages. */}
-                {thresholds.map((t, i) => (
-                  <div
-                    key={`threshold-${i}`}
-                    className="c-floor-plan__piece c-floor-plan__threshold"
-                    aria-hidden="true"
-                    style={pieceStyle(t)}
-                  >
-                    {t.label ? (
-                      <span className="c-floor-plan__threshold-label">{t.label}</span>
-                    ) : null}
-                  </div>
-                ))}
-
-                {/* Portals — tap to jump to the linked zone (terrace, etc.). */}
-                {portals.map((p, i) => (
-                  <button
-                    key={`portal-${i}`}
-                    type="button"
-                    className="c-floor-plan__piece c-floor-plan__portal"
-                    onClick={() => p.target_zone_id && onZoneChange(p.target_zone_id)}
-                    disabled={!p.target_zone_id}
-                    style={pieceStyle(p)}
-                  >
-                    <LuArrowRight aria-hidden="true" />
-                    <span className="c-floor-plan__portal-label">
-                      {p.portal_label || p.label || zoneNameById.get(p.target_zone_id ?? "") || "→"}
-                    </span>
-                  </button>
-                ))}
-
-                {tiles.map((tile, i) => (
-                  <button
-                    key={tile.key}
-                    type="button"
-                    className={[
-                      "c-floor-plan__table",
-                      `c-floor-plan__table--${tile.tone}`,
-                      `c-floor-plan__table--${tile.shape}`,
-                      selectedId === tile.table?.public_id ? "c-floor-plan__table--selected" : "",
-                      tile.perfect ? "c-floor-plan__table--perfect" : "",
-                      (statusFilter && tile.tone !== statusFilter) || (dimTaken && !tile.bookable)
-                        ? "c-floor-plan__table--dimmed"
-                        : "",
-                    ]
-                      .filter(Boolean)
-                      .join(" ")}
-                    onMouseEnter={() => setHovered(tile)}
-                    onMouseLeave={() => setHovered((h) => (h?.key === tile.key ? null : h))}
-                    style={
-                      {
-                        left: tile.x,
-                        top: tile.y,
-                        width: tile.w,
-                        height: tile.h,
-                        animationDelay: `${Math.min(i, 24) * 35}ms`,
-                        "--rot": `${tile.rotation}deg`,
-                      } as CSSProperties
-                    }
-                    onClick={() => {
-                      if (didPanRef.current) return
-                      if (tile.table) onSelect(tile.table)
-                    }}
-                    disabled={!tile.bookable || !tile.table}
-                    aria-label={bookStrings.floorPlan.tableAria(
-                      tile.publicNumber,
-                      tile.capacity,
-                      tile.label,
-                    )}
-                  >
-                    <TableSeats capacity={tile.capacity} shape={tile.shape} size={tile.w} />
-
-                    {tile.perfect && (
-                      <span className="c-floor-plan__perfect" title={`Саме на ${guests}`}>
-                        ★ {guests}
-                      </span>
-                    )}
-
-                    <span className="c-floor-plan__surface">
-                      <span
-                        className={`c-floor-plan__table-badge c-floor-plan__table-badge--${tile.tone}`}
-                      >
-                        {tile.label}
-                      </span>
-
-                      <span className="c-floor-plan__table-number">{tile.publicNumber}</span>
-
-                      <span className="c-floor-plan__table-capacity">
-                        <LuUsers aria-hidden="true" />
-                        {tile.capacity}
-                      </span>
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-          {hovered && (
-            <div className="c-floor-plan__tooltip" aria-hidden="true">
-              <span className="c-floor-plan__tooltip-num">
-                {bookStrings.floorPlan.tableShort} {hovered.publicNumber}
-              </span>
-              <span className="c-floor-plan__tooltip-cap">
-                <LuUsers aria-hidden="true" />
-                {hovered.capacity}
-              </span>
-              <span
-                className={`c-floor-plan__tooltip-status c-floor-plan__tooltip-status--${hovered.tone}`}
-              >
-                {hovered.label}
-              </span>
-            </div>
-          )}
-          <div className="c-floor-plan__zoom">
-            <button
-              type="button"
-              className="c-floor-plan__zoom-btn"
-              onClick={zoomIn}
-              aria-label="Збільшити"
-            >
-              <LuPlus aria-hidden="true" />
-            </button>
-            <button
-              type="button"
-              className="c-floor-plan__zoom-btn"
-              onClick={zoomOut}
-              aria-label="Зменшити"
-            >
-              <LuMinus aria-hidden="true" />
-            </button>
-            <button
-              type="button"
-              className="c-floor-plan__zoom-btn"
-              onClick={zoomFit}
-              aria-label="Показати весь зал"
-            >
-              <LuMaximize aria-hidden="true" />
-            </button>
-          </div>
-        </div>
+        <FloorMap
+          // Remounts on a zone switch, resetting zoom/pan/hover to the overview fit.
+          key={selectedZone ?? "all"}
+          tiles={tiles}
+          obstacles={obstacles}
+          thresholds={thresholds}
+          portals={portals}
+          canvasWidth={canvasWidth}
+          canvasHeight={canvasHeight}
+          selectedId={selectedId}
+          onSelect={onSelect}
+          onZoneChange={onZoneChange}
+          zoneNameById={zoneNameById}
+          guests={guests}
+          statusFilter={statusFilter}
+          dimTaken={dimTaken}
+        />
       )}
 
       <div className="c-floor-plan__legend">

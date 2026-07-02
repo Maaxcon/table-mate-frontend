@@ -121,8 +121,11 @@ describe("CustomerFloorPlan", () => {
       />,
     )
 
-    expect(screen.getByRole("button", { name: "Стіл T7, 6 місць, Вільно" })).toBeDisabled()
-    expect(screen.getByText("6 міс.")).toBeInTheDocument()
-    expect(screen.queryByText("0 міс.")).not.toBeInTheDocument()
+    const tile = screen.getByRole("button", { name: "Стіл T7, 6 місць, Вільно" })
+    expect(tile).toBeDisabled()
+    // Capacity shows as the seats chip (people icon + number) — from the layout (6),
+    // never a 0 placeholder when no live table matches.
+    expect(tile).toHaveTextContent("6")
+    expect(tile).not.toHaveTextContent("0")
   })
 })
