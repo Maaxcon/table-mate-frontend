@@ -206,12 +206,59 @@
   }
 }
 
-/* Wrapper for the published-layout floor map (FloorPlanView) — centre it and let
-   it scroll if the arrangement is wider than the page. */
+/* Positioning context for the scrollable floor + the zoom controls overlay. */
 .c-floor-plan__stage {
+  position: relative;
+}
+
+/* Grab cursor hints the floor can be dragged (mouse). */
+.c-floor-plan__viewport {
+  cursor: grab;
+}
+
+.c-floor-plan__viewport:active {
+  cursor: grabbing;
+}
+
+/* Zoom controls pinned to the floor's corner. */
+.c-floor-plan__zoom {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  z-index: 4;
   display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.c-floor-plan__zoom-btn {
+  display: inline-flex;
+  align-items: center;
   justify-content: center;
-  overflow: auto;
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--color-border-default);
+  border-radius: 12px;
+  background: var(--color-bg-surface);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  box-shadow: 0 4px 12px -4px rgb(0 0 0 / 25%);
+  transition:
+    background 140ms ease,
+    transform 120ms ease;
+}
+
+.c-floor-plan__zoom-btn:hover {
+  background: var(--color-bg-surface-subtle);
+}
+
+.c-floor-plan__zoom-btn:active {
+  transform: scale(0.94);
+}
+
+.c-floor-plan__zoom-btn svg {
+  width: 18px;
+  height: 18px;
 }
 
 .c-floor-plan__table--round {

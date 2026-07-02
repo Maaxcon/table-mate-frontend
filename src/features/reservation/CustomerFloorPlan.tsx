@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 import type { CSSProperties } from "react"
-import { LuPlus, LuUsers, LuArrowRight } from "react-icons/lu"
+import { LuPlus, LuMinus, LuMaximize, LuUsers, LuArrowRight } from "react-icons/lu"
 import type { Table } from "@/types/api/types.gen"
 import type { FloorTable, UpcomingReservation } from "@/features/waiter-order-view/data/waiterTypes"
 import { getTableVisualStatus } from "@/features/waiter-order-view/data/waiterTypes"
@@ -336,8 +336,47 @@ export function CustomerFloorPlan({
     }
   }, [payload, zones, selectedZone, tables, tableViews, viewByPublicId, guests])
 
-  const scale =
+  // Base scale fits the room to the width (never below MIN_SCALE); the user zoom
+  // multiplies on top of that so guests can enlarge/overview the plan.
+  const [zoom, setZoom] = useState(1)
+  const fitScale =
     viewportWidth > 0 ? Math.min(1, Math.max(MIN_SCALE, viewportWidth / canvasWidth)) : 1
+  const scale = Math.min(2.4, Math.max(0.4, fitScale * zoom))
+  const zoomIn = () => setZoom((z) => Math.min(3, z * 1.25))
+  const zoomOut = () => setZoom((z) => Math.max(0.5, z / 1.25))
+  const zoomFit = () => setZoom(1)
+
+  // Refit when the room (zone) changes.
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setZoom(1)
+  }, [selectedZone])
+
+  // Drag-to-pan the floor. A small threshold lets a plain tap still book a table
+  // (didPanRef suppresses the table click when the pointer was actually dragged).
+  const panRef = useRef<{ x: number; y: number; left: number; top: number } | null>(null)
+  const didPanRef = useRef(false)
+  const onPanStart = (e: React.PointerEvent) => {
+    const el = viewportRef.current
+    // Only mouse drags to pan; touch keeps native scrolling (no double-move).
+    if (!el || e.pointerType !== "mouse") return
+    didPanRef.current = false
+    panRef.current = { x: e.clientX, y: e.clientY, left: el.scrollLeft, top: el.scrollTop }
+  }
+  const onPanMove = (e: React.PointerEvent) => {
+    const el = viewportRef.current
+    const p = panRef.current
+    if (!el || !p) return
+    const dx = e.clientX - p.x
+    const dy = e.clientY - p.y
+    if (!didPanRef.current && Math.hypot(dx, dy) < 6) return
+    didPanRef.current = true
+    el.scrollLeft = p.left - dx
+    el.scrollTop = p.top - dy
+  }
+  const onPanEnd = () => {
+    panRef.current = null
+  }
 
   // Mobile order: tables that seat the party first, tightest fit on top, free
   // before booked, then by number.
@@ -485,113 +524,153 @@ export function CustomerFloorPlan({
           )}
         </>
       ) : (
-        <div className="c-floor-plan__viewport" ref={viewportRef}>
+        <div className="c-floor-plan__stage">
           <div
-            className="c-floor-plan__canvas-wrap"
-            style={{ width: canvasWidth * scale, height: canvasHeight * scale }}
+            className="c-floor-plan__viewport"
+            ref={viewportRef}
+            onPointerDown={onPanStart}
+            onPointerMove={onPanMove}
+            onPointerUp={onPanEnd}
+            onPointerLeave={onPanEnd}
           >
             <div
-              className="c-floor-plan__canvas"
-              style={{ width: canvasWidth, height: canvasHeight, transform: `scale(${scale})` }}
+              className="c-floor-plan__canvas-wrap"
+              style={{ width: canvasWidth * scale, height: canvasHeight * scale }}
             >
-              {/* Walls / pillars — solid blocks the guests can't sit at. */}
-              {obstacles.map((o, i) => (
-                <div
-                  key={`obstacle-${i}`}
-                  className="c-floor-plan__piece c-floor-plan__obstacle"
-                  aria-hidden="true"
-                  style={pieceStyle(o)}
-                />
-              ))}
+              <div
+                className="c-floor-plan__canvas"
+                style={{ width: canvasWidth, height: canvasHeight, transform: `scale(${scale})` }}
+              >
+                {/* Walls / pillars — solid blocks the guests can't sit at. */}
+                {obstacles.map((o, i) => (
+                  <div
+                    key={`obstacle-${i}`}
+                    className="c-floor-plan__piece c-floor-plan__obstacle"
+                    aria-hidden="true"
+                    style={pieceStyle(o)}
+                  />
+                ))}
 
-              {/* Thresholds — doorways / passages. */}
-              {thresholds.map((t, i) => (
-                <div
-                  key={`threshold-${i}`}
-                  className="c-floor-plan__piece c-floor-plan__threshold"
-                  aria-hidden="true"
-                  style={pieceStyle(t)}
-                >
-                  {t.label ? (
-                    <span className="c-floor-plan__threshold-label">{t.label}</span>
-                  ) : null}
-                </div>
-              ))}
+                {/* Thresholds — doorways / passages. */}
+                {thresholds.map((t, i) => (
+                  <div
+                    key={`threshold-${i}`}
+                    className="c-floor-plan__piece c-floor-plan__threshold"
+                    aria-hidden="true"
+                    style={pieceStyle(t)}
+                  >
+                    {t.label ? (
+                      <span className="c-floor-plan__threshold-label">{t.label}</span>
+                    ) : null}
+                  </div>
+                ))}
 
-              {/* Portals — tap to jump to the linked zone (terrace, etc.). */}
-              {portals.map((p, i) => (
-                <button
-                  key={`portal-${i}`}
-                  type="button"
-                  className="c-floor-plan__piece c-floor-plan__portal"
-                  onClick={() => p.target_zone_id && onZoneChange(p.target_zone_id)}
-                  disabled={!p.target_zone_id}
-                  style={pieceStyle(p)}
-                >
-                  <LuArrowRight aria-hidden="true" />
-                  <span className="c-floor-plan__portal-label">
-                    {p.portal_label || p.label || zoneNameById.get(p.target_zone_id ?? "") || "→"}
-                  </span>
-                </button>
-              ))}
-
-              {tiles.map((tile, i) => (
-                <button
-                  key={tile.key}
-                  type="button"
-                  className={[
-                    "c-floor-plan__table",
-                    `c-floor-plan__table--${tile.tone}`,
-                    `c-floor-plan__table--${tile.shape}`,
-                    selectedId === tile.table?.public_id ? "c-floor-plan__table--selected" : "",
-                    tile.perfect ? "c-floor-plan__table--perfect" : "",
-                    statusFilter && tile.tone !== statusFilter ? "c-floor-plan__table--dimmed" : "",
-                  ]
-                    .filter(Boolean)
-                    .join(" ")}
-                  style={
-                    {
-                      left: tile.x,
-                      top: tile.y,
-                      width: tile.w,
-                      height: tile.h,
-                      animationDelay: `${Math.min(i, 24) * 35}ms`,
-                      "--rot": `${tile.rotation}deg`,
-                    } as CSSProperties
-                  }
-                  onClick={() => tile.table && onSelect(tile.table)}
-                  disabled={!tile.bookable || !tile.table}
-                  aria-label={bookStrings.floorPlan.tableAria(
-                    tile.publicNumber,
-                    tile.capacity,
-                    tile.label,
-                  )}
-                >
-                  <TableSeats capacity={tile.capacity} shape={tile.shape} size={tile.w} />
-
-                  {tile.perfect && (
-                    <span className="c-floor-plan__perfect" title={`Саме на ${guests}`}>
-                      ★ {guests}
+                {/* Portals — tap to jump to the linked zone (terrace, etc.). */}
+                {portals.map((p, i) => (
+                  <button
+                    key={`portal-${i}`}
+                    type="button"
+                    className="c-floor-plan__piece c-floor-plan__portal"
+                    onClick={() => p.target_zone_id && onZoneChange(p.target_zone_id)}
+                    disabled={!p.target_zone_id}
+                    style={pieceStyle(p)}
+                  >
+                    <LuArrowRight aria-hidden="true" />
+                    <span className="c-floor-plan__portal-label">
+                      {p.portal_label || p.label || zoneNameById.get(p.target_zone_id ?? "") || "→"}
                     </span>
-                  )}
+                  </button>
+                ))}
 
-                  <span className="c-floor-plan__surface">
-                    <span
-                      className={`c-floor-plan__table-badge c-floor-plan__table-badge--${tile.tone}`}
-                    >
-                      {tile.label}
+                {tiles.map((tile, i) => (
+                  <button
+                    key={tile.key}
+                    type="button"
+                    className={[
+                      "c-floor-plan__table",
+                      `c-floor-plan__table--${tile.tone}`,
+                      `c-floor-plan__table--${tile.shape}`,
+                      selectedId === tile.table?.public_id ? "c-floor-plan__table--selected" : "",
+                      tile.perfect ? "c-floor-plan__table--perfect" : "",
+                      statusFilter && tile.tone !== statusFilter
+                        ? "c-floor-plan__table--dimmed"
+                        : "",
+                    ]
+                      .filter(Boolean)
+                      .join(" ")}
+                    style={
+                      {
+                        left: tile.x,
+                        top: tile.y,
+                        width: tile.w,
+                        height: tile.h,
+                        animationDelay: `${Math.min(i, 24) * 35}ms`,
+                        "--rot": `${tile.rotation}deg`,
+                      } as CSSProperties
+                    }
+                    onClick={() => {
+                      if (didPanRef.current) return
+                      if (tile.table) onSelect(tile.table)
+                    }}
+                    disabled={!tile.bookable || !tile.table}
+                    aria-label={bookStrings.floorPlan.tableAria(
+                      tile.publicNumber,
+                      tile.capacity,
+                      tile.label,
+                    )}
+                  >
+                    <TableSeats capacity={tile.capacity} shape={tile.shape} size={tile.w} />
+
+                    {tile.perfect && (
+                      <span className="c-floor-plan__perfect" title={`Саме на ${guests}`}>
+                        ★ {guests}
+                      </span>
+                    )}
+
+                    <span className="c-floor-plan__surface">
+                      <span
+                        className={`c-floor-plan__table-badge c-floor-plan__table-badge--${tile.tone}`}
+                      >
+                        {tile.label}
+                      </span>
+
+                      <span className="c-floor-plan__table-number">{tile.publicNumber}</span>
+
+                      <span className="c-floor-plan__table-capacity">
+                        <LuUsers aria-hidden="true" />
+                        {tile.capacity}
+                      </span>
                     </span>
-
-                    <span className="c-floor-plan__table-number">{tile.publicNumber}</span>
-
-                    <span className="c-floor-plan__table-capacity">
-                      <LuUsers aria-hidden="true" />
-                      {tile.capacity}
-                    </span>
-                  </span>
-                </button>
-              ))}
+                  </button>
+                ))}
+              </div>
             </div>
+          </div>
+          <div className="c-floor-plan__zoom">
+            <button
+              type="button"
+              className="c-floor-plan__zoom-btn"
+              onClick={zoomIn}
+              aria-label="Збільшити"
+            >
+              <LuPlus aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              className="c-floor-plan__zoom-btn"
+              onClick={zoomOut}
+              aria-label="Зменшити"
+            >
+              <LuMinus aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              className="c-floor-plan__zoom-btn"
+              onClick={zoomFit}
+              aria-label="Показати весь зал"
+            >
+              <LuMaximize aria-hidden="true" />
+            </button>
           </div>
         </div>
       )}
