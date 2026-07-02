@@ -159,20 +159,9 @@ export function ReservationScheduler() {
   }, [fetchedReservations, setReservations])
 
   const handleExternalUpdate = useCallback(async () => {
-    console.log(
-      "[stale-banner] WS HALL_RESERVATIONS_UPDATED received, pendingChangesRef.current.length:",
-      pendingChangesRef.current.length,
-    )
     await refetch()
-    console.log(
-      "[stale-banner] After refetch, pendingChangesRef.current.length:",
-      pendingChangesRef.current.length,
-    )
     if (pendingChangesRef.current.length > 0) {
-      console.log("[stale-banner] Setting externalUpdate = true")
       setExternalUpdate(true)
-    } else {
-      console.log("[stale-banner] No pending changes, banner suppressed")
     }
   }, [refetch])
 
