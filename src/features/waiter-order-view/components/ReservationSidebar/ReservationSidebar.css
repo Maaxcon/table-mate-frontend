@@ -4,7 +4,7 @@
   gap: 16px;
   flex: 1;
   min-height: 0;
-  background: var(--w-card);
+  background: var(--color-bg-surface);
   border-radius: var(--w-radius);
   box-shadow: var(--w-shadow-lg);
   padding: 24px;
@@ -21,7 +21,7 @@
   font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.12em;
-  color: var(--w-text);
+  color: var(--color-text-primary);
 }
 
 .reservation-sidebar__add {
@@ -30,11 +30,11 @@
   justify-content: center;
   width: 28px;
   height: 28px;
-  border: 1px solid var(--w-border);
+  border: 1px solid var(--color-border-default);
   border-radius: var(--w-radius-sm);
   background: none;
   cursor: pointer;
-  color: var(--w-text);
+  color: var(--color-text-primary);
 }
 
 .reservation-sidebar__search {
@@ -42,14 +42,14 @@
   align-items: center;
   gap: 8px;
   padding: 10px 12px;
-  border: 1px solid var(--w-border);
+  border: 1px solid var(--color-border-default);
   border-radius: var(--w-radius-sm);
-  background: var(--w-card);
+  background: var(--color-bg-surface);
 }
 
 .reservation-sidebar__search-icon {
   flex-shrink: 0;
-  color: var(--w-text-muted);
+  color: var(--color-text-secondary);
 }
 
 .reservation-sidebar__search-input {
@@ -60,12 +60,12 @@
   font-size: 0.72rem;
   font-weight: 600;
   letter-spacing: 0.06em;
-  color: var(--w-text);
+  color: var(--color-text-primary);
   outline: none;
 }
 
 .reservation-sidebar__search-input::placeholder {
-  color: var(--w-text-muted);
+  color: var(--color-text-secondary);
 }
 
 .reservation-sidebar__list {
@@ -82,7 +82,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 12px;
-  background: var(--w-card);
+  background: var(--color-bg-surface);
   border-radius: var(--w-radius-sm);
   box-shadow: var(--w-shadow-sm);
 }
@@ -96,7 +96,7 @@
 .reservation-sidebar__item-time {
   font-size: 0.95rem;
   font-weight: 800;
-  color: var(--w-text);
+  color: var(--color-text-primary);
   font-variant-numeric: tabular-nums;
 }
 
@@ -109,14 +109,14 @@
 .reservation-sidebar__item-name {
   font-size: 1.05rem;
   font-weight: 700;
-  color: var(--w-text);
+  color: var(--color-text-primary);
 }
 
 .reservation-sidebar__item-meta {
   font-size: 0.78rem;
   font-weight: 600;
   letter-spacing: 0.08em;
-  color: var(--w-text-muted);
+  color: var(--color-text-secondary);
   display: flex;
   align-items: center;
   gap: 8px;
@@ -126,31 +126,31 @@
   font-size: 0.55rem;
   font-weight: 700;
   letter-spacing: 0.06em;
-  color: var(--w-text-muted);
+  color: var(--color-text-secondary);
   padding: 1px 6px;
-  border: 1px solid var(--w-text-muted);
+  border: 1px solid var(--color-text-secondary);
   border-radius: 999px;
   text-transform: uppercase;
 }
 
 .reservation-sidebar__item-status--pending {
-  color: var(--w-accent);
-  border-color: var(--w-accent);
+  color: var(--color-primary);
+  border-color: var(--color-primary);
 }
 
 .reservation-sidebar__item-status--active {
-  color: var(--w-success);
-  border-color: var(--w-success);
+  color: var(--color-success);
+  border-color: var(--color-success);
 }
 
 .reservation-sidebar__item-status--completed {
-  color: var(--w-text-muted);
-  border-color: var(--w-border);
+  color: var(--color-text-secondary);
+  border-color: var(--color-border-default);
 }
 
 .reservation-sidebar__item-status--cancelled {
-  color: var(--w-danger);
-  border-color: var(--w-danger);
+  color: var(--color-error);
+  border-color: var(--color-error);
 }
 
 .reservation-sidebar__item-right {
@@ -163,11 +163,11 @@
 .reservation-sidebar__item-table {
   font-size: 0.9rem;
   font-weight: 800;
-  color: var(--w-text);
+  color: var(--color-text-primary);
   padding: 4px 10px;
-  border: 1px solid var(--w-border);
+  border: 1px solid var(--color-border-default);
   border-radius: var(--w-radius-sm);
-  background: var(--w-card);
+  background: var(--color-bg-surface);
 }
 
 .reservation-sidebar__item-actions {
@@ -193,14 +193,14 @@
 }
 
 .reservation-sidebar__action-btn--modify {
-  color: var(--w-text);
-  background: var(--w-card);
-  border: 1px solid var(--w-border);
+  color: var(--color-text-primary);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-default);
 }
 
 .reservation-sidebar__action-btn--cancel {
   color: #fff;
-  background: var(--w-danger);
+  background: var(--color-error);
 }
 
 .reservation-sidebar__action {
@@ -209,8 +209,8 @@
   font-size: 0.75rem;
   font-weight: 800;
   letter-spacing: 0.08em;
-  color: var(--w-bg);
-  background: var(--w-text);
+  color: var(--color-bg-secondary);
+  background: var(--color-text-primary);
   border: none;
   border-radius: var(--w-radius-sm);
   cursor: pointer;

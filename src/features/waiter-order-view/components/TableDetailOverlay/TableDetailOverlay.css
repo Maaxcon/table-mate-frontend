@@ -12,8 +12,8 @@
   width: 460px;
   max-width: 100vw;
   height: 100svh;
-  background: var(--w-panel);
-  border-left: 1px solid var(--w-divider);
+  background: var(--color-bg-surface);
+  border-left: 1px solid var(--color-border-light);
   z-index: 101;
   display: flex;
   flex-direction: column;
@@ -21,7 +21,7 @@
 }
 
 [data-theme="dark"] .overlay {
-  background: color-mix(in srgb, #0a0c12 90%, var(--w-panel) 10%);
+  background: color-mix(in srgb, #0a0c12 90%, var(--color-bg-surface) 10%);
   border-left-color: rgba(255, 255, 255, 0.08);
 }
 
@@ -45,7 +45,7 @@
   margin: 0;
   font-size: 2rem;
   font-weight: 900;
-  color: var(--w-text);
+  color: var(--color-text-primary);
   letter-spacing: -0.02em;
 }
 
@@ -55,23 +55,23 @@
   justify-content: center;
   width: 36px;
   height: 36px;
-  border: 1px solid var(--w-border);
+  border: 1px solid var(--color-border-default);
   border-radius: var(--w-radius-sm);
   background: none;
   cursor: pointer;
-  color: var(--w-text);
+  color: var(--color-text-primary);
   transition: background 0.15s;
 }
 
 .overlay__close:hover {
-  background: var(--w-bg);
+  background: var(--color-bg-secondary);
 }
 
 .overlay__subtitle {
   margin: 10px 0 0;
   font-size: 0.85rem;
   font-weight: 500;
-  color: var(--w-text-muted);
+  color: var(--color-text-secondary);
   line-height: 1.4;
 }
 
@@ -84,24 +84,24 @@
 
 .overlay__status-card {
   padding: 12px 14px;
-  border: 1px solid var(--w-border);
+  border: 1px solid var(--color-border-default);
   border-radius: var(--w-radius-sm);
-  background: var(--w-card);
+  background: var(--color-bg-surface);
   box-shadow: var(--w-shadow-sm);
 }
 
 .overlay__status-card--muted {
-  background: color-mix(in srgb, var(--w-card) 80%, var(--w-bg) 20%);
+  background: color-mix(in srgb, var(--color-bg-surface) 80%, var(--color-bg-secondary) 20%);
 }
 
 [data-theme="dark"] .overlay__status-card {
-  background: color-mix(in srgb, var(--w-card) 70%, #111622 30%);
+  background: color-mix(in srgb, var(--color-bg-surface) 70%, #111622 30%);
   border-color: rgba(255, 255, 255, 0.08);
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.55);
 }
 
 [data-theme="dark"] .overlay__status-card--muted {
-  background: color-mix(in srgb, #0f1522 75%, var(--w-card) 25%);
+  background: color-mix(in srgb, #0f1522 75%, var(--color-bg-surface) 25%);
 }
 
 .overlay__status-label {
@@ -109,14 +109,14 @@
   font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.08em;
-  color: var(--w-text-muted);
+  color: var(--color-text-secondary);
 }
 
 .overlay__status-value {
   margin: 4px 0 0;
   font-size: 0.95rem;
   font-weight: 700;
-  color: var(--w-text);
+  color: var(--color-text-primary);
 }
 
 [data-theme="dark"] .overlay__status-value {
@@ -130,16 +130,16 @@
 }
 
 .overlay__actions--pill {
-  background: color-mix(in srgb, var(--w-bg) 80%, white 20%);
+  background: color-mix(in srgb, var(--color-bg-secondary) 80%, white 20%);
   padding: 20px 28px;
   margin: 12px 28px 0;
   border-radius: var(--w-radius);
   box-shadow: var(--w-shadow-md);
-  border: 1px solid var(--w-border);
+  border: 1px solid var(--color-border-default);
 }
 
 [data-theme="dark"] .overlay__actions--pill {
-  background: color-mix(in srgb, #0f1624 85%, var(--w-card) 15%);
+  background: color-mix(in srgb, #0f1624 85%, var(--color-bg-surface) 15%);
   border-color: rgba(255, 255, 255, 0.08);
   box-shadow: 0 16px 32px rgba(0, 0, 0, 0.7);
 }
@@ -149,9 +149,9 @@
   font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.06em;
-  color: var(--w-text);
-  background: var(--w-card);
-  border: 1px solid var(--w-border);
+  color: var(--color-text-primary);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-default);
   border-radius: var(--w-radius-sm);
   cursor: pointer;
   font-family: inherit;
@@ -162,18 +162,18 @@
 
 [data-theme="dark"] .overlay__action-btn {
   color: rgba(255, 255, 255, 0.92);
-  background: color-mix(in srgb, #111827 80%, var(--w-card) 20%);
+  background: color-mix(in srgb, #111827 80%, var(--color-bg-surface) 20%);
   border-color: rgba(255, 255, 255, 0.08);
 }
 
 .overlay__action-btn:hover {
-  border-color: var(--w-text-muted);
+  border-color: var(--color-text-secondary);
   box-shadow: var(--w-shadow-sm);
 }
 
 .overlay__divider {
   margin: 24px 28px;
-  border-bottom: 1px solid var(--w-divider);
+  border-bottom: 1px solid var(--color-border-light);
 }
 
 .overlay__body {
@@ -184,7 +184,7 @@
 .overlay__body-footer {
   padding: 24px 0 32px;
   margin-top: 24px;
-  border-top: 1px solid var(--w-divider);
+  border-top: 1px solid var(--color-border-light);
 }
 
 .overlay__body-footer .overlay__cta {
@@ -194,7 +194,7 @@
 .overlay__slot + .overlay__slot {
   margin-top: 20px;
   padding-top: 20px;
-  border-top: 1px solid var(--w-divider);
+  border-top: 1px solid var(--color-border-light);
 }
 
 .overlay__slot-title {
@@ -202,7 +202,7 @@
   font-size: 0.65rem;
   font-weight: 700;
   letter-spacing: 0.1em;
-  color: var(--w-text-muted);
+  color: var(--color-text-secondary);
 }
 
 .overlay__footer {
@@ -221,7 +221,7 @@
 
 .overlay__total-row--final {
   padding: 12px 0;
-  border-top: 1px solid var(--w-divider);
+  border-top: 1px solid var(--color-border-light);
   margin-top: 4px;
 }
 
@@ -229,19 +229,19 @@
   font-size: 0.72rem;
   font-weight: 600;
   letter-spacing: 0.06em;
-  color: var(--w-text-muted);
+  color: var(--color-text-secondary);
 }
 
 .overlay__total-label--large {
   font-size: 1.1rem;
   font-weight: 900;
-  color: var(--w-text);
+  color: var(--color-text-primary);
 }
 
 .overlay__total-value {
   font-size: 0.85rem;
   font-weight: 700;
-  color: var(--w-text);
+  color: var(--color-text-primary);
   font-variant-numeric: tabular-nums;
 }
 
@@ -257,8 +257,8 @@
   font-size: 0.85rem;
   font-weight: 800;
   letter-spacing: 0.06em;
-  color: var(--w-bg);
-  background: var(--w-text);
+  color: var(--color-bg-secondary);
+  background: var(--color-text-primary);
   border: none;
   border-radius: var(--w-radius-sm);
   cursor: pointer;
@@ -272,7 +272,7 @@
 
 .overlay__tabs {
   display: flex;
-  border-bottom: 1px solid var(--w-divider);
+  border-bottom: 1px solid var(--color-border-light);
   margin: 8px 28px 16px;
 }
 
@@ -281,7 +281,7 @@
   font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.08em;
-  color: var(--w-text-muted);
+  color: var(--color-text-secondary);
   background: none;
   border: none;
   cursor: pointer;
@@ -291,7 +291,7 @@
 }
 
 .overlay__tab--active {
-  color: var(--w-text);
+  color: var(--color-text-primary);
 }
 
 .overlay__tab--active::after {
@@ -301,11 +301,11 @@
   left: 0;
   right: 0;
   height: 2px;
-  background: var(--w-text);
+  background: var(--color-text-primary);
 }
 
 .overlay__empty {
-  color: var(--w-text-muted);
+  color: var(--color-text-secondary);
   font-size: 0.85rem;
   font-weight: 600;
   text-align: center;
@@ -319,9 +319,9 @@
   flex-wrap: wrap;
   gap: 16px;
   padding: 18px 20px;
-  border: 1px solid var(--w-border);
+  border: 1px solid var(--color-border-default);
   border-radius: var(--w-radius-sm);
-  background: color-mix(in srgb, var(--w-card) 88%, var(--w-bg) 12%);
+  background: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-secondary) 12%);
   box-shadow: var(--w-shadow-sm);
   margin-bottom: 14px;
 }
@@ -331,40 +331,40 @@
 }
 
 .overlay__reservation-row--pending {
-  border-color: rgba(var(--w-warning-rgb), 0.4);
-  background: rgba(var(--w-warning-rgb), 0.08);
+  border-color: rgba(var(--color-warning-rgb), 0.4);
+  background: rgba(var(--color-warning-rgb), 0.08);
 }
 
 .overlay__reservation-row--active {
-  border-color: rgba(var(--w-success-rgb), 0.5);
-  background: rgba(var(--w-success-rgb), 0.12);
+  border-color: rgba(var(--color-success-rgb), 0.5);
+  background: rgba(var(--color-success-rgb), 0.12);
 }
 
 .overlay__reservation-row--cancelled {
-  border-color: rgba(var(--w-danger-rgb), 0.35);
-  background: rgba(var(--w-danger-rgb), 0.08);
+  border-color: rgba(var(--color-error-rgb), 0.35);
+  background: rgba(var(--color-error-rgb), 0.08);
   opacity: 0.85;
 }
 
 [data-theme="dark"] .overlay__reservation-row {
   border-color: rgba(255, 255, 255, 0.08);
-  background: color-mix(in srgb, #131926 80%, var(--w-card) 20%);
+  background: color-mix(in srgb, #131926 80%, var(--color-bg-surface) 20%);
   box-shadow: 0 18px 32px rgba(0, 0, 0, 0.65);
 }
 
 [data-theme="dark"] .overlay__reservation-row--pending {
-  border-color: rgba(var(--w-warning-rgb), 0.45);
-  background: rgba(var(--w-warning-rgb), 0.18);
+  border-color: rgba(var(--color-warning-rgb), 0.45);
+  background: rgba(var(--color-warning-rgb), 0.18);
 }
 
 [data-theme="dark"] .overlay__reservation-row--active {
-  border-color: rgba(var(--w-success-rgb), 0.6);
-  background: rgba(var(--w-success-rgb), 0.2);
+  border-color: rgba(var(--color-success-rgb), 0.6);
+  background: rgba(var(--color-success-rgb), 0.2);
 }
 
 [data-theme="dark"] .overlay__reservation-row--cancelled {
-  border-color: rgba(var(--w-danger-rgb), 0.5);
-  background: rgba(var(--w-danger-rgb), 0.2);
+  border-color: rgba(var(--color-error-rgb), 0.5);
+  background: rgba(var(--color-error-rgb), 0.2);
 }
 
 .overlay__reservation-info {
@@ -376,7 +376,7 @@
 .overlay__reservation-name {
   font-size: 0.95rem;
   font-weight: 700;
-  color: var(--w-text);
+  color: var(--color-text-primary);
 }
 
 .overlay__reservation-tag {
@@ -386,15 +386,15 @@
   font-weight: 800;
   letter-spacing: 0.06em;
   border-radius: var(--w-radius-pill);
-  color: var(--w-bg);
-  background: var(--w-text);
+  color: var(--color-bg-secondary);
+  background: var(--color-text-primary);
   vertical-align: middle;
 }
 
 .overlay__reservation-meta {
   font-size: 0.75rem;
   font-weight: 600;
-  color: var(--w-text-muted);
+  color: var(--color-text-secondary);
 }
 
 .overlay__reservation-actions {
@@ -414,7 +414,12 @@
 }
 
 .skeleton-box {
-  background: linear-gradient(90deg, var(--w-border) 25%, var(--w-bg) 50%, var(--w-border) 75%);
+  background: linear-gradient(
+    90deg,
+    var(--color-border-default) 25%,
+    var(--color-bg-secondary) 50%,
+    var(--color-border-default) 75%
+  );
   background-size: 800px 100%;
   animation: overlay-shimmer 1.5s ease-in-out infinite;
   border-radius: 6px;
@@ -435,7 +440,7 @@
 
 .overlay__skeleton-divider {
   margin: 24px 0;
-  border-bottom: 1px solid var(--w-divider);
+  border-bottom: 1px solid var(--color-border-light);
 }
 
 .overlay__skeleton-items {
@@ -464,13 +469,13 @@
 .overlay__action-error {
   margin: 0 0 12px;
   font-size: 0.8rem;
-  color: var(--w-danger);
+  color: var(--color-error);
 }
 
 .overlay__open-hint {
   margin: 0;
   font-size: 0.82rem;
-  color: var(--w-text-muted);
+  color: var(--color-text-secondary);
 }
 
 .overlay__open-row {
@@ -486,17 +491,17 @@
   font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.06em;
-  color: var(--w-text-muted);
+  color: var(--color-text-secondary);
 }
 
 .overlay__guests-input {
   width: 72px;
   padding: 10px 12px;
   font-size: 0.95rem;
-  border: 1px solid var(--w-border);
+  border: 1px solid var(--color-border-default);
   border-radius: var(--w-radius-sm);
-  background: var(--w-card);
-  color: var(--w-text);
+  background: var(--color-bg-surface);
+  color: var(--color-text-primary);
   font-family: inherit;
 }
 
@@ -517,8 +522,8 @@
   font-size: 0.78rem;
   font-weight: 800;
   letter-spacing: 0.06em;
-  color: var(--w-bg);
-  background: var(--w-text);
+  color: var(--color-bg-secondary);
+  background: var(--color-text-primary);
   border: none;
   border-radius: var(--w-radius-sm);
   cursor: pointer;
@@ -531,11 +536,11 @@
 }
 
 .overlay__seat-btn--modify {
-  color: var(--w-text);
-  background: var(--w-card);
-  border: 1px solid var(--w-border);
+  color: var(--color-text-primary);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-default);
 }
 
 .overlay__seat-btn--cancel {
-  background: var(--w-danger);
+  background: var(--color-error);
 }

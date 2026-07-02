@@ -2,7 +2,7 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
-  background: var(--w-card);
+  background: var(--color-bg-surface);
   border-radius: var(--w-radius);
   box-shadow: var(--w-shadow-lg);
   padding: 24px;
@@ -19,20 +19,20 @@
   font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.12em;
-  color: var(--w-text);
+  color: var(--color-text-primary);
 }
 
 .notification-stream__status {
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  border: 2px solid var(--w-danger);
+  border: 2px solid var(--color-error);
   flex-shrink: 0;
 }
 
 .notification-stream__status--on {
-  border-color: var(--w-success);
-  background: var(--w-success);
+  border-color: var(--color-success);
+  background: var(--color-success);
 }
 
 .notification-stream__list {
@@ -58,7 +58,7 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
-  border-bottom: 1px solid var(--w-divider);
+  border-bottom: 1px solid var(--color-border-light);
   padding-bottom: 12px;
 }
 .notification-stream__section:last-child {
@@ -73,17 +73,17 @@
   font-size: 0.65rem;
   font-weight: 700;
   letter-spacing: 0.12em;
-  color: var(--w-text-muted);
+  color: var(--color-text-secondary);
 }
 
 .notification-stream__section-count {
   font-size: 0.7rem;
-  color: var(--w-text);
+  color: var(--color-text-primary);
 }
 
 .notification-stream__empty {
   font-size: 0.7rem;
-  color: var(--w-text-muted);
+  color: var(--color-text-secondary);
   text-align: center;
   margin: 0;
   padding: 12px 0;
@@ -92,14 +92,14 @@
 .notification-stream__event {
   width: 100%;
   text-align: left;
-  background: var(--w-bg);
-  border: 1px solid var(--w-border);
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border-default);
   border-radius: var(--w-radius-sm);
   box-shadow: var(--w-shadow-sm);
   padding: 12px 14px;
   cursor: pointer;
   font-family: inherit;
-  color: var(--w-text);
+  color: var(--color-text-primary);
   transition:
     box-shadow 0.15s,
     transform 0.15s;
@@ -121,28 +121,28 @@
 .notification-stream__event-title {
   font-size: 0.72rem;
   font-weight: 700;
-  color: var(--w-text);
+  color: var(--color-text-primary);
 }
 
 .notification-stream__event-time {
   font-size: 0.62rem;
-  color: var(--w-text-muted);
+  color: var(--color-text-secondary);
   font-variant-numeric: tabular-nums;
 }
 
 .notification-stream__event-desc {
   margin: 0;
   font-size: 0.68rem;
-  color: var(--w-text-muted);
+  color: var(--color-text-secondary);
   line-height: 1.35;
 }
 
 .notification-stream__arrow {
   margin-left: 6px;
   font-weight: 700;
-  color: var(--w-success);
+  color: var(--color-success);
 }
 
 .notification-stream__arrow--pending {
-  color: var(--w-warning);
+  color: var(--color-warning-icon);
 }

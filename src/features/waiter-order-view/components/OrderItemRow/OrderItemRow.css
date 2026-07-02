@@ -4,7 +4,7 @@
   justify-content: space-between;
   gap: 16px;
   padding: 12px 0;
-  border-bottom: 1px solid var(--w-divider);
+  border-bottom: 1px solid var(--color-border-light);
 }
 
 .order-item-row--voided {
@@ -21,13 +21,13 @@
 .order-item-row__name {
   font-size: 0.88rem;
   font-weight: 600;
-  color: var(--w-text);
+  color: var(--color-text-primary);
 }
 
 .order-item-row__comment {
   font-size: 0.74rem;
   font-style: italic;
-  color: var(--w-text-muted);
+  color: var(--color-text-secondary);
   white-space: pre-wrap;
   word-break: break-word;
 }
@@ -35,7 +35,7 @@
 .order-item-row__void-reason {
   font-size: 0.62rem;
   font-weight: 600;
-  color: var(--w-danger);
+  color: var(--color-error);
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
@@ -50,7 +50,7 @@
 .order-item-row__price {
   font-size: 0.85rem;
   font-weight: 700;
-  color: var(--w-text);
+  color: var(--color-text-primary);
   font-variant-numeric: tabular-nums;
   min-width: 60px;
   text-align: right;
@@ -62,10 +62,10 @@
   text-transform: uppercase;
   letter-spacing: 0.05em;
   padding: 3px 8px;
-  border: 1px solid var(--w-danger);
+  border: 1px solid var(--color-error);
   border-radius: 6px;
   background: transparent;
-  color: var(--w-danger);
+  color: var(--color-error);
   cursor: pointer;
   transition:
     background 0.15s,
@@ -73,6 +73,6 @@
 }
 
 .order-item-row__void-btn:hover {
-  background: var(--w-danger);
+  background: var(--color-error);
   color: #fff;
 }
