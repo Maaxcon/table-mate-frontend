@@ -22,6 +22,8 @@ interface CustomerFloorPlanProps {
   // When present, statuses reflect that slot instead of the current moment.
   slotAvailability?: Record<string, boolean> | null
   guests?: number
+  // The slot time the guest picked (HH:MM), shown in the free-count pill.
+  slotTime?: string | null
   // The published editor layout. When present the tables sit at their real
   // positions; otherwise they fall back to a tidy auto grid.
   payload?: LayoutPayload | null
@@ -48,6 +50,7 @@ interface Tile {
   tone: Tone
   label: string
   bookable: boolean
+  perfect: boolean
 }
 
 // Tracks whether the viewport is in the mobile (card-list) range.
@@ -134,10 +137,13 @@ export function CustomerFloorPlan({
   upcomingReservations = [],
   slotAvailability = null,
   guests = DEFAULT_GUESTS,
+  slotTime = null,
   payload = null,
 }: CustomerFloorPlanProps) {
   const [currentTime, setCurrentTime] = useState(new Date())
   const [onlyFree, setOnlyFree] = useState(false)
+  // Legend doubles as a filter: pick a status and the rest dim out.
+  const [statusFilter, setStatusFilter] = useState<Tone | null>(null)
   const isMobile = useIsMobile()
 
   // The minute tick only matters for the now-based fallback status; when slot
@@ -203,7 +209,10 @@ export function CustomerFloorPlan({
           bookable = true
         }
 
-        return { table: t, tone, label, bookable }
+        // Exact-fit table for the party — worth highlighting as "perfect".
+        const perfect = bookable && guests > 0 && t.capacity === guests
+
+        return { table: t, tone, label, bookable, perfect }
       }),
     [tables, slotAvailability, guests, upcomingReservations, currentTime],
   )
@@ -237,6 +246,7 @@ export function CustomerFloorPlan({
             tone: view?.tone ?? "free",
             label: view?.label ?? bookStrings.floorPlan.status.free,
             bookable: view?.bookable ?? false,
+            perfect: view?.perfect ?? false,
           }
         })
       return {
@@ -260,6 +270,7 @@ export function CustomerFloorPlan({
       tone: v.tone,
       label: v.label,
       bookable: v.bookable,
+      perfect: v.perfect,
     }))
     return {
       tiles,
@@ -296,7 +307,13 @@ export function CustomerFloorPlan({
 
   return (
     <div className="c-floor-plan">
-      <h2 className="c-floor-plan__title">{bookStrings.floorPlan.title}</h2>
+      <div className="c-floor-plan__head">
+        <h2 className="c-floor-plan__title">{bookStrings.floorPlan.title}</h2>
+        <span className="c-floor-plan__count">
+          <span className="c-floor-plan__count-num">{freeCount}</span>
+          вільно{slotTime ? ` на ${slotTime}` : ""}
+        </span>
+      </div>
       {zones.length > 1 && (
         <div className="c-floor-plan__zones">
           {zones.map((z) => (
@@ -349,7 +366,7 @@ export function CustomerFloorPlan({
             </div>
           ) : (
             <ul className="c-floor-plan__list">
-              {visibleTableViews.map(({ table, tone, label, bookable }) => (
+              {visibleTableViews.map(({ table, tone, label, bookable, perfect }, i) => (
                 <li key={table.public_id}>
                   <button
                     type="button"
@@ -357,9 +374,12 @@ export function CustomerFloorPlan({
                       "c-floor-plan__card",
                       `c-floor-plan__card--${tone}`,
                       selectedId === table.public_id ? "c-floor-plan__card--selected" : "",
+                      perfect ? "c-floor-plan__card--perfect" : "",
+                      statusFilter && tone !== statusFilter ? "c-floor-plan__card--dimmed" : "",
                     ]
                       .filter(Boolean)
                       .join(" ")}
+                    style={{ animationDelay: `${Math.min(i, 20) * 45}ms` }}
                     onClick={() => onSelect(table)}
                     disabled={!bookable}
                     aria-label={bookStrings.floorPlan.tableAria(
@@ -368,6 +388,11 @@ export function CustomerFloorPlan({
                       label,
                     )}
                   >
+                    {perfect && (
+                      <span className="c-floor-plan__card-perfect" title={`Саме на ${guests}`}>
+                        ★ {guests}
+                      </span>
+                    )}
                     <span
                       className={`c-floor-plan__card-table c-floor-plan__table--${tone}`}
                       aria-hidden="true"
@@ -420,6 +445,8 @@ export function CustomerFloorPlan({
                   `c-floor-plan__table--${tile.tone}`,
                   `c-floor-plan__table--${tile.shape}`,
                   selectedId === tile.table?.public_id ? "c-floor-plan__table--selected" : "",
+                  tile.perfect ? "c-floor-plan__table--perfect" : "",
+                  statusFilter && tile.tone !== statusFilter ? "c-floor-plan__table--dimmed" : "",
                 ]
                   .filter(Boolean)
                   .join(" ")}
@@ -439,6 +466,12 @@ export function CustomerFloorPlan({
                 )}
               >
                 <TableSeats capacity={tile.table?.capacity ?? 0} shape={tile.shape} size={tile.w} />
+
+                {tile.perfect && (
+                  <span className="c-floor-plan__perfect" title={`Саме на ${guests}`}>
+                    ★ {guests}
+                  </span>
+                )}
 
                 <span className="c-floor-plan__surface">
                   <span
@@ -468,15 +501,23 @@ export function CustomerFloorPlan({
       )}
 
       <div className="c-floor-plan__legend">
-        <span className="c-floor-plan__legend-item c-floor-plan__legend-item--free">
-          {bookStrings.floorPlan.status.free}
-        </span>
-        <span className="c-floor-plan__legend-item c-floor-plan__legend-item--reserved">
-          {bookStrings.floorPlan.status.reserved}
-        </span>
-        <span className="c-floor-plan__legend-item c-floor-plan__legend-item--occupied">
-          {bookStrings.floorPlan.status.occupied}
-        </span>
+        {(["free", "reserved", "occupied"] as const).map((s) => (
+          <button
+            key={s}
+            type="button"
+            className={[
+              "c-floor-plan__legend-item",
+              `c-floor-plan__legend-item--${s}`,
+              statusFilter === s ? "c-floor-plan__legend-item--active" : "",
+            ]
+              .filter(Boolean)
+              .join(" ")}
+            onClick={() => setStatusFilter((prev) => (prev === s ? null : s))}
+            aria-pressed={statusFilter === s}
+          >
+            {bookStrings.floorPlan.status[s]}
+          </button>
+        ))}
       </div>
     </div>
   )

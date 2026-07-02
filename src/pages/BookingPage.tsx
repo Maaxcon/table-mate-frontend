@@ -274,6 +274,7 @@ export function BookingPage() {
                 upcomingReservations={upcomingReservations}
                 slotAvailability={availability}
                 guests={slotGuests}
+                slotTime={slotTime}
                 payload={layoutPayload}
               />
             </div>

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import type { CSSProperties } from "react"
 import type { Table } from "@/types/api/types.gen"
 import { useFocusTrap } from "@/hooks/useFocusTrap"
 import type { WorkingHoursDay, ReservationWithTable } from "./api"
@@ -18,6 +19,9 @@ import {
   zonedWallTimeToUtcIso,
 } from "./utils"
 import "./BookModal.css"
+
+// Confetti burst colors for the booking-confirmed screen.
+const CONFETTI_COLORS = ["#f5a623", "#4caf50", "#2196f3", "#e91e63", "#9c27b0", "#ff5722"]
 
 interface BookModalProps {
   // Only the identity + size is needed, so both a full Table (customer flow) and a
@@ -316,6 +320,23 @@ export function BookModal({
       >
         {success ? (
           <>
+            <div className="book-confetti" aria-hidden="true">
+              {Array.from({ length: 18 }, (_, i) => (
+                <span
+                  key={i}
+                  className="book-confetti__piece"
+                  style={
+                    {
+                      left: `${8 + (i * 84) / 17}%`,
+                      background: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
+                      "--cx": `${((i % 5) - 2) * 26}px`,
+                      "--cr": `${(i % 2 ? 1 : -1) * (200 + i * 15)}deg`,
+                      animationDelay: `${(i % 6) * 45}ms`,
+                    } as CSSProperties
+                  }
+                />
+              ))}
+            </div>
             <div className="book-modal__header">
               <h2 className="book-modal__title" id="book-modal-title">
                 {bookStrings.modal.confirmedTitle}
