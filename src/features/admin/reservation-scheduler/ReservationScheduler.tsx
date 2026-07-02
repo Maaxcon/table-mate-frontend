@@ -8,7 +8,7 @@ import type { WorkingHoursDay } from "@/features/reservation/api"
 import { fetchRestaurantSettings } from "@/features/reservation/api"
 import ConfirmDialog from "@/features/admin/components/ConfirmDialog"
 import { useUnsavedChanges } from "@/features/admin/hooks/unsavedChanges"
-import { useHallSubscription } from "@/features/waiter-order-view/hooks/useHallSubscription"
+import { env } from "@/config/env"
 import { batchUpdateReservations } from "./api"
 import { useSchedulerState } from "./hooks/useSchedulerState"
 import { useSchedulerData } from "./hooks/useSchedulerData"
@@ -71,6 +71,7 @@ function localToISOString(dateStr: string, timeHHMM: string): string {
 
 export function ReservationScheduler() {
   const restaurantId = useAppSelector((state) => state.auth.user?.restaurantId)
+  const accessToken = useAppSelector((state) => state.auth.accessToken)
   const toast = useToast()
   const { setDirty } = useUnsavedChanges()
 
@@ -165,9 +166,44 @@ export function ReservationScheduler() {
     }
   }, [refetch])
 
-  useHallSubscription({
-    onReservationsUpdated: handleExternalUpdate,
-  })
+  useEffect(() => {
+    if (!accessToken || env.wsUrl === "Not configured") return
+
+    let ws: WebSocket | null = null
+    let reconnectTimer: ReturnType<typeof setTimeout>
+
+    function connect() {
+      ws = new WebSocket(`${env.wsUrl}/staff/reservations/?token=${accessToken}`)
+
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data) as { event_name?: string }
+          if (data.event_name === "HALL_RESERVATIONS_UPDATED") {
+            handleExternalUpdate()
+          }
+        } catch {
+          // ignore parse errors
+        }
+      }
+
+      ws.onclose = (e) => {
+        ws = null
+        if (e.code !== 1000) {
+          reconnectTimer = setTimeout(connect, 3000)
+        }
+      }
+    }
+
+    connect()
+
+    return () => {
+      clearTimeout(reconnectTimer)
+      if (ws) {
+        ws.close(1000)
+        ws = null
+      }
+    }
+  }, [accessToken, handleExternalUpdate])
 
   const handleCommitChanges = useCallback(() => {
     commitChanges()
