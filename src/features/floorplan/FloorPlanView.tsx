@@ -134,7 +134,7 @@ export function FloorPlanView({
     )
   }
 
-  const pad = GRID * Math.max(scale * 0.2, 0.5)
+  const pad = GRID * scale
   const scaledW = canvasPxW * scale + 2 * pad
   const scaledH = canvasPxH * scale + 2 * pad
   const offsetX = Math.max((containerWidth - scaledW) / 2, 0)
