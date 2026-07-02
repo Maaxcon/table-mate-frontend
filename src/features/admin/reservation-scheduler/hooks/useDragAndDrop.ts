@@ -1,7 +1,13 @@
 import { useCallback } from "react"
 import type { DragEndEvent } from "@dnd-kit/core"
 import type { SchedulerReservation, SchedulerTable } from "../types"
-import { checkOverlap, checkOrderingViolation, checkPastTimeViolation } from "./useOverlapCheck"
+import {
+  checkOperatingHours,
+  checkOverlap,
+  checkOrderingViolation,
+  checkPastTimeViolation,
+} from "./useOverlapCheck"
+import type { WorkingHoursDay } from "./useOverlapCheck"
 import type { PendingChange } from "../types"
 
 interface UseDragAndDropOptions {
@@ -11,6 +17,8 @@ interface UseDragAndDropOptions {
   hourStart: number
   hourEnd: number
   slotMinutes: number
+  restaurantTimezone?: string
+  workingHours?: Record<string, WorkingHoursDay> | null
   onMove: (
     reservationId: string,
     newTableId: string,
@@ -29,6 +37,8 @@ export function useDragAndDrop({
   hourStart,
   hourEnd,
   slotMinutes,
+  restaurantTimezone,
+  workingHours,
   onMove,
   onConflict,
 }: UseDragAndDropOptions) {
@@ -106,16 +116,37 @@ export function useDragAndDrop({
         return
       }
 
-      const pastReason = checkPastTimeViolation(proposed)
+      const pastReason = checkPastTimeViolation(
+        proposed,
+        draggedReservation?.status,
+        restaurantTimezone,
+      )
       if (pastReason) {
         onConflict(reservationId, pastReason)
+        return
+      }
+
+      const hoursReason = checkOperatingHours(proposed, workingHours)
+      if (hoursReason) {
+        onConflict(reservationId, hoursReason)
         return
       }
 
       const table = tables.find((t) => t.public_id === tableId)
       onMove(reservationId, tableId, table?.public_number ?? "", date, startTime, endTime)
     },
-    [tables, reservations, pendingChanges, hourStart, hourEnd, slotMinutes, onMove, onConflict],
+    [
+      tables,
+      reservations,
+      pendingChanges,
+      hourStart,
+      hourEnd,
+      slotMinutes,
+      restaurantTimezone,
+      workingHours,
+      onMove,
+      onConflict,
+    ],
   )
 
   return { handleDragEnd }
