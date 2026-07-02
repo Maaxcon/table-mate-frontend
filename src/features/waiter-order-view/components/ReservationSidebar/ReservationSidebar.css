@@ -129,6 +129,28 @@
   color: var(--w-text-muted);
   padding: 1px 6px;
   border: 1px solid var(--w-text-muted);
+  border-radius: 999px;
+  text-transform: uppercase;
+}
+
+.reservation-sidebar__item-status--pending {
+  color: var(--w-accent);
+  border-color: var(--w-accent);
+}
+
+.reservation-sidebar__item-status--active {
+  color: var(--w-success);
+  border-color: var(--w-success);
+}
+
+.reservation-sidebar__item-status--completed {
+  color: var(--w-text-muted);
+  border-color: var(--w-border);
+}
+
+.reservation-sidebar__item-status--cancelled {
+  color: var(--w-danger);
+  border-color: var(--w-danger);
 }
 
 .reservation-sidebar__item-right {

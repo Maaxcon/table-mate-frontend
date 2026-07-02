@@ -54,15 +54,14 @@ export function TopNav({
         </div>
 
         {zones.length > 0 && (
-          <div className="top-nav__zones" role="tablist" aria-label="Dining rooms">
+          <div className="top-nav__zones" role="group" aria-label="Dining rooms">
             {zones.map((zone) => (
               <button
                 key={zone.public_id}
                 type="button"
-                role="tab"
                 className={`top-nav__zone ${selectedZoneId === zone.public_id ? "top-nav__zone--active" : ""}`}
                 onClick={() => onZoneChange?.(zone.public_id)}
-                aria-selected={selectedZoneId === zone.public_id}
+                aria-pressed={selectedZoneId === zone.public_id}
               >
                 {zone.name}
               </button>

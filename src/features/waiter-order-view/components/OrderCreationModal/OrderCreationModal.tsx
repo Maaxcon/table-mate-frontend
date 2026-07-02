@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { useFocusTrap } from "@/hooks/useFocusTrap"
 import type { MenuCategory, MenuItem } from "@/types/api/types.gen"
 import {
@@ -41,10 +41,11 @@ export function OrderCreationModal({
   const [searchQuery, setSearchQuery] = useState("")
   const [draftItems, setDraftItems] = useState<DraftItem[]>([])
   const [submitting, setSubmitting] = useState(false)
+  const requestClose = useCallback(() => {
+    if (!submitting) onClose()
+  }, [submitting, onClose])
   const dialogRef = useFocusTrap<HTMLDivElement>({
-    onEscape: () => {
-      if (!submitting) onClose()
-    },
+    onEscape: requestClose,
   })
 
   useEffect(() => {
@@ -131,8 +132,11 @@ export function OrderCreationModal({
     <div
       className="ocm-backdrop"
       role="presentation"
-      onClick={(event) => {
-        if (event.target === event.currentTarget && !submitting) onClose()
+      onPointerDown={(event) => {
+        if (event.target === event.currentTarget) {
+          event.preventDefault()
+          requestClose()
+        }
       }}
     >
       <div
@@ -146,7 +150,13 @@ export function OrderCreationModal({
           <h2 id="ocm-title" className="ocm__title">
             NEW ORDER
           </h2>
-          <button type="button" className="ocm__close" onClick={onClose} aria-label="Close">
+          <button
+            type="button"
+            className="ocm__close"
+            onClick={requestClose}
+            aria-label="Close"
+            disabled={submitting}
+          >
             &times;
           </button>
         </div>

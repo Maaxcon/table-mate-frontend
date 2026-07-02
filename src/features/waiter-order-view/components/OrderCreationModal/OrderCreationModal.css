@@ -45,6 +45,11 @@
   line-height: 1;
 }
 
+.ocm__close:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 .ocm__body {
   display: flex;
   flex: 1;

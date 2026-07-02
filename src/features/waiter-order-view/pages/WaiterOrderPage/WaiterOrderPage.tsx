@@ -453,5 +453,3 @@ export function WaiterOrderPage() {
     </div>
   )
 }
-
-export default WaiterOrderPage

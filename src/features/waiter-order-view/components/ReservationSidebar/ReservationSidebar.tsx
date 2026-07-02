@@ -12,6 +12,19 @@ interface ReservationSidebarProps {
   error?: string | null
 }
 
+const STATUS_LABELS = {
+  pending: "PENDING",
+  active: "ACTIVE",
+  completed: "COMPLETED",
+  cancelled: "CANCELLED",
+} as const
+
+function getReservationStatusLabel(status?: ReservationItem["status"]) {
+  if (!status) return "UNKNOWN"
+  const key = status.toLowerCase() as keyof typeof STATUS_LABELS
+  return STATUS_LABELS[key] ?? status.replace(/_/g, " ").toUpperCase()
+}
+
 export function ReservationSidebar({
   reservations,
   onCancel,
@@ -75,7 +88,14 @@ export function ReservationSidebar({
               </span>
               <div className="reservation-sidebar__item-info">
                 <span className="reservation-sidebar__item-name">{r.name}</span>
-                <span className="reservation-sidebar__item-meta">{r.guest_count} GUESTS</span>
+                <span className="reservation-sidebar__item-meta">
+                  {r.guest_count} GUESTS
+                  <span
+                    className={`reservation-sidebar__item-status reservation-sidebar__item-status--${(r.status ?? "unknown").toLowerCase()}`}
+                  >
+                    {getReservationStatusLabel(r.status)}
+                  </span>
+                </span>
               </div>
             </div>
             <div className="reservation-sidebar__item-right">
