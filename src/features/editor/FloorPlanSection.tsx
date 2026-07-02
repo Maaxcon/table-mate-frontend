@@ -209,7 +209,7 @@ function FloorPlanSection() {
     }
   }, [loadEntities, clearPendingZones, restaurantId])
 
-  useHallSubscription({
+  const { isConnected } = useHallSubscription({
     onLayoutPublished: handleOtherAdminPublished,
     onZoneCreated: refreshZones,
     onZoneUpdated: refreshZones,
@@ -301,6 +301,19 @@ function FloorPlanSection() {
     : 0
 
   const selectedEntity = visibleEntities.find((e) => e.id === selectedId) ?? null
+  const zoneEntities = useMemo(
+    () => entities.filter((e) => e.zoneId === selectedZoneId),
+    [entities, selectedZoneId],
+  )
+  const zoneTables = useMemo(
+    () => zoneEntities.filter((e) => e.type.startsWith("table-")).length,
+    [zoneEntities],
+  )
+  const zonePortals = useMemo(
+    () => zoneEntities.filter((e) => e.type === "portal").length,
+    [zoneEntities],
+  )
+  const canvasSizeLabel = `${canvasCols} × ${canvasRows}`
 
   const handleCanvasClick = useCallback(
     (gridX: number, gridY: number) => {
@@ -366,58 +379,105 @@ function FloorPlanSection() {
 
   return (
     <div className="editor-page">
-      <Toolbar
-        dirty={dirty}
-        publishing={publishing}
-        activeTool={activeTool}
-        onToolSelect={setTool}
-        onPublish={() => setShowPublishModal(true)}
-        onDiscard={handleDiscard}
-      />
-      <ZoneHeader
-        zones={allZones}
-        selectedZoneId={selectedZoneId}
-        onZoneSelect={setSelectedZoneId}
-        onAddZone={handleAddZone}
-        onRenameZone={handleRenameZone}
-        onDeleteZone={(zoneId) => {
-          const zone = allZones.find((z) => z.public_id === zoneId)
-          if (zone) setDeleteZoneTarget(zone)
-        }}
-      />
-      <div className="editor-page__body">
-        {noZones ? (
-          <div className="editor-page__empty">
-            <p>Please create a zone to start editing the floor plan.</p>
+      <header className="editor-topbar">
+        <div className="editor-topbar__brand">
+          <span className="editor-topbar__eyebrow">Admin · Floor plan</span>
+          <div className="editor-topbar__title-row">
+            <h1 className="editor-topbar__title">Floor plan designer</h1>
+            <span
+              className={`editor-topbar__badge ${dirty ? "editor-topbar__badge--dirty" : "editor-topbar__badge--clean"}`}
+            >
+              {dirty ? "Unsaved" : "Synced"}
+            </span>
           </div>
-        ) : (
-          <>
-            <Canvas
-              entities={visibleEntities}
-              selectedId={selectedId}
-              activeTool={activeTool}
-              onEntityMove={(id, x, y) => moveEntity(id, x, y, selectedZoneId ?? undefined)}
-              onEntitySelect={selectEntity}
-              onCanvasClick={handleCanvasClick}
-              onEntityResize={(id, w, h) => updateEntity(id, { w, h })}
-              edgeStyles={edgeStyles}
-              canvasCols={canvasCols}
-              canvasRows={canvasRows}
-            />
-            <PropertiesSidebar
-              entity={selectedEntity}
-              onUpdate={updateEntity}
-              onDelete={removeEntity}
-              zones={allZones}
-              selectedZone={selectedZone}
-              onZoneStyleChange={handleZoneStyleChange}
-              canvasCols={canvasCols}
-              canvasRows={canvasRows}
-              onCanvasSizeChange={handleCanvasSizeChange}
-            />
-          </>
-        )}
-      </div>
+          <p className="editor-topbar__subtitle">
+            {selectedZone
+              ? `Editing ${selectedZone.name} — adjust seating, portals, and traffic edges before publishing.`
+              : "Create a zone to start mapping the dining room."}
+          </p>
+        </div>
+        <div className="editor-topbar__stats">
+          <div className="editor-stat">
+            <span className="editor-stat__label">Zones</span>
+            <span className="editor-stat__value">{allZones.length}</span>
+            <span className="editor-stat__hint">active</span>
+          </div>
+          <div className="editor-stat">
+            <span className="editor-stat__label">Tables</span>
+            <span className="editor-stat__value">{selectedZone ? zoneTables : "—"}</span>
+            <span className="editor-stat__hint">
+              {selectedZone ? `${zonePortals} portals` : "select zone"}
+            </span>
+          </div>
+          <div className="editor-stat">
+            <span className="editor-stat__label">Grid</span>
+            <span className="editor-stat__value">{selectedZone ? canvasSizeLabel : "—"}</span>
+            <span className="editor-stat__hint">cols × rows</span>
+          </div>
+        </div>
+        <span
+          className={`editor-topbar__connection ${isConnected ? "editor-topbar__connection--online" : ""}`}
+          role="status"
+          aria-label={isConnected ? "Live updates connected" : "Live updates offline"}
+        />
+      </header>
+
+      <section className="editor-page__panel">
+        <Toolbar
+          dirty={dirty}
+          publishing={publishing}
+          activeTool={activeTool}
+          onToolSelect={setTool}
+          onPublish={() => setShowPublishModal(true)}
+          onDiscard={handleDiscard}
+        />
+        <ZoneHeader
+          zones={allZones}
+          selectedZoneId={selectedZoneId}
+          onZoneSelect={setSelectedZoneId}
+          onAddZone={handleAddZone}
+          onRenameZone={handleRenameZone}
+          onDeleteZone={(zoneId) => {
+            const zone = allZones.find((z) => z.public_id === zoneId)
+            if (zone) setDeleteZoneTarget(zone)
+          }}
+        />
+        <div className="editor-page__body">
+          {noZones ? (
+            <div className="editor-page__empty">
+              <p>Please create a zone to start editing the floor plan.</p>
+            </div>
+          ) : (
+            <>
+              <div className="editor-page__stage">
+                <Canvas
+                  entities={visibleEntities}
+                  selectedId={selectedId}
+                  activeTool={activeTool}
+                  onEntityMove={(id, x, y) => moveEntity(id, x, y, selectedZoneId ?? undefined)}
+                  onEntitySelect={selectEntity}
+                  onCanvasClick={handleCanvasClick}
+                  onEntityResize={(id, w, h) => updateEntity(id, { w, h })}
+                  edgeStyles={edgeStyles}
+                  canvasCols={canvasCols}
+                  canvasRows={canvasRows}
+                />
+              </div>
+              <PropertiesSidebar
+                entity={selectedEntity}
+                onUpdate={updateEntity}
+                onDelete={removeEntity}
+                zones={allZones}
+                selectedZone={selectedZone}
+                onZoneStyleChange={handleZoneStyleChange}
+                canvasCols={canvasCols}
+                canvasRows={canvasRows}
+                onCanvasSizeChange={handleCanvasSizeChange}
+              />
+            </>
+          )}
+        </div>
+      </section>
 
       {showPublishModal && (
         <PublishConfirmModal

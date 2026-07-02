@@ -1,38 +1,43 @@
 .editor-zone-header {
   display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 6px 16px;
-  border-bottom: 2px solid var(--color-border-strong);
-  background: var(--color-bg-surface);
   flex-wrap: wrap;
+  gap: 8px;
+  padding: 0 8px;
 }
 
 .editor-zone-header__tab {
-  padding: 4px 12px;
-  border: 2px solid var(--color-border-strong);
-  background: var(--color-bg-surface);
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--color-border-default) 80%, transparent);
+  background: color-mix(in srgb, var(--color-bg-page) 80%, transparent);
   color: var(--color-text-primary);
   font-family: inherit;
   font-size: 0.68rem;
   font-weight: 700;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
   cursor: pointer;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease,
+    transform 0.15s ease;
 }
 
 .editor-zone-header__tab:hover {
-  box-shadow: 2px 2px 0 var(--color-border-strong);
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--color-text-primary) 40%, transparent);
 }
 
 .editor-zone-header__tab--active {
-  background: var(--color-text-primary);
+  background: color-mix(in srgb, var(--color-primary) 18%, var(--color-bg-surface));
+  border-color: color-mix(in srgb, var(--color-primary) 45%, transparent);
   color: var(--color-bg-page);
 }
 
 .editor-zone-header__tab--add {
   border-style: dashed;
-  opacity: 0.6;
+  opacity: 0.7;
 }
 
 .editor-zone-header__tab--add:hover {
@@ -58,35 +63,38 @@
 }
 
 .editor-zone-header__input {
-  padding: 4px 8px;
-  border: 2px solid var(--color-border-strong);
+  padding: 6px 10px;
+  border-radius: 12px;
+  border: 1px solid var(--color-border-default);
   font-family: inherit;
   font-size: 0.68rem;
   font-weight: 600;
   color: var(--color-text-primary);
-  background: var(--color-bg-page);
-  width: 120px;
+  background: color-mix(in srgb, var(--color-bg-page) 90%, transparent);
+  width: 140px;
   outline: none;
 }
 
 .editor-zone-header__btn {
-  padding: 4px 8px;
-  border: 2px solid var(--color-border-strong);
-  background: var(--color-text-primary);
+  padding: 6px 10px;
+  border-radius: 12px;
+  border: 1px solid var(--color-border-default);
+  background: color-mix(in srgb, var(--color-text-primary) 20%, var(--color-bg-surface));
   color: var(--color-bg-page);
   font-family: inherit;
-  font-size: 0.6rem;
+  font-size: 0.62rem;
   font-weight: 700;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
   cursor: pointer;
 }
 
 .editor-zone-header__btn:disabled {
-  opacity: 0.35;
+  opacity: 0.4;
   cursor: not-allowed;
 }
 
 .editor-zone-header__btn--cancel {
-  background: var(--color-bg-surface);
+  background: transparent;
   color: var(--color-text-primary);
 }
