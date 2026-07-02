@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import { LuArrowLeft } from "react-icons/lu"
 import type { Table } from "@/types/api/types.gen"
@@ -135,10 +135,15 @@ export function BookingPage() {
 
   // Guests get no live floor updates (that WebSocket needs a staff token), so a
   // table a waiter just seated/booked in another tab would look stale here.
-  // Refresh occupancy + slot availability whenever the tab regains focus.
+  // Refresh occupancy + slot availability whenever the tab regains focus, but at
+  // most once every 10s so rapid alt-tabbing doesn't spam the API.
+  const lastRefreshRef = useRef(0)
   useEffect(() => {
     const refresh = () => {
       if (document.visibilityState === "hidden") return
+      const now = Date.now()
+      if (now - lastRefreshRef.current < 10_000) return
+      lastRefreshRef.current = now
       reloadTables()
       setAvailabilityNonce((n) => n + 1)
     }
