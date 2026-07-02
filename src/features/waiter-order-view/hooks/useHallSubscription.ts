@@ -178,6 +178,9 @@ export function useHallSubscription({
     ws.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data) as HallEvent
+        if (data.event_name !== "HALL_TABLE_STATUS_CHANGED") {
+          console.log("[HallWS] Received event:", data.event_name, data)
+        }
         if (data.event_name === "HALL_TABLE_STATUS_CHANGED") {
           callbacksRef.current.onTableStatusChanged?.(data)
         } else if (data.event_name === "HALL_NEW_RESERVATION") {
