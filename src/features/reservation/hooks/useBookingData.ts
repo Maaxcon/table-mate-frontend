@@ -8,7 +8,6 @@ import {
   fetchLayoutData,
   fetchMyReservations,
   fetchRestaurantSettings,
-  fetchTables,
   fetchUpcomingReservations,
   fetchZones,
 } from "../api"
@@ -81,12 +80,15 @@ export function useBookingData(
 
   // Loaders only fetch and store results — no synchronous setState — so the
   // mount effect below stays clean. The reload wrappers own the loading flag.
+  // Source tables from the layout endpoint (all active tables, unpaginated) rather
+  // than /tables/ (paginated, PAGE_SIZE 20) so no table is dropped for larger
+  // restaurants — a dropped table would show as an unclickable "ghost" on the floor.
   const loadTables = useCallback(() => {
     if (!restaurantId) return Promise.resolve()
-    return fetchTables(restaurantId)
+    return fetchLayoutData(restaurantId)
       .then((data) => {
         if (!mountedRef.current) return
-        setTables(data)
+        setTables(data.tables)
         setTablesError(false)
       })
       .catch(() => {
