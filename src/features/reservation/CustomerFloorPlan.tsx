@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react"
-import { LuPlus, LuUsers } from "react-icons/lu"
+import { LuPlus, LuUsers, LuDoorOpen } from "react-icons/lu"
 import type { Table } from "@/types/api/types.gen"
 import type { FloorTable, UpcomingReservation } from "@/features/waiter-order-view/data/waiterTypes"
 import { getTableVisualStatus } from "@/features/waiter-order-view/data/waiterTypes"
@@ -368,11 +368,14 @@ export function CustomerFloorPlan({
                       label,
                     )}
                   >
-                    <span className="c-floor-plan__card-chip">
-                      <span className="c-floor-plan__card-chip-label">
-                        {bookStrings.floorPlan.tableShort}
+                    <span
+                      className={`c-floor-plan__card-table c-floor-plan__table--${tone}`}
+                      aria-hidden="true"
+                    >
+                      <TableSeats capacity={table.capacity} shape="square" size={60} />
+                      <span className="c-floor-plan__surface c-floor-plan__card-surface">
+                        <span className="c-floor-plan__card-table-num">{table.public_number}</span>
                       </span>
-                      <span className="c-floor-plan__card-chip-num">{table.public_number}</span>
                     </span>
 
                     <span className="c-floor-plan__card-cap">
@@ -408,7 +411,7 @@ export function CustomerFloorPlan({
             className="c-floor-plan__canvas"
             style={{ width: canvasWidth, height: canvasHeight, transform: `scale(${scale})` }}
           >
-            {tiles.map((tile) => (
+            {tiles.map((tile, i) => (
               <button
                 key={tile.key}
                 type="button"
@@ -420,7 +423,13 @@ export function CustomerFloorPlan({
                 ]
                   .filter(Boolean)
                   .join(" ")}
-                style={{ left: tile.x, top: tile.y, width: tile.w, height: tile.h }}
+                style={{
+                  left: tile.x,
+                  top: tile.y,
+                  width: tile.w,
+                  height: tile.h,
+                  animationDelay: `${Math.min(i, 24) * 35}ms`,
+                }}
                 onClick={() => tile.table && onSelect(tile.table)}
                 disabled={!tile.bookable || !tile.table}
                 aria-label={bookStrings.floorPlan.tableAria(
@@ -451,6 +460,10 @@ export function CustomerFloorPlan({
               </button>
             ))}
           </div>
+          <span className="c-floor-plan__entrance">
+            <LuDoorOpen aria-hidden="true" />
+            Вхід
+          </span>
         </div>
       )}
 
