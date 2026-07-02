@@ -610,13 +610,6 @@
   transform: rotate(calc(-1 * var(--rot, 0deg)));
 }
 
-.c-floor-plan__table-meta {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  margin-top: 6px;
-}
-
 /* Seats — a clear chip (people icon + count) so capacity reads at a glance. */
 .c-floor-plan__table-capacity {
   display: inline-flex;
@@ -647,17 +640,6 @@
 .c-floor-plan__table--reserved .c-floor-plan__table-capacity {
   background: color-mix(in srgb, var(--color-text-primary) 12%, var(--color-bg-surface));
   color: var(--color-text-secondary);
-}
-
-.c-floor-plan__table-available {
-  font-size: 0.65rem;
-  font-weight: 600;
-  color: var(--color-text-secondary);
-  letter-spacing: 0.05em;
-}
-
-.c-floor-plan__table--round .c-floor-plan__table-meta {
-  margin-top: 2px;
 }
 
 .c-floor-plan__table--round .c-floor-plan__table-number {
