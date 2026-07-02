@@ -14,47 +14,82 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
-  border: 2px solid var(--color-border-strong);
-  background: var(--color-bg-surface);
+  gap: 4px;
+  padding: 6px;
+  border: 1px solid color-mix(in srgb, var(--color-border-strong) 55%, transparent);
+  border-radius: 18px;
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--color-bg-surface) 92%, transparent),
+      var(--color-bg-page)
+    ),
+    var(--color-bg-surface);
   font-family: inherit;
   text-align: center;
-  transition: box-shadow 0.1s;
+  box-shadow:
+    0 8px 18px color-mix(in srgb, var(--color-border-strong) 14%, transparent),
+    inset 0 1px 0 color-mix(in srgb, #fff 65%, transparent);
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.editor-block--table::after {
+  content: "";
+  position: absolute;
+  inset: 10%;
+  border-radius: 14px;
+  border: 1px dashed color-mix(in srgb, var(--color-text-primary) 18%, transparent);
+  pointer-events: none;
+}
+
+.editor-block--table-round::after {
+  inset: 14%;
+  border-radius: 50%;
+  border-style: dotted;
 }
 
 .editor-block--table:hover {
-  box-shadow: 4px 4px 0 var(--color-border-strong);
+  transform: translateY(-2px);
+  box-shadow:
+    0 12px 24px color-mix(in srgb, var(--color-border-strong) 18%, transparent),
+    inset 0 1px 0 color-mix(in srgb, #fff 65%, transparent);
 }
 
 .editor-block--table-square {
-  border-radius: 0;
+  border-radius: 18px;
 }
 
 .editor-block--table-round {
   border-radius: 50%;
-  border-width: 3px;
+  border-width: 1px;
 }
 
 .editor-block--selected {
-  outline: 2px solid var(--color-text-primary);
-  outline-offset: 2px;
+  outline: 3px solid color-mix(in srgb, var(--color-primary) 55%, transparent);
+  outline-offset: 4px;
+  box-shadow:
+    0 14px 30px color-mix(in srgb, var(--color-primary) 25%, transparent),
+    inset 0 1px 0 color-mix(in srgb, #fff 75%, transparent);
 }
 
 .editor-block__label {
-  font-weight: 900;
-  font-size: 0.9rem;
+  font-weight: 800;
+  font-size: 0.85rem;
   text-transform: uppercase;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.18em;
   line-height: 1;
   color: var(--color-text-primary);
 }
 
 .editor-block__capacity {
-  font-size: 0.75rem;
+  font-size: 0.68rem;
   font-weight: 700;
-  letter-spacing: 0.05em;
-  color: var(--color-text-primary);
-  opacity: 0.6;
+  letter-spacing: 0.2em;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
 }
 
 .editor-block--zone {
@@ -95,29 +130,62 @@
   align-items: center;
   justify-content: center;
   gap: 4px;
-  border: 2px solid var(--color-border-strong);
-  background: var(--color-bg-surface);
+  padding: 6px 10px;
+  border-radius: 18px;
+  border: 1px solid color-mix(in srgb, var(--color-text-primary) 35%, transparent);
+  background:
+    linear-gradient(
+      145deg,
+      color-mix(in srgb, var(--color-bg-surface) 95%, transparent),
+      var(--color-bg-page)
+    ),
+    var(--color-bg-surface);
   cursor: pointer;
+  box-shadow:
+    0 8px 16px color-mix(in srgb, var(--color-border-strong) 12%, transparent),
+    inset 0 1px 0 color-mix(in srgb, #fff 60%, transparent);
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.editor-block--portal:hover {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--color-primary) 45%, transparent);
+  box-shadow:
+    0 12px 22px color-mix(in srgb, var(--color-primary) 18%, transparent),
+    inset 0 1px 0 color-mix(in srgb, #fff 70%, transparent);
+}
+
+.editor-block__portal-label {
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
 }
 
 .editor-block__portal-arrow {
-  font-size: 1.2rem;
+  font-size: 1rem;
   line-height: 1;
-  display: none;
+  color: var(--color-primary);
 }
 
 .editor-block__resize {
   position: absolute;
   width: 14px;
   height: 14px;
-  background: var(--color-bg-surface);
-  border: 2px solid var(--color-border-strong);
+  background: color-mix(in srgb, var(--color-bg-page) 90%, transparent);
+  border: 2px solid color-mix(in srgb, var(--color-text-primary) 60%, transparent);
+  border-radius: 4px;
+  box-shadow: 0 2px 4px color-mix(in srgb, var(--color-border-strong) 20%, transparent);
   z-index: 20;
   touch-action: none;
 }
 
 .editor-block__resize:hover {
-  background: var(--color-text-primary);
+  background: var(--color-primary);
+  border-color: var(--color-primary);
 }
 
 .editor-block__resize--nw {
