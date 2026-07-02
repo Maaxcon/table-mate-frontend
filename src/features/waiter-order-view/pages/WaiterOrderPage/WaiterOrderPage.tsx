@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useHallSubscription } from "../../hooks/useHallSubscription"
 import {
   TopNav,
@@ -59,6 +59,16 @@ export function WaiterOrderPage() {
   const [moveTarget, setMoveTarget] = useState<ReservationItem | null>(null)
   const [orderModalOpen, setOrderModalOpen] = useState(false)
   const [createResModalOpen, setCreateResModalOpen] = useState(false)
+  const tablesRef = useRef<FloorTable[]>([])
+  const reservationsRef = useRef<ReservationItem[]>([])
+
+  useEffect(() => {
+    tablesRef.current = tables
+  }, [tables])
+
+  useEffect(() => {
+    reservationsRef.current = reservations
+  }, [reservations])
 
   useEffect(() => {
     const id = setInterval(() => setCurrentTime(new Date()), 60_000)
@@ -125,9 +135,12 @@ export function WaiterOrderPage() {
         apiFetch(`/api/restaurants/tables/layout/`),
         fetchReservations(),
       ])
+      let nextTables = tablesRef.current
+      let nextReservations = reservationsRef.current
       if (layoutRes.ok) {
         const layoutData = (await layoutRes.json()) as LayoutResponse
-        setTables((layoutData.tables ?? []).map(mapTableToFloorTable))
+        nextTables = (layoutData.tables ?? []).map(mapTableToFloorTable)
+        setTables(nextTables)
         setLayoutPayload(
           layoutData.layout && typeof layoutData.layout === "object"
             ? (layoutData.layout as LayoutPayload)
@@ -135,9 +148,16 @@ export function WaiterOrderPage() {
         )
         setLayoutReservations(layoutData.upcoming_reservations ?? [])
       }
-      if (items) setReservations(items)
+      if (items) {
+        nextReservations = items
+        setReservations(items)
+      }
+      tablesRef.current = nextTables
+      reservationsRef.current = nextReservations
+      return { tables: nextTables, reservations: nextReservations }
     } catch {
       // keep current state on refresh failure
+      return null
     }
   }, [])
 
@@ -403,9 +423,12 @@ export function WaiterOrderPage() {
           guestCount={overlayDetail.guest_count}
           restaurantId={restaurantId}
           onClose={() => setOrderModalOpen(false)}
-          onSuccess={() => {
+          onSuccess={async () => {
             setOrderModalOpen(false)
-            refreshFloor()
+            const latest = await refreshFloor()
+            if (selectedTableId && latest) {
+              await buildOverlayDetail(selectedTableId, latest.tables, latest.reservations)
+            }
           }}
         />
       )}
