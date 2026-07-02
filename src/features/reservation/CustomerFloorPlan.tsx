@@ -42,6 +42,8 @@ type Tone = "free" | "reserved" | "occupied"
 interface Tile {
   key: string
   table: Table | undefined
+  publicNumber: string
+  capacity: number
   x: number
   y: number
   w: number
@@ -51,6 +53,21 @@ interface Tile {
   label: string
   bookable: boolean
   perfect: boolean
+}
+
+function tableZoneId(table: Table): string | null {
+  return table.zone?.public_id ?? null
+}
+
+function findLayoutTableMatch(tables: Table[], layoutTable: LayoutPayload["tables"][number]) {
+  const sameZone = (table: Table) => tableZoneId(table) === layoutTable.zone_id
+
+  return (
+    tables.find((table) => table.public_id === layoutTable.id && sameZone(table)) ??
+    tables.find((table) => table.public_number === layoutTable.public_number && sameZone(table)) ??
+    tables.find((table) => table.public_id === layoutTable.id) ??
+    tables.find((table) => table.public_number === layoutTable.public_number)
+  )
 }
 
 // Tracks whether the viewport is in the mobile (card-list) range.
@@ -231,13 +248,15 @@ export function CustomerFloorPlan({
       const tiles: Tile[] = layoutTables
         .filter((lt) => !selectedZone || lt.zone_id === selectedZone)
         .map((lt) => {
-          const table =
-            tables.find((t) => t.public_id === lt.id) ??
-            tables.find((t) => t.public_number === lt.public_number)
+          const table = findLayoutTableMatch(tables, lt)
           const view = table ? viewByPublicId.get(table.public_id) : undefined
+          const capacity = table?.capacity ?? lt.capacity
+          const publicNumber = table?.public_number ?? lt.public_number
           return {
             key: lt.id ?? lt.public_number,
             table,
+            publicNumber,
+            capacity,
             x: lt.x,
             y: lt.y,
             w: lt.width,
@@ -246,7 +265,7 @@ export function CustomerFloorPlan({
             tone: view?.tone ?? "free",
             label: view?.label ?? bookStrings.floorPlan.status.free,
             bookable: view?.bookable ?? false,
-            perfect: view?.perfect ?? false,
+            perfect: view?.perfect ?? (capacity === guests && Boolean(table)),
           }
         })
       return {
@@ -262,6 +281,8 @@ export function CustomerFloorPlan({
     const tiles: Tile[] = tableViews.map((v, i) => ({
       key: v.table.public_id,
       table: v.table,
+      publicNumber: v.table.public_number,
+      capacity: v.table.capacity,
       x: CANVAS_PADDING + (i % cols) * GRID_SPACING,
       y: CANVAS_PADDING + Math.floor(i / cols) * GRID_SPACING,
       w: 200,
@@ -460,12 +481,12 @@ export function CustomerFloorPlan({
                 onClick={() => tile.table && onSelect(tile.table)}
                 disabled={!tile.bookable || !tile.table}
                 aria-label={bookStrings.floorPlan.tableAria(
-                  tile.table?.public_number ?? "",
-                  tile.table?.capacity ?? 0,
+                  tile.publicNumber,
+                  tile.capacity,
                   tile.label,
                 )}
               >
-                <TableSeats capacity={tile.table?.capacity ?? 0} shape={tile.shape} size={tile.w} />
+                <TableSeats capacity={tile.capacity} shape={tile.shape} size={tile.w} />
 
                 {tile.perfect && (
                   <span className="c-floor-plan__perfect" title={`Саме на ${guests}`}>
@@ -480,13 +501,11 @@ export function CustomerFloorPlan({
                     {tile.label}
                   </span>
 
-                  <span className="c-floor-plan__table-number">
-                    {tile.table?.public_number ?? ""}
-                  </span>
+                  <span className="c-floor-plan__table-number">{tile.publicNumber}</span>
 
                   <div className="c-floor-plan__table-meta">
                     <span className="c-floor-plan__table-capacity">
-                      {bookStrings.floorPlan.seats(tile.table?.capacity ?? 0)}
+                      {bookStrings.floorPlan.seats(tile.capacity)}
                     </span>
                   </div>
                 </span>
