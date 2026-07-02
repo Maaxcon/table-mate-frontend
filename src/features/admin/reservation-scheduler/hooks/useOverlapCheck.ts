@@ -1,6 +1,11 @@
 import type { PendingChange, SchedulerReservation } from "../types"
 import { isoToDateKey } from "../types"
 
+export interface WorkingHoursDay {
+  open: string
+  close: string
+}
+
 interface TimeRange {
   table_id: string
   date: string
@@ -72,8 +77,64 @@ export function checkOrderingViolation(
   return null
 }
 
-export function checkPastTimeViolation(proposed: TimeRange): string | null {
-  const now = new Date()
+const DAY_KEYS: Record<string, string> = {
+  sun: "sun",
+  mon: "mon",
+  tue: "tue",
+  wed: "wed",
+  thu: "thu",
+  fri: "fri",
+  sat: "sat",
+}
+
+function dateToDayKey(dateStr: string): string {
+  const d = new Date(dateStr + "T00:00:00")
+  const short = d.toLocaleDateString("en-US", { weekday: "short" }).toLowerCase()
+  return DAY_KEYS[short] ?? "monday"
+}
+
+function hhmmToMinutes(hhmm: string): number {
+  const [h, m] = hhmm.split(":").map(Number)
+  return h * 60 + m
+}
+
+export function checkOperatingHours(
+  proposed: TimeRange,
+  workingHours: Record<string, WorkingHoursDay> | null,
+): string | null {
+  if (!workingHours) return null
+  const dayKey = dateToDayKey(proposed.date)
+  const dayHours = workingHours[dayKey]
+  if (!dayHours) return "Restaurant is closed on this day"
+  const openMin = hhmmToMinutes(dayHours.open)
+  const closeMin = hhmmToMinutes(dayHours.close)
+  if (closeMin <= openMin) return "Restaurant is closed on this day"
+  if (proposed.start_minutes < openMin) return "Cannot start before opening time"
+  if (proposed.end_minutes > closeMin) return "Cannot end after closing time"
+  return null
+}
+
+export function checkPastTimeViolation(
+  proposed: TimeRange,
+  status?: string,
+  restaurantTimezone?: string,
+): string | null {
+  if (status === "active") return null
+
+  const now = restaurantTimezone
+    ? new Date(
+        new Intl.DateTimeFormat("en-US", {
+          timeZone: restaurantTimezone,
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+          hour12: false,
+        }).format(new Date()),
+      )
+    : new Date()
   const todayKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`
   if (proposed.date < todayKey) return "Cannot move to a past date"
   if (proposed.date === todayKey) {
