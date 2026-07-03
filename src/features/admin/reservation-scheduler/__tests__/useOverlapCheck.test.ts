@@ -112,9 +112,15 @@ function checkOperatingHours(
   if (!dayHours) return "Restaurant is closed on this day"
   const openMin = hhmmToMinutes(dayHours.open)
   const closeMin = hhmmToMinutes(dayHours.close)
-  if (closeMin <= openMin) return "Restaurant is closed on this day"
-  if (proposed.start_minutes < openMin) return "Cannot start before opening time"
-  if (proposed.end_minutes > closeMin) return "Cannot end after closing time"
+
+  if (closeMin > openMin) {
+    if (proposed.start_minutes < openMin) return "Cannot start before opening time"
+    if (proposed.end_minutes > closeMin) return "Cannot end after closing time"
+  } else {
+    if (proposed.start_minutes < openMin && proposed.end_minutes > closeMin) {
+      return "Restaurant is closed on this day"
+    }
+  }
   return null
 }
 
@@ -328,5 +334,62 @@ describe("checkOperatingHours", () => {
       end_minutes: 60,
     }
     expect(checkOperatingHours(proposed, null)).toBeNull()
+  })
+
+  it("returns null for overnight hours within window (fri 10:00-00:00)", () => {
+    const proposed: TimeRange = {
+      table_id: "t1",
+      date: "2026-07-03",
+      start_minutes: 22 * 60,
+      end_minutes: 23 * 60 + 30,
+    }
+    expect(checkOperatingHours(proposed, workingHours)).toBeNull()
+  })
+
+  it("returns null for overnight hours at midnight boundary", () => {
+    const proposed: TimeRange = {
+      table_id: "t1",
+      date: "2026-07-03",
+      start_minutes: 23 * 60,
+      end_minutes: 24 * 60,
+    }
+    expect(checkOperatingHours(proposed, workingHours)).toBeNull()
+  })
+
+  it("returns null for daytime hours on overnight day", () => {
+    const proposed: TimeRange = {
+      table_id: "t1",
+      date: "2026-07-03",
+      start_minutes: 14 * 60,
+      end_minutes: 16 * 60,
+    }
+    expect(checkOperatingHours(proposed, workingHours)).toBeNull()
+  })
+
+  it("returns reason when outside overnight window", () => {
+    const closedHours = {
+      mon: { open: "10:00", close: "00:00" },
+    }
+    const proposed: TimeRange = {
+      table_id: "t1",
+      date: "2026-07-06",
+      start_minutes: 2 * 60,
+      end_minutes: 4 * 60,
+    }
+    expect(checkOperatingHours(proposed, closedHours)).toBe("Restaurant is closed on this day")
+  })
+
+  it("returns null for close=00:00 (seeded data format)", () => {
+    const seededHours = {
+      fri: { open: "10:00", close: "00:00" },
+      sat: { open: "10:00", close: "00:00" },
+    }
+    const proposed: TimeRange = {
+      table_id: "t1",
+      date: "2026-07-03",
+      start_minutes: 18 * 60,
+      end_minutes: 20 * 60,
+    }
+    expect(checkOperatingHours(proposed, seededHours)).toBeNull()
   })
 })

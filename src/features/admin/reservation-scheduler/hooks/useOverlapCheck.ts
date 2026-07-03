@@ -108,9 +108,15 @@ export function checkOperatingHours(
   if (!dayHours) return "Restaurant is closed on this day"
   const openMin = hhmmToMinutes(dayHours.open)
   const closeMin = hhmmToMinutes(dayHours.close)
-  if (closeMin <= openMin) return "Restaurant is closed on this day"
-  if (proposed.start_minutes < openMin) return "Cannot start before opening time"
-  if (proposed.end_minutes > closeMin) return "Cannot end after closing time"
+
+  if (closeMin > openMin) {
+    if (proposed.start_minutes < openMin) return "Cannot start before opening time"
+    if (proposed.end_minutes > closeMin) return "Cannot end after closing time"
+  } else {
+    if (proposed.start_minutes < openMin && proposed.end_minutes > closeMin) {
+      return "Restaurant is closed on this day"
+    }
+  }
   return null
 }
 
