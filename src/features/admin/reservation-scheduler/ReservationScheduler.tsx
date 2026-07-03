@@ -159,10 +159,11 @@ export function ReservationScheduler() {
     setReservations(fetchedReservations)
   }, [fetchedReservations, setReservations])
 
-  const handleExternalUpdate = useCallback(async () => {
-    await refetch()
+  const handleExternalUpdate = useCallback(() => {
     if (pendingChangesRef.current.length > 0) {
       setExternalUpdate(true)
+    } else {
+      refetch()
     }
   }, [refetch])
 
