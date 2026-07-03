@@ -6,7 +6,6 @@ import { useAppSelector } from "@/store/hooks"
 import { useToast } from "@/features/admin/hooks/toastContext"
 import type { WorkingHoursDay } from "@/features/reservation/api"
 import { fetchRestaurantSettings } from "@/features/reservation/api"
-import ConfirmDialog from "@/features/admin/components/ConfirmDialog"
 import { useUnsavedChanges } from "@/features/admin/hooks/unsavedChanges"
 import { env } from "@/config/env"
 import { batchUpdateReservations } from "./api"
@@ -104,29 +103,79 @@ export function ReservationScheduler() {
   )
 
   const [activeDragId, setActiveDragId] = useState<string | null>(null)
-  const [activeResizeId, setActiveResizeId] = useState<string | null>(null)
+  const [activeDragDate, setActiveDragDate] = useState<string | null>(null)
+
+  const dayRanges = useMemo(() => {
+    const ranges: Record<string, { hourStart: number; hourEnd: number }> = {}
+
+    for (const date of dates) {
+      let start = workingHourStart
+      let end = workingHourEnd
+
+      for (const r of state.reservations) {
+        if (isoToDateKey(r.start_at) !== date) continue
+        const s = new Date(r.start_at)
+        const e = new Date(r.end_at)
+        const startH = s.getHours() + s.getMinutes() / 60
+        const endH = e.getHours() + e.getMinutes() / 60
+        if (startH < start) start = Math.floor(startH)
+        if (endH > end) end = Math.ceil(endH)
+      }
+
+      for (const change of state.pendingChanges) {
+        if (change.new_date !== date) continue
+        const [sh, sm] = change.new_start_time.split(":").map(Number)
+        const [eh, em] = change.new_end_time.split(":").map(Number)
+        const startH = sh + sm / 60
+        const endH = eh + em / 60
+        if (startH < start) start = Math.floor(startH)
+        if (endH > end) end = Math.ceil(endH)
+      }
+
+      ranges[date] = {
+        hourStart: Math.max(0, start),
+        hourEnd: Math.min(24, end),
+      }
+    }
+
+    if (activeDragId && activeDragDate && ranges[activeDragDate]) {
+      const r = ranges[activeDragDate]
+      const dragChange = state.pendingChanges.find(
+        (c) => c.reservation_id === activeDragId && c.new_date === activeDragDate,
+      )
+      if (dragChange) {
+        const [sh, sm] = dragChange.new_start_time.split(":").map(Number)
+        const [eh, em] = dragChange.new_end_time.split(":").map(Number)
+        const startH = sh + sm / 60
+        const endH = eh + em / 60
+        if (startH <= r.hourStart && r.hourStart > 0) {
+          ranges[activeDragDate] = { ...r, hourStart: Math.max(0, r.hourStart - 1) }
+        } else if (endH >= r.hourEnd && r.hourEnd < 24) {
+          ranges[activeDragDate] = { ...r, hourEnd: Math.min(24, r.hourEnd + 1) }
+        }
+      }
+    }
+
+    return ranges
+  }, [
+    dates,
+    workingHourStart,
+    workingHourEnd,
+    state.reservations,
+    state.pendingChanges,
+    activeDragId,
+    activeDragDate,
+  ])
 
   const { hourStart, hourEnd } = useMemo(() => {
-    if (activeDragId || activeResizeId) {
-      return { hourStart: 0, hourEnd: 24 }
-    }
-
     let start = workingHourStart
     let end = workingHourEnd
-
-    for (const change of state.pendingChanges) {
-      const [sh, sm] = change.new_start_time.split(":").map(Number)
-      const [eh, em] = change.new_end_time.split(":").map(Number)
-      const startH = sh + sm / 60
-      const endH = eh + em / 60
-      if (startH < start) start = Math.floor(startH)
-      if (endH > end) end = Math.ceil(endH)
+    for (const range of Object.values(dayRanges)) {
+      if (range.hourStart < start) start = range.hourStart
+      if (range.hourEnd > end) end = range.hourEnd
     }
-
-    start = Math.max(0, start)
-    end = Math.min(24, end)
     return { hourStart: start, hourEnd: end }
-  }, [workingHourStart, workingHourEnd, state.pendingChanges, activeDragId, activeResizeId])
+  }, [dayRanges, workingHourStart, workingHourEnd])
 
   const reservationsRef = useRef(state.reservations)
   const pendingChangesRef = useRef(state.pendingChanges)
@@ -164,19 +213,7 @@ export function ReservationScheduler() {
     return () => window.removeEventListener("beforeunload", onBefore)
   }, [state.pendingChanges])
 
-  const [pendingNavAction, setPendingNavAction] = useState<(() => void) | null>(null)
   const [externalUpdate, setExternalUpdate] = useState(false)
-
-  const guardedNav = useCallback(
-    (action: () => void) => {
-      if (state.pendingChanges.length > 0) {
-        setPendingNavAction(() => action)
-      } else {
-        action()
-      }
-    },
-    [state.pendingChanges],
-  )
 
   const {
     tables,
@@ -261,17 +298,6 @@ export function ReservationScheduler() {
     setExternalUpdate(false)
   }, [])
 
-  const confirmNav = useCallback(() => {
-    const action = pendingNavAction
-    setPendingNavAction(null)
-    clearPending()
-    action?.()
-  }, [pendingNavAction, clearPending])
-
-  const cancelNav = useCallback(() => {
-    setPendingNavAction(null)
-  }, [])
-
   const toggleSplitView = useCallback(() => {
     setDatesState((prev) => {
       if (prev.length === 2) return [prev[0]]
@@ -280,38 +306,26 @@ export function ReservationScheduler() {
     })
   }, [])
 
-  const shiftDate = useCallback(
-    (index: number, delta: number) => {
-      guardedNav(() => {
-        setDatesState((prev) => {
-          const next = [...prev]
-          next[index] = formatDateKey(addDays(new Date(next[index] + "T00:00:00"), delta))
-          return next
-        })
-      })
-    },
-    [guardedNav],
-  )
+  const shiftDate = useCallback((index: number, delta: number) => {
+    setDatesState((prev) => {
+      const next = [...prev]
+      next[index] = formatDateKey(addDays(new Date(next[index] + "T00:00:00"), delta))
+      return next
+    })
+  }, [])
 
-  const shiftAllDates = useCallback(
-    (delta: number) => {
-      guardedNav(() => {
-        setDatesState((prev) =>
-          prev.map((d) => formatDateKey(addDays(new Date(d + "T00:00:00"), delta))),
-        )
-      })
-    },
-    [guardedNav],
-  )
+  const shiftAllDates = useCallback((delta: number) => {
+    setDatesState((prev) =>
+      prev.map((d) => formatDateKey(addDays(new Date(d + "T00:00:00"), delta))),
+    )
+  }, [])
 
   const setTodayAll = useCallback(() => {
-    guardedNav(() => {
-      const today = formatDateKey(new Date())
-      setDatesState((prev) =>
-        prev.length === 2 ? [today, formatDateKey(addDays(new Date(), 1))] : [today],
-      )
-    })
-  }, [guardedNav])
+    const today = formatDateKey(new Date())
+    setDatesState((prev) =>
+      prev.length === 2 ? [today, formatDateKey(addDays(new Date(), 1))] : [today],
+    )
+  }, [])
 
   const scrollRefA = useRef<HTMLDivElement>(null)
   const scrollRefB = useRef<HTMLDivElement>(null)
@@ -328,9 +342,17 @@ export function ReservationScheduler() {
     [state.pendingChanges],
   )
 
-  const handleDragStart = useCallback((event: DragStartEvent) => {
-    setActiveDragId(String(event.active.id))
-  }, [])
+  const handleDragStart = useCallback(
+    (event: DragStartEvent) => {
+      const dragId = String(event.active.id)
+      setActiveDragId(dragId)
+      const reservation = state.reservations.find((r) => r.public_id === dragId)
+      if (reservation) {
+        setActiveDragDate(isoToDateKey(reservation.start_at))
+      }
+    },
+    [state.reservations],
+  )
 
   const { handleDragEnd } = useDragAndDrop({
     tables,
@@ -351,6 +373,7 @@ export function ReservationScheduler() {
     (args: Parameters<typeof handleDragEnd>[0]) => {
       handleDragEnd(args)
       setActiveDragId(null)
+      setActiveDragDate(null)
     },
     [handleDragEnd],
   )
@@ -364,7 +387,7 @@ export function ReservationScheduler() {
       if (reservation.status === "completed") return
       if (reservation.status === "active" && edge === "start") return
 
-      setActiveResizeId(reservationId)
+      setActiveDragDate(isoToDateKey(reservation.start_at))
 
       const startX = e.clientX
       const edgeTime = new Date(edge === "start" ? reservation.start_at : reservation.end_at)
@@ -425,7 +448,7 @@ export function ReservationScheduler() {
       const onMouseUp = () => {
         document.removeEventListener("mousemove", onMouseMove)
         document.removeEventListener("mouseup", onMouseUp)
-        setActiveResizeId(null)
+        setActiveDragDate(null)
 
         const currentRes = reservationsRef.current
         const currentChanges = pendingChangesRef.current
@@ -598,8 +621,8 @@ export function ReservationScheduler() {
                 date={date}
                 tables={tables}
                 reservations={state.reservations}
-                hourStart={hourStart}
-                hourEnd={hourEnd}
+                hourStart={dayRanges[date]?.hourStart ?? workingHourStart}
+                hourEnd={dayRanges[date]?.hourEnd ?? workingHourEnd}
                 workingHourStart={workingHourStart}
                 workingHourEnd={workingHourEnd}
                 conflictReservationId={state.conflictReservationId}
@@ -640,17 +663,6 @@ export function ReservationScheduler() {
         onSave={handleSave}
         onReset={handleResetChanges}
       />
-
-      {pendingNavAction && (
-        <ConfirmDialog
-          title="Discard unsaved changes?"
-          message="You have unsaved changes. Navigate without saving?"
-          confirmLabel="Discard"
-          tone="danger"
-          onConfirm={confirmNav}
-          onClose={cancelNav}
-        />
-      )}
     </div>
   )
 }
