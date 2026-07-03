@@ -72,7 +72,7 @@ type Action =
       canvasCols?: number
       canvasRows?: number
     }
-  | { type: "SET_CANVAS_SIZE"; cols: number; rows: number }
+  | { type: "SET_CANVAS_SIZE"; cols: number; rows: number; zoneId?: string | null }
   | { type: "REMOVE_ENTITIES_BY_ZONE"; zoneId: string }
   | { type: "CLEAR" }
   | { type: "CREATE_ZONE"; zone: PendingZoneCreate }
@@ -277,7 +277,10 @@ function editorReducer(state: EditorState, action: Action): EditorState {
         pendingZones: { created: [], updated: {}, deleted: [] },
       }
     case "SET_CANVAS_SIZE": {
+      // Only the active zone's entities are reclamped. A smaller zone's canvas
+      // must not squash tables that live in a larger sibling zone.
       const reclamped = state.entities.map((e) => {
+        if (action.zoneId == null || e.zoneId !== action.zoneId) return e
         const { x, y } = clampEntityToBackendLimits(e.x, e.y, e.type, action.cols, action.rows)
         let { w, h } = e
         if (x + w > action.cols) w = Math.max(1, action.cols - x)
