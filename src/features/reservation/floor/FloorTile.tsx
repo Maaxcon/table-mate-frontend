@@ -42,7 +42,9 @@ export function FloorTile({
       ]
         .filter(Boolean)
         .join(" ")}
-      onMouseEnter={() => onHoverEnter(tile)}
+      onMouseEnter={() => {
+        if (!dimmed && tile.table) onHoverEnter(tile)
+      }}
       onMouseLeave={() => onHoverLeave(tile)}
       style={
         {
