@@ -1,5 +1,5 @@
-import type { EditorEntity } from "../types"
-import { GRID, uprightContentStyle } from "../types"
+import type { EditorEntity } from "@/features/editor/types"
+import { GRID, uprightContentStyle } from "@/features/editor/types"
 import { ResizeHandles } from "./ResizeHandles"
 import "./blocks.css"
 

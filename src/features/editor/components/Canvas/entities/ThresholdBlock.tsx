@@ -1,9 +1,9 @@
-import type { EditorEntity } from "../types"
-import { GRID } from "../types"
+import type { EditorEntity } from "@/features/editor/types"
+import { GRID, uprightContentStyle } from "@/features/editor/types"
 import { ResizeHandles } from "./ResizeHandles"
 import "./blocks.css"
 
-interface ObstacleBlockProps {
+interface ThresholdBlockProps {
   entity: EditorEntity
   selected: boolean
   onMouseDown: (e: React.MouseEvent, id: string) => void
@@ -15,7 +15,7 @@ interface ObstacleBlockProps {
   canvasRows: number
 }
 
-export function ObstacleBlock({
+export function ThresholdBlock({
   entity,
   selected,
   onMouseDown,
@@ -25,14 +25,14 @@ export function ObstacleBlock({
   canvasScale = 1,
   canvasCols,
   canvasRows,
-}: ObstacleBlockProps) {
+}: ThresholdBlockProps) {
   const px = (v: number) => v * GRID
 
   return (
     <div
       className={[
         "editor-block",
-        "editor-block--obstacle",
+        "editor-block--threshold",
         selected ? "editor-block--selected" : "",
       ]
         .filter(Boolean)
@@ -46,13 +46,16 @@ export function ObstacleBlock({
       }}
       role="button"
       tabIndex={0}
-      aria-label="Obstacle"
+      aria-label={`Threshold${entity.label ? ` ${entity.label}` : ""}`}
       onMouseDown={(e) => onMouseDown(e, entity.id)}
       onClick={() => onClick(entity.id)}
       onKeyDown={(e) => {
         if (e.key === "Enter") onClick(entity.id)
       }}
     >
+      <span style={uprightContentStyle(entity.rotation)}>
+        <span className="editor-block__zone-label">{entity.label ?? ""}</span>
+      </span>
       {selected && onResize && onMove && (
         <ResizeHandles
           entityId={entity.id}

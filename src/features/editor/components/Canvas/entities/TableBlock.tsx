@@ -1,9 +1,9 @@
-import type { EditorEntity } from "../types"
-import { GRID, uprightContentStyle } from "../types"
+import type { EditorEntity } from "@/features/editor/types"
+import { GRID, uprightContentStyle } from "@/features/editor/types"
 import { ResizeHandles } from "./ResizeHandles"
 import "./blocks.css"
 
-interface ThresholdBlockProps {
+interface TableBlockProps {
   entity: EditorEntity
   selected: boolean
   onMouseDown: (e: React.MouseEvent, id: string) => void
@@ -15,7 +15,7 @@ interface ThresholdBlockProps {
   canvasRows: number
 }
 
-export function ThresholdBlock({
+export function TableBlock({
   entity,
   selected,
   onMouseDown,
@@ -25,14 +25,15 @@ export function ThresholdBlock({
   canvasScale = 1,
   canvasCols,
   canvasRows,
-}: ThresholdBlockProps) {
+}: TableBlockProps) {
   const px = (v: number) => v * GRID
 
   return (
     <div
       className={[
         "editor-block",
-        "editor-block--threshold",
+        "editor-block--table",
+        `editor-block--${entity.type}`,
         selected ? "editor-block--selected" : "",
       ]
         .filter(Boolean)
@@ -46,7 +47,9 @@ export function ThresholdBlock({
       }}
       role="button"
       tabIndex={0}
-      aria-label={`Threshold${entity.label ? ` ${entity.label}` : ""}`}
+      aria-label={`Table ${entity.label ?? entity.id.slice(-4)}${
+        entity.capacity ? `, ${entity.capacity} seats` : ""
+      }`}
       onMouseDown={(e) => onMouseDown(e, entity.id)}
       onClick={() => onClick(entity.id)}
       onKeyDown={(e) => {
@@ -54,7 +57,8 @@ export function ThresholdBlock({
       }}
     >
       <span style={uprightContentStyle(entity.rotation)}>
-        <span className="editor-block__zone-label">{entity.label ?? ""}</span>
+        <span className="editor-block__label">{entity.label ?? entity.id.slice(-4)}</span>
+        {entity.capacity && <span className="editor-block__capacity">{entity.capacity}P</span>}
       </span>
       {selected && onResize && onMove && (
         <ResizeHandles

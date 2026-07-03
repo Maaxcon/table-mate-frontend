@@ -3,27 +3,26 @@ import { useAppSelector } from "@/store/hooks"
 import { fetchZones } from "@/features/reservation/api"
 import type { Zone } from "@/features/reservation/api"
 import { apiFetch } from "@/api/client"
-import { Toolbar } from "./Toolbar"
-import { Canvas } from "./Canvas"
-import { PropertiesSidebar } from "./PropertiesSidebar"
-import { PublishConfirmModal } from "./PublishConfirmModal"
-import { ConfirmDeleteZoneModal } from "./ConfirmDeleteZoneModal"
-import { ZoneHeader } from "./ZoneHeader"
-import { useEditorState } from "./hooks/useEditorState"
-import type { EditorState } from "./hooks/useEditorState"
-import { usePublish } from "./hooks/usePublish"
-import type { PublishResult } from "./hooks/usePublish"
+import {
+  Canvas,
+  ConfirmDeleteZoneModal,
+  PropertiesSidebar,
+  PublishConfirmModal,
+  Toolbar,
+  ZoneHeader,
+} from "@/features/editor/components"
+import { useEditorState } from "@/features/editor/hooks/useEditorState"
+import type { EditorState } from "@/features/editor/hooks/useEditorState"
+import { usePublish } from "@/features/editor/hooks/usePublish"
+import type { PublishResult } from "@/features/editor/hooks/usePublish"
 import {
   DEFAULT_CANVAS_COLS,
   DEFAULT_CANVAS_ROWS,
   serializeEntities,
   deserializeLayout,
-} from "./types"
-import type { EditorEntity, LayoutPayload } from "./types"
-import "./Toolbar.css"
-import "./Canvas.css"
-import "./PropertiesSidebar.css"
-import "./FloorPlanSection.css"
+} from "@/features/editor/types"
+import type { EditorEntity, LayoutPayload } from "@/features/editor/types"
+import "./FloorPlanEditorPage.css"
 import { useToast } from "@/features/admin/hooks/toastContext"
 import { useHallSubscription } from "@/features/waiter-order-view/hooks/useHallSubscription"
 
@@ -45,7 +44,7 @@ function useCurrentTime(): string {
   return time
 }
 
-function FloorPlanSection() {
+function FloorPlanEditorPage() {
   const {
     entities,
     selectedId,
@@ -536,4 +535,4 @@ function FloorPlanSection() {
   )
 }
 
-export default FloorPlanSection
+export default FloorPlanEditorPage

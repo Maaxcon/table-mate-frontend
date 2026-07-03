@@ -1,5 +1,5 @@
 /* Shared read-only floor renderer. Geometry mirrors the editor canvas
-   (features/editor/Canvas.css + entities/blocks.css); status coloring is layered
+   (features/editor/components/Canvas/Canvas.css + entities/blocks.css); status coloring is layered
    on top for the customer/waiter views. */
 
 .fp-view {

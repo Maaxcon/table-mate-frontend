@@ -1,9 +1,9 @@
-import type { EditorEntity } from "../types"
-import { GRID, uprightContentStyle } from "../types"
+import type { EditorEntity } from "@/features/editor/types"
+import { GRID } from "@/features/editor/types"
 import { ResizeHandles } from "./ResizeHandles"
 import "./blocks.css"
 
-interface TableBlockProps {
+interface ObstacleBlockProps {
   entity: EditorEntity
   selected: boolean
   onMouseDown: (e: React.MouseEvent, id: string) => void
@@ -15,7 +15,7 @@ interface TableBlockProps {
   canvasRows: number
 }
 
-export function TableBlock({
+export function ObstacleBlock({
   entity,
   selected,
   onMouseDown,
@@ -25,15 +25,14 @@ export function TableBlock({
   canvasScale = 1,
   canvasCols,
   canvasRows,
-}: TableBlockProps) {
+}: ObstacleBlockProps) {
   const px = (v: number) => v * GRID
 
   return (
     <div
       className={[
         "editor-block",
-        "editor-block--table",
-        `editor-block--${entity.type}`,
+        "editor-block--obstacle",
         selected ? "editor-block--selected" : "",
       ]
         .filter(Boolean)
@@ -47,19 +46,13 @@ export function TableBlock({
       }}
       role="button"
       tabIndex={0}
-      aria-label={`Table ${entity.label ?? entity.id.slice(-4)}${
-        entity.capacity ? `, ${entity.capacity} seats` : ""
-      }`}
+      aria-label="Obstacle"
       onMouseDown={(e) => onMouseDown(e, entity.id)}
       onClick={() => onClick(entity.id)}
       onKeyDown={(e) => {
         if (e.key === "Enter") onClick(entity.id)
       }}
     >
-      <span style={uprightContentStyle(entity.rotation)}>
-        <span className="editor-block__label">{entity.label ?? entity.id.slice(-4)}</span>
-        {entity.capacity && <span className="editor-block__capacity">{entity.capacity}P</span>}
-      </span>
       {selected && onResize && onMove && (
         <ResizeHandles
           entityId={entity.id}

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
-import { snap, GRID, EDITOR_MIN_SCALE, EDITOR_MAX_SCALE } from "./types"
-import type { EditorEntity } from "./types"
+import { snap, GRID, EDITOR_MIN_SCALE, EDITOR_MAX_SCALE } from "@/features/editor/types"
+import type { EditorEntity } from "@/features/editor/types"
 import { TableBlock } from "./entities/TableBlock"
 import { ObstacleBlock } from "./entities/ObstacleBlock"
 import { ThresholdBlock } from "./entities/ThresholdBlock"

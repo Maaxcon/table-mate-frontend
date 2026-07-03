@@ -425,19 +425,19 @@ const initialState: EditorState = {
   pendingZones: { created: [], updated: {}, deleted: [] },
 }
 
+const DEFAULT_ENTITY_SIZES: Partial<Record<EditorEntity["type"], { w: number; h: number }>> = {
+  obstacle: { w: 4, h: 1 },
+  threshold: { w: 3, h: 1 },
+  portal: { w: 2, h: 2 },
+}
+
 export function useEditorState() {
   const [state, dispatch] = useReducer(editorReducer, initialState)
-
-  const DEFAULT_SIZES: Partial<Record<EditorEntity["type"], { w: number; h: number }>> = {
-    obstacle: { w: 4, h: 1 },
-    threshold: { w: 3, h: 1 },
-    portal: { w: 2, h: 2 },
-  }
 
   const addEntity = useCallback(
     (type: EditorEntity["type"], gridX: number, gridY: number, extra?: Partial<EditorEntity>) => {
       const preset = TABLE_PRESETS[type]
-      const defaultSize = preset ?? DEFAULT_SIZES[type]
+      const defaultSize = preset ?? DEFAULT_ENTITY_SIZES[type]
       const x = gridX
       const y = gridY
       const needsAutoLabel =

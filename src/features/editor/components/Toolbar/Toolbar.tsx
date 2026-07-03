@@ -1,3 +1,5 @@
+import "./Toolbar.css"
+
 interface ToolbarProps {
   dirty: boolean
   publishing: boolean
