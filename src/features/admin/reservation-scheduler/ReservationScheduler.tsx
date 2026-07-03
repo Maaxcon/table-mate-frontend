@@ -43,9 +43,13 @@ function computeHourRange(workingHours: Record<string, WorkingHoursDay> | null):
     if (!dayHours) continue
     const openMin = toMinutes(dayHours.open)
     const closeMin = toMinutes(dayHours.close)
-    if (closeMin <= openMin) continue
-    minOpen = Math.min(minOpen, openMin)
-    maxClose = Math.max(maxClose, closeMin)
+    if (closeMin > openMin) {
+      minOpen = Math.min(minOpen, openMin)
+      maxClose = Math.max(maxClose, closeMin)
+    } else {
+      minOpen = Math.min(minOpen, openMin)
+      maxClose = Math.max(maxClose, closeMin + 24 * 60)
+    }
   }
   return {
     hourStart: minOpen === Infinity ? 8 : Math.floor(minOpen / 60),
@@ -95,7 +99,26 @@ export function ReservationScheduler() {
   )
   const [workingHours, setWorkingHours] = useState<Record<string, WorkingHoursDay> | null>(null)
 
-  const { hourStart, hourEnd } = useMemo(() => computeHourRange(workingHours), [workingHours])
+  const { hourStart: workingHourStart, hourEnd: workingHourEnd } = useMemo(
+    () => computeHourRange(workingHours),
+    [workingHours],
+  )
+
+  const { hourStart, hourEnd } = useMemo(() => {
+    let start = workingHourStart
+    let end = workingHourEnd
+    for (const r of state.reservations) {
+      const s = new Date(r.start_at)
+      const e = new Date(r.end_at)
+      const startH = s.getHours() + s.getMinutes() / 60
+      const endH = e.getHours() + e.getMinutes() / 60
+      if (startH < start) start = Math.floor(startH)
+      if (endH > end) end = Math.ceil(endH)
+    }
+    start = Math.max(0, start)
+    end = Math.min(24, end)
+    return { hourStart: start, hourEnd: end }
+  }, [workingHourStart, workingHourEnd, state.reservations])
 
   const reservationsRef = useRef(state.reservations)
   const pendingChangesRef = useRef(state.pendingChanges)
@@ -580,6 +603,8 @@ export function ReservationScheduler() {
                 reservations={state.reservations}
                 hourStart={hourStart}
                 hourEnd={hourEnd}
+                workingHourStart={workingHourStart}
+                workingHourEnd={workingHourEnd}
                 conflictReservationId={state.conflictReservationId}
                 modifiedIds={modifiedIds}
                 onResizeStart={handleResizeStart}

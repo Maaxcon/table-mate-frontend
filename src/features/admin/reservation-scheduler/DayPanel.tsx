@@ -11,6 +11,8 @@ interface DayPanelProps {
   reservations: SchedulerReservation[]
   hourStart: number
   hourEnd: number
+  workingHourStart: number
+  workingHourEnd: number
   conflictReservationId: string | null
   modifiedIds: Set<string>
   onResizeStart: (reservationId: string, edge: "start" | "end", e: React.MouseEvent) => void
@@ -26,6 +28,8 @@ export function DayPanel({
   reservations,
   hourStart,
   hourEnd,
+  workingHourStart,
+  workingHourEnd,
   conflictReservationId,
   modifiedIds,
   onResizeStart,
@@ -69,7 +73,12 @@ export function DayPanel({
         <div className="scheduler__day-panel-header">{dayLabel}</div>
       )}
       <div className="scheduler__day-panel-body" ref={scrollRef}>
-        <TimelineHeader hourStart={hourStart} hourEnd={hourEnd} />
+        <TimelineHeader
+          hourStart={hourStart}
+          hourEnd={hourEnd}
+          workingHourStart={workingHourStart}
+          workingHourEnd={workingHourEnd}
+        />
         {tables.map((table) => (
           <TableRow
             key={`${table.public_id}__${date}`}
@@ -78,6 +87,8 @@ export function DayPanel({
             reservations={dateReservations.filter((r) => r.table === table.public_id)}
             hourStart={hourStart}
             hourEnd={hourEnd}
+            workingHourStart={workingHourStart}
+            workingHourEnd={workingHourEnd}
             conflictReservationId={conflictReservationId}
             modifiedIds={modifiedIds}
             onResizeStart={onResizeStart}

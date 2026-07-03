@@ -8,6 +8,8 @@ interface TableRowProps {
   reservations: SchedulerReservation[]
   hourStart: number
   hourEnd: number
+  workingHourStart: number
+  workingHourEnd: number
   conflictReservationId: string | null
   modifiedIds: Set<string>
   onResizeStart: (reservationId: string, edge: "start" | "end", e: React.MouseEvent) => void
@@ -19,6 +21,8 @@ export function TableRow({
   reservations,
   hourStart,
   hourEnd,
+  workingHourStart,
+  workingHourEnd,
   conflictReservationId,
   modifiedIds,
   onResizeStart,
@@ -32,13 +36,29 @@ export function TableRow({
     .filter(Boolean)
     .join(" ")
 
+  const hasExtended = hourStart < workingHourStart || hourEnd > workingHourEnd
+  const totalHours = hourEnd - hourStart
+  const extendedStartPct = ((workingHourStart - hourStart) / totalHours) * 100
+  const extendedEndPct = ((hourEnd - workingHourEnd) / totalHours) * 100
+
+  const cellsStyle: React.CSSProperties | undefined = hasExtended
+    ? {
+        backgroundImage:
+          extendedStartPct > 0 && extendedEndPct > 0
+            ? `linear-gradient(to right, var(--scheduler-extended-bg) 0%, var(--scheduler-extended-bg) ${extendedStartPct}%, transparent ${extendedStartPct}%, transparent ${100 - extendedEndPct}%, var(--scheduler-extended-bg) ${100 - extendedEndPct}%, var(--scheduler-extended-bg) 100%)`
+            : extendedStartPct > 0
+              ? `linear-gradient(to right, var(--scheduler-extended-bg) 0%, var(--scheduler-extended-bg) ${extendedStartPct}%, transparent ${extendedStartPct}%, transparent 100%)`
+              : `linear-gradient(to right, transparent 0%, transparent ${100 - extendedEndPct}%, var(--scheduler-extended-bg) ${100 - extendedEndPct}%, var(--scheduler-extended-bg) 100%)`,
+      }
+    : undefined
+
   return (
     <div className={classNames}>
       <div className="scheduler__table-row-label">
         <span className="scheduler__table-row-name">{table.public_number}</span>
         <span className="scheduler__table-row-cap">{table.capacity}p</span>
       </div>
-      <div ref={setNodeRef} className="scheduler__table-row-cells">
+      <div ref={setNodeRef} className="scheduler__table-row-cells" style={cellsStyle}>
         {reservations.map((r) => (
           <ReservationBlock
             key={r.public_id}
