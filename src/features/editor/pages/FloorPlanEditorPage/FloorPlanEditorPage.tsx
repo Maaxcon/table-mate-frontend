@@ -130,8 +130,13 @@ function FloorPlanEditorPage() {
 
   // Keep editor state in sync when zone changes canvas dimensions.
   useEffect(() => {
-    dispatch({ type: "SET_CANVAS_SIZE", cols: canvasCols, rows: canvasRows })
-  }, [canvasCols, canvasRows, dispatch])
+    dispatch({
+      type: "SET_CANVAS_SIZE",
+      cols: canvasCols,
+      rows: canvasRows,
+      zoneId: selectedZoneId ?? null,
+    })
+  }, [canvasCols, canvasRows, dispatch, selectedZoneId])
 
   useEffect(() => {
     if (!restaurantId) return
