@@ -102,10 +102,6 @@ export function BookingPage() {
     }
   }, [public_restaurant_id, slotDate, slotTime, availabilityNonce])
 
-  const filteredTables = selectedZone
-    ? tables.filter((t) => t.zone?.public_id === selectedZone)
-    : tables
-
   // Largest party the venue can seat = its biggest table. Caps the guest stepper
   // per restaurant; falls back to 20 until tables load.
   const maxGuests = useMemo(
@@ -268,7 +264,7 @@ export function BookingPage() {
                 onChange={handleSlotChange}
               />
               <CustomerFloorPlan
-                tables={filteredTables}
+                tables={tables}
                 zones={zones}
                 selectedZone={selectedZone}
                 onZoneChange={setSelectedZone}

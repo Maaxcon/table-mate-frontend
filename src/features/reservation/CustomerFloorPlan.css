@@ -683,6 +683,167 @@
   border-color: var(--color-primary);
 }
 
+/* Free-table count baked into each zone pill so guests see where seats are. */
+.c-floor-plan__zone {
+  display: inline-flex;
+  align-items: center;
+}
+
+.c-floor-plan__zone-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  margin-left: 7px;
+  padding: 0 5px;
+  border-radius: 100px;
+  background: color-mix(in srgb, var(--color-text-primary) 10%, transparent);
+  font-size: 0.7rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.c-floor-plan__zone--active .c-floor-plan__zone-count {
+  background: color-mix(in srgb, var(--color-bg-surface) 32%, transparent);
+}
+
+/* Mobile: a sticky bar keeps the current zone name + free count in view while
+   the card list scrolls, and offers a jump to the spatial map. */
+.c-floor-plan__zone-bar {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 2px;
+  background: color-mix(in srgb, var(--color-bg-surface) 90%, transparent);
+  backdrop-filter: blur(6px);
+}
+
+.c-floor-plan__zone-bar-name {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+
+.c-floor-plan__zone-bar-count {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--color-success-text);
+}
+
+/* Floating action button: always reachable while the card list scrolls. Sits
+   bottom-left so it never overlaps the app's bottom-right theme toggle. */
+.c-floor-plan__map-fab {
+  position: fixed;
+  left: 16px;
+  bottom: max(16px, env(safe-area-inset-bottom));
+  z-index: 40;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 12px 18px;
+  border: none;
+  border-radius: 100px;
+  background: var(--color-primary);
+  color: var(--color-bg-surface);
+  font-size: 0.9rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  box-shadow: 0 10px 24px -8px rgb(0 0 0 / 40%);
+}
+
+.c-floor-plan__map-fab svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Full-screen sheet that hosts the spatial map on phones. */
+.c-floor-plan__map-sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  padding-top: max(12px, env(safe-area-inset-top));
+  padding-bottom: max(12px, env(safe-area-inset-bottom));
+  background: var(--color-bg-canvas, var(--color-bg-surface));
+  animation: c-fp-sheet-in 220ms ease;
+}
+
+@keyframes c-fp-sheet-in {
+  from {
+    opacity: 0;
+    transform: translateY(2%);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.c-floor-plan__map-sheet-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.c-floor-plan__map-sheet-title {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+
+.c-floor-plan__map-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 1.5px solid var(--color-border-default);
+  border-radius: 50%;
+  background: var(--color-bg-surface);
+  color: var(--color-text-primary);
+  cursor: pointer;
+}
+
+.c-floor-plan__map-close svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* Inside the sheet the map fills all space below the header. Use a flex column
+   so the viewport gets a real height (percentage heights collapse here). */
+.c-floor-plan__map-sheet .c-floor-plan__stage {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.c-floor-plan__map-sheet .c-floor-plan__viewport {
+  flex: 1;
+  min-height: 0;
+  max-height: none;
+  height: auto;
+}
+
+/* Keep the zoom controls clear of the app's bottom-right theme toggle. */
+.c-floor-plan__map-sheet .c-floor-plan__zoom {
+  left: 12px;
+  right: auto;
+}
+
 .c-floor-plan__legend {
   display: flex;
   flex-wrap: wrap;

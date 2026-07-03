@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react"
+import { LuMap, LuX } from "react-icons/lu"
 import type { Table } from "@/types/api/types.gen"
 import type { FloorTable, UpcomingReservation } from "@/features/waiter-order-view/data/waiterTypes"
 import { getTableVisualStatus } from "@/features/waiter-order-view/data/waiterTypes"
@@ -92,6 +93,8 @@ export function CustomerFloorPlan({
   const [statusFilter, setStatusFilter] = useState<Tone | null>(null)
   // Desktop "only free" — dims tables you can't book so free ones pop.
   const [dimTaken, setDimTaken] = useState(false)
+  // Mobile: the spatial map opens in a full-screen sheet on demand.
+  const [mapOpen, setMapOpen] = useState(false)
   const isMobile = useIsMobile()
 
   // The minute tick only matters for the now-based fallback status; when slot
@@ -101,6 +104,21 @@ export function CustomerFloorPlan({
     const id = setInterval(() => setCurrentTime(new Date()), 60_000)
     return () => clearInterval(id)
   }, [slotAvailability])
+
+  // Close the mobile map sheet on Escape and lock background scroll while open.
+  useEffect(() => {
+    if (!mapOpen || !isMobile) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMapOpen(false)
+    }
+    document.addEventListener("keydown", onKey)
+    const prevOverflow = document.body.style.overflow
+    document.body.style.overflow = "hidden"
+    return () => {
+      document.removeEventListener("keydown", onKey)
+      document.body.style.overflow = prevOverflow
+    }
+  }, [mapOpen, isMobile])
 
   // Each table paired with a visual tone (free/reserved/occupied), a status label,
   // and whether it can be booked for the chosen slot. With slot availability we
@@ -201,9 +219,12 @@ export function CustomerFloorPlan({
     }
 
     // Fallback: auto grid over the tables we have (no positions in the backend).
-    const cols = Math.max(1, Math.round(Math.sqrt(tableViews.length * 1.6)))
-    const rows = Math.max(1, Math.ceil(tableViews.length / cols))
-    const tiles: Tile[] = tableViews.map((v, i) => ({
+    const zoneViews = tableViews.filter(
+      (v) => !selectedZone || v.table.zone?.public_id === selectedZone,
+    )
+    const cols = Math.max(1, Math.round(Math.sqrt(zoneViews.length * 1.6)))
+    const rows = Math.max(1, Math.ceil(zoneViews.length / cols))
+    const tiles: Tile[] = zoneViews.map((v, i) => ({
       key: v.table.public_id,
       table: v.table,
       publicNumber: v.table.public_number,
@@ -238,17 +259,19 @@ export function CustomerFloorPlan({
         numeric: true,
       })
 
-    return [...tableViews].sort((a, b) => {
-      const aFits = fits(a.table.capacity)
-      const bFits = fits(b.table.capacity)
-      if (aFits !== bFits) return aFits ? -1 : 1
-      if (aFits) {
-        if (a.table.capacity !== b.table.capacity) return a.table.capacity - b.table.capacity
-        if (a.bookable !== b.bookable) return a.bookable ? -1 : 1
-      }
-      return byNumber(a, b)
-    })
-  }, [tableViews, guests])
+    return [...tableViews]
+      .filter((v) => !selectedZone || v.table.zone?.public_id === selectedZone)
+      .sort((a, b) => {
+        const aFits = fits(a.table.capacity)
+        const bFits = fits(b.table.capacity)
+        if (aFits !== bFits) return aFits ? -1 : 1
+        if (aFits) {
+          if (a.table.capacity !== b.table.capacity) return a.table.capacity - b.table.capacity
+          if (a.bookable !== b.bookable) return a.bookable ? -1 : 1
+        }
+        return byNumber(a, b)
+      })
+  }, [tableViews, guests, selectedZone])
 
   const freeCount = useMemo(
     () =>
@@ -257,6 +280,19 @@ export function CustomerFloorPlan({
       ).length,
     [tableViews, selectedZone],
   )
+
+  // Free-table count per zone, so each zone pill shows where seats are.
+  const zoneFreeCounts = useMemo(() => {
+    const counts = new Map<string, number>()
+    for (const v of tableViews) {
+      if (!v.bookable) continue
+      const zid = v.table.zone?.public_id
+      if (zid) counts.set(zid, (counts.get(zid) ?? 0) + 1)
+    }
+    return counts
+  }, [tableViews])
+
+  const selectedZoneName = selectedZone ? (zoneNameById.get(selectedZone) ?? null) : null
   const visibleTableViews = onlyFree ? sortedTableViews.filter((v) => v.bookable) : sortedTableViews
 
   return (
@@ -274,10 +310,12 @@ export function CustomerFloorPlan({
               {bookStrings.floorPlan.filterFree}
             </button>
           )}
-          <span className="c-floor-plan__count">
-            <span className="c-floor-plan__count-num">{freeCount}</span>{" "}
-            {bookStrings.floorPlan.freeCount(slotTime)}
-          </span>
+          {!isMobile && (
+            <span className="c-floor-plan__count">
+              <span className="c-floor-plan__count-num">{freeCount}</span>{" "}
+              {bookStrings.floorPlan.freeCount(slotTime)}
+            </span>
+          )}
         </div>
       </div>
       {zones.length > 1 && (
@@ -290,8 +328,22 @@ export function CustomerFloorPlan({
               onClick={() => onZoneChange(z.public_id)}
             >
               {z.name}
+              <span className="c-floor-plan__zone-count">
+                {zoneFreeCounts.get(z.public_id) ?? 0}
+              </span>
             </button>
           ))}
+        </div>
+      )}
+
+      {isMobile && (
+        <div className="c-floor-plan__zone-bar">
+          <span className="c-floor-plan__zone-bar-name">
+            {selectedZoneName ?? bookStrings.floorPlan.title}
+          </span>
+          <span className="c-floor-plan__zone-bar-count">
+            {freeCount} {bookStrings.floorPlan.freeShort}
+          </span>
         </div>
       )}
 
@@ -325,6 +377,50 @@ export function CustomerFloorPlan({
           statusFilter={statusFilter}
           dimTaken={dimTaken}
         />
+      )}
+
+      {isMobile && !mapOpen && (
+        <button type="button" className="c-floor-plan__map-fab" onClick={() => setMapOpen(true)}>
+          <LuMap aria-hidden="true" />
+          {bookStrings.floorPlan.showMap}
+        </button>
+      )}
+
+      {isMobile && mapOpen && (
+        <div className="c-floor-plan__map-sheet" role="dialog" aria-modal="true">
+          <div className="c-floor-plan__map-sheet-head">
+            <span className="c-floor-plan__map-sheet-title">
+              {selectedZoneName ?? bookStrings.floorPlan.title}
+            </span>
+            <button
+              type="button"
+              className="c-floor-plan__map-close"
+              onClick={() => setMapOpen(false)}
+              aria-label={bookStrings.floorPlan.closeMap}
+            >
+              <LuX aria-hidden="true" />
+            </button>
+          </div>
+          <FloorMap
+            key={selectedZone ?? "all"}
+            tiles={tiles}
+            obstacles={obstacles}
+            thresholds={thresholds}
+            portals={portals}
+            canvasWidth={canvasWidth}
+            canvasHeight={canvasHeight}
+            selectedId={selectedId}
+            onSelect={(t) => {
+              onSelect(t)
+              setMapOpen(false)
+            }}
+            onZoneChange={onZoneChange}
+            zoneNameById={zoneNameById}
+            guests={guests}
+            statusFilter={statusFilter}
+            dimTaken={dimTaken}
+          />
+        </div>
       )}
 
       <div className="c-floor-plan__legend">
