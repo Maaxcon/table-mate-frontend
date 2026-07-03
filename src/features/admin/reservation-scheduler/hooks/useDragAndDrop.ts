@@ -1,13 +1,7 @@
 import { useCallback } from "react"
 import type { DragEndEvent } from "@dnd-kit/core"
 import type { SchedulerReservation, SchedulerTable } from "../types"
-import {
-  checkOperatingHours,
-  checkOverlap,
-  checkOrderingViolation,
-  checkPastTimeViolation,
-} from "./useOverlapCheck"
-import type { WorkingHoursDay } from "./useOverlapCheck"
+import { checkOverlap, checkOrderingViolation, checkPastTimeViolation } from "./useOverlapCheck"
 import type { PendingChange } from "../types"
 
 interface UseDragAndDropOptions {
@@ -18,7 +12,6 @@ interface UseDragAndDropOptions {
   hourEnd: number
   slotMinutes: number
   restaurantTimezone?: string
-  workingHours?: Record<string, WorkingHoursDay> | null
   onMove: (
     reservationId: string,
     newTableId: string,
@@ -38,7 +31,6 @@ export function useDragAndDrop({
   hourEnd,
   slotMinutes,
   restaurantTimezone,
-  workingHours,
   onMove,
   onConflict,
 }: UseDragAndDropOptions) {
@@ -126,12 +118,6 @@ export function useDragAndDrop({
         return
       }
 
-      const hoursReason = checkOperatingHours(proposed, workingHours)
-      if (hoursReason) {
-        onConflict(reservationId, hoursReason)
-        return
-      }
-
       const table = tables.find((t) => t.public_id === tableId)
       onMove(reservationId, tableId, table?.public_number ?? "", date, startTime, endTime)
     },
@@ -143,7 +129,6 @@ export function useDragAndDrop({
       hourEnd,
       slotMinutes,
       restaurantTimezone,
-      workingHours,
       onMove,
       onConflict,
     ],

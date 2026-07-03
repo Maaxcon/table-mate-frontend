@@ -15,7 +15,6 @@ import { useSchedulerData } from "./hooks/useSchedulerData"
 import { useScrollSync } from "./hooks/useScrollSync"
 import { useDragAndDrop } from "./hooks/useDragAndDrop"
 import {
-  checkOperatingHours,
   checkOverlap,
   checkOrderingViolation,
   checkPastTimeViolation,
@@ -104,21 +103,30 @@ export function ReservationScheduler() {
     [workingHours],
   )
 
+  const [activeDragId, setActiveDragId] = useState<string | null>(null)
+  const [activeResizeId, setActiveResizeId] = useState<string | null>(null)
+
   const { hourStart, hourEnd } = useMemo(() => {
+    if (activeDragId || activeResizeId) {
+      return { hourStart: 0, hourEnd: 24 }
+    }
+
     let start = workingHourStart
     let end = workingHourEnd
-    for (const r of state.reservations) {
-      const s = new Date(r.start_at)
-      const e = new Date(r.end_at)
-      const startH = s.getHours() + s.getMinutes() / 60
-      const endH = e.getHours() + e.getMinutes() / 60
+
+    for (const change of state.pendingChanges) {
+      const [sh, sm] = change.new_start_time.split(":").map(Number)
+      const [eh, em] = change.new_end_time.split(":").map(Number)
+      const startH = sh + sm / 60
+      const endH = eh + em / 60
       if (startH < start) start = Math.floor(startH)
       if (endH > end) end = Math.ceil(endH)
     }
+
     start = Math.max(0, start)
     end = Math.min(24, end)
     return { hourStart: start, hourEnd: end }
-  }, [workingHourStart, workingHourEnd, state.reservations])
+  }, [workingHourStart, workingHourEnd, state.pendingChanges, activeDragId, activeResizeId])
 
   const reservationsRef = useRef(state.reservations)
   const pendingChangesRef = useRef(state.pendingChanges)
@@ -265,14 +273,12 @@ export function ReservationScheduler() {
   }, [])
 
   const toggleSplitView = useCallback(() => {
-    guardedNav(() => {
-      setDatesState((prev) => {
-        if (prev.length === 2) return [prev[0]]
-        const secondDate = formatDateKey(addDays(new Date(prev[0] + "T00:00:00"), 1))
-        return [prev[0], secondDate]
-      })
+    setDatesState((prev) => {
+      if (prev.length === 2) return [prev[0]]
+      const secondDate = formatDateKey(addDays(new Date(prev[0] + "T00:00:00"), 1))
+      return [prev[0], secondDate]
     })
-  }, [guardedNav])
+  }, [])
 
   const shiftDate = useCallback(
     (index: number, delta: number) => {
@@ -322,8 +328,6 @@ export function ReservationScheduler() {
     [state.pendingChanges],
   )
 
-  const [activeDragId, setActiveDragId] = useState<string | null>(null)
-
   const handleDragStart = useCallback((event: DragStartEvent) => {
     setActiveDragId(String(event.active.id))
   }, [])
@@ -336,7 +340,6 @@ export function ReservationScheduler() {
     hourEnd,
     slotMinutes: SLOT_MINUTES,
     restaurantTimezone,
-    workingHours,
     onMove: moveReservation,
     onConflict: (id: string, reason?: string) => {
       markConflict(id)
@@ -360,6 +363,8 @@ export function ReservationScheduler() {
 
       if (reservation.status === "completed") return
       if (reservation.status === "active" && edge === "start") return
+
+      setActiveResizeId(reservationId)
 
       const startX = e.clientX
       const edgeTime = new Date(edge === "start" ? reservation.start_at : reservation.end_at)
@@ -414,15 +419,13 @@ export function ReservationScheduler() {
         const pastReason = checkPastTimeViolation(proposed, res.status, restaurantTimezone)
         if (pastReason) return
 
-        const hoursReason = checkOperatingHours(proposed, workingHours)
-        if (hoursReason) return
-
         resizeReservation(reservationId, edge, `${ehh}:${emm}`)
       }
 
       const onMouseUp = () => {
         document.removeEventListener("mousemove", onMouseMove)
         document.removeEventListener("mouseup", onMouseUp)
+        setActiveResizeId(null)
 
         const currentRes = reservationsRef.current
         const currentChanges = pendingChangesRef.current
@@ -454,11 +457,6 @@ export function ReservationScheduler() {
             toast.error(pastReason)
             return
           }
-          const hoursReason = checkOperatingHours(proposed, workingHours)
-          if (hoursReason) {
-            markConflict(reservationId)
-            toast.error(hoursReason)
-          }
         }
       }
 
@@ -473,7 +471,6 @@ export function ReservationScheduler() {
       hourStart,
       hourEnd,
       restaurantTimezone,
-      workingHours,
     ],
   )
 
