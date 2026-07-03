@@ -108,6 +108,8 @@
   letter-spacing: 0.18em;
   color: var(--color-text-primary);
   pointer-events: none;
+  text-align: center;
+  display: block;
 }
 
 .editor-block--obstacle {
