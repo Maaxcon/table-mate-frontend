@@ -178,7 +178,11 @@ export function ReservationScheduler() {
       ws.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data) as { event_name?: string }
-          if (data.event_name === "HALL_RESERVATIONS_UPDATED") {
+          if (
+            data.event_name === "HALL_RESERVATIONS_UPDATED" ||
+            data.event_name === "HALL_NEW_RESERVATION" ||
+            data.event_name === "HALL_RESERVATION_CANCELLED"
+          ) {
             handleExternalUpdate()
           }
         } catch {
