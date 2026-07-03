@@ -81,6 +81,24 @@ type Action =
   | { type: "CLEAR_PENDING_ZONES" }
   | { type: "REMAP_ZONE_ID"; from: string; to: string }
 
+const TABLE_LABEL_REGEX = /^T(\d+)$/i
+
+function getNextTableLabel(entities: EditorEntity[]): string {
+  let max = 0
+  for (const entity of entities) {
+    if (!entity.type.startsWith("table")) continue
+    const label = entity.label?.trim()
+    if (!label) continue
+    const match = TABLE_LABEL_REGEX.exec(label)
+    if (!match) continue
+    const value = Number.parseInt(match[1], 10)
+    if (!Number.isNaN(value)) {
+      max = Math.max(max, value)
+    }
+  }
+  return `T${max + 1}`
+}
+
 function computeDirty(entities: EditorEntity[], lastPublishedJson: object | null): boolean {
   if (!lastPublishedJson) return entities.length > 0
   const current = serializeEntities(entities)
@@ -422,6 +440,11 @@ export function useEditorState() {
       const defaultSize = preset ?? DEFAULT_SIZES[type]
       const x = gridX
       const y = gridY
+      const needsAutoLabel =
+        type.startsWith("table") && (extra?.label == null || extra.label === "")
+      const finalExtra = needsAutoLabel
+        ? { ...extra, label: getNextTableLabel(state.entities) }
+        : extra
       const entity: EditorEntity = {
         id: generateId(),
         type,
@@ -431,14 +454,12 @@ export function useEditorState() {
         h: defaultSize?.h ?? 2,
         capacity: preset?.defaultCapacity,
         rotation: 0,
-        ...extra,
+        ...(finalExtra ?? {}),
       }
       dispatch({ type: "ADD_ENTITY", entity })
       return entity
     },
-    // TABLE_PRESETS and DEFAULT_SIZES are module-level constants
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [],
+    [state.entities],
   )
 
   const updateEntity = useCallback((id: string, patch: Partial<EditorEntity>) => {

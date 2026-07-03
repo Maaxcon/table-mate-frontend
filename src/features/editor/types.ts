@@ -222,18 +222,35 @@ export function deserializeLayout(layout: LayoutPayload): EditorEntity[] {
 
   for (const t of layout.tables) {
     const type = t.shape === "round" ? "table-round" : "table-square"
+    const tableLike = t as {
+      public_id?: string | null
+      publicNumber?: string | null
+      label?: string | null
+      number?: string | null
+      zoneId?: string | null
+    }
+    const serverId = t.id ?? tableLike.public_id ?? undefined
+    const publicNumberCandidate =
+      (typeof t.public_number === "string" && t.public_number.trim() !== ""
+        ? t.public_number
+        : undefined) ??
+      (tableLike.publicNumber && tableLike.publicNumber.trim() !== ""
+        ? tableLike.publicNumber
+        : undefined) ??
+      (tableLike.label && tableLike.label.trim() !== "" ? tableLike.label : undefined) ??
+      (tableLike.number && tableLike.number.trim() !== "" ? tableLike.number : undefined)
     entities.push({
-      id: t.id ?? generateId(),
-      serverId: t.id ?? undefined,
+      id: serverId ?? generateId(),
+      serverId,
       type,
       x: Math.round(t.x / GRID),
       y: Math.round(t.y / GRID),
       w: Math.round(t.width / GRID),
       h: Math.round(t.height / GRID),
-      label: t.public_number || undefined,
+      label: publicNumberCandidate,
       capacity: t.capacity,
       tags: t.tags,
-      zoneId: t.zone_id ?? undefined,
+      zoneId: t.zone_id ?? tableLike.zoneId ?? undefined,
       rotation: t.rotation,
     })
   }
