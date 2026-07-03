@@ -310,7 +310,7 @@ function editorReducer(state: EditorState, action: Action): EditorState {
         canvasCols: action.cols,
         canvasRows: action.rows,
         entities: reclamped,
-        dirty: computeDirty(reclamped, state.lastPublishedJson),
+        dirty: state.dirty || computeDirty(reclamped, state.lastPublishedJson),
       }
     }
     case "REMOVE_ENTITIES_BY_ZONE": {
