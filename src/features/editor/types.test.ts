@@ -1,5 +1,10 @@
 import { describe, it, expect } from "vitest"
-import { findFreePosition, rotatedAABB, DEFAULT_CANVAS_COLS, DEFAULT_CANVAS_ROWS } from "./types"
+import {
+  findFreePosition,
+  rotatedAABB,
+  DEFAULT_CANVAS_COLS,
+  DEFAULT_CANVAS_ROWS,
+} from "@/features/editor/types"
 
 const GRID_COLS = DEFAULT_CANVAS_COLS
 const GRID_ROWS = DEFAULT_CANVAS_ROWS
