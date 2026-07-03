@@ -338,12 +338,18 @@ export function CustomerFloorPlan({
 
       {isMobile && (
         <div className="c-floor-plan__zone-bar">
-          <span className="c-floor-plan__zone-bar-name">
-            {selectedZoneName ?? bookStrings.floorPlan.title}
-          </span>
-          <span className="c-floor-plan__zone-bar-count">
-            {freeCount} {bookStrings.floorPlan.freeShort}
-          </span>
+          <div className="c-floor-plan__zone-bar-info">
+            <span className="c-floor-plan__zone-bar-name">
+              {selectedZoneName ?? bookStrings.floorPlan.title}
+            </span>
+            <span className="c-floor-plan__zone-bar-count">
+              {freeCount} {bookStrings.floorPlan.freeShort}
+            </span>
+          </div>
+          <button type="button" className="c-floor-plan__map-btn" onClick={() => setMapOpen(true)}>
+            <LuMap aria-hidden="true" />
+            {bookStrings.floorPlan.showMap}
+          </button>
         </div>
       )}
 
@@ -377,13 +383,6 @@ export function CustomerFloorPlan({
           statusFilter={statusFilter}
           dimTaken={dimTaken}
         />
-      )}
-
-      {isMobile && !mapOpen && (
-        <button type="button" className="c-floor-plan__map-fab" onClick={() => setMapOpen(true)}>
-          <LuMap aria-hidden="true" />
-          {bookStrings.floorPlan.showMap}
-        </button>
       )}
 
       {isMobile && mapOpen && (

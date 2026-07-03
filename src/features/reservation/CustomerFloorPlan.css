@@ -708,61 +708,75 @@
   background: color-mix(in srgb, var(--color-bg-surface) 32%, transparent);
 }
 
-/* Mobile: a sticky bar keeps the current zone name + free count in view while
-   the card list scrolls, and offers a jump to the spatial map. */
+/* Mobile: a frosted bar pinned to the top of the scroll area. Holds the current
+   zone name + free count and the jump-to-map button, so the key context and the
+   map action stay in reach while the card list scrolls. */
 .c-floor-plan__zone-bar {
   position: sticky;
   top: 0;
-  z-index: 3;
+  z-index: 5;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 10px 2px;
-  background: color-mix(in srgb, var(--color-bg-surface) 90%, transparent);
-  backdrop-filter: blur(6px);
+  padding: 11px 2px 12px;
+  background: var(--color-bg-frosted, color-mix(in srgb, var(--color-bg-surface) 88%, transparent));
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--color-border-default);
+}
+
+.c-floor-plan__zone-bar-info {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-width: 0;
 }
 
 .c-floor-plan__zone-bar-name {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 8px;
-  font-size: 1rem;
+  font-size: 1.05rem;
   font-weight: 800;
   color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .c-floor-plan__zone-bar-count {
+  flex-shrink: 0;
   font-size: 0.8rem;
   font-weight: 700;
   color: var(--color-success-text);
 }
 
-/* Floating action button: always reachable while the card list scrolls. Sits
-   bottom-left so it never overlaps the app's bottom-right theme toggle. */
-.c-floor-plan__map-fab {
-  position: fixed;
-  left: 16px;
-  bottom: max(16px, env(safe-area-inset-bottom));
-  z-index: 40;
+/* Jump-to-map button living in the pinned bar. */
+.c-floor-plan__map-btn {
+  flex-shrink: 0;
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  padding: 12px 18px;
+  padding: 9px 16px;
   border: none;
   border-radius: 100px;
   background: var(--color-primary);
   color: var(--color-bg-surface);
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 700;
   font-family: inherit;
   cursor: pointer;
-  box-shadow: 0 10px 24px -8px rgb(0 0 0 / 40%);
+  box-shadow: 0 4px 12px -4px color-mix(in srgb, var(--color-primary) 55%, transparent);
+  transition:
+    transform 140ms ease,
+    box-shadow 140ms ease;
 }
 
-.c-floor-plan__map-fab svg {
-  width: 18px;
-  height: 18px;
+.c-floor-plan__map-btn:active {
+  transform: translateY(1px);
+}
+
+.c-floor-plan__map-btn svg {
+  width: 17px;
+  height: 17px;
 }
 
 /* Full-screen sheet that hosts the spatial map on phones. */
