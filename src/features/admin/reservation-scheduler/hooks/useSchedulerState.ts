@@ -67,7 +67,24 @@ function reducer(state: SchedulerState, action: Action): SchedulerState {
     case "SET_DATES":
       return { ...state, dates: action.dates }
     case "SET_RESERVATIONS": {
-      let updated = action.reservations
+      const serverIds = new Set(action.reservations.map((r) => r.public_id))
+      const injected = [...action.reservations]
+      for (const change of state.pendingChanges) {
+        if (!serverIds.has(change.reservation_id)) {
+          injected.push({
+            public_id: change.reservation_id,
+            table: change.new_table_id,
+            table_number: change.new_table_number,
+            customer_name: change.customer_name,
+            guest_count: change.guest_count,
+            start_at: localToISOString(change.new_date, change.new_start_time),
+            end_at: localToISOString(change.new_date, change.new_end_time),
+            opened_at: change.opened_at,
+            status: change.status as SchedulerReservation["status"],
+          })
+        }
+      }
+      let updated = injected
       for (const change of state.pendingChanges) {
         updated = applyChange(updated, change)
       }
@@ -92,6 +109,10 @@ function reducer(state: SchedulerState, action: Action): SchedulerState {
         new_date: action.newDate,
         new_start_time: action.newStartTime,
         new_end_time: action.newEndTime,
+        customer_name: existingChange?.customer_name ?? existing.customer_name,
+        guest_count: existingChange?.guest_count ?? existing.guest_count,
+        opened_at: existingChange?.opened_at ?? existing.opened_at,
+        status: existingChange?.status ?? existing.status,
       }
 
       const otherChanges = state.pendingChanges.filter(
@@ -168,6 +189,10 @@ function reducer(state: SchedulerState, action: Action): SchedulerState {
         new_date: dateKey,
         new_start_time: startHHMM,
         new_end_time: endHHMM,
+        customer_name: existingChange?.customer_name ?? target.customer_name,
+        guest_count: existingChange?.guest_count ?? target.guest_count,
+        opened_at: existingChange?.opened_at ?? target.opened_at,
+        status: existingChange?.status ?? target.status,
       }
 
       const otherChanges = state.pendingChanges.filter(

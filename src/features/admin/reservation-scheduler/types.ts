@@ -23,6 +23,10 @@ export interface PendingChange {
   new_date: string
   new_start_time: string
   new_end_time: string
+  customer_name: string
+  guest_count: number
+  opened_at: string | null
+  status: string
 }
 
 export interface BatchUpdatePayload {

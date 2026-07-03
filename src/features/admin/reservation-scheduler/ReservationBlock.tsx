@@ -25,7 +25,8 @@ export function ReservationBlock({
       : new Date(reservation.start_at)
   const end = new Date(reservation.end_at)
   const startMinutes = displayStart.getHours() * 60 + displayStart.getMinutes()
-  const endMinutes = end.getHours() * 60 + end.getMinutes()
+  const endRaw = end.getHours() * 60 + end.getMinutes()
+  const endMinutes = endRaw < startMinutes ? endRaw + 24 * 60 : endRaw
   const totalMinutes = (hourEnd - hourStart) * 60
 
   const left = ((startMinutes - hourStart * 60) / totalMinutes) * 100

@@ -69,8 +69,30 @@ function reducer(state: SchedulerState, action: Action): SchedulerState {
   switch (action.type) {
     case "SET_DATES":
       return { ...state, dates: action.dates }
-    case "SET_RESERVATIONS":
-      return { ...state, reservations: action.reservations }
+    case "SET_RESERVATIONS": {
+      const serverIds = new Set(action.reservations.map((r) => r.public_id))
+      const injected = [...action.reservations]
+      for (const change of state.pendingChanges) {
+        if (!serverIds.has(change.reservation_id)) {
+          injected.push({
+            public_id: change.reservation_id,
+            table: change.new_table_id,
+            table_number: change.new_table_number,
+            customer_name: change.customer_name,
+            guest_count: change.guest_count,
+            start_at: localToISOString(change.new_date, change.new_start_time),
+            end_at: localToISOString(change.new_date, change.new_end_time),
+            opened_at: change.opened_at,
+            status: change.status as SchedulerReservation["status"],
+          })
+        }
+      }
+      let updated = injected
+      for (const change of state.pendingChanges) {
+        updated = applyChange(updated, change)
+      }
+      return { ...state, reservations: updated }
+    }
     case "MOVE_RESERVATION": {
       const existing = state.reservations.find((r) => r.public_id === action.reservationId)
       if (!existing) return state
@@ -90,6 +112,10 @@ function reducer(state: SchedulerState, action: Action): SchedulerState {
         new_date: action.newDate,
         new_start_time: action.newStartTime,
         new_end_time: action.newEndTime,
+        customer_name: existingChange?.customer_name ?? existing.customer_name,
+        guest_count: existingChange?.guest_count ?? existing.guest_count,
+        opened_at: existingChange?.opened_at ?? existing.opened_at,
+        status: existingChange?.status ?? existing.status,
       }
 
       const otherChanges = state.pendingChanges.filter(
@@ -166,6 +192,10 @@ function reducer(state: SchedulerState, action: Action): SchedulerState {
         new_date: dateKey,
         new_start_time: startHHMM,
         new_end_time: endHHMM,
+        customer_name: existingChange?.customer_name ?? target.customer_name,
+        guest_count: existingChange?.guest_count ?? target.guest_count,
+        opened_at: existingChange?.opened_at ?? target.opened_at,
+        status: existingChange?.status ?? target.status,
       }
 
       const otherChanges = state.pendingChanges.filter(
@@ -251,10 +281,42 @@ describe("scheduler reducer", () => {
     expect(next.dates).toEqual(["2026-07-03"])
   })
 
-  it("SET_RESERVATIONS replaces reservations", () => {
-    const r2 = { ...baseReservation, public_id: "res-2" }
-    const next = reducer(baseState, { type: "SET_RESERVATIONS", reservations: [r2] })
-    expect(next.reservations).toEqual([r2])
+  it("SET_RESERVATIONS replaces reservations and reapplies pending changes", () => {
+    const moved = reducer(baseState, {
+      type: "MOVE_RESERVATION",
+      reservationId: "res-1",
+      newTableId: "table-2",
+      newTableNumber: "T2",
+      newDate: "2026-07-02",
+      newStartTime: "19:00",
+      newEndTime: "21:00",
+    })
+    const fresh = { ...baseReservation, table: "table-1", start_at: "2026-07-02T18:00:00.000Z" }
+    const next = reducer(moved, { type: "SET_RESERVATIONS", reservations: [fresh] })
+    const updated = next.reservations.find((r) => r.public_id === "res-1")
+    expect(updated?.table).toBe("table-2")
+    expect(next.pendingChanges).toHaveLength(1)
+  })
+
+  it("SET_RESERVATIONS injects virtual reservation when server data is missing it", () => {
+    const moved = reducer(baseState, {
+      type: "MOVE_RESERVATION",
+      reservationId: "res-1",
+      newTableId: "table-2",
+      newTableNumber: "T2",
+      newDate: "2026-07-03",
+      newStartTime: "19:00",
+      newEndTime: "21:00",
+    })
+    const next = reducer(moved, { type: "SET_RESERVATIONS", reservations: [] })
+    expect(next.reservations).toHaveLength(1)
+    const virtual = next.reservations[0]
+    expect(virtual.public_id).toBe("res-1")
+    expect(virtual.table).toBe("table-2")
+    expect(virtual.customer_name).toBe("Alice")
+    expect(virtual.guest_count).toBe(4)
+    expect(virtual.status).toBe("pending")
+    expect(next.pendingChanges).toHaveLength(1)
   })
 
   it("MOVE_RESERVATION adds a pending change and updates the reservation", () => {

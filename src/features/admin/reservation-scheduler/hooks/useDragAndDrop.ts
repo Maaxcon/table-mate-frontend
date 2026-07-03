@@ -8,8 +8,7 @@ interface UseDragAndDropOptions {
   tables: SchedulerTable[]
   reservations: SchedulerReservation[]
   pendingChanges: PendingChange[]
-  hourStart: number
-  hourEnd: number
+  dayRanges: Record<string, { hourStart: number; hourEnd: number }>
   slotMinutes: number
   restaurantTimezone?: string
   onMove: (
@@ -27,8 +26,7 @@ export function useDragAndDrop({
   tables,
   reservations,
   pendingChanges,
-  hourStart,
-  hourEnd,
+  dayRanges,
   slotMinutes,
   restaurantTimezone,
   onMove,
@@ -51,6 +49,10 @@ export function useDragAndDrop({
       const draggedReservation = reservations.find((r) => r.public_id === reservationId)
       if (draggedReservation && draggedReservation.status === "completed") return
       const { tableId, date } = overData
+
+      const range = dayRanges[date]
+      if (!range) return
+      const { hourStart, hourEnd } = range
 
       let startTime: string
       let endTime: string
@@ -82,9 +84,9 @@ export function useDragAndDrop({
           hourStart * 60 + Math.max(0, Math.min(minuteOffset, totalMinutes - durationMinutes))
         endMinute = startMinute + durationMinutes
 
-        const startHH = String(Math.floor(startMinute / 60)).padStart(2, "0")
+        const startHH = String(Math.floor(startMinute / 60) % 24).padStart(2, "0")
         const startMM = String(startMinute % 60).padStart(2, "0")
-        const endHH = String(Math.floor(endMinute / 60)).padStart(2, "0")
+        const endHH = String(Math.floor(endMinute / 60) % 24).padStart(2, "0")
         const endMM = String(endMinute % 60).padStart(2, "0")
         startTime = `${startHH}:${startMM}`
         endTime = `${endHH}:${endMM}`
@@ -125,8 +127,7 @@ export function useDragAndDrop({
       tables,
       reservations,
       pendingChanges,
-      hourStart,
-      hourEnd,
+      dayRanges,
       slotMinutes,
       restaurantTimezone,
       onMove,

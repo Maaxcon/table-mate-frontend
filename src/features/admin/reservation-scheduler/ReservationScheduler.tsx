@@ -30,28 +30,52 @@ function toMinutes(hhmm: string): number {
   return h * 60 + m
 }
 
-function computeHourRange(workingHours: Record<string, WorkingHoursDay> | null): {
-  hourStart: number
-  hourEnd: number
-} {
+const DAY_KEYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const
+
+function computeDayHourRange(
+  date: string,
+  workingHours: Record<string, WorkingHoursDay> | null,
+): { hourStart: number; hourEnd: number } {
   if (!workingHours) return { hourStart: 8, hourEnd: 23 }
-  let minOpen = Infinity
-  let maxClose = -Infinity
-  for (const dayHours of Object.values(workingHours)) {
-    if (!dayHours) continue
-    const openMin = toMinutes(dayHours.open)
-    const closeMin = toMinutes(dayHours.close)
-    if (closeMin > openMin) {
-      minOpen = Math.min(minOpen, openMin)
-      maxClose = Math.max(maxClose, closeMin)
-    } else {
-      minOpen = Math.min(minOpen, openMin)
-      maxClose = Math.max(maxClose, closeMin + 24 * 60)
-    }
-  }
+  const d = new Date(date + "T00:00:00")
+  const dayKey = DAY_KEYS[d.getDay()]
+  const dayHours = workingHours[dayKey]
+  if (!dayHours) return { hourStart: 8, hourEnd: 23 }
+
+  const openMin = toMinutes(dayHours.open)
+  const closeMin = toMinutes(dayHours.close)
+  if (openMin == null || closeMin == null) return { hourStart: 8, hourEnd: 23 }
+
+  const shiftDuration = closeMin > openMin ? closeMin - openMin : closeMin + 24 * 60 - openMin
+  const nonWorking = 24 * 60 - shiftDuration
+  const padding = nonWorking / 2
+
+  const paddedOpen = openMin - padding
+  const paddedClose = (closeMin > openMin ? closeMin : closeMin + 24 * 60) + padding
+
   return {
-    hourStart: minOpen === Infinity ? 8 : Math.floor(minOpen / 60),
-    hourEnd: maxClose === -Infinity ? 23 : Math.ceil(maxClose / 60),
+    hourStart: Math.floor((((paddedOpen % (24 * 60)) + 24 * 60) % (24 * 60)) / 60),
+    hourEnd: Math.ceil(paddedClose / 60),
+  }
+}
+
+function getDayWorkingBounds(
+  date: string,
+  workingHours: Record<string, WorkingHoursDay> | null,
+): { start: number; end: number } {
+  if (!workingHours) return { start: 8, end: 23 }
+  const d = new Date(date + "T00:00:00")
+  const dayKey = DAY_KEYS[d.getDay()]
+  const dayHours = workingHours[dayKey]
+  if (!dayHours) return { start: 8, end: 23 }
+
+  const openMin = toMinutes(dayHours.open)
+  const closeMin = toMinutes(dayHours.close)
+  if (openMin == null || closeMin == null) return { start: 8, end: 23 }
+
+  return {
+    start: Math.floor(openMin / 60),
+    end: Math.ceil((closeMin > openMin ? closeMin : closeMin + 24 * 60) / 60),
   }
 }
 
@@ -97,11 +121,6 @@ export function ReservationScheduler() {
   )
   const [workingHours, setWorkingHours] = useState<Record<string, WorkingHoursDay> | null>(null)
 
-  const { hourStart: workingHourStart, hourEnd: workingHourEnd } = useMemo(
-    () => computeHourRange(workingHours),
-    [workingHours],
-  )
-
   const [activeDragId, setActiveDragId] = useState<string | null>(null)
   const [activeDragDate, setActiveDragDate] = useState<string | null>(null)
 
@@ -109,15 +128,17 @@ export function ReservationScheduler() {
     const ranges: Record<string, { hourStart: number; hourEnd: number }> = {}
 
     for (const date of dates) {
-      let start = workingHourStart
-      let end = workingHourEnd
+      const dayRange = computeDayHourRange(date, workingHours)
+      let start = dayRange.hourStart
+      let end = dayRange.hourEnd
 
       for (const r of state.reservations) {
         if (isoToDateKey(r.start_at) !== date) continue
         const s = new Date(r.start_at)
         const e = new Date(r.end_at)
         const startH = s.getHours() + s.getMinutes() / 60
-        const endH = e.getHours() + e.getMinutes() / 60
+        let endH = e.getHours() + e.getMinutes() / 60
+        if (endH < startH) endH += 24
         if (startH < start) start = Math.floor(startH)
         if (endH > end) end = Math.ceil(endH)
       }
@@ -127,14 +148,15 @@ export function ReservationScheduler() {
         const [sh, sm] = change.new_start_time.split(":").map(Number)
         const [eh, em] = change.new_end_time.split(":").map(Number)
         const startH = sh + sm / 60
-        const endH = eh + em / 60
+        let endH = eh + em / 60
+        if (endH < startH) endH += 24
         if (startH < start) start = Math.floor(startH)
         if (endH > end) end = Math.ceil(endH)
       }
 
       ranges[date] = {
         hourStart: Math.max(0, start),
-        hourEnd: Math.min(24, end),
+        hourEnd: end,
       }
     }
 
@@ -147,35 +169,18 @@ export function ReservationScheduler() {
         const [sh, sm] = dragChange.new_start_time.split(":").map(Number)
         const [eh, em] = dragChange.new_end_time.split(":").map(Number)
         const startH = sh + sm / 60
-        const endH = eh + em / 60
+        let endH = eh + em / 60
+        if (endH < startH) endH += 24
         if (startH <= r.hourStart && r.hourStart > 0) {
           ranges[activeDragDate] = { ...r, hourStart: Math.max(0, r.hourStart - 1) }
-        } else if (endH >= r.hourEnd && r.hourEnd < 24) {
-          ranges[activeDragDate] = { ...r, hourEnd: Math.min(24, r.hourEnd + 1) }
+        } else if (endH >= r.hourEnd) {
+          ranges[activeDragDate] = { ...r, hourEnd: r.hourEnd + 1 }
         }
       }
     }
 
     return ranges
-  }, [
-    dates,
-    workingHourStart,
-    workingHourEnd,
-    state.reservations,
-    state.pendingChanges,
-    activeDragId,
-    activeDragDate,
-  ])
-
-  const { hourStart, hourEnd } = useMemo(() => {
-    let start = workingHourStart
-    let end = workingHourEnd
-    for (const range of Object.values(dayRanges)) {
-      if (range.hourStart < start) start = range.hourStart
-      if (range.hourEnd > end) end = range.hourEnd
-    }
-    return { hourStart: start, hourEnd: end }
-  }, [dayRanges, workingHourStart, workingHourEnd])
+  }, [dates, workingHours, state.reservations, state.pendingChanges, activeDragId, activeDragDate])
 
   const reservationsRef = useRef(state.reservations)
   const pendingChangesRef = useRef(state.pendingChanges)
@@ -358,8 +363,7 @@ export function ReservationScheduler() {
     tables,
     reservations: state.reservations,
     pendingChanges: state.pendingChanges,
-    hourStart,
-    hourEnd,
+    dayRanges,
     slotMinutes: SLOT_MINUTES,
     restaurantTimezone,
     onMove: moveReservation,
@@ -387,13 +391,18 @@ export function ReservationScheduler() {
       if (reservation.status === "completed") return
       if (reservation.status === "active" && edge === "start") return
 
-      setActiveDragDate(isoToDateKey(reservation.start_at))
+      const dateKey = isoToDateKey(reservation.start_at)
+      setActiveDragDate(dateKey)
 
+      const dayRange = computeDayHourRange(dateKey, workingHours)
       const startX = e.clientX
       const edgeTime = new Date(edge === "start" ? reservation.start_at : reservation.end_at)
-      const startLocalHours = edgeTime.getHours()
-      const startLocalMinutes = edgeTime.getMinutes()
-      const totalMinutes = (hourEnd - hourStart) * 60
+      const edgeMinutesFromMidnight = edgeTime.getHours() * 60 + edgeTime.getMinutes()
+      const startMinutes =
+        edgeMinutesFromMidnight < dayRange.hourStart * 60
+          ? edgeMinutesFromMidnight + 24 * 60
+          : edgeMinutesFromMidnight
+      const totalMinutes = (dayRange.hourEnd - dayRange.hourStart) * 60
 
       const dayEl = (e.target as HTMLElement).closest(".scheduler__day-panel-body")
       if (!dayEl) return
@@ -405,8 +414,11 @@ export function ReservationScheduler() {
         const dx = moveEvt.clientX - startX
         const dMinute = Math.round(((dx / rowWidth) * totalMinutes) / SLOT_MINUTES) * SLOT_MINUTES
 
-        const totalMin = startLocalHours * 60 + startLocalMinutes + dMinute
-        const clamped = Math.max(hourStart * 60, Math.min(totalMin, hourEnd * 60 - SLOT_MINUTES))
+        const totalMin = startMinutes + dMinute
+        const clamped = Math.max(
+          dayRange.hourStart * 60,
+          Math.min(totalMin, dayRange.hourEnd * 60 - SLOT_MINUTES),
+        )
 
         const currentRes = reservationsRef.current
         const currentChanges = pendingChangesRef.current
@@ -423,7 +435,7 @@ export function ReservationScheduler() {
           effectiveClamped = Math.max(clamped, nowMinutes + 15)
         }
 
-        const ehh = String(Math.floor(effectiveClamped / 60)).padStart(2, "0")
+        const ehh = String(Math.floor(effectiveClamped / 60) % 24).padStart(2, "0")
         const emm = String(effectiveClamped % 60).padStart(2, "0")
 
         const proposed = {
@@ -486,15 +498,7 @@ export function ReservationScheduler() {
       document.addEventListener("mousemove", onMouseMove)
       document.addEventListener("mouseup", onMouseUp)
     },
-    [
-      state.reservations,
-      resizeReservation,
-      markConflict,
-      toast,
-      hourStart,
-      hourEnd,
-      restaurantTimezone,
-    ],
+    [state.reservations, resizeReservation, markConflict, toast, workingHours, restaurantTimezone],
   )
 
   const handleSave = useCallback(async () => {
@@ -615,25 +619,28 @@ export function ReservationScheduler() {
           onDragEnd={handleDragEndWithClear}
         >
           <div className={`scheduler__grid scheduler__grid--${dates.length}`}>
-            {dates.map((date, i) => (
-              <DayPanel
-                key={date}
-                date={date}
-                tables={tables}
-                reservations={state.reservations}
-                hourStart={dayRanges[date]?.hourStart ?? workingHourStart}
-                hourEnd={dayRanges[date]?.hourEnd ?? workingHourEnd}
-                workingHourStart={workingHourStart}
-                workingHourEnd={workingHourEnd}
-                conflictReservationId={state.conflictReservationId}
-                modifiedIds={modifiedIds}
-                onResizeStart={handleResizeStart}
-                scrollRef={i === 0 ? scrollRefA : scrollRefB}
-                showNav={dates.length === 2}
-                onPrevDay={() => shiftDate(i, -1)}
-                onNextDay={() => shiftDate(i, 1)}
-              />
-            ))}
+            {dates.map((date, i) => {
+              const bounds = getDayWorkingBounds(date, workingHours)
+              return (
+                <DayPanel
+                  key={date}
+                  date={date}
+                  tables={tables}
+                  reservations={state.reservations}
+                  hourStart={dayRanges[date]?.hourStart ?? bounds.start}
+                  hourEnd={dayRanges[date]?.hourEnd ?? bounds.end}
+                  workingHourStart={bounds.start}
+                  workingHourEnd={bounds.end}
+                  conflictReservationId={state.conflictReservationId}
+                  modifiedIds={modifiedIds}
+                  onResizeStart={handleResizeStart}
+                  scrollRef={i === 0 ? scrollRefA : scrollRefB}
+                  showNav={dates.length === 2}
+                  onPrevDay={() => shiftDate(i, -1)}
+                  onNextDay={() => shiftDate(i, 1)}
+                />
+              )
+            })}
           </div>
           <DragOverlay>
             {activeDragId
