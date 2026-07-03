@@ -1,7 +1,7 @@
 import { apiFetch } from "@/api/client"
 import type { Reservation } from "@/types/api"
 import type { Table } from "@/types/api/types.gen"
-import type { UpcomingReservation } from "@/features/waiter-order-view/data/waiterTypes"
+import type { UpcomingReservation } from "@/features/waiter-order-view/types"
 
 export type WorkingHoursDay = {
   open: string

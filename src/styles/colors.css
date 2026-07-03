@@ -63,6 +63,12 @@
   /* Interactive */
   --color-like: #c81e1e;
   --color-danger: var(--color-text-primary);
+
+  /* RGB triples for rgba()/alpha compositing (match the hex tokens above) */
+  --color-primary-rgb: 25, 118, 210;
+  --color-success-rgb: 26, 138, 74;
+  --color-error-rgb: 192, 57, 43;
+  --color-warning-rgb: 181, 124, 0;
 }
 
 [data-theme="dark"] {
@@ -129,4 +135,10 @@
   /* Interactive */
   --color-like: #f87171;
   --color-danger: var(--color-text-primary);
+
+  /* RGB triples for rgba()/alpha compositing (match the hex tokens above) */
+  --color-primary-rgb: 96, 165, 250;
+  --color-success-rgb: 34, 197, 94;
+  --color-error-rgb: 239, 68, 68;
+  --color-warning-rgb: 250, 204, 21;
 }

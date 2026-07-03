@@ -1,0 +1,1 @@
+export { WaiterOrderPage } from "./WaiterOrderPage"

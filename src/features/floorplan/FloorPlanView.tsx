@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react"
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react"
 import {
   DEFAULT_CANVAS_COLS,
   DEFAULT_CANVAS_ROWS,
@@ -44,6 +44,9 @@ interface FloorPlanViewProps {
   onPortalNavigate?: (targetZoneId: string) => void
   /** Shown when there is no published layout to render. */
   emptyMessage?: string
+  /** Clamp auto-fit scale (default min 0.3, no max). */
+  minScale?: number
+  maxScale?: number
 }
 
 const px = (v: number) => v * GRID
@@ -66,14 +69,22 @@ export function FloorPlanView({
   renderTableContent,
   onPortalNavigate,
   emptyMessage = "No floor plan published yet.",
+  minScale: minScaleProp,
+  maxScale: maxScaleProp,
 }: FloorPlanViewProps) {
   const containerRef = useRef<HTMLDivElement>(null)
-  const [scale, setScale] = useState(1)
+  const [viewBox, setViewBox] = useState({ scale: 1, width: 0, height: 0 })
 
   const canvasCols = canvasColsProp ?? DEFAULT_CANVAS_COLS
   const canvasRows = canvasRowsProp ?? DEFAULT_CANVAS_ROWS
   const canvasPxW = canvasCols * GRID
   const canvasPxH = canvasRows * GRID
+  const { scale, width: containerWidth, height: containerHeight } = viewBox
+  const aspectRatio = canvasPxH === 0 ? 1 : canvasPxW / canvasPxH
+  const containerStyle = useMemo<CSSProperties>(
+    () => ({ aspectRatio: `${aspectRatio}` }),
+    [aspectRatio],
+  )
 
   useEffect(() => {
     const el = containerRef.current
@@ -81,12 +92,22 @@ export function FloorPlanView({
     // Fit the canvas plus its proportional overhang (one grid cell each side, where
     // grid -1 portals/thresholds live). With padding = GRID * scale the scale factors
     // out cleanly: clientWidth = (canvasPxW + 2 * GRID) * scale.
-    const update = () => setScale(Math.max(el.clientWidth / (canvasPxW + 2 * GRID), 0.3))
+    const minScale = minScaleProp ?? 0.3
+    const maxScale = maxScaleProp ?? Number.POSITIVE_INFINITY
+    const update = () => {
+      const availableW = el.clientWidth
+      const availableH = el.clientHeight || availableW
+      const neededW = canvasPxW + 2 * GRID
+      const neededH = canvasPxH + 2 * GRID
+      const fitted = Math.min(availableW / neededW, availableH / neededH)
+      const scale = Math.min(maxScale, Math.max(fitted, minScale))
+      setViewBox({ scale, width: availableW, height: availableH })
+    }
     update()
     const observer = new ResizeObserver(update)
     observer.observe(el)
     return () => observer.disconnect()
-  }, [canvasPxW])
+  }, [canvasPxW, canvasPxH, minScaleProp, maxScaleProp])
 
   const entities = useMemo<EditorEntity[]>(
     () => (payload ? deserializeLayout(payload) : []),
@@ -116,13 +137,19 @@ export function FloorPlanView({
   const pad = GRID * scale
   const scaledW = canvasPxW * scale + 2 * pad
   const scaledH = canvasPxH * scale + 2 * pad
+  const offsetX = Math.max((containerWidth - scaledW) / 2, 0)
+  const offsetY = Math.max((containerHeight - scaledH) / 2, 0)
 
   return (
-    <div className="fp-view" ref={containerRef}>
+    <div className="fp-view" ref={containerRef} style={containerStyle}>
       <div
         style={{
           width: scaledW,
           height: scaledH,
+          marginLeft: offsetX,
+          marginRight: offsetX,
+          marginTop: offsetY,
+          marginBottom: offsetY,
           flexShrink: 0,
           pointerEvents: "none",
           visibility: "hidden",
@@ -132,8 +159,8 @@ export function FloorPlanView({
         className="fp-view__stage"
         style={{
           position: "absolute",
-          top: pad,
-          left: pad,
+          top: pad + offsetY,
+          left: pad + offsetX,
           width: canvasPxW,
           height: canvasPxH,
           transform: `scale(${scale})`,

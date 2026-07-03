@@ -9,7 +9,7 @@ import {
   fetchZones,
 } from "@/features/reservation/api"
 import type { LayoutPayload } from "@/features/editor/types"
-import type { UpcomingReservation } from "@/features/waiter-order-view/data/waiterTypes"
+import type { UpcomingReservation } from "@/features/waiter-order-view/types"
 import { ActiveBookings } from "@/features/reservation/ActiveBookings"
 import { BookModal } from "@/features/reservation/BookModal"
 import { CustomerFloorPlan } from "@/features/reservation/CustomerFloorPlan"

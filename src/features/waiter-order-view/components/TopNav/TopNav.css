@@ -1,0 +1,217 @@
+.top-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 14px 28px;
+  background: var(--color-bg-surface);
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.top-nav__left {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.top-nav__brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.top-nav__logo {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--color-primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 12px 28px color-mix(in srgb, var(--color-primary) 32%, transparent);
+}
+
+.top-nav__logo-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 4px;
+  background: #fff;
+}
+
+.top-nav__brand-copy {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+}
+
+.top-nav__brand-title {
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: var(--color-text-primary);
+}
+
+.top-nav__brand-subtitle {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: var(--color-text-secondary);
+}
+
+.top-nav__zones {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding-left: 12px;
+  border-left: 1px solid var(--color-border-light);
+  min-height: 36px;
+}
+
+.top-nav__zone {
+  padding: 6px 18px;
+  border-radius: var(--w-radius-pill);
+  border: 1px solid var(--color-border-default);
+  background: var(--color-bg-secondary);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  font-family: inherit;
+  transition:
+    background 0.15s,
+    color 0.15s,
+    border-color 0.15s;
+}
+
+.top-nav__zone--active {
+  background: var(--color-text-primary);
+  color: var(--color-bg-secondary);
+  border-color: var(--color-text-primary);
+}
+
+.top-nav__right {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.top-nav__stats {
+  display: inline-flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.top-nav__stat {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--color-text-primary);
+}
+
+.top-nav__stat-chip {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  background: currentColor;
+  box-shadow: 0 0 0 1px color-mix(in srgb, currentColor 40%, transparent);
+}
+
+.top-nav__stat-chip--occupied {
+  color: var(--color-error);
+}
+
+.top-nav__stat-chip--reserved {
+  color: var(--color-primary);
+}
+
+.top-nav__stat-chip--free {
+  color: var(--color-success);
+}
+
+.top-nav__stat-label {
+  color: var(--color-text-secondary);
+}
+
+.top-nav__time-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  line-height: 1.1;
+}
+
+.top-nav__time {
+  font-size: 1.5rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+  color: var(--color-text-primary);
+}
+
+.top-nav__time-label {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: var(--color-text-secondary);
+}
+
+.top-nav__connection {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid var(--color-error);
+}
+
+.top-nav__connection--connected {
+  border-color: var(--color-success);
+  background: var(--color-success);
+}
+
+.top-nav__nav-link {
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: var(--color-text-primary);
+  text-decoration: none;
+  padding: 9px 18px;
+  border-radius: var(--w-radius-pill);
+  border: 1px solid var(--color-border-default);
+  background: var(--color-bg-secondary);
+  transition:
+    background 0.15s,
+    color 0.15s,
+    border-color 0.15s;
+}
+
+.top-nav__nav-link:hover {
+  background: var(--color-border-light);
+  color: var(--color-text-primary);
+}
+
+@media (max-width: 900px) {
+  .top-nav {
+    padding: 14px 20px;
+  }
+
+  .top-nav__stats {
+    gap: 12px;
+  }
+}
+
+@media (max-width: 640px) {
+  .top-nav__left,
+  .top-nav__right {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .top-nav__time-wrap {
+    align-items: flex-start;
+  }
+}
