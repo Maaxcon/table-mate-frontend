@@ -48,7 +48,6 @@ export const bookStrings = {
     filterFree: "Вільні",
     noFree: "Немає вільних столів на цей час",
     showAll: "Показати всі",
-    statusBooked: "Зайнято",
     statusSmall: "Замало місць",
     slot: {
       title: "Коли вам зручно?",

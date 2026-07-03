@@ -123,7 +123,7 @@ export function CustomerFloorPlan({
             bookable = true
           } else {
             tone = "reserved"
-            label = bookStrings.floorPlan.statusBooked
+            label = bookStrings.floorPlan.status.occupied
             bookable = false
           }
         } else {
