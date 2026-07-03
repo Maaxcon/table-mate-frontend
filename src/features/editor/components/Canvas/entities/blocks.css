@@ -3,6 +3,7 @@
   cursor: grab;
   user-select: none;
   box-sizing: border-box;
+  --canvas-scale: 1;
 }
 
 .editor-block:active {
@@ -16,7 +17,8 @@
   justify-content: center;
   gap: 4px;
   padding: 6px;
-  border: 1px solid color-mix(in srgb, var(--color-border-strong) 55%, transparent);
+  border: calc(1.2px / var(--canvas-scale)) solid
+    color-mix(in srgb, var(--color-border-strong) 55%, transparent);
   border-radius: 18px;
   background:
     linear-gradient(
@@ -41,7 +43,8 @@
   position: absolute;
   inset: 10%;
   border-radius: 14px;
-  border: 1px dashed color-mix(in srgb, var(--color-text-primary) 18%, transparent);
+  border: calc(1px / var(--canvas-scale)) dashed
+    color-mix(in srgb, var(--color-text-primary) 18%, transparent);
   pointer-events: none;
 }
 
@@ -121,7 +124,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 2px dashed var(--color-border-strong);
+  border: calc(2px / var(--canvas-scale)) dashed var(--color-border-strong);
   background: var(--color-bg-surface);
   opacity: 0.85;
 }
@@ -134,7 +137,8 @@
   gap: 4px;
   padding: 6px 10px;
   border-radius: 18px;
-  border: 1px solid color-mix(in srgb, var(--color-text-primary) 35%, transparent);
+  border: calc(1px / var(--canvas-scale)) solid
+    color-mix(in srgb, var(--color-text-primary) 35%, transparent);
   background:
     linear-gradient(
       145deg,

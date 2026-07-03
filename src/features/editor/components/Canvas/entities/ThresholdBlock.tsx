@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react"
 import type { EditorEntity } from "@/features/editor/types"
 import { GRID, uprightContentStyle } from "@/features/editor/types"
 import { ResizeHandles } from "./ResizeHandles"
@@ -28,6 +29,15 @@ export function ThresholdBlock({
 }: ThresholdBlockProps) {
   const px = (v: number) => v * GRID
 
+  const style: CSSProperties = {
+    left: px(entity.x),
+    top: px(entity.y),
+    width: px(entity.w),
+    height: px(entity.h),
+    transform: entity.rotation ? `rotate(${entity.rotation}deg)` : undefined,
+    ["--canvas-scale" as const]: canvasScale,
+  }
+
   return (
     <div
       className={[
@@ -37,13 +47,7 @@ export function ThresholdBlock({
       ]
         .filter(Boolean)
         .join(" ")}
-      style={{
-        left: px(entity.x),
-        top: px(entity.y),
-        width: px(entity.w),
-        height: px(entity.h),
-        transform: entity.rotation ? `rotate(${entity.rotation}deg)` : undefined,
-      }}
+      style={style}
       role="button"
       tabIndex={0}
       aria-label={`Threshold${entity.label ? ` ${entity.label}` : ""}`}
