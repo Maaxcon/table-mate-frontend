@@ -330,6 +330,8 @@ function FloorPlanEditorPage() {
     dirty,
     activeTool,
     deletedServerIds,
+    canvasCols,
+    canvasRows,
     layoutCanvasCols,
     layoutCanvasRows,
     pendingZones,

@@ -261,18 +261,10 @@
     grid-template-columns: minmax(0, 1fr);
     height: auto;
   }
-
-  .editor-page__metrics {
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  }
 }
 
 @media (max-width: 640px) {
   .editor-page {
     padding: 16px;
-  }
-
-  .editor-page__hero {
-    border-radius: 22px;
   }
 }

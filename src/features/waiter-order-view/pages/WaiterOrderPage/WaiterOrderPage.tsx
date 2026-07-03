@@ -110,6 +110,8 @@ export function WaiterOrderPage() {
       })
       .finally(() => setLoading(false))
     return () => controller.abort()
+    // restaurant is derived inside this effect; rerunning on its change would refetch endlessly
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {

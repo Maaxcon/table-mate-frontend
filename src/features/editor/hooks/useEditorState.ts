@@ -81,7 +81,7 @@ type Action =
   | { type: "CLEAR_PENDING_ZONES" }
   | { type: "REMAP_ZONE_ID"; from: string; to: string }
 
-const TABLE_LABEL_REGEX = /^T(\d+)$/i
+const TABLE_LABEL_REGEX = /^(?:T)?(\d+)$/i
 
 function getNextTableLabel(entities: EditorEntity[]): string {
   let max = 0
@@ -548,3 +548,5 @@ export function useEditorState() {
     dispatch,
   }
 }
+
+export { getNextTableLabel }

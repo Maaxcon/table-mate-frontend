@@ -5,6 +5,12 @@
   padding: 0 8px;
 }
 
+.editor-zone-header__tab-wrapper {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
 .editor-zone-header__tab {
   padding: 6px 14px;
   border-radius: 999px;
@@ -45,15 +51,30 @@
 }
 
 .editor-zone-header__delete {
-  margin-left: 6px;
-  cursor: pointer;
-  opacity: 0.4;
-  font-size: 1rem;
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--color-border-default) 80%, transparent);
+  background: color-mix(in srgb, var(--color-bg-page) 90%, transparent);
+  color: var(--color-text-secondary);
+  font-size: 0.8rem;
+  font-weight: 700;
   line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease;
 }
 
-.editor-zone-header__delete:hover {
-  opacity: 1;
+.editor-zone-header__delete:hover,
+.editor-zone-header__delete:focus-visible {
+  border-color: color-mix(in srgb, var(--color-error) 35%, transparent);
+  color: var(--color-error);
 }
 
 .editor-zone-header__add-form {

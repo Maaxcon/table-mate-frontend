@@ -31,7 +31,7 @@
   text-align: center;
   box-shadow:
     0 8px 18px color-mix(in srgb, var(--color-border-strong) 14%, transparent),
-    inset 0 1px 0 color-mix(in srgb, #fff 65%, transparent);
+    inset 0 1px 0 color-mix(in srgb, var(--color-bg-page) 65%, transparent);
   transition:
     transform 0.15s ease,
     box-shadow 0.15s ease,
@@ -58,7 +58,7 @@
   transform: translateY(-2px);
   box-shadow:
     0 12px 24px color-mix(in srgb, var(--color-border-strong) 18%, transparent),
-    inset 0 1px 0 color-mix(in srgb, #fff 65%, transparent);
+    inset 0 1px 0 color-mix(in srgb, var(--color-bg-page) 65%, transparent);
 }
 
 .editor-block--table-square {
@@ -75,7 +75,7 @@
   outline-offset: 4px;
   box-shadow:
     0 14px 30px color-mix(in srgb, var(--color-primary) 25%, transparent),
-    inset 0 1px 0 color-mix(in srgb, #fff 75%, transparent);
+    inset 0 1px 0 color-mix(in srgb, var(--color-bg-page) 75%, transparent);
 }
 
 .editor-block__label {
@@ -149,7 +149,7 @@
   cursor: pointer;
   box-shadow:
     0 8px 16px color-mix(in srgb, var(--color-border-strong) 12%, transparent),
-    inset 0 1px 0 color-mix(in srgb, #fff 60%, transparent);
+    inset 0 1px 0 color-mix(in srgb, var(--color-bg-page) 60%, transparent);
   transition:
     transform 0.15s ease,
     box-shadow 0.15s ease,
@@ -161,7 +161,7 @@
   border-color: color-mix(in srgb, var(--color-primary) 45%, transparent);
   box-shadow:
     0 12px 22px color-mix(in srgb, var(--color-primary) 18%, transparent),
-    inset 0 1px 0 color-mix(in srgb, #fff 70%, transparent);
+    inset 0 1px 0 color-mix(in srgb, var(--color-bg-page) 70%, transparent);
 }
 
 .editor-block__portal-label {
