@@ -72,15 +72,17 @@ export function FloorTile({
       )}
 
       <span className="c-floor-plan__surface">
-        <span className={`c-floor-plan__table-badge c-floor-plan__table-badge--${tile.tone}`}>
-          {tile.label}
-        </span>
+        <span className="c-floor-plan__content">
+          <span className={`c-floor-plan__table-badge c-floor-plan__table-badge--${tile.tone}`}>
+            {tile.label}
+          </span>
 
-        <span className="c-floor-plan__table-number">{tile.publicNumber}</span>
+          <span className="c-floor-plan__table-number">{tile.publicNumber}</span>
 
-        <span className="c-floor-plan__table-capacity">
-          <LuUsers aria-hidden="true" />
-          {tile.capacity}
+          <span className="c-floor-plan__table-capacity">
+            <LuUsers aria-hidden="true" />
+            {tile.capacity}
+          </span>
         </span>
       </span>
     </button>

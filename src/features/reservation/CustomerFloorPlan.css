@@ -600,13 +600,16 @@
   color: var(--color-text-primary);
 }
 
-/* Keep the number / status label / seats chip upright when the table rotates. */
-.c-floor-plan__table--square .c-floor-plan__table-badge,
-.c-floor-plan__table--square .c-floor-plan__table-number,
-.c-floor-plan__table--square .c-floor-plan__table-capacity,
-.c-floor-plan__table--round .c-floor-plan__table-badge,
-.c-floor-plan__table--round .c-floor-plan__table-number,
-.c-floor-plan__table--round .c-floor-plan__table-capacity {
+/* Keep the badge / number / seats chip upright AND centered as one group when
+   the table rotates: counter-rotate the whole content block, not each label.
+   Rotating labels individually kept them upright but left them scattered around
+   the rotated column instead of stacked in the middle. */
+.c-floor-plan__content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: inherit;
   transform: rotate(calc(-1 * var(--rot, 0deg)));
 }
 
