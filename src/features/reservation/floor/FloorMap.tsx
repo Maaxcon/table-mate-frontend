@@ -121,7 +121,7 @@ export function FloorMap({
           type="button"
           className="c-floor-plan__zoom-btn"
           onClick={zoomIn}
-          aria-label="Збільшити"
+          aria-label={bookStrings.floorPlan.zoomIn}
         >
           <LuPlus aria-hidden="true" />
         </button>
@@ -129,7 +129,7 @@ export function FloorMap({
           type="button"
           className="c-floor-plan__zoom-btn"
           onClick={zoomOut}
-          aria-label="Зменшити"
+          aria-label={bookStrings.floorPlan.zoomOut}
         >
           <LuMinus aria-hidden="true" />
         </button>
@@ -137,7 +137,7 @@ export function FloorMap({
           type="button"
           className="c-floor-plan__zoom-btn"
           onClick={zoomFit}
-          aria-label="Показати весь зал"
+          aria-label={bookStrings.floorPlan.zoomFit}
         >
           <LuMaximize aria-hidden="true" />
         </button>

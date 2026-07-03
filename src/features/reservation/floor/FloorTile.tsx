@@ -64,7 +64,7 @@ export function FloorTile({
       <TableSeats capacity={tile.capacity} shape={tile.shape} size={tile.w} />
 
       {tile.perfect && (
-        <span className="c-floor-plan__perfect" title={`Саме на ${guests}`}>
+        <span className="c-floor-plan__perfect" title={bookStrings.floorPlan.perfectFit(guests)}>
           ★ {guests}
         </span>
       )}

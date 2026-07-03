@@ -49,6 +49,11 @@ export const bookStrings = {
     noFree: "Немає вільних столів на цей час",
     showAll: "Показати всі",
     statusSmall: "Замало місць",
+    freeCount: (time?: string | null) => (time ? `вільно на ${time}` : "вільно"),
+    perfectFit: (guests: number) => `Саме на ${guests}`,
+    zoomIn: "Збільшити",
+    zoomOut: "Зменшити",
+    zoomFit: "Показати весь зал",
     slot: {
       title: "Коли вам зручно?",
       hint: "Оберіть дату, час і кількість гостей — у плані залу підсвітяться столи, вільні саме на цей час.",

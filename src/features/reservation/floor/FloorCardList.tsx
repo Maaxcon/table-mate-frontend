@@ -87,7 +87,10 @@ export function FloorCardList({
                 )}
               >
                 {perfect && (
-                  <span className="c-floor-plan__card-perfect" title={`Саме на ${guests}`}>
+                  <span
+                    className="c-floor-plan__card-perfect"
+                    title={bookStrings.floorPlan.perfectFit(guests)}
+                  >
                     ★ {guests}
                   </span>
                 )}

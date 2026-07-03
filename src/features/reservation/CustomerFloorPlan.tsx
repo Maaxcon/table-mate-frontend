@@ -275,8 +275,8 @@ export function CustomerFloorPlan({
             </button>
           )}
           <span className="c-floor-plan__count">
-            <span className="c-floor-plan__count-num">{freeCount}</span>
-            вільно{slotTime ? ` на ${slotTime}` : ""}
+            <span className="c-floor-plan__count-num">{freeCount}</span>{" "}
+            {bookStrings.floorPlan.freeCount(slotTime)}
           </span>
         </div>
       </div>
