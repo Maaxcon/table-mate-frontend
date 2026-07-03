@@ -1,18 +1,8 @@
 .editor-page {
+  --editor-page-padding: clamp(16px, 2vw, 32px);
   min-height: calc(100vh - 56px);
-  padding: clamp(16px, 2vw, 32px);
-  background:
-    radial-gradient(
-      circle at 80% -20%,
-      color-mix(in srgb, var(--color-primary) 18%, transparent),
-      transparent 55%
-    ),
-    radial-gradient(
-      circle at 0% 0%,
-      color-mix(in srgb, var(--color-success) 12%, transparent),
-      transparent 50%
-    ),
-    var(--color-bg-page);
+  padding: var(--editor-page-padding);
+  background: var(--color-bg-secondary);
   display: flex;
   flex-direction: column;
   gap: clamp(12px, 2vw, 24px);
@@ -22,28 +12,77 @@
 .editor-topbar {
   display: flex;
   align-items: center;
-  gap: clamp(12px, 2vw, 20px);
-  padding: 12px clamp(14px, 2vw, 20px);
-  border-radius: 16px;
-  border: 1px solid var(--color-border-default);
-  background: color-mix(in srgb, var(--color-bg-surface) 94%, transparent);
-  box-shadow: 0 10px 24px color-mix(in srgb, var(--color-border-strong) 10%, transparent);
+  justify-content: space-between;
+  gap: clamp(12px, 2vw, 24px);
   flex-wrap: wrap;
+  padding: 14px clamp(20px, 4vw, 48px);
+  background: var(--color-bg-surface);
+  border-bottom: 1px solid var(--color-border-light);
+  box-shadow: 0 12px 30px color-mix(in srgb, var(--color-border-strong) 10%, transparent);
+  margin-top: calc(var(--editor-page-padding) * -1);
+  margin-left: calc(var(--editor-page-padding) * -1);
+  margin-right: calc(var(--editor-page-padding) * -1);
+  margin-bottom: 0;
+}
+
+.editor-topbar__left,
+.editor-topbar__right {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+  min-width: 0;
 }
 
 .editor-topbar__brand {
-  flex: 1 1 260px;
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  align-items: center;
+  gap: 14px;
 }
 
-.editor-topbar__eyebrow {
-  margin: 0;
-  font-size: 0.65rem;
-  letter-spacing: 0.28em;
-  text-transform: uppercase;
+.editor-topbar__logo {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--color-primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 12px 28px color-mix(in srgb, var(--color-primary) 32%, transparent);
+}
+
+.editor-topbar__logo-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 4px;
+  background: #fff;
+}
+
+.editor-topbar__brand-copy {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+}
+
+.editor-topbar__brand-title {
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: var(--color-text-primary);
+}
+
+.editor-topbar__brand-subtitle {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
   color: var(--color-text-secondary);
+}
+
+.editor-topbar__details {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 200px;
 }
 
 .editor-topbar__title-row {
@@ -55,14 +94,14 @@
 
 .editor-topbar__title {
   margin: 0;
-  font-size: clamp(1.25rem, 2vw, 1.8rem);
+  font-size: clamp(1.15rem, 1.8vw, 1.6rem);
   letter-spacing: -0.01em;
   color: var(--color-text-primary);
 }
 
 .editor-topbar__badge {
   padding: 4px 12px;
-  border-radius: 12px;
+  border-radius: 999px;
   font-size: 0.65rem;
   font-weight: 700;
   letter-spacing: 0.15em;
@@ -86,42 +125,61 @@
   color: var(--color-text-secondary);
 }
 
-.editor-topbar__stats {
+.editor-topbar__metrics {
   display: flex;
-  gap: 10px;
+  align-items: stretch;
+  gap: 16px;
   flex-wrap: wrap;
 }
 
-.editor-stat {
-  min-width: 120px;
-  padding: 10px 14px;
-  border-radius: 14px;
-  border: 1px solid color-mix(in srgb, var(--color-border-default) 70%, transparent);
-  background: color-mix(in srgb, var(--color-bg-surface) 96%, transparent);
+.editor-metric {
+  min-width: 110px;
   display: flex;
   flex-direction: column;
   gap: 2px;
 }
 
-.editor-stat__label {
-  font-size: 0.65rem;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
+.editor-metric__label {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
   color: var(--color-text-secondary);
 }
 
-.editor-stat__value {
-  font-size: 1.4rem;
+.editor-metric__value {
+  font-size: 1.35rem;
   font-weight: 800;
   color: var(--color-text-primary);
   line-height: 1.1;
 }
 
-.editor-stat__hint {
-  font-size: 0.65rem;
+.editor-metric__hint {
+  font-size: 0.6rem;
+  font-weight: 700;
   letter-spacing: 0.18em;
-  text-transform: uppercase;
   color: var(--color-text-muted);
+}
+
+.editor-topbar__time {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+  align-items: flex-end;
+}
+
+.editor-topbar__clock {
+  font-size: 1.4rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: var(--color-text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.editor-topbar__clock-label {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: var(--color-text-secondary);
 }
 
 .editor-topbar__connection {
@@ -134,6 +192,17 @@
 .editor-topbar__connection--online {
   border-color: var(--color-success);
   background: var(--color-success);
+}
+
+@media (max-width: 720px) {
+  .editor-topbar__left,
+  .editor-topbar__right {
+    align-items: flex-start;
+  }
+
+  .editor-topbar__time {
+    align-items: flex-start;
+  }
 }
 
 .editor-page__panel {

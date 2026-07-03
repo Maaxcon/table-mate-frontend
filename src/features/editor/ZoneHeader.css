@@ -30,9 +30,9 @@
 }
 
 .editor-zone-header__tab--active {
-  background: color-mix(in srgb, var(--color-primary) 18%, var(--color-bg-surface));
-  border-color: color-mix(in srgb, var(--color-primary) 45%, transparent);
-  color: var(--color-bg-page);
+  background: var(--color-text-primary);
+  border-color: var(--color-text-primary);
+  color: var(--color-bg-surface);
 }
 
 .editor-zone-header__tab--add {

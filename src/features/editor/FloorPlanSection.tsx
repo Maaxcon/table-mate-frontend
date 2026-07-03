@@ -27,6 +27,24 @@ import "./FloorPlanSection.css"
 import { useToast } from "@/features/admin/hooks/toastContext"
 import { useHallSubscription } from "@/features/waiter-order-view/hooks/useHallSubscription"
 
+function getTimeString(): string {
+  const now = new Date()
+  const hours = now.getHours().toString().padStart(2, "0")
+  const minutes = now.getMinutes().toString().padStart(2, "0")
+  return `${hours}:${minutes}`
+}
+
+function useCurrentTime(): string {
+  const [time, setTime] = useState(getTimeString)
+
+  useEffect(() => {
+    const intervalId = setInterval(() => setTime(getTimeString()), 10_000)
+    return () => clearInterval(intervalId)
+  }, [])
+
+  return time
+}
+
 function FloorPlanSection() {
   const {
     entities,
@@ -216,6 +234,8 @@ function FloorPlanSection() {
     onZoneDeleted: refreshZones,
   })
 
+  const currentTime = useCurrentTime()
+
   const handleAddZone = useCallback(
     (name: string) => {
       const clientId = crypto.randomUUID()
@@ -379,47 +399,63 @@ function FloorPlanSection() {
 
   return (
     <div className="editor-page">
-      <header className="editor-topbar">
-        <div className="editor-topbar__brand">
-          <span className="editor-topbar__eyebrow">Admin · Floor plan</span>
-          <div className="editor-topbar__title-row">
-            <h1 className="editor-topbar__title">Floor plan designer</h1>
-            <span
-              className={`editor-topbar__badge ${dirty ? "editor-topbar__badge--dirty" : "editor-topbar__badge--clean"}`}
-            >
-              {dirty ? "Unsaved" : "Synced"}
+      <header className="editor-topbar" role="banner">
+        <div className="editor-topbar__left">
+          <div className="editor-topbar__brand">
+            <span className="editor-topbar__logo" aria-hidden="true">
+              <span className="editor-topbar__logo-dot" />
             </span>
+            <div className="editor-topbar__brand-copy">
+              <span className="editor-topbar__brand-title">FLOOR PLAN</span>
+              <span className="editor-topbar__brand-subtitle">ADMIN · LAYOUT</span>
+            </div>
           </div>
-          <p className="editor-topbar__subtitle">
-            {selectedZone
-              ? `Editing ${selectedZone.name} — adjust seating, portals, and traffic edges before publishing.`
-              : "Create a zone to start mapping the dining room."}
-          </p>
-        </div>
-        <div className="editor-topbar__stats">
-          <div className="editor-stat">
-            <span className="editor-stat__label">Zones</span>
-            <span className="editor-stat__value">{allZones.length}</span>
-            <span className="editor-stat__hint">active</span>
-          </div>
-          <div className="editor-stat">
-            <span className="editor-stat__label">Tables</span>
-            <span className="editor-stat__value">{selectedZone ? zoneTables : "—"}</span>
-            <span className="editor-stat__hint">
-              {selectedZone ? `${zonePortals} portals` : "select zone"}
-            </span>
-          </div>
-          <div className="editor-stat">
-            <span className="editor-stat__label">Grid</span>
-            <span className="editor-stat__value">{selectedZone ? canvasSizeLabel : "—"}</span>
-            <span className="editor-stat__hint">cols × rows</span>
+          <div className="editor-topbar__details">
+            <div className="editor-topbar__title-row">
+              <h1 className="editor-topbar__title">Floor plan designer</h1>
+              <span
+                className={`editor-topbar__badge ${dirty ? "editor-topbar__badge--dirty" : "editor-topbar__badge--clean"}`}
+              >
+                {dirty ? "Unsaved" : "Synced"}
+              </span>
+            </div>
+            <p className="editor-topbar__subtitle">
+              {selectedZone
+                ? `Editing ${selectedZone.name} — adjust seating, portals, and traffic edges before publishing.`
+                : "Create a zone to start mapping the dining room."}
+            </p>
           </div>
         </div>
-        <span
-          className={`editor-topbar__connection ${isConnected ? "editor-topbar__connection--online" : ""}`}
-          role="status"
-          aria-label={isConnected ? "Live updates connected" : "Live updates offline"}
-        />
+        <div className="editor-topbar__right">
+          <div className="editor-topbar__metrics" role="group" aria-label="Layout metrics">
+            <div className="editor-metric">
+              <span className="editor-metric__label">ZONES</span>
+              <span className="editor-metric__value">{allZones.length}</span>
+              <span className="editor-metric__hint">ACTIVE</span>
+            </div>
+            <div className="editor-metric">
+              <span className="editor-metric__label">TABLES</span>
+              <span className="editor-metric__value">{selectedZone ? zoneTables : "—"}</span>
+              <span className="editor-metric__hint">
+                {selectedZone ? `${zonePortals} portals` : "SELECT ZONE"}
+              </span>
+            </div>
+            <div className="editor-metric">
+              <span className="editor-metric__label">GRID</span>
+              <span className="editor-metric__value">{selectedZone ? canvasSizeLabel : "—"}</span>
+              <span className="editor-metric__hint">COLS × ROWS</span>
+            </div>
+          </div>
+          <div className="editor-topbar__time" aria-label="Local time">
+            <span className="editor-topbar__clock">{currentTime}</span>
+            <span className="editor-topbar__clock-label">LOCAL TIME</span>
+          </div>
+          <span
+            className={`editor-topbar__connection ${isConnected ? "editor-topbar__connection--online" : ""}`}
+            role="status"
+            aria-label={isConnected ? "Live updates connected" : "Live updates offline"}
+          />
+        </div>
       </header>
 
       <section className="editor-page__panel">

@@ -46,9 +46,9 @@
 }
 
 .editor-toolbar__btn--active {
-  background: color-mix(in srgb, var(--color-primary) 18%, var(--color-bg-surface));
-  border-color: color-mix(in srgb, var(--color-primary) 40%, transparent);
-  color: var(--color-bg-page);
+  background: var(--color-text-primary);
+  border-color: var(--color-text-primary);
+  color: var(--color-bg-surface);
 }
 
 .editor-toolbar__btn:disabled {
