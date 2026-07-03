@@ -18,7 +18,7 @@
   position: relative;
   background: color-mix(in srgb, var(--color-bg-surface) 96%, transparent);
   box-shadow: inset 0 1px 3px color-mix(in srgb, var(--color-border-strong) 12%, transparent);
-  overflow: hidden;
+  overflow: visible;
 }
 
 .editor-canvas__content {
