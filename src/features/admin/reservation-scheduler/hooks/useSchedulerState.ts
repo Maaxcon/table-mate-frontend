@@ -66,8 +66,13 @@ function reducer(state: SchedulerState, action: Action): SchedulerState {
   switch (action.type) {
     case "SET_DATES":
       return { ...state, dates: action.dates }
-    case "SET_RESERVATIONS":
-      return { ...state, reservations: action.reservations }
+    case "SET_RESERVATIONS": {
+      let updated = action.reservations
+      for (const change of state.pendingChanges) {
+        updated = applyChange(updated, change)
+      }
+      return { ...state, reservations: updated }
+    }
     case "MOVE_RESERVATION": {
       const existing = state.reservations.find((r) => r.public_id === action.reservationId)
       if (!existing) return state
