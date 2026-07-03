@@ -150,9 +150,32 @@
   align-items: center;
   justify-content: center;
   gap: 4px;
-  border: 2px solid var(--color-border-strong);
-  background: var(--color-bg-surface);
+  padding: 6px 10px;
+  border-radius: 18px;
+  border: 1px solid color-mix(in srgb, var(--color-text-primary) 35%, transparent);
+  background:
+    linear-gradient(
+      145deg,
+      color-mix(in srgb, var(--color-bg-surface) 95%, transparent),
+      var(--color-bg-page)
+    ),
+    var(--color-bg-surface);
+  box-shadow:
+    0 8px 16px color-mix(in srgb, var(--color-border-strong) 12%, transparent),
+    inset 0 1px 0 color-mix(in srgb, #fff 60%, transparent);
   cursor: pointer;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.fp-block--portal:hover {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--color-primary) 45%, transparent);
+  box-shadow:
+    0 12px 22px color-mix(in srgb, var(--color-primary) 18%, transparent),
+    inset 0 1px 0 color-mix(in srgb, #fff 70%, transparent);
 }
 
 .fp-block--portal-link {
@@ -166,6 +189,8 @@
   letter-spacing: 0.18em;
   color: var(--color-text-primary);
   pointer-events: none;
+  text-align: center;
+  display: block;
 }
 
 .fp-block__portal-arrow {
