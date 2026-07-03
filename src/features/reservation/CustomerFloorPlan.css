@@ -718,65 +718,82 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  padding: 11px 2px 12px;
-  background: var(--color-bg-frosted, color-mix(in srgb, var(--color-bg-surface) 88%, transparent));
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--color-border-default);
+  gap: 10px;
+  padding: 8px 8px 8px 14px;
+  border-radius: 16px;
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-default);
+  box-shadow: 0 8px 22px -14px rgb(0 0 0 / 30%);
 }
 
 .c-floor-plan__zone-bar-info {
   display: flex;
-  align-items: baseline;
-  gap: 10px;
+  align-items: center;
+  gap: 9px;
   min-width: 0;
 }
 
 .c-floor-plan__zone-bar-name {
-  font-size: 1.05rem;
+  font-size: 1.02rem;
   font-weight: 800;
+  letter-spacing: -0.01em;
   color: var(--color-text-primary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
+/* Free count as a soft green badge with a live dot — reads as availability. */
 .c-floor-plan__zone-bar-count {
   flex-shrink: 0;
-  font-size: 0.8rem;
-  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px 3px 7px;
+  border-radius: 100px;
+  background: color-mix(in srgb, var(--color-success-bg) 60%, var(--color-bg-surface));
   color: var(--color-success-text);
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1;
 }
 
-/* Jump-to-map button living in the pinned bar. */
+.c-floor-plan__zone-bar-count::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-success, currentColor);
+}
+
+/* Jump-to-map button: a light, tinted pill so the bar reads clean, not heavy. */
 .c-floor-plan__map-btn {
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  padding: 9px 16px;
-  border: none;
+  gap: 6px;
+  padding: 8px 15px;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 24%, transparent);
   border-radius: 100px;
-  background: var(--color-primary);
-  color: var(--color-bg-surface);
-  font-size: 0.85rem;
+  background: color-mix(in srgb, var(--color-primary) 9%, var(--color-bg-surface));
+  color: var(--color-primary);
+  font-size: 0.82rem;
   font-weight: 700;
   font-family: inherit;
   cursor: pointer;
-  box-shadow: 0 4px 12px -4px color-mix(in srgb, var(--color-primary) 55%, transparent);
   transition:
-    transform 140ms ease,
-    box-shadow 140ms ease;
+    background 140ms ease,
+    transform 140ms ease;
 }
 
 .c-floor-plan__map-btn:active {
   transform: translateY(1px);
+  background: color-mix(in srgb, var(--color-primary) 16%, var(--color-bg-surface));
 }
 
 .c-floor-plan__map-btn svg {
-  width: 17px;
-  height: 17px;
+  width: 16px;
+  height: 16px;
 }
 
 /* Full-screen sheet that hosts the spatial map on phones. */
