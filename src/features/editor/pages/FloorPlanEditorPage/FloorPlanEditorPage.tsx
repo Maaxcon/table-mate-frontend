@@ -114,6 +114,22 @@ function FloorPlanEditorPage() {
     [allZones, selectedZoneId],
   )
 
+  const layoutCanvasCols = useMemo(() => {
+    if (allZones.length === 0) return DEFAULT_CANVAS_COLS
+    return allZones.reduce(
+      (max, zone) => Math.max(max, zone.canvas_cols ?? DEFAULT_CANVAS_COLS),
+      DEFAULT_CANVAS_COLS,
+    )
+  }, [allZones])
+
+  const layoutCanvasRows = useMemo(() => {
+    if (allZones.length === 0) return DEFAULT_CANVAS_ROWS
+    return allZones.reduce(
+      (max, zone) => Math.max(max, zone.canvas_rows ?? DEFAULT_CANVAS_ROWS),
+      DEFAULT_CANVAS_ROWS,
+    )
+  }, [allZones])
+
   const edgeStyles = useMemo(
     () =>
       selectedZone?.edge_styles ?? {
@@ -305,7 +321,7 @@ function FloorPlanEditorPage() {
       canvasRows,
       pendingZones,
     }
-    publish(entities, deletedServerIds, canvasCols, canvasRows, pendingZones)
+    publish(entities, deletedServerIds, layoutCanvasCols, layoutCanvasRows, pendingZones)
   }, [
     publish,
     entities,
@@ -314,8 +330,8 @@ function FloorPlanEditorPage() {
     dirty,
     activeTool,
     deletedServerIds,
-    canvasCols,
-    canvasRows,
+    layoutCanvasCols,
+    layoutCanvasRows,
     pendingZones,
   ])
 

@@ -16,7 +16,6 @@
 
 .editor-canvas {
   position: relative;
-  border-radius: 18px;
   background: color-mix(in srgb, var(--color-bg-surface) 96%, transparent);
   box-shadow: inset 0 1px 3px color-mix(in srgb, var(--color-border-strong) 12%, transparent);
   overflow: hidden;
