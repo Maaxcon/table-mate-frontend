@@ -3,6 +3,7 @@ import { useAppSelector } from "@/store/hooks"
 import { fetchTables } from "@/features/reservation/api"
 import { fetchReservationsForRange } from "../api"
 import type { SchedulerReservation, SchedulerTable } from "../types"
+import { addDays } from "../types"
 
 interface UseSchedulerDataReturn {
   tables: SchedulerTable[]
@@ -10,12 +11,6 @@ interface UseSchedulerDataReturn {
   loading: boolean
   error: string | null
   refetch: () => void
-}
-
-function addDays(dateStr: string, n: number): string {
-  const d = new Date(dateStr + "T00:00:00")
-  d.setDate(d.getDate() + n)
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
 }
 
 export function useSchedulerData(dates: string[]): UseSchedulerDataReturn {
@@ -36,8 +31,8 @@ export function useSchedulerData(dates: string[]): UseSchedulerDataReturn {
     async function load() {
       setLoading(true)
       try {
-        const dateFrom = addDays(dates[0], 0)
-        const dateTo = addDays(dates[dates.length - 1], 0)
+        const dateFrom = addDays(dates[0], -1)
+        const dateTo = addDays(dates[dates.length - 1], 1)
         const [tablesData, reservationsData] = await Promise.all([
           fetchTables(restaurantId!),
           fetchReservationsForRange(dateFrom, dateTo),
