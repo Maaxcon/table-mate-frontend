@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { DndContext, DragOverlay, PointerSensor, useSensor, useSensors } from "@dnd-kit/core"
-import type { DragStartEvent } from "@dnd-kit/core"
+import type { DragMoveEvent, DragStartEvent } from "@dnd-kit/core"
 import { LuChevronLeft, LuChevronRight } from "react-icons/lu"
 import { useAppSelector } from "@/store/hooks"
 import { useToast } from "@/features/admin/hooks/toastContext"
@@ -46,17 +46,11 @@ function computeDayHourRange(
   const closeMin = toMinutes(dayHours.close)
   if (openMin == null || closeMin == null) return { hourStart: 8, hourEnd: 23 }
 
-  const shiftDuration = closeMin > openMin ? closeMin - openMin : closeMin + 24 * 60 - openMin
-  const nonWorking = 24 * 60 - shiftDuration
-  const padding = nonWorking / 2
+  const hourStart = Math.floor(openMin / 60)
+  const hourEnd =
+    closeMin > openMin ? Math.ceil(closeMin / 60) : Math.ceil((closeMin + 24 * 60) / 60)
 
-  const paddedOpen = openMin - padding
-  const paddedClose = (closeMin > openMin ? closeMin : closeMin + 24 * 60) + padding
-
-  return {
-    hourStart: Math.floor((((paddedOpen % (24 * 60)) + 24 * 60) % (24 * 60)) / 60),
-    hourEnd: Math.ceil(paddedClose / 60),
-  }
+  return { hourStart, hourEnd }
 }
 
 function getDayWorkingBounds(
@@ -77,6 +71,74 @@ function getDayWorkingBounds(
     start: Math.floor(openMin / 60),
     end: Math.ceil((closeMin > openMin ? closeMin : closeMin + 24 * 60) / 60),
   }
+}
+
+function getDayExtendedBounds(
+  date: string,
+  workingHours: Record<string, WorkingHoursDay> | null,
+): { minHour: number; maxHour: number } | null {
+  if (!workingHours) return null
+  const d = new Date(date + "T00:00:00")
+  const dayKey = DAY_KEYS[d.getDay()]
+  const dayHours = workingHours[dayKey]
+  if (!dayHours) return null
+
+  const openMin = toMinutes(dayHours.open)
+  const closeMin = toMinutes(dayHours.close)
+  if (openMin == null || closeMin == null) return null
+
+  const prevDayKey = DAY_KEYS[(d.getDay() + 6) % 7]
+  const nextDayKey = DAY_KEYS[(d.getDay() + 1) % 7]
+  const prevHours = workingHours[prevDayKey]
+  const nextHours = workingHours[nextDayKey]
+
+  const prevClose = prevHours ? toMinutes(prevHours.close) : null
+  const nextOpen = nextHours ? toMinutes(nextHours.open) : null
+
+  const thisOpen = openMin
+
+  let minHour = 0
+  if (prevClose != null) {
+    const prevCloseAdjusted = prevClose <= thisOpen ? prevClose : prevClose - 24 * 60
+    minHour = Math.floor(prevCloseAdjusted / 60)
+  }
+
+  let maxHour = 24
+  if (nextOpen != null) {
+    const nextOpenAdjusted = nextOpen + 24 * 60
+    maxHour = Math.ceil(nextOpenAdjusted / 60)
+  }
+
+  return { minHour, maxHour }
+}
+
+function isCrossDayReservation(
+  resStartAt: string,
+  resEndAt: string,
+  date: string,
+  workingHours: Record<string, WorkingHoursDay> | null,
+): "prev" | "next" | null {
+  const resDate = isoToDateKey(resStartAt)
+  if (resDate === date) return null
+  const diff = Math.round(
+    (new Date(resDate + "T00:00:00").getTime() - new Date(date + "T00:00:00").getTime()) / 86400000,
+  )
+  if (Math.abs(diff) !== 1) return null
+  if (diff === 1) {
+    const bounds = getDayExtendedBounds(date, workingHours)
+    if (!bounds) return null
+    const resD = new Date(resStartAt)
+    const resMinutes = 24 * 60 + resD.getHours() * 60 + resD.getMinutes()
+    return resMinutes <= bounds.maxHour * 60 ? "next" : null
+  }
+  if (isoToDateKey(resEndAt) !== date) return null
+  const endD = new Date(resEndAt)
+  const endMinutes = endD.getHours() * 60 + endD.getMinutes()
+  const dayKey = DAY_KEYS[new Date(date + "T00:00:00").getDay()]
+  const dayHours = workingHours?.[dayKey]
+  if (!dayHours) return null
+  const openMinutes = toMinutes(dayHours.open)
+  return endMinutes < openMinutes ? "prev" : null
 }
 
 function formatDateKey(d: Date): string {
@@ -123,24 +185,49 @@ export function ReservationScheduler() {
 
   const [activeDragId, setActiveDragId] = useState<string | null>(null)
   const [activeDragDate, setActiveDragDate] = useState<string | null>(null)
+  const [dragCrossedBoundary, setDragCrossedBoundary] = useState(false)
 
-  const dayRanges = useMemo(() => {
+  const { dayRanges, crossDayInfoByDate } = useMemo(() => {
     const ranges: Record<string, { hourStart: number; hourEnd: number }> = {}
+    const crossInfo: Record<string, Record<string, "prev" | "next">> = {}
 
     for (const date of dates) {
+      crossInfo[date] = {}
       const dayRange = computeDayHourRange(date, workingHours)
+      const extendedBounds = getDayExtendedBounds(date, workingHours)
       let start = dayRange.hourStart
       let end = dayRange.hourEnd
 
       for (const r of state.reservations) {
-        if (isoToDateKey(r.start_at) !== date) continue
-        const s = new Date(r.start_at)
-        const e = new Date(r.end_at)
-        const startH = s.getHours() + s.getMinutes() / 60
-        let endH = e.getHours() + e.getMinutes() / 60
-        if (endH < startH) endH += 24
-        if (startH < start) start = Math.floor(startH)
-        if (endH > end) end = Math.ceil(endH)
+        const rDate = isoToDateKey(r.start_at)
+        if (rDate === date) {
+          const s = new Date(r.start_at)
+          const e = new Date(r.end_at)
+          const startH = s.getHours() + s.getMinutes() / 60
+          let endH = e.getHours() + e.getMinutes() / 60
+          if (endH < startH) endH += 24
+          if (startH < start) start = Math.floor(startH)
+          if (endH > end) end = Math.ceil(endH)
+        } else {
+          const crossDir = isCrossDayReservation(r.start_at, r.end_at, date, workingHours)
+          if (crossDir) {
+            crossInfo[date][r.public_id] = crossDir
+            if (crossDir === "next") {
+              const s = new Date(r.start_at)
+              const e = new Date(r.end_at)
+              const startH = 24 + s.getHours() + s.getMinutes() / 60
+              let endH = 24 + e.getHours() + e.getMinutes() / 60
+              if (endH < startH) endH += 24
+              if (startH < start) start = Math.floor(startH)
+              if (endH > end) end = Math.ceil(endH)
+            } else {
+              start = Math.min(start, extendedBounds ? extendedBounds.minHour : 0)
+              const e = new Date(r.end_at)
+              const endH = e.getHours() + e.getMinutes() / 60
+              if (endH > end) end = Math.ceil(endH)
+            }
+          }
+        }
       }
 
       for (const change of state.pendingChanges) {
@@ -154,33 +241,36 @@ export function ReservationScheduler() {
         if (endH > end) end = Math.ceil(endH)
       }
 
+      if (activeDragId && activeDragDate === date && dragCrossedBoundary) {
+        if (extendedBounds) {
+          ranges[date] = { hourStart: extendedBounds.minHour, hourEnd: extendedBounds.maxHour }
+        } else {
+          ranges[date] = { hourStart: Math.max(0, start - 1), hourEnd: end + 1 }
+        }
+        continue
+      }
+
+      if (extendedBounds) {
+        start = Math.max(start, extendedBounds.minHour)
+        end = Math.min(end, extendedBounds.maxHour)
+      }
+
       ranges[date] = {
-        hourStart: Math.max(0, start),
+        hourStart: Math.max(extendedBounds ? extendedBounds.minHour : 0, start),
         hourEnd: end,
       }
     }
 
-    if (activeDragId && activeDragDate && ranges[activeDragDate]) {
-      const r = ranges[activeDragDate]
-      const dragChange = state.pendingChanges.find(
-        (c) => c.reservation_id === activeDragId && c.new_date === activeDragDate,
-      )
-      if (dragChange) {
-        const [sh, sm] = dragChange.new_start_time.split(":").map(Number)
-        const [eh, em] = dragChange.new_end_time.split(":").map(Number)
-        const startH = sh + sm / 60
-        let endH = eh + em / 60
-        if (endH < startH) endH += 24
-        if (startH <= r.hourStart && r.hourStart > 0) {
-          ranges[activeDragDate] = { ...r, hourStart: Math.max(0, r.hourStart - 1) }
-        } else if (endH >= r.hourEnd) {
-          ranges[activeDragDate] = { ...r, hourEnd: r.hourEnd + 1 }
-        }
-      }
-    }
-
-    return ranges
-  }, [dates, workingHours, state.reservations, state.pendingChanges, activeDragId, activeDragDate])
+    return { dayRanges: ranges, crossDayInfoByDate: crossInfo }
+  }, [
+    dates,
+    workingHours,
+    state.reservations,
+    state.pendingChanges,
+    activeDragId,
+    activeDragDate,
+    dragCrossedBoundary,
+  ])
 
   const reservationsRef = useRef(state.reservations)
   const pendingChangesRef = useRef(state.pendingChanges)
@@ -351,6 +441,7 @@ export function ReservationScheduler() {
     (event: DragStartEvent) => {
       const dragId = String(event.active.id)
       setActiveDragId(dragId)
+      setDragCrossedBoundary(false)
       const reservation = state.reservations.find((r) => r.public_id === dragId)
       if (reservation) {
         setActiveDragDate(isoToDateKey(reservation.start_at))
@@ -366,18 +457,66 @@ export function ReservationScheduler() {
     dayRanges,
     slotMinutes: SLOT_MINUTES,
     restaurantTimezone,
-    onMove: moveReservation,
+    onMove: (
+      reservationId,
+      newTableId,
+      newTableNumber,
+      newDate,
+      newStartTime,
+      newEndTime,
+      crossMidnight,
+    ) =>
+      moveReservation(
+        reservationId,
+        newTableId,
+        newTableNumber,
+        newDate,
+        newStartTime,
+        newEndTime,
+        crossMidnight,
+      ),
     onConflict: (id: string, reason?: string) => {
       markConflict(id)
       toast.error(reason ?? "Cannot place reservation here")
     },
   })
 
+  const handleDragMove = useCallback(
+    (event: DragMoveEvent) => {
+      if (!activeDragDate || dragCrossedBoundary) return
+      const activeData = event.active.data.current as
+        | { reservationId: string; durationMinutes: number }
+        | undefined
+      if (!activeData) return
+      const over = event.over
+      if (!over) return
+
+      const dayRange = computeDayHourRange(activeDragDate, workingHours)
+      const { hourStart, hourEnd } = dayRange
+      const { durationMinutes } = activeData
+      const rect = over.rect
+      if (!rect) return
+      const blockLeft = event.active.rect.current?.translated?.left
+      if (blockLeft == null) return
+      const pointerX = blockLeft - rect.left
+      const totalMinutes = (hourEnd - hourStart) * 60
+      const minuteOffset =
+        Math.round(((pointerX / rect.width) * totalMinutes) / SLOT_MINUTES) * SLOT_MINUTES
+      const rawMinute = hourStart * 60 + minuteOffset
+
+      if (rawMinute < hourStart * 60 || rawMinute + durationMinutes > hourEnd * 60) {
+        setDragCrossedBoundary(true)
+      }
+    },
+    [activeDragDate, dragCrossedBoundary, workingHours],
+  )
+
   const handleDragEndWithClear = useCallback(
     (args: Parameters<typeof handleDragEnd>[0]) => {
       handleDragEnd(args)
       setActiveDragId(null)
       setActiveDragDate(null)
+      setDragCrossedBoundary(false)
     },
     [handleDragEnd],
   )
@@ -415,10 +554,7 @@ export function ReservationScheduler() {
         const dMinute = Math.round(((dx / rowWidth) * totalMinutes) / SLOT_MINUTES) * SLOT_MINUTES
 
         const totalMin = startMinutes + dMinute
-        const clamped = Math.max(
-          dayRange.hourStart * 60,
-          Math.min(totalMin, dayRange.hourEnd * 60 - SLOT_MINUTES),
-        )
+        const clamped = Math.max(dayRange.hourStart * 60, totalMin)
 
         const currentRes = reservationsRef.current
         const currentChanges = pendingChangesRef.current
@@ -435,7 +571,7 @@ export function ReservationScheduler() {
           effectiveClamped = Math.max(clamped, nowMinutes + 15)
         }
 
-        const ehh = String(Math.floor(effectiveClamped / 60) % 24).padStart(2, "0")
+        const ehh = String(Math.floor(effectiveClamped / 60)).padStart(2, "0")
         const emm = String(effectiveClamped % 60).padStart(2, "0")
 
         const proposed = {
@@ -511,7 +647,7 @@ export function ReservationScheduler() {
       const payload = {
         changes: state.pendingChanges.map((c) => {
           const utcStart = localToISOString(c.new_date, c.new_start_time)
-          const utcEnd = localToISOString(c.new_date, c.new_end_time)
+          const utcEnd = localToISOString(c.new_end_date ?? c.new_date, c.new_end_time)
           return {
             reservation_id: c.reservation_id,
             new_table_id: c.new_table_id,
@@ -616,6 +752,7 @@ export function ReservationScheduler() {
         <DndContext
           sensors={sensors}
           onDragStart={handleDragStart}
+          onDragMove={handleDragMove}
           onDragEnd={handleDragEndWithClear}
         >
           <div className={`scheduler__grid scheduler__grid--${dates.length}`}>
@@ -627,6 +764,7 @@ export function ReservationScheduler() {
                   date={date}
                   tables={tables}
                   reservations={state.reservations}
+                  crossDayInfo={crossDayInfoByDate[date] ?? {}}
                   hourStart={dayRanges[date]?.hourStart ?? bounds.start}
                   hourEnd={dayRanges[date]?.hourEnd ?? bounds.end}
                   workingHourStart={bounds.start}
