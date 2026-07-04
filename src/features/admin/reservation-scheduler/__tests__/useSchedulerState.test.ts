@@ -16,6 +16,7 @@ type Action =
       newDate: string
       newStartTime: string
       newEndTime: string
+      crossMidnight?: boolean
     }
   | {
       type: "RESIZE_RESERVATION"
@@ -49,6 +50,17 @@ function localToISOString(dateStr: string, timeHHMM: string): string {
   return new Date(y, m - 1, d, h, min, 0, 0).toISOString()
 }
 
+function isoToDateKey(iso: string): string {
+  const d = new Date(iso)
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
+}
+
+function addDay(dateStr: string): string {
+  const d = new Date(dateStr + "T00:00:00")
+  d.setDate(d.getDate() + 1)
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
+}
+
 function applyChange(
   reservations: SchedulerReservation[],
   change: PendingChange,
@@ -60,7 +72,9 @@ function applyChange(
       table: change.new_table_id,
       table_number: change.new_table_number,
       start_at: localToISOString(change.new_date, change.new_start_time),
-      end_at: localToISOString(change.new_date, change.new_end_time),
+      end_at: change.new_end_date
+        ? localToISOString(change.new_end_date, change.new_end_time)
+        : localToISOString(change.new_date, change.new_end_time),
     }
   })
 }
@@ -81,7 +95,9 @@ function reducer(state: SchedulerState, action: Action): SchedulerState {
             customer_name: change.customer_name,
             guest_count: change.guest_count,
             start_at: localToISOString(change.new_date, change.new_start_time),
-            end_at: localToISOString(change.new_date, change.new_end_time),
+            end_at: change.new_end_date
+              ? localToISOString(change.new_end_date, change.new_end_time)
+              : localToISOString(change.new_date, change.new_end_time),
             opened_at: change.opened_at,
             status: change.status as SchedulerReservation["status"],
           })
@@ -112,6 +128,7 @@ function reducer(state: SchedulerState, action: Action): SchedulerState {
         new_date: action.newDate,
         new_start_time: action.newStartTime,
         new_end_time: action.newEndTime,
+        new_end_date: action.crossMidnight ? addDay(action.newDate) : undefined,
         customer_name: existingChange?.customer_name ?? existing.customer_name,
         guest_count: existingChange?.guest_count ?? existing.guest_count,
         opened_at: existingChange?.opened_at ?? existing.opened_at,
@@ -154,6 +171,7 @@ function reducer(state: SchedulerState, action: Action): SchedulerState {
 
       let newStart: Date
       let newEnd: Date
+      let newEndDate: string | undefined
 
       if (action.edge === "start") {
         newStart = new Date(
@@ -169,7 +187,20 @@ function reducer(state: SchedulerState, action: Action): SchedulerState {
         if (newStart >= oldEnd) return state
       } else {
         newStart = oldStart
-        newEnd = new Date(oldEnd.getFullYear(), oldEnd.getMonth(), oldEnd.getDate(), h, m, 0, 0)
+        if (h < oldStart.getHours() || (h === oldStart.getHours() && m < oldStart.getMinutes())) {
+          newEnd = new Date(
+            oldEnd.getFullYear(),
+            oldEnd.getMonth(),
+            oldEnd.getDate() + 1,
+            h,
+            m,
+            0,
+            0,
+          )
+          newEndDate = addDay(isoToDateKey(oldStart.toISOString()))
+        } else {
+          newEnd = new Date(oldEnd.getFullYear(), oldEnd.getMonth(), oldEnd.getDate(), h, m, 0, 0)
+        }
         if (newEnd <= oldStart) return state
       }
 
@@ -192,6 +223,7 @@ function reducer(state: SchedulerState, action: Action): SchedulerState {
         new_date: dateKey,
         new_start_time: startHHMM,
         new_end_time: endHHMM,
+        new_end_date: newEndDate,
         customer_name: existingChange?.customer_name ?? target.customer_name,
         guest_count: existingChange?.guest_count ?? target.guest_count,
         opened_at: existingChange?.opened_at ?? target.opened_at,
@@ -462,5 +494,76 @@ describe("scheduler reducer", () => {
     expect(second.pendingChanges).toHaveLength(1)
     expect(second.pendingChanges[0].original_table).toBe("table-1")
     expect(second.pendingChanges[0].new_table_id).toBe("table-3")
+  })
+
+  it("MOVE_RESERVATION with crossMidnight sets new_end_date", () => {
+    const next = reducer(baseState, {
+      type: "MOVE_RESERVATION",
+      reservationId: "res-1",
+      newTableId: "table-2",
+      newTableNumber: "T2",
+      newDate: "2026-07-02",
+      newStartTime: "22:00",
+      newEndTime: "02:00",
+      crossMidnight: true,
+    })
+    expect(next.pendingChanges).toHaveLength(1)
+    expect(next.pendingChanges[0].new_end_date).toBe("2026-07-03")
+    const updated = next.reservations.find((r) => r.public_id === "res-1")
+    expect(updated?.end_at).toBe("2026-07-03T02:00:00.000Z")
+  })
+
+  it("MOVE_RESERVATION without crossMidnight does not set new_end_date", () => {
+    const next = reducer(baseState, {
+      type: "MOVE_RESERVATION",
+      reservationId: "res-1",
+      newTableId: "table-2",
+      newTableNumber: "T2",
+      newDate: "2026-07-02",
+      newStartTime: "22:00",
+      newEndTime: "02:00",
+    })
+    expect(next.pendingChanges[0].new_end_date).toBeUndefined()
+    const updated = next.reservations.find((r) => r.public_id === "res-1")
+    expect(updated?.end_at).toBe("2026-07-02T02:00:00.000Z")
+  })
+
+  it("RESIZE_RESERVATION end edge across midnight sets new_end_date", () => {
+    const next = reducer(baseState, {
+      type: "RESIZE_RESERVATION",
+      reservationId: "res-1",
+      edge: "end",
+      newTime: "01:00",
+    })
+    expect(next.pendingChanges[0].new_end_date).toBe("2026-07-03")
+    expect(next.pendingChanges[0].new_end_time).toBe("01:00")
+  })
+
+  it("RESIZE_RESERVATION end edge same day does not set new_end_date", () => {
+    const next = reducer(baseState, {
+      type: "RESIZE_RESERVATION",
+      reservationId: "res-1",
+      edge: "end",
+      newTime: "21:00",
+    })
+    expect(next.pendingChanges[0].new_end_date).toBeUndefined()
+    expect(next.pendingChanges[0].new_end_time).toBe("21:00")
+  })
+
+  it("SET_RESERVATIONS injects virtual reservation with new_end_date", () => {
+    const moved = reducer(baseState, {
+      type: "MOVE_RESERVATION",
+      reservationId: "res-1",
+      newTableId: "table-2",
+      newTableNumber: "T2",
+      newDate: "2026-07-02",
+      newStartTime: "22:00",
+      newEndTime: "02:00",
+      crossMidnight: true,
+    })
+    const next = reducer(moved, { type: "SET_RESERVATIONS", reservations: [] })
+    expect(next.reservations).toHaveLength(1)
+    const virtual = next.reservations[0]
+    expect(virtual.end_at).toBe("2026-07-03T02:00:00.000Z")
   })
 })
