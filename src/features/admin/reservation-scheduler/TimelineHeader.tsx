@@ -26,7 +26,7 @@ export function TimelineHeader({
             key={h}
             className={`scheduler__timeline-header-hour${isExtended ? " scheduler__timeline-header-hour--extended" : ""}`}
           >
-            {String(h % 24).padStart(2, "0")}:00
+            {String(((h % 24) + 24) % 24).padStart(2, "0")}:00
           </div>
         )
       })}

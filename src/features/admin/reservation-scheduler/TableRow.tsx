@@ -6,6 +6,7 @@ interface TableRowProps {
   table: SchedulerTable
   date: string
   reservations: SchedulerReservation[]
+  crossDayInfo: Record<string, "prev" | "next">
   hourStart: number
   hourEnd: number
   workingHourStart: number
@@ -19,6 +20,7 @@ export function TableRow({
   table,
   date,
   reservations,
+  crossDayInfo,
   hourStart,
   hourEnd,
   workingHourStart,
@@ -67,6 +69,9 @@ export function TableRow({
             hourEnd={hourEnd}
             isConflict={r.public_id === conflictReservationId}
             isModified={modifiedIds.has(r.public_id)}
+            crossDay={crossDayInfo[r.public_id]}
+            workingHourStart={workingHourStart}
+            workingHourEnd={workingHourEnd}
             onResizeStart={onResizeStart}
           />
         ))}

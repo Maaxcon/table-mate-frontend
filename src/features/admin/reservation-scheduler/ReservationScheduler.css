@@ -388,6 +388,13 @@
   text-decoration: line-through;
 }
 
+.scheduler__block--cross-day {
+  opacity: 0.55;
+  cursor: default;
+  border: 1px dashed var(--color-text-muted, #9ca3af);
+  pointer-events: none;
+}
+
 .scheduler__stale-banner {
   display: flex;
   align-items: center;

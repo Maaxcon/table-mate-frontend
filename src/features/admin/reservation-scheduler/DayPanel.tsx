@@ -9,6 +9,7 @@ interface DayPanelProps {
   date: string
   tables: SchedulerTable[]
   reservations: SchedulerReservation[]
+  crossDayInfo: Record<string, "prev" | "next">
   hourStart: number
   hourEnd: number
   workingHourStart: number
@@ -26,6 +27,7 @@ export function DayPanel({
   date,
   tables,
   reservations,
+  crossDayInfo,
   hourStart,
   hourEnd,
   workingHourStart,
@@ -45,7 +47,9 @@ export function DayPanel({
     day: "numeric",
   })
 
-  const dateReservations = reservations.filter((r) => isoToDateKey(r.start_at) === date)
+  const dateReservations = reservations.filter(
+    (r) => isoToDateKey(r.start_at) === date || crossDayInfo[r.public_id] != null,
+  )
 
   return (
     <div className="scheduler__day-panel">
@@ -85,6 +89,7 @@ export function DayPanel({
             table={table}
             date={date}
             reservations={dateReservations.filter((r) => r.table === table.public_id)}
+            crossDayInfo={crossDayInfo}
             hourStart={hourStart}
             hourEnd={hourEnd}
             workingHourStart={workingHourStart}

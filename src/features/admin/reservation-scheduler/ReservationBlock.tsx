@@ -8,6 +8,9 @@ interface ReservationBlockProps {
   hourEnd: number
   isConflict: boolean
   isModified: boolean
+  crossDay?: "prev" | "next"
+  workingHourStart: number
+  workingHourEnd: number
   onResizeStart: (reservationId: string, edge: "start" | "end", e: React.MouseEvent) => void
 }
 
@@ -17,6 +20,8 @@ export function ReservationBlock({
   hourEnd,
   isConflict,
   isModified,
+  crossDay,
+  workingHourStart,
   onResizeStart,
 }: ReservationBlockProps) {
   const displayStart =
@@ -24,15 +29,28 @@ export function ReservationBlock({
       ? new Date(reservation.opened_at)
       : new Date(reservation.start_at)
   const end = new Date(reservation.end_at)
-  const startMinutes = displayStart.getHours() * 60 + displayStart.getMinutes()
-  const endRaw = end.getHours() * 60 + end.getMinutes()
-  const endMinutes = endRaw < startMinutes ? endRaw + 24 * 60 : endRaw
+  let startMinutes = displayStart.getHours() * 60 + displayStart.getMinutes()
+  let endRaw = end.getHours() * 60 + end.getMinutes()
+
+  if (crossDay === "next") {
+    startMinutes += 24 * 60
+    endRaw += 24 * 60
+  } else if (crossDay === "prev") {
+    startMinutes = 0
+  }
+
+  let endMinutes = endRaw < startMinutes ? endRaw + 24 * 60 : endRaw
+  if (crossDay === "prev") {
+    endMinutes = Math.min(endMinutes, workingHourStart * 60)
+  } else if (crossDay === "next") {
+    endMinutes = Math.min(endMinutes, hourEnd * 60)
+  }
   const totalMinutes = (hourEnd - hourStart) * 60
 
   const left = ((startMinutes - hourStart * 60) / totalMinutes) * 100
   const width = ((endMinutes - startMinutes) / totalMinutes) * 100
 
-  const dragDisabled = reservation.status === "completed"
+  const dragDisabled = reservation.status === "completed" || crossDay
 
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: reservation.public_id,
@@ -57,6 +75,7 @@ export function ReservationBlock({
     isModified && "scheduler__block--modified",
     reservation.status === "active" && "scheduler__block--active",
     reservation.status === "completed" && "scheduler__block--completed",
+    crossDay && "scheduler__block--cross-day",
   ]
     .filter(Boolean)
     .join(" ")
@@ -78,7 +97,7 @@ export function ReservationBlock({
       {...attributes}
       {...listeners}
     >
-      {reservation.status === "pending" && (
+      {reservation.status === "pending" && !crossDay && (
         <button
           type="button"
           data-resize-handle
@@ -99,7 +118,7 @@ export function ReservationBlock({
           {reservation.guest_count}p &middot; {durationLabel}
         </span>
       </div>
-      {reservation.status !== "completed" && (
+      {reservation.status !== "completed" && !crossDay && (
         <button
           type="button"
           data-resize-handle
