@@ -23,6 +23,7 @@ export interface PendingChange {
   new_date: string
   new_start_time: string
   new_end_time: string
+  new_end_date?: string
   customer_name: string
   guest_count: number
   opened_at: string | null
@@ -59,5 +60,11 @@ export type SchedulerTable = {
 
 export function isoToDateKey(iso: string): string {
   const d = new Date(iso)
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
+}
+
+export function addDays(dateStr: string, n: number): string {
+  const d = new Date(dateStr + "T00:00:00")
+  d.setDate(d.getDate() + n)
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
 }

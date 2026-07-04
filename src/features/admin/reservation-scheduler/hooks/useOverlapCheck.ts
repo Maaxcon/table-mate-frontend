@@ -14,8 +14,31 @@ interface TimeRange {
 }
 
 function overlaps(a: TimeRange, b: TimeRange): boolean {
-  if (a.table_id !== b.table_id || a.date !== b.date) return false
-  return a.start_minutes < b.end_minutes && a.end_minutes > b.start_minutes
+  if (a.table_id !== b.table_id) return false
+  if (a.date === b.date) {
+    if (a.end_minutes <= a.start_minutes) {
+      return a.start_minutes < b.end_minutes || b.start_minutes < a.end_minutes
+    }
+    if (b.end_minutes <= b.start_minutes) {
+      return b.start_minutes < a.end_minutes || a.start_minutes < b.end_minutes
+    }
+    return a.start_minutes < b.end_minutes && a.end_minutes > b.start_minutes
+  }
+  const [aY, aM, aD] = a.date.split("-").map(Number)
+  const [bY, bM, bD] = b.date.split("-").map(Number)
+  const aDate = new Date(aY, aM - 1, aD)
+  const bDate = new Date(bY, bM - 1, bD)
+  const diff = Math.round((aDate.getTime() - bDate.getTime()) / (1000 * 60 * 60 * 24))
+  if (Math.abs(diff) !== 1) return false
+  if (diff === 1 && b.end_minutes < b.start_minutes) {
+    const aEnd = a.end_minutes < a.start_minutes ? a.end_minutes + 24 * 60 : a.end_minutes
+    return a.start_minutes < b.end_minutes && aEnd > 0
+  }
+  if (diff === -1 && a.end_minutes < a.start_minutes) {
+    const bEnd = b.end_minutes < b.start_minutes ? b.end_minutes + 24 * 60 : b.end_minutes
+    return b.start_minutes < a.end_minutes && bEnd > 0
+  }
+  return false
 }
 
 function reservationToRange(r: SchedulerReservation, date: string): TimeRange {

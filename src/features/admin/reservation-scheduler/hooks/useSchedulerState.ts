@@ -21,6 +21,7 @@ type Action =
       newDate: string
       newStartTime: string
       newEndTime: string
+      crossMidnight?: boolean
     }
   | {
       type: "RESIZE_RESERVATION"
@@ -46,6 +47,12 @@ function localToISOString(dateStr: string, timeHHMM: string): string {
   return new Date(y, m - 1, d, h, min, 0, 0).toISOString()
 }
 
+function addDay(dateStr: string): string {
+  const d = new Date(dateStr + "T00:00:00")
+  d.setDate(d.getDate() + 1)
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
+}
+
 function applyChange(
   reservations: SchedulerReservation[],
   change: PendingChange,
@@ -57,7 +64,9 @@ function applyChange(
       table: change.new_table_id,
       table_number: change.new_table_number,
       start_at: localToISOString(change.new_date, change.new_start_time),
-      end_at: localToISOString(change.new_date, change.new_end_time),
+      end_at: change.new_end_date
+        ? localToISOString(change.new_end_date, change.new_end_time)
+        : localToISOString(change.new_date, change.new_end_time),
     }
   })
 }
@@ -78,7 +87,9 @@ function reducer(state: SchedulerState, action: Action): SchedulerState {
             customer_name: change.customer_name,
             guest_count: change.guest_count,
             start_at: localToISOString(change.new_date, change.new_start_time),
-            end_at: localToISOString(change.new_date, change.new_end_time),
+            end_at: change.new_end_date
+              ? localToISOString(change.new_end_date, change.new_end_time)
+              : localToISOString(change.new_date, change.new_end_time),
             opened_at: change.opened_at,
             status: change.status as SchedulerReservation["status"],
           })
@@ -109,6 +120,7 @@ function reducer(state: SchedulerState, action: Action): SchedulerState {
         new_date: action.newDate,
         new_start_time: action.newStartTime,
         new_end_time: action.newEndTime,
+        new_end_date: action.crossMidnight ? addDay(action.newDate) : undefined,
         customer_name: existingChange?.customer_name ?? existing.customer_name,
         guest_count: existingChange?.guest_count ?? existing.guest_count,
         opened_at: existingChange?.opened_at ?? existing.opened_at,
@@ -151,6 +163,7 @@ function reducer(state: SchedulerState, action: Action): SchedulerState {
 
       let newStart: Date
       let newEnd: Date
+      let newEndDate: string | undefined
 
       if (action.edge === "start") {
         newStart = new Date(
@@ -166,7 +179,20 @@ function reducer(state: SchedulerState, action: Action): SchedulerState {
         if (newStart >= oldEnd) return state
       } else {
         newStart = oldStart
-        newEnd = new Date(oldEnd.getFullYear(), oldEnd.getMonth(), oldEnd.getDate(), h, m, 0, 0)
+        if (h < oldStart.getHours() || (h === oldStart.getHours() && m < oldStart.getMinutes())) {
+          newEnd = new Date(
+            oldEnd.getFullYear(),
+            oldEnd.getMonth(),
+            oldEnd.getDate() + 1,
+            h,
+            m,
+            0,
+            0,
+          )
+          newEndDate = addDay(isoToDateKey(oldStart.toISOString()))
+        } else {
+          newEnd = new Date(oldEnd.getFullYear(), oldEnd.getMonth(), oldEnd.getDate(), h, m, 0, 0)
+        }
         if (newEnd <= oldStart) return state
       }
 
@@ -189,6 +215,7 @@ function reducer(state: SchedulerState, action: Action): SchedulerState {
         new_date: dateKey,
         new_start_time: startHHMM,
         new_end_time: endHHMM,
+        new_end_date: newEndDate,
         customer_name: existingChange?.customer_name ?? target.customer_name,
         guest_count: existingChange?.guest_count ?? target.guest_count,
         opened_at: existingChange?.opened_at ?? target.opened_at,
@@ -276,6 +303,7 @@ export function useSchedulerState() {
       newDate: string,
       newStartTime: string,
       newEndTime: string,
+      crossMidnight?: boolean,
     ) =>
       dispatch({
         type: "MOVE_RESERVATION",
@@ -285,6 +313,7 @@ export function useSchedulerState() {
         newDate,
         newStartTime,
         newEndTime,
+        crossMidnight,
       }),
     [],
   )

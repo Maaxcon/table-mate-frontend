@@ -3,6 +3,7 @@ import type { DragEndEvent } from "@dnd-kit/core"
 import type { SchedulerReservation, SchedulerTable } from "../types"
 import { checkOverlap, checkOrderingViolation, checkPastTimeViolation } from "./useOverlapCheck"
 import type { PendingChange } from "../types"
+import { addDays } from "../types"
 
 interface UseDragAndDropOptions {
   tables: SchedulerTable[]
@@ -18,6 +19,7 @@ interface UseDragAndDropOptions {
     newDate: string,
     newStartTime: string,
     newEndTime: string,
+    crossMidnight?: boolean,
   ) => void
   onConflict: (reservationId: string, reason?: string) => void
 }
@@ -58,6 +60,8 @@ export function useDragAndDrop({
       let endTime: string
       let startMinute: number
       let endMinute: number
+      let targetDate: string
+      let crossMidnight = false
 
       if (draggedReservation && draggedReservation.status === "active") {
         if (draggedReservation.table === tableId) return
@@ -68,6 +72,8 @@ export function useDragAndDrop({
         endMinute = origEnd.getHours() * 60 + origEnd.getMinutes()
         startTime = `${String(origStart.getHours()).padStart(2, "0")}:${String(origStart.getMinutes()).padStart(2, "0")}`
         endTime = `${String(origEnd.getHours()).padStart(2, "0")}:${String(origEnd.getMinutes()).padStart(2, "0")}`
+        targetDate = date
+        crossMidnight = endMinute > 24 * 60
       } else {
         const { durationMinutes } = activeData
         const rect = over.rect
@@ -80,11 +86,21 @@ export function useDragAndDrop({
         const totalMinutes = (hourEnd - hourStart) * 60
         const minuteOffset =
           Math.round(((pointerX / rect.width) * totalMinutes) / slotMinutes) * slotMinutes
-        startMinute =
-          hourStart * 60 + Math.max(0, Math.min(minuteOffset, totalMinutes - durationMinutes))
+        const rawMinute = hourStart * 60 + minuteOffset
+        startMinute = Math.max(hourStart * 60, Math.min(hourEnd * 60 - durationMinutes, rawMinute))
         endMinute = startMinute + durationMinutes
 
-        const startHH = String(Math.floor(startMinute / 60) % 24).padStart(2, "0")
+        targetDate = date
+        crossMidnight = false
+        if (startMinute >= 24 * 60) {
+          targetDate = addDays(date, 1)
+          startMinute -= 24 * 60
+          endMinute -= 24 * 60
+        } else {
+          crossMidnight = endMinute > 24 * 60
+        }
+
+        const startHH = String(Math.floor(startMinute / 60)).padStart(2, "0")
         const startMM = String(startMinute % 60).padStart(2, "0")
         const endHH = String(Math.floor(endMinute / 60) % 24).padStart(2, "0")
         const endMM = String(endMinute % 60).padStart(2, "0")
@@ -94,9 +110,9 @@ export function useDragAndDrop({
 
       const proposed = {
         table_id: tableId,
-        date,
+        date: targetDate,
         start_minutes: startMinute,
-        end_minutes: endMinute,
+        end_minutes: endMinute > 24 * 60 ? endMinute - 24 * 60 : endMinute,
       }
 
       if (checkOverlap(proposed, reservations, pendingChanges, reservationId)) {
@@ -121,7 +137,15 @@ export function useDragAndDrop({
       }
 
       const table = tables.find((t) => t.public_id === tableId)
-      onMove(reservationId, tableId, table?.public_number ?? "", date, startTime, endTime)
+      onMove(
+        reservationId,
+        tableId,
+        table?.public_number ?? "",
+        targetDate,
+        startTime,
+        endTime,
+        crossMidnight,
+      )
     },
     [
       tables,
