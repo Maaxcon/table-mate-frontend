@@ -8,6 +8,7 @@ interface ReservationBlockProps {
   hourEnd: number
   isConflict: boolean
   isModified: boolean
+  isCancelling: boolean
   crossDay?: "prev" | "next"
   workingHourStart: number
   workingHourEnd: number
@@ -20,6 +21,7 @@ export function ReservationBlock({
   hourEnd,
   isConflict,
   isModified,
+  isCancelling,
   crossDay,
   workingHourStart,
   onResizeStart,
@@ -73,6 +75,7 @@ export function ReservationBlock({
     "scheduler__block",
     isConflict && "scheduler__block--conflict",
     isModified && "scheduler__block--modified",
+    isCancelling && "scheduler__block--cancelling",
     reservation.status === "active" && "scheduler__block--active",
     reservation.status === "completed" && "scheduler__block--completed",
     crossDay && "scheduler__block--cross-day",
@@ -117,6 +120,7 @@ export function ReservationBlock({
         <span className="scheduler__block-meta">
           {reservation.guest_count}p &middot; {durationLabel}
         </span>
+        {isCancelling && <span className="scheduler__block-cancel-badge">CANCELLED</span>}
       </div>
       {reservation.status !== "completed" && !crossDay && (
         <button
