@@ -9,6 +9,7 @@ interface UseDragAndDropOptions {
   tables: SchedulerTable[]
   reservations: SchedulerReservation[]
   pendingChanges: PendingChange[]
+  pendingCancellationIds: string[]
   dayRanges: Record<string, { hourStart: number; hourEnd: number }>
   slotMinutes: number
   restaurantTimezone?: string
@@ -22,17 +23,22 @@ interface UseDragAndDropOptions {
     crossMidnight?: boolean,
   ) => void
   onConflict: (reservationId: string, reason?: string) => void
+  onCancel: (reservationId: string) => void
+  onUncancel: (reservationId: string) => void
 }
 
 export function useDragAndDrop({
   tables,
   reservations,
   pendingChanges,
+  pendingCancellationIds,
   dayRanges,
   slotMinutes,
   restaurantTimezone,
   onMove,
   onConflict,
+  onCancel,
+  onUncancel,
 }: UseDragAndDropOptions) {
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
@@ -42,15 +48,29 @@ export function useDragAndDrop({
       const activeData = active.data.current as
         | { reservationId: string; durationMinutes: number }
         | undefined
-      const overData = over.data.current as { tableId: string; date: string } | undefined
+      const overData = over.data.current as
+        | { tableId: string; date: string }
+        | { zone: "cancel" }
+        | undefined
 
       if (!activeData || !overData) return
 
       const { reservationId } = activeData
 
+      // Check if dropped on cancel/undo zone
+      if ("zone" in overData && overData.zone === "cancel") {
+        if (pendingCancellationIds.includes(reservationId)) {
+          onUncancel(reservationId)
+        } else {
+          onCancel(reservationId)
+        }
+        return
+      }
+
+      // Otherwise treat as a normal move (table row drop)
       const draggedReservation = reservations.find((r) => r.public_id === reservationId)
       if (draggedReservation && draggedReservation.status === "completed") return
-      const { tableId, date } = overData
+      const { tableId, date } = overData as { tableId: string; date: string }
 
       const range = dayRanges[date]
       if (!range) return
@@ -151,11 +171,14 @@ export function useDragAndDrop({
       tables,
       reservations,
       pendingChanges,
+      pendingCancellationIds,
       dayRanges,
       slotMinutes,
       restaurantTimezone,
       onMove,
       onConflict,
+      onCancel,
+      onUncancel,
     ],
   )
 

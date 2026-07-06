@@ -4,6 +4,7 @@ import type { DragMoveEvent, DragStartEvent } from "@dnd-kit/core"
 import { LuChevronLeft, LuChevronRight } from "react-icons/lu"
 import { useAppSelector } from "@/store/hooks"
 import { useToast } from "@/features/admin/hooks/toastContext"
+import ConfirmDialog from "@/features/admin/components/ConfirmDialog"
 import type { WorkingHoursDay } from "@/features/reservation/api"
 import { fetchRestaurantSettings } from "@/features/reservation/api"
 import { useUnsavedChanges } from "@/features/admin/hooks/unsavedChanges"
@@ -19,6 +20,7 @@ import {
   checkPastTimeViolation,
 } from "./hooks/useOverlapCheck"
 import { isoToDateKey } from "./types"
+import { CancelZone } from "./CancelZone"
 import { DayPanel } from "./DayPanel"
 import { SaveBar } from "./SaveBar"
 import "./ReservationScheduler.css"
@@ -169,6 +171,8 @@ export function ReservationScheduler() {
     setReservations,
     moveReservation,
     resizeReservation,
+    cancelReservation,
+    uncancelReservation,
     resetChanges,
     clearPending,
     markConflict,
@@ -186,6 +190,7 @@ export function ReservationScheduler() {
   const [activeDragId, setActiveDragId] = useState<string | null>(null)
   const [activeDragDate, setActiveDragDate] = useState<string | null>(null)
   const [dragCrossedBoundary, setDragCrossedBoundary] = useState(false)
+  const [pendingCancelConfirmId, setPendingCancelConfirmId] = useState<string | null>(null)
 
   const { dayRanges, crossDayInfoByDate } = useMemo(() => {
     const ranges: Record<string, { hourStart: number; hourEnd: number }> = {}
@@ -436,6 +441,10 @@ export function ReservationScheduler() {
     () => new Set(state.pendingChanges.map((c) => c.reservation_id)),
     [state.pendingChanges],
   )
+  const cancellingIds = useMemo(
+    () => new Set(state.pendingCancellationIds),
+    [state.pendingCancellationIds],
+  )
 
   const handleDragStart = useCallback(
     (event: DragStartEvent) => {
@@ -450,10 +459,30 @@ export function ReservationScheduler() {
     [state.reservations],
   )
 
+  const handleCancel = useCallback(
+    (reservationId: string) => {
+      const res = state.reservations.find((r) => r.public_id === reservationId)
+      if (res?.status === "active") {
+        setPendingCancelConfirmId(reservationId)
+      } else {
+        cancelReservation(reservationId)
+      }
+    },
+    [state.reservations, cancelReservation],
+  )
+
+  const handleUncancel = useCallback(
+    (reservationId: string) => {
+      uncancelReservation(reservationId)
+    },
+    [uncancelReservation],
+  )
+
   const { handleDragEnd } = useDragAndDrop({
     tables,
     reservations: state.reservations,
     pendingChanges: state.pendingChanges,
+    pendingCancellationIds: state.pendingCancellationIds,
     dayRanges,
     slotMinutes: SLOT_MINUTES,
     restaurantTimezone,
@@ -479,6 +508,8 @@ export function ReservationScheduler() {
       markConflict(id)
       toast.error(reason ?? "Cannot place reservation here")
     },
+    onCancel: handleCancel,
+    onUncancel: handleUncancel,
   })
 
   const handleDragMove = useCallback(
@@ -638,7 +669,11 @@ export function ReservationScheduler() {
   )
 
   const handleSave = useCallback(async () => {
-    if (!restaurantId || state.pendingChanges.length === 0) return
+    if (
+      !restaurantId ||
+      (state.pendingChanges.length === 0 && state.pendingCancellationIds.length === 0)
+    )
+      return
 
     setSaving(true)
     clearConflict()
@@ -656,6 +691,8 @@ export function ReservationScheduler() {
             new_end_time: utcEnd.slice(11, 16),
           }
         }),
+        cancellations:
+          state.pendingCancellationIds.length > 0 ? state.pendingCancellationIds : undefined,
       }
 
       const result = await batchUpdateReservations(payload)
@@ -682,6 +719,7 @@ export function ReservationScheduler() {
   }, [
     restaurantId,
     state.pendingChanges,
+    state.pendingCancellationIds,
     setSaving,
     clearConflict,
     handleCommitChanges,
@@ -691,123 +729,150 @@ export function ReservationScheduler() {
     handleResetChanges,
   ])
 
+  const pendingCancelReservation = pendingCancelConfirmId
+    ? state.reservations.find((r) => r.public_id === pendingCancelConfirmId)
+    : null
+
   if (!restaurantId) {
     return <div className="scheduler__empty">No restaurant selected.</div>
   }
 
   return (
     <div className="scheduler">
-      <div className="scheduler__toolbar">
-        <div className="scheduler__toolbar-nav">
-          <button type="button" className="scheduler__nav-btn" onClick={() => shiftAllDates(-1)}>
-            <LuChevronLeft aria-hidden="true" />
-          </button>
-          <button type="button" className="scheduler__today-btn" onClick={setTodayAll}>
-            Today
-          </button>
-          <button type="button" className="scheduler__nav-btn" onClick={() => shiftAllDates(1)}>
-            <LuChevronRight aria-hidden="true" />
-          </button>
-        </div>
-        <div className="scheduler__toolbar-actions">
-          <span className="scheduler__timezone-label">{restaurantTimezone}</span>
-          <button
-            type="button"
-            className={`scheduler__split-btn${dates.length === 2 ? " scheduler__split-btn--active" : ""}`}
-            onClick={toggleSplitView}
-          >
-            {dates.length === 2 ? "Single View" : "Split View"}
-          </button>
-        </div>
-      </div>
-
-      {externalUpdate && (
-        <div className="scheduler__stale-banner">
-          <span className="scheduler__stale-banner-text">
-            Reservation data changed externally. Your unsaved changes may conflict.
-          </span>
-          <div className="scheduler__stale-banner-actions">
-            <button
-              type="button"
-              className="scheduler__stale-banner-btn scheduler__stale-banner-btn--primary"
-              onClick={discardExternalUpdate}
-            >
-              Discard &amp; reload
+      <DndContext
+        sensors={sensors}
+        onDragStart={handleDragStart}
+        onDragMove={handleDragMove}
+        onDragEnd={handleDragEndWithClear}
+      >
+        <div className="scheduler__toolbar">
+          <div className="scheduler__toolbar-nav">
+            <button type="button" className="scheduler__nav-btn" onClick={() => shiftAllDates(-1)}>
+              <LuChevronLeft aria-hidden="true" />
             </button>
+            <button type="button" className="scheduler__today-btn" onClick={setTodayAll}>
+              Today
+            </button>
+            <button type="button" className="scheduler__nav-btn" onClick={() => shiftAllDates(1)}>
+              <LuChevronRight aria-hidden="true" />
+            </button>
+          </div>
+          <div className="scheduler__toolbar-actions">
+            <CancelZone
+              activeDragId={activeDragId}
+              pendingCancellationIds={state.pendingCancellationIds}
+            />
+            <span className="scheduler__timezone-label">{restaurantTimezone}</span>
             <button
               type="button"
-              className="scheduler__stale-banner-btn"
-              onClick={dismissExternalUpdate}
+              className={`scheduler__split-btn${dates.length === 2 ? " scheduler__split-btn--active" : ""}`}
+              onClick={toggleSplitView}
             >
-              Continue editing
+              {dates.length === 2 ? "Single View" : "Split View"}
             </button>
           </div>
         </div>
-      )}
 
-      {loading && <div className="scheduler__loading">Loading...</div>}
-      {error && <div className="scheduler__error">{error}</div>}
-
-      {!loading && !error && (
-        <DndContext
-          sensors={sensors}
-          onDragStart={handleDragStart}
-          onDragMove={handleDragMove}
-          onDragEnd={handleDragEndWithClear}
-        >
-          <div className={`scheduler__grid scheduler__grid--${dates.length}`}>
-            {dates.map((date, i) => {
-              const bounds = getDayWorkingBounds(date, workingHours)
-              return (
-                <DayPanel
-                  key={date}
-                  date={date}
-                  tables={tables}
-                  reservations={state.reservations}
-                  crossDayInfo={crossDayInfoByDate[date] ?? {}}
-                  hourStart={dayRanges[date]?.hourStart ?? bounds.start}
-                  hourEnd={dayRanges[date]?.hourEnd ?? bounds.end}
-                  workingHourStart={bounds.start}
-                  workingHourEnd={bounds.end}
-                  conflictReservationId={state.conflictReservationId}
-                  modifiedIds={modifiedIds}
-                  onResizeStart={handleResizeStart}
-                  scrollRef={i === 0 ? scrollRefA : scrollRefB}
-                  showNav={dates.length === 2}
-                  onPrevDay={() => shiftDate(i, -1)}
-                  onNextDay={() => shiftDate(i, 1)}
-                />
-              )
-            })}
+        {externalUpdate && (
+          <div className="scheduler__stale-banner">
+            <span className="scheduler__stale-banner-text">
+              Reservation data changed externally. Your unsaved changes may conflict.
+            </span>
+            <div className="scheduler__stale-banner-actions">
+              <button
+                type="button"
+                className="scheduler__stale-banner-btn scheduler__stale-banner-btn--primary"
+                onClick={discardExternalUpdate}
+              >
+                Discard &amp; reload
+              </button>
+              <button
+                type="button"
+                className="scheduler__stale-banner-btn"
+                onClick={dismissExternalUpdate}
+              >
+                Continue editing
+              </button>
+            </div>
           </div>
-          <DragOverlay>
-            {activeDragId
-              ? (() => {
-                  const r = state.reservations.find((res) => res.public_id === activeDragId)
-                  if (!r) return null
-                  const start = new Date(r.start_at)
-                  const hh = String(start.getHours()).padStart(2, "0")
-                  const mm = String(start.getMinutes()).padStart(2, "0")
-                  return (
-                    <div className="scheduler__drag-overlay">
-                      <span className="scheduler__drag-overlay-name">{r.customer_name}</span>
-                      <span className="scheduler__drag-overlay-meta">
-                        {r.guest_count}p &middot; {hh}:{mm}
-                      </span>
-                    </div>
-                  )
-                })()
-              : null}
-          </DragOverlay>
-        </DndContext>
-      )}
+        )}
+
+        {loading && <div className="scheduler__loading">Loading...</div>}
+        {error && <div className="scheduler__error">{error}</div>}
+
+        {!loading && !error && (
+          <>
+            <div className={`scheduler__grid scheduler__grid--${dates.length}`}>
+              {dates.map((date, i) => {
+                const bounds = getDayWorkingBounds(date, workingHours)
+                return (
+                  <DayPanel
+                    key={date}
+                    date={date}
+                    tables={tables}
+                    reservations={state.reservations}
+                    crossDayInfo={crossDayInfoByDate[date] ?? {}}
+                    hourStart={dayRanges[date]?.hourStart ?? bounds.start}
+                    hourEnd={dayRanges[date]?.hourEnd ?? bounds.end}
+                    workingHourStart={bounds.start}
+                    workingHourEnd={bounds.end}
+                    conflictReservationId={state.conflictReservationId}
+                    modifiedIds={modifiedIds}
+                    cancellingIds={cancellingIds}
+                    onResizeStart={handleResizeStart}
+                    scrollRef={i === 0 ? scrollRefA : scrollRefB}
+                    showNav={dates.length === 2}
+                    onPrevDay={() => shiftDate(i, -1)}
+                    onNextDay={() => shiftDate(i, 1)}
+                  />
+                )
+              })}
+            </div>
+            <DragOverlay>
+              {activeDragId
+                ? (() => {
+                    const r = state.reservations.find((res) => res.public_id === activeDragId)
+                    if (!r) return null
+                    const start = new Date(r.start_at)
+                    const hh = String(start.getHours()).padStart(2, "0")
+                    const mm = String(start.getMinutes()).padStart(2, "0")
+                    return (
+                      <div className="scheduler__drag-overlay">
+                        <span className="scheduler__drag-overlay-name">{r.customer_name}</span>
+                        <span className="scheduler__drag-overlay-meta">
+                          {r.guest_count}p &middot; {hh}:{mm}
+                        </span>
+                      </div>
+                    )
+                  })()
+                : null}
+            </DragOverlay>
+          </>
+        )}
+      </DndContext>
 
       <SaveBar
         changeCount={state.pendingChanges.length}
+        cancellationCount={state.pendingCancellationIds.length}
         saving={state.saving}
         onSave={handleSave}
         onReset={handleResetChanges}
       />
+
+      {pendingCancelConfirmId && pendingCancelReservation && (
+        <ConfirmDialog
+          title="Complete active reservation?"
+          message={`${pendingCancelReservation.customer_name} at table ${pendingCancelReservation.table_number} has an active session with a bill. Complete it anyway?`}
+          confirmLabel="Complete"
+          cancelLabel="Keep"
+          tone="danger"
+          onConfirm={() => {
+            cancelReservation(pendingCancelConfirmId)
+            setPendingCancelConfirmId(null)
+          }}
+          onClose={() => setPendingCancelConfirmId(null)}
+        />
+      )}
     </div>
   )
 }
