@@ -13,6 +13,7 @@ interface TableRowProps {
   workingHourEnd: number
   conflictReservationId: string | null
   modifiedIds: Set<string>
+  cancellingIds: Set<string>
   onResizeStart: (reservationId: string, edge: "start" | "end", e: React.MouseEvent) => void
 }
 
@@ -27,6 +28,7 @@ export function TableRow({
   workingHourEnd,
   conflictReservationId,
   modifiedIds,
+  cancellingIds,
   onResizeStart,
 }: TableRowProps) {
   const { setNodeRef, isOver } = useDroppable({
@@ -69,6 +71,7 @@ export function TableRow({
             hourEnd={hourEnd}
             isConflict={r.public_id === conflictReservationId}
             isModified={modifiedIds.has(r.public_id)}
+            isCancelling={cancellingIds.has(r.public_id)}
             crossDay={crossDayInfo[r.public_id]}
             workingHourStart={workingHourStart}
             workingHourEnd={workingHourEnd}

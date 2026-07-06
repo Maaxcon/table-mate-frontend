@@ -16,6 +16,7 @@ interface DayPanelProps {
   workingHourEnd: number
   conflictReservationId: string | null
   modifiedIds: Set<string>
+  cancellingIds: Set<string>
   onResizeStart: (reservationId: string, edge: "start" | "end", e: React.MouseEvent) => void
   scrollRef?: RefObject<HTMLDivElement | null>
   showNav?: boolean
@@ -34,6 +35,7 @@ export function DayPanel({
   workingHourEnd,
   conflictReservationId,
   modifiedIds,
+  cancellingIds,
   onResizeStart,
   scrollRef,
   showNav,
@@ -96,6 +98,7 @@ export function DayPanel({
             workingHourEnd={workingHourEnd}
             conflictReservationId={conflictReservationId}
             modifiedIds={modifiedIds}
+            cancellingIds={cancellingIds}
             onResizeStart={onResizeStart}
           />
         ))}
