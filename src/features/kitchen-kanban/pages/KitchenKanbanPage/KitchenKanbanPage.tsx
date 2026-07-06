@@ -11,7 +11,7 @@ import {
   updateOrderItemStatus,
 } from "../../api"
 import type { BatchCount, KanbanTicket } from "../../types"
-import { elapsedMinutes, mapItem, mapTicket, mapTicketShort } from "../../utils"
+import { elapsedMinutes, filterTicketsToday, mapItem, mapTicket, mapTicketShort } from "../../utils"
 import { KanbanHeader } from "../../components/KanbanHeader"
 import { IncomingColumn } from "../../components/IncomingColumn"
 import { ActiveColumn } from "../../components/ActiveColumn"
@@ -69,6 +69,23 @@ export function KitchenKanbanPage() {
   }, [])
 
   useEffect(() => {
+    const msUntilMidnight =
+      new Date(
+        new Date().getFullYear(),
+        new Date().getMonth(),
+        new Date().getDate() + 1,
+        0,
+        0,
+        0,
+      ).getTime() - Date.now()
+    const id = setTimeout(() => {
+      setCompleted([])
+      setTick((t) => t + 1)
+    }, msUntilMidnight)
+    return () => clearTimeout(id)
+  }, [])
+
+  useEffect(() => {
     if (!mutationError) return
     const id = setTimeout(() => setMutationError(null), 5000)
     return () => clearTimeout(id)
@@ -93,7 +110,7 @@ export function KitchenKanbanPage() {
         )
 
         setTickets(allActive.map((t, i) => mapTicket(t, itemsByOrder[i])))
-        setCompleted(completedList.map(mapTicketShort))
+        setCompleted(filterTicketsToday(completedList.map(mapTicketShort)))
         setAvgPrepTimeSeconds(stats.avg_prep_time_seconds)
         setError(null)
       } catch (err) {
@@ -142,7 +159,12 @@ export function KitchenKanbanPage() {
       try {
         await updateTicketStatus(ticketId, "completed")
         setCompleted((c) => [
-          { ...ticket, status: "completed", completedMinutes: elapsedMinutes(ticket.startedAt) },
+          {
+            ...ticket,
+            status: "completed",
+            completedMinutes: elapsedMinutes(ticket.startedAt),
+            completedAt: Date.now(),
+          },
           ...c,
         ])
         setTickets((prev) => prev.filter((t) => t.id !== ticketId))

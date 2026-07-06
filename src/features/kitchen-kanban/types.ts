@@ -17,6 +17,7 @@ export interface KanbanTicket {
   guestCount: number
   serverName: string
   completedMinutes?: number
+  completedAt?: number
 }
 
 export interface BatchCount {
