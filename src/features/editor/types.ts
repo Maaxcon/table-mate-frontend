@@ -75,6 +75,16 @@ export function snap(val: number): number {
  * `display: contents`, leaving the original layout (and any custom content)
  * completely untouched.
  */
+/**
+ * Attach CSS custom properties (`--*`) to an inline style object. React's
+ * `CSSProperties` type has no index signature for custom props, so setting one
+ * directly is a TS2353 error — funnel them through here instead of casting at
+ * every call site.
+ */
+export function cssVars(vars: Record<`--${string}`, string | number>): CSSProperties {
+  return vars as CSSProperties
+}
+
 export function uprightContentStyle(rotation?: number): CSSProperties {
   return rotation
     ? {

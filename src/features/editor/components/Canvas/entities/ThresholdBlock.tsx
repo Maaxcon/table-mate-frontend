@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react"
 import type { EditorEntity } from "@/features/editor/types"
-import { GRID, uprightContentStyle } from "@/features/editor/types"
+import { GRID, cssVars, uprightContentStyle } from "@/features/editor/types"
 import { ResizeHandles } from "./ResizeHandles"
 import "./blocks.css"
 
@@ -35,7 +35,7 @@ export function ThresholdBlock({
     width: px(entity.w),
     height: px(entity.h),
     transform: entity.rotation ? `rotate(${entity.rotation}deg)` : undefined,
-    ["--canvas-scale" as const]: canvasScale,
+    ...cssVars({ "--canvas-scale": canvasScale }),
   }
 
   return (
