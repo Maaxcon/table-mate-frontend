@@ -1,24 +1,20 @@
 import { api } from "@/api/client"
-import type { OrderItem, OrderItemStatusEnum, TicketStatusEnum } from "@/types/api/types.gen"
+import type {
+  OrderItem,
+  OrderItemStatusEnum,
+  Ticket,
+  TicketStatusEnum,
+} from "@/types/api/types.gen"
 
 export type { OrderItem }
 
-export interface KitchenTicket {
-  readonly public_id: string
-  readonly restaurant: string
-  session: string
-  order: string
-  status?: TicketStatusEnum
-  injected_at: string
-  started_at?: string | null
-  completed_at?: string | null
-  readonly created_at: string
-  readonly updated_at: string
-  table_number: string
-  server_name: string
-  guest_count: number
-  items_count: number
-}
+/**
+ * Kitchen tickets are read from the generated API schema. The board never
+ * mutates server-owned fields (`label`, `daily_number`, etc.), so reuse the
+ * generated `Ticket` type verbatim — including its `readonly` markers —
+ * instead of hand-rolling a parallel interface that can drift.
+ */
+export type KitchenTicket = Ticket
 
 const TICKETS_PATH = "/api/orders/tickets/"
 const ORDER_ITEMS_PATH = "/api/orders/order-items/"

@@ -1,0 +1,103 @@
+.confirm-cancel {
+  position: fixed;
+  inset: 0;
+  z-index: 130;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.confirm-cancel__dialog {
+  width: 420px;
+  max-width: 100%;
+  background: var(--color-bg-surface);
+  border-radius: var(--w-radius);
+  box-shadow: var(--w-shadow-lg);
+}
+
+.confirm-cancel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.confirm-cancel__title {
+  margin: 0;
+  font-size: 0.88rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-primary);
+}
+
+.confirm-cancel__close {
+  border: 0;
+  background: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.confirm-cancel__body {
+  padding: 20px;
+}
+
+.confirm-cancel__message {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+
+.confirm-cancel__error {
+  margin: 12px 0 0;
+  color: var(--color-error);
+  font-size: 0.85rem;
+}
+
+.confirm-cancel__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 14px 20px 20px;
+}
+
+.confirm-cancel__btn {
+  padding: 9px 14px;
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--w-radius-sm);
+  background: var(--color-bg-surface);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+.confirm-cancel__btn:hover:not(:disabled) {
+  border-color: var(--color-text-secondary);
+}
+
+.confirm-cancel__btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.confirm-cancel__btn--primary {
+  border-color: var(--color-error);
+  background: var(--color-error);
+  color: #fff;
+}
+
+@media (max-width: 460px) {
+  .confirm-cancel__actions {
+    flex-direction: column-reverse;
+  }
+}

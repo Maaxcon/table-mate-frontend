@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { LuGripVertical, LuTrash2 } from "react-icons/lu"
 import { useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
@@ -6,6 +6,7 @@ import { deleteCategory, updateCategory } from "@/features/admin/api/menu"
 import type { AdminCategory } from "@/features/admin/types"
 import ConfirmDialog from "@/features/admin/components/ConfirmDialog"
 import { useToast } from "@/features/admin/hooks/toastContext"
+import { DEFAULT_CATEGORY_COLOR } from "@/features/admin/constants/menu"
 
 type CategoryRowProps = {
   category: AdminCategory
@@ -22,6 +23,9 @@ function CategoryRow({ category, onChanged, onDeleted }: CategoryRowProps) {
   const [name, setName] = useState(category.name)
   const [busy, setBusy] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [color, setColor] = useState(category.color ?? DEFAULT_CATEGORY_COLOR)
+  const [colorEnabled, setColorEnabled] = useState(Boolean(category.color))
+  const colorInputRef = useRef<HTMLInputElement | null>(null)
 
   const run = async (action: () => Promise<unknown>, after: () => void, successMsg: string) => {
     setBusy(true)
@@ -36,13 +40,34 @@ function CategoryRow({ category, onChanged, onDeleted }: CategoryRowProps) {
     }
   }
 
-  const handleRename = () => {
-    if (!name.trim() || name.trim() === category.name) return
-    void run(
-      () => updateCategory(category.public_id, { name: name.trim() }),
-      onChanged,
-      "Category renamed",
-    )
+  const trimmedName = name.trim()
+  const nextColor = colorEnabled ? color.toUpperCase() : null
+  const nameChanged = Boolean(trimmedName) && trimmedName !== category.name
+  const colorChanged = (nextColor ?? null) !== (category.color ?? null)
+  const nameInvalid = !trimmedName && name !== category.name
+  const canSave = (nameChanged || colorChanged) && !nameInvalid
+
+  const saveChanges = () => {
+    const trimmedName = name.trim()
+    const nextColor = colorEnabled ? color.toUpperCase() : null
+    const patch: Partial<Pick<AdminCategory, "name" | "color">> = {}
+
+    if (trimmedName && trimmedName !== category.name) {
+      patch.name = trimmedName
+    }
+
+    if ((nextColor ?? null) !== (category.color ?? null)) {
+      patch.color = nextColor
+    }
+
+    if (Object.keys(patch).length === 0) {
+      if (!trimmedName) {
+        setName(category.name)
+      }
+      return
+    }
+
+    void run(() => updateCategory(category.public_id, patch), onChanged, "Category updated")
   }
 
   const confirmDeleteAction = async () => {
@@ -61,40 +86,87 @@ function CategoryRow({ category, onChanged, onDeleted }: CategoryRowProps) {
         zIndex: isDragging ? 2 : undefined,
       }}
     >
-      <button
-        type="button"
-        className="menu-admin__drag"
-        aria-label={`Drag to reorder category ${category.name}`}
-        {...attributes}
-        {...listeners}
-      >
-        <LuGripVertical aria-hidden="true" />
-      </button>
-      <input
-        className="admin-field__input menu-admin__row-input"
-        value={name}
-        disabled={busy}
-        aria-label="Category name"
-        onChange={(e) => setName(e.target.value)}
-        onBlur={handleRename}
-      />
-      <button
-        type="button"
-        className="menu-admin__btn menu-admin__btn--primary"
-        disabled={busy || !name.trim() || name.trim() === category.name}
-        onClick={handleRename}
-      >
-        Save
-      </button>
-      <button
-        type="button"
-        className="menu-admin__btn menu-admin__btn--danger"
-        disabled={busy}
-        onClick={() => setConfirmDelete(true)}
-        aria-label="Delete category"
-      >
-        <LuTrash2 aria-hidden="true" />
-      </button>
+      <div className="menu-admin__row-drag">
+        <button
+          type="button"
+          className="menu-admin__drag"
+          aria-label={`Drag to reorder category ${category.name}`}
+          {...attributes}
+          {...listeners}
+        >
+          <LuGripVertical aria-hidden="true" />
+        </button>
+      </div>
+      <div className="menu-admin__row-body">
+        <div className="menu-admin__row-top">
+          <input
+            className="admin-field__input menu-admin__row-input"
+            value={name}
+            disabled={busy}
+            aria-label="Category name"
+            onChange={(e) => setName(e.target.value)}
+            onBlur={saveChanges}
+          />
+        </div>
+        <div className="menu-admin__row-bottom">
+          <div className="menu-admin__color-controls">
+            <button
+              type="button"
+              className={`menu-admin__color-swatch ${colorEnabled ? "" : "is-disabled"}`}
+              style={{ backgroundColor: colorEnabled ? color : "transparent" }}
+              aria-label={
+                colorEnabled
+                  ? `Change color for ${category.name}`
+                  : `Set color for ${category.name}`
+              }
+              disabled={busy}
+              onClick={() => {
+                if (busy) return
+                if (!colorEnabled) setColorEnabled(true)
+                colorInputRef.current?.click()
+              }}
+            />
+            <input
+              ref={colorInputRef}
+              type="color"
+              className="menu-admin__color-picker"
+              value={color}
+              onChange={(event) => setColor(event.target.value)}
+            />
+            <button
+              type="button"
+              className="menu-admin__btn menu-admin__btn--primary menu-admin__color-clear"
+              disabled={busy || !colorEnabled}
+              onClick={() => {
+                if (!colorEnabled || busy) return
+                setColorEnabled(false)
+                setColor(DEFAULT_CATEGORY_COLOR)
+              }}
+            >
+              Clear
+            </button>
+          </div>
+          <div className="menu-admin__row-bottom-actions">
+            <button
+              type="button"
+              className="menu-admin__btn menu-admin__btn--danger"
+              disabled={busy}
+              onClick={() => setConfirmDelete(true)}
+              aria-label="Delete category"
+            >
+              <LuTrash2 aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              className="menu-admin__btn menu-admin__btn--primary menu-admin__row-save"
+              disabled={busy || !canSave}
+              onClick={saveChanges}
+            >
+              Save
+            </button>
+          </div>
+        </div>
+      </div>
 
       {confirmDelete && (
         <ConfirmDialog

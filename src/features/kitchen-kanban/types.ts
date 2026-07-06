@@ -4,10 +4,13 @@ export interface KanbanItem {
   quantity: number
   modifiers?: string
   status: "pending" | "ready"
+  categoryName?: string
+  categoryColor: string
 }
 
 export interface KanbanTicket {
   id: string
+  label: string
   status: "incoming" | "active" | "completed"
   items: KanbanItem[]
   startedAt: number
@@ -19,4 +22,5 @@ export interface KanbanTicket {
 export interface BatchCount {
   label: string
   count: number
+  color: string
 }

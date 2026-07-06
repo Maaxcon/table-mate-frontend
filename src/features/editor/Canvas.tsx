@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react"
 import { snap, GRID, EDITOR_MIN_SCALE, EDITOR_MAX_SCALE } from "./types"
 import type { EditorEntity } from "./types"
 import { TableBlock } from "./entities/TableBlock"
@@ -45,6 +45,13 @@ export function Canvas({
     moved: boolean
   } | null>(null)
 
+  const panDragRef = useRef<{
+    startX: number
+    startY: number
+    startScrollLeft: number
+    startScrollTop: number
+  } | null>(null)
+
   const [scale, setScale] = useState(1)
   // Mirror scale into a ref so the (once-bound) gesture listeners read the live
   // value without re-subscribing on every zoom step.
@@ -52,6 +59,24 @@ export function Canvas({
   useEffect(() => {
     scaleRef.current = scale
   }, [scale])
+
+  // One-shot auto-fit: on first load, scale the canvas to fit within the
+  // viewport so the entire map is visible at once.
+  const autoFitted = useRef(false)
+  useLayoutEffect(() => {
+    if (autoFitted.current || entities.length === 0) return
+    autoFitted.current = true
+
+    const container = containerRef.current
+    if (!container) return
+
+    const w = canvasCols * GRID
+    const h = canvasRows * GRID
+    const gap = 200 // 2 × container padding (100px each side)
+    setScale(
+      clampScale(Math.min((container.clientWidth - gap) / w, (container.clientHeight - gap) / h)),
+    )
+  }, [canvasCols, canvasRows, entities.length])
 
   // Pinch (two-finger) and ctrl+wheel zoom of the canvas. Native non-passive
   // listeners so we can preventDefault the browser's own page zoom/scroll.
@@ -70,7 +95,9 @@ export function Canvas({
     const onTouchMove = (e: TouchEvent) => {
       if (pinchStart && e.touches.length === 2) {
         e.preventDefault()
-        setScale(clampScale(pinchStart.scale * (distance(e.touches) / pinchStart.dist)))
+        const d = distance(e.touches)
+        if (pinchStart.dist === 0 || d === 0) return
+        setScale(clampScale(pinchStart.scale * (d / pinchStart.dist)))
       }
     }
     const onTouchEnd = (e: TouchEvent) => {
@@ -117,6 +144,15 @@ export function Canvas({
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
+      const pan = panDragRef.current
+      if (pan) {
+        const el = containerRef.current
+        if (!el) return
+        el.scrollLeft = pan.startScrollLeft - (e.clientX - pan.startX)
+        el.scrollTop = pan.startScrollTop - (e.clientY - pan.startY)
+        return
+      }
+
       const drag = dragRef.current
       if (!drag) return
 
@@ -134,6 +170,10 @@ export function Canvas({
     }
 
     const handleMouseUp = () => {
+      if (panDragRef.current) {
+        panDragRef.current = null
+        if (containerRef.current) containerRef.current.style.cursor = ""
+      }
       dragRef.current = null
     }
 
@@ -223,6 +263,20 @@ export function Canvas({
     return () => window.removeEventListener("keydown", handleKeyDown)
   }, [selectedId, entities, onEntityMove, onEntityResize])
 
+  const handleContainerMouseDown = useCallback((e: React.MouseEvent) => {
+    if (e.button !== 1) return
+    e.preventDefault()
+    const el = containerRef.current
+    if (!el) return
+    panDragRef.current = {
+      startX: e.clientX,
+      startY: e.clientY,
+      startScrollLeft: el.scrollLeft,
+      startScrollTop: el.scrollTop,
+    }
+    el.style.cursor = "grabbing"
+  }, [])
+
   useEffect(() => {
     if (activeTool && activeTool !== "select" && activeTool !== "pan") {
       if (canvasRef.current) {
@@ -236,35 +290,43 @@ export function Canvas({
   }, [activeTool])
 
   return (
-    <div ref={containerRef} className="editor-canvas__container">
-      {/* The canvas is an application widget: it owns pointer placement and (below)
-          keyboard move/resize, so it legitimately carries interaction handlers. */}
-      {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions */}
-      <div
-        ref={canvasRef}
-        className="editor-canvas"
-        style={{
-          width: canvasCols * GRID,
-          height: canvasRows * GRID,
-          transform: `scale(${scale})`,
-        }}
-        onMouseDown={handleCanvasMouseDown}
-        role="application"
-        aria-label="Floor plan editor"
-      >
-        {entities.map(renderBlock)}
+    <div
+      ref={containerRef}
+      className="editor-canvas__container"
+      onMouseDown={handleContainerMouseDown}
+      role="presentation"
+    >
+      {/* The wrapper is sized to the visual canvas extent so the scrollport
+          matches what the user sees, avoiding dead scroll space when zoomed out. */}
+      <div style={{ width: canvasCols * GRID * scale, height: canvasRows * GRID * scale }}>
+        {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions */}
         <div
-          className={`editor-canvas__edge editor-canvas__edge--top${edgeStyles.top === "solid" ? " editor-canvas__edge--solid" : ""}`}
-        />
-        <div
-          className={`editor-canvas__edge editor-canvas__edge--right${edgeStyles.right === "solid" ? " editor-canvas__edge--solid" : ""}`}
-        />
-        <div
-          className={`editor-canvas__edge editor-canvas__edge--bottom${edgeStyles.bottom === "solid" ? " editor-canvas__edge--solid" : ""}`}
-        />
-        <div
-          className={`editor-canvas__edge editor-canvas__edge--left${edgeStyles.left === "solid" ? " editor-canvas__edge--solid" : ""}`}
-        />
+          ref={canvasRef}
+          className="editor-canvas"
+          style={{
+            width: canvasCols * GRID,
+            height: canvasRows * GRID,
+            transformOrigin: "0 0",
+            transform: `scale(${scale})`,
+          }}
+          onMouseDown={handleCanvasMouseDown}
+          role="application"
+          aria-label="Floor plan editor"
+        >
+          {entities.map(renderBlock)}
+          <div
+            className={`editor-canvas__edge editor-canvas__edge--top${edgeStyles.top === "solid" ? " editor-canvas__edge--solid" : ""}`}
+          />
+          <div
+            className={`editor-canvas__edge editor-canvas__edge--right${edgeStyles.right === "solid" ? " editor-canvas__edge--solid" : ""}`}
+          />
+          <div
+            className={`editor-canvas__edge editor-canvas__edge--bottom${edgeStyles.bottom === "solid" ? " editor-canvas__edge--solid" : ""}`}
+          />
+          <div
+            className={`editor-canvas__edge editor-canvas__edge--left${edgeStyles.left === "solid" ? " editor-canvas__edge--solid" : ""}`}
+          />
+        </div>
       </div>
     </div>
   )

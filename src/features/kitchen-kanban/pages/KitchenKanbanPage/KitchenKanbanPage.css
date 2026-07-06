@@ -1,0 +1,370 @@
+/* ===========================================================================
+   Kitchen Kanban — "Soft UI" design system
+   Airy light theme (with a dark variant), rounded white cards, diffuse
+   shadows, faint dividers, and semantic per-column accent colors.
+   All colors are driven by .kanban-scoped tokens so the footer theme toggle
+   switches the whole board between light and dark.
+   ========================================================================= */
+
+.kanban {
+  /* Surfaces */
+  --k-bg: #f8f9fa;
+  --k-panel: #ffffff;
+  --k-card: #ffffff;
+  --k-border: #e2e8f0;
+  --k-divider: #eef1f5;
+
+  /* Text */
+  --k-text: #0f172a;
+  --k-text-muted: #64748b;
+  --k-text-faint: #cbd5e1;
+
+  /* Semantic accents */
+  --k-incoming: #f97316;
+  --k-incoming-soft: #fff7ed;
+  --k-active: #16a34a;
+  --k-active-soft: #f0fdf4;
+  --k-active-border: #86efac;
+  --k-completed: #047857;
+  --k-completed-soft: #ecfdf5;
+  --k-strip: #1e293b;
+  --k-warning: #d97706;
+  --k-danger: #dc2626;
+
+  /* Elevation */
+  --k-shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(15, 23, 42, 0.06);
+  --k-shadow-md: 0 2px 4px rgba(15, 23, 42, 0.05), 0 6px 16px rgba(15, 23, 42, 0.08);
+  --k-shadow-lg: 0 4px 6px rgba(15, 23, 42, 0.04), 0 16px 32px rgba(15, 23, 42, 0.12);
+
+  /* Radii */
+  --k-radius: 16px;
+  --k-radius-sm: 12px;
+  --k-radius-pill: 999px;
+
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  background: var(--k-bg);
+  color: var(--k-text);
+  font-family: "Inter", var(--font-family-base), system-ui, sans-serif;
+}
+
+[data-theme="dark"] .kanban {
+  --k-bg: #0e1014;
+  --k-panel: #14171d;
+  --k-card: #181b22;
+  --k-border: #262b35;
+  --k-divider: #20242c;
+  --k-text: #f1f5f9;
+  --k-text-muted: #94a3b8;
+  --k-text-faint: #475569;
+  --k-incoming: #fb923c;
+  --k-incoming-soft: rgba(249, 115, 22, 0.14);
+  --k-active: #22c55e;
+  --k-active-soft: rgba(22, 163, 74, 0.14);
+  --k-active-border: rgba(34, 197, 94, 0.45);
+  --k-completed: #34d399;
+  --k-completed-soft: rgba(4, 120, 87, 0.16);
+  --k-strip: #64748b;
+  --k-warning: #f59e0b;
+  --k-danger: #f87171;
+  --k-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --k-shadow-md: 0 4px 14px rgba(0, 0, 0, 0.45);
+  --k-shadow-lg: 0 16px 32px rgba(0, 0, 0, 0.55);
+}
+
+/* ─── Header ─── */
+
+/* ─── Columns grid ─── */
+
+.kanban__columns {
+  display: grid;
+  grid-template-columns:
+    minmax(200px, 1fr) minmax(360px, 2.3fr) minmax(190px, 1.1fr)
+    minmax(290px, 1.75fr);
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.kanban__col {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-right: 1px solid var(--k-divider);
+  overflow: hidden;
+}
+
+.kanban__right {
+  --kanban-right-completed-height: 52%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.kanban__col-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  flex-shrink: 0;
+}
+
+.kanban__col-title {
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: var(--col-accent, var(--k-text));
+}
+
+.kanban__col-title--dark {
+  color: var(--k-text);
+}
+
+.kanban__col-title--muted {
+  color: var(--k-text-muted);
+}
+
+.kanban__col-subtitle {
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--k-text-muted);
+}
+
+.kanban__col-icon {
+  color: var(--k-text-muted);
+  width: 18px;
+  height: 18px;
+}
+
+.kanban__col-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 7px;
+  font-size: 0.74rem;
+  font-weight: 800;
+  border-radius: var(--k-radius-pill);
+  border: 1.5px solid var(--col-accent, var(--k-border));
+  color: var(--col-accent, var(--k-text));
+  background: transparent;
+}
+
+.kanban__col-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.kanban__col-body--grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  align-content: start;
+}
+
+/* ─── Cards (base) ─── */
+
+.kanban-card {
+  background: var(--k-card);
+  border-radius: var(--k-radius-sm);
+  box-shadow: var(--k-shadow-sm);
+  padding: 14px 16px;
+}
+
+.kanban-card--empty {
+  grid-column: 1 / -1;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--k-text-muted);
+  text-align: center;
+  padding: 28px 12px;
+  background: transparent;
+  box-shadow: none;
+}
+
+/* ─── Incoming cards ─── */
+
+.kanban-card--incoming {
+  position: relative;
+  padding-left: 22px;
+  overflow: hidden;
+}
+
+.kanban-card--incoming::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 7px;
+  background: var(--k-strip);
+  border-radius: var(--k-radius-sm) 0 0 var(--k-radius-sm);
+}
+
+.kanban-card--clickable {
+  display: block;
+  width: 100%;
+  text-align: left;
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  transition:
+    box-shadow 0.15s,
+    transform 0.15s;
+}
+
+.kanban-card--clickable:not(:disabled):hover {
+  box-shadow: var(--k-shadow-md);
+  transform: translateY(-1px);
+}
+
+.kanban-card--clickable:disabled {
+  cursor: default;
+}
+
+.kanban-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.kanban-card__id {
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  color: var(--k-text);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.kanban-card__timer {
+  font-size: 0.85rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--k-text-muted);
+  flex-shrink: 0;
+}
+
+.kanban-card__timer--warning {
+  color: var(--k-warning);
+}
+
+.kanban-card__timer--danger {
+  color: var(--k-danger);
+}
+
+.kanban-card__items {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.kanban-card__item {
+  font-size: 0.86rem;
+  font-weight: 500;
+  color: var(--k-text);
+  line-height: 1.45;
+  background: var(--kanban-item-chip-bg, transparent);
+  border: 1px solid var(--kanban-item-chip-border, transparent);
+  border-radius: calc(var(--k-radius-sm) / 1.6);
+  padding: 6px 10px;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.kanban-card__item-qty {
+  font-weight: 800;
+}
+
+.kanban-card__item--cat {
+  --kanban-item-chip-bg: color-mix(
+    in srgb,
+    var(--item-cat-color, var(--k-border)) 22%,
+    var(--k-card)
+  );
+  --kanban-item-chip-border: color-mix(
+    in srgb,
+    var(--item-cat-color, var(--k-border)) 45%,
+    var(--k-border)
+  );
+}
+
+/* Visible, non-color category label so category isn't conveyed by color
+   (or a hover-only title) alone — keeps the board color-vision safe and
+   readable by screen readers. */
+.kanban-card__item-cat-tag {
+  display: block;
+  margin-top: 3px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--k-text-muted);
+}
+
+/* ─── Loading / error / toast ─── */
+
+.kanban__loading,
+.kanban__error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--k-text-muted);
+  padding: 48px 24px;
+}
+
+.kanban__error {
+  color: var(--k-danger);
+}
+
+.kanban__toast {
+  position: sticky;
+  top: 12px;
+  z-index: 10;
+  margin: 12px 16px 0;
+  background: var(--k-danger);
+  color: #fff;
+  text-align: center;
+  padding: 12px 16px;
+  border-radius: var(--k-radius-sm);
+  box-shadow: var(--k-shadow-md);
+  font-size: 0.85rem;
+  font-weight: 600;
+  animation: kanban-toast-in 0.25s ease-out;
+}
+
+@keyframes kanban-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kanban__toast {
+    animation: none;
+  }
+}

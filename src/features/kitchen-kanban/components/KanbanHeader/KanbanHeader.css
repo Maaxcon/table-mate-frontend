@@ -1,0 +1,106 @@
+.kanban__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 28px;
+  background: var(--k-panel);
+  border-bottom: 1px solid var(--k-divider);
+  flex-shrink: 0;
+}
+
+.kanban__header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.kanban__logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--k-active);
+  color: #fff;
+  font-size: 1.1rem;
+  box-shadow: 0 4px 10px color-mix(in srgb, var(--k-active) 35%, transparent);
+}
+
+.kanban__brand {
+  font-size: 1.1rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: var(--k-text);
+}
+
+.kanban__header-divider {
+  width: 1px;
+  height: 26px;
+  background: var(--k-border);
+}
+
+.kanban__station-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--k-text-muted);
+}
+
+.kanban__station-badge {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  padding: 5px 14px;
+  border-radius: var(--k-radius-pill);
+  background: var(--k-incoming-soft);
+  color: var(--k-incoming);
+}
+
+.kanban__header-right {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+}
+
+.kanban__clock-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  line-height: 1.1;
+}
+
+.kanban__clock {
+  font-size: 1.6rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+  color: var(--k-text);
+}
+
+.kanban__clock-label {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: var(--k-text-muted);
+}
+
+.kanban__floor-link {
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: var(--k-text-muted);
+  text-decoration: none;
+  padding: 9px 18px;
+  border-radius: var(--k-radius-pill);
+  background: var(--k-bg);
+  border: 1px solid var(--k-border);
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+
+.kanban__floor-link:hover {
+  background: var(--k-divider);
+  color: var(--k-text);
+}

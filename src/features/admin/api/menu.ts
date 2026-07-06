@@ -45,17 +45,23 @@ export function deleteMenu(publicId: string): Promise<void> {
   return api.del(`${MENUS_PATH}${publicId}/`, { errorMessage: "Could not delete menu." })
 }
 
-export function createCategory(menuPublicId: string, name: string): Promise<AdminCategory> {
-  return api.post<AdminCategory>(
-    CATEGORIES_PATH,
-    { menu: menuPublicId, name },
-    { errorMessage: "Could not create category." },
-  )
+export function createCategory(
+  menuPublicId: string,
+  name: string,
+  color?: string,
+): Promise<AdminCategory> {
+  const payload: Record<string, string> = { menu: menuPublicId, name }
+  if (color) {
+    payload.color = color
+  }
+  return api.post<AdminCategory>(CATEGORIES_PATH, payload, {
+    errorMessage: "Could not create category.",
+  })
 }
 
 export function updateCategory(
   publicId: string,
-  patch: Partial<Pick<AdminCategory, "name" | "sort_order">>,
+  patch: Partial<Pick<AdminCategory, "name" | "sort_order" | "color">>,
 ): Promise<AdminCategory> {
   return api.patch<AdminCategory>(`${CATEGORIES_PATH}${publicId}/`, patch, {
     errorMessage: "Could not update category.",

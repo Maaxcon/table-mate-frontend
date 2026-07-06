@@ -1,5 +1,5 @@
 import { useAppSelector } from "@/store/hooks"
-import { WaiterOrderView } from "@/features/waiter-order-view/WaiterOrderView"
+import { WaiterOrderPage as WaiterOrderFeature } from "@/features/waiter-order-view"
 
 export function WaiterOrderPage() {
   const user = useAppSelector((state) => state.auth.user)
@@ -12,5 +12,5 @@ export function WaiterOrderPage() {
     )
   }
 
-  return <WaiterOrderView />
+  return <WaiterOrderFeature />
 }

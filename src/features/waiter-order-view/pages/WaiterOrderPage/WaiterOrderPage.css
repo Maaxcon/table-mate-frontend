@@ -1,0 +1,456 @@
+/* ===========================================================================
+   Waiter Order View — "Soft UI" design system
+   Aligned with the Kitchen Kanban visual language: rounded surfaces,
+   diffuse shadows, scoped tokens, full light/dark support.
+   ========================================================================= */
+
+.waiter-view {
+  /* Local shadows/radii only; color comes straight from the global theme tokens. */
+  --w-shadow-sm:
+    0 1px 2px color-mix(in srgb, var(--color-border-strong) 4%, transparent),
+    0 1px 3px color-mix(in srgb, var(--color-border-strong) 6%, transparent);
+  --w-shadow-md:
+    0 2px 4px color-mix(in srgb, var(--color-border-strong) 5%, transparent),
+    0 6px 16px color-mix(in srgb, var(--color-border-strong) 8%, transparent);
+  --w-shadow-lg:
+    0 4px 6px color-mix(in srgb, var(--color-border-strong) 4%, transparent),
+    0 16px 32px color-mix(in srgb, var(--color-border-strong) 12%, transparent);
+
+  --w-radius: 16px;
+  --w-radius-sm: 12px;
+  --w-radius-pill: 999px;
+
+  display: flex;
+  flex-direction: column;
+  height: 100svh;
+  background: var(--color-bg-secondary);
+  color: var(--color-text-primary);
+  font-family: "Inter", var(--font-family-base), system-ui, sans-serif;
+}
+
+[data-theme="dark"] .waiter-view {
+  /* Color tokens are inherited from the global --color-* dark theme; only the
+     shadows need a dark-specific override (no global shadow tokens exist). */
+  --w-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --w-shadow-md: 0 4px 14px rgba(0, 0, 0, 0.45);
+  --w-shadow-lg: 0 16px 32px rgba(0, 0, 0, 0.55);
+}
+
+.waiter-view__content {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 0.9fr);
+  gap: clamp(16px, 2vw, 24px);
+  padding: clamp(16px, 1.8vw, 28px);
+  align-items: stretch;
+  overflow: hidden;
+}
+
+.waiter-view__floor-card {
+  background: var(--color-bg-surface);
+  border-radius: var(--w-radius);
+  box-shadow: var(--w-shadow-lg);
+  padding: clamp(16px, 2vw, 22px);
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  flex: 1 1 auto;
+}
+
+.waiter-view__side-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  min-height: 0;
+  height: 100%;
+  grid-auto-rows: 1fr;
+  align-items: stretch;
+}
+
+.waiter-view__message {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  min-height: 300px;
+  color: var(--color-text-secondary);
+  font-size: 0.95rem;
+  font-weight: 600;
+  padding: 24px;
+}
+
+.waiter-view__message--error {
+  color: var(--color-error);
+}
+
+.waiter-view__placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  min-height: 300px;
+  color: var(--color-text-secondary);
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+.waiter-view__content > * {
+  min-height: 0;
+}
+
+.waiter-view__floor-card .floor-plan {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1 1 auto;
+}
+
+.waiter-view__floor-card .fp-view {
+  position: relative;
+  overflow: hidden;
+  border: none;
+  border-radius: var(--w-radius);
+  background: linear-gradient(180deg, var(--color-bg-surface) 0%, var(--color-bg-secondary) 100%);
+  box-shadow:
+    inset 0 0 0 1px var(--color-border-light),
+    0 20px 40px color-mix(in srgb, var(--color-border-strong) 8%, transparent);
+  flex: 0 1 auto;
+  min-height: 0;
+  width: 100%;
+  height: auto;
+
+  align-self: stretch;
+}
+
+.waiter-view__floor-card .fp-view__stage {
+  background-image:
+    radial-gradient(
+      color-mix(in srgb, var(--color-border-strong) 15%, transparent) 1px,
+      transparent 1px
+    ),
+    radial-gradient(
+      color-mix(in srgb, var(--color-border-strong) 8%, transparent) 1px,
+      transparent 1px
+    );
+  background-size:
+    34px 34px,
+    68px 68px;
+  background-position:
+    0 0,
+    17px 17px;
+}
+
+.waiter-view__floor-card .fp-view--empty {
+  background: none;
+}
+
+.waiter-view__floor-card .fp-block--table {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 28px;
+  border: 3px solid color-mix(in srgb, var(--color-border-strong) 15%, transparent);
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.96), rgba(247, 248, 250, 0.92)) padding-box,
+    linear-gradient(
+        145deg,
+        color-mix(in srgb, var(--color-border-strong) 10%, transparent),
+        transparent
+      )
+      border-box;
+  color: var(--color-text-primary);
+  box-shadow:
+    0 18px 38px color-mix(in srgb, var(--color-border-strong) 12%, transparent),
+    inset 0 0 16px color-mix(in srgb, var(--color-border-strong) 4%, transparent);
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    border-color 0.18s ease,
+    background 0.18s ease;
+  padding: 22px 20px;
+}
+
+.waiter-view__floor-card .fp-block--table:hover {
+  transform: translateY(-4px);
+  border-color: color-mix(in srgb, var(--color-border-strong) 25%, transparent);
+  box-shadow:
+    0 24px 50px color-mix(in srgb, var(--color-border-strong) 18%, transparent),
+    inset 0 0 25px color-mix(in srgb, var(--color-border-strong) 8%, transparent);
+}
+
+.waiter-view__floor-card .fp-block--table-square {
+  border-radius: 32px;
+}
+
+.waiter-view__floor-card .fp-block--free {
+  border-color: var(--color-success);
+  box-shadow: 0 0 0 4px rgba(var(--color-success-rgb), 0.12);
+  background:
+    linear-gradient(145deg, rgba(240, 253, 244, 0.92), rgba(226, 252, 237, 0.85)) padding-box,
+    linear-gradient(145deg, rgba(var(--color-success-rgb), 0.15), rgba(var(--color-success-rgb), 0))
+      border-box;
+}
+
+.waiter-view__floor-card .fp-block--reserved {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 4px rgba(var(--color-primary-rgb), 0.12);
+  background:
+    linear-gradient(145deg, rgba(239, 246, 255, 0.9), rgba(219, 234, 254, 0.82)) padding-box,
+    linear-gradient(145deg, rgba(var(--color-primary-rgb), 0.15), rgba(var(--color-primary-rgb), 0))
+      border-box;
+}
+
+.waiter-view__floor-card .fp-block--occupied {
+  border-color: var(--color-error);
+  box-shadow: 0 0 0 4px rgba(var(--color-error-rgb), 0.15);
+  background:
+    linear-gradient(145deg, rgba(255, 235, 235, 0.96), rgba(255, 245, 245, 0.9)) padding-box,
+    linear-gradient(145deg, rgba(var(--color-error-rgb), 0.25), rgba(var(--color-error-rgb), 0))
+      border-box;
+  color: var(--color-text-primary);
+}
+
+.waiter-view__floor-card .fp-block--occupied .fp-block__label,
+.waiter-view__floor-card .fp-block--occupied .fp-block__capacity {
+  color: var(--color-text-primary);
+}
+
+.waiter-view__floor-card .fp-block__badge--reserved {
+  background: rgba(var(--color-primary-rgb), 0.1);
+  color: var(--color-primary);
+  border-color: rgba(var(--color-primary-rgb), 0.4);
+}
+
+.waiter-view__floor-card .fp-block__badge--occupied {
+  background: rgba(var(--color-error-rgb), 0.12);
+  color: var(--color-error);
+  border-color: rgba(var(--color-error-rgb), 0.4);
+}
+
+.waiter-view__floor-card .fp-block__label {
+  font-size: 1.8rem;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+}
+
+.waiter-view__floor-card .fp-block__capacity {
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  opacity: 0.95;
+}
+
+.waiter-view__floor-card .fp-block__info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.waiter-view__floor-card .fp-block__info-name {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+
+.waiter-view__floor-card .fp-block--reserved .fp-block__info-name {
+  font-size: 1.5rem;
+  letter-spacing: 0.05em;
+}
+
+.waiter-view__floor-card .fp-block__info-sub {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.waiter-view__floor-card .fp-block__badge {
+  font-size: 0.95rem;
+  padding: 8px 20px;
+  letter-spacing: 0.15em;
+}
+
+.waiter-view__floor-card .fp-block__badge {
+  font-size: 1.3rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  padding: 6px 16px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--color-border-strong) 12%, transparent);
+  color: var(--color-text-secondary);
+  background: color-mix(in srgb, var(--color-border-strong) 5%, transparent);
+}
+
+.waiter-view__floor-card .fp-block__badge--free {
+  border-color: rgba(var(--color-success-rgb), 0.3);
+  color: var(--color-success);
+  background: rgba(var(--color-success-rgb), 0.08);
+}
+
+.waiter-view__floor-card .fp-block__badge--reserved {
+  border-color: rgba(var(--color-primary-rgb), 0.25);
+  color: var(--color-primary);
+  background: rgba(var(--color-primary-rgb), 0.08);
+}
+
+.waiter-view__floor-card .fp-block__badge--occupied {
+  border-color: rgba(var(--color-error-rgb), 0.25);
+  color: var(--color-error);
+  background: rgba(var(--color-error-rgb), 0.08);
+}
+
+[data-theme="dark"] .waiter-view__floor-card .fp-view {
+  background: linear-gradient(180deg, rgba(20, 24, 32, 0.85), rgba(11, 13, 19, 0.95));
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04),
+    0 24px 50px rgba(0, 0, 0, 0.5);
+}
+
+[data-theme="dark"] .waiter-view__floor-card .fp-view__stage {
+  background-image:
+    radial-gradient(rgba(62, 217, 133, 0.18) 1px, transparent 1px),
+    radial-gradient(rgba(99, 179, 237, 0.12) 1px, transparent 1px);
+  background-size:
+    32px 32px,
+    64px 64px;
+  background-position:
+    0 0,
+    16px 16px;
+  opacity: 0.8;
+}
+
+[data-theme="dark"] .waiter-view__floor-card .fp-block--table {
+  border: 2px solid rgba(255, 255, 255, 0.08);
+  background:
+    linear-gradient(145deg, rgba(41, 48, 60, 0.95), rgba(24, 28, 38, 0.95)) padding-box,
+    linear-gradient(145deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0)) border-box;
+  color: rgba(255, 255, 255, 0.92);
+  box-shadow:
+    0 12px 32px rgba(0, 0, 0, 0.55),
+    inset 0 0 20px rgba(255, 255, 255, 0.04);
+}
+
+[data-theme="dark"] .waiter-view__floor-card .fp-block--free {
+  border-color: color-mix(in srgb, rgba(var(--color-success-rgb), 0.9), rgba(255, 255, 255, 0.3));
+  box-shadow: 0 0 0 4px rgba(var(--color-success-rgb), 0.18);
+  background:
+    linear-gradient(145deg, rgba(21, 46, 34, 0.9), rgba(17, 33, 27, 0.85)) padding-box,
+    linear-gradient(145deg, rgba(var(--color-success-rgb), 0.25), rgba(var(--color-success-rgb), 0))
+      border-box;
+}
+
+[data-theme="dark"] .waiter-view__floor-card .fp-block--reserved {
+  border-color: color-mix(in srgb, rgba(var(--color-primary-rgb), 0.85), rgba(255, 255, 255, 0.25));
+  box-shadow: 0 0 0 4px rgba(var(--color-primary-rgb), 0.2);
+  background:
+    linear-gradient(145deg, rgba(22, 33, 53, 0.9), rgba(16, 24, 38, 0.85)) padding-box,
+    linear-gradient(145deg, rgba(var(--color-primary-rgb), 0.25), rgba(var(--color-primary-rgb), 0))
+      border-box;
+}
+
+[data-theme="dark"] .waiter-view__floor-card .fp-block--occupied {
+  border-color: color-mix(in srgb, rgba(var(--color-error-rgb), 0.85), rgba(255, 255, 255, 0.2));
+  box-shadow: 0 0 0 4px rgba(var(--color-error-rgb), 0.22);
+  background:
+    linear-gradient(145deg, rgba(49, 21, 24, 0.95), rgba(34, 16, 18, 0.9)) padding-box,
+    linear-gradient(145deg, rgba(var(--color-error-rgb), 0.3), rgba(var(--color-error-rgb), 0.05))
+      border-box;
+}
+
+[data-theme="dark"] .waiter-view__floor-card .fp-block--table:hover {
+  border-color: rgba(255, 255, 255, 0.18);
+  box-shadow:
+    0 18px 42px rgba(0, 0, 0, 0.65),
+    inset 0 0 24px rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="dark"] .waiter-view__floor-card .fp-block__label {
+  color: inherit;
+}
+
+[data-theme="dark"] .waiter-view__floor-card .fp-block__capacity {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+[data-theme="dark"] .waiter-view__floor-card .fp-block__badge {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.82);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+[data-theme="dark"] .waiter-view__floor-card .fp-block__badge--free {
+  border-color: rgba(var(--color-success-rgb), 0.45);
+  color: rgba(var(--color-success-rgb), 0.9);
+  background: rgba(var(--color-success-rgb), 0.15);
+}
+
+[data-theme="dark"] .waiter-view__floor-card .fp-block__badge--reserved {
+  border-color: rgba(var(--color-primary-rgb), 0.45);
+  color: color-mix(in srgb, var(--color-primary) 65%, white 35%);
+  background: rgba(var(--color-primary-rgb), 0.2);
+}
+
+[data-theme="dark"] .waiter-view__floor-card .fp-block__badge--occupied {
+  border-color: rgba(var(--color-error-rgb), 0.4);
+  color: color-mix(in srgb, var(--color-error) 60%, white 40%);
+  background: rgba(var(--color-error-rgb), 0.18);
+}
+
+@media (max-width: 1100px) {
+  .waiter-view__content {
+    grid-template-columns: 1fr;
+  }
+
+  .waiter-view__side-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .waiter-view__content {
+    padding: 16px;
+  }
+}
+[data-theme="light"] .waiter-view__floor-card .fp-block--table::before,
+[data-theme="dark"] .waiter-view__floor-card .fp-block--table::before {
+  content: "";
+  position: absolute;
+  inset: 8px;
+  border-radius: inherit;
+  border: 1px dashed color-mix(in srgb, var(--color-border-strong) 12%, transparent);
+  pointer-events: none;
+}
+
+[data-theme="dark"] .waiter-view__floor-card .fp-block--table::before {
+  border-color: rgba(255, 255, 255, 0.2);
+}
+.waiter-view__floor-card .fp-block__seats {
+  position: absolute;
+  inset: 8px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  pointer-events: none;
+}
+
+.waiter-view__floor-card .fp-block__seats-row {
+  display: flex;
+  justify-content: space-between;
+}
+
+.waiter-view__floor-card .fp-block__seat-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-border-strong) 10%, transparent);
+}
+
+[data-theme="dark"] .waiter-view__floor-card .fp-block__seat-dot {
+  background: rgba(255, 255, 255, 0.25);
+}

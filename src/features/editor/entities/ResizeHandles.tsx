@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef } from "react"
-import { GRID, snap, SIZE_CONSTRAINTS } from "../types"
+import { GRID, rotatedAABB, snap, SIZE_CONSTRAINTS } from "../types"
 import type { EntityType } from "../types"
 import "./blocks.css"
 
@@ -10,6 +10,7 @@ interface ResizeHandlesProps {
   entityY: number
   entityW: number
   entityH: number
+  entityRotation?: number
   onResize: (id: string, w: number, h: number) => void
   onMove: (id: string, x: number, y: number) => void
   scale: number
@@ -26,6 +27,7 @@ export function ResizeHandles({
   entityY,
   entityW,
   entityH,
+  entityRotation,
   onResize,
   onMove,
   scale,
@@ -65,8 +67,19 @@ export function ResizeHandles({
     const handleMouseMove = (e: MouseEvent) => {
       const drag = dragRef.current
       if (!drag) return
-      const dx = (e.clientX - drag.startX) / scale
-      const dy = (e.clientY - drag.startY) / scale
+      let dx = (e.clientX - drag.startX) / scale
+      let dy = (e.clientY - drag.startY) / scale
+      // Rotate drag delta from screen-space to entity-space so handles
+      // behave intuitively on rotated entities.
+      if (entityRotation) {
+        const rad = (-entityRotation * Math.PI) / 180
+        const cos = Math.cos(rad)
+        const sin = Math.sin(rad)
+        const rdx = dx * cos - dy * sin
+        const rdy = dx * sin + dy * cos
+        dx = rdx
+        dy = rdy
+      }
       let newW = drag.startW
       let newH = drag.startH
       if (drag.corner.includes("e")) newW = Math.max(1, snap(drag.startW * GRID + dx) / GRID)
@@ -101,12 +114,13 @@ export function ResizeHandles({
       window.removeEventListener("mousemove", handleMouseMove)
       window.removeEventListener("mouseup", handleMouseUp)
     }
-  }, [entityId, entityType, onResize, onMove, scale])
+  }, [entityId, entityType, entityRotation, onResize, onMove, scale])
 
-  const atTop = entityY <= 0
-  const atBottom = entityY + entityH >= canvasRows
-  const atLeft = entityX <= 0
-  const atRight = entityX + entityW >= canvasCols
+  const aabb = rotatedAABB(entityX, entityY, entityW, entityH, entityRotation)
+  const atTop = aabb.y <= 0
+  const atBottom = aabb.y + aabb.h >= canvasRows
+  const atLeft = aabb.x <= 0
+  const atRight = aabb.x + aabb.w >= canvasCols
 
   const cornerLabels: Record<Corner, string> = {
     nw: "top-left",

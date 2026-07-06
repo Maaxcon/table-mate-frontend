@@ -1,0 +1,41 @@
+.kanban__col--incoming {
+  --col-accent: var(--k-incoming);
+}
+
+.kanban-card--incoming {
+  position: relative;
+  padding-left: 22px;
+  overflow: hidden;
+}
+
+.kanban-card--incoming::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 7px;
+  background: var(--k-strip);
+  border-radius: var(--k-radius-sm) 0 0 var(--k-radius-sm);
+}
+
+.kanban-card--clickable {
+  display: block;
+  width: 100%;
+  text-align: left;
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  transition:
+    box-shadow 0.15s,
+    transform 0.15s;
+}
+
+.kanban-card--clickable:not(:disabled):hover {
+  box-shadow: var(--k-shadow-md);
+  transform: translateY(-1px);
+}
+
+.kanban-card--clickable:disabled {
+  cursor: default;
+}

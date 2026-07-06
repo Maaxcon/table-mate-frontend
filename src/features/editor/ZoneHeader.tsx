@@ -6,9 +6,9 @@ interface ZoneHeaderProps {
   zones: Zone[]
   selectedZoneId: string | null
   onZoneSelect: (zoneId: string | null) => void
-  onAddZone: (name: string) => Promise<void>
+  onAddZone: (name: string) => void | Promise<void>
   onDeleteZone?: (zoneId: string) => void
-  onRenameZone?: (zoneId: string, name: string) => Promise<void>
+  onRenameZone?: (zoneId: string, name: string) => void | Promise<void>
 }
 
 export function ZoneHeader({

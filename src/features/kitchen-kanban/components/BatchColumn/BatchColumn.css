@@ -1,0 +1,50 @@
+.kanban__col--batch {
+  --col-accent: var(--k-text-muted);
+}
+
+.kanban-card--batch {
+  --batch-accent: var(--batch-accent, var(--k-active));
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px 12px 18px;
+  background: color-mix(in srgb, var(--batch-accent) 12%, var(--k-card));
+  border: 1px solid color-mix(in srgb, var(--batch-accent) 45%, var(--k-border));
+  border-radius: var(--k-radius-sm);
+  box-shadow: var(--k-shadow-md);
+}
+
+.kanban-card__batch-indicator {
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  background: var(--batch-accent);
+  box-shadow: var(--k-shadow-sm);
+  flex-shrink: 0;
+}
+
+.kanban-card__batch-label {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--k-text);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.kanban-card__batch-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--k-radius-pill);
+  background: var(--batch-accent);
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 800;
+  line-height: 1;
+}
