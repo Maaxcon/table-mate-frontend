@@ -70,6 +70,30 @@
   border-width: 1px;
 }
 
+/* Dark theme: the surface fill sits almost on top of the page and the 55%
+   border nearly vanishes, so tables blend into the canvas. Lift the fill toward
+   the lighter subtle tone and strengthen the border + inner outline. */
+[data-theme="dark"] .editor-block--table {
+  border-color: color-mix(in srgb, var(--color-border-strong) 90%, transparent);
+  background:
+    linear-gradient(135deg, var(--color-bg-surface-subtle), var(--color-bg-surface)),
+    var(--color-bg-surface-subtle);
+  box-shadow:
+    0 10px 22px rgb(0 0 0 / 45%),
+    inset 0 1px 0 color-mix(in srgb, #ffffff 8%, transparent);
+}
+
+[data-theme="dark"] .editor-block--table::after {
+  border-color: color-mix(in srgb, var(--color-text-primary) 30%, transparent);
+}
+
+[data-theme="dark"] .editor-block--table:hover {
+  border-color: color-mix(in srgb, var(--color-border-strong) 100%, transparent);
+  box-shadow:
+    0 14px 28px rgb(0 0 0 / 55%),
+    inset 0 1px 0 color-mix(in srgb, #ffffff 8%, transparent);
+}
+
 .editor-block--selected {
   outline: 3px solid color-mix(in srgb, var(--color-primary) 55%, transparent);
   outline-offset: 4px;
@@ -120,6 +144,14 @@
   border: none;
 }
 
+/* Dark theme: define the obstacle's edges with a shadow + subtle ring so the
+   solid block reads as a placed object rather than a flat patch. */
+[data-theme="dark"] .editor-block--obstacle {
+  box-shadow:
+    0 8px 20px rgb(0 0 0 / 55%),
+    0 0 0 1px color-mix(in srgb, #000000 35%, transparent);
+}
+
 .editor-block--threshold {
   display: flex;
   align-items: center;
@@ -162,6 +194,25 @@
   box-shadow:
     0 12px 22px color-mix(in srgb, var(--color-primary) 18%, transparent),
     inset 0 1px 0 color-mix(in srgb, var(--color-bg-page) 70%, transparent);
+}
+
+/* Dark theme: same problem as tables — the surface gradient blends into the
+   page. Lift the fill toward the subtle tone and brighten the primary border. */
+[data-theme="dark"] .editor-block--portal {
+  border-color: color-mix(in srgb, var(--color-primary) 55%, transparent);
+  background:
+    linear-gradient(145deg, var(--color-bg-surface-subtle), var(--color-bg-surface)),
+    var(--color-bg-surface-subtle);
+  box-shadow:
+    0 10px 20px rgb(0 0 0 / 45%),
+    inset 0 1px 0 color-mix(in srgb, #ffffff 8%, transparent);
+}
+
+[data-theme="dark"] .editor-block--portal:hover {
+  border-color: color-mix(in srgb, var(--color-primary) 75%, transparent);
+  box-shadow:
+    0 14px 26px color-mix(in srgb, var(--color-primary) 28%, transparent),
+    inset 0 1px 0 color-mix(in srgb, #ffffff 8%, transparent);
 }
 
 .editor-block__portal-label {
