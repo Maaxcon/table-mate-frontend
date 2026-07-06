@@ -72,7 +72,7 @@ type Action =
       canvasCols?: number
       canvasRows?: number
     }
-  | { type: "SET_CANVAS_SIZE"; cols: number; rows: number }
+  | { type: "SET_CANVAS_SIZE"; cols: number; rows: number; zoneId?: string | null }
   | { type: "REMOVE_ENTITIES_BY_ZONE"; zoneId: string }
   | { type: "CLEAR" }
   | { type: "CREATE_ZONE"; zone: PendingZoneCreate }
@@ -80,6 +80,24 @@ type Action =
   | { type: "DELETE_ZONE"; zoneId: string }
   | { type: "CLEAR_PENDING_ZONES" }
   | { type: "REMAP_ZONE_ID"; from: string; to: string }
+
+const TABLE_LABEL_REGEX = /^(?:T)?(\d+)$/i
+
+function getNextTableLabel(entities: EditorEntity[]): string {
+  let max = 0
+  for (const entity of entities) {
+    if (!entity.type.startsWith("table")) continue
+    const label = entity.label?.trim()
+    if (!label) continue
+    const match = TABLE_LABEL_REGEX.exec(label)
+    if (!match) continue
+    const value = Number.parseInt(match[1], 10)
+    if (!Number.isNaN(value)) {
+      max = Math.max(max, value)
+    }
+  }
+  return `T${max + 1}`
+}
 
 function computeDirty(entities: EditorEntity[], lastPublishedJson: object | null): boolean {
   if (!lastPublishedJson) return entities.length > 0
@@ -277,7 +295,10 @@ function editorReducer(state: EditorState, action: Action): EditorState {
         pendingZones: { created: [], updated: {}, deleted: [] },
       }
     case "SET_CANVAS_SIZE": {
+      const targetZoneId = action.zoneId ?? null
       const reclamped = state.entities.map((e) => {
+        const applies = (e.zoneId ?? null) === targetZoneId
+        if (!applies) return e
         const { x, y } = clampEntityToBackendLimits(e.x, e.y, e.type, action.cols, action.rows)
         let { w, h } = e
         if (x + w > action.cols) w = Math.max(1, action.cols - x)
@@ -292,7 +313,7 @@ function editorReducer(state: EditorState, action: Action): EditorState {
         canvasCols: action.cols,
         canvasRows: action.rows,
         entities: reclamped,
-        dirty: computeDirty(reclamped, state.lastPublishedJson),
+        dirty: state.dirty || computeDirty(reclamped, state.lastPublishedJson),
       }
     }
     case "REMOVE_ENTITIES_BY_ZONE": {
@@ -407,21 +428,26 @@ const initialState: EditorState = {
   pendingZones: { created: [], updated: {}, deleted: [] },
 }
 
+const DEFAULT_ENTITY_SIZES: Partial<Record<EditorEntity["type"], { w: number; h: number }>> = {
+  obstacle: { w: 4, h: 1 },
+  threshold: { w: 3, h: 1 },
+  portal: { w: 2, h: 2 },
+}
+
 export function useEditorState() {
   const [state, dispatch] = useReducer(editorReducer, initialState)
-
-  const DEFAULT_SIZES: Partial<Record<EditorEntity["type"], { w: number; h: number }>> = {
-    obstacle: { w: 4, h: 1 },
-    threshold: { w: 3, h: 1 },
-    portal: { w: 2, h: 2 },
-  }
 
   const addEntity = useCallback(
     (type: EditorEntity["type"], gridX: number, gridY: number, extra?: Partial<EditorEntity>) => {
       const preset = TABLE_PRESETS[type]
-      const defaultSize = preset ?? DEFAULT_SIZES[type]
+      const defaultSize = preset ?? DEFAULT_ENTITY_SIZES[type]
       const x = gridX
       const y = gridY
+      const needsAutoLabel =
+        type.startsWith("table") && (extra?.label == null || extra.label === "")
+      const finalExtra = needsAutoLabel
+        ? { ...extra, label: getNextTableLabel(state.entities) }
+        : extra
       const entity: EditorEntity = {
         id: generateId(),
         type,
@@ -431,14 +457,12 @@ export function useEditorState() {
         h: defaultSize?.h ?? 2,
         capacity: preset?.defaultCapacity,
         rotation: 0,
-        ...extra,
+        ...(finalExtra ?? {}),
       }
       dispatch({ type: "ADD_ENTITY", entity })
       return entity
     },
-    // TABLE_PRESETS and DEFAULT_SIZES are module-level constants
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [],
+    [state.entities],
   )
 
   const updateEntity = useCallback((id: string, patch: Partial<EditorEntity>) => {
@@ -524,3 +548,5 @@ export function useEditorState() {
     dispatch,
   }
 }
+
+export { getNextTableLabel }

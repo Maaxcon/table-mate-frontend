@@ -72,39 +72,31 @@ export function ZoneHeader({
               onKeyDown={handleRenameKeyDown}
             />
           ) : (
-            <button
-              type="button"
-              className={[
-                "editor-zone-header__tab",
-                selectedZoneId === z.public_id ? "editor-zone-header__tab--active" : "",
-              ]
-                .filter(Boolean)
-                .join(" ")}
-              onClick={() => onZoneSelect(z.public_id)}
-              onDoubleClick={() => onRenameZone && handleStartRename(z)}
-            >
-              {z.name.toUpperCase()}
+            <>
+              <button
+                type="button"
+                className={[
+                  "editor-zone-header__tab",
+                  selectedZoneId === z.public_id ? "editor-zone-header__tab--active" : "",
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
+                onClick={() => onZoneSelect(z.public_id)}
+                onDoubleClick={() => onRenameZone && handleStartRename(z)}
+              >
+                {z.name.toUpperCase()}
+              </button>
               {onDeleteZone && (
-                <span
+                <button
+                  type="button"
                   className="editor-zone-header__delete"
-                  role="button"
-                  tabIndex={0}
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    onDeleteZone(z.public_id)
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.stopPropagation()
-                      onDeleteZone(z.public_id)
-                    }
-                  }}
-                  title="Delete zone"
+                  aria-label={`Delete ${z.name}`}
+                  onClick={() => onDeleteZone(z.public_id)}
                 >
                   ×
-                </span>
+                </button>
               )}
-            </button>
+            </>
           )}
         </div>
       ))}

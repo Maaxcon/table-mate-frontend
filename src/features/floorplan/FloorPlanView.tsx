@@ -208,6 +208,7 @@ function renderEntity(e: EditorEntity, opts: RenderOpts): ReactNode {
     width: px(e.w),
     height: px(e.h),
     transform: e.rotation ? `rotate(${e.rotation}deg)` : undefined,
+    borderRadius: e.type === "table-round" ? "50%" : undefined,
   }
 
   if (e.type === "table-square" || e.type === "table-round") {

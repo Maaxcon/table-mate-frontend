@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react"
-import { snap, GRID, EDITOR_MIN_SCALE, EDITOR_MAX_SCALE } from "./types"
-import type { EditorEntity } from "./types"
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
+import { snap, GRID, EDITOR_MIN_SCALE, EDITOR_MAX_SCALE } from "@/features/editor/types"
+import type { EditorEntity } from "@/features/editor/types"
 import { TableBlock } from "./entities/TableBlock"
 import { ObstacleBlock } from "./entities/ObstacleBlock"
 import { ThresholdBlock } from "./entities/ThresholdBlock"
@@ -289,6 +289,25 @@ export function Canvas({
     }
   }, [activeTool])
 
+  const canvasStyle = useMemo(
+    () => ({
+      width: canvasCols * GRID,
+      height: canvasRows * GRID,
+      ["--grid-size" as const]: `${GRID}px`,
+    }),
+    [canvasCols, canvasRows],
+  )
+
+  const contentStyle = useMemo(
+    () => ({
+      width: canvasCols * GRID,
+      height: canvasRows * GRID,
+      transformOrigin: "0 0",
+      transform: `scale(${scale})`,
+    }),
+    [canvasCols, canvasRows, scale],
+  )
+
   return (
     <div
       ref={containerRef}
@@ -303,29 +322,26 @@ export function Canvas({
         <div
           ref={canvasRef}
           className="editor-canvas"
-          style={{
-            width: canvasCols * GRID,
-            height: canvasRows * GRID,
-            transformOrigin: "0 0",
-            transform: `scale(${scale})`,
-          }}
+          style={canvasStyle}
           onMouseDown={handleCanvasMouseDown}
           role="application"
           aria-label="Floor plan editor"
         >
-          {entities.map(renderBlock)}
-          <div
-            className={`editor-canvas__edge editor-canvas__edge--top${edgeStyles.top === "solid" ? " editor-canvas__edge--solid" : ""}`}
-          />
-          <div
-            className={`editor-canvas__edge editor-canvas__edge--right${edgeStyles.right === "solid" ? " editor-canvas__edge--solid" : ""}`}
-          />
-          <div
-            className={`editor-canvas__edge editor-canvas__edge--bottom${edgeStyles.bottom === "solid" ? " editor-canvas__edge--solid" : ""}`}
-          />
-          <div
-            className={`editor-canvas__edge editor-canvas__edge--left${edgeStyles.left === "solid" ? " editor-canvas__edge--solid" : ""}`}
-          />
+          <div className="editor-canvas__content" style={contentStyle}>
+            {entities.map(renderBlock)}
+            <div
+              className={`editor-canvas__edge editor-canvas__edge--top${edgeStyles.top === "solid" ? " editor-canvas__edge--solid" : ""}`}
+            />
+            <div
+              className={`editor-canvas__edge editor-canvas__edge--right${edgeStyles.right === "solid" ? " editor-canvas__edge--solid" : ""}`}
+            />
+            <div
+              className={`editor-canvas__edge editor-canvas__edge--bottom${edgeStyles.bottom === "solid" ? " editor-canvas__edge--solid" : ""}`}
+            />
+            <div
+              className={`editor-canvas__edge editor-canvas__edge--left${edgeStyles.left === "solid" ? " editor-canvas__edge--solid" : ""}`}
+            />
+          </div>
         </div>
       </div>
     </div>

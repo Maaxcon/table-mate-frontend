@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef } from "react"
-import { GRID, rotatedAABB, snap, SIZE_CONSTRAINTS } from "../types"
-import type { EntityType } from "../types"
+import { GRID, rotatedAABB, snap, SIZE_CONSTRAINTS } from "@/features/editor/types"
+import type { EntityType } from "@/features/editor/types"
 import "./blocks.css"
 
 interface ResizeHandlesProps {

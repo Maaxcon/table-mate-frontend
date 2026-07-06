@@ -1,9 +1,10 @@
-import type { EditorEntity } from "../types"
-import { GRID, uprightContentStyle } from "../types"
+import type { CSSProperties } from "react"
+import type { EditorEntity } from "@/features/editor/types"
+import { GRID, cssVars, uprightContentStyle } from "@/features/editor/types"
 import { ResizeHandles } from "./ResizeHandles"
 import "./blocks.css"
 
-interface ThresholdBlockProps {
+interface PortalBlockProps {
   entity: EditorEntity
   selected: boolean
   onMouseDown: (e: React.MouseEvent, id: string) => void
@@ -15,7 +16,7 @@ interface ThresholdBlockProps {
   canvasRows: number
 }
 
-export function ThresholdBlock({
+export function PortalBlock({
   entity,
   selected,
   onMouseDown,
@@ -25,28 +26,27 @@ export function ThresholdBlock({
   canvasScale = 1,
   canvasCols,
   canvasRows,
-}: ThresholdBlockProps) {
+}: PortalBlockProps) {
   const px = (v: number) => v * GRID
+
+  const style: CSSProperties = {
+    left: px(entity.x),
+    top: px(entity.y),
+    width: px(entity.w),
+    height: px(entity.h),
+    transform: entity.rotation ? `rotate(${entity.rotation}deg)` : undefined,
+    ...cssVars({ "--canvas-scale": canvasScale }),
+  }
 
   return (
     <div
-      className={[
-        "editor-block",
-        "editor-block--threshold",
-        selected ? "editor-block--selected" : "",
-      ]
+      className={["editor-block", "editor-block--portal", selected ? "editor-block--selected" : ""]
         .filter(Boolean)
         .join(" ")}
-      style={{
-        left: px(entity.x),
-        top: px(entity.y),
-        width: px(entity.w),
-        height: px(entity.h),
-        transform: entity.rotation ? `rotate(${entity.rotation}deg)` : undefined,
-      }}
+      style={style}
       role="button"
       tabIndex={0}
-      aria-label={`Threshold${entity.label ? ` ${entity.label}` : ""}`}
+      aria-label={`Portal${entity.label ? ` to ${entity.label}` : ""}`}
       onMouseDown={(e) => onMouseDown(e, entity.id)}
       onClick={() => onClick(entity.id)}
       onKeyDown={(e) => {
@@ -54,7 +54,7 @@ export function ThresholdBlock({
       }}
     >
       <span style={uprightContentStyle(entity.rotation)}>
-        <span className="editor-block__zone-label">{entity.label ?? ""}</span>
+        <span className="editor-block__zone-label">{entity.label ?? "Portal"}</span>
       </span>
       {selected && onResize && onMove && (
         <ResizeHandles

@@ -1,5 +1,6 @@
-import type { EditorEntity } from "../types"
-import { GRID, uprightContentStyle } from "../types"
+import type { CSSProperties } from "react"
+import type { EditorEntity } from "@/features/editor/types"
+import { GRID, cssVars, uprightContentStyle } from "@/features/editor/types"
 import { ResizeHandles } from "./ResizeHandles"
 import "./blocks.css"
 
@@ -28,6 +29,15 @@ export function TableBlock({
 }: TableBlockProps) {
   const px = (v: number) => v * GRID
 
+  const style: CSSProperties = {
+    left: px(entity.x),
+    top: px(entity.y),
+    width: px(entity.w),
+    height: px(entity.h),
+    transform: entity.rotation ? `rotate(${entity.rotation}deg)` : undefined,
+    ...cssVars({ "--canvas-scale": canvasScale }),
+  }
+
   return (
     <div
       className={[
@@ -38,13 +48,7 @@ export function TableBlock({
       ]
         .filter(Boolean)
         .join(" ")}
-      style={{
-        left: px(entity.x),
-        top: px(entity.y),
-        width: px(entity.w),
-        height: px(entity.h),
-        transform: entity.rotation ? `rotate(${entity.rotation}deg)` : undefined,
-      }}
+      style={style}
       role="button"
       tabIndex={0}
       aria-label={`Table ${entity.label ?? entity.id.slice(-4)}${
