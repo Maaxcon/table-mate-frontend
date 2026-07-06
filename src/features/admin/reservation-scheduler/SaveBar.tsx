@@ -2,18 +2,24 @@ import { LuRotateCcw, LuSave } from "react-icons/lu"
 
 interface SaveBarProps {
   changeCount: number
+  cancellationCount: number
   saving: boolean
   onSave: () => void
   onReset: () => void
 }
 
-export function SaveBar({ changeCount, saving, onSave, onReset }: SaveBarProps) {
-  if (changeCount === 0) return null
+export function SaveBar({ changeCount, cancellationCount, saving, onSave, onReset }: SaveBarProps) {
+  const total = changeCount + cancellationCount
+  if (total === 0) return null
 
   return (
     <div className="scheduler__save-bar">
       <span className="scheduler__save-bar-count">
-        {changeCount} unsaved change{changeCount !== 1 ? "s" : ""}
+        {changeCount > 0 && `${changeCount} change${changeCount !== 1 ? "s" : ""}`}
+        {changeCount > 0 && cancellationCount > 0 && ", "}
+        {cancellationCount > 0 &&
+          `${cancellationCount} cancellation${cancellationCount !== 1 ? "s" : ""}`}
+        {" unsaved"}
       </span>
       <div className="scheduler__save-bar-actions">
         <button
