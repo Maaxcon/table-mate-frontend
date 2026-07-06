@@ -38,6 +38,7 @@ export interface BatchUpdatePayload {
     new_start_time: string
     new_end_time: string
   }[]
+  cancellations?: string[]
 }
 
 export interface BatchUpdateResponse {

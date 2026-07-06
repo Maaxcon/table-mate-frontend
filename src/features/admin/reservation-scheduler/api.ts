@@ -67,16 +67,22 @@ export async function fetchReservationsForRange(
 export async function batchUpdateReservations(
   payload: BatchUpdatePayload,
 ): Promise<BatchUpdateResponse | BatchUpdateErrorResponse> {
+  const requestBody: Record<string, unknown> = {
+    changes: payload.changes,
+  }
+  if (payload.cancellations && payload.cancellations.length > 0) {
+    requestBody.cancellations = payload.cancellations
+  }
   const res = await apiFetch("/api/reservations/reservations/batch-update/", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
+    body: JSON.stringify(requestBody),
   })
   if (res.ok) return { ok: true }
-  const body = (await res.json().catch(() => ({}))) as Record<string, unknown>
+  const errBody = (await res.json().catch(() => ({}))) as Record<string, unknown>
   return {
     ok: false,
-    conflicting_reservation_id: body.conflicting_reservation_id as string | undefined,
-    message: (body.detail as string) ?? "Batch update failed",
+    conflicting_reservation_id: errBody.conflicting_reservation_id as string | undefined,
+    message: (errBody.detail as string) ?? "Batch update failed",
   }
 }
