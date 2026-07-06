@@ -13,6 +13,7 @@ import {
   MIN_DURATION,
   minutesToTime,
   timeToMinutes,
+  normalizeSlots,
 } from "./utils"
 import "./BookModal.css"
 
@@ -112,7 +113,9 @@ export function BookModal({
 
   const realSlots = useMemo(() => {
     if (!availableSlots) return null
-    return availableSlots[dateKey] ?? null
+    const raw = availableSlots[dateKey]
+    if (!raw) return null
+    return normalizeSlots(raw)
   }, [availableSlots, dateKey])
 
   const timeSlots = useMemo(() => {
@@ -139,21 +142,18 @@ export function BookModal({
       }
     }
 
-    if (availableSlots) {
-      const slots = availableSlots[dateKey]
-      if (slots) {
-        const startMins = timeToMinutes(selectedTime)
-        for (let m = startMins; m < endMins; m += 30) {
-          const slotTime = minutesToTime(m)
-          if (!slots.includes(slotTime)) {
-            return "The selected duration is not fully available at this time. Choose a shorter duration or different start time."
-          }
+    if (realSlots) {
+      const startMins = timeToMinutes(selectedTime)
+      for (let m = startMins; m < endMins; m += 30) {
+        const slotTime = minutesToTime(m)
+        if (!realSlots.includes(slotTime)) {
+          return "The selected duration is not fully available at this time. Choose a shorter duration or different start time."
         }
       }
     }
 
     return null
-  }, [selectedTime, durationMinutes, dayConfig, availableSlots, dateKey])
+  }, [selectedTime, durationMinutes, dayConfig, realSlots])
 
   const handleConfirm = useCallback(async () => {
     if (!selectedTime) return

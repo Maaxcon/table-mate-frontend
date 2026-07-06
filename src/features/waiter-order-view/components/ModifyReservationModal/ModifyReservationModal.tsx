@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react"
 import { apiFetch } from "@/api/client"
 import { useFocusTrap } from "@/hooks/useFocusTrap"
+import { normalizeSlots } from "@/features/reservation/utils"
 import type { ReservationItem } from "../../types"
 import "./ModifyReservationModal.css"
 
@@ -49,22 +50,9 @@ export function ModifyReservationModal({
   const currentEndTime = msToTime(new Date(reservation.end_at).getTime())
   const currentDurationMinutes = timeToMinutes(currentEndTime) - timeToMinutes(currentStartTime)
 
-  const initialSnappedTime = useMemo(() => {
-    const mins = timeToMinutes(currentStartTime)
-    const snapped = Math.round(mins / 30) * 30
-    return minutesToTime(snapped)
-  }, [currentStartTime])
-
   const isActive = reservation.status === "active"
 
-  const snappedNowMinutes = useMemo(() => {
-    const now = new Date()
-    return Math.ceil((now.getHours() * 60 + now.getMinutes()) / 30) * 30
-  }, [])
-
-  const [selectedTime, setSelectedTime] = useState<string | null>(
-    isActive ? currentStartTime : initialSnappedTime,
-  )
+  const [selectedTime, setSelectedTime] = useState<string | null>(currentStartTime)
   const [durationMinutes, setDurationMinutes] = useState(Math.max(30, currentDurationMinutes))
   const [guestCount, setGuestCount] = useState(reservation.guest_count)
   const [busy, setBusy] = useState(false)
@@ -93,7 +81,8 @@ export function ModifyReservationModal({
           return
         }
         const data = (await res.json()) as Record<string, string[]>
-        if (!cancelled) setAvailableSlots(data[dateStr] ?? null)
+        const raw = data[dateStr]
+        if (!cancelled) setAvailableSlots(raw ? normalizeSlots(raw) : null)
       })
       .catch(() => {
         if (!cancelled) setAvailableSlots(null)
@@ -114,11 +103,11 @@ export function ModifyReservationModal({
   const durationError = useMemo(() => {
     if (!selectedTime || !durationMinutes) return null
     if (availableSlots) {
-      const endMins = timeToMinutes(selectedTime) + durationMinutes
-      const startMins = isActive
-        ? Math.ceil(Math.max(timeToMinutes(currentEndTime), snappedNowMinutes) / 30) * 30
-        : timeToMinutes(selectedTime)
-      for (let m = startMins; m < endMins; m += 30) {
+      const startMins = timeToMinutes(selectedTime)
+      const endMins = startMins + durationMinutes
+      const slotStart = Math.floor(startMins / 30) * 30
+      const slotEnd = Math.ceil(endMins / 30) * 30
+      for (let m = slotStart; m < slotEnd; m += 30) {
         const slotTime = minutesToTime(m)
         if (!availableSlots.includes(slotTime)) {
           return "The selected duration is not fully available. Choose a shorter duration or different start time."
@@ -126,7 +115,7 @@ export function ModifyReservationModal({
       }
     }
     return null
-  }, [selectedTime, durationMinutes, availableSlots, isActive, currentEndTime, snappedNowMinutes])
+  }, [selectedTime, durationMinutes, availableSlots])
 
   const handleSave = async () => {
     if (!selectedTime) return
