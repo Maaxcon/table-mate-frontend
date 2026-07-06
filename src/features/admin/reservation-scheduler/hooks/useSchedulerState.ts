@@ -6,6 +6,7 @@ export interface SchedulerState {
   dates: string[]
   reservations: SchedulerReservation[]
   pendingChanges: PendingChange[]
+  pendingCancellationIds: string[]
   conflictReservationId: string | null
   saving: boolean
 }
@@ -29,6 +30,8 @@ type Action =
       edge: "start" | "end"
       newTime: string
     }
+  | { type: "CANCEL_RESERVATION"; reservationId: string }
+  | { type: "UNCANCEL_RESERVATION"; reservationId: string }
   | { type: "RESET_CHANGES" }
   | { type: "CLEAR_PENDING" }
   | { type: "MARK_CONFLICT"; reservationId: string }
@@ -248,6 +251,21 @@ function reducer(state: SchedulerState, action: Action): SchedulerState {
 
       return { ...state, reservations: updated, pendingChanges: newChanges }
     }
+    case "CANCEL_RESERVATION": {
+      if (state.pendingCancellationIds.includes(action.reservationId)) return state
+      return {
+        ...state,
+        pendingCancellationIds: [...state.pendingCancellationIds, action.reservationId],
+      }
+    }
+    case "UNCANCEL_RESERVATION": {
+      return {
+        ...state,
+        pendingCancellationIds: state.pendingCancellationIds.filter(
+          (id) => id !== action.reservationId,
+        ),
+      }
+    }
     case "RESET_CHANGES": {
       const restored = state.reservations.map((r) => {
         const change = state.pendingChanges.find((c) => c.reservation_id === r.public_id)
@@ -262,10 +280,21 @@ function reducer(state: SchedulerState, action: Action): SchedulerState {
         }
         return r
       })
-      return { ...state, reservations: restored, pendingChanges: [], conflictReservationId: null }
+      return {
+        ...state,
+        reservations: restored,
+        pendingChanges: [],
+        pendingCancellationIds: [],
+        conflictReservationId: null,
+      }
     }
     case "CLEAR_PENDING":
-      return { ...state, pendingChanges: [], conflictReservationId: null }
+      return {
+        ...state,
+        pendingChanges: [],
+        pendingCancellationIds: [],
+        conflictReservationId: null,
+      }
     case "MARK_CONFLICT":
       return { ...state, conflictReservationId: action.reservationId }
     case "CLEAR_CONFLICT":
@@ -273,7 +302,12 @@ function reducer(state: SchedulerState, action: Action): SchedulerState {
     case "SET_SAVING":
       return { ...state, saving: action.saving }
     case "COMMIT_CHANGES":
-      return { ...state, pendingChanges: [], conflictReservationId: null }
+      return {
+        ...state,
+        pendingChanges: [],
+        pendingCancellationIds: [],
+        conflictReservationId: null,
+      }
     default:
       return state
   }
@@ -283,6 +317,7 @@ const initialState: SchedulerState = {
   dates: [],
   reservations: [],
   pendingChanges: [],
+  pendingCancellationIds: [],
   conflictReservationId: null,
   saving: false,
 }
@@ -322,6 +357,14 @@ export function useSchedulerState() {
       dispatch({ type: "RESIZE_RESERVATION", reservationId, edge, newTime }),
     [],
   )
+  const cancelReservation = useCallback(
+    (reservationId: string) => dispatch({ type: "CANCEL_RESERVATION", reservationId }),
+    [],
+  )
+  const uncancelReservation = useCallback(
+    (reservationId: string) => dispatch({ type: "UNCANCEL_RESERVATION", reservationId }),
+    [],
+  )
   const resetChanges = useCallback(() => dispatch({ type: "RESET_CHANGES" }), [])
   const clearPending = useCallback(() => dispatch({ type: "CLEAR_PENDING" }), [])
   const markConflict = useCallback(
@@ -338,6 +381,8 @@ export function useSchedulerState() {
     setReservations,
     moveReservation,
     resizeReservation,
+    cancelReservation,
+    uncancelReservation,
     resetChanges,
     clearPending,
     markConflict,
