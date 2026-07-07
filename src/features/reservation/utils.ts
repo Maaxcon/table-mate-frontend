@@ -140,12 +140,17 @@ export function generateTimeSlots(
   const overnight = closeTotal <= openTotal
   const endBase = overnight ? closeTotal + 24 * 60 : closeTotal
 
+  // Slots past midnight live on an extended timeline (24:00 = 1440+). Put "now"
+  // on the same timeline: for an overnight day, an early-morning "now" still
+  // belongs to the session that opened the evening before, so shift it by a day.
+  const nowTotal = overnight && now.minutes < openTotal ? now.minutes + 24 * 60 : now.minutes
+
   while (hour * 60 + minute < endBase) {
     const hh = String(hour % 24).padStart(2, "0")
     const mm = String(minute).padStart(2, "0")
     const slotTotal = hour * 60 + minute
 
-    if (!isToday || slotTotal > now.minutes) {
+    if (!isToday || slotTotal > nowTotal) {
       slots.push(`${hh}:${mm}`)
     }
 
