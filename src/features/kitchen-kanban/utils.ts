@@ -80,5 +80,5 @@ function isSameDay(timestamp: number, day: Date): boolean {
 
 export function filterTicketsToday(tickets: KanbanTicket[]): KanbanTicket[] {
   const today = new Date()
-  return tickets.filter((t) => !t.completedAt || isSameDay(t.completedAt, today))
+  return tickets.filter((t) => t.completedAt && isSameDay(t.completedAt, today))
 }
