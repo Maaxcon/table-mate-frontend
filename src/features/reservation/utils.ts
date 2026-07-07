@@ -1,4 +1,5 @@
 import type { WorkingHoursDay } from "./api"
+import { bookStrings } from "./strings"
 
 export const MIN_DURATION = 30
 
@@ -77,6 +78,37 @@ export function slotDateKey(
     }
   }
   return localDateKey(date)
+}
+
+// Shared by BookModal and RescheduleModal: is [windowStartMins, endMins) a
+// bookable window? Checked against the day's closing time and, when
+// `availableSlotTimes` is given, every 30-min slot in the window. Callers that
+// want to skip the slot-availability check (e.g. prolonging an active
+// booking, where only the closing-time bound applies) pass null.
+export function getDurationError(
+  windowStartMins: number,
+  endMins: number,
+  dayConfig: WorkingHoursDay | undefined,
+  availableSlotTimes: string[] | null,
+): string | null {
+  if (dayConfig) {
+    const closeMins = timeToMinutes(dayConfig.close)
+    const openMins = timeToMinutes(dayConfig.open)
+    const overnight = closeMins <= openMins
+    if (!overnight && endMins > closeMins) {
+      return bookStrings.modal.validation.closingExceeded(dayConfig.close)
+    }
+  }
+
+  if (availableSlotTimes) {
+    for (let m = windowStartMins; m < endMins; m += 30) {
+      if (!availableSlotTimes.includes(minutesToTime(m))) {
+        return bookStrings.modal.validation.durationUnavailable
+      }
+    }
+  }
+
+  return null
 }
 
 export function minutesToTime(minutes: number): string {

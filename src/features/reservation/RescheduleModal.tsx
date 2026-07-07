@@ -2,11 +2,16 @@ import { useCallback, useEffect, useMemo, useState } from "react"
 import { useFocusTrap } from "@/hooks/useFocusTrap"
 import type { WorkingHoursDay } from "./api"
 import { fetchAvailableSlots, fetchRestaurantSettings, modifyReservation } from "./api"
+import { DurationInput } from "./DurationInput"
+import { GuestStepper } from "./GuestStepper"
+import { SlotSummary } from "./SlotSummary"
 import { bookStrings } from "./strings"
+import { TimeSlotGrid } from "./TimeSlotGrid"
 import {
   DAY_NAMES,
   formatTimeInTz,
   generateTimeSlots,
+  getDurationError,
   localDateKey,
   MIN_DURATION,
   minutesToTime,
@@ -173,27 +178,16 @@ function RescheduleForm({
 
     const baseMins = endTimeOnly ? timeToMinutes(currentStartTime) : timeToMinutes(selectedTime)
     const endMins = baseMins + durationMinutes
+    const windowStartMins = prolongOnly
+      ? timeToMinutes(currentEndTime)
+      : timeToMinutes(selectedTime)
 
-    if (dayConfig) {
-      const closeMins = timeToMinutes(dayConfig.close)
-      const openMins = timeToMinutes(dayConfig.open)
-      const overnight = closeMins <= openMins
-      if (!overnight && endMins > closeMins) {
-        return bookStrings.modal.validation.closingExceeded(dayConfig.close)
-      }
-    }
-
-    if (availableSlots && !endTimeOnly) {
-      const startMins = prolongOnly ? timeToMinutes(currentEndTime) : timeToMinutes(selectedTime)
-      for (let m = startMins; m < endMins; m += 30) {
-        const slotTime = minutesToTime(m)
-        if (!availableSlots.includes(slotTime)) {
-          return bookStrings.modal.validation.durationUnavailable
-        }
-      }
-    }
-
-    return null
+    return getDurationError(
+      windowStartMins,
+      endMins,
+      dayConfig,
+      endTimeOnly ? null : availableSlots,
+    )
   }, [
     selectedTime,
     durationMinutes,
@@ -343,23 +337,11 @@ function RescheduleForm({
                 ) : timeSlots.length === 0 ? (
                   <p className="book-modal__empty">{bookStrings.modal.slots.none}</p>
                 ) : (
-                  <div className="book-modal__times">
-                    {timeSlots.map((t) => (
-                      <button
-                        key={t}
-                        type="button"
-                        className={[
-                          "book-modal__time-btn",
-                          selectedTime === t ? "book-modal__time-btn--active" : "",
-                        ]
-                          .filter(Boolean)
-                          .join(" ")}
-                        onClick={() => setSelectedTime(t)}
-                      >
-                        {t}
-                      </button>
-                    ))}
-                  </div>
+                  <TimeSlotGrid
+                    slots={timeSlots}
+                    selectedTime={selectedTime}
+                    onSelect={setSelectedTime}
+                  />
                 )}
               </section>
 
@@ -367,78 +349,31 @@ function RescheduleForm({
                 <h3 className="book-modal__section-title">
                   {bookStrings.reschedule.sections.duration}
                 </h3>
-                <div className="book-modal__duration-input">
-                  <input
-                    type="number"
-                    className="book-modal__duration-field"
-                    min={MIN_DURATION}
-                    step={15}
-                    value={durationMinutes}
-                    onChange={(e) =>
-                      setDurationMinutes(Math.max(MIN_DURATION, Number(e.target.value)))
-                    }
-                  />
-                  {durationError && <p className="book-modal__hint">{durationError}</p>}
-                </div>
+                <DurationInput
+                  value={durationMinutes}
+                  min={MIN_DURATION}
+                  onChange={setDurationMinutes}
+                  error={durationError}
+                />
               </section>
 
               <section className="book-modal__section">
                 <h3 className="book-modal__section-title">
                   {bookStrings.reschedule.sections.guests}
                 </h3>
-                <div className="book-modal__guests">
-                  <button
-                    type="button"
-                    className="book-modal__guest-btn"
-                    onClick={() => setGuestCount((g) => Math.max(1, g - 1))}
-                    disabled={guestCount <= 1}
-                  >
-                    &minus;
-                  </button>
-                  <span className="book-modal__guest-count">{guestCount}</span>
-                  <button
-                    type="button"
-                    className="book-modal__guest-btn"
-                    onClick={() => setGuestCount((g) => g + 1)}
-                    disabled={guestCount >= tableCapacity}
-                  >
-                    +
-                  </button>
-                </div>
+                <GuestStepper value={guestCount} max={tableCapacity} onChange={setGuestCount} />
               </section>
 
               {selectedTime && (
-                <section className="book-modal__section book-modal__section--summary">
-                  <h3 className="book-modal__section-title">
-                    {bookStrings.reschedule.sections.summary}
-                  </h3>
-                  <div className="book-modal__summary">
-                    <div className="book-modal__summary-row">
-                      <span>{bookStrings.modal.summary.table}</span>
-                      <span>#{tableNumber}</span>
-                    </div>
-                    <div className="book-modal__summary-row">
-                      <span>{bookStrings.modal.summary.date}</span>
-                      <span>{formattedDate}</span>
-                    </div>
-                    <div className="book-modal__summary-row">
-                      <span>{bookStrings.modal.summary.time}</span>
-                      <span>
-                        {selectedTime} &ndash; {endAt}
-                      </span>
-                    </div>
-                    <div className="book-modal__summary-row">
-                      <span>{bookStrings.modal.summary.duration}</span>
-                      <span>
-                        {durationMinutes} {bookStrings.modal.durationUnit}
-                      </span>
-                    </div>
-                    <div className="book-modal__summary-row">
-                      <span>{bookStrings.modal.summary.guests}</span>
-                      <span>{guestCount}</span>
-                    </div>
-                  </div>
-                </section>
+                <SlotSummary
+                  title={bookStrings.reschedule.sections.summary}
+                  tableNumber={tableNumber}
+                  date={formattedDate}
+                  time={selectedTime}
+                  endTime={endAt}
+                  duration={durationMinutes}
+                  guests={guestCount}
+                />
               )}
             </div>
 

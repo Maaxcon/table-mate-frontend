@@ -5,13 +5,19 @@ import { useFocusTrap } from "@/hooks/useFocusTrap"
 import type { WorkingHoursDay, ReservationWithTable } from "./api"
 import { createReservation, fetchAvailableSlots, fetchRestaurantSettings } from "./api"
 import { SlotsSkeleton } from "./BookingSkeleton"
+import { DurationInput } from "./DurationInput"
+import { GuestStepper } from "./GuestStepper"
+import { useDateWindow } from "./hooks/useDateWindow"
 import { downloadReservationIcs } from "./ics"
+import { SlotSummary } from "./SlotSummary"
 import { bookStrings } from "./strings"
+import { TimeSlotGrid } from "./TimeSlotGrid"
 import {
   DAY_NAMES,
   DEFAULT_DURATION,
   DEFAULT_GUESTS,
   generateTimeSlots,
+  getDurationError,
   localDateKey,
   MIN_DURATION,
   minutesToTime,
@@ -55,13 +61,9 @@ export function BookModal({
   restaurantId,
   showNameField,
 }: BookModalProps) {
-  // Keyed on the calendar day so "today" refreshes after midnight if the modal
-  // is left open, instead of sticking to a stale date.
-  const todayKey = localDateKey(new Date())
-  const today = useMemo(() => {
-    const [y, m, d] = todayKey.split("-").map(Number)
-    return new Date(y, m - 1, d)
-  }, [todayKey])
+  // Keyed to the venue's calendar day (not the guest's device clock), so
+  // "today" matches the working day the backend checks.
+  const { today, dates } = useDateWindow(timeZone ?? null)
 
   const [selectedDate, setSelectedDate] = useState(() => {
     if (!initialDate) return today
@@ -144,16 +146,6 @@ export function BookModal({
     loadSlots()
   }, [loadSlots])
 
-  const dates = useMemo(() => {
-    const days: Date[] = []
-    for (let i = 0; i < 14; i++) {
-      const d = new Date(today)
-      d.setDate(d.getDate() + i)
-      days.push(d)
-    }
-    return days
-  }, [today])
-
   const dayName = DAY_NAMES[selectedDate.getDay()]
   const dayConfig = effectiveWorkingHours?.[dayName]
 
@@ -204,32 +196,9 @@ export function BookModal({
 
   const durationError = useMemo(() => {
     if (!selectedTime || !effectiveDuration) return null
-
-    const endMins = timeToMinutes(selectedTime) + effectiveDuration
-
-    if (dayConfig) {
-      const closeMins = timeToMinutes(dayConfig.close)
-      const openMins = timeToMinutes(dayConfig.open)
-      const overnight = closeMins <= openMins
-      if (!overnight && endMins > closeMins) {
-        return bookStrings.modal.validation.closingExceeded(dayConfig.close)
-      }
-    }
-
-    if (availableSlots) {
-      const slots = availableSlots[dateKey]
-      if (slots) {
-        const startMins = timeToMinutes(selectedTime)
-        for (let m = startMins; m < endMins; m += 30) {
-          const slotTime = minutesToTime(m)
-          if (!slots.includes(slotTime)) {
-            return bookStrings.modal.validation.durationUnavailable
-          }
-        }
-      }
-    }
-
-    return null
+    const startMins = timeToMinutes(selectedTime)
+    const endMins = startMins + effectiveDuration
+    return getDurationError(startMins, endMins, dayConfig, availableSlots?.[dateKey] ?? null)
   }, [selectedTime, effectiveDuration, dayConfig, availableSlots, dateKey])
 
   const handleConfirm = useCallback(async () => {
@@ -490,67 +459,28 @@ export function BookModal({
                 ) : timeSlots.length === 0 ? (
                   <p className="book-modal__empty">{bookStrings.modal.slots.none}</p>
                 ) : (
-                  <div className="book-modal__times">
-                    {timeSlots.map((t) => (
-                      <button
-                        key={t}
-                        type="button"
-                        className={[
-                          "book-modal__time-btn",
-                          selectedTime === t ? "book-modal__time-btn--active" : "",
-                        ]
-                          .filter(Boolean)
-                          .join(" ")}
-                        onClick={() => setSelectedTime(t)}
-                      >
-                        {t}
-                      </button>
-                    ))}
-                  </div>
+                  <TimeSlotGrid
+                    slots={timeSlots}
+                    selectedTime={selectedTime}
+                    onSelect={setSelectedTime}
+                  />
                 )}
               </section>
 
               <section className="book-modal__section">
                 <h3 className="book-modal__section-title">{bookStrings.modal.sections.duration}</h3>
-                <div className="book-modal__duration-input">
-                  <input
-                    type="number"
-                    className="book-modal__duration-field"
-                    min={MIN_DURATION}
-                    max={Number.isFinite(maxDuration) ? maxDuration : undefined}
-                    step={15}
-                    value={effectiveDuration}
-                    onChange={(e) =>
-                      setDurationMinutes(
-                        Math.max(MIN_DURATION, Math.min(Number(e.target.value), maxDuration)),
-                      )
-                    }
-                  />
-                  {durationError && <p className="book-modal__hint">{durationError}</p>}
-                </div>
+                <DurationInput
+                  value={effectiveDuration}
+                  min={MIN_DURATION}
+                  max={maxDuration}
+                  onChange={setDurationMinutes}
+                  error={durationError}
+                />
               </section>
 
               <section className="book-modal__section">
                 <h3 className="book-modal__section-title">{bookStrings.modal.sections.guests}</h3>
-                <div className="book-modal__guests">
-                  <button
-                    type="button"
-                    className="book-modal__guest-btn"
-                    onClick={() => setGuestCount((g) => Math.max(1, g - 1))}
-                    disabled={guestCount <= 1}
-                  >
-                    &minus;
-                  </button>
-                  <span className="book-modal__guest-count">{guestCount}</span>
-                  <button
-                    type="button"
-                    className="book-modal__guest-btn"
-                    onClick={() => setGuestCount((g) => Math.min(table.capacity, g + 1))}
-                    disabled={guestCount >= table.capacity}
-                  >
-                    +
-                  </button>
-                </div>
+                <GuestStepper value={guestCount} max={table.capacity} onChange={setGuestCount} />
               </section>
 
               {showNameField && (
@@ -578,44 +508,20 @@ export function BookModal({
               </section>
 
               {selectedTime && (
-                <section className="book-modal__section book-modal__section--summary">
-                  <h3 className="book-modal__section-title">
-                    {bookStrings.modal.sections.confirmation}
-                  </h3>
-                  <div className="book-modal__summary">
-                    <div className="book-modal__summary-row">
-                      <span>{bookStrings.modal.summary.table}</span>
-                      <span>#{table.public_number}</span>
-                    </div>
-                    <div className="book-modal__summary-row">
-                      <span>{bookStrings.modal.summary.date}</span>
-                      <span>
-                        {selectedDate.toLocaleDateString("uk-UA", {
-                          weekday: "short",
-                          month: "short",
-                          day: "numeric",
-                          year: "numeric",
-                        })}
-                      </span>
-                    </div>
-                    <div className="book-modal__summary-row">
-                      <span>{bookStrings.modal.summary.time}</span>
-                      <span>
-                        {selectedTime} &ndash; {endAt}
-                      </span>
-                    </div>
-                    <div className="book-modal__summary-row">
-                      <span>{bookStrings.modal.summary.duration}</span>
-                      <span>
-                        {effectiveDuration} {bookStrings.modal.durationUnit}
-                      </span>
-                    </div>
-                    <div className="book-modal__summary-row">
-                      <span>{bookStrings.modal.summary.guests}</span>
-                      <span>{guestCount}</span>
-                    </div>
-                  </div>
-                </section>
+                <SlotSummary
+                  title={bookStrings.modal.sections.confirmation}
+                  tableNumber={table.public_number}
+                  date={selectedDate.toLocaleDateString("uk-UA", {
+                    weekday: "short",
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                  })}
+                  time={selectedTime}
+                  endTime={endAt}
+                  duration={effectiveDuration}
+                  guests={guestCount}
+                />
               )}
             </div>
 
