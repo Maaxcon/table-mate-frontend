@@ -55,6 +55,7 @@ export function ModifyReservationModal({
   const [selectedTime, setSelectedTime] = useState<string | null>(currentStartTime)
   const [durationMinutes, setDurationMinutes] = useState(Math.max(30, currentDurationMinutes))
   const [guestCount, setGuestCount] = useState(reservation.guest_count)
+  const [guestName, setGuestName] = useState(reservation.name)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const dialogRef = useFocusTrap<HTMLDivElement>({
@@ -126,7 +127,9 @@ export function ModifyReservationModal({
         ? new Date(reservation.start_at)
         : new Date(`${dateStr}T${selectedTime}:00`)
       const endDt = new Date(startDt.getTime() + durationMinutes * 60000)
-      const body: Record<string, unknown> = {}
+      const body: Record<string, unknown> = {
+        guest_name: guestName,
+      }
       if (isActive) {
         body.end_at = endDt.toISOString()
       } else {
@@ -183,8 +186,17 @@ export function ModifyReservationModal({
 
         <div className="modify-res__body">
           <div className="modify-res__field">
-            <span className="modify-res__label">Guest</span>
-            <span className="modify-res__value">{reservation.name}</span>
+            <label className="modify-res__label" htmlFor="mod-res-name">
+              Guest
+            </label>
+            <input
+              id="mod-res-name"
+              type="text"
+              className="modify-res__input"
+              value={guestName}
+              onChange={(e) => setGuestName(e.target.value)}
+              disabled={busy}
+            />
           </div>
           <div className="modify-res__field">
             <span className="modify-res__label">Table</span>
