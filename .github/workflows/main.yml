@@ -22,6 +22,8 @@ jobs:
         with:
           repository: unibrix/table-mate-backend
           path: table-mate-backend
+          token: ${{ secrets.DEPENDENCY_ACCESS_TOKEN }}
+          ref: dev
 
       - name: Set up Node
         uses: actions/setup-node@v4
