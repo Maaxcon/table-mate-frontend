@@ -96,6 +96,14 @@ export function formatTimeInTz(iso: string, timeZone: string | null): string {
   })
 }
 
+// "Today" as a local Date (midnight, device-local fields) but keyed to the
+// restaurant's calendar day, not the guest's. A guest whose device clock is a
+// day ahead/behind the venue must still browse/query the venue's "today".
+export function todayInTz(timeZone: string | null): Date {
+  const { year, month, day } = nowInTz(timeZone)
+  return new Date(year, month - 1, day)
+}
+
 // "Now" as wall-clock calendar parts in `timeZone` (falls back to the browser's
 // zone) — so the past-slot filter below compares the venue's clock, not the
 // guest's device clock.

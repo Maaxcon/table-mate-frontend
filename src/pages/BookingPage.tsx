@@ -9,7 +9,12 @@ import { FloorSlotPicker } from "@/features/reservation/FloorSlotPicker"
 import { LoginCtaModal } from "@/features/reservation/LoginCtaModal"
 import { FloorPlanSkeleton } from "@/features/reservation/BookingSkeleton"
 import { fetchSlotAvailability } from "@/features/reservation/api"
-import { DEFAULT_DURATION, DEFAULT_GUESTS, localDateKey } from "@/features/reservation/utils"
+import {
+  DEFAULT_DURATION,
+  DEFAULT_GUESTS,
+  localDateKey,
+  todayInTz,
+} from "@/features/reservation/utils"
 import { bookStrings } from "@/features/reservation/strings"
 import { useBookingData } from "@/features/reservation/hooks/useBookingData"
 import { useFloorSubscription } from "@/features/reservation/hooks/useFloorSubscription"
@@ -61,7 +66,9 @@ export function BookingPage() {
   const [loginCtaOpen, setLoginCtaOpen] = useState(false)
 
   // Slot the guest is browsing for. Table statuses on the floor reflect this slot
-  // (not "now"), and the booking modal opens prefilled with it.
+  // (not "now"), and the booking modal opens prefilled with it. The venue's
+  // timezone loads async, so this starts on the device's "today" and gets
+  // corrected below once the real timezone is known.
   const [slotDate, setSlotDate] = useState(() => {
     const d = new Date()
     d.setHours(0, 0, 0, 0)
@@ -71,11 +78,13 @@ export function BookingPage() {
   const [slotGuests, setSlotGuests] = useState(DEFAULT_GUESTS)
   const [availability, setAvailability] = useState<Record<string, boolean> | null>(null)
   const [availabilityNonce, setAvailabilityNonce] = useState(0)
+  const [userPickedDate, setUserPickedDate] = useState(false)
 
   const handleSlotChange = useCallback(
     (next: { date?: Date; time?: string | null; guests?: number }) => {
       // Switching day clears the now-stale availability until the new slot loads.
       if (next.date !== undefined) {
+        setUserPickedDate(true)
         setSlotDate(next.date)
         setAvailability(null)
       }
@@ -84,6 +93,23 @@ export function BookingPage() {
     },
     [],
   )
+
+  // Once the venue's timezone is known, snap the still-default date to the
+  // venue's "today" — a device clock a day ahead/behind must not leave the
+  // guest browsing (and querying availability for) the wrong working day.
+  // Adjusted during render (not an effect) per React's guidance for state
+  // that depends on a prop transition, so it lands in the same commit.
+  const [syncedTimezone, setSyncedTimezone] = useState(timezone)
+  if (timezone !== syncedTimezone) {
+    setSyncedTimezone(timezone)
+    if (timezone && !userPickedDate) {
+      const venueToday = todayInTz(timezone)
+      if (localDateKey(venueToday) !== localDateKey(slotDate)) {
+        setSlotDate(venueToday)
+        setAvailability(null)
+      }
+    }
+  }
 
   useEffect(() => {
     if (!public_restaurant_id || !slotTime) return
