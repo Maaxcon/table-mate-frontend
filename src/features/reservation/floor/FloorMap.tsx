@@ -17,6 +17,7 @@ export function FloorMap({
   portals,
   canvasWidth,
   canvasHeight,
+  contentBounds = null,
   selectedId,
   onSelect,
   onZoneChange,
@@ -31,6 +32,8 @@ export function FloorMap({
   portals: LayoutPayload["portals"]
   canvasWidth: number
   canvasHeight: number
+  // Bounding box of the tables in canvas px; the map opens framed on it.
+  contentBounds?: { x: number; y: number; w: number; h: number } | null
   selectedId: string | null
   onSelect: (table: Table) => void
   onZoneChange: (zoneId: string | null) => void
@@ -41,6 +44,7 @@ export function FloorMap({
 }) {
   const viewportRef = useRef<HTMLDivElement>(null)
   const [viewportWidth, setViewportWidth] = useState(0)
+  const [viewportHeight, setViewportHeight] = useState(0)
   const [hovered, setHovered] = useState<Tile | null>(null)
 
   // Measure the viewport so the canvas can be scaled to fit.
@@ -49,6 +53,7 @@ export function FloorMap({
     if (!el) return
     const observer = new ResizeObserver((entries) => {
       setViewportWidth(entries[0].contentRect.width)
+      setViewportHeight(entries[0].contentRect.height)
     })
     observer.observe(el)
     return () => observer.disconnect()
@@ -58,18 +63,37 @@ export function FloorMap({
     viewportRef,
     canvasWidth,
     viewportWidth,
+    viewportHeight,
+    contentBounds,
   )
+
+  // When a content box is given (mobile sheet), crop the canvas to just the
+  // tables + decor and centre it, so they read large instead of floating in the
+  // empty room. Otherwise render the whole canvas (desktop).
+  const cropped = contentBounds
+  const drawW = cropped ? cropped.w : canvasWidth
+  const drawH = cropped ? cropped.h : canvasHeight
 
   return (
     <div className="c-floor-plan__stage">
       <div className="c-floor-plan__viewport" ref={viewportRef} {...panHandlers}>
         <div
           className="c-floor-plan__canvas-wrap"
-          style={{ width: canvasWidth * scale, height: canvasHeight * scale }}
+          style={{
+            width: drawW * scale,
+            height: drawH * scale,
+            margin: cropped ? "auto" : undefined,
+          }}
         >
           <div
             className="c-floor-plan__canvas"
-            style={{ width: canvasWidth, height: canvasHeight, transform: `scale(${scale})` }}
+            style={{
+              width: drawW,
+              height: drawH,
+              transform: cropped
+                ? `scale(${scale}) translate(${-cropped.x}px, ${-cropped.y}px)`
+                : `scale(${scale})`,
+            }}
           >
             <FloorDecor
               obstacles={obstacles}

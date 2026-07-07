@@ -867,6 +867,9 @@
   min-height: 0;
   max-height: none;
   height: auto;
+  /* Centre the content-cropped canvas (margin:auto on the wrap) both ways, while
+     still allowing pan-scroll once the guest zooms in past the viewport. */
+  display: flex;
 }
 
 /* Keep the zoom controls clear of the app's bottom-right theme toggle. */

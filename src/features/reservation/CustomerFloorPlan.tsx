@@ -55,6 +55,36 @@ function findLayoutTableMatch(tables: Table[], layoutTable: LayoutPayload["table
   )
 }
 
+// Bounding box of everything placed on the floor (tables + decor), in canvas px.
+// Lets the mobile map open framed on the content, not the whole empty room, so
+// tables read large on first open.
+type Box = { x: number; y: number; width: number; height: number }
+function contentBoundsOf(
+  tiles: Tile[],
+  ...decor: Box[][]
+): { x: number; y: number; w: number; h: number } | null {
+  let minX = Infinity
+  let minY = Infinity
+  let maxX = -Infinity
+  let maxY = -Infinity
+  for (const t of tiles) {
+    minX = Math.min(minX, t.x)
+    minY = Math.min(minY, t.y)
+    maxX = Math.max(maxX, t.x + t.w)
+    maxY = Math.max(maxY, t.y + t.h)
+  }
+  for (const arr of decor) {
+    for (const e of arr) {
+      minX = Math.min(minX, e.x)
+      minY = Math.min(minY, e.y)
+      maxX = Math.max(maxX, e.x + e.width)
+      maxY = Math.max(maxY, e.y + e.height)
+    }
+  }
+  if (!Number.isFinite(minX)) return null
+  return { x: minX, y: minY, w: maxX - minX, h: maxY - minY }
+}
+
 // Tracks whether the viewport is in the mobile (card-list) range.
 function useIsMobile() {
   const [isMobile, setIsMobile] = useState(() =>
@@ -178,77 +208,83 @@ export function CustomerFloorPlan({
 
   // Spatial layout: real coordinates from the published editor layout when present,
   // otherwise a tidy auto grid. Both render the same visual table tiles.
-  const { tiles, obstacles, thresholds, portals, canvasWidth, canvasHeight } = useMemo(() => {
-    const layoutTables = payload?.tables ?? []
-    if (layoutTables.length > 0) {
-      const activeZone = zones.find((z) => z.public_id === selectedZone) ?? zones[0]
-      const tiles: Tile[] = layoutTables
-        .filter((lt) => !selectedZone || lt.zone_id === selectedZone)
-        .map((lt) => {
-          const table = findLayoutTableMatch(tables, lt)
-          const view = table ? viewByPublicId.get(table.public_id) : undefined
-          const capacity = table?.capacity ?? lt.capacity
-          const publicNumber = table?.public_number ?? lt.public_number
-          return {
-            key: lt.id ?? lt.public_number,
-            table,
-            publicNumber,
-            capacity,
-            x: lt.x,
-            y: lt.y,
-            w: lt.width,
-            h: lt.height,
-            rotation: lt.rotation ?? 0,
-            shape: lt.shape === "round" ? "round" : "square",
-            tone: view?.tone ?? "free",
-            label: view?.label ?? bookStrings.floorPlan.status.free,
-            bookable: view?.bookable ?? false,
-            perfect: view?.perfect ?? (capacity === guests && Boolean(table)),
-          }
-        })
-      const inZone = <T extends { zone_id: string | null }>(e: T) =>
-        !selectedZone || e.zone_id === selectedZone
+  const { tiles, obstacles, thresholds, portals, canvasWidth, canvasHeight, contentBounds } =
+    useMemo(() => {
+      const layoutTables = payload?.tables ?? []
+      if (layoutTables.length > 0) {
+        const activeZone = zones.find((z) => z.public_id === selectedZone) ?? zones[0]
+        const tiles: Tile[] = layoutTables
+          .filter((lt) => !selectedZone || lt.zone_id === selectedZone)
+          .map((lt) => {
+            const table = findLayoutTableMatch(tables, lt)
+            const view = table ? viewByPublicId.get(table.public_id) : undefined
+            const capacity = table?.capacity ?? lt.capacity
+            const publicNumber = table?.public_number ?? lt.public_number
+            return {
+              key: lt.id ?? lt.public_number,
+              table,
+              publicNumber,
+              capacity,
+              x: lt.x,
+              y: lt.y,
+              w: lt.width,
+              h: lt.height,
+              rotation: lt.rotation ?? 0,
+              shape: lt.shape === "round" ? "round" : "square",
+              tone: view?.tone ?? "free",
+              label: view?.label ?? bookStrings.floorPlan.status.free,
+              bookable: view?.bookable ?? false,
+              perfect: view?.perfect ?? (capacity === guests && Boolean(table)),
+            }
+          })
+        const inZone = <T extends { zone_id: string | null }>(e: T) =>
+          !selectedZone || e.zone_id === selectedZone
+        const obstacles = (payload?.obstacles ?? []).filter(inZone)
+        const thresholds = (payload?.thresholds ?? []).filter(inZone)
+        const portals = (payload?.portals ?? []).filter(inZone)
+        return {
+          tiles,
+          obstacles,
+          thresholds,
+          portals,
+          canvasWidth: (activeZone?.canvas_cols ?? 20) * GRID,
+          canvasHeight: (activeZone?.canvas_rows ?? 20) * GRID,
+          contentBounds: contentBoundsOf(tiles, obstacles, thresholds, portals),
+        }
+      }
+
+      // Fallback: auto grid over the tables we have (no positions in the backend).
+      const zoneViews = tableViews.filter(
+        (v) => !selectedZone || v.table.zone?.public_id === selectedZone,
+      )
+      const cols = Math.max(1, Math.round(Math.sqrt(zoneViews.length * 1.6)))
+      const rows = Math.max(1, Math.ceil(zoneViews.length / cols))
+      const tiles: Tile[] = zoneViews.map((v, i) => ({
+        key: v.table.public_id,
+        table: v.table,
+        publicNumber: v.table.public_number,
+        capacity: v.table.capacity,
+        x: CANVAS_PADDING + (i % cols) * GRID_SPACING,
+        y: CANVAS_PADDING + Math.floor(i / cols) * GRID_SPACING,
+        w: 200,
+        h: 200,
+        rotation: 0,
+        shape: "square",
+        tone: v.tone,
+        label: v.label,
+        bookable: v.bookable,
+        perfect: v.perfect,
+      }))
       return {
         tiles,
-        obstacles: (payload?.obstacles ?? []).filter(inZone),
-        thresholds: (payload?.thresholds ?? []).filter(inZone),
-        portals: (payload?.portals ?? []).filter(inZone),
-        canvasWidth: (activeZone?.canvas_cols ?? 20) * GRID,
-        canvasHeight: (activeZone?.canvas_rows ?? 20) * GRID,
+        obstacles: [] as LayoutPayload["obstacles"],
+        thresholds: [] as LayoutPayload["thresholds"],
+        portals: [] as LayoutPayload["portals"],
+        canvasWidth: (cols - 1) * GRID_SPACING + TABLE_FOOTPRINT + CANVAS_PADDING * 2,
+        canvasHeight: (rows - 1) * GRID_SPACING + TABLE_FOOTPRINT + CANVAS_PADDING * 2,
+        contentBounds: contentBoundsOf(tiles),
       }
-    }
-
-    // Fallback: auto grid over the tables we have (no positions in the backend).
-    const zoneViews = tableViews.filter(
-      (v) => !selectedZone || v.table.zone?.public_id === selectedZone,
-    )
-    const cols = Math.max(1, Math.round(Math.sqrt(zoneViews.length * 1.6)))
-    const rows = Math.max(1, Math.ceil(zoneViews.length / cols))
-    const tiles: Tile[] = zoneViews.map((v, i) => ({
-      key: v.table.public_id,
-      table: v.table,
-      publicNumber: v.table.public_number,
-      capacity: v.table.capacity,
-      x: CANVAS_PADDING + (i % cols) * GRID_SPACING,
-      y: CANVAS_PADDING + Math.floor(i / cols) * GRID_SPACING,
-      w: 200,
-      h: 200,
-      rotation: 0,
-      shape: "square",
-      tone: v.tone,
-      label: v.label,
-      bookable: v.bookable,
-      perfect: v.perfect,
-    }))
-    return {
-      tiles,
-      obstacles: [] as LayoutPayload["obstacles"],
-      thresholds: [] as LayoutPayload["thresholds"],
-      portals: [] as LayoutPayload["portals"],
-      canvasWidth: (cols - 1) * GRID_SPACING + TABLE_FOOTPRINT + CANVAS_PADDING * 2,
-      canvasHeight: (rows - 1) * GRID_SPACING + TABLE_FOOTPRINT + CANVAS_PADDING * 2,
-    }
-  }, [payload, zones, selectedZone, tables, tableViews, viewByPublicId, guests])
+    }, [payload, zones, selectedZone, tables, tableViews, viewByPublicId, guests])
 
   // Mobile order: tables that seat the party first, tightest fit on top, free
   // before booked, then by number.
@@ -408,6 +444,7 @@ export function CustomerFloorPlan({
             portals={portals}
             canvasWidth={canvasWidth}
             canvasHeight={canvasHeight}
+            contentBounds={contentBounds}
             selectedId={selectedId}
             onSelect={(t) => {
               onSelect(t)

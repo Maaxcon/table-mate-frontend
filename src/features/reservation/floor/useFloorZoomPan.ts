@@ -11,9 +11,25 @@ export function useFloorZoomPan(
   viewportRef: RefObject<HTMLDivElement | null>,
   canvasWidth: number,
   viewportWidth: number,
+  viewportHeight = 0,
+  content: { x: number; y: number; w: number; h: number } | null = null,
 ) {
   const [zoom, setZoom] = useState(1)
-  const fitScale = viewportWidth > 0 ? Math.min(1, viewportWidth / canvasWidth) : 1
+  // Prefer framing the tables (content) so they read large on open; fall back to
+  // fitting the whole canvas width when we have no content box yet.
+  const FIT_PAD = 14
+  let fitScale: number
+  if (content && content.w > 0 && content.h > 0 && viewportWidth > 0 && viewportHeight > 0) {
+    const widthFit = (viewportWidth - FIT_PAD * 2) / content.w
+    const heightFit = (viewportHeight - FIT_PAD * 2) / content.h
+    // Bias toward bigger tables (height fit) but cap how far the content may
+    // spill past the viewport width, so side-panning on open stays small.
+    fitScale = Math.max(widthFit, Math.min(heightFit, (viewportWidth * 1.35) / content.w))
+    // Keep it sane: never upscale past 2x (tiny rooms) or below a floor.
+    fitScale = Math.max(0.1, Math.min(fitScale, 2))
+  } else {
+    fitScale = viewportWidth > 0 ? Math.min(1, viewportWidth / canvasWidth) : 1
+  }
   const scale = Math.min(2.6, fitScale * zoom)
   const zoomIn = useCallback(() => setZoom((z) => Math.min(4, z * 1.25)), [])
   const zoomOut = useCallback(() => setZoom((z) => Math.max(1, z / 1.25)), [])
