@@ -1,65 +1,63 @@
 import { useCallback, useMemo, useRef, useState } from "react"
-import type { PointerEvent as ReactPointerEvent, RefObject } from "react"
+import type { PointerEvent as ReactPointerEvent } from "react"
 
-// Zoom + drag-to-pan for the floor viewport. zoom=1 fits the whole room (overview);
-// buttons multiply on top so guests zoom IN from there. Panning is mouse-only so
-// touch keeps native scrolling; a small threshold means a plain tap still books a
-// table (didPanRef suppresses the click when the pointer was actually dragged).
-// Zoom resets on a zone switch by remounting <FloorMap key={zone}>, so there's no
-// reset effect here.
-export function useFloorZoomPan(
-  viewportRef: RefObject<HTMLDivElement | null>,
-  canvasWidth: number,
-  viewportWidth: number,
-  viewportHeight = 0,
-  content: { x: number; y: number; w: number; h: number } | null = null,
-) {
+// Zoom + drag-to-pan chrome layered OUTSIDE FloorPlanView's own auto-fit —
+// zoom=1 is exactly whatever FloorPlanView already fit itself to (the whole
+// canvas, or a `frame` crop); this hook only adds a multiplier on top via an
+// outer `transform: scale(zoom) translate(panX, panY)` wrapper. Panning is
+// mouse-only (touch keeps native scrolling elsewhere on the page) and tracked
+// as JS state rather than native scroll, since the wrapper clips via
+// `overflow: hidden`, not a scrollable box. A small drag threshold means a
+// plain tap still books a table (didPanRef suppresses the click when the
+// pointer actually moved). Zoom/pan reset on a zone switch by remounting
+// <FloorMap key={zone}>, so there's no reset effect here.
+export function useFloorZoomPan(viewportWidth: number, viewportHeight = 0) {
   const [zoom, setZoom] = useState(1)
-  // Prefer framing the tables (content) so they read large on open; fall back to
-  // fitting the whole canvas width when we have no content box yet.
-  const FIT_PAD = 14
-  let fitScale: number
-  if (content && content.w > 0 && content.h > 0 && viewportWidth > 0 && viewportHeight > 0) {
-    const widthFit = (viewportWidth - FIT_PAD * 2) / content.w
-    const heightFit = (viewportHeight - FIT_PAD * 2) / content.h
-    // Bias toward bigger tables (height fit) but cap how far the content may
-    // spill past the viewport width, so side-panning on open stays small.
-    fitScale = Math.max(widthFit, Math.min(heightFit, (viewportWidth * 1.35) / content.w))
-    // Keep it sane: never upscale past 2x (tiny rooms) or below a floor.
-    fitScale = Math.max(0.1, Math.min(fitScale, 2))
-  } else {
-    fitScale = viewportWidth > 0 ? Math.min(1, viewportWidth / canvasWidth) : 1
-  }
-  const scale = Math.min(2.6, fitScale * zoom)
+  const [pan, setPan] = useState({ x: 0, y: 0 })
+  const scale = zoom
+
+  // How far the zoomed content can be dragged before its edge would show
+  // empty space — an approximation (half the extra size zoom adds), not an
+  // exact bound on FloorPlanView's own fitted content box.
+  const maxPanX = Math.max(0, ((zoom - 1) * viewportWidth) / 2)
+  const maxPanY = Math.max(0, ((zoom - 1) * viewportHeight) / 2)
+  const clampPan = useCallback(
+    (p: { x: number; y: number }) => ({
+      x: Math.max(-maxPanX, Math.min(maxPanX, p.x)),
+      y: Math.max(-maxPanY, Math.min(maxPanY, p.y)),
+    }),
+    [maxPanX, maxPanY],
+  )
+
   const zoomIn = useCallback(() => setZoom((z) => Math.min(4, z * 1.25)), [])
   const zoomOut = useCallback(() => setZoom((z) => Math.max(1, z / 1.25)), [])
-  const zoomFit = useCallback(() => setZoom(1), [])
+  const zoomFit = useCallback(() => {
+    setZoom(1)
+    setPan({ x: 0, y: 0 })
+  }, [])
 
-  const panRef = useRef<{ x: number; y: number; left: number; top: number } | null>(null)
+  const panRef = useRef<{ x: number; y: number; startPan: { x: number; y: number } } | null>(null)
   const didPanRef = useRef(false)
 
   const onPointerDown = useCallback(
     (e: ReactPointerEvent<HTMLDivElement>) => {
-      const el = viewportRef.current
-      if (!el || e.pointerType !== "mouse") return
+      if (e.pointerType !== "mouse") return
       didPanRef.current = false
-      panRef.current = { x: e.clientX, y: e.clientY, left: el.scrollLeft, top: el.scrollTop }
+      panRef.current = { x: e.clientX, y: e.clientY, startPan: pan }
     },
-    [viewportRef],
+    [pan],
   )
   const onPointerMove = useCallback(
     (e: ReactPointerEvent<HTMLDivElement>) => {
-      const el = viewportRef.current
       const p = panRef.current
-      if (!el || !p) return
+      if (!p) return
       const dx = e.clientX - p.x
       const dy = e.clientY - p.y
       if (!didPanRef.current && Math.hypot(dx, dy) < 6) return
       didPanRef.current = true
-      el.scrollLeft = p.left - dx
-      el.scrollTop = p.top - dy
+      setPan(clampPan({ x: p.startPan.x + dx, y: p.startPan.y + dy }))
     },
-    [viewportRef],
+    [clampPan],
   )
   const onPointerUp = useCallback(() => {
     panRef.current = null
@@ -70,5 +68,5 @@ export function useFloorZoomPan(
     [onPointerDown, onPointerMove, onPointerUp],
   )
 
-  return { scale, zoomIn, zoomOut, zoomFit, didPanRef, panHandlers }
+  return { scale, pan, zoomIn, zoomOut, zoomFit, didPanRef, panHandlers }
 }

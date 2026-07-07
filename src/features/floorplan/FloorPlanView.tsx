@@ -23,7 +23,7 @@ export interface FloorPlanTableRef {
   capacity: number | null
 }
 
-interface FloorPlanViewProps {
+export interface FloorPlanViewProps {
   /** The published layout payload (LayoutVersion.layout_json / Layout.payload). */
   payload: LayoutPayload | null | undefined
   /** When set, only entities belonging to this zone are shown. */
@@ -42,6 +42,28 @@ interface FloorPlanViewProps {
   renderTableContent?: (table: FloorPlanTableRef) => ReactNode
   /** Navigate to a portal's target zone on click (makes portals interactive links). */
   onPortalNavigate?: (targetZoneId: string) => void
+  /**
+   * Full per-entity override. When provided, replaces the default fp-block
+   * rendering — including the canvas edge lines — for every entity (tables,
+   * obstacles, thresholds, portals alike). Geometry is raw numbers, not a
+   * prebuilt style/transform, so the consumer can apply rotation however it
+   * wants (e.g. a --rot custom property + CSS rule instead of an inline
+   * transform). tableStatus/renderTableContent/onTableSelect/onPortalNavigate
+   * are ignored when this is set — the override owns everything.
+   */
+  renderEntity?: (
+    entity: EditorEntity,
+    geometry: { left: number; top: number; width: number; height: number; rotation: number },
+    ctx: { selected: boolean; index: number },
+  ) => ReactNode
+  /**
+   * Fit/center on this sub-rectangle instead of the whole canvas (GRID units,
+   * same space as canvasCols/canvasRows). Entities keep their normal
+   * canvas-relative positions; only the fitted/visible region shifts.
+   * Omitting it is exactly the {x:0,y:0,width:canvasCols,height:canvasRows}
+   * case — no behavior change for callers that don't pass it.
+   */
+  frame?: { x: number; y: number; width: number; height: number }
   /** Shown when there is no published layout to render. */
   emptyMessage?: string
   /** Clamp auto-fit scale (default min 0.3, no max). */
@@ -68,6 +90,8 @@ export function FloorPlanView({
   tableStatus,
   renderTableContent,
   onPortalNavigate,
+  renderEntity: renderEntityProp,
+  frame,
   emptyMessage = "No floor plan published yet.",
   minScale: minScaleProp,
   maxScale: maxScaleProp,
@@ -79,8 +103,14 @@ export function FloorPlanView({
   const canvasRows = canvasRowsProp ?? DEFAULT_CANVAS_ROWS
   const canvasPxW = canvasCols * GRID
   const canvasPxH = canvasRows * GRID
+  // The sub-rectangle to fit/center on — defaults to the whole canvas, so
+  // omitting `frame` reduces every formula below to today's behavior exactly.
+  const framePxX = (frame?.x ?? 0) * GRID
+  const framePxY = (frame?.y ?? 0) * GRID
+  const framePxW = (frame?.width ?? canvasCols) * GRID
+  const framePxH = (frame?.height ?? canvasRows) * GRID
   const { scale, width: containerWidth, height: containerHeight } = viewBox
-  const aspectRatio = canvasPxH === 0 ? 1 : canvasPxW / canvasPxH
+  const aspectRatio = framePxH === 0 ? 1 : framePxW / framePxH
   const containerStyle = useMemo<CSSProperties>(
     () => ({ aspectRatio: `${aspectRatio}` }),
     [aspectRatio],
@@ -89,16 +119,16 @@ export function FloorPlanView({
   useEffect(() => {
     const el = containerRef.current
     if (!el) return
-    // Fit the canvas plus its proportional overhang (one grid cell each side, where
+    // Fit the frame plus its proportional overhang (one grid cell each side, where
     // grid -1 portals/thresholds live). With padding = GRID * scale the scale factors
-    // out cleanly: clientWidth = (canvasPxW + 2 * GRID) * scale.
+    // out cleanly: clientWidth = (framePxW + 2 * GRID) * scale.
     const minScale = minScaleProp ?? 0.3
     const maxScale = maxScaleProp ?? Number.POSITIVE_INFINITY
     const update = () => {
       const availableW = el.clientWidth
       const availableH = el.clientHeight || availableW
-      const neededW = canvasPxW + 2 * GRID
-      const neededH = canvasPxH + 2 * GRID
+      const neededW = framePxW + 2 * GRID
+      const neededH = framePxH + 2 * GRID
       const fitted = Math.min(availableW / neededW, availableH / neededH)
       const scale = Math.min(maxScale, Math.max(fitted, minScale))
       setViewBox({ scale, width: availableW, height: availableH })
@@ -107,7 +137,7 @@ export function FloorPlanView({
     const observer = new ResizeObserver(update)
     observer.observe(el)
     return () => observer.disconnect()
-  }, [canvasPxW, canvasPxH, minScaleProp, maxScaleProp])
+  }, [framePxW, framePxH, minScaleProp, maxScaleProp])
 
   const entities = useMemo<EditorEntity[]>(
     () => (payload ? deserializeLayout(payload) : []),
@@ -135,8 +165,8 @@ export function FloorPlanView({
   }
 
   const pad = GRID * scale
-  const scaledW = canvasPxW * scale + 2 * pad
-  const scaledH = canvasPxH * scale + 2 * pad
+  const scaledW = framePxW * scale + 2 * pad
+  const scaledH = framePxH * scale + 2 * pad
   const offsetX = Math.max((containerWidth - scaledW) / 2, 0)
   const offsetY = Math.max((containerHeight - scaledH) / 2, 0)
 
@@ -159,35 +189,55 @@ export function FloorPlanView({
         className="fp-view__stage"
         style={{
           position: "absolute",
-          top: pad + offsetY,
-          left: pad + offsetX,
+          // The stage stays sized to the FULL canvas (entities keep their
+          // normal canvas-relative positions) — only its screen offset shifts
+          // to bring the frame's top-left into view. With frame omitted,
+          // framePxX/Y are 0, so this is identical to the old pad+offset math.
+          top: pad + offsetY - framePxY * scale,
+          left: pad + offsetX - framePxX * scale,
           width: canvasPxW,
           height: canvasPxH,
           transform: `scale(${scale})`,
           transformOrigin: "top left",
         }}
       >
-        {visible.map((e) =>
-          renderEntity(e, {
+        {visible.map((e, index) => {
+          if (renderEntityProp) {
+            const geometry = {
+              left: px(e.x),
+              top: px(e.y),
+              width: px(e.w),
+              height: px(e.h),
+              rotation: e.rotation ?? 0,
+            }
+            const id = e.serverId ?? e.id
+            const selected = selectedId != null && selectedId === id
+            return renderEntityProp(e, geometry, { selected, index })
+          }
+          return defaultRenderEntity(e, {
             selectedId,
             onTableSelect,
             tableStatus,
             renderTableContent,
             onPortalNavigate,
-          }),
+          })
+        })}
+        {!renderEntityProp && (
+          <>
+            <div
+              className={`fp-view__edge fp-view__edge--top${edgeStyles.top === "solid" ? " fp-view__edge--solid" : ""}`}
+            />
+            <div
+              className={`fp-view__edge fp-view__edge--right${edgeStyles.right === "solid" ? " fp-view__edge--solid" : ""}`}
+            />
+            <div
+              className={`fp-view__edge fp-view__edge--bottom${edgeStyles.bottom === "solid" ? " fp-view__edge--solid" : ""}`}
+            />
+            <div
+              className={`fp-view__edge fp-view__edge--left${edgeStyles.left === "solid" ? " fp-view__edge--solid" : ""}`}
+            />
+          </>
         )}
-        <div
-          className={`fp-view__edge fp-view__edge--top${edgeStyles.top === "solid" ? " fp-view__edge--solid" : ""}`}
-        />
-        <div
-          className={`fp-view__edge fp-view__edge--right${edgeStyles.right === "solid" ? " fp-view__edge--solid" : ""}`}
-        />
-        <div
-          className={`fp-view__edge fp-view__edge--bottom${edgeStyles.bottom === "solid" ? " fp-view__edge--solid" : ""}`}
-        />
-        <div
-          className={`fp-view__edge fp-view__edge--left${edgeStyles.left === "solid" ? " fp-view__edge--solid" : ""}`}
-        />
       </div>
     </div>
   )
@@ -201,7 +251,7 @@ interface RenderOpts {
   onPortalNavigate?: (targetZoneId: string) => void
 }
 
-function renderEntity(e: EditorEntity, opts: RenderOpts): ReactNode {
+function defaultRenderEntity(e: EditorEntity, opts: RenderOpts): ReactNode {
   const style = {
     left: px(e.x),
     top: px(e.y),

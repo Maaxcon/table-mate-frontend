@@ -47,6 +47,7 @@ export const bookStrings = {
     filterAll: "Усі",
     filterFree: "Вільні",
     noFree: "Немає вільних столів на цей час",
+    noTables: "У цій зоні поки немає столів",
     showAll: "Показати всі",
     statusSmall: "Замало місць",
     freeCount: (time?: string | null) => (time ? `вільно на ${time}` : "вільно"),

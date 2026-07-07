@@ -5,11 +5,21 @@ import { bookStrings } from "@/features/reservation/strings"
 import { TableSeats } from "./TableSeats"
 import type { Tile } from "./types"
 
+export interface TileGeometry {
+  left: number
+  top: number
+  width: number
+  height: number
+  rotation: number
+}
+
 // One positioned table on the spatial map: chairs, status tone, number, and a
 // seats chip. Clickable to book unless taken; a big hover tooltip is driven by
-// the parent via onHoverEnter/Leave.
+// the parent via onHoverEnter/Leave. Position/rotation come from `geometry`
+// (FloorPlanView's renderEntity callback) — this component owns visuals only.
 export function FloorTile({
   tile,
+  geometry,
   index,
   selected,
   dimmed,
@@ -20,6 +30,7 @@ export function FloorTile({
   onHoverLeave,
 }: {
   tile: Tile
+  geometry: TileGeometry
   index: number
   selected: boolean
   dimmed: boolean
@@ -48,12 +59,12 @@ export function FloorTile({
       onMouseLeave={() => onHoverLeave(tile)}
       style={
         {
-          left: tile.x,
-          top: tile.y,
-          width: tile.w,
-          height: tile.h,
+          left: geometry.left,
+          top: geometry.top,
+          width: geometry.width,
+          height: geometry.height,
           animationDelay: `${Math.min(index, 24) * 35}ms`,
-          "--rot": `${tile.rotation}deg`,
+          "--rot": `${geometry.rotation}deg`,
         } as CSSProperties
       }
       onClick={() => {
@@ -63,7 +74,7 @@ export function FloorTile({
       disabled={!tile.bookable || !tile.table}
       aria-label={bookStrings.floorPlan.tableAria(tile.publicNumber, tile.capacity, tile.label)}
     >
-      <TableSeats capacity={tile.capacity} shape={tile.shape} size={tile.w} />
+      <TableSeats capacity={tile.capacity} shape={tile.shape} size={geometry.width} />
 
       {tile.perfect && (
         <span className="c-floor-plan__perfect" title={bookStrings.floorPlan.perfectFit(guests)}>

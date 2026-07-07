@@ -11,17 +11,14 @@ export interface TableView {
   perfect: boolean
 }
 
-// A positioned table on the spatial floor map (real editor coords or auto grid).
+// A resolved table view for one spatial-map entity — the live table (if
+// matched) joined with its slot-aware status. Geometry (position/rotation)
+// comes separately from FloorPlanView's renderEntity callback, not here.
 export interface Tile {
   key: string
   table: Table | undefined
   publicNumber: string
   capacity: number
-  x: number
-  y: number
-  w: number
-  h: number
-  rotation: number
   shape: "square" | "round"
   tone: Tone
   label: string

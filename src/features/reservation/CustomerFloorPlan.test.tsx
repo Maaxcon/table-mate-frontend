@@ -128,4 +128,36 @@ describe("CustomerFloorPlan", () => {
     expect(tile).toHaveTextContent("6")
     expect(tile).not.toHaveTextContent("0")
   })
+
+  it("synthesizes a grid-aligned, non-overlapping layout when no layout is published", () => {
+    const main = makeZone("main", "Main")
+    const tables = [
+      makeTable({ public_id: "t1", public_number: "T1", capacity: 4, zone: main }),
+      makeTable({ public_id: "t2", public_number: "T2", capacity: 2, zone: main }),
+    ]
+
+    render(
+      <CustomerFloorPlan
+        tables={tables}
+        zones={[main]}
+        selectedZone="main"
+        onZoneChange={vi.fn()}
+        selectedId={null}
+        onSelect={vi.fn()}
+        payload={null}
+      />,
+    )
+
+    const tile1 = screen.getByRole("button", { name: "Стіл T1, 4 місця, Вільно" })
+    const tile2 = screen.getByRole("button", { name: "Стіл T2, 2 місця, Вільно" })
+
+    // GRID = 100 — every synthesized position must be an exact multiple, or
+    // deserializeLayout's Math.round(x / GRID) rounding would silently shift it.
+    for (const tile of [tile1, tile2]) {
+      expect(parseFloat(tile.style.left) % 100).toBe(0)
+      expect(parseFloat(tile.style.top) % 100).toBe(0)
+    }
+    // Not stacked on top of each other.
+    expect(tile1.style.left !== tile2.style.left || tile1.style.top !== tile2.style.top).toBe(true)
+  })
 })

@@ -1,0 +1,84 @@
+import { act, renderHook } from "@testing-library/react"
+import { describe, expect, it } from "vitest"
+import { useFloorZoomPan } from "./useFloorZoomPan"
+
+describe("useFloorZoomPan", () => {
+  it("starts at zoom=1 (FloorPlanView's own fit, no extra scale)", () => {
+    const { result } = renderHook(() => useFloorZoomPan(400, 400))
+    expect(result.current.scale).toBe(1)
+    expect(result.current.pan).toEqual({ x: 0, y: 0 })
+  })
+
+  it("zoomIn/zoomOut multiply within [1, 4]", () => {
+    const { result } = renderHook(() => useFloorZoomPan(400, 400))
+    act(() => result.current.zoomIn())
+    expect(result.current.scale).toBeCloseTo(1.25)
+    act(() => {
+      result.current.zoomIn()
+      result.current.zoomIn()
+      result.current.zoomIn()
+      result.current.zoomIn()
+      result.current.zoomIn()
+      result.current.zoomIn()
+      result.current.zoomIn()
+      result.current.zoomIn()
+    })
+    expect(result.current.scale).toBeLessThanOrEqual(4)
+
+    act(() => result.current.zoomOut())
+    act(() => {
+      for (let i = 0; i < 20; i++) result.current.zoomOut()
+    })
+    expect(result.current.scale).toBe(1)
+  })
+
+  it("zoomFit resets both zoom and pan", () => {
+    const { result } = renderHook(() => useFloorZoomPan(400, 400))
+    act(() => {
+      result.current.zoomIn()
+      result.current.zoomIn()
+    })
+    expect(result.current.scale).toBeGreaterThan(1)
+
+    act(() => result.current.zoomFit())
+    expect(result.current.scale).toBe(1)
+    expect(result.current.pan).toEqual({ x: 0, y: 0 })
+  })
+
+  it("clamps pan to zero range at zoom=1 (nothing to pan into)", () => {
+    const { result } = renderHook(() => useFloorZoomPan(400, 400))
+    const handlers = result.current.panHandlers
+    act(() => {
+      handlers.onPointerDown({
+        pointerType: "mouse",
+        clientX: 100,
+        clientY: 100,
+      } as React.PointerEvent<HTMLDivElement>)
+      handlers.onPointerMove({
+        pointerType: "mouse",
+        clientX: 150,
+        clientY: 130,
+      } as React.PointerEvent<HTMLDivElement>)
+    })
+    // At zoom=1 there's no extra content to pan into — maxPan is 0.
+    expect(result.current.pan).toEqual({ x: 0, y: 0 })
+  })
+
+  it("a small pointer move below the drag threshold does not flip didPanRef", () => {
+    const { result } = renderHook(() => useFloorZoomPan(400, 400))
+    const handlers = result.current.panHandlers
+    act(() => {
+      handlers.onPointerDown({
+        pointerType: "mouse",
+        clientX: 100,
+        clientY: 100,
+      } as React.PointerEvent<HTMLDivElement>)
+      handlers.onPointerMove({
+        pointerType: "mouse",
+        clientX: 102,
+        clientY: 101,
+      } as React.PointerEvent<HTMLDivElement>)
+    })
+    expect(result.current.didPanRef.current).toBe(false)
+  })
+})

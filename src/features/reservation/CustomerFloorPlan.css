@@ -25,13 +25,13 @@
   position: relative;
   width: 100%;
   max-width: 100%;
-  /* Keep the floor readable: never squash below MIN_SCALE — instead scroll/pan
-     inside a fixed-height frame. */
+  /* Keep the floor readable: never squash below MIN_SCALE — instead pan
+     (transform-based, not scroll) inside a fixed-height frame. */
   max-height: 64vh;
   box-sizing: border-box;
-  overflow: auto;
-  overscroll-behavior: contain;
-  scrollbar-width: thin;
+  /* Zoom is an outer transform:scale on .c-floor-plan__zoom-wrap, not native
+     scroll — clip it here instead of scrolling through it. */
+  overflow: hidden;
   /* Walls: a thick, slightly darkened frame reads as the room's perimeter. */
   border: 3px solid
     color-mix(in srgb, var(--color-border-default) 78%, var(--color-text-primary) 10%);
@@ -57,18 +57,20 @@
     inset 0 0 0 1px color-mix(in srgb, var(--color-bg-surface) 55%, transparent);
 }
 
-/* Sized to the SCALED canvas so the scroll area matches what's visible (a
-   transform:scale keeps the untransformed layout size, which would otherwise
-   add empty scroll space). */
-.c-floor-plan__canvas-wrap {
-  position: relative;
+/* The zoom/pan transform layer wrapping FloorPlanView. Its own layout box
+   stays the viewport's natural (zoom=1) fitted size — transform:scale never
+   changes that — so .c-floor-plan__viewport can clip the zoomed-in overflow
+   via overflow:hidden without any JS-computed pixel sizing. */
+.c-floor-plan__zoom-wrap {
+  width: 100%;
+  height: 100%;
+  transform-origin: center center;
 }
 
-.c-floor-plan__canvas {
-  position: absolute;
-  top: 0;
-  left: 0;
-  transform-origin: top left;
+.c-floor-plan__map-sheet .c-floor-plan__zoom-wrap {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
 }
 
 /* ===== Non-table layout elements from the editor: walls, doorways, portals ===== */
@@ -867,8 +869,8 @@
   min-height: 0;
   max-height: none;
   height: auto;
-  /* Centre the content-cropped canvas (margin:auto on the wrap) both ways, while
-     still allowing pan-scroll once the guest zooms in past the viewport. */
+  /* FloorPlanView centers the (frame-cropped) content itself; this just needs
+     to hand .c-floor-plan__zoom-wrap a real flex height to fill/clip within. */
   display: flex;
 }
 
