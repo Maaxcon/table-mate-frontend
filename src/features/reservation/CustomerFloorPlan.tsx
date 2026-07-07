@@ -165,14 +165,16 @@ export function CustomerFloorPlan({
             tone = "occupied"
             label = bookStrings.floorPlan.statusSmall
             bookable = false
-          } else if (slotAvailability[t.public_id]) {
-            tone = "free"
-            label = bookStrings.floorPlan.status.free
-            bookable = true
-          } else {
+          } else if (slotAvailability[t.public_id] === false) {
             tone = "reserved"
             label = bookStrings.floorPlan.status.occupied
             bookable = false
+          } else {
+            // Missing key = table wasn't in the last fetch (e.g. created since).
+            // Treat as free/unknown rather than occupied.
+            tone = "free"
+            label = bookStrings.floorPlan.status.free
+            bookable = true
           }
         } else {
           const ft: FloorTable = {
