@@ -234,11 +234,15 @@ export function BookingPage() {
             {bookStrings.tabs.bookings}
           </button>
         )}
-        <span
-          className={`bp__connection ${isConnected ? "bp__connection--connected" : ""}`}
-          role="status"
-          aria-label={isConnected ? "Connected" : "Disconnected"}
-        />
+        {/* Live-updates dot only for authed guests — guests without a staff token
+            get no floor WebSocket, so the indicator would always read offline. */}
+        {isAuthenticated && (
+          <span
+            className={`bp__connection ${isConnected ? "bp__connection--connected" : ""}`}
+            role="status"
+            aria-label={isConnected ? "Connected" : "Disconnected"}
+          />
+        )}
       </div>
 
       <div className="bp__content">
