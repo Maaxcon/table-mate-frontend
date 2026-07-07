@@ -71,6 +71,11 @@ export function useBookingData(
     }
   }, [])
 
+  // Floor reloads fire from several places (tab-focus refresh, WS layout publish,
+  // a successful booking) and can overlap. Tag each request so a slow older one
+  // can't overwrite a fresher response that already landed.
+  const floorReqRef = useRef(0)
+
   // Loaders only fetch and store results — no synchronous setState — so the
   // mount effect below stays clean. The reload wrappers own the loading flag.
   // One request to the layout endpoint powers the whole floor: all active tables
@@ -78,9 +83,11 @@ export function useBookingData(
   // reservations. (Previously tables/layout/upcoming each fetched it separately.)
   const loadFloor = useCallback(() => {
     if (!restaurantId) return Promise.resolve()
+    const reqId = ++floorReqRef.current
+    const isStale = () => !mountedRef.current || reqId !== floorReqRef.current
     return fetchLayoutData(restaurantId)
       .then((data) => {
-        if (!mountedRef.current) return
+        if (isStale()) return
         setTables(data.tables)
         setLayoutPayload(
           data.layout && typeof data.layout === "object" ? (data.layout as LayoutPayload) : null,
@@ -89,14 +96,14 @@ export function useBookingData(
         setTablesError(false)
       })
       .catch(() => {
-        if (!mountedRef.current) return
+        if (isStale()) return
         setTables([])
         setLayoutPayload(null)
         setUpcomingReservations([])
         setTablesError(true)
       })
       .finally(() => {
-        if (mountedRef.current) setTablesLoading(false)
+        if (!isStale()) setTablesLoading(false)
       })
   }, [restaurantId])
 
