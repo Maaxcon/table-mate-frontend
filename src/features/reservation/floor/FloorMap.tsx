@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { LuMaximize, LuMinus, LuPlus, LuUsers } from "react-icons/lu"
 import type { Table } from "@/types/api/types.gen"
 import type { EditorEntity, LayoutPayload } from "@/features/editor/types"
@@ -88,62 +88,84 @@ export function FloorMap({
     viewportHeight,
   )
 
-  const renderEntity = (
-    entity: EditorEntity,
-    geometry: { left: number; top: number; width: number; height: number; rotation: number },
-    ctx: { selected: boolean; index: number },
-  ) => {
-    if (entity.type === "table-square" || entity.type === "table-round") {
-      const table = findEntityTableMatch(tables, entity)
-      const view = table ? viewByPublicId.get(table.public_id) : undefined
-      const capacity = table?.capacity ?? entity.capacity ?? 0
-      const publicNumber = table?.public_number ?? entity.label ?? ""
-      const tile: Tile = {
-        key: entity.id,
-        table,
-        publicNumber,
-        capacity,
-        shape: entity.type === "table-round" ? "round" : "square",
-        tone: view?.tone ?? "free",
-        label: view?.label ?? bookStrings.floorPlan.status.free,
-        bookable: view?.bookable ?? false,
-        perfect: view?.perfect ?? (capacity === guests && Boolean(table)),
+  // Stable across a hover-only state change — hover never appears in this
+  // closure's own dependencies (only its setter, which React guarantees is
+  // stable) — so FloorPlanView's memo can bail out entirely on hover instead
+  // of re-rendering every table on the floor just to update the tooltip.
+  const handleHoverLeave = useCallback((t: Tile) => {
+    setHovered((h) => (h?.key === t.key ? null : h))
+  }, [])
+
+  const renderEntity = useCallback(
+    (
+      entity: EditorEntity,
+      geometry: { left: number; top: number; width: number; height: number; rotation: number },
+      ctx: { selected: boolean; index: number },
+    ) => {
+      if (entity.type === "table-square" || entity.type === "table-round") {
+        const table = findEntityTableMatch(tables, entity)
+        const view = table ? viewByPublicId.get(table.public_id) : undefined
+        const capacity = table?.capacity ?? entity.capacity ?? 0
+        const publicNumber = table?.public_number ?? entity.label ?? ""
+        const tile: Tile = {
+          key: entity.id,
+          table,
+          publicNumber,
+          capacity,
+          shape: entity.type === "table-round" ? "round" : "square",
+          tone: view?.tone ?? "free",
+          label: view?.label ?? bookStrings.floorPlan.status.free,
+          bookable: view?.bookable ?? false,
+          perfect: view?.perfect ?? (capacity === guests && Boolean(table)),
+        }
+        return (
+          <FloorTile
+            key={entity.id}
+            tile={tile}
+            geometry={geometry}
+            index={ctx.index}
+            selected={ctx.selected}
+            dimmed={Boolean(
+              (statusFilter && tile.tone !== statusFilter) || (dimTaken && !tile.bookable),
+            )}
+            guests={guests}
+            didPanRef={didPanRef}
+            onSelect={onSelect}
+            onHoverEnter={setHovered}
+            onHoverLeave={handleHoverLeave}
+          />
+        )
       }
-      return (
-        <FloorTile
-          key={entity.id}
-          tile={tile}
-          geometry={geometry}
-          index={ctx.index}
-          selected={ctx.selected}
-          dimmed={Boolean(
-            (statusFilter && tile.tone !== statusFilter) || (dimTaken && !tile.bookable),
-          )}
-          guests={guests}
-          didPanRef={didPanRef}
-          onSelect={onSelect}
-          onHoverEnter={setHovered}
-          onHoverLeave={(t) => setHovered((h) => (h?.key === t.key ? null : h))}
-        />
-      )
-    }
 
-    if (entity.type === "obstacle") {
-      return renderObstacle(entity.id, geometry)
-    }
+      if (entity.type === "obstacle") {
+        return renderObstacle(entity.id, geometry)
+      }
 
-    if (entity.type === "threshold") {
-      return renderThreshold(entity.id, geometry, entity.label)
-    }
+      if (entity.type === "threshold") {
+        return renderThreshold(entity.id, geometry, entity.label)
+      }
 
-    // portal
-    return renderPortal(entity.id, geometry, {
-      label: entity.label,
-      targetZoneId: entity.targetZoneId,
-      zoneName: entity.targetZoneId ? zoneNameById.get(entity.targetZoneId) : undefined,
-      onNavigate: onZoneChange,
-    })
-  }
+      // portal
+      return renderPortal(entity.id, geometry, {
+        label: entity.label,
+        targetZoneId: entity.targetZoneId,
+        zoneName: entity.targetZoneId ? zoneNameById.get(entity.targetZoneId) : undefined,
+        onNavigate: onZoneChange,
+      })
+    },
+    [
+      tables,
+      viewByPublicId,
+      guests,
+      statusFilter,
+      dimTaken,
+      didPanRef,
+      onSelect,
+      handleHoverLeave,
+      onZoneChange,
+      zoneNameById,
+    ],
+  )
 
   return (
     <div className="c-floor-plan__stage">

@@ -1,4 +1,4 @@
-import type { CSSProperties, RefObject } from "react"
+import { memo, type CSSProperties, type RefObject } from "react"
 import { LuUsers } from "react-icons/lu"
 import type { Table } from "@/types/api/types.gen"
 import { bookStrings } from "@/features/reservation/strings"
@@ -17,7 +17,9 @@ export interface TileGeometry {
 // seats chip. Clickable to book unless taken; a big hover tooltip is driven by
 // the parent via onHoverEnter/Leave. Position/rotation come from `geometry`
 // (FloorPlanView's renderEntity callback) — this component owns visuals only.
-export function FloorTile({
+// Memoized: with stable tile/geometry/callback props, hovering or selecting
+// one table must not re-render every other table on the floor.
+export const FloorTile = memo(function FloorTile({
   tile,
   geometry,
   index,
@@ -98,4 +100,4 @@ export function FloorTile({
       </span>
     </button>
   )
-}
+})

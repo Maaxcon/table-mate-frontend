@@ -1,4 +1,12 @@
-import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react"
+import {
+  memo,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from "react"
 import {
   DEFAULT_CANVAS_COLS,
   DEFAULT_CANVAS_ROWS,
@@ -79,7 +87,7 @@ const px = (v: number) => v * GRID
  * thresholds and portals — uniformly scaled to fit the container. Shared by the
  * customer and waiter floor views so all three stay visually identical.
  */
-export function FloorPlanView({
+function FloorPlanViewImpl({
   payload,
   selectedZoneId = null,
   selectedId = null,
@@ -156,6 +164,22 @@ export function FloorPlanView({
     [entities, selectedZoneId],
   )
 
+  // Computed once per `visible` change, not on every render — otherwise a
+  // renderEntity override's props would get a fresh geometry object every
+  // time (e.g. a selectedId change elsewhere), defeating React.memo on
+  // whatever the consumer renders per entity.
+  const geometries = useMemo(
+    () =>
+      visible.map((e) => ({
+        left: px(e.x),
+        top: px(e.y),
+        width: px(e.w),
+        height: px(e.h),
+        rotation: e.rotation ?? 0,
+      })),
+    [visible],
+  )
+
   if (!payload || entities.length === 0) {
     return (
       <div className="fp-view fp-view--empty" ref={containerRef}>
@@ -203,13 +227,7 @@ export function FloorPlanView({
       >
         {visible.map((e, index) => {
           if (renderEntityProp) {
-            const geometry = {
-              left: px(e.x),
-              top: px(e.y),
-              width: px(e.w),
-              height: px(e.h),
-              rotation: e.rotation ?? 0,
-            }
+            const geometry = geometries[index]
             const id = e.serverId ?? e.id
             const selected = selectedId != null && selectedId === id
             return renderEntityProp(e, geometry, { selected, index })
@@ -242,6 +260,11 @@ export function FloorPlanView({
     </div>
   )
 }
+
+// Memoized so a re-render triggered elsewhere in a consumer's tree (e.g. a
+// hover-only state update) skips this whole subtree — and therefore every
+// per-entity render — as long as none of these props actually changed.
+export const FloorPlanView = memo(FloorPlanViewImpl)
 
 interface RenderOpts {
   selectedId: string | null

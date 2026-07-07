@@ -157,8 +157,12 @@ export function BookingPage() {
 
   // Guests get no live floor updates (that WebSocket needs a staff token), so a
   // table a waiter just seated/booked in another tab would look stale here.
-  // Refresh occupancy + slot availability whenever the tab regains focus, but at
-  // most once every 10s so rapid alt-tabbing doesn't spam the API.
+  // Refresh whenever the tab regains focus, but at most once every 10s so rapid
+  // alt-tabbing doesn't spam the API. Only one refetch is ever needed: with a
+  // slot picked, the floor's status comes entirely from slotAvailability, so
+  // reloadTables() (tables + layout + upcoming reservations) would be wasted
+  // work; without one, the fallback "now" status reads tables/upcoming instead,
+  // and the availability effect no-ops anyway (it bails out without slotTime).
   const lastRefreshRef = useRef(0)
   useEffect(() => {
     const refresh = () => {
@@ -166,8 +170,11 @@ export function BookingPage() {
       const now = Date.now()
       if (now - lastRefreshRef.current < 10_000) return
       lastRefreshRef.current = now
-      reloadTables()
-      setAvailabilityNonce((n) => n + 1)
+      if (slotTime) {
+        setAvailabilityNonce((n) => n + 1)
+      } else {
+        reloadTables()
+      }
     }
     window.addEventListener("focus", refresh)
     document.addEventListener("visibilitychange", refresh)
@@ -175,7 +182,7 @@ export function BookingPage() {
       window.removeEventListener("focus", refresh)
       document.removeEventListener("visibilitychange", refresh)
     }
-  }, [reloadTables])
+  }, [reloadTables, slotTime])
 
   const handleTableStatusChanged = useCallback(
     (event: FloorTableStatusEvent) => {
