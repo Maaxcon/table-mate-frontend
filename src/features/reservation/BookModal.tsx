@@ -15,6 +15,7 @@ import {
   localDateKey,
   MIN_DURATION,
   minutesToTime,
+  slotDateKey,
   timeToMinutes,
   zonedWallTimeToUtcIso,
 } from "./utils"
@@ -237,7 +238,9 @@ export function BookModal({
     setSubmitting(true)
 
     try {
-      const dateKey = localDateKey(selectedDate)
+      // A slot after midnight on an overnight day belongs to the next calendar
+      // day (the backend keys it under the opening day), so resolve its real date.
+      const dateKey = slotDateKey(selectedDate, selectedTime, dayConfig)
       // Interpret the picked slot as the restaurant's wall-clock time, not the
       // browser's — otherwise a guest in another timezone books the wrong instant.
       const startISO = timeZone
@@ -282,6 +285,7 @@ export function BookModal({
   }, [
     selectedTime,
     selectedDate,
+    dayConfig,
     effectiveDuration,
     endAt,
     guestCount,

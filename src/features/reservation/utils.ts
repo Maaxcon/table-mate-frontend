@@ -57,6 +57,28 @@ export function zonedWallTimeToUtcIso(dateKey: string, time: string, timeZone: s
   return new Date(naiveUtc - offset * 60000).toISOString()
 }
 
+// The calendar date a slot actually falls on. On an overnight day (close <= open)
+// the backend lists after-midnight slots (e.g. "01:00" when the venue opens 18:00)
+// under the opening day's key, but they belong to the NEXT day. Advance the date
+// for those so the booked instant matches what the guest picked.
+export function slotDateKey(
+  date: Date,
+  time: string,
+  dayConfig: WorkingHoursDay | undefined,
+): string {
+  if (dayConfig) {
+    const openMins = timeToMinutes(dayConfig.open)
+    const closeMins = timeToMinutes(dayConfig.close)
+    const overnight = closeMins <= openMins
+    if (overnight && timeToMinutes(time) < openMins) {
+      const next = new Date(date)
+      next.setDate(next.getDate() + 1)
+      return localDateKey(next)
+    }
+  }
+  return localDateKey(date)
+}
+
 export function minutesToTime(minutes: number): string {
   const h = Math.floor(minutes / 60) % 24
   const m = minutes % 60

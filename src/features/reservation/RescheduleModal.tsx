@@ -10,6 +10,7 @@ import {
   localDateKey,
   MIN_DURATION,
   minutesToTime,
+  slotDateKey,
   timeToMinutes,
   zonedWallTimeToUtcIso,
 } from "./utils"
@@ -210,10 +211,13 @@ function RescheduleForm({
     setSubmitting(true)
 
     try {
+      // A slot after midnight on an overnight day belongs to the next calendar
+      // day (the backend keys it under the opening day), so resolve its real date.
+      const slotKey = slotDateKey(parsedDate, selectedTime, dayConfig)
       // Interpret the picked slot in the restaurant timezone, not the browser's.
       const startISO = effectiveTimeZone
-        ? zonedWallTimeToUtcIso(dateStr, selectedTime, effectiveTimeZone)
-        : new Date(`${dateStr}T${selectedTime}:00`).toISOString()
+        ? zonedWallTimeToUtcIso(slotKey, selectedTime, effectiveTimeZone)
+        : new Date(`${slotKey}T${selectedTime}:00`).toISOString()
       // Extending an active booking only moves the end: anchor it to the real,
       // unsnapped start so the stored duration is exactly what the guest picked
       // (selectedTime is the start snapped to 30 min and would skew it by ±15m).
@@ -240,7 +244,8 @@ function RescheduleForm({
     }
   }, [
     selectedTime,
-    dateStr,
+    parsedDate,
+    dayConfig,
     durationMinutes,
     guestCount,
     publicId,
