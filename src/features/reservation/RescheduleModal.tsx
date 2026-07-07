@@ -34,7 +34,6 @@ interface RescheduleModalProps {
   workingHours: Record<string, WorkingHoursDay> | null
   timeZone?: string | null
   excludeReservationIds?: string[]
-  prolongOnly?: boolean
   endTimeOnly?: boolean
   onClose: () => void
   onSuccess: () => void
@@ -108,7 +107,6 @@ function RescheduleForm({
   workingHours,
   timeZone,
   excludeReservationIds,
-  prolongOnly = false,
   endTimeOnly = false,
   onClose,
   onSuccess,
@@ -116,7 +114,6 @@ function RescheduleForm({
   const effectiveTimeZone = timeZone ?? null
 
   const currentStartTime = formatTimeInTz(currentStart, effectiveTimeZone)
-  const currentEndTime = formatTimeInTz(currentEnd, effectiveTimeZone)
   // Derive duration from the actual instants, not the wall-clock HH:MM strings,
   // so a booking that crosses midnight (e.g. 23:00–01:00) isn't computed as a
   // negative span and clamped to the minimum.
@@ -133,7 +130,7 @@ function RescheduleForm({
   }, [currentStartTime])
 
   const [selectedTime, setSelectedTime] = useState<string | null>(
-    prolongOnly || endTimeOnly ? currentStartTime : initialSnappedTime,
+    endTimeOnly ? currentStartTime : initialSnappedTime,
   )
   const [durationMinutes, setDurationMinutes] = useState(
     Math.max(MIN_DURATION, currentDurationMinutes),
@@ -178,9 +175,7 @@ function RescheduleForm({
 
     const baseMins = endTimeOnly ? timeToMinutes(currentStartTime) : timeToMinutes(selectedTime)
     const endMins = baseMins + durationMinutes
-    const windowStartMins = prolongOnly
-      ? timeToMinutes(currentEndTime)
-      : timeToMinutes(selectedTime)
+    const windowStartMins = timeToMinutes(selectedTime)
 
     return getDurationError(
       windowStartMins,
@@ -188,16 +183,7 @@ function RescheduleForm({
       dayConfig,
       endTimeOnly ? null : availableSlots,
     )
-  }, [
-    selectedTime,
-    durationMinutes,
-    dayConfig,
-    availableSlots,
-    prolongOnly,
-    currentEndTime,
-    currentStartTime,
-    endTimeOnly,
-  ])
+  }, [selectedTime, durationMinutes, dayConfig, availableSlots, currentStartTime, endTimeOnly])
 
   const handleSave = useCallback(async () => {
     if (!selectedTime) return
@@ -326,7 +312,7 @@ function RescheduleForm({
                 <h3 className="book-modal__section-title">
                   {bookStrings.reschedule.sections.time}
                 </h3>
-                {prolongOnly || endTimeOnly ? (
+                {endTimeOnly ? (
                   <p className="book-modal__empty">
                     {bookStrings.reschedule.startingFrom(currentStartTime)}
                   </p>

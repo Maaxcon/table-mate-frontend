@@ -485,11 +485,13 @@ export function BookModal({
 
               {showNameField && (
                 <section className="book-modal__section">
-                  <h3 className="book-modal__section-title">GUEST NAME</h3>
+                  <h3 className="book-modal__section-title">
+                    {bookStrings.modal.sections.guestName}
+                  </h3>
                   <input
                     type="text"
                     className="book-modal__notes"
-                    placeholder="Guest name"
+                    placeholder={bookStrings.modal.guestNamePlaceholder}
                     value={guestName}
                     onChange={(e) => setGuestName(e.target.value)}
                   />

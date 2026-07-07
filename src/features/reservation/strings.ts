@@ -77,6 +77,7 @@ export const bookStrings = {
       time: "Час",
       duration: "Тривалість (хв)",
       guests: "Гості",
+      guestName: "Ім'я гостя",
       notes: "Нотатки (необов'язково)",
       confirmation: "Підтвердження",
     },
@@ -86,6 +87,7 @@ export const bookStrings = {
       closed: "Цього дня ресторан зачинено",
       none: "Немає вільних слотів",
     },
+    guestNamePlaceholder: "Ім'я гостя",
     notesPlaceholder: "Ім'я гостя, телефон, особливі побажання…",
     summary: {
       table: "Стіл",
@@ -136,10 +138,6 @@ export const bookStrings = {
     },
     card: {
       table: (table: string) => `Стіл ${table}`,
-      date: "Дата",
-      time: "Час",
-      guests: "Гості",
-      phase: "Стан",
     },
     actions: {
       modify: "Змінити",
