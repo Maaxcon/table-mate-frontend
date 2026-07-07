@@ -138,7 +138,6 @@ export function WaiterOrderPage() {
         fetchReservations(),
       ])
       let nextTables = tablesRef.current
-      let nextReservations = reservationsRef.current
       if (layoutRes.ok) {
         const layoutData = (await layoutRes.json()) as LayoutResponse
         nextTables = (layoutData.tables ?? []).map(mapTableToFloorTable)
@@ -150,15 +149,12 @@ export function WaiterOrderPage() {
         )
         setLayoutReservations(layoutData.upcoming_reservations ?? [])
       }
-      if (items) {
-        const existingIds = new Set(items.map((r) => r.public_id))
-        const localOnly = reservationsRef.current.filter((r) => !existingIds.has(r.public_id))
-        nextReservations = localOnly.length > 0 ? [...localOnly, ...items] : items
-        setReservations(nextReservations)
-      }
       tablesRef.current = nextTables
-      reservationsRef.current = nextReservations
-      return { tables: nextTables, reservations: nextReservations }
+      if (items) {
+        setReservations(items)
+        reservationsRef.current = items
+      }
+      return { tables: nextTables, reservations: reservationsRef.current }
     } catch {
       // keep current state on refresh failure
       return null
@@ -467,20 +463,7 @@ export function WaiterOrderPage() {
           restaurantId={restaurantId}
           showNameField
           onClose={() => setCreateResModalOpen(false)}
-          onSuccess={(r) => {
-            if (r) {
-              const mapped: ReservationItem = {
-                public_id: r.public_id,
-                start_at: r.start_at,
-                end_at: r.end_at,
-                table: r.table_info?.public_number ?? selectedTable.public_number,
-                guest_count: r.guest_count,
-                status: r.status as ReservationItem["status"],
-                notes: r.notes,
-                name: r.customer_name ?? "Guest",
-              }
-              setReservations((prev) => [...prev, mapped])
-            }
+          onSuccess={() => {
             setCreateResModalOpen(false)
             refreshFloor()
           }}
