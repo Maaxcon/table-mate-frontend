@@ -844,6 +844,7 @@ export type PortalEntity = {
   y: number
   width: number
   height: number
+  rotation?: number
   target_zone_id?: string | null
   portal_label?: string
   zone_id: string
@@ -1071,6 +1072,7 @@ export type ThresholdEntity = {
   y: number
   width: number
   height: number
+  rotation?: number
   threshold_label?: string
   zone_id: string
 }
@@ -3466,6 +3468,20 @@ export type ReservationsReservationsMoveTableCreateResponses = {
 
 export type ReservationsReservationsMoveTableCreateResponse =
   ReservationsReservationsMoveTableCreateResponses[keyof ReservationsReservationsMoveTableCreateResponses]
+
+export type ReservationsReservationsAvailabilityRetrieveData = {
+  body?: never
+  path?: never
+  query?: never
+  url: "/api/reservations/reservations/availability/"
+}
+
+export type ReservationsReservationsAvailabilityRetrieveResponses = {
+  200: Reservation
+}
+
+export type ReservationsReservationsAvailabilityRetrieveResponse =
+  ReservationsReservationsAvailabilityRetrieveResponses[keyof ReservationsReservationsAvailabilityRetrieveResponses]
 
 export type ReservationsReservationsAvailableSlotsRetrieveData = {
   body?: never
