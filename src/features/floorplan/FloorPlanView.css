@@ -1,5 +1,5 @@
 /* Shared read-only floor renderer. Geometry mirrors the editor canvas
-   (features/editor/Canvas.css + entities/blocks.css); status coloring is layered
+   (features/editor/components/Canvas/Canvas.css + entities/blocks.css); status coloring is layered
    on top for the customer/waiter views. */
 
 .fp-view {
@@ -51,6 +51,7 @@
   text-align: center;
   cursor: pointer;
   transition: box-shadow 0.1s;
+  overflow: visible;
 }
 
 .fp-block--table:hover {
@@ -71,7 +72,6 @@
   outline-offset: 3px;
 }
 
-/* Status tinting (free / reserved / occupied). */
 .fp-block--reserved {
   border-color: var(--color-text-primary);
 }
@@ -103,58 +103,6 @@
   opacity: 0.6;
 }
 
-.fp-block__zone-label {
-  font-weight: 900;
-  font-size: 1rem;
-  text-transform: uppercase;
-  letter-spacing: 0.18em;
-  color: var(--color-text-primary);
-  pointer-events: none;
-}
-
-.fp-block--obstacle {
-  background: var(--color-text-primary);
-  border: none;
-}
-
-.fp-block--threshold {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 2px dashed var(--color-border-strong);
-  background: var(--color-bg-surface);
-  opacity: 0.85;
-}
-
-.fp-block--portal {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  border: 2px solid var(--color-border-strong);
-  background: var(--color-bg-surface);
-}
-
-.fp-block--portal-link {
-  cursor: pointer;
-  border-style: dashed;
-  font-family: inherit;
-  transition: box-shadow 0.1s;
-}
-
-.fp-block--portal-link:hover {
-  box-shadow: 4px 4px 0 var(--color-border-strong);
-}
-
-.fp-block__portal-arrow {
-  font-size: 1.6rem;
-  font-weight: 900;
-  line-height: 1;
-  color: var(--color-text-primary);
-}
-
-/* Optional status badge + guest info, injected via renderTableContent. */
 .fp-block__badge {
   font-size: 0.8rem;
   font-weight: 800;
@@ -180,24 +128,97 @@
   color: var(--color-text-primary);
 }
 
-.fp-block__info {
+/* --- obstacles, thresholds, portals, zone labels --- */
+
+.fp-block--obstacle {
+  background: var(--color-text-primary);
+  border: none;
+}
+
+.fp-block--threshold {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed var(--color-border-strong);
+  background: var(--color-bg-surface);
+  opacity: 0.85;
+}
+
+.fp-block--portal {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
+  justify-content: center;
+  gap: 4px;
+  padding: 6px 10px;
+  border-radius: 18px;
+  border: 1px solid color-mix(in srgb, var(--color-text-primary) 35%, transparent);
+  background:
+    linear-gradient(
+      145deg,
+      color-mix(in srgb, var(--color-bg-surface) 95%, transparent),
+      var(--color-bg-page)
+    ),
+    var(--color-bg-surface);
+  box-shadow:
+    0 8px 16px color-mix(in srgb, var(--color-border-strong) 12%, transparent),
+    inset 0 1px 0 color-mix(in srgb, #fff 60%, transparent);
+  cursor: pointer;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    border-color 0.15s ease;
 }
 
-.fp-block__info-name {
+.fp-block--portal:hover {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--color-primary) 45%, transparent);
+  box-shadow:
+    0 12px 22px color-mix(in srgb, var(--color-primary) 18%, transparent),
+    inset 0 1px 0 color-mix(in srgb, #fff 70%, transparent);
+}
+
+/* Dark theme: the surface gradient blends into the page. Lift the fill toward
+   the subtle tone and brighten the primary border (matches the editor). */
+[data-theme="dark"] .fp-block--portal {
+  border-color: color-mix(in srgb, var(--color-primary) 55%, transparent);
+  background:
+    linear-gradient(145deg, var(--color-bg-surface-subtle), var(--color-bg-surface)),
+    var(--color-bg-surface-subtle);
+  box-shadow:
+    0 10px 20px rgb(0 0 0 / 45%),
+    inset 0 1px 0 color-mix(in srgb, #ffffff 8%, transparent);
+}
+
+[data-theme="dark"] .fp-block--portal:hover {
+  border-color: color-mix(in srgb, var(--color-primary) 75%, transparent);
+  box-shadow:
+    0 14px 26px color-mix(in srgb, var(--color-primary) 28%, transparent),
+    inset 0 1px 0 color-mix(in srgb, #ffffff 8%, transparent);
+}
+
+.fp-block--portal-link {
+  cursor: pointer;
+}
+
+.fp-block__zone-label {
+  font-weight: 900;
   font-size: 1rem;
-  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--color-text-primary);
+  pointer-events: none;
+  text-align: center;
+  display: block;
 }
 
-.fp-block__info-sub {
-  font-size: 0.9rem;
-  opacity: 0.7;
+.fp-block__portal-arrow {
+  font-size: 1.2rem;
+  line-height: 1;
 }
 
-/* Canvas edge borders (mirrors editor-canvas__edge). */
+/* --- canvas-edge borders --- */
+
 .fp-view__edge {
   position: absolute;
   pointer-events: none;

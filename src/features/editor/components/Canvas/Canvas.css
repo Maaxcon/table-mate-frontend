@@ -1,0 +1,84 @@
+.editor-canvas__container {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  position: relative;
+  overflow: auto;
+  padding: clamp(16px, 3vw, 48px);
+  box-sizing: border-box;
+  border-radius: 24px;
+  background: color-mix(in srgb, var(--color-bg-page) 92%, transparent);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--color-bg-page) 70%, transparent),
+    inset 0 -30px 60px color-mix(in srgb, var(--color-bg-secondary) 40%, transparent);
+  height: 100%;
+}
+
+.editor-canvas {
+  position: relative;
+  background: color-mix(in srgb, var(--color-bg-surface) 96%, transparent);
+  box-shadow: inset 0 1px 3px color-mix(in srgb, var(--color-border-strong) 12%, transparent);
+  overflow: visible;
+}
+
+.editor-canvas__content {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: 0 0;
+  background: transparent;
+}
+
+.editor-canvas__edge {
+  position: absolute;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.editor-canvas__edge--top {
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 0;
+  border-top: 3px dashed var(--color-border-strong);
+}
+
+.editor-canvas__edge--top.editor-canvas__edge--solid {
+  border-top-style: solid;
+}
+
+.editor-canvas__edge--right {
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 0;
+  border-right: 3px dashed var(--color-border-strong);
+}
+
+.editor-canvas__edge--right.editor-canvas__edge--solid {
+  border-right-style: solid;
+}
+
+.editor-canvas__edge--bottom {
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 0;
+  border-bottom: 3px dashed var(--color-border-strong);
+}
+
+.editor-canvas__edge--bottom.editor-canvas__edge--solid {
+  border-bottom-style: solid;
+}
+
+.editor-canvas__edge--left {
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 0;
+  border-left: 3px dashed var(--color-border-strong);
+}
+
+.editor-canvas__edge--left.editor-canvas__edge--solid {
+  border-left-style: solid;
+}

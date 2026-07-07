@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import type { Dispatch, SetStateAction } from "react"
 import type { Table } from "@/types/api/types.gen"
-import type { UpcomingReservation } from "@/features/waiter-order-view/data/waiterTypes"
+import type { UpcomingReservation } from "@/features/waiter-order-view/types"
 import type { LayoutPayload } from "@/features/editor/types"
 import type { ReservationWithTable, WorkingHoursDay, Zone } from "../api"
 import { fetchLayoutData, fetchMyReservations, fetchRestaurantSettings, fetchZones } from "../api"

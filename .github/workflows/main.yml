@@ -2,9 +2,7 @@ name: Frontend CI
 
 on:
   push:
-    branches: [main]
   pull_request:
-    branches: [main]
 
 jobs:
   test:
@@ -24,6 +22,9 @@ jobs:
         with:
           repository: unibrix/table-mate-backend
           path: table-mate-backend
+          token: ${{ secrets.DEPENDENCY_ACCESS_TOKEN }}
+          ref: dev
+          persist-credentials: false
 
       - name: Set up Node
         uses: actions/setup-node@v4
@@ -46,3 +47,33 @@ jobs:
 
       - name: Smoke test
         run: npm run smoke
+
+
+
+  build-and-push:
+    name: Build and Push Docker Images
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: '${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}'
+
+      - name: Configure Docker for GAR
+        run: gcloud auth configure-docker europe-docker.pkg.dev --quiet
+
+      - name: Build and Push Frontend
+        run: |
+          IMAGE=europe-docker.pkg.dev/auth-server-381211/table-mate/frontend/develop
+          
+          # Assuming your frontend has its own Dockerfile in a /frontend folder
+          # Adjust the build path (-f frontend/Dockerfile) if needed
+          docker build -t $IMAGE:latest -t $IMAGE:${{ github.sha }} -f Dockerfile .
+          
+          docker push $IMAGE --all-tags

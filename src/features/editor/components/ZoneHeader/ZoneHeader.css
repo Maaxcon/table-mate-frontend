@@ -1,0 +1,121 @@
+.editor-zone-header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0 8px;
+}
+
+.editor-zone-header__tab-wrapper {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.editor-zone-header__tab {
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--color-border-default) 80%, transparent);
+  background: color-mix(in srgb, var(--color-bg-page) 80%, transparent);
+  color: var(--color-text-primary);
+  font-family: inherit;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease,
+    transform 0.15s ease;
+}
+
+.editor-zone-header__tab:hover {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--color-text-primary) 40%, transparent);
+}
+
+.editor-zone-header__tab--active {
+  background: var(--color-text-primary);
+  border-color: var(--color-text-primary);
+  color: var(--color-bg-surface);
+}
+
+.editor-zone-header__tab--add {
+  border-style: dashed;
+  opacity: 0.7;
+}
+
+.editor-zone-header__tab--add:hover {
+  opacity: 1;
+}
+
+.editor-zone-header__delete {
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--color-border-default) 80%, transparent);
+  background: color-mix(in srgb, var(--color-bg-page) 90%, transparent);
+  color: var(--color-text-secondary);
+  font-size: 0.8rem;
+  font-weight: 700;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.editor-zone-header__delete:hover,
+.editor-zone-header__delete:focus-visible {
+  border-color: color-mix(in srgb, var(--color-error) 35%, transparent);
+  color: var(--color-error);
+}
+
+.editor-zone-header__add-form {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.editor-zone-header__input {
+  padding: 6px 10px;
+  border-radius: 12px;
+  border: 1px solid var(--color-border-default);
+  font-family: inherit;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  background: color-mix(in srgb, var(--color-bg-page) 90%, transparent);
+  width: 140px;
+  outline: none;
+}
+
+.editor-zone-header__btn {
+  padding: 6px 10px;
+  border-radius: 12px;
+  border: 1px solid var(--color-border-default);
+  background: color-mix(in srgb, var(--color-text-primary) 20%, var(--color-bg-surface));
+  color: var(--color-bg-page);
+  font-family: inherit;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.editor-zone-header__btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.editor-zone-header__btn--cancel {
+  background: transparent;
+  color: var(--color-text-primary);
+}

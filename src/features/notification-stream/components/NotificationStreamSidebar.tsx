@@ -8,6 +8,25 @@ function formatTime(date: Date): string {
   return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
 }
 
+function renderDescription(description: string) {
+  const arrowIndex = description.lastIndexOf("→")
+  if (arrowIndex === -1) return description
+  const head = description.slice(0, arrowIndex)
+  const tail = description.slice(arrowIndex)
+  const state = tail.replace("→", "").trim().toLowerCase()
+  const pending = state !== "ready"
+  return (
+    <>
+      {head}
+      <span
+        className={`notification-stream__arrow ${pending ? "notification-stream__arrow--pending" : ""}`}
+      >
+        {tail}
+      </span>
+    </>
+  )
+}
+
 interface NotificationStreamSidebarProps {
   onConnectionChange?: (connected: boolean) => void
 }
@@ -20,8 +39,11 @@ export function NotificationStreamSidebar({ onConnectionChange }: NotificationSt
     onConnectionChange?.(isConnected)
   }, [isConnected, onConnectionChange])
 
-  const clientEvents = events.filter((e) => e.stream === "client")
-  const kitchenEvents = events.filter((e) => e.stream === "kitchen")
+  const sortedEvents = [...events].sort(
+    (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+  )
+  const clientEvents = sortedEvents.filter((event) => event.stream === "client")
+  const kitchenEvents = sortedEvents.filter((event) => event.stream === "kitchen")
 
   const handleEventClick = (event: NotificationEvent) => {
     if (event.stream === "kitchen") {
@@ -34,60 +56,70 @@ export function NotificationStreamSidebar({ onConnectionChange }: NotificationSt
   return (
     <aside className="notification-stream">
       <div className="notification-stream__header">
-        <h2 className="notification-stream__title">NOTIFICATIONS</h2>
+        <span className="notification-stream__title">NOTIFICATIONS</span>
         <span
-          className={`notification-stream__status ${isConnected ? "notification-stream__status--connected" : ""}`}
+          className={`notification-stream__status ${isConnected ? "notification-stream__status--on" : ""}`}
           role="status"
           aria-label={isConnected ? "Connected" : "Disconnected"}
         />
       </div>
 
-      <div className="notification-stream__sections">
-        <div className="notification-stream__section">
-          <h3 className="notification-stream__section-title">CLIENT</h3>
-          <div className="notification-stream__list">
-            {clientEvents.length === 0 && (
-              <p className="notification-stream__empty">No client events</p>
-            )}
-            {clientEvents.map((e) => (
-              <button
-                key={e.id}
-                type="button"
-                className="notification-stream__event"
-                onClick={() => handleEventClick(e)}
-              >
-                <div className="notification-stream__event-header">
-                  <span className="notification-stream__event-type">{e.title}</span>
-                  <span className="notification-stream__event-time">{formatTime(e.timestamp)}</span>
-                </div>
-                <p className="notification-stream__event-desc">{e.description}</p>
-              </button>
-            ))}
+      <div className="notification-stream__sections" aria-live="polite" aria-relevant="additions">
+        <section className="notification-stream__section">
+          <div className="notification-stream__section-header">
+            <span className="notification-stream__section-title">CLIENT</span>
+            <span className="notification-stream__section-count">{clientEvents.length}</span>
           </div>
-        </div>
+          {clientEvents.length === 0 && (
+            <p className="notification-stream__empty">No client events</p>
+          )}
+          {clientEvents.map((event) => (
+            <button
+              key={event.id}
+              type="button"
+              className="notification-stream__event"
+              onClick={() => handleEventClick(event)}
+            >
+              <div className="notification-stream__event-top">
+                <span className="notification-stream__event-title">{event.title}</span>
+                <span className="notification-stream__event-time">
+                  {formatTime(event.timestamp)}
+                </span>
+              </div>
+              <p className="notification-stream__event-desc">
+                {renderDescription(event.description)}
+              </p>
+            </button>
+          ))}
+        </section>
 
-        <div className="notification-stream__section">
-          <h3 className="notification-stream__section-title">KITCHEN</h3>
-          <div className="notification-stream__list">
-            {kitchenEvents.length === 0 && (
-              <p className="notification-stream__empty">No kitchen events</p>
-            )}
-            {kitchenEvents.map((e) => (
-              <button
-                key={e.id}
-                type="button"
-                className="notification-stream__event"
-                onClick={() => handleEventClick(e)}
-              >
-                <div className="notification-stream__event-header">
-                  <span className="notification-stream__event-type">{e.title}</span>
-                  <span className="notification-stream__event-time">{formatTime(e.timestamp)}</span>
-                </div>
-                <p className="notification-stream__event-desc">{e.description}</p>
-              </button>
-            ))}
+        <section className="notification-stream__section">
+          <div className="notification-stream__section-header">
+            <span className="notification-stream__section-title">KITCHEN</span>
+            <span className="notification-stream__section-count">{kitchenEvents.length}</span>
           </div>
-        </div>
+          {kitchenEvents.length === 0 && (
+            <p className="notification-stream__empty">No kitchen events</p>
+          )}
+          {kitchenEvents.map((event) => (
+            <button
+              key={event.id}
+              type="button"
+              className="notification-stream__event"
+              onClick={() => handleEventClick(event)}
+            >
+              <div className="notification-stream__event-top">
+                <span className="notification-stream__event-title">{event.title}</span>
+                <span className="notification-stream__event-time">
+                  {formatTime(event.timestamp)}
+                </span>
+              </div>
+              <p className="notification-stream__event-desc">
+                {renderDescription(event.description)}
+              </p>
+            </button>
+          ))}
+        </section>
       </div>
     </aside>
   )

@@ -1,0 +1,5 @@
+export { Canvas } from "./Canvas"
+export { TableBlock } from "./entities/TableBlock"
+export { PortalBlock } from "./entities/PortalBlock"
+export { ObstacleBlock } from "./entities/ObstacleBlock"
+export { ThresholdBlock } from "./entities/ThresholdBlock"

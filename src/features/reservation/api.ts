@@ -1,6 +1,6 @@
 import { apiFetch } from "@/api/client"
 import type { Table } from "@/types/api/types.gen"
-import type { UpcomingReservation } from "@/features/waiter-order-view/data/waiterTypes"
+import type { UpcomingReservation } from "@/features/waiter-order-view/types"
 import { DEFAULT_DURATION } from "./utils"
 
 // Turns a DRF error body into a human message: a string `detail`, otherwise the
