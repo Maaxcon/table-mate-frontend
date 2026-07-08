@@ -28,6 +28,30 @@ export function timeToMinutes(t: string): number {
   return h * 60 + m
 }
 
+// True if Intl actually recognizes `tz` as a timezone name — the browser
+// throws a RangeError on a bad one rather than returning something falsy.
+function isValidTimeZone(tz: string): boolean {
+  try {
+    new Intl.DateTimeFormat("en-US", { timeZone: tz })
+    return true
+  } catch {
+    return false
+  }
+}
+
+// Mirrors the backend's _safe_zoneinfo fallback: a misconfigured restaurant
+// timezone (typo, bad migration, manual DB edit) must not crash every screen
+// that formats a wall-clock time — and it must fall back to UTC specifically
+// (not the browser's own zone), or the two sides silently disagree on the
+// resulting instant instead of both degrading to the same one. `null`/empty
+// is left alone (a genuinely unknown timezone, e.g. settings still loading,
+// is a different case from a bad one and keeps its existing browser-local
+// fallback in the functions below).
+export function safeTimeZone(tz: string | null | undefined): string | null {
+  if (!tz) return null
+  return isValidTimeZone(tz) ? tz : "UTC"
+}
+
 // Offset (minutes, east-positive) of `timeZone` at the given instant, read via Intl.
 function tzOffsetMinutes(instant: Date, timeZone: string): number {
   const parts = new Intl.DateTimeFormat("en-US", {
@@ -54,6 +78,7 @@ export function zonedWallTimeToUtcIso(dateKey: string, time: string, timeZone: s
   const [y, mo, d] = dateKey.split("-").map(Number)
   const [h, mi] = time.split(":").map(Number)
   const naiveUtc = Date.UTC(y, mo - 1, d, h, mi)
+  const tz = safeTimeZone(timeZone) ?? "UTC"
   // Two-pass: reading the offset at `naiveUtc` itself is only a first
   // approximation (it treats the wall-clock time as if it were already UTC,
   // which can land on the wrong side of a DST transition). Apply that offset
@@ -61,9 +86,9 @@ export function zonedWallTimeToUtcIso(dateKey: string, time: string, timeZone: s
   // near a spring-forward/fall-back boundary the two passes can disagree by
   // an hour, and the second reading is the one that reflects DST at the
   // actual target moment.
-  const firstOffset = tzOffsetMinutes(new Date(naiveUtc), timeZone)
+  const firstOffset = tzOffsetMinutes(new Date(naiveUtc), tz)
   const candidate = naiveUtc - firstOffset * 60000
-  const secondOffset = tzOffsetMinutes(new Date(candidate), timeZone)
+  const secondOffset = tzOffsetMinutes(new Date(candidate), tz)
   return new Date(naiveUtc - secondOffset * 60000).toISOString()
 }
 
@@ -138,7 +163,7 @@ export function minutesToTime(minutes: number): string {
 // browser's zone when unknown), so a guest in another zone sees the venue's time.
 export function formatTimeInTz(iso: string, timeZone: string | null): string {
   return new Date(iso).toLocaleTimeString("uk-UA", {
-    timeZone: timeZone ?? undefined,
+    timeZone: safeTimeZone(timeZone) ?? undefined,
     hour: "2-digit",
     minute: "2-digit",
     hour12: false,
@@ -163,7 +188,8 @@ function nowInTz(timeZone: string | null): {
   minutes: number
 } {
   const now = new Date()
-  if (!timeZone) {
+  const tz = safeTimeZone(timeZone)
+  if (!tz) {
     return {
       year: now.getFullYear(),
       month: now.getMonth() + 1,
@@ -172,7 +198,7 @@ function nowInTz(timeZone: string | null): {
     }
   }
   const parts = new Intl.DateTimeFormat("en-US", {
-    timeZone,
+    timeZone: tz,
     hour12: false,
     year: "numeric",
     month: "2-digit",

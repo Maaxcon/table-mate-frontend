@@ -3481,7 +3481,24 @@ export type ReservationsReservationsMoveTableCreateResponse =
 export type ReservationsReservationsAvailabilityRetrieveData = {
   body?: never
   path?: never
-  query?: never
+  query: {
+    /**
+     * YYYY-MM-DD.
+     */
+    date: string
+    /**
+     * Minutes, default 120, clamped to a minimum of 30.
+     */
+    duration?: number
+    /**
+     * Restaurant public ID.
+     */
+    restaurant: string
+    /**
+     * HH:MM, restaurant-local.
+     */
+    time: string
+  }
   url: "/api/reservations/reservations/availability/"
 }
 
@@ -3495,7 +3512,20 @@ export type ReservationsReservationsAvailabilityRetrieveResponse =
 export type ReservationsReservationsAvailableSlotsRetrieveData = {
   body?: never
   path?: never
-  query?: never
+  query: {
+    /**
+     * YYYY-MM-DD. Omit to get the next 14 days.
+     */
+    date?: string
+    /**
+     * Reservation public ID(s) to exclude, e.g. the booking currently being rescheduled.
+     */
+    exclude?: Array<string>
+    /**
+     * Table public ID.
+     */
+    table: string
+  }
   url: "/api/reservations/reservations/available-slots/"
 }
 

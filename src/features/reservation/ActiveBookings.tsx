@@ -7,7 +7,7 @@ import { CancellationConfirmationModal } from "./CancellationConfirmationModal"
 import { downloadReservationIcs } from "./ics"
 import { RescheduleModal } from "./RescheduleModal"
 import { bookStrings } from "./strings"
-import { formatTimeInTz } from "./utils"
+import { formatTimeInTz, safeTimeZone } from "./utils"
 import "./ActiveBookings.css"
 
 interface ActiveBookingsProps {
@@ -24,7 +24,7 @@ interface ActiveBookingsProps {
 // guest in another zone still sees the correct local booking time.
 function dateParts(iso: string, timeZone: string | null) {
   const d = new Date(iso)
-  const tz = timeZone ?? undefined
+  const tz = safeTimeZone(timeZone) ?? undefined
   return {
     day: d.toLocaleDateString("uk-UA", { timeZone: tz, day: "numeric" }),
     month: d.toLocaleDateString("uk-UA", { timeZone: tz, month: "short" }).replace(".", ""),

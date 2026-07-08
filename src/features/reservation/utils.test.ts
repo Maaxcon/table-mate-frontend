@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { getDurationError, timeToMinutes, zonedWallTimeToUtcIso } from "./utils"
+import { getDurationError, safeTimeZone, timeToMinutes, zonedWallTimeToUtcIso } from "./utils"
 
 // Europe/Kyiv, 2026: spring-forward is between Mar 28/29 (EET +120 -> EEST
 // +180, at 01:00 UTC / 03:00 local), fall-back is between Oct 24/25 (EEST
@@ -29,6 +29,33 @@ describe("zonedWallTimeToUtcIso", () => {
   it("resolves an ordinary slot far from any DST transition unchanged", () => {
     const iso = zonedWallTimeToUtcIso("2026-07-08", "19:00", "Europe/Kyiv")
     expect(iso).toBe("2026-07-08T16:00:00.000Z")
+  })
+
+  it("does not throw and falls back to UTC for a misconfigured restaurant timezone", () => {
+    // Backend's _safe_zoneinfo degrades a bad stored value to UTC; without a
+    // matching frontend fallback, Intl throws a RangeError here instead —
+    // this must resolve the same UTC instant the backend would.
+    const iso = zonedWallTimeToUtcIso("2026-07-08", "19:00", "Not/AZone")
+    expect(iso).toBe("2026-07-08T19:00:00.000Z")
+  })
+})
+
+describe("safeTimeZone", () => {
+  it("passes through a valid IANA timezone", () => {
+    expect(safeTimeZone("Europe/Kyiv")).toBe("Europe/Kyiv")
+  })
+
+  it("falls back to UTC for an invalid timezone string, not null", () => {
+    // UTC specifically, not null/browser-local — a misconfigured value must
+    // degrade to the same fallback the backend uses (_safe_zoneinfo -> UTC),
+    // or the two sides silently disagree on the resulting instant.
+    expect(safeTimeZone("Not/AZone")).toBe("UTC")
+  })
+
+  it("leaves null/undefined/empty alone (no timezone known yet is a different case)", () => {
+    expect(safeTimeZone(null)).toBeNull()
+    expect(safeTimeZone(undefined)).toBeNull()
+    expect(safeTimeZone("")).toBeNull()
   })
 })
 
