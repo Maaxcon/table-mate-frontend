@@ -74,22 +74,38 @@ function tzOffsetMinutes(instant: Date, timeZone: string): number {
 
 // Interprets `dateKey` (YYYY-MM-DD) + `time` (HH:MM) as wall-clock time in the
 // restaurant's `timeZone` and returns the matching UTC instant as an ISO string.
+//
+// Mirrors Python's fold=0 semantics — what the backend's naive
+// `datetime(..., tzinfo=tz)` uses — so both sides resolve DST edge cases to
+// the SAME instant: the repeated fall-back hour maps to its FIRST occurrence,
+// and a time inside the spring-forward gap resolves with the pre-transition
+// offset. Sample the offset a day before/after the wall time; a candidate
+// instant is real when the offset actually in effect there matches the offset
+// used to build it.
 export function zonedWallTimeToUtcIso(dateKey: string, time: string, timeZone: string): string {
   const [y, mo, d] = dateKey.split("-").map(Number)
   const [h, mi] = time.split(":").map(Number)
   const naiveUtc = Date.UTC(y, mo - 1, d, h, mi)
   const tz = safeTimeZone(timeZone) ?? "UTC"
-  // Two-pass: reading the offset at `naiveUtc` itself is only a first
-  // approximation (it treats the wall-clock time as if it were already UTC,
-  // which can land on the wrong side of a DST transition). Apply that offset
-  // once to get close to the real instant, then re-read the offset there —
-  // near a spring-forward/fall-back boundary the two passes can disagree by
-  // an hour, and the second reading is the one that reflects DST at the
-  // actual target moment.
-  const firstOffset = tzOffsetMinutes(new Date(naiveUtc), tz)
-  const candidate = naiveUtc - firstOffset * 60000
-  const secondOffset = tzOffsetMinutes(new Date(candidate), tz)
-  return new Date(naiveUtc - secondOffset * 60000).toISOString()
+  const DAY_MS = 24 * 60 * 60000
+
+  const preOffset = tzOffsetMinutes(new Date(naiveUtc - DAY_MS), tz)
+  const preCandidate = naiveUtc - preOffset * 60000
+  // Self-consistent under the pre-transition offset: an ordinary time, or the
+  // first occurrence of an ambiguous fall-back time — fold=0 picks this one.
+  if (tzOffsetMinutes(new Date(preCandidate), tz) === preOffset) {
+    return new Date(preCandidate).toISOString()
+  }
+
+  const postOffset = tzOffsetMinutes(new Date(naiveUtc + DAY_MS), tz)
+  const postCandidate = naiveUtc - postOffset * 60000
+  if (tzOffsetMinutes(new Date(postCandidate), tz) === postOffset) {
+    return new Date(postCandidate).toISOString()
+  }
+
+  // Neither offset is self-consistent: the wall time sits in the
+  // spring-forward gap. fold=0 resolves it with the pre-transition offset.
+  return new Date(preCandidate).toISOString()
 }
 
 // The calendar date a slot actually falls on. On an overnight day (close <= open)

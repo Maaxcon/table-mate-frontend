@@ -39,6 +39,24 @@ describe("zonedWallTimeToUtcIso", () => {
     expect(iso).toBe("2026-07-08T16:00:00.000Z")
   })
 
+  it("resolves the repeated fall-back hour to its FIRST occurrence (fold=0, like the backend)", () => {
+    // 2026-10-25 03:30 Kyiv happens twice (clocks fall back 04:00 -> 03:00).
+    // Python's naive datetime(..., tzinfo=tz) — what the backend uses — is
+    // fold=0 and picks the first pass (EEST +180 -> 00:30Z). Resolving to the
+    // second (01:30Z) would make the availability map and the booked instant
+    // disagree for that hour.
+    const iso = zonedWallTimeToUtcIso("2026-10-25", "03:30", "Europe/Kyiv")
+    expect(iso).toBe("2026-10-25T00:30:00.000Z")
+  })
+
+  it("resolves a time inside the spring-forward gap with the pre-transition offset (fold=0)", () => {
+    // 2026-03-29 03:30 Kyiv does not exist (clocks jump 03:00 -> 04:00).
+    // fold=0 maps it via the pre-transition offset (EET +120 -> 01:30Z),
+    // matching the backend's resolution of the same impossible wall time.
+    const iso = zonedWallTimeToUtcIso("2026-03-29", "03:30", "Europe/Kyiv")
+    expect(iso).toBe("2026-03-29T01:30:00.000Z")
+  })
+
   it("does not throw and falls back to UTC for a misconfigured restaurant timezone", () => {
     // Backend's _safe_zoneinfo degrades a bad stored value to UTC; without a
     // matching frontend fallback, Intl throws a RangeError here instead —
