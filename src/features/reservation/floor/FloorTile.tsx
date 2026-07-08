@@ -73,7 +73,9 @@ export const FloorTile = memo(function FloorTile({
         if (didPanRef.current) return
         if (tile.table) onSelect(tile.table)
       }}
-      disabled={!tile.bookable || !tile.table}
+      // Dimmed = filtered out by the legend/only-free toggle: it already
+      // suppresses hover, so it must not stay clickable or tabbable either.
+      disabled={!tile.bookable || !tile.table || dimmed}
       aria-label={bookStrings.floorPlan.tableAria(tile.publicNumber, tile.capacity, tile.label)}
     >
       <TableSeats capacity={tile.capacity} shape={tile.shape} size={geometry.width} />

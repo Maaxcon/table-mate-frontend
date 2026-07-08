@@ -64,66 +64,70 @@ export function FloorCardList({
         </div>
       ) : (
         <ul className="c-floor-plan__list">
-          {visibleTableViews.map(({ table, tone, label, bookable, perfect }, i) => (
-            <li key={table.public_id}>
-              <button
-                type="button"
-                className={[
-                  "c-floor-plan__card",
-                  `c-floor-plan__card--${tone}`,
-                  selectedId === table.public_id ? "c-floor-plan__card--selected" : "",
-                  perfect ? "c-floor-plan__card--perfect" : "",
-                  statusFilter && tone !== statusFilter ? "c-floor-plan__card--dimmed" : "",
-                ]
-                  .filter(Boolean)
-                  .join(" ")}
-                style={{ animationDelay: `${Math.min(i, 20) * 45}ms` }}
-                onClick={() => onSelect(table)}
-                disabled={!bookable}
-                aria-label={bookStrings.floorPlan.tableAria(
-                  table.public_number,
-                  table.capacity,
-                  label,
-                )}
-              >
-                {perfect && (
-                  <span
-                    className="c-floor-plan__card-perfect"
-                    title={bookStrings.floorPlan.perfectFit(guests)}
-                  >
-                    ★ {guests}
-                  </span>
-                )}
-                <span
-                  className={`c-floor-plan__card-table c-floor-plan__table--${tone}`}
-                  aria-hidden="true"
+          {visibleTableViews.map(({ table, tone, label, bookable, perfect }, i) => {
+            const dimmed = Boolean(statusFilter && tone !== statusFilter)
+            return (
+              <li key={table.public_id}>
+                <button
+                  type="button"
+                  className={[
+                    "c-floor-plan__card",
+                    `c-floor-plan__card--${tone}`,
+                    selectedId === table.public_id ? "c-floor-plan__card--selected" : "",
+                    perfect ? "c-floor-plan__card--perfect" : "",
+                    dimmed ? "c-floor-plan__card--dimmed" : "",
+                  ]
+                    .filter(Boolean)
+                    .join(" ")}
+                  style={{ animationDelay: `${Math.min(i, 20) * 45}ms` }}
+                  onClick={() => onSelect(table)}
+                  // Dimmed = filtered out by the legend: not clickable or tabbable.
+                  disabled={!bookable || dimmed}
+                  aria-label={bookStrings.floorPlan.tableAria(
+                    table.public_number,
+                    table.capacity,
+                    label,
+                  )}
                 >
-                  <TableSeats capacity={table.capacity} shape="square" size={60} />
-                  <span className="c-floor-plan__surface c-floor-plan__card-surface">
-                    <span className="c-floor-plan__card-table-num">{table.public_number}</span>
-                  </span>
-                </span>
-
-                <span className="c-floor-plan__card-cap">
-                  <LuUsers aria-hidden="true" />
-                  {bookStrings.floorPlan.seats(table.capacity)}
-                </span>
-
-                {bookable ? (
-                  <span className="c-floor-plan__card-cta">
-                    <LuPlus aria-hidden="true" />
-                    {bookStrings.floorPlan.choose}
-                  </span>
-                ) : (
+                  {perfect && (
+                    <span
+                      className="c-floor-plan__card-perfect"
+                      title={bookStrings.floorPlan.perfectFit(guests)}
+                    >
+                      ★ {guests}
+                    </span>
+                  )}
                   <span
-                    className={`c-floor-plan__table-badge c-floor-plan__table-badge--${tone} c-floor-plan__card-badge`}
+                    className={`c-floor-plan__card-table c-floor-plan__table--${tone}`}
+                    aria-hidden="true"
                   >
-                    {label}
+                    <TableSeats capacity={table.capacity} shape="square" size={60} />
+                    <span className="c-floor-plan__surface c-floor-plan__card-surface">
+                      <span className="c-floor-plan__card-table-num">{table.public_number}</span>
+                    </span>
                   </span>
-                )}
-              </button>
-            </li>
-          ))}
+
+                  <span className="c-floor-plan__card-cap">
+                    <LuUsers aria-hidden="true" />
+                    {bookStrings.floorPlan.seats(table.capacity)}
+                  </span>
+
+                  {bookable ? (
+                    <span className="c-floor-plan__card-cta">
+                      <LuPlus aria-hidden="true" />
+                      {bookStrings.floorPlan.choose}
+                    </span>
+                  ) : (
+                    <span
+                      className={`c-floor-plan__table-badge c-floor-plan__table-badge--${tone} c-floor-plan__card-badge`}
+                    >
+                      {label}
+                    </span>
+                  )}
+                </button>
+              </li>
+            )
+          })}
         </ul>
       )}
     </>
