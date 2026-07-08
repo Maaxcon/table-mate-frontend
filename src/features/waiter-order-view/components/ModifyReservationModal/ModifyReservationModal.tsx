@@ -137,12 +137,11 @@ export function ModifyReservationModal({
         ? new Date(reservation.start_at)
         : new Date(`${dateStr}T${selectedTime}:00`)
       const endDt = new Date(startDt.getTime() + durationMinutes * 60000)
-      const body: Record<string, unknown> = {
-        guest_name: guestName,
-      }
+      const body: Record<string, unknown> = {}
       if (isActive) {
         body.end_at = endDt.toISOString()
       } else {
+        if (guestName !== reservation.name) body.guest_name = guestName
         body.start_at = startDt.toISOString()
         body.end_at = endDt.toISOString()
         body.guest_count = guestCount
