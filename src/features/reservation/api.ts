@@ -234,6 +234,7 @@ export async function modifyReservation(
     start_at?: string
     end_at?: string
     guest_count?: number
+    guest_name?: string
   },
 ): Promise<ReservationWithTable> {
   const res = await apiFetch(`/api/reservations/reservations/${publicId}/`, {

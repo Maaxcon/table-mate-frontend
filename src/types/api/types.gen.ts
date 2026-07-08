@@ -702,6 +702,7 @@ export type PatchedReservation = {
   table_info?: TableInfo
   restaurant_info?: RestaurantInfo
   readonly customer_name?: string
+  guest_name?: string | null
   type?: TypeEnum
   guest_count?: number
   start_at?: string
@@ -927,6 +928,7 @@ export type Reservation = {
   table_info: TableInfo
   restaurant_info: RestaurantInfo
   readonly customer_name: string
+  guest_name?: string | null
   type?: TypeEnum
   guest_count: number
   start_at: string
@@ -1623,6 +1625,7 @@ export type PatchedOrderItemWritable = {
 
 export type PatchedReservationWritable = {
   table?: string
+  guest_name?: string | null
   type?: TypeEnum
   guest_count?: number
   start_at?: string
@@ -1708,6 +1711,7 @@ export type ReceiptWritable = {
 
 export type ReservationWritable = {
   table: string
+  guest_name?: string | null
   type?: TypeEnum
   guest_count: number
   start_at: string

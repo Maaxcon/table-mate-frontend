@@ -194,6 +194,25 @@ export function minutesToTime(minutes: number): string {
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`
 }
 
+// Rounds each slot up to the nearest 30-min boundary and dedupes, then sorts
+// chronologically on an overnight-aware timeline: times before 6am sort as if
+// they were 24h later, so an overnight day's after-midnight tail (e.g. 01:00)
+// displays after its evening slots (e.g. 22:00) instead of before them.
+export function normalizeSlots(slots: string[]): string[] {
+  const set = new Set<string>()
+  for (const s of slots) {
+    const mins = timeToMinutes(s)
+    const normalized = Math.ceil(mins / 30) * 30
+    set.add(minutesToTime(normalized))
+  }
+  const BREAK = 6 * 60
+  return [...set].sort((a, b) => {
+    const ma = timeToMinutes(a)
+    const mb = timeToMinutes(b)
+    return (ma < BREAK ? ma + 1440 : ma) - (mb < BREAK ? mb + 1440 : mb)
+  })
+}
+
 // Format an ISO instant as HH:MM in the restaurant's timezone (falls back to the
 // browser's zone when unknown), so a guest in another zone sees the venue's time.
 export function formatTimeInTz(iso: string, timeZone: string | null): string {

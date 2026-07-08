@@ -22,6 +22,7 @@ import {
   maxDurationBeforeClose,
   MIN_DURATION,
   minutesToTime,
+  normalizeSlots,
   slotDateKey,
   timeToMinutes,
   zonedWallTimeToUtcIso,
@@ -185,7 +186,9 @@ export function BookModal({
 
   const realSlots = useMemo(() => {
     if (!availableSlots) return null
-    return availableSlots[dateKey] ?? null
+    const raw = availableSlots[dateKey]
+    if (!raw) return null
+    return normalizeSlots(raw)
   }, [availableSlots, dateKey])
 
   const timeSlots = useMemo(() => {

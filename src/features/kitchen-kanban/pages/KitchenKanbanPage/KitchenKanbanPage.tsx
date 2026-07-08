@@ -142,7 +142,12 @@ export function KitchenKanbanPage() {
       try {
         await updateTicketStatus(ticketId, "completed")
         setCompleted((c) => [
-          { ...ticket, status: "completed", completedMinutes: elapsedMinutes(ticket.startedAt) },
+          {
+            ...ticket,
+            status: "completed",
+            completedMinutes: elapsedMinutes(ticket.startedAt),
+            completedAt: Date.now(),
+          },
           ...c,
         ])
         setTickets((prev) => prev.filter((t) => t.id !== ticketId))

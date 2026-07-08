@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react"
 import { apiFetch } from "@/api/client"
 import { useFocusTrap } from "@/hooks/useFocusTrap"
+import { normalizeSlots } from "@/features/reservation/utils"
 import type { ReservationItem } from "../../types"
 import "./ModifyReservationModal.css"
 
@@ -49,24 +50,12 @@ export function ModifyReservationModal({
   const currentEndTime = msToTime(new Date(reservation.end_at).getTime())
   const currentDurationMinutes = timeToMinutes(currentEndTime) - timeToMinutes(currentStartTime)
 
-  const initialSnappedTime = useMemo(() => {
-    const mins = timeToMinutes(currentStartTime)
-    const snapped = Math.round(mins / 30) * 30
-    return minutesToTime(snapped)
-  }, [currentStartTime])
-
   const isActive = reservation.status === "active"
 
-  const snappedNowMinutes = useMemo(() => {
-    const now = new Date()
-    return Math.ceil((now.getHours() * 60 + now.getMinutes()) / 30) * 30
-  }, [])
-
-  const [selectedTime, setSelectedTime] = useState<string | null>(
-    isActive ? currentStartTime : initialSnappedTime,
-  )
+  const [selectedTime, setSelectedTime] = useState<string | null>(currentStartTime)
   const [durationMinutes, setDurationMinutes] = useState(Math.max(30, currentDurationMinutes))
   const [guestCount, setGuestCount] = useState(reservation.guest_count)
+  const [guestName, setGuestName] = useState(reservation.name)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const dialogRef = useFocusTrap<HTMLDivElement>({
@@ -93,7 +82,8 @@ export function ModifyReservationModal({
           return
         }
         const data = (await res.json()) as Record<string, string[]>
-        if (!cancelled) setAvailableSlots(data[dateStr] ?? null)
+        const raw = data[dateStr]
+        if (!cancelled) setAvailableSlots(raw ? normalizeSlots(raw) : null)
       })
       .catch(() => {
         if (!cancelled) setAvailableSlots(null)
@@ -114,11 +104,21 @@ export function ModifyReservationModal({
   const durationError = useMemo(() => {
     if (!selectedTime || !durationMinutes) return null
     if (availableSlots) {
-      const endMins = timeToMinutes(selectedTime) + durationMinutes
-      const startMins = isActive
-        ? Math.ceil(Math.max(timeToMinutes(currentEndTime), snappedNowMinutes) / 30) * 30
-        : timeToMinutes(selectedTime)
-      for (let m = startMins; m < endMins; m += 30) {
+      const startMins = timeToMinutes(selectedTime)
+      const endMins = startMins + durationMinutes
+      const slotEnd = Math.ceil(endMins / 30) * 30
+
+      const now = new Date()
+      const nowMins = now.getHours() * 60 + now.getMinutes()
+      const currentEndMins = timeToMinutes(currentEndTime)
+
+      // For active reservations the start is in the past — only validate
+      // the future tail (past slots are excluded by the backend).
+      const scanStart = isActive
+        ? Math.floor(Math.max(currentEndMins, nowMins) / 30) * 30
+        : Math.floor(startMins / 30) * 30
+
+      for (let m = scanStart; m < slotEnd; m += 30) {
         const slotTime = minutesToTime(m)
         if (!availableSlots.includes(slotTime)) {
           return "The selected duration is not fully available. Choose a shorter duration or different start time."
@@ -126,7 +126,7 @@ export function ModifyReservationModal({
       }
     }
     return null
-  }, [selectedTime, durationMinutes, availableSlots, isActive, currentEndTime, snappedNowMinutes])
+  }, [selectedTime, durationMinutes, availableSlots, isActive, currentEndTime])
 
   const handleSave = async () => {
     if (!selectedTime) return
@@ -141,6 +141,7 @@ export function ModifyReservationModal({
       if (isActive) {
         body.end_at = endDt.toISOString()
       } else {
+        if (guestName !== reservation.name) body.guest_name = guestName
         body.start_at = startDt.toISOString()
         body.end_at = endDt.toISOString()
         body.guest_count = guestCount
@@ -194,8 +195,17 @@ export function ModifyReservationModal({
 
         <div className="modify-res__body">
           <div className="modify-res__field">
-            <span className="modify-res__label">Guest</span>
-            <span className="modify-res__value">{reservation.name}</span>
+            <label className="modify-res__label" htmlFor="mod-res-name">
+              Guest
+            </label>
+            <input
+              id="mod-res-name"
+              type="text"
+              className="modify-res__input"
+              value={guestName}
+              onChange={(e) => setGuestName(e.target.value)}
+              disabled={busy}
+            />
           </div>
           <div className="modify-res__field">
             <span className="modify-res__label">Table</span>

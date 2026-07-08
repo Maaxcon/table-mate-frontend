@@ -17,6 +17,36 @@ jobs:
         with:
           path: table-mate-frontend
 
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: table-mate-frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Smoke test
+        run: npm run smoke
+
+  api-drift-gate:
+    name: Verify API Type Alignment
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
+    defaults:
+      run:
+        working-directory: table-mate-frontend
+        
+    steps:
+      - name: Checkout frontend
+        uses: actions/checkout@v4
+        with:
+          path: table-mate-frontend
+
       - name: Checkout backend schema source
         uses: actions/checkout@v4
         with:
@@ -42,17 +72,9 @@ jobs:
       - name: Check generated API type drift
         run: git diff --exit-code -- src/types/api
 
-      - name: Lint
-        run: npm run lint
-
-      - name: Smoke test
-        run: npm run smoke
-
-
-
   build-and-push:
     name: Build and Push Docker Images
-    needs: test
+    needs: [test, api-drift-gate]
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
 
@@ -71,9 +93,7 @@ jobs:
       - name: Build and Push Frontend
         run: |
           IMAGE=europe-docker.pkg.dev/auth-server-381211/table-mate/frontend/develop
-          
-          # Assuming your frontend has its own Dockerfile in a /frontend folder
-          # Adjust the build path (-f frontend/Dockerfile) if needed
+
           docker build -t $IMAGE:latest -t $IMAGE:${{ github.sha }} -f Dockerfile .
           
           docker push $IMAGE --all-tags
