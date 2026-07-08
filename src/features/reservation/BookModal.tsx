@@ -73,8 +73,10 @@ export function BookModal({
   })
   const [selectedTime, setSelectedTime] = useState<string | null>(initialTime ?? null)
   const [durationMinutes, setDurationMinutes] = useState(DEFAULT_DURATION)
+  // Clamped to the table in BOTH branches — the default too, or opening a
+  // capacity-1 table starts at 2 guests and 400s until the stepper is touched.
   const [guestCount, setGuestCount] = useState(() =>
-    initialGuests ? Math.min(initialGuests, table.capacity) : DEFAULT_GUESTS,
+    Math.max(1, Math.min(initialGuests ?? DEFAULT_GUESTS, table.capacity)),
   )
   const [notes, setNotes] = useState("")
   const [guestName, setGuestName] = useState("")
