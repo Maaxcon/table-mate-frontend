@@ -1,5 +1,9 @@
 import { apiFetch } from "@/api/client"
-import type { Table } from "@/types/api/types.gen"
+import type {
+  ReservationsReservationsAvailabilityRetrieveResponse,
+  ReservationsReservationsAvailableSlotsRetrieveResponse,
+  Table,
+} from "@/types/api/types.gen"
 import type { UpcomingReservation } from "@/features/waiter-order-view/types"
 import { DEFAULT_DURATION } from "./utils"
 
@@ -130,7 +134,7 @@ export async function fetchAvailableSlots(
   }
   const res = await apiFetch(`/api/reservations/reservations/available-slots/?${params}`)
   if (!res.ok) throw new Error("Failed to fetch available slots")
-  return res.json() as Promise<Record<string, string[]>>
+  return res.json() as Promise<ReservationsReservationsAvailableSlotsRetrieveResponse>
 }
 
 // Per-table availability for one slot (date + time + duration) across the whole
@@ -150,7 +154,7 @@ export async function fetchSlotAvailability(
   })
   const res = await apiFetch(`/api/reservations/reservations/availability/?${params}`)
   if (!res.ok) throw new Error("Failed to fetch availability")
-  const data = (await res.json()) as { availability?: Record<string, boolean> }
+  const data = (await res.json()) as ReservationsReservationsAvailabilityRetrieveResponse
   return data.availability ?? {}
 }
 

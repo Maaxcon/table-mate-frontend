@@ -518,6 +518,7 @@ export type {
   ShapeEnum,
   SourceEnum,
   Table,
+  TableAvailabilityResponse,
   TableEntity,
   TableInfo,
   TableInfoWritable,

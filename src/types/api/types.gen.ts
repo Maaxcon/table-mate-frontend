@@ -1043,6 +1043,15 @@ export type Table = {
   readonly updated_at: string
 }
 
+export type TableAvailabilityResponse = {
+  /**
+   * table public_id -> is it free for the requested slot
+   */
+  availability: {
+    [key: string]: boolean
+  }
+}
+
 export type TableEntity = {
   id?: string | null
   /**
@@ -3477,7 +3486,7 @@ export type ReservationsReservationsAvailabilityRetrieveData = {
 }
 
 export type ReservationsReservationsAvailabilityRetrieveResponses = {
-  200: Reservation
+  200: TableAvailabilityResponse
 }
 
 export type ReservationsReservationsAvailabilityRetrieveResponse =
@@ -3491,7 +3500,12 @@ export type ReservationsReservationsAvailableSlotsRetrieveData = {
 }
 
 export type ReservationsReservationsAvailableSlotsRetrieveResponses = {
-  200: Reservation
+  /**
+   * date (YYYY-MM-DD) -> list of bookable HH:MM slot start times
+   */
+  200: {
+    [key: string]: Array<string>
+  }
 }
 
 export type ReservationsReservationsAvailableSlotsRetrieveResponse =
