@@ -353,12 +353,17 @@ function RescheduleForm({
                 />
               </section>
 
-              <section className="book-modal__section">
-                <h3 className="book-modal__section-title">
-                  {bookStrings.reschedule.sections.guests}
-                </h3>
-                <GuestStepper value={guestCount} max={tableCapacity} onChange={setGuestCount} />
-              </section>
+              {/* Prolonging an active booking only moves end_at (the backend
+                  rejects other fields), so don't offer a guest edit that would
+                  silently be dropped on save. */}
+              {!endTimeOnly && (
+                <section className="book-modal__section">
+                  <h3 className="book-modal__section-title">
+                    {bookStrings.reschedule.sections.guests}
+                  </h3>
+                  <GuestStepper value={guestCount} max={tableCapacity} onChange={setGuestCount} />
+                </section>
+              )}
 
               {selectedTime && (
                 <SlotSummary
