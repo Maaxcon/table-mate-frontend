@@ -178,6 +178,49 @@ export function todayInTz(timeZone: string | null): Date {
   return new Date(year, month - 1, day)
 }
 
+// The venue-local calendar day (as a local-midnight Date) of an ISO instant —
+// same convention as todayInTz, for arbitrary instants.
+export function dateInTz(iso: string, timeZone: string | null): Date {
+  const d = new Date(iso)
+  const tz = safeTimeZone(timeZone)
+  if (!tz) return new Date(d.getFullYear(), d.getMonth(), d.getDate())
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: tz,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(d)
+  const m: Record<string, number> = {}
+  for (const p of parts) {
+    if (p.type !== "literal") m[p.type] = Number(p.value)
+  }
+  return new Date(m.year, m.month - 1, m.day)
+}
+
+// Inverse of slotDateKey: the venue-local OPENING day a stored instant belongs
+// to. A post-midnight instant on an overnight day is keyed by the backend (and
+// slotDateKey) under the PREVIOUS venue day, so step back one day when the
+// previous day's config runs overnight and this wall time is before its
+// opening — then slotDateKey advances it forward exactly once, round-tripping
+// cleanly.
+export function openingDayOfInstant(
+  iso: string,
+  timeZone: string | null,
+  workingHours: Record<string, WorkingHoursDay> | null,
+): Date {
+  const day = dateInTz(iso, timeZone)
+  const wallMins = timeToMinutes(formatTimeInTz(iso, timeZone))
+  const prev = new Date(day)
+  prev.setDate(prev.getDate() - 1)
+  const prevConfig = workingHours?.[DAY_NAMES[prev.getDay()]]
+  if (prevConfig) {
+    const openMins = timeToMinutes(prevConfig.open)
+    const closeMins = timeToMinutes(prevConfig.close)
+    if (closeMins <= openMins && wallMins < openMins) return prev
+  }
+  return day
+}
+
 // "Now" as wall-clock calendar parts in `timeZone` (falls back to the browser's
 // zone) — so the past-slot filter below compares the venue's clock, not the
 // guest's device clock.

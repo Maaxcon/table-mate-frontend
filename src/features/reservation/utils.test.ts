@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest"
-import { getDurationError, safeTimeZone, timeToMinutes, zonedWallTimeToUtcIso } from "./utils"
+import {
+  getDurationError,
+  localDateKey,
+  openingDayOfInstant,
+  safeTimeZone,
+  slotDateKey,
+  timeToMinutes,
+  zonedWallTimeToUtcIso,
+} from "./utils"
 
 // Europe/Kyiv, 2026: spring-forward is between Mar 28/29 (EET +120 -> EEST
 // +180, at 01:00 UTC / 03:00 local), fall-back is between Oct 24/25 (EEST
@@ -91,5 +99,42 @@ describe("getDurationError overnight closing bound", () => {
     const start = timeToMinutes("01:00")
     const error = getDurationError(start, start + 60, OVERNIGHT_DAY, null)
     expect(error).toBeNull()
+  })
+})
+
+// 2026-07-10 is a Friday; Kyiv is UTC+3 in July.
+const OVERNIGHT_HOURS = {
+  fri: OVERNIGHT_DAY,
+  thu: { open: "09:00", close: "22:00" },
+}
+
+describe("openingDayOfInstant", () => {
+  it("maps a post-midnight instant on an overnight day to the previous (opening) day", () => {
+    // 2026-07-10T22:00Z = Sat 2026-07-11 01:00 Kyiv — inside Friday's
+    // 18:00–02:00 session, so its opening day is Friday the 10th.
+    const day = openingDayOfInstant("2026-07-10T22:00:00Z", "Europe/Kyiv", OVERNIGHT_HOURS)
+    expect(localDateKey(day)).toBe("2026-07-10")
+  })
+
+  it("keeps an ordinary evening instant on its own venue day", () => {
+    // 19:00 Kyiv on Friday — Thursday's config is not overnight, no step back.
+    const day = openingDayOfInstant("2026-07-10T16:00:00Z", "Europe/Kyiv", OVERNIGHT_HOURS)
+    expect(localDateKey(day)).toBe("2026-07-10")
+  })
+
+  it("falls back to the instant's venue day when working hours are unknown", () => {
+    const day = openingDayOfInstant("2026-07-10T22:00:00Z", "Europe/Kyiv", null)
+    expect(localDateKey(day)).toBe("2026-07-11")
+  })
+
+  it("round-trips through slotDateKey back to the original instant (no +24h drift)", () => {
+    // The reschedule no-op case: read a stored post-midnight start, key it by
+    // its opening day, then let slotDateKey advance it once — re-deriving the
+    // instant must give back exactly what was stored, not a day later.
+    const storedStart = "2026-07-10T22:00:00.000Z"
+    const openingDay = openingDayOfInstant(storedStart, "Europe/Kyiv", OVERNIGHT_HOURS)
+    const key = slotDateKey(openingDay, "01:00", OVERNIGHT_HOURS.fri)
+    expect(key).toBe("2026-07-11")
+    expect(zonedWallTimeToUtcIso(key, "01:00", "Europe/Kyiv")).toBe(storedStart)
   })
 })

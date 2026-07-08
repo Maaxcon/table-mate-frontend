@@ -15,6 +15,7 @@ import {
   localDateKey,
   MIN_DURATION,
   minutesToTime,
+  openingDayOfInstant,
   slotDateKey,
   timeToMinutes,
   zonedWallTimeToUtcIso,
@@ -25,7 +26,6 @@ interface RescheduleModalProps {
   publicId: string
   tableNumber: string
   tablePublicId: string
-  currentDate: string
   currentStart: string
   currentEnd: string
   currentGuests: number
@@ -99,7 +99,6 @@ function RescheduleForm({
   publicId,
   tableNumber,
   tablePublicId,
-  currentDate,
   currentStart,
   currentEnd,
   currentGuests,
@@ -121,7 +120,15 @@ function RescheduleForm({
     (new Date(currentEnd).getTime() - new Date(currentStart).getTime()) / 60000,
   )
 
-  const parsedDate = useMemo(() => new Date(currentDate), [currentDate])
+  // The booking's OPENING day in the venue's zone — not the device-local date
+  // of the instant. For a post-midnight slot on an overnight day the instant's
+  // calendar day is already the day after the opening day, and slotDateKey
+  // advances post-midnight slots itself; deriving the opening day here keeps
+  // that advance from happening twice (which rewrote the booking +24h).
+  const parsedDate = useMemo(
+    () => openingDayOfInstant(currentStart, effectiveTimeZone, workingHours),
+    [currentStart, effectiveTimeZone, workingHours],
+  )
 
   const initialSnappedTime = useMemo(() => {
     const mins = timeToMinutes(currentStartTime)
