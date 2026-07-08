@@ -138,7 +138,6 @@ export function WaiterOrderPage() {
         fetchReservations(),
       ])
       let nextTables = tablesRef.current
-      let nextReservations = reservationsRef.current
       if (layoutRes.ok) {
         const layoutData = (await layoutRes.json()) as LayoutResponse
         nextTables = (layoutData.tables ?? []).map(mapTableToFloorTable)
@@ -150,13 +149,12 @@ export function WaiterOrderPage() {
         )
         setLayoutReservations(layoutData.upcoming_reservations ?? [])
       }
-      if (items) {
-        nextReservations = items
-        setReservations(items)
-      }
       tablesRef.current = nextTables
-      reservationsRef.current = nextReservations
-      return { tables: nextTables, reservations: nextReservations }
+      if (items) {
+        setReservations(items)
+        reservationsRef.current = items
+      }
+      return { tables: nextTables, reservations: reservationsRef.current }
     } catch {
       // keep current state on refresh failure
       return null
@@ -284,15 +282,38 @@ export function WaiterOrderPage() {
     ? (filteredTables.find((t) => t.public_id === selectedTableId) ?? null)
     : null
 
+  const mergedReservations = useMemo(() => {
+    const occupiedTableNumbers = new Set(
+      tables.filter((t) => t.is_occupied).map((t) => t.public_number),
+    )
+    const byId = new Map(reservations.map((r) => [r.public_id, r]))
+    const merged = [...reservations]
+    for (const lr of layoutReservations) {
+      if (byId.has(lr.public_id)) continue
+      const table = tables.find((t) => t.public_id === lr.table_id)
+      merged.push({
+        public_id: lr.public_id,
+        start_at: lr.start_at,
+        end_at: lr.end_at ?? lr.start_at,
+        table: table?.public_number ?? "",
+        guest_count: lr.guest_count ?? 2,
+        status: "pending" as const,
+        notes: null,
+        name: lr.customer_name ?? "Guest",
+      })
+    }
+    return merged.filter((r) => !(r.status === "active" && !occupiedTableNumbers.has(r.table)))
+  }, [reservations, layoutReservations, tables])
+
   const selectedTableReservations = selectedTable
-    ? reservations.filter((r) => r.table === selectedTable.public_number)
+    ? mergedReservations.filter((r) => r.table === selectedTable.public_number)
     : []
 
   const handleTableSelect = (table: FloorTable) => {
     clearActionError()
     setSelectedTableId(table.public_id)
     if (table.is_occupied) {
-      buildOverlayDetail(table.public_id, tables, reservations)
+      buildOverlayDetail(table.public_id, tables, mergedReservations)
     } else {
       setOverlayDetail(null)
       setOverlayLoading(false)
@@ -312,20 +333,20 @@ export function WaiterOrderPage() {
     ? getTableVisualStatus(selectedTable, layoutReservations, currentTime)
     : "free"
 
-  const pendingTodayReservations = reservations.filter(
+  const pendingTodayReservations = mergedReservations.filter(
     (r) =>
       r.status === "pending" && new Date(r.start_at).toDateString() === currentTime.toDateString(),
   )
 
   const activeReservationsByTable = useMemo(() => {
     const map: Record<string, ReservationItem> = {}
-    for (const res of reservations) {
+    for (const res of mergedReservations) {
       if (res.status === "active" && res.table) {
         map[res.table] = res
       }
     }
     return map
-  }, [reservations])
+  }, [mergedReservations])
 
   if (loading)
     return (
@@ -442,20 +463,7 @@ export function WaiterOrderPage() {
           restaurantId={restaurantId}
           showNameField
           onClose={() => setCreateResModalOpen(false)}
-          onSuccess={(r) => {
-            if (r) {
-              const mapped: ReservationItem = {
-                public_id: r.public_id,
-                start_at: r.start_at,
-                end_at: r.end_at,
-                table: r.table_info?.public_number ?? "",
-                guest_count: r.guest_count,
-                status: r.status as ReservationItem["status"],
-                notes: r.notes,
-                name: r.customer_name ?? "Guest",
-              }
-              setReservations((prev) => [...prev, mapped])
-            }
+          onSuccess={() => {
             setCreateResModalOpen(false)
             refreshFloor()
           }}

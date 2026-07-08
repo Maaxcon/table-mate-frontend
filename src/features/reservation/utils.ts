@@ -30,6 +30,21 @@ export function minutesToTime(minutes: number): string {
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`
 }
 
+export function normalizeSlots(slots: string[]): string[] {
+  const set = new Set<string>()
+  for (const s of slots) {
+    const mins = timeToMinutes(s)
+    const normalized = Math.ceil(mins / 30) * 30
+    set.add(minutesToTime(normalized))
+  }
+  const BREAK = 6 * 60
+  return [...set].sort((a, b) => {
+    const ma = timeToMinutes(a)
+    const mb = timeToMinutes(b)
+    return (ma < BREAK ? ma + 1440 : ma) - (mb < BREAK ? mb + 1440 : mb)
+  })
+}
+
 export function generateTimeSlots(date: Date, dayConfig: WorkingHoursDay | undefined): string[] {
   if (!dayConfig) return []
 
