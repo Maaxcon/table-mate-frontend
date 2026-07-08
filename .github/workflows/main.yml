@@ -74,7 +74,7 @@ jobs:
 
   build-and-push:
     name: Build and Push Docker Images
-    needs: test
+    needs: [test, api-drift-gate]
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
 
