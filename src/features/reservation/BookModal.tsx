@@ -205,8 +205,17 @@ export function BookModal({
     return getDurationError(startMins, endMins, dayConfig, availableSlots?.[dateKey] ?? null)
   }, [selectedTime, effectiveDuration, dayConfig, availableSlots, dateKey])
 
+  // Staff mode only (showNameField). The backend only routes to
+  // create_staff_reservation when guest_name is truthy — a blank name
+  // silently falls through to the customer path and books the reservation
+  // under the WAITER's own account instead of the walk-in guest's. Blocking
+  // submit here is the only guard: the backend has no way to tell "staff
+  // forgot the name" apart from "this is actually a self-service booking".
+  const nameError =
+    showNameField && !guestName.trim() ? bookStrings.modal.validation.guestNameRequired : null
+
   const handleConfirm = useCallback(async () => {
-    if (!selectedTime) return
+    if (!selectedTime || nameError) return
     setError(null)
     setSubmitting(true)
 
@@ -265,6 +274,7 @@ export function BookModal({
     notes,
     guestName,
     showNameField,
+    nameError,
     timeZone,
     loadSlots,
     table.public_id,
@@ -502,6 +512,7 @@ export function BookModal({
                     value={guestName}
                     onChange={(e) => setGuestName(e.target.value)}
                   />
+                  {nameError && <p className="book-modal__hint">{nameError}</p>}
                 </section>
               )}
 
@@ -547,7 +558,7 @@ export function BookModal({
               <button
                 className="book-modal__btn book-modal__btn--confirm"
                 onClick={handleConfirm}
-                disabled={!selectedTime || submitting || !!durationError}
+                disabled={!selectedTime || submitting || !!durationError || !!nameError}
                 type="button"
               >
                 {submitting
