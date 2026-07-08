@@ -106,9 +106,19 @@ export function ModifyReservationModal({
     if (availableSlots) {
       const startMins = timeToMinutes(selectedTime)
       const endMins = startMins + durationMinutes
-      const slotStart = Math.floor(startMins / 30) * 30
       const slotEnd = Math.ceil(endMins / 30) * 30
-      for (let m = slotStart; m < slotEnd; m += 30) {
+
+      const now = new Date()
+      const nowMins = now.getHours() * 60 + now.getMinutes()
+      const currentEndMins = timeToMinutes(currentEndTime)
+
+      // For active reservations the start is in the past — only validate
+      // the future tail (past slots are excluded by the backend).
+      const scanStart = isActive
+        ? Math.floor(Math.max(currentEndMins, nowMins) / 30) * 30
+        : Math.floor(startMins / 30) * 30
+
+      for (let m = scanStart; m < slotEnd; m += 30) {
         const slotTime = minutesToTime(m)
         if (!availableSlots.includes(slotTime)) {
           return "The selected duration is not fully available. Choose a shorter duration or different start time."
@@ -116,7 +126,7 @@ export function ModifyReservationModal({
       }
     }
     return null
-  }, [selectedTime, durationMinutes, availableSlots])
+  }, [selectedTime, durationMinutes, availableSlots, isActive, currentEndTime])
 
   const handleSave = async () => {
     if (!selectedTime) return
