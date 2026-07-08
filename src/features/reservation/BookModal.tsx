@@ -135,7 +135,11 @@ export function BookModal({
         if (mountedRef.current) setAvailableSlots(data)
       })
       .catch(() => {
-        if (mountedRef.current) setAvailableSlots({})
+        // null = "unknown", not "no slots anywhere": a {} sentinel here made the
+        // date gating gray out every day, locking the guest out of navigation.
+        // With null the days stay clickable and times fall back to
+        // generateTimeSlots; the backend re-checks the slot on create anyway.
+        if (mountedRef.current) setAvailableSlots(null)
       })
       .finally(() => {
         if (mountedRef.current) setSlotsLoading(false)
