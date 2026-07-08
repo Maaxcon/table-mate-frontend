@@ -83,6 +83,15 @@ const wsLog: (...args: unknown[]) => void = import.meta.env.DEV
   ? (...args) => console.debug("[FloorWS]", ...args)
   : () => {}
 
+// Detach handlers before a deliberate close so the old socket's onclose can't
+// fire after a replacement is installed (it would null the live socket's ref,
+// leak it in the hall group, and let a reconnect double-deliver every event).
+function closeSilently(ws: WebSocket, reason: string) {
+  ws.onerror = null
+  ws.onclose = null
+  ws.close(1000, reason)
+}
+
 export function useFloorSubscription({
   onTableStatusChanged,
   onNewReservation,
@@ -141,7 +150,7 @@ export function useFloorSubscription({
     if (env.wsUrl === "Not configured" || !restaurantId) return
 
     if (wsRef.current) {
-      wsRef.current.close(1000, "Reconnecting")
+      closeSilently(wsRef.current, "Reconnecting")
       wsRef.current = null
     }
 
@@ -187,7 +196,7 @@ export function useFloorSubscription({
 
     ws.onclose = (event) => {
       wsLog("Disconnected:", event.code, event.reason)
-      wsRef.current = null
+      if (wsRef.current === ws) wsRef.current = null
       if (!mountedRef.current) return
       setIsConnected(false)
       callbacksRef.current.onClose?.()
@@ -210,7 +219,7 @@ export function useFloorSubscription({
       mountedRef.current = false
       if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current)
       if (wsRef.current) {
-        wsRef.current.close(1000, "Component unmounting")
+        closeSilently(wsRef.current, "Component unmounting")
         wsRef.current = null
       }
     }
@@ -219,8 +228,9 @@ export function useFloorSubscription({
   const disconnect = useCallback(() => {
     if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current)
     if (wsRef.current) {
-      wsRef.current.close(1000, "Manual disconnect")
+      closeSilently(wsRef.current, "Manual disconnect")
       wsRef.current = null
+      setIsConnected(false)
     }
   }, [])
 
