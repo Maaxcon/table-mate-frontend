@@ -170,7 +170,7 @@ export async function fetchLayoutData(restaurantId?: string): Promise<LayoutData
     url += `?restaurant=${restaurantId}`
   }
   const res = await apiFetch(url)
-  if (!res.ok) return { tables: [], layout: null, upcoming_reservations: [] }
+  if (!res.ok) throw new Error("Failed to fetch layout data")
   return res.json() as Promise<LayoutDataResponse>
 }
 
