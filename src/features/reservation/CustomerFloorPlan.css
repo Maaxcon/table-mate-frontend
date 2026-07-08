@@ -26,8 +26,18 @@
   width: 100%;
   max-width: 100%;
   /* Keep the floor readable: never squash below MIN_SCALE — instead pan
-     (transform-based, not scroll) inside a fixed-height frame. */
-  max-height: 64vh;
+     (transform-based, not scroll) inside a fixed-height frame. An explicit
+     height (not just max-height) so it's a definite size for descendants —
+     .zoom-wrap's height:100% (and in turn .fp-view's) can't reliably resolve
+     against an auto-height ancestor whose own "natural" size is itself
+     aspect-ratio-derived from THAT descendant: a max-height-only cap left
+     that circular, so a wide room's fp-view could compute a height taller
+     than 64vh, get silently clipped by overflow:hidden, and fit its scale
+     to the untruncated (wrong, too-generous) measurement — clipping tables
+     until an unrelated resize corrected it. FloorPlanView already letterboxes
+     content that doesn't match the container's aspect ratio via offsetX/Y
+     centering, so a fixed height here is safe for small rooms too. */
+  height: 64vh;
   box-sizing: border-box;
   /* Zoom is an outer transform:scale on .c-floor-plan__zoom-wrap, not native
      scroll — clip it here instead of scrolling through it. */

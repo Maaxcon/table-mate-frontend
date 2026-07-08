@@ -134,7 +134,16 @@ function FloorPlanViewImpl({
     const maxScale = maxScaleProp ?? Number.POSITIVE_INFINITY
     const update = () => {
       const availableW = el.clientWidth
-      const availableH = el.clientHeight || availableW
+      const availableH = el.clientHeight
+      // The container's own height is aspect-ratio-derived (from its width),
+      // not fixed by an ancestor — nested inside a shrink-to-fit chain (as on
+      // the customer floor), the very first layout pass can briefly report
+      // clientHeight=0 before that resolves. Falling back to availableW
+      // (assuming a square) commits a too-small fit for a wide room and
+      // clips tables until something else happens to trigger a re-render.
+      // Skip and wait for the next callback instead — ResizeObserver keeps
+      // firing until the box has a real, non-zero size.
+      if (availableW === 0 || availableH === 0) return
       const neededW = framePxW + 2 * GRID
       const neededH = framePxH + 2 * GRID
       const fitted = Math.min(availableW / neededW, availableH / neededH)
@@ -196,15 +205,22 @@ function FloorPlanViewImpl({
 
   return (
     <div className="fp-view" ref={containerRef} style={containerStyle}>
+      {/* Absolutely positioned (not a normal-flow flex item) so its JS-computed
+          scaledW/H can never feed back into this container's own measured
+          size — it used to be a normal-flow child, which meant a larger
+          `scale` (computed FROM this element's height) produced a taller
+          spacer, which grew this element's height, which the next
+          ResizeObserver tick read back in as `containerHeight`: a circular
+          fit->size->fit loop that settled on a scale too large for the room,
+          clipping tables until an unrelated resize (e.g. clicking a table)
+          happened to jog it back to a smaller, correct value. */}
       <div
         style={{
+          position: "absolute",
+          top: offsetY,
+          left: offsetX,
           width: scaledW,
           height: scaledH,
-          marginLeft: offsetX,
-          marginRight: offsetX,
-          marginTop: offsetY,
-          marginBottom: offsetY,
-          flexShrink: 0,
           pointerEvents: "none",
           visibility: "hidden",
         }}
