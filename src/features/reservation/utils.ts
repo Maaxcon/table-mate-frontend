@@ -54,8 +54,17 @@ export function zonedWallTimeToUtcIso(dateKey: string, time: string, timeZone: s
   const [y, mo, d] = dateKey.split("-").map(Number)
   const [h, mi] = time.split(":").map(Number)
   const naiveUtc = Date.UTC(y, mo - 1, d, h, mi)
-  const offset = tzOffsetMinutes(new Date(naiveUtc), timeZone)
-  return new Date(naiveUtc - offset * 60000).toISOString()
+  // Two-pass: reading the offset at `naiveUtc` itself is only a first
+  // approximation (it treats the wall-clock time as if it were already UTC,
+  // which can land on the wrong side of a DST transition). Apply that offset
+  // once to get close to the real instant, then re-read the offset there —
+  // near a spring-forward/fall-back boundary the two passes can disagree by
+  // an hour, and the second reading is the one that reflects DST at the
+  // actual target moment.
+  const firstOffset = tzOffsetMinutes(new Date(naiveUtc), timeZone)
+  const candidate = naiveUtc - firstOffset * 60000
+  const secondOffset = tzOffsetMinutes(new Date(candidate), timeZone)
+  return new Date(naiveUtc - secondOffset * 60000).toISOString()
 }
 
 // The calendar date a slot actually falls on. On an overnight day (close <= open)
