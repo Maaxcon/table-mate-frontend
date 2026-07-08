@@ -37,7 +37,12 @@ export function normalizeSlots(slots: string[]): string[] {
     const normalized = Math.ceil(mins / 30) * 30
     set.add(minutesToTime(normalized))
   }
-  return [...set].sort()
+  const BREAK = 6 * 60
+  return [...set].sort((a, b) => {
+    const ma = timeToMinutes(a)
+    const mb = timeToMinutes(b)
+    return (ma < BREAK ? ma + 1440 : ma) - (mb < BREAK ? mb + 1440 : mb)
+  })
 }
 
 export function generateTimeSlots(date: Date, dayConfig: WorkingHoursDay | undefined): string[] {
