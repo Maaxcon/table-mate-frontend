@@ -68,17 +68,3 @@ export function mapTicketShort(ticket: KitchenTicket): KanbanTicket {
     items: [],
   }
 }
-
-function isSameDay(timestamp: number, day: Date): boolean {
-  const d = new Date(timestamp)
-  return (
-    d.getFullYear() === day.getFullYear() &&
-    d.getMonth() === day.getMonth() &&
-    d.getDate() === day.getDate()
-  )
-}
-
-export function filterTicketsToday(tickets: KanbanTicket[]): KanbanTicket[] {
-  const today = new Date()
-  return tickets.filter((t) => t.completedAt && isSameDay(t.completedAt, today))
-}
