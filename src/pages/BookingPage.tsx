@@ -155,14 +155,14 @@ export function BookingPage() {
     setAvailabilityNonce((n) => n + 1)
   }, [reloadTables, reloadReservations])
 
-  // Guests get no live floor updates (that WebSocket needs a staff token), so a
-  // table a waiter just seated/booked in another tab would look stale here.
-  // Refresh whenever the tab regains focus, but at most once every 10s so rapid
-  // alt-tabbing doesn't spam the API. Only one refetch is ever needed: with a
-  // slot picked, the floor's status comes entirely from slotAvailability, so
-  // reloadTables() (tables + layout + upcoming reservations) would be wasted
-  // work; without one, the fallback "now" status reads tables/upcoming instead,
-  // and the availability effect no-ops anyway (it bails out without slotTime).
+  // Catch-up fallback for events the floor WebSocket missed — while the tab was
+  // hidden, or during a dropped connection's reconnect window. Refresh whenever
+  // the tab regains focus, but at most once every 10s so rapid alt-tabbing
+  // doesn't spam the API. Only one refetch is ever needed: with a slot picked,
+  // the floor's status comes entirely from slotAvailability, so reloadTables()
+  // (tables + layout + upcoming reservations) would be wasted work; without
+  // one, the fallback "now" status reads tables/upcoming instead, and the
+  // availability effect no-ops anyway (it bails out without slotTime).
   const lastRefreshRef = useRef(0)
   useEffect(() => {
     const refresh = () => {
@@ -267,15 +267,11 @@ export function BookingPage() {
             {bookStrings.tabs.bookings}
           </button>
         )}
-        {/* Live-updates dot only for authed guests — guests without a staff token
-            get no floor WebSocket, so the indicator would always read offline. */}
-        {isAuthenticated && (
-          <span
-            className={`bp__connection ${isConnected ? "bp__connection--connected" : ""}`}
-            role="status"
-            aria-label={isConnected ? "Connected" : "Disconnected"}
-          />
-        )}
+        <span
+          className={`bp__connection ${isConnected ? "bp__connection--connected" : ""}`}
+          role="status"
+          aria-label={isConnected ? "Connected" : "Disconnected"}
+        />
       </div>
 
       <div className="bp__content">

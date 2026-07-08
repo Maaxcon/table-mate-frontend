@@ -154,7 +154,10 @@ export function useFloorSubscription({
       wsRef.current = null
     }
 
-    const params = new URLSearchParams({ token: accessToken ?? "" })
+    // The floor stream is public: anonymous guests connect with just the
+    // restaurant param, a token only adds the (optional) identity/claim.
+    const params = new URLSearchParams()
+    if (accessToken) params.set("token", accessToken)
     if (restaurantId) params.set("restaurant", restaurantId)
     const ws = new WebSocket(`${env.wsUrl}/floor/?${params}`)
     wsRef.current = ws
@@ -201,8 +204,9 @@ export function useFloorSubscription({
       setIsConnected(false)
       callbacksRef.current.onClose?.()
 
-      // Retry transient drops, but never loop on auth/scope rejections.
-      if (event.code !== 1000 && !NO_RETRY_CLOSE_CODES.has(event.code) && accessToken) {
+      // Retry transient drops (guests included — the stream is public), but
+      // never loop on auth/scope rejections.
+      if (event.code !== 1000 && !NO_RETRY_CLOSE_CODES.has(event.code)) {
         reconnectTimeoutRef.current = setTimeout(() => connectRef.current?.(), 3000)
       }
     }
