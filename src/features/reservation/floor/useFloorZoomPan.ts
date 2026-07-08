@@ -12,29 +12,40 @@ import type { PointerEvent as ReactPointerEvent } from "react"
 // pointer actually moved). Zoom/pan reset on a zone switch by remounting
 // <FloorMap key={zone}>, so there's no reset effect here.
 export function useFloorZoomPan(viewportWidth: number, viewportHeight = 0) {
-  const [zoom, setZoom] = useState(1)
-  const [pan, setPan] = useState({ x: 0, y: 0 })
-  const scale = zoom
+  // Zoom and pan live in one state so every zoom change re-clamps pan against
+  // the NEW zoom's bounds in the same update — the pan range shrinks as zoom
+  // drops, and a stale corner offset at a lower zoom would translate the whole
+  // floor out of the viewport, leaving a blank map.
+  const [view, setView] = useState({ zoom: 1, pan: { x: 0, y: 0 } })
+  const { zoom, pan } = view
 
   // How far the zoomed content can be dragged before its edge would show
   // empty space — an approximation (half the extra size zoom adds), not an
   // exact bound on FloorPlanView's own fitted content box.
-  const maxPanX = Math.max(0, ((zoom - 1) * viewportWidth) / 2)
-  const maxPanY = Math.max(0, ((zoom - 1) * viewportHeight) / 2)
-  const clampPan = useCallback(
-    (p: { x: number; y: number }) => ({
-      x: Math.max(-maxPanX, Math.min(maxPanX, p.x)),
-      y: Math.max(-maxPanY, Math.min(maxPanY, p.y)),
-    }),
-    [maxPanX, maxPanY],
+  const clampPanFor = useCallback(
+    (zoom: number, p: { x: number; y: number }) => {
+      const maxPanX = Math.max(0, ((zoom - 1) * viewportWidth) / 2)
+      const maxPanY = Math.max(0, ((zoom - 1) * viewportHeight) / 2)
+      return {
+        x: Math.max(-maxPanX, Math.min(maxPanX, p.x)),
+        y: Math.max(-maxPanY, Math.min(maxPanY, p.y)),
+      }
+    },
+    [viewportWidth, viewportHeight],
   )
 
-  const zoomIn = useCallback(() => setZoom((z) => Math.min(4, z * 1.25)), [])
-  const zoomOut = useCallback(() => setZoom((z) => Math.max(1, z / 1.25)), [])
-  const zoomFit = useCallback(() => {
-    setZoom(1)
-    setPan({ x: 0, y: 0 })
-  }, [])
+  const applyZoom = useCallback(
+    (next: (z: number) => number) =>
+      setView((v) => {
+        const zoom = next(v.zoom)
+        return { zoom, pan: clampPanFor(zoom, v.pan) }
+      }),
+    [clampPanFor],
+  )
+
+  const zoomIn = useCallback(() => applyZoom((z) => Math.min(4, z * 1.25)), [applyZoom])
+  const zoomOut = useCallback(() => applyZoom((z) => Math.max(1, z / 1.25)), [applyZoom])
+  const zoomFit = useCallback(() => setView({ zoom: 1, pan: { x: 0, y: 0 } }), [])
 
   const panRef = useRef<{ x: number; y: number; startPan: { x: number; y: number } } | null>(null)
   const didPanRef = useRef(false)
@@ -55,9 +66,12 @@ export function useFloorZoomPan(viewportWidth: number, viewportHeight = 0) {
       const dy = e.clientY - p.y
       if (!didPanRef.current && Math.hypot(dx, dy) < 6) return
       didPanRef.current = true
-      setPan(clampPan({ x: p.startPan.x + dx, y: p.startPan.y + dy }))
+      setView((v) => ({
+        ...v,
+        pan: clampPanFor(v.zoom, { x: p.startPan.x + dx, y: p.startPan.y + dy }),
+      }))
     },
-    [clampPan],
+    [clampPanFor],
   )
   const onPointerUp = useCallback(() => {
     panRef.current = null
@@ -68,5 +82,5 @@ export function useFloorZoomPan(viewportWidth: number, viewportHeight = 0) {
     [onPointerDown, onPointerMove, onPointerUp],
   )
 
-  return { scale, pan, zoomIn, zoomOut, zoomFit, didPanRef, panHandlers }
+  return { scale: zoom, pan, zoomIn, zoomOut, zoomFit, didPanRef, panHandlers }
 }

@@ -64,6 +64,43 @@ describe("useFloorZoomPan", () => {
     expect(result.current.pan).toEqual({ x: 0, y: 0 })
   })
 
+  it("re-clamps pan to the shrinking bounds on zoom out (no off-screen leftover)", () => {
+    const { result } = renderHook(() => useFloorZoomPan(400, 400))
+    act(() => {
+      for (let i = 0; i < 8; i++) result.current.zoomIn()
+    })
+    expect(result.current.scale).toBe(4)
+
+    // Drag hard into a corner: pan clamps to the 4x bound, (4-1)*400/2 = 600.
+    act(() => {
+      result.current.panHandlers.onPointerDown({
+        pointerType: "mouse",
+        clientX: 0,
+        clientY: 0,
+      } as React.PointerEvent<HTMLDivElement>)
+      result.current.panHandlers.onPointerMove({
+        pointerType: "mouse",
+        clientX: 900,
+        clientY: 900,
+      } as React.PointerEvent<HTMLDivElement>)
+      result.current.panHandlers.onPointerUp()
+    })
+    expect(result.current.pan).toEqual({ x: 600, y: 600 })
+
+    // Each zoom-out step must pull pan back inside the new, smaller bound —
+    // a stale corner offset at a lower zoom would push the floor off-screen.
+    act(() => result.current.zoomOut())
+    const bound = ((result.current.scale - 1) * 400) / 2
+    expect(result.current.pan.x).toBeLessThanOrEqual(bound)
+    expect(result.current.pan.y).toBeLessThanOrEqual(bound)
+
+    act(() => {
+      for (let i = 0; i < 20; i++) result.current.zoomOut()
+    })
+    expect(result.current.scale).toBe(1)
+    expect(result.current.pan).toEqual({ x: 0, y: 0 })
+  })
+
   it("a small pointer move below the drag threshold does not flip didPanRef", () => {
     const { result } = renderHook(() => useFloorZoomPan(400, 400))
     const handlers = result.current.panHandlers
