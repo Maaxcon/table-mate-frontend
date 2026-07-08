@@ -101,10 +101,18 @@ export function getDurationError(
   availableSlotTimes: string[] | null,
 ): string | null {
   if (dayConfig) {
-    const closeMins = timeToMinutes(dayConfig.close)
     const openMins = timeToMinutes(dayConfig.open)
+    const closeMins = timeToMinutes(dayConfig.close)
     const overnight = closeMins <= openMins
-    if (!overnight && endMins > closeMins) {
+    // Same extended timeline as BookModal's maxDuration / the backend's
+    // availability action (close + 24h): an after-midnight window start
+    // shifts onto it too, so e.g. 01:00+180min compares against the real
+    // 02:00-next-day close instead of always passing (the previous
+    // `!overnight &&` guard skipped this check for every overnight day,
+    // whether the window started before or after midnight).
+    const closeBase = overnight ? closeMins + 24 * 60 : closeMins
+    const shift = overnight && windowStartMins < openMins ? 24 * 60 : 0
+    if (endMins + shift > closeBase) {
       return bookStrings.modal.validation.closingExceeded(dayConfig.close)
     }
   }
