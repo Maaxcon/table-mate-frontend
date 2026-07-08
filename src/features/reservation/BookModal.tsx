@@ -454,7 +454,10 @@ export function BookModal({
                 )}
                 {slotsLoading || fallbackHoursLoading ? (
                   <SlotsSkeleton />
-                ) : !dayConfig ? (
+                ) : !dayConfig && !realSlots ? (
+                  // No day config to fall back to a client-generated grid, but
+                  // when real slots already came back from the server, trust
+                  // that over declaring the day closed.
                   <p className="book-modal__empty">{bookStrings.modal.slots.closed}</p>
                 ) : timeSlots.length === 0 ? (
                   <p className="book-modal__empty">{bookStrings.modal.slots.none}</p>
