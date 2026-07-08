@@ -13,6 +13,7 @@ import {
   generateTimeSlots,
   getDurationError,
   localDateKey,
+  maxDurationBeforeClose,
   MIN_DURATION,
   minutesToTime,
   openingDayOfInstant,
@@ -169,19 +170,30 @@ function RescheduleForm({
     return generateTimeSlots(parsedDate, dayConfig, effectiveTimeZone)
   }, [availableSlots, parsedDate, dayConfig, effectiveTimeZone])
 
+  // Auto-cap the length to what fits before close (same behavior as BookModal):
+  // a late slot with the current 2h booking shrinks to the remaining window
+  // instead of tripping a validation error the guest has to resolve by hand.
+  const maxDuration = useMemo(
+    () => maxDurationBeforeClose(endTimeOnly ? currentStartTime : selectedTime, dayConfig),
+    [endTimeOnly, currentStartTime, selectedTime, dayConfig],
+  )
+  const effectiveDuration = Number.isFinite(maxDuration)
+    ? Math.min(durationMinutes, maxDuration)
+    : durationMinutes
+
   const endAt = useMemo(() => {
     if (!selectedTime) return ""
     // When only the end moves (active booking), the start stays at its real,
     // unsnapped value — anchor the end there, not on the snapped selectedTime.
     const baseMins = endTimeOnly ? timeToMinutes(currentStartTime) : timeToMinutes(selectedTime)
-    return minutesToTime(baseMins + durationMinutes)
-  }, [selectedTime, durationMinutes, endTimeOnly, currentStartTime])
+    return minutesToTime(baseMins + effectiveDuration)
+  }, [selectedTime, effectiveDuration, endTimeOnly, currentStartTime])
 
   const durationError = useMemo(() => {
-    if (!selectedTime || !durationMinutes) return null
+    if (!selectedTime || !effectiveDuration) return null
 
     const baseMins = endTimeOnly ? timeToMinutes(currentStartTime) : timeToMinutes(selectedTime)
-    const endMins = baseMins + durationMinutes
+    const endMins = baseMins + effectiveDuration
     const windowStartMins = timeToMinutes(selectedTime)
 
     return getDurationError(
@@ -190,7 +202,7 @@ function RescheduleForm({
       dayConfig,
       endTimeOnly ? null : availableSlots,
     )
-  }, [selectedTime, durationMinutes, dayConfig, availableSlots, currentStartTime, endTimeOnly])
+  }, [selectedTime, effectiveDuration, dayConfig, availableSlots, currentStartTime, endTimeOnly])
 
   const handleSave = useCallback(async () => {
     if (!selectedTime) return
@@ -211,7 +223,7 @@ function RescheduleForm({
       const endBaseMs = endTimeOnly
         ? new Date(currentStart).getTime()
         : new Date(startISO).getTime()
-      const endISO = new Date(endBaseMs + durationMinutes * 60000).toISOString()
+      const endISO = new Date(endBaseMs + effectiveDuration * 60000).toISOString()
 
       if (endTimeOnly) {
         await modifyReservation(publicId, { end_at: endISO })
@@ -233,7 +245,7 @@ function RescheduleForm({
     selectedTime,
     parsedDate,
     dayConfig,
-    durationMinutes,
+    effectiveDuration,
     guestCount,
     publicId,
     endTimeOnly,
@@ -346,8 +358,9 @@ function RescheduleForm({
                   {bookStrings.reschedule.sections.duration}
                 </h3>
                 <DurationInput
-                  value={durationMinutes}
+                  value={effectiveDuration}
                   min={MIN_DURATION}
+                  max={maxDuration}
                   onChange={setDurationMinutes}
                   error={durationError}
                 />
@@ -372,7 +385,7 @@ function RescheduleForm({
                   date={formattedDate}
                   time={selectedTime}
                   endTime={endAt}
-                  duration={durationMinutes}
+                  duration={effectiveDuration}
                   guests={guestCount}
                 />
               )}

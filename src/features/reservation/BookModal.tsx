@@ -19,6 +19,7 @@ import {
   generateTimeSlots,
   getDurationError,
   localDateKey,
+  maxDurationBeforeClose,
   MIN_DURATION,
   minutesToTime,
   slotDateKey,
@@ -161,21 +162,10 @@ export function BookModal({
   // 20:30 with a 22:00 close) is bookable for the 90 min that remain instead of
   // forcing the guest to shrink the default 2h by hand. The desired duration is
   // kept and re-applied automatically when an earlier slot leaves room again.
-  // Overnight days (close <= open, e.g. 18:00-02:00) must clamp too, on the same
-  // extended timeline the backend's availability action uses (close + 24h) — an
-  // unclamped Infinity here let a late overnight slot submit a full-length
-  // reservation past what availability had checked (and past actual close),
-  // so a table shown free there could still 409 on create.
-  const maxDuration = useMemo(() => {
-    if (!selectedTime || !dayConfig) return Infinity
-    const openMins = timeToMinutes(dayConfig.open)
-    const closeMins = timeToMinutes(dayConfig.close)
-    const overnight = closeMins <= openMins
-    const closeBase = overnight ? closeMins + 24 * 60 : closeMins
-    let slotMins = timeToMinutes(selectedTime)
-    if (overnight && slotMins < openMins) slotMins += 24 * 60
-    return Math.max(MIN_DURATION, closeBase - slotMins)
-  }, [selectedTime, dayConfig])
+  const maxDuration = useMemo(
+    () => maxDurationBeforeClose(selectedTime, dayConfig),
+    [selectedTime, dayConfig],
+  )
 
   // Two values on purpose: `durationMinutes` is the guest's *desired* length
   // (state, persists across slot changes); `effectiveDuration` is what's actually

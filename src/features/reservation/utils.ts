@@ -135,6 +135,25 @@ export function slotDateKey(
 // `availableSlotTimes` is given, every 30-min slot in the window. Callers that
 // want to skip the slot-availability check (e.g. prolonging an active
 // booking, where only the closing-time bound applies) pass null.
+// Longest booking that still ends by closing time, for a window anchored at
+// `startTime`. Overnight days (close <= open) count on the extended timeline
+// (close + 24h), with after-midnight starts shifted onto it. Infinity when
+// there's no day config to cap against. Shared by BookModal and
+// RescheduleModal so both auto-cap a late slot instead of erroring.
+export function maxDurationBeforeClose(
+  startTime: string | null,
+  dayConfig: WorkingHoursDay | undefined,
+): number {
+  if (!startTime || !dayConfig) return Infinity
+  const openMins = timeToMinutes(dayConfig.open)
+  const closeMins = timeToMinutes(dayConfig.close)
+  const overnight = closeMins <= openMins
+  const closeBase = overnight ? closeMins + 24 * 60 : closeMins
+  let slotMins = timeToMinutes(startTime)
+  if (overnight && slotMins < openMins) slotMins += 24 * 60
+  return Math.max(MIN_DURATION, closeBase - slotMins)
+}
+
 export function getDurationError(
   windowStartMins: number,
   endMins: number,

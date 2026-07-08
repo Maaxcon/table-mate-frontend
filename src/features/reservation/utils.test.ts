@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 import {
   getDurationError,
   localDateKey,
+  maxDurationBeforeClose,
   openingDayOfInstant,
   safeTimeZone,
   slotDateKey,
@@ -117,6 +118,28 @@ describe("getDurationError overnight closing bound", () => {
     const start = timeToMinutes("01:00")
     const error = getDurationError(start, start + 60, OVERNIGHT_DAY, null)
     expect(error).toBeNull()
+  })
+})
+
+describe("maxDurationBeforeClose", () => {
+  it("caps a late slot on a regular day to the time left before close", () => {
+    expect(maxDurationBeforeClose("20:30", { open: "09:00", close: "22:00" })).toBe(90)
+  })
+
+  it("caps a pre-midnight slot on an overnight day against the wrapped close", () => {
+    // 23:30 with an 02:00 close: 150 minutes remain on the extended timeline.
+    expect(maxDurationBeforeClose("23:30", OVERNIGHT_DAY)).toBe(150)
+  })
+
+  it("caps an after-midnight slot on an overnight day", () => {
+    // 01:00 with an 02:00 close: only 60 minutes remain — the default 120
+    // must shrink here instead of tripping a validation error.
+    expect(maxDurationBeforeClose("01:00", OVERNIGHT_DAY)).toBe(60)
+  })
+
+  it("returns Infinity when there is no day config to cap against", () => {
+    expect(maxDurationBeforeClose("20:30", undefined)).toBe(Infinity)
+    expect(maxDurationBeforeClose(null, OVERNIGHT_DAY)).toBe(Infinity)
   })
 })
 
