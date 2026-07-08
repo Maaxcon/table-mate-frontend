@@ -176,7 +176,14 @@ export function FloorMap({
             tile={tile}
             geometry={geometry}
             index={ctx.index}
-            selected={ctx.selected}
+            // Not ctx.selected: FloorPlanView computes that from the raw
+            // entity's serverId only, but this tile's own identity (and
+            // what onSelect below actually books) comes from buildTile's
+            // tiered match — serverId, falling back to public_number when
+            // the layout's serverId is stale. A tile matched only via that
+            // fallback is bookable but would never show as selected if we
+            // used ctx.selected, since its serverId doesn't equal selectedId.
+            selected={tile.table?.public_id === selectedId}
             dimmed={Boolean(
               (statusFilter && tile.tone !== statusFilter) || (dimTaken && !tile.bookable),
             )}
@@ -217,6 +224,7 @@ export function FloorMap({
       handleHoverLeave,
       onZoneChange,
       zoneNameById,
+      selectedId,
     ],
   )
 

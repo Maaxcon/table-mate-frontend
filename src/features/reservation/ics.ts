@@ -10,6 +10,17 @@ function toIcsUtc(iso: string): string {
   )
 }
 
+// RFC 5545 §3.3.11 TEXT escaping. Backslash, comma and semicolon are
+// structural in an iCalendar TEXT value (comma/semicolon separate list
+// items and parameters) — a raw one in a table label or guest count string
+// (e.g. "Зала А, столик 2") truncates or reinterprets the field, and some
+// calendar clients reject the whole file rather than degrade gracefully.
+// Order matters: backslashes must be escaped first, or the backslashes the
+// other three replacements introduce would themselves get doubled.
+function escapeIcsText(text: string): string {
+  return text.replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\n/g, "\\n")
+}
+
 // Builds a minimal .ics for the booking and triggers a download, so the guest
 // can drop the reservation straight into their calendar.
 export function downloadReservationIcs(opts: {
@@ -30,8 +41,8 @@ export function downloadReservationIcs(opts: {
     `DTSTAMP:${toIcsUtc(new Date().toISOString())}`,
     `DTSTART:${toIcsUtc(startISO)}`,
     `DTEND:${toIcsUtc(endISO)}`,
-    `SUMMARY:${summary}`,
-    `DESCRIPTION:${guestsLabel}: ${guests}`,
+    `SUMMARY:${escapeIcsText(summary)}`,
+    `DESCRIPTION:${escapeIcsText(`${guestsLabel}: ${guests}`)}`,
     "END:VEVENT",
     "END:VCALENDAR",
   ]

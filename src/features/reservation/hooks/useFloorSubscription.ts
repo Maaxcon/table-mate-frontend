@@ -14,6 +14,7 @@ export interface FloorNewReservationEvent {
   reservation_id: string
   table_id: string
   start_at: string
+  end_at: string
   occurred_at: string
 }
 

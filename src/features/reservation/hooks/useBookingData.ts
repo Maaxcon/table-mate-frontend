@@ -58,6 +58,21 @@ export function useBookingData(
   const [reservationsLoading, setReservationsLoading] = useState(isAuthenticated)
   const [reservationsError, setReservationsError] = useState(false)
 
+  // useState(isAuthenticated) above only seeds reservationsLoading once, at
+  // mount — an auth false->true flip afterward (e.g. login completing while
+  // this page is already open) never touched it again, since loadReservations
+  // returns early while unauthenticated and its .finally() (the only other
+  // place that sets it) never runs. Left at false, with `reservations` still
+  // the initial empty array, "My Bookings" flashed the empty state instead
+  // of a spinner for that reservation fetch. Adjusted during render (React's
+  // documented pattern for prop-transition-driven state) rather than in an
+  // effect, which would set state synchronously inside the effect below.
+  const [prevAuthenticated, setPrevAuthenticated] = useState(isAuthenticated)
+  if (isAuthenticated !== prevAuthenticated) {
+    setPrevAuthenticated(isAuthenticated)
+    if (isAuthenticated) setReservationsLoading(true)
+  }
+
   const [upcomingReservations, setUpcomingReservations] = useState<UpcomingReservation[]>([])
 
   // Guards every fetch callback so we never set state after the page unmounts

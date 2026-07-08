@@ -114,6 +114,7 @@ export const bookStrings = {
       closingExceeded: (close: string) => `Час завершення перевищує час закриття (${close})`,
       durationUnavailable:
         "Обрана тривалість недоступна повністю в цей час. Оберіть коротшу тривалість або інший початок.",
+      guestNameRequired: "Вкажіть ім'я гостя",
     },
     createFailed: "Не вдалося створити бронь",
   },

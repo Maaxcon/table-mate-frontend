@@ -202,6 +202,7 @@ export function BookingPage() {
           public_id: event.reservation_id,
           table_id: event.table_id,
           start_at: event.start_at,
+          end_at: event.end_at,
         },
       ])
       setAvailabilityNonce((n) => n + 1)

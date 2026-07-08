@@ -106,6 +106,36 @@ describe("CustomerFloorPlan", () => {
     expect(screen.queryByText("4 міс.")).not.toBeInTheDocument()
   })
 
+  it("shows the selected ring on a tile matched only via the stale-id public-number fallback", () => {
+    // Regression: the ring used to compare selectedId against the layout
+    // entity's raw serverId ("stale-id" here), which never matches once the
+    // table's real public_id ("summer-table") has moved on — even though
+    // the tile is still the one a click resolves to and books via the same
+    // public_number fallback. A stale-serverId tile could be clicked/booked
+    // but would render with no visible selection at all.
+    const main = makeZone("main", "Main")
+    const summer = makeZone("summer", "Summer VIbe")
+    const tables = [
+      makeTable({ public_id: "main-table", capacity: 4, zone: main }),
+      makeTable({ public_id: "summer-table", capacity: 8, zone: summer }),
+    ]
+
+    render(
+      <CustomerFloorPlan
+        tables={tables}
+        zones={[main, summer]}
+        selectedZone="summer"
+        onZoneChange={vi.fn()}
+        selectedId="summer-table"
+        onSelect={vi.fn()}
+        payload={makePayload({ id: "stale-id", public_number: "T1", zone_id: "summer" })}
+      />,
+    )
+
+    const tile = screen.getByRole("button", { name: "Стіл T1, 8 місць, Вільно" })
+    expect(tile.className).toContain("c-floor-plan__table--selected")
+  })
+
   it("uses layout capacity when a live table cannot be matched", () => {
     const summer = makeZone("summer", "Summer VIbe")
 
