@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { LuMaximize, LuMinus, LuPlus, LuUsers } from "react-icons/lu"
 import type { Table } from "@/types/api/types.gen"
+import { deserializeLayout } from "@/features/editor/types"
 import type { EditorEntity, LayoutPayload } from "@/features/editor/types"
 import { FloorPlanView } from "@/features/floorplan/FloorPlanView"
 import { bookStrings } from "@/features/reservation/strings"
@@ -9,22 +10,68 @@ import { FloorTile } from "./FloorTile"
 import { useFloorZoomPan } from "./useFloorZoomPan"
 import type { Tile, TableView, Tone } from "./types"
 
-function tableZoneId(table: Table): string | null {
-  return table.zone?.public_id ?? null
-}
-
 // Same tiered matching CustomerFloorPlan always used for the real-layout
 // path: same zone by id, same zone by public_number, any zone by id, any
 // zone by public_number — a stale layout id (table re-published under a new
-// public_id) still resolves via public_number.
-function findEntityTableMatch(tables: Table[], entity: EditorEntity): Table | undefined {
-  const sameZone = (table: Table) => tableZoneId(table) === (entity.zoneId ?? null)
+// public_id) still resolves via public_number. Prebuilt maps make each entity
+// an O(1) lookup instead of four linear scans; first table wins duplicate
+// keys, mirroring the old Array.find semantics. "" stands in for "no zone" on
+// both sides (a real zone public_id is a uuid, never empty).
+interface TableLookups {
+  byZoneAndId: Map<string, Table>
+  byZoneAndNumber: Map<string, Table>
+  byId: Map<string, Table>
+  byNumber: Map<string, Table>
+}
+
+function buildTableLookups(tables: Table[]): TableLookups {
+  const byZoneAndId = new Map<string, Table>()
+  const byZoneAndNumber = new Map<string, Table>()
+  const byId = new Map<string, Table>()
+  const byNumber = new Map<string, Table>()
+  const setFirst = (map: Map<string, Table>, key: string, table: Table) => {
+    if (!map.has(key)) map.set(key, table)
+  }
+  for (const table of tables) {
+    const zone = table.zone?.public_id ?? ""
+    setFirst(byZoneAndId, `${zone}|${table.public_id}`, table)
+    setFirst(byZoneAndNumber, `${zone}|${table.public_number}`, table)
+    setFirst(byId, table.public_id, table)
+    setFirst(byNumber, table.public_number, table)
+  }
+  return { byZoneAndId, byZoneAndNumber, byId, byNumber }
+}
+
+function matchEntityTable(lookups: TableLookups, entity: EditorEntity): Table | undefined {
+  const zone = entity.zoneId ?? ""
   return (
-    tables.find((table) => table.public_id === entity.serverId && sameZone(table)) ??
-    tables.find((table) => table.public_number === entity.label && sameZone(table)) ??
-    tables.find((table) => table.public_id === entity.serverId) ??
-    tables.find((table) => table.public_number === entity.label)
+    (entity.serverId ? lookups.byZoneAndId.get(`${zone}|${entity.serverId}`) : undefined) ??
+    (entity.label ? lookups.byZoneAndNumber.get(`${zone}|${entity.label}`) : undefined) ??
+    (entity.serverId ? lookups.byId.get(entity.serverId) : undefined) ??
+    (entity.label ? lookups.byNumber.get(entity.label) : undefined)
   )
+}
+
+function buildTile(
+  lookups: TableLookups,
+  entity: EditorEntity,
+  viewByPublicId: Map<string, TableView>,
+  guests: number,
+): Tile {
+  const table = matchEntityTable(lookups, entity)
+  const view = table ? viewByPublicId.get(table.public_id) : undefined
+  const capacity = table?.capacity ?? entity.capacity ?? 0
+  return {
+    key: entity.id,
+    table,
+    publicNumber: table?.public_number ?? entity.label ?? "",
+    capacity,
+    shape: entity.type === "table-round" ? "round" : "square",
+    tone: view?.tone ?? "free",
+    label: view?.label ?? bookStrings.floorPlan.status.free,
+    bookable: view?.bookable ?? false,
+    perfect: view?.perfect ?? (capacity === guests && Boolean(table)),
+  }
 }
 
 // Desktop/mobile-sheet spatial map: a scaled, pan/zoomable viewport over
@@ -96,6 +143,24 @@ export function FloorMap({
     setHovered((h) => (h?.key === t.key ? null : h))
   }, [])
 
+  const lookups = useMemo(() => buildTableLookups(tables), [tables])
+
+  // Tiles are precomputed with stable identities — a fresh tile object per
+  // render defeated FloorTile's memo, re-rendering every tile on any
+  // selection change. Keyed by entity.id: table entities derive their id from
+  // serverId, so this parse and FloorPlanView's internal one agree on it (the
+  // renderEntity fallback covers the rare id-less entity, where
+  // deserializeLayout mints a random id per parse).
+  const tileByEntityId = useMemo(() => {
+    const tiles = new Map<string, Tile>()
+    for (const entity of deserializeLayout(payload)) {
+      if (entity.type === "table-square" || entity.type === "table-round") {
+        tiles.set(entity.id, buildTile(lookups, entity, viewByPublicId, guests))
+      }
+    }
+    return tiles
+  }, [payload, lookups, viewByPublicId, guests])
+
   const renderEntity = useCallback(
     (
       entity: EditorEntity,
@@ -103,21 +168,8 @@ export function FloorMap({
       ctx: { selected: boolean; index: number },
     ) => {
       if (entity.type === "table-square" || entity.type === "table-round") {
-        const table = findEntityTableMatch(tables, entity)
-        const view = table ? viewByPublicId.get(table.public_id) : undefined
-        const capacity = table?.capacity ?? entity.capacity ?? 0
-        const publicNumber = table?.public_number ?? entity.label ?? ""
-        const tile: Tile = {
-          key: entity.id,
-          table,
-          publicNumber,
-          capacity,
-          shape: entity.type === "table-round" ? "round" : "square",
-          tone: view?.tone ?? "free",
-          label: view?.label ?? bookStrings.floorPlan.status.free,
-          bookable: view?.bookable ?? false,
-          perfect: view?.perfect ?? (capacity === guests && Boolean(table)),
-        }
+        const tile =
+          tileByEntityId.get(entity.id) ?? buildTile(lookups, entity, viewByPublicId, guests)
         return (
           <FloorTile
             key={entity.id}
@@ -154,7 +206,8 @@ export function FloorMap({
       })
     },
     [
-      tables,
+      tileByEntityId,
+      lookups,
       viewByPublicId,
       guests,
       statusFilter,
