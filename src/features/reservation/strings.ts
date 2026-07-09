@@ -75,11 +75,22 @@ export const bookStrings = {
     sections: {
       date: "Дата",
       time: "Час",
+      table: "Стіл",
+      contacts: "Контакти",
       duration: "Тривалість (хв)",
       guests: "Гості",
       guestName: "Ім'я гостя",
       notes: "Нотатки (необов'язково)",
       confirmation: "Підтвердження",
+    },
+    flow: {
+      steps: ["Дата і час", "Стіл", "Контакти", "Підтвердження"],
+      stepLabel: (current: number, total: number) => `Крок ${current} з ${total}`,
+      back: "Назад",
+      next: "Далі",
+      profileHint: "Контакти акаунта будуть використані для цієї броні.",
+      notesHint: "Додайте ім'я, телефон або побажання для команди ресторану.",
+      notesFallback: "Без нотаток",
     },
     tzNote: (tz: string) => `Час показано за часом ресторану (${tz})`,
     slots: {

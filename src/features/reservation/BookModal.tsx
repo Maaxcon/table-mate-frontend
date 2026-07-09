@@ -87,6 +87,7 @@ export function BookModal({
   const reservationRef = useRef<ReservationWithTable | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [currentStep, setCurrentStep] = useState(0)
   const [success, setSuccess] = useState<{
     tableNumber: string
     date: string
@@ -216,6 +217,34 @@ export function BookModal({
   // forgot the name" apart from "this is actually a self-service booking".
   const nameError =
     showNameField && !guestName.trim() ? bookStrings.modal.validation.guestNameRequired : null
+  const flowSteps = bookStrings.modal.flow.steps
+  const totalSteps = flowSteps.length
+  const isLastStep = currentStep === totalSteps - 1
+  const progress = ((currentStep + 1) / totalSteps) * 100
+
+  const canGoNext = useMemo(() => {
+    if (currentStep === 0) {
+      return Boolean(selectedTime) && !durationError
+    }
+    if (currentStep === 1) {
+      return guestCount >= 1 && guestCount <= table.capacity
+    }
+    if (currentStep === 2) {
+      return !nameError
+    }
+    return false
+  }, [currentStep, selectedTime, durationError, guestCount, table.capacity, nameError])
+
+  const canConfirm = Boolean(selectedTime) && !durationError && !nameError && !submitting
+
+  const handleBack = useCallback(() => {
+    setCurrentStep((prev) => Math.max(0, prev - 1))
+  }, [])
+
+  const handleNext = useCallback(() => {
+    if (!canGoNext) return
+    setCurrentStep((prev) => Math.min(totalSteps - 1, prev + 1))
+  }, [canGoNext, totalSteps])
 
   const handleConfirm = useCallback(async () => {
     if (!selectedTime || nameError) return
@@ -262,6 +291,7 @@ export function BookModal({
       setError(err instanceof Error ? err.message : bookStrings.modal.createFailed)
       // Someone may have just taken this slot; refresh so the grid reflects it.
       setSelectedTime(null)
+      setCurrentStep(0)
       setSlotsLoading(true)
       loadSlots()
     } finally {
@@ -407,145 +437,264 @@ export function BookModal({
           </>
         ) : (
           <>
-            <div className="book-modal__header">
-              <h2 className="book-modal__title" id="book-modal-title">
-                {bookStrings.modal.title(table.public_number)}
-              </h2>
-              <button className="book-modal__close" onClick={onClose} type="button">
-                &times;
-              </button>
+            <div className="book-modal__header book-modal__header--flow">
+              <div className="book-modal__header-row">
+                <h2 className="book-modal__title" id="book-modal-title">
+                  {bookStrings.modal.title(table.public_number)}
+                </h2>
+                <button className="book-modal__close" onClick={onClose} type="button">
+                  &times;
+                </button>
+              </div>
+              <div className="book-modal__flow">
+                <p className="book-modal__flow-meta">
+                  {bookStrings.modal.flow.stepLabel(currentStep + 1, totalSteps)}
+                </p>
+                <div
+                  className="book-modal__flow-track"
+                  role="progressbar"
+                  aria-valuemin={1}
+                  aria-valuemax={totalSteps}
+                  aria-valuenow={currentStep + 1}
+                  aria-valuetext={bookStrings.modal.flow.stepLabel(currentStep + 1, totalSteps)}
+                >
+                  <span style={{ width: `${progress}%` }} />
+                </div>
+                <ol className="book-modal__flow-steps" aria-label="Кроки бронювання">
+                  {flowSteps.map((step, index) => {
+                    const state =
+                      index < currentStep
+                        ? "book-modal__flow-step--done"
+                        : index === currentStep
+                          ? "book-modal__flow-step--active"
+                          : ""
+                    return (
+                      <li
+                        key={step}
+                        className={["book-modal__flow-step", state].filter(Boolean).join(" ")}
+                      >
+                        <span className="book-modal__flow-dot">{index + 1}</span>
+                        <span>{step}</span>
+                      </li>
+                    )
+                  })}
+                </ol>
+              </div>
             </div>
 
             <div className="book-modal__body">
-              <section className="book-modal__section">
-                <h3 className="book-modal__section-title">{bookStrings.modal.sections.date}</h3>
-                <div className="book-modal__dates">
-                  {dates.map((d) => {
-                    const isActive =
-                      d.getFullYear() === selectedDate.getFullYear() &&
-                      d.getMonth() === selectedDate.getMonth() &&
-                      d.getDate() === selectedDate.getDate()
-                    const isToday =
-                      d.getFullYear() === today.getFullYear() &&
-                      d.getMonth() === today.getMonth() &&
-                      d.getDate() === today.getDate()
-                    const dKey = localDateKey(d)
-                    const hasSlots = availableSlots ? (availableSlots[dKey]?.length ?? 0) > 0 : true
-                    const isGrayed = availableSlots !== null && !hasSlots
-                    return (
-                      <button
-                        key={dKey}
-                        type="button"
-                        className={[
-                          "book-modal__date-btn",
-                          isActive ? "book-modal__date-btn--active" : "",
-                          isGrayed ? "book-modal__date-btn--grayed" : "",
-                        ]
-                          .filter(Boolean)
-                          .join(" ")}
-                        onClick={() => {
-                          if (!isGrayed) {
-                            setSelectedDate(d)
-                            setSelectedTime(null)
-                          }
-                        }}
-                        disabled={isGrayed}
-                      >
-                        <span className="book-modal__date-day">
-                          {d.toLocaleDateString("uk-UA", { weekday: "short" })}
-                        </span>
-                        <span className="book-modal__date-num">{d.getDate()}</span>
-                        {isToday && (
-                          <span className="book-modal__date-today">{bookStrings.modal.today}</span>
+              <div key={`step-${currentStep}`} className="book-modal__step-panel">
+                {currentStep === 0 && (
+                  <>
+                    <section className="book-modal__section">
+                      <h3 className="book-modal__section-title">
+                        {bookStrings.modal.sections.date}
+                      </h3>
+                      <div className="book-modal__dates">
+                        {dates.map((d) => {
+                          const isActive =
+                            d.getFullYear() === selectedDate.getFullYear() &&
+                            d.getMonth() === selectedDate.getMonth() &&
+                            d.getDate() === selectedDate.getDate()
+                          const isToday =
+                            d.getFullYear() === today.getFullYear() &&
+                            d.getMonth() === today.getMonth() &&
+                            d.getDate() === today.getDate()
+                          const dKey = localDateKey(d)
+                          const hasSlots = availableSlots
+                            ? (availableSlots[dKey]?.length ?? 0) > 0
+                            : true
+                          const isGrayed = availableSlots !== null && !hasSlots
+                          return (
+                            <button
+                              key={dKey}
+                              type="button"
+                              className={[
+                                "book-modal__date-btn",
+                                isActive ? "book-modal__date-btn--active" : "",
+                                isGrayed ? "book-modal__date-btn--grayed" : "",
+                              ]
+                                .filter(Boolean)
+                                .join(" ")}
+                              onClick={() => {
+                                if (!isGrayed) {
+                                  setSelectedDate(d)
+                                  setSelectedTime(null)
+                                }
+                              }}
+                              disabled={isGrayed}
+                            >
+                              <span className="book-modal__date-day">
+                                {d.toLocaleDateString("uk-UA", { weekday: "short" })}
+                              </span>
+                              <span className="book-modal__date-num">{d.getDate()}</span>
+                              {isToday && (
+                                <span className="book-modal__date-today">
+                                  {bookStrings.modal.today}
+                                </span>
+                              )}
+                            </button>
+                          )
+                        })}
+                      </div>
+                    </section>
+
+                    <section className="book-modal__section">
+                      <h3 className="book-modal__section-title">
+                        {bookStrings.modal.sections.time}
+                      </h3>
+                      {foreignTzNote && (
+                        <p className="book-modal__tz-note">
+                          {bookStrings.modal.tzNote(foreignTzNote)}
+                        </p>
+                      )}
+                      {slotsLoading || fallbackHoursLoading ? (
+                        <SlotsSkeleton />
+                      ) : !dayConfig && !realSlots ? (
+                        // No day config to fall back to a client-generated grid, but
+                        // when real slots already came back from the server, trust
+                        // that over declaring the day closed.
+                        <p className="book-modal__empty">{bookStrings.modal.slots.closed}</p>
+                      ) : timeSlots.length === 0 ? (
+                        <p className="book-modal__empty">{bookStrings.modal.slots.none}</p>
+                      ) : (
+                        <TimeSlotGrid
+                          slots={timeSlots}
+                          selectedTime={selectedTime}
+                          onSelect={setSelectedTime}
+                        />
+                      )}
+                    </section>
+
+                    <section className="book-modal__section">
+                      <h3 className="book-modal__section-title">
+                        {bookStrings.modal.sections.duration}
+                      </h3>
+                      <DurationInput
+                        value={effectiveDuration}
+                        min={MIN_DURATION}
+                        max={maxDuration}
+                        onChange={setDurationMinutes}
+                        error={durationError}
+                      />
+                    </section>
+                  </>
+                )}
+
+                {currentStep === 1 && (
+                  <>
+                    <section className="book-modal__section">
+                      <h3 className="book-modal__section-title">
+                        {bookStrings.modal.sections.table}
+                      </h3>
+                      <div className="book-modal__table-card">
+                        <div>
+                          <p className="book-modal__table-name">
+                            {bookStrings.modal.summary.table} {table.public_number}
+                          </p>
+                          <p className="book-modal__table-meta">
+                            {bookStrings.floorPlan.seats(table.capacity)}
+                          </p>
+                        </div>
+                        {selectedTime && (
+                          <p className="book-modal__table-slot">
+                            {selectedDate.toLocaleDateString("uk-UA", {
+                              month: "short",
+                              day: "numeric",
+                            })}{" "}
+                            · {selectedTime}&ndash;{endAt}
+                          </p>
                         )}
-                      </button>
-                    )
-                  })}
-                </div>
-              </section>
+                      </div>
+                    </section>
 
-              <section className="book-modal__section">
-                <h3 className="book-modal__section-title">{bookStrings.modal.sections.time}</h3>
-                {foreignTzNote && (
-                  <p className="book-modal__tz-note">{bookStrings.modal.tzNote(foreignTzNote)}</p>
+                    <section className="book-modal__section">
+                      <h3 className="book-modal__section-title">
+                        {bookStrings.modal.sections.guests}
+                      </h3>
+                      <GuestStepper
+                        value={guestCount}
+                        max={table.capacity}
+                        onChange={setGuestCount}
+                      />
+                    </section>
+                  </>
                 )}
-                {slotsLoading || fallbackHoursLoading ? (
-                  <SlotsSkeleton />
-                ) : !dayConfig && !realSlots ? (
-                  // No day config to fall back to a client-generated grid, but
-                  // when real slots already came back from the server, trust
-                  // that over declaring the day closed.
-                  <p className="book-modal__empty">{bookStrings.modal.slots.closed}</p>
-                ) : timeSlots.length === 0 ? (
-                  <p className="book-modal__empty">{bookStrings.modal.slots.none}</p>
-                ) : (
-                  <TimeSlotGrid
-                    slots={timeSlots}
-                    selectedTime={selectedTime}
-                    onSelect={setSelectedTime}
-                  />
+
+                {currentStep === 2 && (
+                  <>
+                    <section className="book-modal__section">
+                      <h3 className="book-modal__section-title">
+                        {bookStrings.modal.sections.contacts}
+                      </h3>
+                      {showNameField ? (
+                        <>
+                          <input
+                            type="text"
+                            className="book-modal__notes"
+                            placeholder={bookStrings.modal.guestNamePlaceholder}
+                            value={guestName}
+                            onChange={(e) => setGuestName(e.target.value)}
+                          />
+                          {nameError && <p className="book-modal__hint">{nameError}</p>}
+                        </>
+                      ) : (
+                        <p className="book-modal__empty">{bookStrings.modal.flow.profileHint}</p>
+                      )}
+                    </section>
+
+                    <section className="book-modal__section">
+                      <h3 className="book-modal__section-title">
+                        {bookStrings.modal.sections.notes}
+                      </h3>
+                      <p className="book-modal__tz-note">{bookStrings.modal.flow.notesHint}</p>
+                      <textarea
+                        className="book-modal__notes"
+                        placeholder={bookStrings.modal.notesPlaceholder}
+                        value={notes}
+                        onChange={(e) => setNotes(e.target.value)}
+                        rows={3}
+                      />
+                    </section>
+                  </>
                 )}
-              </section>
 
-              <section className="book-modal__section">
-                <h3 className="book-modal__section-title">{bookStrings.modal.sections.duration}</h3>
-                <DurationInput
-                  value={effectiveDuration}
-                  min={MIN_DURATION}
-                  max={maxDuration}
-                  onChange={setDurationMinutes}
-                  error={durationError}
-                />
-              </section>
-
-              <section className="book-modal__section">
-                <h3 className="book-modal__section-title">{bookStrings.modal.sections.guests}</h3>
-                <GuestStepper value={guestCount} max={table.capacity} onChange={setGuestCount} />
-              </section>
-
-              {showNameField && (
-                <section className="book-modal__section">
-                  <h3 className="book-modal__section-title">
-                    {bookStrings.modal.sections.guestName}
-                  </h3>
-                  <input
-                    type="text"
-                    className="book-modal__notes"
-                    placeholder={bookStrings.modal.guestNamePlaceholder}
-                    value={guestName}
-                    onChange={(e) => setGuestName(e.target.value)}
-                  />
-                  {nameError && <p className="book-modal__hint">{nameError}</p>}
-                </section>
-              )}
-
-              <section className="book-modal__section">
-                <h3 className="book-modal__section-title">{bookStrings.modal.sections.notes}</h3>
-                <textarea
-                  className="book-modal__notes"
-                  placeholder={bookStrings.modal.notesPlaceholder}
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  rows={3}
-                />
-              </section>
-
-              {selectedTime && (
-                <SlotSummary
-                  title={bookStrings.modal.sections.confirmation}
-                  tableNumber={table.public_number}
-                  date={selectedDate.toLocaleDateString("uk-UA", {
-                    weekday: "short",
-                    month: "short",
-                    day: "numeric",
-                    year: "numeric",
-                  })}
-                  time={selectedTime}
-                  endTime={endAt}
-                  duration={effectiveDuration}
-                  guests={guestCount}
-                />
-              )}
+                {currentStep === 3 && selectedTime && (
+                  <>
+                    <SlotSummary
+                      title={bookStrings.modal.sections.confirmation}
+                      tableNumber={table.public_number}
+                      date={selectedDate.toLocaleDateString("uk-UA", {
+                        weekday: "short",
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                      })}
+                      time={selectedTime}
+                      endTime={endAt}
+                      duration={effectiveDuration}
+                      guests={guestCount}
+                    />
+                    <section className="book-modal__section book-modal__section--summary">
+                      <h3 className="book-modal__section-title">
+                        {bookStrings.modal.sections.contacts}
+                      </h3>
+                      <div className="book-modal__summary">
+                        {showNameField && (
+                          <div className="book-modal__summary-row">
+                            <span>{bookStrings.modal.sections.guestName}</span>
+                            <span>{guestName || "—"}</span>
+                          </div>
+                        )}
+                        <div className="book-modal__summary-row">
+                          <span>{bookStrings.modal.sections.notes}</span>
+                          <span>{notes.trim() || bookStrings.modal.flow.notesFallback}</span>
+                        </div>
+                      </div>
+                    </section>
+                  </>
+                )}
+              </div>
             </div>
 
             {error && <p className="book-modal__error">{error}</p>}
@@ -553,20 +702,22 @@ export function BookModal({
             <div className="book-modal__actions">
               <button
                 className="book-modal__btn book-modal__btn--cancel"
-                onClick={onClose}
+                onClick={currentStep === 0 ? onClose : handleBack}
                 type="button"
               >
-                {bookStrings.modal.actions.cancel}
+                {currentStep === 0 ? bookStrings.modal.actions.cancel : bookStrings.modal.flow.back}
               </button>
               <button
                 className="book-modal__btn book-modal__btn--confirm"
-                onClick={handleConfirm}
-                disabled={!selectedTime || submitting || !!durationError || !!nameError}
+                onClick={isLastStep ? handleConfirm : handleNext}
+                disabled={isLastStep ? !canConfirm : !canGoNext || submitting}
                 type="button"
               >
-                {submitting
-                  ? bookStrings.modal.actions.submitting
-                  : bookStrings.modal.actions.confirm}
+                {isLastStep
+                  ? submitting
+                    ? bookStrings.modal.actions.submitting
+                    : bookStrings.modal.actions.confirm
+                  : bookStrings.modal.flow.next}
               </button>
             </div>
           </>

@@ -41,6 +41,20 @@
   background: var(--color-bg-elevated);
 }
 
+.book-modal__header--flow {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+  padding-bottom: 14px;
+}
+
+.book-modal__header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
 /* Grab handle */
 .book-modal__header::before {
   content: "";
@@ -89,11 +103,105 @@
   transform: rotate(90deg);
 }
 
+.book-modal__flow {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.book-modal__flow-meta {
+  margin: 0;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.book-modal__flow-track {
+  height: 6px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--color-bg-surface-subtle);
+}
+
+.book-modal__flow-track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--color-primary) 65%, #fff),
+    var(--color-primary)
+  );
+  transition: width 220ms ease;
+}
+
+.book-modal__flow-steps {
+  list-style: none;
+  margin: 0;
+  padding: 2px 0 0;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.book-modal__flow-step {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  font-size: 0.62rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.book-modal__flow-dot {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1.5px solid var(--color-border-default);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: var(--color-text-secondary);
+  background: var(--color-bg-surface);
+  transition:
+    border-color 180ms ease,
+    color 180ms ease,
+    background 180ms ease;
+}
+
+.book-modal__flow-step--active,
+.book-modal__flow-step--done {
+  color: var(--color-text-primary);
+}
+
+.book-modal__flow-step--active .book-modal__flow-dot {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.book-modal__flow-step--done .book-modal__flow-dot {
+  border-color: var(--color-primary);
+  color: var(--color-bg-surface);
+  background: var(--color-primary);
+}
+
 .book-modal__body {
   padding: 8px 26px 22px;
   display: flex;
   flex-direction: column;
   gap: 24px;
+}
+
+.book-modal__step-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  animation: book-step-in 200ms ease;
 }
 
 .book-modal__section {
@@ -116,6 +224,41 @@
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--color-text-muted);
+}
+
+.book-modal__table-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  border-radius: 16px;
+  border: 1px solid var(--color-border-default);
+  background: linear-gradient(
+    140deg,
+    color-mix(in srgb, var(--color-bg-surface) 88%, #fff),
+    var(--color-bg-surface-subtle)
+  );
+}
+
+.book-modal__table-name {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+
+.book-modal__table-meta {
+  margin: 2px 0 0;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.book-modal__table-slot {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--color-primary);
 }
 
 /* Date strip */
@@ -645,6 +788,13 @@
   }
 }
 
+@keyframes book-step-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
 /* Confetti burst on the booking-confirmed screen. */
 .book-confetti {
   position: absolute;
@@ -686,7 +836,8 @@
   .book-overlay,
   .book-modal,
   .book-modal__success-icon,
-  .book-ticket {
+  .book-ticket,
+  .book-modal__step-panel {
     animation: none;
   }
 
@@ -694,7 +845,23 @@
   .book-modal__time-btn,
   .book-modal__guest-btn,
   .book-modal__btn,
-  .book-modal__close {
+  .book-modal__close,
+  .book-modal__flow-track span,
+  .book-modal__flow-dot {
     transition: none;
+  }
+}
+
+@media (max-width: 680px) {
+  .book-modal__flow-steps {
+    display: flex;
+    overflow-x: auto;
+    gap: 10px;
+    padding-bottom: 2px;
+    scrollbar-width: thin;
+  }
+
+  .book-modal__flow-step {
+    min-width: 84px;
   }
 }

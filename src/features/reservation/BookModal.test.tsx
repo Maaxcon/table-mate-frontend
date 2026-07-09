@@ -61,6 +61,11 @@ describe("BookModal staff guest-name requirement", () => {
     )
 
     await waitFor(() =>
+      expect(screen.getByRole("button", { name: bookStrings.modal.flow.next })).toBeEnabled(),
+    )
+    fireEvent.click(screen.getByRole("button", { name: bookStrings.modal.flow.next }))
+    fireEvent.click(screen.getByRole("button", { name: bookStrings.modal.flow.next }))
+    await waitFor(() =>
       expect(
         screen.getByPlaceholderText(bookStrings.modal.guestNamePlaceholder),
       ).toBeInTheDocument(),
@@ -71,10 +76,9 @@ describe("BookModal staff guest-name requirement", () => {
     // anyway, booking the reservation under the WAITER's own account instead
     // of failing loudly or attributing it to the walk-in guest.
     expect(screen.getByText(bookStrings.modal.validation.guestNameRequired)).toBeInTheDocument()
-    const confirmBtn = screen.getByRole("button", { name: bookStrings.modal.actions.confirm })
-    expect(confirmBtn).toBeDisabled()
-
-    fireEvent.click(confirmBtn)
+    const nextBtn = screen.getByRole("button", { name: bookStrings.modal.flow.next })
+    expect(nextBtn).toBeDisabled()
+    fireEvent.click(nextBtn)
     expect(createReservation).not.toHaveBeenCalled()
   })
 
@@ -92,6 +96,11 @@ describe("BookModal staff guest-name requirement", () => {
     )
 
     await waitFor(() =>
+      expect(screen.getByRole("button", { name: bookStrings.modal.flow.next })).toBeEnabled(),
+    )
+    fireEvent.click(screen.getByRole("button", { name: bookStrings.modal.flow.next }))
+    fireEvent.click(screen.getByRole("button", { name: bookStrings.modal.flow.next }))
+    await waitFor(() =>
       expect(
         screen.getByPlaceholderText(bookStrings.modal.guestNamePlaceholder),
       ).toBeInTheDocument(),
@@ -103,6 +112,9 @@ describe("BookModal staff guest-name requirement", () => {
     expect(
       screen.queryByText(bookStrings.modal.validation.guestNameRequired),
     ).not.toBeInTheDocument()
+    const nextBtn = screen.getByRole("button", { name: bookStrings.modal.flow.next })
+    expect(nextBtn).toBeEnabled()
+    fireEvent.click(nextBtn)
     const confirmBtn = screen.getByRole("button", { name: bookStrings.modal.actions.confirm })
     expect(confirmBtn).toBeEnabled()
 
@@ -123,6 +135,12 @@ describe("BookModal staff guest-name requirement", () => {
       />,
     )
 
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: bookStrings.modal.flow.next })).toBeEnabled(),
+    )
+    fireEvent.click(screen.getByRole("button", { name: bookStrings.modal.flow.next }))
+    fireEvent.click(screen.getByRole("button", { name: bookStrings.modal.flow.next }))
+    fireEvent.click(screen.getByRole("button", { name: bookStrings.modal.flow.next }))
     await waitFor(() =>
       expect(screen.getByRole("button", { name: bookStrings.modal.actions.confirm })).toBeEnabled(),
     )
