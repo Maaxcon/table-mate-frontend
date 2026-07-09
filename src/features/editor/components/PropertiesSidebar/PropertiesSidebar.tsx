@@ -382,7 +382,7 @@ export function PropertiesSidebar({
             </label>
             <button
               type="button"
-              className="editor-sidebar__button"
+              className="editor-sidebar__button editor-sidebar__button--soft"
               onClick={() => onUpdate(entity.id, { rotation: ((entity.rotation ?? 0) + 45) % 360 })}
             >
               Rotate +45°
@@ -413,21 +413,21 @@ export function PropertiesSidebar({
           <div className="editor-sidebar__arrange">
             <button
               type="button"
-              className="editor-sidebar__quick-btn"
+              className="editor-sidebar__quick-btn editor-sidebar__quick-btn--axis"
               onClick={() => onMove(entity.id, Math.round((canvasCols - entity.w) / 2), entity.y)}
             >
               Center X
             </button>
             <button
               type="button"
-              className="editor-sidebar__quick-btn"
+              className="editor-sidebar__quick-btn editor-sidebar__quick-btn--axis"
               onClick={() => onMove(entity.id, entity.x, Math.round((canvasRows - entity.h) / 2))}
             >
               Center Y
             </button>
             <button
               type="button"
-              className="editor-sidebar__quick-btn"
+              className="editor-sidebar__quick-btn editor-sidebar__quick-btn--nudge"
               onClick={() => onMove(entity.id, entity.x, entity.y - 1)}
               aria-label="Move up"
             >
@@ -435,7 +435,7 @@ export function PropertiesSidebar({
             </button>
             <button
               type="button"
-              className="editor-sidebar__quick-btn"
+              className="editor-sidebar__quick-btn editor-sidebar__quick-btn--nudge"
               onClick={() => onMove(entity.id, entity.x - 1, entity.y)}
               aria-label="Move left"
             >
@@ -443,7 +443,7 @@ export function PropertiesSidebar({
             </button>
             <button
               type="button"
-              className="editor-sidebar__quick-btn"
+              className="editor-sidebar__quick-btn editor-sidebar__quick-btn--nudge"
               onClick={() => onMove(entity.id, entity.x + 1, entity.y)}
               aria-label="Move right"
             >
@@ -451,7 +451,7 @@ export function PropertiesSidebar({
             </button>
             <button
               type="button"
-              className="editor-sidebar__quick-btn"
+              className="editor-sidebar__quick-btn editor-sidebar__quick-btn--nudge"
               onClick={() => onMove(entity.id, entity.x, entity.y + 1)}
               aria-label="Move down"
             >
@@ -586,14 +586,14 @@ export function PropertiesSidebar({
       <div className="editor-sidebar__footer">
         <button
           type="button"
-          className="editor-sidebar__button"
+          className="editor-sidebar__button editor-sidebar__button--primary"
           onClick={() => onDuplicate(entity.id)}
         >
           Duplicate
         </button>
         <button
           type="button"
-          className="editor-sidebar__button"
+          className="editor-sidebar__button editor-sidebar__button--danger"
           onClick={() => onDelete(entity.id)}
         >
           Delete
