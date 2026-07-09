@@ -89,6 +89,7 @@ export function BookModal({
   const [error, setError] = useState<string | null>(null)
   const [currentStep, setCurrentStep] = useState(0)
   const [success, setSuccess] = useState<{
+    reservationId: string
     tableNumber: string
     date: string
     time: string
@@ -97,6 +98,7 @@ export function BookModal({
     startISO: string
     endISO: string
   } | null>(null)
+  const [shareFeedback, setShareFeedback] = useState<string | null>(null)
 
   const [availableSlots, setAvailableSlots] = useState<Record<string, string[]> | null>(null)
   const [slotsLoading, setSlotsLoading] = useState(true)
@@ -127,10 +129,14 @@ export function BookModal({
 
   // Guards the slot fetch from setting state after the modal closes/unmounts.
   const mountedRef = useRef(true)
+  const shareFeedbackTimerRef = useRef<number | null>(null)
   useEffect(() => {
     mountedRef.current = true
     return () => {
       mountedRef.current = false
+      if (shareFeedbackTimerRef.current !== null) {
+        window.clearTimeout(shareFeedbackTimerRef.current)
+      }
     }
   }, [])
 
@@ -297,6 +303,7 @@ export function BookModal({
       reservationRef.current = await createReservation(body)
 
       setSuccess({
+        reservationId: reservationRef.current.public_id,
         tableNumber: table.public_number,
         date: localDateKey(selectedDate),
         time: selectedTimeValue,
@@ -332,12 +339,60 @@ export function BookModal({
     table.public_number,
   ])
 
+  const reservationCode = useMemo(() => {
+    if (!success) return null
+    const compact = success.reservationId.replace(/-/g, "").toUpperCase()
+    return `#${compact.slice(0, 8)}`
+  }, [success])
+
   // After a successful booking, dismissing must also notify the parent so it can
   // refresh. Backdrop click and Escape share this.
   const handleDismiss = useCallback(() => {
     if (success) onSuccess(reservationRef.current ?? undefined)
     onClose()
   }, [success, onSuccess, onClose])
+
+  const handleShare = useCallback(async () => {
+    if (!success) return
+
+    const payload = [
+      bookStrings.modal.confirmedTitle,
+      `${bookStrings.modal.ticket.reservationNumber}: ${reservationCode ?? success.reservationId}`,
+      `${bookStrings.modal.summary.table}: ${success.tableNumber}`,
+      `${bookStrings.modal.summary.date}: ${success.date}`,
+      `${bookStrings.modal.summary.time}: ${success.time}-${success.endTime}`,
+      `${bookStrings.modal.summary.guests}: ${success.guests}`,
+    ].join("\n")
+
+    try {
+      if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
+        await navigator.share({
+          title: bookStrings.modal.confirmedTitle,
+          text: payload,
+        })
+        return
+      }
+
+      if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(payload)
+        setShareFeedback(bookStrings.modal.ticket.shareCopied)
+        if (shareFeedbackTimerRef.current !== null) {
+          window.clearTimeout(shareFeedbackTimerRef.current)
+        }
+        shareFeedbackTimerRef.current = window.setTimeout(() => {
+          setShareFeedback(null)
+          shareFeedbackTimerRef.current = null
+        }, 2200)
+        return
+      }
+
+      setShareFeedback(bookStrings.modal.ticket.shareUnsupported)
+    } catch (err) {
+      // Native share dialogs throw AbortError when cancelled — keep that silent.
+      if (err instanceof DOMException && err.name === "AbortError") return
+      setShareFeedback(bookStrings.modal.ticket.shareUnsupported)
+    }
+  }, [success, reservationCode])
 
   const dialogRef = useFocusTrap<HTMLDivElement>({ onEscape: handleDismiss })
 
@@ -391,80 +446,53 @@ export function BookModal({
                 <p className="book-modal__success-text">
                   {bookStrings.modal.success(success.tableNumber)}
                 </p>
-                <div className="book-modal__success-pills">
-                  <span className="book-modal__success-pill">
-                    {bookStrings.modal.summary.table} {success.tableNumber}
-                  </span>
-                  <span className="book-modal__success-pill">
-                    {success.time}&ndash;{success.endTime}
-                  </span>
-                  <span className="book-modal__success-pill">
-                    {success.guests} {bookStrings.modal.summary.guests.toLowerCase()}
-                  </span>
-                </div>
-              </div>
-              <div className="book-ticket">
-                <div className="book-ticket__top">
-                  <span className="book-ticket__label">{bookStrings.modal.ticket.label}</span>
-                  <span className="book-ticket__success" aria-hidden="true">
-                    &#10003;
-                  </span>
-                  <span className="book-ticket__table-label">
-                    {bookStrings.modal.ticket.tableLabel}
-                  </span>
-                  <span className="book-ticket__table-num">{success.tableNumber}</span>
-                </div>
-                <div className="book-ticket__perf" aria-hidden="true" />
-                <div className="book-ticket__stub">
-                  <div className="book-ticket__cells">
-                    <div className="book-ticket__cell">
-                      <span>{bookStrings.modal.summary.date}</span>
-                      <strong>{success.date}</strong>
-                    </div>
-                    <div className="book-ticket__cell">
-                      <span>{bookStrings.modal.summary.time}</span>
-                      <strong>
-                        {success.time}&ndash;{success.endTime}
-                      </strong>
-                    </div>
-                    <div className="book-ticket__cell">
-                      <span>{bookStrings.modal.summary.guests}</span>
-                      <strong>{success.guests}</strong>
-                    </div>
+                <div className="book-modal__success-card">
+                  <div className="book-modal__success-row">
+                    <span>{bookStrings.modal.ticket.reservationNumber}</span>
+                    <strong>{reservationCode ?? success.reservationId}</strong>
                   </div>
-                  <div className="book-ticket__qr" aria-hidden="true">
-                    <span />
-                    <span />
-                    <span />
-                    <span />
-                    <span />
-                    <span />
-                    <span />
-                    <span />
-                    <span />
+                  <div className="book-modal__success-row">
+                    <span>{bookStrings.modal.summary.time}</span>
+                    <strong>
+                      {success.time}&ndash;{success.endTime}
+                    </strong>
+                  </div>
+                  <div className="book-modal__success-row">
+                    <span>{bookStrings.modal.summary.table}</span>
+                    <strong>{success.tableNumber}</strong>
                   </div>
                 </div>
               </div>
+              {shareFeedback && <p className="book-modal__share-feedback">{shareFeedback}</p>}
             </div>
             <div className="book-modal__actions book-modal__actions--success">
+              <div className="book-modal__actions-row">
+                <button
+                  className="book-modal__btn book-modal__btn--cancel"
+                  onClick={() =>
+                    downloadReservationIcs({
+                      tableNumber: success.tableNumber,
+                      startISO: success.startISO,
+                      endISO: success.endISO,
+                      guests: success.guests,
+                      summary: bookStrings.modal.title(success.tableNumber),
+                      guestsLabel: bookStrings.modal.summary.guests,
+                    })
+                  }
+                  type="button"
+                >
+                  {bookStrings.modal.ticket.addToCalendar}
+                </button>
+                <button
+                  className="book-modal__btn book-modal__btn--share"
+                  onClick={() => void handleShare()}
+                  type="button"
+                >
+                  {bookStrings.modal.ticket.share}
+                </button>
+              </div>
               <button
-                className="book-modal__btn book-modal__btn--cancel"
-                onClick={() =>
-                  downloadReservationIcs({
-                    tableNumber: success.tableNumber,
-                    startISO: success.startISO,
-                    endISO: success.endISO,
-                    guests: success.guests,
-                    summary: bookStrings.modal.title(success.tableNumber),
-                    guestsLabel: bookStrings.modal.summary.guests,
-                  })
-                }
-                type="button"
-              >
-                {bookStrings.modal.ticket.addToCalendar}
-              </button>
-              <button
-                className="book-modal__btn book-modal__btn--confirm"
+                className="book-modal__btn book-modal__btn--confirm book-modal__btn--done"
                 onClick={handleDismiss}
                 type="button"
               >

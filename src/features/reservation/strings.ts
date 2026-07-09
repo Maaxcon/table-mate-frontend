@@ -112,7 +112,11 @@ export const bookStrings = {
     ticket: {
       label: "Електронна бронь",
       tableLabel: "Стіл",
+      reservationNumber: "Номер броні",
       addToCalendar: "Додати в календар",
+      share: "Поділитися",
+      shareCopied: "Деталі броні скопійовано",
+      shareUnsupported: "Поділитися не вдалося на цьому пристрої",
       done: "Готово",
     },
     actions: {
