@@ -459,6 +459,11 @@ export function WaiterOrderPage() {
       {createResModalOpen && selectedTable && (
         <BookModal
           table={selectedTable}
+          tablePreviewItems={filteredTables.map((t) => ({
+            public_id: t.public_id,
+            public_number: t.public_number,
+            capacity: t.capacity,
+          }))}
           workingHours={workingHours}
           restaurantId={restaurantId}
           showNameField

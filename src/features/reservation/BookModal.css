@@ -261,6 +261,76 @@
   color: var(--color-primary);
 }
 
+.book-modal__mini-floor-wrap {
+  margin-top: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.book-modal__mini-floor {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(78px, 1fr));
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid var(--color-border-default);
+  border-radius: 16px;
+  background: linear-gradient(
+    150deg,
+    color-mix(in srgb, var(--color-bg-surface) 90%, #fff),
+    color-mix(in srgb, var(--color-bg-surface-subtle) 84%, #fff)
+  );
+}
+
+.book-modal__mini-table {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 6px;
+  border: 1.5px solid var(--color-border-default);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--color-bg-surface) 88%, #fff);
+  color: var(--color-text-secondary);
+}
+
+.book-modal__mini-table--selected {
+  border-color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 10%, #fff);
+  box-shadow: 0 10px 18px -14px color-mix(in srgb, var(--color-primary) 60%, #000);
+}
+
+.book-modal__mini-table-num {
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+
+.book-modal__mini-table-seats {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 3px;
+  min-height: 8px;
+}
+
+.book-modal__mini-table-seats span {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-text-muted) 70%, #fff);
+}
+
+.book-modal__mini-table--selected .book-modal__mini-table-seats span {
+  background: color-mix(in srgb, var(--color-primary) 75%, #fff);
+}
+
+.book-modal__mini-table-cap {
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: var(--color-text-muted);
+}
+
 /* Date strip */
 .book-modal__dates {
   display: flex;
