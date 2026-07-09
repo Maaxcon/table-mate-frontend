@@ -13,8 +13,10 @@ interface PropertiesSidebarProps {
   entity: EditorEntity | null
   zoneEntities: EditorEntity[]
   onUpdate: (id: string, patch: Partial<EditorEntity>) => void
+  onMove: (id: string, x: number, y: number) => void
   onDelete: (id: string) => void
   onDuplicate: (id: string) => void
+  onToolSelect: (tool: EditorEntity["type"]) => void
   zones: Zone[]
   selectedZone: Zone | null
   onZoneStyleChange: (edge: string, style: "dashed" | "solid") => void
@@ -55,8 +57,10 @@ export function PropertiesSidebar({
   entity,
   zoneEntities,
   onUpdate,
+  onMove,
   onDelete,
   onDuplicate,
+  onToolSelect,
   zones,
   selectedZone,
   onZoneStyleChange,
@@ -198,6 +202,23 @@ export function PropertiesSidebar({
               <span className="editor-sidebar__stat-value">{zoneObstacleCount}</span>
             </article>
           </section>
+
+          <details open className="editor-sidebar__section">
+            <summary className="editor-sidebar__section-title">Quick Add</summary>
+            <div className="editor-sidebar__quick-add">
+              {(Object.keys(ENTITY_COPY) as EditorEntity["type"][]).map((type) => (
+                <button
+                  key={type}
+                  type="button"
+                  className="editor-sidebar__quick-btn"
+                  onClick={() => onToolSelect(type)}
+                >
+                  <span aria-hidden="true">{ENTITY_COPY[type].icon}</span>
+                  <span>{ENTITY_COPY[type].title}</span>
+                </button>
+              ))}
+            </div>
+          </details>
 
           <details open className="editor-sidebar__section">
             <summary className="editor-sidebar__section-title">Canvas Size</summary>
@@ -388,6 +409,54 @@ export function PropertiesSidebar({
                 </option>
               ))}
             </select>
+          </div>
+          <div className="editor-sidebar__arrange">
+            <button
+              type="button"
+              className="editor-sidebar__quick-btn"
+              onClick={() => onMove(entity.id, Math.round((canvasCols - entity.w) / 2), entity.y)}
+            >
+              Center X
+            </button>
+            <button
+              type="button"
+              className="editor-sidebar__quick-btn"
+              onClick={() => onMove(entity.id, entity.x, Math.round((canvasRows - entity.h) / 2))}
+            >
+              Center Y
+            </button>
+            <button
+              type="button"
+              className="editor-sidebar__quick-btn"
+              onClick={() => onMove(entity.id, entity.x, entity.y - 1)}
+              aria-label="Move up"
+            >
+              ↑
+            </button>
+            <button
+              type="button"
+              className="editor-sidebar__quick-btn"
+              onClick={() => onMove(entity.id, entity.x - 1, entity.y)}
+              aria-label="Move left"
+            >
+              ←
+            </button>
+            <button
+              type="button"
+              className="editor-sidebar__quick-btn"
+              onClick={() => onMove(entity.id, entity.x + 1, entity.y)}
+              aria-label="Move right"
+            >
+              →
+            </button>
+            <button
+              type="button"
+              className="editor-sidebar__quick-btn"
+              onClick={() => onMove(entity.id, entity.x, entity.y + 1)}
+              aria-label="Move down"
+            >
+              ↓
+            </button>
           </div>
         </details>
 

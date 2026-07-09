@@ -240,7 +240,9 @@ function editorReducer(state: EditorState, action: Action): EditorState {
         if (
           action.patch.rotation !== undefined ||
           action.patch.w !== undefined ||
-          action.patch.h !== undefined
+          action.patch.h !== undefined ||
+          action.patch.x !== undefined ||
+          action.patch.y !== undefined
         ) {
           const aabb = rotatedAABB(updated.x, updated.y, updated.w, updated.h, updated.rotation)
           const ox = (aabb.w - updated.w) / 2

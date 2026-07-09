@@ -489,6 +489,14 @@ function FloorPlanEditorPage() {
     [activeTool, addEntity, handleSelectionChange, selectedZoneId, setTool],
   )
 
+  const handleSidebarToolSelect = useCallback(
+    (tool: EditorEntity["type"]) => {
+      setTool(tool)
+      handleSelectionChange([], null)
+    },
+    [handleSelectionChange, setTool],
+  )
+
   const handleZoneStyleChange = useCallback(
     (edge: string, style: "dashed" | "solid") => {
       if (!selectedZoneId) return
@@ -755,8 +763,10 @@ function FloorPlanEditorPage() {
                 entity={selectedEntity}
                 zoneEntities={zoneEntities}
                 onUpdate={updateEntity}
+                onMove={(id, x, y) => moveEntity(id, x, y, selectedZoneId ?? undefined)}
                 onDelete={handleDeleteEntity}
                 onDuplicate={handleDuplicateEntity}
+                onToolSelect={handleSidebarToolSelect}
                 zones={allZones}
                 selectedZone={selectedZone}
                 onZoneStyleChange={handleZoneStyleChange}
