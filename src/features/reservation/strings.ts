@@ -122,7 +122,7 @@ export const bookStrings = {
     actions: {
       ok: "Гаразд",
       cancel: "Скасувати",
-      confirm: "Підтвердити бронь",
+      confirm: "Забронювати",
       submitting: "Бронюємо…",
     },
     validation: {
