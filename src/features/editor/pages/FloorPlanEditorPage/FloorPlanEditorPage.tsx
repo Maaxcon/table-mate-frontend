@@ -427,6 +427,29 @@ function FloorPlanEditorPage() {
     [selectEntity],
   )
 
+  const handleDuplicateEntity = useCallback(
+    (id: string) => {
+      const source = entities.find((item) => item.id === id)
+      if (!source) return
+
+      const duplicated = addEntity(source.type, source.x + 1, source.y + 1, {
+        w: source.w,
+        h: source.h,
+        rotation: source.rotation ?? 0,
+        zoneId: selectedZoneId ?? source.zoneId,
+        targetZoneId: source.targetZoneId,
+        capacity: source.capacity,
+        sector: source.sector,
+        tags: source.tags ? [...source.tags] : undefined,
+        label: isTableEntity(source) ? getNextTableLabel(entities) : source.label,
+      })
+      if (duplicated) {
+        handleSelectionChange([duplicated.id], duplicated.id)
+      }
+    },
+    [addEntity, entities, handleSelectionChange, selectedZoneId],
+  )
+
   const handleDeleteSelected = useCallback(
     (ids: string[]) => {
       const uniqueIds = Array.from(new Set(ids))
@@ -730,8 +753,10 @@ function FloorPlanEditorPage() {
               </div>
               <PropertiesSidebar
                 entity={selectedEntity}
+                zoneEntities={zoneEntities}
                 onUpdate={updateEntity}
                 onDelete={handleDeleteEntity}
+                onDuplicate={handleDuplicateEntity}
                 zones={allZones}
                 selectedZone={selectedZone}
                 onZoneStyleChange={handleZoneStyleChange}
