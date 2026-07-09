@@ -88,8 +88,6 @@ export const bookStrings = {
       stepLabel: (current: number, total: number) => `Крок ${current} з ${total}`,
       back: "Назад",
       next: "Далі",
-      miniFloorTitle: "Міні-план залу",
-      miniFloorHint: "Обраний стіл підсвічено.",
       profileHint: "Контакти акаунта будуть використані для цієї броні.",
       notesHint: "Додайте ім'я, телефон або побажання для команди ресторану.",
       notesFallback: "Без нотаток",

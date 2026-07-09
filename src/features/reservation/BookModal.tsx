@@ -36,8 +36,6 @@ interface BookModalProps {
   // Only the identity + size is needed, so both a full Table (customer flow) and a
   // FloorTable (waiter view) can be passed.
   table: Pick<Table, "public_id" | "public_number" | "capacity">
-  // Optional nearby tables for the "mini floor" preview in step 2.
-  tablePreviewItems?: Array<Pick<Table, "public_id" | "public_number" | "capacity">>
   workingHours: Record<string, WorkingHoursDay> | null
   timeZone?: string | null
   onClose: () => void
@@ -55,7 +53,6 @@ interface BookModalProps {
 
 export function BookModal({
   table,
-  tablePreviewItems,
   workingHours,
   timeZone,
   onClose,
@@ -238,27 +235,6 @@ export function BookModal({
   // forgot the name" apart from "this is actually a self-service booking".
   const nameError =
     showNameField && !guestName.trim() ? bookStrings.modal.validation.guestNameRequired : null
-  const floorPreviewTables = useMemo(() => {
-    const source = tablePreviewItems && tablePreviewItems.length > 0 ? tablePreviewItems : [table]
-    const selectedPresent = source.some((t) => t.public_id === table.public_id)
-    const withSelected = selectedPresent
-      ? source
-      : [
-          ...source,
-          {
-            public_id: table.public_id,
-            public_number: table.public_number,
-            capacity: table.capacity,
-          },
-        ]
-    return [...withSelected]
-      .sort((a, b) =>
-        String(a.public_number).localeCompare(String(b.public_number), undefined, {
-          numeric: true,
-        }),
-      )
-      .slice(0, 12)
-  }, [tablePreviewItems, table.public_id, table.public_number, table.capacity])
   const flowSteps = bookStrings.modal.flow.steps
   const totalSteps = flowSteps.length
   const isLastStep = currentStep === totalSteps - 1
@@ -667,48 +643,6 @@ export function BookModal({
                             · {selectedTimeValue}&ndash;{endAt}
                           </p>
                         )}
-                      </div>
-                      <div className="book-modal__mini-floor-wrap">
-                        <p className="book-modal__section-title">
-                          {bookStrings.modal.flow.miniFloorTitle}
-                        </p>
-                        <p className="book-modal__tz-note">
-                          {bookStrings.modal.flow.miniFloorHint}
-                        </p>
-                        <div
-                          className="book-modal__mini-floor"
-                          role="list"
-                          aria-label={bookStrings.modal.flow.miniFloorTitle}
-                        >
-                          {floorPreviewTables.map((previewTable) => {
-                            const isSelected = previewTable.public_id === table.public_id
-                            const seats = Math.min(previewTable.capacity, 6)
-                            return (
-                              <div
-                                key={previewTable.public_id}
-                                role="listitem"
-                                className={[
-                                  "book-modal__mini-table",
-                                  isSelected ? "book-modal__mini-table--selected" : "",
-                                ]
-                                  .filter(Boolean)
-                                  .join(" ")}
-                              >
-                                <span className="book-modal__mini-table-num">
-                                  {previewTable.public_number}
-                                </span>
-                                <div className="book-modal__mini-table-seats" aria-hidden="true">
-                                  {Array.from({ length: seats }, (_, index) => (
-                                    <span key={`${previewTable.public_id}-seat-${index}`} />
-                                  ))}
-                                </div>
-                                <span className="book-modal__mini-table-cap">
-                                  {bookStrings.floorPlan.seats(previewTable.capacity)}
-                                </span>
-                              </div>
-                            )
-                          })}
-                        </div>
                       </div>
                     </section>
 
