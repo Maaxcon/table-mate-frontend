@@ -6,6 +6,10 @@
   color: var(--color-text-primary);
 }
 
+.admin-layout--sidebar-collapsed {
+  grid-template-columns: 84px 1fr;
+}
+
 .admin-layout__sidebar {
   display: flex;
   flex-direction: column;
@@ -111,6 +115,10 @@
   background: var(--color-bg-surface-subtle);
 }
 
+.admin-layout__icon-btn--collapse {
+  margin-left: auto;
+}
+
 .admin-layout__content {
   padding: 28px 32px;
   overflow-y: auto;
@@ -120,9 +128,43 @@
   padding: 0;
 }
 
+.admin-layout--sidebar-collapsed .admin-layout__sidebar {
+  padding: 20px 10px;
+}
+
+.admin-layout--sidebar-collapsed .admin-layout__brand-name {
+  display: none;
+}
+
+.admin-layout--sidebar-collapsed .admin-layout__brand {
+  justify-content: center;
+}
+
+.admin-layout--sidebar-collapsed .admin-layout__icon-btn--collapse {
+  margin-left: 0;
+}
+
+.admin-layout--sidebar-collapsed .admin-layout__nav-link {
+  justify-content: center;
+  padding: 10px;
+}
+
+.admin-layout--sidebar-collapsed .admin-layout__nav-link span {
+  display: none;
+}
+
+.admin-layout--sidebar-collapsed .admin-layout__footer {
+  justify-content: center;
+}
+
+.admin-layout--sidebar-collapsed .admin-layout__user {
+  display: none;
+}
+
 /* Mobile: sidebar becomes a top bar with horizontal nav */
 @media (max-width: 720px) {
-  .admin-layout {
+  .admin-layout,
+  .admin-layout--sidebar-collapsed {
     grid-template-columns: 1fr;
     /* top bar hugs its content; the page fills the rest (no stretching the menu) */
     grid-template-rows: auto 1fr;
@@ -160,6 +202,10 @@
   }
 
   .admin-layout__user {
+    display: none;
+  }
+
+  .admin-layout__icon-btn--collapse {
     display: none;
   }
 

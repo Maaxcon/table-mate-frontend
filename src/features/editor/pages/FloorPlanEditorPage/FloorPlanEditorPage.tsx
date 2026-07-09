@@ -87,6 +87,7 @@ function FloorPlanEditorPage() {
   const [zones, setZones] = useState<Zone[]>([])
   const [selectedZoneId, setSelectedZoneId] = useState<string | null>(null)
   const [selectedIds, setSelectedIds] = useState<string[]>([])
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
   const prePublishStateRef = useRef<EditorState | null>(null)
   const publishingRef = useRef(false)
   const copiedEntitiesRef = useRef<EditorEntity[]>([])
@@ -734,7 +735,14 @@ function FloorPlanEditorPage() {
             if (zone) setDeleteZoneTarget(zone)
           }}
         />
-        <div className="editor-page__body">
+        <div
+          className={[
+            "editor-page__body",
+            isSidebarCollapsed ? "editor-page__body--sidebar-collapsed" : "",
+          ]
+            .filter(Boolean)
+            .join(" ")}
+        >
           {noZones ? (
             <div className="editor-page__empty">
               <p>Please create a zone to start editing the floor plan.</p>
@@ -742,6 +750,16 @@ function FloorPlanEditorPage() {
           ) : (
             <>
               <div className="editor-page__stage">
+                <div className="editor-page__stage-toolbar">
+                  <button
+                    type="button"
+                    className="editor-page__sidebar-toggle"
+                    aria-expanded={!isSidebarCollapsed}
+                    onClick={() => setIsSidebarCollapsed((prev) => !prev)}
+                  >
+                    {isSidebarCollapsed ? "Show side menu" : "Hide side menu"}
+                  </button>
+                </div>
                 <Canvas
                   entities={visibleEntities}
                   selectedId={selectedId}
@@ -759,21 +777,23 @@ function FloorPlanEditorPage() {
                   canvasRows={canvasRows}
                 />
               </div>
-              <PropertiesSidebar
-                entity={selectedEntity}
-                zoneEntities={zoneEntities}
-                onUpdate={updateEntity}
-                onMove={(id, x, y) => moveEntity(id, x, y, selectedZoneId ?? undefined)}
-                onDelete={handleDeleteEntity}
-                onDuplicate={handleDuplicateEntity}
-                onToolSelect={handleSidebarToolSelect}
-                zones={allZones}
-                selectedZone={selectedZone}
-                onZoneStyleChange={handleZoneStyleChange}
-                canvasCols={canvasCols}
-                canvasRows={canvasRows}
-                onCanvasSizeChange={handleCanvasSizeChange}
-              />
+              {!isSidebarCollapsed && (
+                <PropertiesSidebar
+                  entity={selectedEntity}
+                  zoneEntities={zoneEntities}
+                  onUpdate={updateEntity}
+                  onMove={(id, x, y) => moveEntity(id, x, y, selectedZoneId ?? undefined)}
+                  onDelete={handleDeleteEntity}
+                  onDuplicate={handleDuplicateEntity}
+                  onToolSelect={handleSidebarToolSelect}
+                  zones={allZones}
+                  selectedZone={selectedZone}
+                  onZoneStyleChange={handleZoneStyleChange}
+                  canvasCols={canvasCols}
+                  canvasRows={canvasRows}
+                  onCanvasSizeChange={handleCanvasSizeChange}
+                />
+              )}
             </>
           )}
         </div>

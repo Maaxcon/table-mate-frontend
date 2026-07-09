@@ -227,6 +227,10 @@
   align-items: stretch;
 }
 
+.editor-page__body--sidebar-collapsed {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .editor-page__stage {
   border-radius: 28px;
   border: 1px solid var(--color-border-default);
@@ -241,7 +245,42 @@
   min-height: 0;
   box-shadow: inset 0 1px 0 color-mix(in srgb, var(--color-bg-page) 40%, transparent);
   display: flex;
+  flex-direction: column;
+  gap: 10px;
   flex: 1;
+}
+
+.editor-page__stage-toolbar {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.editor-page__sidebar-toggle {
+  border: 1px solid color-mix(in srgb, var(--color-border-default) 72%, transparent);
+  background: color-mix(in srgb, var(--color-bg-surface) 92%, transparent);
+  color: var(--color-text-primary);
+  border-radius: 12px;
+  padding: 8px 12px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease,
+    transform 0.18s ease;
+}
+
+.editor-page__sidebar-toggle:hover {
+  border-color: color-mix(in srgb, var(--color-primary) 54%, transparent);
+  background: color-mix(in srgb, var(--color-primary) 14%, var(--color-bg-surface));
+  transform: translateY(-1px);
+}
+
+.editor-page__sidebar-toggle:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--color-primary) 62%, transparent);
+  outline-offset: 2px;
 }
 
 .editor-page__empty {
@@ -276,5 +315,13 @@
   .editor-page__stage {
     padding: 8px;
     border-radius: 18px;
+  }
+
+  .editor-page__stage-toolbar {
+    justify-content: stretch;
+  }
+
+  .editor-page__sidebar-toggle {
+    width: 100%;
   }
 }

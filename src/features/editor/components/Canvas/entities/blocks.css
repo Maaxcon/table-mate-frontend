@@ -99,7 +99,7 @@
   position: relative;
   z-index: 2;
   font-weight: 900;
-  font-size: 1.08rem;
+  font-size: 1.72rem;
   text-transform: uppercase;
   letter-spacing: 0.09em;
   line-height: 1;
@@ -110,7 +110,7 @@
 .editor-block__capacity {
   position: relative;
   z-index: 2;
-  font-size: 1.14rem;
+  font-size: 1.78rem;
   font-weight: 800;
   letter-spacing: 0.1em;
   color: color-mix(in srgb, var(--color-primary) 70%, var(--color-text-primary));
@@ -134,7 +134,7 @@
 
 .editor-block__zone-label {
   font-weight: 900;
-  font-size: 0.9rem;
+  font-size: 1.54rem;
   text-transform: uppercase;
   letter-spacing: 0.18em;
   color: var(--color-text-primary);
@@ -190,7 +190,7 @@
 
 .editor-block__threshold-label {
   font-weight: 800;
-  font-size: 1.64rem;
+  font-size: 2.32rem;
   text-transform: uppercase;
   letter-spacing: 0.09em;
   color: color-mix(in srgb, var(--color-text-primary) 78%, var(--color-primary));
@@ -243,7 +243,7 @@
 }
 
 .editor-block__portal-label {
-  font-size: 0.92rem;
+  font-size: 1.56rem;
   font-weight: 800;
   letter-spacing: 0.09em;
   text-transform: uppercase;
@@ -258,7 +258,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.2rem;
+  font-size: 1.84rem;
   line-height: 1;
   color: var(--portal-accent);
   border: calc(1px / var(--canvas-scale)) solid
