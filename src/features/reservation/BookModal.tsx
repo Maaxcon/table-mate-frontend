@@ -374,7 +374,7 @@ export function BookModal({
       }}
     >
       <div
-        className="book-modal"
+        className={["book-modal", success ? "book-modal--success" : ""].filter(Boolean).join(" ")}
         ref={dialogRef}
         role="dialog"
         aria-modal="true"
@@ -399,7 +399,7 @@ export function BookModal({
                 />
               ))}
             </div>
-            <div className="book-modal__header">
+            <div className="book-modal__header book-modal__header--success">
               <h2 className="book-modal__title" id="book-modal-title">
                 {bookStrings.modal.confirmedTitle}
               </h2>
@@ -407,7 +407,26 @@ export function BookModal({
                 &times;
               </button>
             </div>
-            <div className="book-modal__body">
+            <div className="book-modal__body book-modal__body--success">
+              <div className="book-modal__success-hero" role="status" aria-live="polite">
+                <span className="book-modal__success-icon" aria-hidden="true">
+                  &#10003;
+                </span>
+                <p className="book-modal__success-text">
+                  {bookStrings.modal.success(success.tableNumber)}
+                </p>
+                <div className="book-modal__success-pills">
+                  <span className="book-modal__success-pill">
+                    {bookStrings.modal.summary.table} {success.tableNumber}
+                  </span>
+                  <span className="book-modal__success-pill">
+                    {success.time}&ndash;{success.endTime}
+                  </span>
+                  <span className="book-modal__success-pill">
+                    {success.guests} {bookStrings.modal.summary.guests.toLowerCase()}
+                  </span>
+                </div>
+              </div>
               <div className="book-ticket">
                 <div className="book-ticket__top">
                   <span className="book-ticket__label">{bookStrings.modal.ticket.label}</span>
@@ -451,7 +470,7 @@ export function BookModal({
                 </div>
               </div>
             </div>
-            <div className="book-modal__actions">
+            <div className="book-modal__actions book-modal__actions--success">
               <button
                 className="book-modal__btn book-modal__btn--cancel"
                 onClick={() =>
