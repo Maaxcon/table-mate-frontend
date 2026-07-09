@@ -654,61 +654,70 @@ function FloorPlanEditorPage() {
   return (
     <div className="editor-page">
       <header className="editor-topbar" role="banner">
-        <div className="editor-topbar__left">
-          <div className="editor-topbar__brand">
-            <span className="editor-topbar__logo" aria-hidden="true">
-              <span className="editor-topbar__logo-dot" />
-            </span>
-            <div className="editor-topbar__brand-copy">
-              <span className="editor-topbar__brand-title">FLOOR PLAN</span>
-              <span className="editor-topbar__brand-subtitle">ADMIN · LAYOUT</span>
-            </div>
-          </div>
-          <div className="editor-topbar__details">
-            <div className="editor-topbar__title-row">
-              <h1 className="editor-topbar__title">Floor plan designer</h1>
-              <span
-                className={`editor-topbar__badge ${dirty ? "editor-topbar__badge--dirty" : "editor-topbar__badge--clean"}`}
-              >
-                {dirty ? "Unsaved" : "Synced"}
+        <div className="editor-topbar__head">
+          <div className="editor-topbar__identity">
+            <div className="editor-topbar__brand">
+              <span className="editor-topbar__logo" aria-hidden="true">
+                <span className="editor-topbar__logo-dot" />
               </span>
+              <div className="editor-topbar__brand-copy">
+                <span className="editor-topbar__brand-title">Floor Plan</span>
+                <span className="editor-topbar__brand-subtitle">Admin Workspace</span>
+              </div>
             </div>
+            <h1 className="editor-topbar__title">Floor plan studio</h1>
             <p className="editor-topbar__subtitle">
               {selectedZone
-                ? `Editing ${selectedZone.name} — adjust seating, portals, and traffic edges before publishing.`
+                ? `Editing zone: ${selectedZone.name}`
                 : "Create a zone to start mapping the dining room."}
             </p>
           </div>
+          <div className="editor-topbar__meta">
+            <span
+              className={`editor-topbar__badge ${dirty ? "editor-topbar__badge--dirty" : "editor-topbar__badge--clean"}`}
+            >
+              {dirty ? "Unsaved changes" : "All changes synced"}
+            </span>
+            <span
+              className={`editor-topbar__live ${isConnected ? "editor-topbar__live--online" : ""}`}
+              role="status"
+              aria-label={isConnected ? "Live updates connected" : "Live updates offline"}
+            >
+              <span className="editor-topbar__live-dot" aria-hidden="true" />
+              {isConnected ? "Live updates" : "Offline mode"}
+            </span>
+            <div className="editor-topbar__time" aria-label="Local time">
+              <span className="editor-topbar__clock">{currentTime}</span>
+              <span className="editor-topbar__clock-label">Local time</span>
+            </div>
+          </div>
         </div>
-        <div className="editor-topbar__right">
-          <div className="editor-topbar__metrics" role="group" aria-label="Layout metrics">
-            <div className="editor-metric">
-              <span className="editor-metric__label">ZONES</span>
-              <span className="editor-metric__value">{allZones.length}</span>
-              <span className="editor-metric__hint">ACTIVE</span>
-            </div>
-            <div className="editor-metric">
-              <span className="editor-metric__label">TABLES</span>
-              <span className="editor-metric__value">{selectedZone ? zoneTables : "—"}</span>
-              <span className="editor-metric__hint">
-                {selectedZone ? `${zonePortals} portals` : "SELECT ZONE"}
-              </span>
-            </div>
-            <div className="editor-metric">
-              <span className="editor-metric__label">GRID</span>
-              <span className="editor-metric__value">{selectedZone ? canvasSizeLabel : "—"}</span>
-              <span className="editor-metric__hint">COLS × ROWS</span>
-            </div>
-          </div>
-          <div className="editor-topbar__time" aria-label="Local time">
-            <span className="editor-topbar__clock">{currentTime}</span>
-            <span className="editor-topbar__clock-label">LOCAL TIME</span>
-          </div>
-          <span
-            className={`editor-topbar__connection ${isConnected ? "editor-topbar__connection--online" : ""}`}
-            role="status"
-            aria-label={isConnected ? "Live updates connected" : "Live updates offline"}
-          />
+
+        <div className="editor-topbar__metrics" role="group" aria-label="Layout metrics">
+          <article className="editor-metric">
+            <span className="editor-metric__label">Zones</span>
+            <span className="editor-metric__value">{allZones.length}</span>
+            <span className="editor-metric__hint">Active zones</span>
+          </article>
+          <article className="editor-metric">
+            <span className="editor-metric__label">Tables</span>
+            <span className="editor-metric__value">{selectedZone ? zoneTables : "—"}</span>
+            <span className="editor-metric__hint">
+              {selectedZone ? "Ready for guests" : "Select zone"}
+            </span>
+          </article>
+          <article className="editor-metric">
+            <span className="editor-metric__label">Portals</span>
+            <span className="editor-metric__value">{selectedZone ? zonePortals : "—"}</span>
+            <span className="editor-metric__hint">
+              {selectedZone ? "Navigation links" : "Select zone"}
+            </span>
+          </article>
+          <article className="editor-metric">
+            <span className="editor-metric__label">Grid</span>
+            <span className="editor-metric__value">{selectedZone ? canvasSizeLabel : "—"}</span>
+            <span className="editor-metric__hint">Columns × rows</span>
+          </article>
         </div>
       </header>
 
