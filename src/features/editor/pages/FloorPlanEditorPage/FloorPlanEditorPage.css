@@ -1,6 +1,7 @@
 .editor-page {
   --editor-page-padding: clamp(16px, 2vw, 32px);
   min-height: calc(100vh - 56px);
+  min-height: calc(100dvh - 56px);
   padding: var(--editor-page-padding);
   background: var(--color-bg-secondary);
   display: flex;
@@ -39,7 +40,7 @@
 .editor-topbar__identity {
   display: grid;
   gap: 6px;
-  min-width: min(520px, 100%);
+  min-width: min(420px, 100%);
 }
 
 .editor-topbar__brand {
@@ -113,6 +114,7 @@
   gap: 10px;
   flex-wrap: wrap;
   justify-content: flex-end;
+  min-width: min(360px, 100%);
 }
 
 .editor-topbar__badge,
@@ -236,6 +238,57 @@
   text-transform: uppercase;
 }
 
+@media (max-width: 1024px) {
+  .editor-page {
+    --editor-page-padding: 14px;
+  }
+
+  .editor-topbar__metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .editor-page__panel {
+    border-radius: 22px;
+    padding: 12px;
+  }
+
+  .editor-page__body {
+    gap: 12px;
+  }
+
+  .editor-page__stage {
+    border-radius: 20px;
+    padding: 12px;
+  }
+}
+
+@media (max-width: 860px) {
+  .editor-page {
+    gap: 10px;
+  }
+
+  .editor-topbar__head {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .editor-topbar__meta {
+    min-width: 0;
+    justify-content: flex-start;
+  }
+
+  .editor-topbar__badge,
+  .editor-topbar__live,
+  .editor-topbar__time {
+    min-height: 36px;
+  }
+
+  .editor-page__sidebar-toggle {
+    min-height: 40px;
+  }
+}
+
 @media (max-width: 720px) {
   .editor-topbar {
     gap: 12px;
@@ -313,6 +366,8 @@
 .editor-page__stage-toolbar {
   display: flex;
   justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .editor-page__sidebar-toggle {
@@ -364,17 +419,17 @@
 
 @media (max-width: 640px) {
   .editor-page {
-    padding: 16px;
+    padding: 12px;
   }
 
   .editor-page__panel {
-    padding: 10px;
-    border-radius: 20px;
+    padding: 8px;
+    border-radius: 16px;
   }
 
   .editor-page__stage {
     padding: 8px;
-    border-radius: 18px;
+    border-radius: 14px;
   }
 
   .editor-page__stage-toolbar {

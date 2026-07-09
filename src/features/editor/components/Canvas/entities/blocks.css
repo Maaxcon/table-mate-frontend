@@ -105,6 +105,10 @@
   line-height: 1;
   color: var(--color-text-primary);
   text-shadow: 0 1px 0 color-mix(in srgb, #ffffff 45%, transparent);
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .editor-block__capacity {
@@ -249,6 +253,10 @@
   text-transform: uppercase;
   color: color-mix(in srgb, var(--color-text-primary) 80%, var(--portal-accent));
   text-align: center;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .editor-block__portal-arrow {
@@ -392,4 +400,117 @@
   left: -8px;
   transform: translateY(-50%);
   cursor: ew-resize;
+}
+
+@media (max-width: 1200px) {
+  .editor-block__label {
+    font-size: 1.42rem;
+  }
+
+  .editor-block__capacity {
+    font-size: 1.5rem;
+  }
+
+  .editor-block__zone-label {
+    font-size: 1.24rem;
+  }
+
+  .editor-block__threshold-label {
+    font-size: 1.92rem;
+  }
+
+  .editor-block__portal-label {
+    font-size: 1.28rem;
+  }
+
+  .editor-block__portal-arrow {
+    font-size: 1.56rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .editor-block__label {
+    font-size: 1.08rem;
+    letter-spacing: 0.06em;
+  }
+
+  .editor-block__capacity {
+    font-size: 1.14rem;
+    letter-spacing: 0.08em;
+  }
+
+  .editor-block__zone-label {
+    font-size: 0.98rem;
+    letter-spacing: 0.1em;
+  }
+
+  .editor-block__threshold-label {
+    font-size: 1.5rem;
+  }
+
+  .editor-block__portal-label {
+    font-size: 1rem;
+    letter-spacing: 0.06em;
+  }
+
+  .editor-block__portal-arrow {
+    width: 22px;
+    height: 22px;
+    font-size: 1.2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .editor-block__label {
+    font-size: 0.92rem;
+  }
+
+  .editor-block__capacity {
+    font-size: 0.96rem;
+    padding: 2px 4px;
+  }
+
+  .editor-block__zone-label {
+    font-size: 0.86rem;
+  }
+
+  .editor-block__threshold-label {
+    font-size: 1.2rem;
+  }
+
+  .editor-block__portal-label {
+    font-size: 0.86rem;
+  }
+}
+
+@media (pointer: coarse) {
+  .editor-block__resize {
+    width: 18px;
+    height: 18px;
+    border-radius: 6px;
+  }
+
+  .editor-block__resize--nw,
+  .editor-block__resize--n,
+  .editor-block__resize--ne {
+    top: -10px;
+  }
+
+  .editor-block__resize--sw,
+  .editor-block__resize--s,
+  .editor-block__resize--se {
+    bottom: -10px;
+  }
+
+  .editor-block__resize--nw,
+  .editor-block__resize--sw,
+  .editor-block__resize--w {
+    left: -10px;
+  }
+
+  .editor-block__resize--ne,
+  .editor-block__resize--se,
+  .editor-block__resize--e {
+    right: -10px;
+  }
 }

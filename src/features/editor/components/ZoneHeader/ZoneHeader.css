@@ -3,6 +3,7 @@
   flex-wrap: wrap;
   gap: 8px;
   padding: 0 8px;
+  min-width: 0;
 }
 
 .editor-zone-header__tab-wrapper {
@@ -28,6 +29,7 @@
     color 0.15s ease,
     border-color 0.15s ease,
     transform 0.15s ease;
+  min-height: 32px;
 }
 
 .editor-zone-header__tab:hover {
@@ -81,8 +83,10 @@
   display: flex;
   align-items: center;
   gap: 4px;
+  flex-wrap: wrap;
 }
 
+.editor-zone-header__rename-input,
 .editor-zone-header__input {
   padding: 6px 10px;
   border-radius: 12px;
@@ -118,4 +122,62 @@
 .editor-zone-header__btn--cancel {
   background: transparent;
   color: var(--color-text-primary);
+}
+
+@media (max-width: 980px) {
+  .editor-zone-header {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 0 4px 6px;
+    scrollbar-width: thin;
+    scroll-snap-type: x proximity;
+  }
+
+  .editor-zone-header__tab-wrapper,
+  .editor-zone-header__add-form,
+  .editor-zone-header__tab--add {
+    flex-shrink: 0;
+    scroll-snap-align: start;
+  }
+
+  .editor-zone-header__tab {
+    padding: 8px 14px;
+    min-height: 36px;
+    letter-spacing: 0.12em;
+  }
+
+  .editor-zone-header__delete {
+    width: 28px;
+    height: 28px;
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 560px) {
+  .editor-zone-header {
+    gap: 6px;
+    padding: 0 2px 8px;
+  }
+
+  .editor-zone-header__tab {
+    padding: 9px 12px;
+    font-size: 0.63rem;
+    letter-spacing: 0.1em;
+    min-height: 38px;
+  }
+
+  .editor-zone-header__rename-input,
+  .editor-zone-header__input {
+    width: 128px;
+    min-height: 38px;
+    font-size: 0.72rem;
+  }
+
+  .editor-zone-header__btn {
+    min-height: 38px;
+    padding: 8px 10px;
+    font-size: 0.58rem;
+    letter-spacing: 0.14em;
+  }
 }

@@ -319,6 +319,105 @@
   color: #f5f8ff;
 }
 
+@media (max-width: 1220px) {
+  .editor-toolbar {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+    padding: 14px;
+    border-radius: 20px;
+  }
+
+  .editor-toolbar__actions-panel {
+    min-width: 0;
+  }
+
+  .editor-toolbar__actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .editor-toolbar__btn {
+    min-height: 42px;
+  }
+}
+
+@media (max-width: 760px) {
+  .editor-toolbar {
+    padding: 10px;
+    border-radius: 16px;
+  }
+
+  .editor-toolbar__tools-panel,
+  .editor-toolbar__actions-panel {
+    border-radius: 14px;
+  }
+
+  .editor-toolbar__tools-panel {
+    padding: 10px;
+  }
+
+  .editor-toolbar__actions-panel {
+    padding: 10px;
+    gap: 8px;
+  }
+
+  .editor-toolbar__tools {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .editor-toolbar__tool {
+    padding: 9px;
+    border-radius: 12px;
+    min-height: 52px;
+  }
+
+  .editor-toolbar__tool-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 9px;
+    font-size: 0.92rem;
+  }
+
+  .editor-toolbar__tool-label {
+    font-size: 0.68rem;
+    letter-spacing: 0.09em;
+  }
+
+  .editor-toolbar__tool-hint {
+    font-size: 0.61rem;
+    letter-spacing: 0.03em;
+  }
+
+  .editor-toolbar__section-kicker {
+    font-size: 0.56rem;
+  }
+
+  .editor-toolbar__section-title {
+    font-size: 0.72rem;
+  }
+
+  .editor-toolbar__btn {
+    min-height: 44px;
+    font-size: 0.66rem;
+    letter-spacing: 0.12em;
+  }
+}
+
+@media (max-width: 520px) {
+  .editor-toolbar__tools,
+  .editor-toolbar__actions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .editor-toolbar__section-head {
+    margin-bottom: 8px;
+  }
+
+  .editor-toolbar__tool {
+    min-height: 50px;
+  }
+}
+
 [data-theme="dark"] .editor-toolbar__btn--publish:disabled {
   opacity: 0.72;
   color: rgb(245 248 255 / 88%);

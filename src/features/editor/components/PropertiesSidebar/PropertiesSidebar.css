@@ -581,16 +581,84 @@
 @media (max-width: 1100px) {
   .editor-sidebar {
     width: 100%;
-    max-height: min(560px, 65vh);
+    max-height: none;
+    height: auto;
   }
 
   .editor-sidebar__footer {
-    position: sticky;
-    bottom: 0;
+    position: static;
+  }
+}
+
+@media (max-width: 900px) {
+  .editor-sidebar {
+    border-radius: 18px;
+  }
+
+  .editor-sidebar__header {
+    padding: 14px 14px 12px;
+  }
+
+  .editor-sidebar__body {
+    padding: 12px;
+  }
+
+  .editor-sidebar__title {
+    font-size: 0.78rem;
+    letter-spacing: 0.12em;
+  }
+
+  .editor-sidebar__label {
+    font-size: 0.64rem;
+    letter-spacing: 0.12em;
+  }
+
+  .editor-sidebar__input {
+    min-height: 40px;
+    font-size: 0.8rem;
+  }
+
+  .editor-sidebar__button,
+  .editor-sidebar__quick-btn,
+  .editor-sidebar__pill {
+    min-height: 40px;
   }
 }
 
 @media (max-width: 560px) {
+  .editor-sidebar {
+    border-radius: 14px;
+  }
+
+  .editor-sidebar__header {
+    padding: 12px 12px 10px;
+  }
+
+  .editor-sidebar__body {
+    padding: 10px;
+    gap: 10px;
+  }
+
+  .editor-sidebar__title {
+    font-size: 0.74rem;
+    letter-spacing: 0.1em;
+  }
+
+  .editor-sidebar__badge {
+    font-size: 0.55rem;
+    letter-spacing: 0.1em;
+  }
+
+  .editor-sidebar__button,
+  .editor-sidebar__quick-btn,
+  .editor-sidebar__pill {
+    border-radius: 10px;
+  }
+
+  .editor-sidebar__footer {
+    padding: 10px;
+  }
+
   .editor-sidebar__stats {
     grid-template-columns: 1fr;
   }
