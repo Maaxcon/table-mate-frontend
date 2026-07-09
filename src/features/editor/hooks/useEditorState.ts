@@ -295,6 +295,8 @@ function editorReducer(state: EditorState, action: Action): EditorState {
         pendingZones: { created: [], updated: {}, deleted: [] },
       }
     case "SET_CANVAS_SIZE": {
+      // Only the active zone's entities are reclamped. A smaller zone's canvas
+      // must not squash tables that live in a larger sibling zone.
       const targetZoneId = action.zoneId ?? null
       const reclamped = state.entities.map((e) => {
         const applies = (e.zoneId ?? null) === targetZoneId

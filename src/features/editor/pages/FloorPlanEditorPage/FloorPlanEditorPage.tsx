@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useAppSelector } from "@/store/hooks"
-import { fetchZones } from "@/features/reservation/api"
+import { fetchLayoutData, fetchZones } from "@/features/reservation/api"
 import type { Zone } from "@/features/reservation/api"
 import { apiFetch } from "@/api/client"
 import {
@@ -77,6 +77,23 @@ function FloorPlanEditorPage() {
   const [deleteZoneTarget, setDeleteZoneTarget] = useState<Zone | null>(null)
   const [deleting, setDeleting] = useState(false)
   const toast = useToast()
+
+  // Tables that currently have guests seated (open session). Deleting one is
+  // blocked up front — the publish would reject it anyway — so we warn instead.
+  // Uses the unpaginated /layout/ endpoint (like BookingPage) rather than the
+  // paginated /tables/ list — the latter only returns page 1 (20 tables), so a
+  // restaurant with more than that would silently miss occupied tables past it.
+  const [occupiedTableIds, setOccupiedTableIds] = useState<Set<string>>(new Set())
+  useEffect(() => {
+    if (!restaurantId) return
+    fetchLayoutData(String(restaurantId))
+      .then((data) => {
+        setOccupiedTableIds(
+          new Set(data.tables.filter((t) => t.is_occupied).map((t) => t.public_id)),
+        )
+      })
+      .catch(() => setOccupiedTableIds(new Set()))
+  }, [restaurantId])
 
   // Merge server zones with pending local zone changes so the UI always shows
   // the latest state (including un-published zone creates, renames, deletes).
@@ -252,6 +269,14 @@ function FloorPlanEditorPage() {
     onZoneCreated: refreshZones,
     onZoneUpdated: refreshZones,
     onZoneDeleted: refreshZones,
+    onTableStatusChanged: (event) => {
+      setOccupiedTableIds((prev) => {
+        const next = new Set(prev)
+        if (event.current_status === "occupied") next.add(event.table_id)
+        else next.delete(event.table_id)
+        return next
+      })
+    },
   })
 
   const currentTime = useCurrentTime()
@@ -263,6 +288,21 @@ function FloorPlanEditorPage() {
       setSelectedZoneId(clientId)
     },
     [createZone],
+  )
+
+  // Block deleting a table that currently has guests seated, with an up-front
+  // warning — otherwise the removal only fails later, at publish time.
+  const handleDeleteEntity = useCallback(
+    (id: string) => {
+      const entity = entities.find((e) => e.id === id)
+      const isTable = entity?.type === "table-square" || entity?.type === "table-round"
+      if (isTable && entity?.serverId && occupiedTableIds.has(entity.serverId)) {
+        toast.error("Can't delete an occupied table — close its visit first.")
+        return
+      }
+      removeEntity(id)
+    },
+    [entities, occupiedTableIds, removeEntity, toast],
   )
 
   // Strict filter: only ever show the selected zone's entities. The Canvas is
@@ -524,7 +564,7 @@ function FloorPlanEditorPage() {
               <PropertiesSidebar
                 entity={selectedEntity}
                 onUpdate={updateEntity}
-                onDelete={removeEntity}
+                onDelete={handleDeleteEntity}
                 zones={allZones}
                 selectedZone={selectedZone}
                 onZoneStyleChange={handleZoneStyleChange}
