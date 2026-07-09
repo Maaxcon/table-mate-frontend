@@ -19,6 +19,8 @@ interface FloorPlanProps {
   canvasRows?: number
   edgeStyles?: Record<string, "dashed" | "solid">
   maxScale?: number
+  enableZoom?: boolean
+  enablePan?: boolean
 }
 
 const statusLabel: Record<string, string> = {
@@ -41,6 +43,8 @@ export function FloorPlan({
   canvasRows,
   edgeStyles,
   maxScale,
+  enableZoom = false,
+  enablePan = false,
 }: FloorPlanProps) {
   // Join a layout table to its live table by public_id, falling back to public_number.
   const { byId, byNumber } = useMemo(() => {
@@ -75,6 +79,8 @@ export function FloorPlan({
         canvasCols={canvasCols}
         canvasRows={canvasRows}
         maxScale={maxScale}
+        enableZoom={enableZoom}
+        enablePan={enablePan}
         onTableSelect={(ref) => {
           const table = resolve(ref)
           if (table) onSelect(table)

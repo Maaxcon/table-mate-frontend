@@ -59,8 +59,20 @@ export function WaiterOrderPage() {
   const [moveTarget, setMoveTarget] = useState<ReservationItem | null>(null)
   const [orderModalOpen, setOrderModalOpen] = useState(false)
   const [createResModalOpen, setCreateResModalOpen] = useState(false)
+  const [sidebarTab, setSidebarTab] = useState<"reservations" | "notifications">("reservations")
+  const TABLET_BREAKPOINT = 1180
+  const [isTabletLayout, setIsTabletLayout] = useState(() =>
+    typeof window !== "undefined" ? window.innerWidth <= TABLET_BREAKPOINT : false,
+  )
   const tablesRef = useRef<FloorTable[]>([])
   const reservationsRef = useRef<ReservationItem[]>([])
+
+  useEffect(() => {
+    const update = () => setIsTabletLayout(window.innerWidth <= TABLET_BREAKPOINT)
+    update()
+    window.addEventListener("resize", update)
+    return () => window.removeEventListener("resize", update)
+  }, [])
 
   useEffect(() => {
     tablesRef.current = tables
@@ -388,20 +400,61 @@ export function WaiterOrderPage() {
             canvasCols={zones.find((z) => z.public_id === selectedZoneId)?.canvas_cols}
             canvasRows={zones.find((z) => z.public_id === selectedZoneId)?.canvas_rows}
             edgeStyles={zones.find((z) => z.public_id === selectedZoneId)?.edge_styles}
+            enableZoom={isTabletLayout}
+            enablePan={isTabletLayout}
           />
         </div>
 
-        <div className="waiter-view__side-grid">
-          <ReservationSidebar
-            reservations={pendingTodayReservations}
-            onCancel={handleCancel}
-            onModify={handleModify}
-            actionLoading={sidebarActionLoading}
-            error={sidebarError}
-          />
+        {isTabletLayout ? (
+          <div className="waiter-view__sidebar" role="complementary">
+            <div className="waiter-view__sidebar-tabs" role="tablist">
+              <button
+                type="button"
+                role="tab"
+                aria-selected={sidebarTab === "reservations"}
+                className={`waiter-view__sidebar-tab${sidebarTab === "reservations" ? " waiter-view__sidebar-tab--active" : ""}`}
+                onClick={() => setSidebarTab("reservations")}
+              >
+                Reservations
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={sidebarTab === "notifications"}
+                className={`waiter-view__sidebar-tab${sidebarTab === "notifications" ? " waiter-view__sidebar-tab--active" : ""}`}
+                onClick={() => setSidebarTab("notifications")}
+              >
+                Notifications
+              </button>
+            </div>
 
-          <NotificationStreamSidebar />
-        </div>
+            <div className="waiter-view__sidebar-panel" role="tabpanel">
+              {sidebarTab === "reservations" ? (
+                <ReservationSidebar
+                  reservations={pendingTodayReservations}
+                  onCancel={handleCancel}
+                  onModify={handleModify}
+                  actionLoading={sidebarActionLoading}
+                  error={sidebarError}
+                />
+              ) : (
+                <NotificationStreamSidebar />
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="waiter-view__side-grid">
+            <ReservationSidebar
+              reservations={pendingTodayReservations}
+              onCancel={handleCancel}
+              onModify={handleModify}
+              actionLoading={sidebarActionLoading}
+              error={sidebarError}
+            />
+
+            <NotificationStreamSidebar />
+          </div>
+        )}
       </div>
 
       {selectedTable && (

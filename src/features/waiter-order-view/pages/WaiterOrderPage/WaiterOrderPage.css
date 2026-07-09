@@ -69,6 +69,73 @@
   align-items: stretch;
 }
 
+.waiter-view__sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  background: var(--color-bg-surface);
+  border-radius: var(--w-radius);
+  box-shadow: var(--w-shadow-lg);
+  padding: clamp(14px, 1.8vw, 22px);
+  min-height: 0;
+}
+
+.waiter-view__sidebar-tabs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px;
+  border-radius: var(--w-radius-pill);
+  background: color-mix(in srgb, var(--color-border-light) 35%, transparent);
+  box-shadow: inset 0 0 0 1px var(--color-border-light);
+}
+
+.waiter-view__sidebar-tab {
+  flex: 1 1 0;
+  border: none;
+  border-radius: var(--w-radius-pill);
+  padding: 10px 14px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  background: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  font-family: inherit;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.waiter-view__sidebar-tab--active {
+  background: var(--color-text-primary);
+  color: var(--color-bg-surface);
+  box-shadow: 0 12px 28px color-mix(in srgb, var(--color-text-primary) 18%, transparent);
+  transform: translateY(-1px);
+}
+
+.waiter-view__sidebar-panel {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+}
+
+.waiter-view__sidebar-panel > * {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.waiter-view__sidebar-panel .reservation-sidebar,
+.waiter-view__sidebar-panel .notification-stream {
+  background: transparent;
+  box-shadow: none;
+  border-radius: 0;
+  padding: 0;
+}
+
 .waiter-view__message {
   display: flex;
   align-items: center;
@@ -402,7 +469,7 @@
   background: rgba(var(--color-error-rgb), 0.18);
 }
 
-@media (max-width: 1100px) {
+@media (max-width: 960px) {
   .waiter-view__content {
     grid-template-columns: 1fr;
   }
