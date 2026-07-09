@@ -333,75 +333,77 @@ export function TableDetailOverlay({
         )}
 
         {activeOverlayTab === "reservations" && (
-          <div className="overlay__body">
+          <div className="overlay__body overlay__body--reservations">
             {dayReservations.length === 0 ? (
               <p className="overlay__empty">No reservations for this table.</p>
             ) : (
-              dayReservations.map((r) => (
-                <div
-                  key={r.public_id}
-                  className={`overlay__reservation-row overlay__reservation-row--${r.status}`}
-                >
-                  <div className="overlay__reservation-info">
-                    <span className="overlay__reservation-name">
-                      {r.name}
-                      {r.status === "active" && (
-                        <span className="overlay__reservation-tag">SEATED NOW</span>
+              <div className="overlay__reservation-list">
+                {dayReservations.map((r) => (
+                  <div
+                    key={r.public_id}
+                    className={`overlay__reservation-row overlay__reservation-row--${r.status}`}
+                  >
+                    <div className="overlay__reservation-info">
+                      <span className="overlay__reservation-name">
+                        {r.name}
+                        {r.status === "active" && (
+                          <span className="overlay__reservation-tag">SEATED NOW</span>
+                        )}
+                      </span>
+                      <span className="overlay__reservation-meta">
+                        {r.guest_count} guests &middot; {formatTimeRange(r.start_at, r.end_at)}
+                      </span>
+                    </div>
+                    <div className="overlay__reservation-actions">
+                      {!isOccupied && r.status === "pending" && (
+                        <>
+                          <button
+                            type="button"
+                            className="overlay__seat-btn"
+                            disabled={actionBusy}
+                            onClick={() => onActivateReservation?.(r.public_id)}
+                          >
+                            {busyActionId === r.public_id ? "…" : "SEAT"}
+                          </button>
+                          {onModifyReservation && (
+                            <button
+                              type="button"
+                              className="overlay__seat-btn overlay__seat-btn--modify"
+                              disabled={actionBusy}
+                              onClick={() => onModifyReservation(r)}
+                            >
+                              MODIFY
+                            </button>
+                          )}
+                          {onCancelReservation && (
+                            <button
+                              type="button"
+                              className="overlay__seat-btn overlay__seat-btn--cancel"
+                              disabled={actionBusy}
+                              onClick={() => onCancelReservation(r.public_id)}
+                            >
+                              CANCEL
+                            </button>
+                          )}
+                        </>
                       )}
-                    </span>
-                    <span className="overlay__reservation-meta">
-                      {r.guest_count} guests &middot; {formatTimeRange(r.start_at, r.end_at)}
-                    </span>
-                  </div>
-                  <div className="overlay__reservation-actions">
-                    {!isOccupied && r.status === "pending" && (
-                      <>
+                      {r.status === "active" && onModifyReservation && (
                         <button
                           type="button"
-                          className="overlay__seat-btn"
-                          disabled={actionBusy}
-                          onClick={() => onActivateReservation?.(r.public_id)}
+                          className="overlay__seat-btn overlay__seat-btn--modify"
+                          onClick={() => onModifyReservation(r)}
                         >
-                          {busyActionId === r.public_id ? "…" : "SEAT"}
+                          MODIFY
                         </button>
-                        {onModifyReservation && (
-                          <button
-                            type="button"
-                            className="overlay__seat-btn overlay__seat-btn--modify"
-                            disabled={actionBusy}
-                            onClick={() => onModifyReservation(r)}
-                          >
-                            MODIFY
-                          </button>
-                        )}
-                        {onCancelReservation && (
-                          <button
-                            type="button"
-                            className="overlay__seat-btn overlay__seat-btn--cancel"
-                            disabled={actionBusy}
-                            onClick={() => onCancelReservation(r.public_id)}
-                          >
-                            CANCEL
-                          </button>
-                        )}
-                      </>
-                    )}
-                    {r.status === "active" && onModifyReservation && (
-                      <button
-                        type="button"
-                        className="overlay__seat-btn overlay__seat-btn--modify"
-                        onClick={() => onModifyReservation(r)}
-                      >
-                        MODIFY
-                      </button>
-                    )}
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))
+                ))}
+              </div>
             )}
 
             {onCreateReservation && (
-              <div className="overlay__body-footer">
+              <div className="overlay__body-footer overlay__body-footer--sticky">
                 <button type="button" className="overlay__cta" onClick={onCreateReservation}>
                   NEW RESERVATION
                 </button>
