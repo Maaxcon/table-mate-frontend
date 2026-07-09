@@ -132,8 +132,14 @@ export function BookModal({
   const shareFeedbackTimerRef = useRef<number | null>(null)
   useEffect(() => {
     mountedRef.current = true
+    if (typeof document !== "undefined") {
+      document.body.classList.add("has-book-modal")
+    }
     return () => {
       mountedRef.current = false
+      if (typeof document !== "undefined") {
+        document.body.classList.remove("has-book-modal")
+      }
       if (shareFeedbackTimerRef.current !== null) {
         window.clearTimeout(shareFeedbackTimerRef.current)
       }
