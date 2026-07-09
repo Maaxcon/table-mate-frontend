@@ -49,6 +49,20 @@ export interface EditorState {
   canvasRows: number
   /** Zone changes deferred to publish. */
   pendingZones: PendingZones
+  /** Undo history. */
+  past: EditorHistorySnapshot[]
+  /** Redo history. */
+  future: EditorHistorySnapshot[]
+}
+
+interface EditorHistorySnapshot {
+  entities: EditorEntity[]
+  selectedId: string | null
+  dirty: boolean
+  deletedServerIds: string[]
+  canvasCols: number
+  canvasRows: number
+  pendingZones: PendingZones
 }
 
 type Action =
@@ -80,8 +94,11 @@ type Action =
   | { type: "DELETE_ZONE"; zoneId: string }
   | { type: "CLEAR_PENDING_ZONES" }
   | { type: "REMAP_ZONE_ID"; from: string; to: string }
+  | { type: "UNDO" }
+  | { type: "REDO" }
 
 const TABLE_LABEL_REGEX = /^(?:T)?(\d+)$/i
+const MAX_HISTORY_ENTRIES = 50
 
 function getNextTableLabel(entities: EditorEntity[]): string {
   let max = 0
@@ -103,6 +120,69 @@ function computeDirty(entities: EditorEntity[], lastPublishedJson: object | null
   if (!lastPublishedJson) return entities.length > 0
   const current = serializeEntities(entities)
   return JSON.stringify(current) !== JSON.stringify(lastPublishedJson)
+}
+
+function cloneEntities(entities: EditorEntity[]): EditorEntity[] {
+  return entities.map((entity) => ({
+    ...entity,
+    tags: entity.tags ? [...entity.tags] : undefined,
+  }))
+}
+
+function clonePendingZones(pendingZones: PendingZones): PendingZones {
+  return {
+    created: pendingZones.created.map((zone) => ({
+      ...zone,
+      edge_styles: { ...zone.edge_styles },
+    })),
+    updated: Object.fromEntries(
+      Object.entries(pendingZones.updated).map(([zoneId, patch]) => [
+        zoneId,
+        {
+          ...patch,
+          edge_styles: patch.edge_styles ? { ...patch.edge_styles } : undefined,
+        },
+      ]),
+    ),
+    deleted: [...pendingZones.deleted],
+  }
+}
+
+function createHistorySnapshot(state: EditorState): EditorHistorySnapshot {
+  return {
+    entities: cloneEntities(state.entities),
+    selectedId: state.selectedId,
+    dirty: state.dirty,
+    deletedServerIds: [...state.deletedServerIds],
+    canvasCols: state.canvasCols,
+    canvasRows: state.canvasRows,
+    pendingZones: clonePendingZones(state.pendingZones),
+  }
+}
+
+function applyHistorySnapshot(state: EditorState, snapshot: EditorHistorySnapshot): EditorState {
+  return {
+    ...state,
+    entities: cloneEntities(snapshot.entities),
+    selectedId: snapshot.selectedId,
+    dirty: snapshot.dirty,
+    deletedServerIds: [...snapshot.deletedServerIds],
+    canvasCols: snapshot.canvasCols,
+    canvasRows: snapshot.canvasRows,
+    pendingZones: clonePendingZones(snapshot.pendingZones),
+  }
+}
+
+function pushHistory(state: EditorState, next: EditorState): EditorState {
+  const past = [...state.past, createHistorySnapshot(state)]
+  if (past.length > MAX_HISTORY_ENTRIES) {
+    past.shift()
+  }
+  return {
+    ...next,
+    past,
+    future: [],
+  }
 }
 
 function editorReducer(state: EditorState, action: Action): EditorState {
@@ -127,16 +207,19 @@ function editorReducer(state: EditorState, action: Action): EditorState {
       )
       const placed = { ...action.entity, x: clamped.x, y: clamped.y }
       const entities = [...state.entities, placed]
-      return {
+      return pushHistory(state, {
         ...state,
         entities,
         selectedId: placed.id,
         dirty: computeDirty(entities, state.lastPublishedJson),
-      }
+      })
     }
     case "UPDATE_ENTITY": {
+      let found = false
+      let changed = false
       const entities = state.entities.map((e) => {
         if (e.id !== action.id) return e
+        found = true
         const updated = { ...e, ...action.patch }
         if (action.patch.label !== undefined) {
           const minW = minLabelSize(action.patch.label)
@@ -187,9 +270,18 @@ function editorReducer(state: EditorState, action: Action): EditorState {
           updated.x = clamped.x
           updated.y = clamped.y
         }
+        if (JSON.stringify(updated) === JSON.stringify(e)) {
+          return e
+        }
+        changed = true
         return updated
       })
-      return { ...state, entities, dirty: computeDirty(entities, state.lastPublishedJson) }
+      if (!found || !changed) return state
+      return pushHistory(state, {
+        ...state,
+        entities,
+        dirty: computeDirty(entities, state.lastPublishedJson),
+      })
     }
     case "MOVE_ENTITY": {
       const entity = state.entities.find((e) => e.id === action.id)
@@ -225,25 +317,31 @@ function editorReducer(state: EditorState, action: Action): EditorState {
         state.canvasCols,
         state.canvasRows,
       )
+      if (entity.x === clamped.x && entity.y === clamped.y) return state
       const entities = state.entities.map((e) =>
         e.id === action.id ? { ...e, x: clamped.x, y: clamped.y } : e,
       )
-      return { ...state, entities, dirty: computeDirty(entities, state.lastPublishedJson) }
+      return pushHistory(state, {
+        ...state,
+        entities,
+        dirty: computeDirty(entities, state.lastPublishedJson),
+      })
     }
     case "REMOVE_ENTITY": {
       const removed = state.entities.find((e) => e.id === action.id)
+      if (!removed) return state
       const entities = state.entities.filter((e) => e.id !== action.id)
       const deletedServerIds =
         removed?.serverId && !state.deletedServerIds.includes(removed.serverId)
           ? [...state.deletedServerIds, removed.serverId]
           : state.deletedServerIds
-      return {
+      return pushHistory(state, {
         ...state,
         entities,
         deletedServerIds,
         selectedId: state.selectedId === action.id ? null : state.selectedId,
         dirty: computeDirty(entities, state.lastPublishedJson),
-      }
+      })
     }
     case "SELECT_ENTITY":
       return { ...state, selectedId: action.id }
@@ -277,6 +375,8 @@ function editorReducer(state: EditorState, action: Action): EditorState {
         dirty: false,
         deletedServerIds: [],
         pendingZones: { created: [], updated: {}, deleted: [] },
+        past: [],
+        future: [],
       }
     }
     case "PUBLISH_ROLLBACK":
@@ -286,13 +386,15 @@ function editorReducer(state: EditorState, action: Action): EditorState {
     case "LOAD_ENTITIES":
       return {
         ...state,
-        entities: action.entities,
+        entities: cloneEntities(action.entities),
         lastPublishedJson: action.publishedJson,
         dirty: false,
         deletedServerIds: [],
         canvasCols: action.canvasCols ?? state.canvasCols,
         canvasRows: action.canvasRows ?? state.canvasRows,
         pendingZones: { created: [], updated: {}, deleted: [] },
+        past: [],
+        future: [],
       }
     case "SET_CANVAS_SIZE": {
       // Only the active zone's entities are reclamped. A smaller zone's canvas
@@ -310,17 +412,33 @@ function editorReducer(state: EditorState, action: Action): EditorState {
         }
         return e
       })
-      return {
+      const hasEntityChanges = reclamped.some((entity, index) => entity !== state.entities[index])
+      if (
+        !hasEntityChanges &&
+        state.canvasCols === action.cols &&
+        state.canvasRows === action.rows
+      ) {
+        return state
+      }
+      if (!hasEntityChanges) {
+        return {
+          ...state,
+          canvasCols: action.cols,
+          canvasRows: action.rows,
+        }
+      }
+      return pushHistory(state, {
         ...state,
         canvasCols: action.cols,
         canvasRows: action.rows,
         entities: reclamped,
         dirty: state.dirty || computeDirty(reclamped, state.lastPublishedJson),
-      }
+      })
     }
     case "REMOVE_ENTITIES_BY_ZONE": {
       const remaining = state.entities.filter((e) => e.zoneId !== action.zoneId)
-      return {
+      if (remaining.length === state.entities.length) return state
+      return pushHistory(state, {
         ...state,
         entities: remaining,
         dirty: computeDirty(remaining, state.lastPublishedJson),
@@ -328,17 +446,17 @@ function editorReducer(state: EditorState, action: Action): EditorState {
           state.selectedId && remaining.every((e) => e.id !== state.selectedId)
             ? null
             : state.selectedId,
-      }
+      })
     }
     case "CREATE_ZONE": {
-      return {
+      return pushHistory(state, {
         ...state,
         pendingZones: {
           ...state.pendingZones,
           created: [...state.pendingZones.created, action.zone],
         },
         dirty: true,
-      }
+      })
     }
     case "UPDATE_ZONE_META": {
       const createdIndex = state.pendingZones.created.findIndex(
@@ -347,9 +465,13 @@ function editorReducer(state: EditorState, action: Action): EditorState {
       if (createdIndex >= 0) {
         const created = [...state.pendingZones.created]
         created[createdIndex] = { ...created[createdIndex], ...action.patch }
-        return { ...state, pendingZones: { ...state.pendingZones, created }, dirty: true }
+        return pushHistory(state, {
+          ...state,
+          pendingZones: { ...state.pendingZones, created },
+          dirty: true,
+        })
       }
-      return {
+      return pushHistory(state, {
         ...state,
         pendingZones: {
           ...state.pendingZones,
@@ -362,7 +484,7 @@ function editorReducer(state: EditorState, action: Action): EditorState {
           },
         },
         dirty: true,
-      }
+      })
     }
     case "DELETE_ZONE": {
       const inCreated = state.pendingZones.created.some((z) => z._clientId === action.zoneId)
@@ -378,7 +500,7 @@ function editorReducer(state: EditorState, action: Action): EditorState {
               : [...state.pendingZones.deleted, action.zoneId],
           }
       const entities = state.entities.filter((e) => e.zoneId !== action.zoneId)
-      return {
+      return pushHistory(state, {
         ...state,
         entities,
         pendingZones,
@@ -387,7 +509,7 @@ function editorReducer(state: EditorState, action: Action): EditorState {
             ? null
             : state.selectedId,
         dirty: true,
-      }
+      })
     }
     case "CLEAR_PENDING_ZONES":
       return {
@@ -401,6 +523,30 @@ function editorReducer(state: EditorState, action: Action): EditorState {
       )
       return { ...state, entities }
     }
+    case "UNDO": {
+      if (state.past.length === 0) return state
+      const snapshot = state.past[state.past.length - 1]
+      const restored = applyHistorySnapshot(state, snapshot)
+      return {
+        ...restored,
+        past: state.past.slice(0, -1),
+        future: [createHistorySnapshot(state), ...state.future],
+      }
+    }
+    case "REDO": {
+      if (state.future.length === 0) return state
+      const [snapshot, ...nextFuture] = state.future
+      const restored = applyHistorySnapshot(state, snapshot)
+      const past = [...state.past, createHistorySnapshot(state)]
+      if (past.length > MAX_HISTORY_ENTRIES) {
+        past.shift()
+      }
+      return {
+        ...restored,
+        past,
+        future: nextFuture,
+      }
+    }
     case "CLEAR":
       return {
         entities: [],
@@ -412,6 +558,8 @@ function editorReducer(state: EditorState, action: Action): EditorState {
         canvasCols: DEFAULT_CANVAS_COLS,
         canvasRows: DEFAULT_CANVAS_ROWS,
         pendingZones: { created: [], updated: {}, deleted: [] },
+        past: [],
+        future: [],
       }
     default:
       return state
@@ -428,6 +576,8 @@ const initialState: EditorState = {
   canvasCols: DEFAULT_CANVAS_COLS,
   canvasRows: DEFAULT_CANVAS_ROWS,
   pendingZones: { created: [], updated: {}, deleted: [] },
+  past: [],
+  future: [],
 }
 
 const DEFAULT_ENTITY_SIZES: Partial<Record<EditorEntity["type"], { w: number; h: number }>> = {
@@ -531,8 +681,18 @@ export function useEditorState() {
     dispatch({ type: "CLEAR_PENDING_ZONES" })
   }, [])
 
+  const undo = useCallback(() => {
+    dispatch({ type: "UNDO" })
+  }, [])
+
+  const redo = useCallback(() => {
+    dispatch({ type: "REDO" })
+  }, [])
+
   return {
     ...state,
+    canUndo: state.past.length > 0,
+    canRedo: state.future.length > 0,
     addEntity,
     updateEntity,
     moveEntity,
@@ -547,6 +707,8 @@ export function useEditorState() {
     updateZoneMeta,
     deleteZone,
     clearPendingZones,
+    undo,
+    redo,
     dispatch,
   }
 }

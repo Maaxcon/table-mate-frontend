@@ -70,3 +70,43 @@ describe("getNextTableLabel", () => {
     expect(getNextTableLabel(entities)).toBe("T13")
   })
 })
+
+describe("useEditorState — undo/redo", () => {
+  it("undoes and redoes entity creation", () => {
+    const { result } = renderHook(() => useEditorState())
+
+    act(() => {
+      result.current.addEntity("table-square", 0, 0)
+    })
+    expect(result.current.entities).toHaveLength(1)
+    expect(result.current.canUndo).toBe(true)
+
+    act(() => {
+      result.current.undo()
+    })
+    expect(result.current.entities).toHaveLength(0)
+    expect(result.current.canRedo).toBe(true)
+
+    act(() => {
+      result.current.redo()
+    })
+    expect(result.current.entities).toHaveLength(1)
+  })
+
+  it("clears redo stack after a new edit", () => {
+    const { result } = renderHook(() => useEditorState())
+
+    act(() => {
+      result.current.addEntity("table-square", 0, 0)
+    })
+    act(() => {
+      result.current.undo()
+    })
+    expect(result.current.canRedo).toBe(true)
+
+    act(() => {
+      result.current.addEntity("obstacle", 2, 2)
+    })
+    expect(result.current.canRedo).toBe(false)
+  })
+})

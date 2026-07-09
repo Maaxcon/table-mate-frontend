@@ -11,7 +11,7 @@ import {
   Toolbar,
   ZoneHeader,
 } from "@/features/editor/components"
-import { useEditorState } from "@/features/editor/hooks/useEditorState"
+import { getNextTableLabel, useEditorState } from "@/features/editor/hooks/useEditorState"
 import type { EditorState } from "@/features/editor/hooks/useEditorState"
 import { usePublish } from "@/features/editor/hooks/usePublish"
 import type { PublishResult } from "@/features/editor/hooks/usePublish"
@@ -44,6 +44,15 @@ function useCurrentTime(): string {
   return time
 }
 
+function isTypingTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return false
+  return target.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName)
+}
+
+function isTableEntity(entity: EditorEntity): boolean {
+  return entity.type === "table-square" || entity.type === "table-round"
+}
+
 function FloorPlanEditorPage() {
   const {
     entities,
@@ -65,6 +74,10 @@ function FloorPlanEditorPage() {
     deleteZone: deleteZoneMeta,
     clearPendingZones,
     pendingZones,
+    past,
+    future,
+    undo,
+    redo,
     dispatch,
   } = useEditorState()
 
@@ -74,6 +87,8 @@ function FloorPlanEditorPage() {
   const [selectedZoneId, setSelectedZoneId] = useState<string | null>(null)
   const prePublishStateRef = useRef<EditorState | null>(null)
   const publishingRef = useRef(false)
+  const copiedEntityRef = useRef<EditorEntity | null>(null)
+  const pasteStepRef = useRef(0)
   const [deleteZoneTarget, setDeleteZoneTarget] = useState<Zone | null>(null)
   const [deleting, setDeleting] = useState(false)
   const toast = useToast()
@@ -360,6 +375,8 @@ function FloorPlanEditorPage() {
       canvasCols,
       canvasRows,
       pendingZones,
+      past,
+      future,
     }
     publish(entities, deletedServerIds, layoutCanvasCols, layoutCanvasRows, pendingZones)
   }, [
@@ -375,6 +392,8 @@ function FloorPlanEditorPage() {
     layoutCanvasCols,
     layoutCanvasRows,
     pendingZones,
+    past,
+    future,
   ])
 
   const deleteZoneTableCount = deleteZoneTarget
@@ -458,6 +477,82 @@ function FloorPlanEditorPage() {
     },
     [selectedZoneId, allZones, deleteZoneMeta],
   )
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (isTypingTarget(event.target)) return
+
+      const withCommand = event.metaKey || event.ctrlKey
+      const key = event.key.toLowerCase()
+
+      if (withCommand && key === "z") {
+        event.preventDefault()
+        if (event.shiftKey) redo()
+        else undo()
+        return
+      }
+      if (withCommand && key === "y") {
+        event.preventDefault()
+        redo()
+        return
+      }
+
+      if (withCommand && key === "c") {
+        if (!selectedEntity) return
+        copiedEntityRef.current = {
+          ...selectedEntity,
+          tags: selectedEntity.tags ? [...selectedEntity.tags] : undefined,
+        }
+        pasteStepRef.current = 0
+        event.preventDefault()
+        return
+      }
+
+      if (withCommand && key === "v") {
+        const copied = copiedEntityRef.current
+        if (!copied) return
+        event.preventDefault()
+
+        pasteStepRef.current += 1
+        const offset = pasteStepRef.current
+        const pasteX = copied.x + offset
+        const pasteY = copied.y + offset
+        const copiedIntoZoneId = selectedZoneId ?? copied.zoneId
+        const label = isTableEntity(copied) ? getNextTableLabel(entities) : copied.label
+
+        const next = addEntity(copied.type, pasteX, pasteY, {
+          w: copied.w,
+          h: copied.h,
+          label,
+          capacity: copied.capacity,
+          sector: copied.sector,
+          tags: copied.tags ? [...copied.tags] : undefined,
+          zoneId: copiedIntoZoneId,
+          targetZoneId: copied.targetZoneId,
+          rotation: copied.rotation,
+        })
+        if (next) selectEntity(next.id)
+        return
+      }
+
+      if ((event.key === "Delete" || event.key === "Backspace") && selectedEntity) {
+        event.preventDefault()
+        handleDeleteEntity(selectedEntity.id)
+      }
+    }
+
+    window.addEventListener("keydown", onKeyDown)
+    return () => window.removeEventListener("keydown", onKeyDown)
+  }, [
+    addEntity,
+    entities,
+    handleDeleteEntity,
+    redo,
+    selectEntity,
+    selectedEntity,
+    selectedZoneId,
+    undo,
+  ])
 
   return (
     <div className="editor-page">
