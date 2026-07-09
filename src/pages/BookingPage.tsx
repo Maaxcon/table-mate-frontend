@@ -88,7 +88,12 @@ export function BookingPage() {
         setSlotDate(next.date)
         setAvailability(null)
       }
-      if (next.time !== undefined) setSlotTime(next.time)
+      if (next.time !== undefined) {
+        setSlotTime(next.time)
+        // Time cleared (e.g. a closed day): drop stale slot data so the floor
+        // falls back to current-moment status instead of a slot no longer picked.
+        if (next.time === null) setAvailability(null)
+      }
       if (next.guests !== undefined) setSlotGuests(next.guests)
     },
     [],

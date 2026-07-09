@@ -174,13 +174,6 @@ export async function fetchLayoutData(restaurantId?: string): Promise<LayoutData
   return res.json() as Promise<LayoutDataResponse>
 }
 
-export async function fetchUpcomingReservations(
-  restaurantId?: string,
-): Promise<UpcomingReservation[]> {
-  const data = await fetchLayoutData(restaurantId)
-  return data.upcoming_reservations
-}
-
 export async function createReservation(data: {
   table: string
   guest_count: number
