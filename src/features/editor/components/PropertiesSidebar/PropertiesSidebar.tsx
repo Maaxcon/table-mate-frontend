@@ -189,7 +189,20 @@ export function PropertiesSidebar({
         <div className="editor-sidebar__field">
           <span className="editor-sidebar__label">Rotation</span>
           <div className="editor-sidebar__row">
-            <span className="editor-sidebar__value">{entity.rotation ?? 0}°</span>
+            <input
+              id="sidebar-rotation"
+              className="editor-sidebar__input"
+              type="number"
+              step={1}
+              value={entity.rotation ?? 0}
+              onChange={(e) => {
+                const raw = Number(e.target.value)
+                if (e.target.value === "" || Number.isNaN(raw)) return
+                const normalized = ((Math.round(raw) % 360) + 360) % 360
+                onUpdate(entity.id, { rotation: normalized })
+              }}
+              aria-label="Rotation in degrees"
+            />
             <button
               type="button"
               className="editor-sidebar__input"
