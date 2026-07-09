@@ -1,8 +1,10 @@
-import { useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom"
 import {
   LuArrowLeft,
   LuChefHat,
+  LuChevronLeft,
+  LuChevronRight,
   LuLayoutDashboard,
   LuLogOut,
   LuMap,
@@ -11,6 +13,7 @@ import {
   LuStore,
   LuUsers,
   LuUtensilsCrossed,
+  LuX,
 } from "react-icons/lu"
 import { useAppSelector } from "@/store/hooks"
 import { useLogout } from "@/features/auth/hooks/useLogout"
@@ -37,14 +40,63 @@ function AdminLayout() {
   const user = useAppSelector((state) => state.auth.user)
 
   const [dirty, setDirty] = useState(false)
-  // A queued navigation, held back until the user confirms leaving unsaved edits.
   const [pending, setPending] = useState<(() => void) | null>(null)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   const unsavedValue = useMemo(() => ({ setDirty }), [])
 
+  const closeSidebar = useCallback(() => setSidebarOpen(false), [])
+
+  const toggleSidebar = useCallback(() => setSidebarOpen((v) => !v), [])
+
+  /* ── Swipe to open/close ── */
+  const touchStartX = useRef(0)
+  const touchStartY = useRef(0)
+  const swipingRef = useRef(false)
+
+  useEffect(() => {
+    const el = document.documentElement
+
+    const onTouchStart = (e: TouchEvent) => {
+      touchStartX.current = e.touches[0].clientX
+      touchStartY.current = e.touches[0].clientY
+      swipingRef.current = false
+    }
+
+    const onTouchMove = (e: TouchEvent) => {
+      const dx = Math.abs(e.touches[0].clientX - touchStartX.current)
+      const dy = Math.abs(e.touches[0].clientY - touchStartY.current)
+      if (dx > dy && dx > 10) swipingRef.current = true
+    }
+
+    const onTouchEnd = (e: TouchEvent) => {
+      if (!swipingRef.current) return
+      const dx = e.changedTouches[0].clientX - touchStartX.current
+      const threshold = 50
+
+      if (!sidebarOpen && touchStartX.current <= 30 && dx > threshold) {
+        setSidebarOpen(true)
+      } else if (sidebarOpen && dx < -threshold) {
+        setSidebarOpen(false)
+      }
+    }
+
+    el.addEventListener("touchstart", onTouchStart, { passive: true })
+    el.addEventListener("touchmove", onTouchMove, { passive: true })
+    el.addEventListener("touchend", onTouchEnd, { passive: true })
+    return () => {
+      el.removeEventListener("touchstart", onTouchStart)
+      el.removeEventListener("touchmove", onTouchMove)
+      el.removeEventListener("touchend", onTouchEnd)
+    }
+  }, [sidebarOpen])
+
   const guarded = (action: () => void) => {
     if (dirty) setPending(() => action)
-    else action()
+    else {
+      closeSidebar()
+      action()
+    }
   }
 
   const confirmLeave = () => {
@@ -60,21 +112,38 @@ function AdminLayout() {
     )
   }, [location.pathname])
 
+  const sidebarClassName = [
+    "admin-layout__sidebar",
+    sidebarOpen ? "admin-layout__sidebar--open" : "",
+  ]
+    .filter(Boolean)
+    .join(" ")
+
   return (
     <ToastProvider>
       <UnsavedChangesContext.Provider value={unsavedValue}>
         <div className="admin-layout">
-          <aside className="admin-layout__sidebar">
-            <div className="admin-layout__brand">
+          <aside className={sidebarClassName}>
+            <div className="admin-layout__sidebar-header">
+              <div className="admin-layout__brand">
+                <button
+                  type="button"
+                  className="admin-layout__icon-btn"
+                  onClick={() => guarded(() => navigate("/cabinet"))}
+                  aria-label="Back to cabinet"
+                >
+                  <LuArrowLeft aria-hidden="true" />
+                </button>
+                <span className="admin-layout__brand-name">Admin</span>
+              </div>
               <button
                 type="button"
-                className="admin-layout__icon-btn"
-                onClick={() => guarded(() => navigate("/cabinet"))}
-                aria-label="Back to cabinet"
+                className="admin-layout__sidebar-close"
+                onClick={closeSidebar}
+                aria-label="Close sidebar"
               >
-                <LuArrowLeft aria-hidden="true" />
+                <LuX aria-hidden="true" />
               </button>
-              <span className="admin-layout__brand-name">Admin</span>
             </div>
 
             <nav className="admin-layout__nav">
@@ -117,6 +186,23 @@ function AdminLayout() {
               )}
             </div>
           </aside>
+
+          {sidebarOpen && (
+            <div className="admin-layout__backdrop" role="presentation" onClick={closeSidebar} />
+          )}
+
+          <button
+            type="button"
+            className={`admin-layout__toggle${sidebarOpen ? " admin-layout__toggle--open" : ""}`}
+            onClick={toggleSidebar}
+            aria-label={sidebarOpen ? "Close sidebar" : "Open sidebar"}
+          >
+            {sidebarOpen ? (
+              <LuChevronLeft aria-hidden="true" />
+            ) : (
+              <LuChevronRight aria-hidden="true" />
+            )}
+          </button>
 
           <main
             className={`admin-layout__content${isFullBleed ? " admin-layout__content--flush" : ""}`}
