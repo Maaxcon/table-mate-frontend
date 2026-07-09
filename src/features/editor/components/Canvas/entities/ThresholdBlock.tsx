@@ -58,7 +58,7 @@ export function ThresholdBlock({
       }}
     >
       <span style={uprightContentStyle(entity.rotation)}>
-        <span className="editor-block__zone-label">{entity.label ?? ""}</span>
+        <span className="editor-block__threshold-label">{entity.label ?? "Passage"}</span>
       </span>
       {selected && onResize && onMove && (
         <ResizeHandles

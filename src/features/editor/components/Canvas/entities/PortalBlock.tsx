@@ -54,7 +54,10 @@ export function PortalBlock({
       }}
     >
       <span style={uprightContentStyle(entity.rotation)}>
-        <span className="editor-block__zone-label">{entity.label ?? "Portal"}</span>
+        <span className="editor-block__portal-label">{entity.label ?? "Portal"}</span>
+        <span className="editor-block__portal-arrow" aria-hidden="true">
+          ↔
+        </span>
       </span>
       {selected && onResize && onMove && (
         <ResizeHandles
