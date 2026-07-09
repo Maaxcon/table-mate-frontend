@@ -165,10 +165,22 @@ function RescheduleForm({
   const dayName = DAY_NAMES[parsedDate.getDay()]
   const dayConfig = workingHours?.[dayName]
 
+  const generatedTimeSlots = useMemo(
+    () => generateTimeSlots(parsedDate, dayConfig, effectiveTimeZone),
+    [parsedDate, dayConfig, effectiveTimeZone],
+  )
+
   const timeSlots = useMemo(() => {
+    if (availableSlots && generatedTimeSlots.length > 0) return generatedTimeSlots
     if (availableSlots) return availableSlots
-    return generateTimeSlots(parsedDate, dayConfig, effectiveTimeZone)
-  }, [availableSlots, parsedDate, dayConfig, effectiveTimeZone])
+    return generatedTimeSlots
+  }, [availableSlots, generatedTimeSlots])
+
+  const disabledTimeSlots = useMemo(() => {
+    if (!availableSlots) return []
+    const available = new Set(availableSlots)
+    return timeSlots.filter((slot) => !available.has(slot))
+  }, [availableSlots, timeSlots])
 
   // Auto-cap the length to what fits before close (same behavior as BookModal):
   // a late slot with the current 2h booking shrinks to the remaining window
@@ -349,6 +361,7 @@ function RescheduleForm({
                     slots={timeSlots}
                     selectedTime={selectedTime}
                     onSelect={setSelectedTime}
+                    disabledSlots={disabledTimeSlots}
                   />
                 )}
               </section>

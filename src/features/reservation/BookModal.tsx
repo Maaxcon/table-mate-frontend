@@ -160,24 +160,6 @@ export function BookModal({
 
   const dateKey = localDateKey(selectedDate)
 
-  // Cap the booking length to the time left before close, so a late slot (e.g.
-  // 20:30 with a 22:00 close) is bookable for the 90 min that remain instead of
-  // forcing the guest to shrink the default 2h by hand. The desired duration is
-  // kept and re-applied automatically when an earlier slot leaves room again.
-  const maxDuration = useMemo(
-    () => maxDurationBeforeClose(selectedTime, dayConfig),
-    [selectedTime, dayConfig],
-  )
-
-  // Two values on purpose: `durationMinutes` is the guest's *desired* length
-  // (state, persists across slot changes); `effectiveDuration` is what's actually
-  // shown in the input, validated and booked — the desired value capped to what
-  // fits before close. Read/use `effectiveDuration` everywhere (input, summary,
-  // endAt, confirm); only the duration <input> onChange writes `durationMinutes`.
-  const effectiveDuration = Number.isFinite(maxDuration)
-    ? Math.min(durationMinutes, maxDuration)
-    : durationMinutes
-
   // Only worth flagging when the guest's device clock is in a different zone.
   const foreignTzNote = useMemo(() => {
     if (!timeZone) return null
@@ -192,22 +174,58 @@ export function BookModal({
     return normalizeSlots(raw)
   }, [availableSlots, dateKey])
 
+  const generatedTimeSlots = useMemo(
+    () => generateTimeSlots(selectedDate, dayConfig, timeZone),
+    [selectedDate, dayConfig, timeZone],
+  )
+
   const timeSlots = useMemo(() => {
+    if (realSlots && generatedTimeSlots.length > 0) return generatedTimeSlots
     if (realSlots) return realSlots
-    return generateTimeSlots(selectedDate, dayConfig, timeZone)
-  }, [realSlots, selectedDate, dayConfig, timeZone])
+    return generatedTimeSlots
+  }, [realSlots, generatedTimeSlots])
+
+  const disabledTimeSlots = useMemo(() => {
+    if (!realSlots) return []
+    const available = new Set(realSlots)
+    return timeSlots.filter((slot) => !available.has(slot))
+  }, [realSlots, timeSlots])
+
+  const disabledTimeSlotSet = useMemo(() => new Set(disabledTimeSlots), [disabledTimeSlots])
+  const selectedTimeValue = useMemo(() => {
+    if (!selectedTime) return null
+    return disabledTimeSlotSet.has(selectedTime) ? null : selectedTime
+  }, [selectedTime, disabledTimeSlotSet])
+
+  // Cap the booking length to the time left before close, so a late slot (e.g.
+  // 20:30 with a 22:00 close) is bookable for the 90 min that remain instead of
+  // forcing the guest to shrink the default 2h by hand. The desired duration is
+  // kept and re-applied automatically when an earlier slot leaves room again.
+  const maxDuration = useMemo(
+    () => maxDurationBeforeClose(selectedTimeValue, dayConfig),
+    [selectedTimeValue, dayConfig],
+  )
+
+  // Two values on purpose: `durationMinutes` is the guest's *desired* length
+  // (state, persists across slot changes); `effectiveDuration` is what's actually
+  // shown in the input, validated and booked — the desired value capped to what
+  // fits before close. Read/use `effectiveDuration` everywhere (input, summary,
+  // endAt, confirm); only the duration <input> onChange writes `durationMinutes`.
+  const effectiveDuration = Number.isFinite(maxDuration)
+    ? Math.min(durationMinutes, maxDuration)
+    : durationMinutes
 
   const endAt = useMemo(() => {
-    if (!selectedTime || !effectiveDuration) return ""
-    return minutesToTime(timeToMinutes(selectedTime) + effectiveDuration)
-  }, [selectedTime, effectiveDuration])
+    if (!selectedTimeValue || !effectiveDuration) return ""
+    return minutesToTime(timeToMinutes(selectedTimeValue) + effectiveDuration)
+  }, [selectedTimeValue, effectiveDuration])
 
   const durationError = useMemo(() => {
-    if (!selectedTime || !effectiveDuration) return null
-    const startMins = timeToMinutes(selectedTime)
+    if (!selectedTimeValue || !effectiveDuration) return null
+    const startMins = timeToMinutes(selectedTimeValue)
     const endMins = startMins + effectiveDuration
     return getDurationError(startMins, endMins, dayConfig, availableSlots?.[dateKey] ?? null)
-  }, [selectedTime, effectiveDuration, dayConfig, availableSlots, dateKey])
+  }, [selectedTimeValue, effectiveDuration, dayConfig, availableSlots, dateKey])
 
   // Staff mode only (showNameField). The backend only routes to
   // create_staff_reservation when guest_name is truthy — a blank name
@@ -224,7 +242,7 @@ export function BookModal({
 
   const canGoNext = useMemo(() => {
     if (currentStep === 0) {
-      return Boolean(selectedTime) && !durationError
+      return Boolean(selectedTimeValue) && !durationError
     }
     if (currentStep === 1) {
       return guestCount >= 1 && guestCount <= table.capacity
@@ -233,9 +251,9 @@ export function BookModal({
       return !nameError
     }
     return false
-  }, [currentStep, selectedTime, durationError, guestCount, table.capacity, nameError])
+  }, [currentStep, selectedTimeValue, durationError, guestCount, table.capacity, nameError])
 
-  const canConfirm = Boolean(selectedTime) && !durationError && !nameError && !submitting
+  const canConfirm = Boolean(selectedTimeValue) && !durationError && !nameError && !submitting
 
   const handleBack = useCallback(() => {
     setCurrentStep((prev) => Math.max(0, prev - 1))
@@ -247,19 +265,19 @@ export function BookModal({
   }, [canGoNext, totalSteps])
 
   const handleConfirm = useCallback(async () => {
-    if (!selectedTime || nameError) return
+    if (!selectedTimeValue || nameError) return
     setError(null)
     setSubmitting(true)
 
     try {
       // A slot after midnight on an overnight day belongs to the next calendar
       // day (the backend keys it under the opening day), so resolve its real date.
-      const dateKey = slotDateKey(selectedDate, selectedTime, dayConfig)
+      const dateKey = slotDateKey(selectedDate, selectedTimeValue, dayConfig)
       // Interpret the picked slot as the restaurant's wall-clock time, not the
       // browser's — otherwise a guest in another timezone books the wrong instant.
       const startISO = timeZone
-        ? zonedWallTimeToUtcIso(dateKey, selectedTime, timeZone)
-        : new Date(`${dateKey}T${selectedTime}:00`).toISOString()
+        ? zonedWallTimeToUtcIso(dateKey, selectedTimeValue, timeZone)
+        : new Date(`${dateKey}T${selectedTimeValue}:00`).toISOString()
       const endISO = new Date(
         new Date(startISO).getTime() + effectiveDuration * 60000,
       ).toISOString()
@@ -281,7 +299,7 @@ export function BookModal({
       setSuccess({
         tableNumber: table.public_number,
         date: localDateKey(selectedDate),
-        time: selectedTime,
+        time: selectedTimeValue,
         endTime: endAt,
         guests: guestCount,
         startISO,
@@ -298,7 +316,7 @@ export function BookModal({
       setSubmitting(false)
     }
   }, [
-    selectedTime,
+    selectedTimeValue,
     selectedDate,
     dayConfig,
     effectiveDuration,
@@ -560,8 +578,9 @@ export function BookModal({
                       ) : (
                         <TimeSlotGrid
                           slots={timeSlots}
-                          selectedTime={selectedTime}
+                          selectedTime={selectedTimeValue}
                           onSelect={setSelectedTime}
+                          disabledSlots={disabledTimeSlots}
                         />
                       )}
                     </section>
@@ -596,13 +615,13 @@ export function BookModal({
                             {bookStrings.floorPlan.seats(table.capacity)}
                           </p>
                         </div>
-                        {selectedTime && (
+                        {selectedTimeValue && (
                           <p className="book-modal__table-slot">
                             {selectedDate.toLocaleDateString("uk-UA", {
                               month: "short",
                               day: "numeric",
                             })}{" "}
-                            · {selectedTime}&ndash;{endAt}
+                            · {selectedTimeValue}&ndash;{endAt}
                           </p>
                         )}
                       </div>
@@ -659,7 +678,7 @@ export function BookModal({
                   </>
                 )}
 
-                {currentStep === 3 && selectedTime && (
+                {currentStep === 3 && selectedTimeValue && (
                   <>
                     <SlotSummary
                       title={bookStrings.modal.sections.confirmation}
@@ -670,7 +689,7 @@ export function BookModal({
                         day: "numeric",
                         year: "numeric",
                       })}
-                      time={selectedTime}
+                      time={selectedTimeValue}
                       endTime={endAt}
                       duration={effectiveDuration}
                       guests={guestCount}
