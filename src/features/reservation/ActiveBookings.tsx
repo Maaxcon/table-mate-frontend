@@ -181,7 +181,7 @@ export function ActiveBookings({
             {withActions && (
               <div className="ab__card-actions">
                 <button
-                  className="ab__action ab__action--edit"
+                  className="ab__action ab__action--edit ab__action--cta"
                   onClick={() => setRescheduleTarget(r)}
                   disabled={isBusy}
                   type="button"
