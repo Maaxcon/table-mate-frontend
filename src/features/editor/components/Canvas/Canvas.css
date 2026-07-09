@@ -29,6 +29,15 @@
   background: transparent;
 }
 
+.editor-canvas__marquee {
+  position: absolute;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 70%, transparent);
+  background: color-mix(in srgb, var(--color-primary) 16%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-bg-surface) 40%, transparent);
+  pointer-events: none;
+  z-index: 12;
+}
+
 .editor-canvas__edge {
   position: absolute;
   pointer-events: none;

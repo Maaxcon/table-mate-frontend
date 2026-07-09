@@ -69,6 +69,7 @@ type Action =
   | { type: "ADD_ENTITY"; entity: EditorEntity }
   | { type: "UPDATE_ENTITY"; id: string; patch: Partial<EditorEntity> }
   | { type: "MOVE_ENTITY"; id: string; x: number; y: number; zoneId?: string }
+  | { type: "MOVE_ENTITIES_BY_DELTA"; ids: string[]; dx: number; dy: number; zoneId?: string }
   | { type: "REMOVE_ENTITY"; id: string }
   | { type: "SELECT_ENTITY"; id: string | null }
   | { type: "SET_TOOL"; tool: string | null }
@@ -321,6 +322,38 @@ function editorReducer(state: EditorState, action: Action): EditorState {
       const entities = state.entities.map((e) =>
         e.id === action.id ? { ...e, x: clamped.x, y: clamped.y } : e,
       )
+      return pushHistory(state, {
+        ...state,
+        entities,
+        dirty: computeDirty(entities, state.lastPublishedJson),
+      })
+    }
+    case "MOVE_ENTITIES_BY_DELTA": {
+      if (action.ids.length === 0) return state
+      const ids = new Set(action.ids)
+      const targetZoneId = action.zoneId ?? null
+      let changed = false
+      const entities = state.entities.map((entity) => {
+        if (!ids.has(entity.id)) return entity
+        if (targetZoneId && (entity.zoneId ?? null) !== targetZoneId) return entity
+
+        let x = entity.x + action.dx
+        let y = entity.y + action.dy
+        const aabb = rotatedAABB(x, y, entity.w, entity.h, entity.rotation)
+        const offsetX = (aabb.w - entity.w) / 2
+        const offsetY = (aabb.h - entity.h) / 2
+        if (entity.type === "threshold" || entity.type === "portal") {
+          x = Math.max(-1, Math.min(aabb.x, state.canvasCols + 1 - aabb.w)) + offsetX
+          y = Math.max(-1, Math.min(aabb.y, state.canvasRows + 1 - aabb.h)) + offsetY
+        } else {
+          x = Math.max(0, Math.min(aabb.x, state.canvasCols - aabb.w)) + offsetX
+          y = Math.max(0, Math.min(aabb.y, state.canvasRows - aabb.h)) + offsetY
+        }
+        if (x === entity.x && y === entity.y) return entity
+        changed = true
+        return { ...entity, x, y }
+      })
+      if (!changed) return state
       return pushHistory(state, {
         ...state,
         entities,
@@ -625,6 +658,13 @@ export function useEditorState() {
     dispatch({ type: "MOVE_ENTITY", id, x, y, zoneId })
   }, [])
 
+  const moveEntitiesByDelta = useCallback(
+    (ids: string[], dx: number, dy: number, zoneId?: string) => {
+      dispatch({ type: "MOVE_ENTITIES_BY_DELTA", ids, dx, dy, zoneId })
+    },
+    [],
+  )
+
   const removeEntity = useCallback((id: string) => {
     dispatch({ type: "REMOVE_ENTITY", id })
   }, [])
@@ -696,6 +736,7 @@ export function useEditorState() {
     addEntity,
     updateEntity,
     moveEntity,
+    moveEntitiesByDelta,
     removeEntity,
     selectEntity,
     setTool,

@@ -63,6 +63,7 @@ function FloorPlanEditorPage() {
     addEntity,
     updateEntity,
     moveEntity,
+    moveEntitiesByDelta,
     removeEntity,
     selectEntity,
     setTool,
@@ -85,9 +86,11 @@ function FloorPlanEditorPage() {
   const [showPublishModal, setShowPublishModal] = useState(false)
   const [zones, setZones] = useState<Zone[]>([])
   const [selectedZoneId, setSelectedZoneId] = useState<string | null>(null)
+  const [selectedIds, setSelectedIds] = useState<string[]>([])
   const prePublishStateRef = useRef<EditorState | null>(null)
   const publishingRef = useRef(false)
-  const copiedEntityRef = useRef<EditorEntity | null>(null)
+  const copiedEntitiesRef = useRef<EditorEntity[]>([])
+  const copiedBoundsRef = useRef<{ minX: number; minY: number }>({ minX: 0, minY: 0 })
   const pasteStepRef = useRef(0)
   const [deleteZoneTarget, setDeleteZoneTarget] = useState<Zone | null>(null)
   const [deleting, setDeleting] = useState(false)
@@ -301,8 +304,10 @@ function FloorPlanEditorPage() {
       const clientId = crypto.randomUUID()
       createZone(clientId, name)
       setSelectedZoneId(clientId)
+      setSelectedIds([])
+      selectEntity(null)
     },
-    [createZone],
+    [createZone, selectEntity],
   )
 
   // Block deleting a table that currently has guests seated, with an up-front
@@ -316,6 +321,7 @@ function FloorPlanEditorPage() {
         return
       }
       removeEntity(id)
+      setSelectedIds((prev) => prev.filter((selected) => selected !== id))
     },
     [entities, occupiedTableIds, removeEntity, toast],
   )
@@ -324,7 +330,10 @@ function FloorPlanEditorPage() {
   // gated behind `noZones`, so when `selectedZoneId` is momentarily null (load
   // race, or a zone deselected via ZoneHeader) we render nothing rather than
   // leaking other zones' grid -1 portals/thresholds into the padding area.
-  const visibleEntities = entities.filter((e) => e.zoneId === selectedZoneId)
+  const visibleEntities = useMemo(
+    () => entities.filter((e) => e.zoneId === selectedZoneId),
+    [entities, selectedZoneId],
+  )
 
   const noZones = allZones.length === 0
 
@@ -402,6 +411,33 @@ function FloorPlanEditorPage() {
     : 0
 
   const selectedEntity = visibleEntities.find((e) => e.id === selectedId) ?? null
+  const selectedEntities = useMemo(
+    () =>
+      selectedIds
+        .map((id) => visibleEntities.find((entity) => entity.id === id))
+        .filter((entity): entity is EditorEntity => Boolean(entity)),
+    [selectedIds, visibleEntities],
+  )
+
+  const handleSelectionChange = useCallback(
+    (ids: string[], primaryId: string | null) => {
+      setSelectedIds(ids)
+      selectEntity(primaryId)
+    },
+    [selectEntity],
+  )
+
+  const handleDeleteSelected = useCallback(
+    (ids: string[]) => {
+      const uniqueIds = Array.from(new Set(ids))
+      for (const id of uniqueIds) {
+        handleDeleteEntity(id)
+      }
+      setSelectedIds((prev) => prev.filter((id) => !uniqueIds.includes(id)))
+    },
+    [handleDeleteEntity],
+  )
+
   const zoneEntities = useMemo(
     () => entities.filter((e) => e.zoneId === selectedZoneId),
     [entities, selectedZoneId],
@@ -424,10 +460,10 @@ function FloorPlanEditorPage() {
           zoneId: selectedZoneId,
         })
         setTool("select")
-        if (entity) selectEntity(entity.id)
+        if (entity) handleSelectionChange([entity.id], entity.id)
       }
     },
-    [activeTool, addEntity, selectedZoneId, setTool, selectEntity],
+    [activeTool, addEntity, handleSelectionChange, selectedZoneId, setTool],
   )
 
   const handleZoneStyleChange = useCallback(
@@ -472,10 +508,12 @@ function FloorPlanEditorPage() {
         const remaining = allZones.filter((z) => z.public_id !== zoneId)
         setSelectedZoneId(remaining.length > 0 ? remaining[0].public_id : null)
       }
+      setSelectedIds([])
+      selectEntity(null)
       setDeleteZoneTarget(null)
       setDeleting(false)
     },
-    [selectedZoneId, allZones, deleteZoneMeta],
+    [allZones, deleteZoneMeta, selectEntity, selectedZoneId],
   )
 
   useEffect(() => {
@@ -498,46 +536,72 @@ function FloorPlanEditorPage() {
       }
 
       if (withCommand && key === "c") {
-        if (!selectedEntity) return
-        copiedEntityRef.current = {
-          ...selectedEntity,
-          tags: selectedEntity.tags ? [...selectedEntity.tags] : undefined,
-        }
+        const copied =
+          selectedEntities.length > 0 ? selectedEntities : selectedEntity ? [selectedEntity] : []
+        if (copied.length === 0) return
+        const minX = Math.min(...copied.map((entity) => entity.x))
+        const minY = Math.min(...copied.map((entity) => entity.y))
+        copiedEntitiesRef.current = copied.map((entity) => ({
+          ...entity,
+          tags: entity.tags ? [...entity.tags] : undefined,
+        }))
+        copiedBoundsRef.current = { minX, minY }
         pasteStepRef.current = 0
         event.preventDefault()
         return
       }
 
       if (withCommand && key === "v") {
-        const copied = copiedEntityRef.current
-        if (!copied) return
+        const copiedEntities = copiedEntitiesRef.current
+        if (copiedEntities.length === 0) return
         event.preventDefault()
 
         pasteStepRef.current += 1
         const offset = pasteStepRef.current
-        const pasteX = copied.x + offset
-        const pasteY = copied.y + offset
-        const copiedIntoZoneId = selectedZoneId ?? copied.zoneId
-        const label = isTableEntity(copied) ? getNextTableLabel(entities) : copied.label
+        const { minX, minY } = copiedBoundsRef.current
+        const createdIds: string[] = []
+        let nextEntities = [...entities]
 
-        const next = addEntity(copied.type, pasteX, pasteY, {
-          w: copied.w,
-          h: copied.h,
-          label,
-          capacity: copied.capacity,
-          sector: copied.sector,
-          tags: copied.tags ? [...copied.tags] : undefined,
-          zoneId: copiedIntoZoneId,
-          targetZoneId: copied.targetZoneId,
-          rotation: copied.rotation,
-        })
-        if (next) selectEntity(next.id)
+        for (const copied of copiedEntities) {
+          const relativeX = copied.x - minX
+          const relativeY = copied.y - minY
+          const pasteX = minX + relativeX + offset
+          const pasteY = minY + relativeY + offset
+          const copiedIntoZoneId = selectedZoneId ?? copied.zoneId
+          const label = isTableEntity(copied) ? getNextTableLabel(nextEntities) : copied.label
+
+          const next = addEntity(copied.type, pasteX, pasteY, {
+            w: copied.w,
+            h: copied.h,
+            label,
+            capacity: copied.capacity,
+            sector: copied.sector,
+            tags: copied.tags ? [...copied.tags] : undefined,
+            zoneId: copiedIntoZoneId,
+            targetZoneId: copied.targetZoneId,
+            rotation: copied.rotation,
+          })
+          if (next) {
+            createdIds.push(next.id)
+            nextEntities = [...nextEntities, { ...next, label }]
+          }
+        }
+        if (createdIds.length > 0) {
+          handleSelectionChange(createdIds, createdIds[0])
+        }
         return
       }
 
-      if ((event.key === "Delete" || event.key === "Backspace") && selectedEntity) {
+      if (event.key === "Delete" || event.key === "Backspace") {
+        const idsToDelete =
+          selectedEntities.length > 0
+            ? selectedEntities.map((entity) => entity.id)
+            : selectedEntity
+              ? [selectedEntity.id]
+              : []
+        if (idsToDelete.length === 0) return
         event.preventDefault()
-        handleDeleteEntity(selectedEntity.id)
+        handleDeleteSelected(idsToDelete)
       }
     }
 
@@ -546,9 +610,10 @@ function FloorPlanEditorPage() {
   }, [
     addEntity,
     entities,
-    handleDeleteEntity,
+    handleDeleteSelected,
+    handleSelectionChange,
     redo,
-    selectEntity,
+    selectedEntities,
     selectedEntity,
     selectedZoneId,
     undo,
@@ -627,7 +692,10 @@ function FloorPlanEditorPage() {
         <ZoneHeader
           zones={allZones}
           selectedZoneId={selectedZoneId}
-          onZoneSelect={setSelectedZoneId}
+          onZoneSelect={(zoneId) => {
+            setSelectedZoneId(zoneId)
+            handleSelectionChange([], null)
+          }}
           onAddZone={handleAddZone}
           onRenameZone={handleRenameZone}
           onDeleteZone={(zoneId) => {
@@ -646,9 +714,13 @@ function FloorPlanEditorPage() {
                 <Canvas
                   entities={visibleEntities}
                   selectedId={selectedId}
+                  selectedIds={selectedIds}
                   activeTool={activeTool}
                   onEntityMove={(id, x, y) => moveEntity(id, x, y, selectedZoneId ?? undefined)}
-                  onEntitySelect={selectEntity}
+                  onEntitiesMoveByDelta={(ids, dx, dy) =>
+                    moveEntitiesByDelta(ids, dx, dy, selectedZoneId ?? undefined)
+                  }
+                  onSelectionChange={handleSelectionChange}
                   onCanvasClick={handleCanvasClick}
                   onEntityResize={(id, w, h) => updateEntity(id, { w, h })}
                   edgeStyles={edgeStyles}

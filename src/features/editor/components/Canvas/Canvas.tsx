@@ -8,13 +8,16 @@ import { PortalBlock } from "./entities/PortalBlock"
 import "./Canvas.css"
 
 const clampScale = (s: number) => Math.min(EDITOR_MAX_SCALE, Math.max(EDITOR_MIN_SCALE, s))
+const SNAP_THRESHOLD = 0.4
 
 interface CanvasProps {
   entities: EditorEntity[]
   selectedId: string | null
+  selectedIds: string[]
   activeTool: string | null
   onEntityMove: (id: string, x: number, y: number) => void
-  onEntitySelect: (id: string | null) => void
+  onEntitiesMoveByDelta: (ids: string[], dx: number, dy: number) => void
+  onSelectionChange: (ids: string[], primaryId: string | null) => void
   onCanvasClick: (gridX: number, gridY: number) => void
   onEntityResize: (id: string, w: number, h: number) => void
   edgeStyles: Record<string, "dashed" | "solid">
@@ -22,12 +25,105 @@ interface CanvasProps {
   canvasRows: number
 }
 
+type MarqueeRect = {
+  x: number
+  y: number
+  w: number
+  h: number
+}
+
+type LogicalPoint = {
+  x: number
+  y: number
+}
+
+type SnapGuide = {
+  axis: "x" | "y"
+  position: number
+}
+
+type RectBounds = {
+  x: number
+  y: number
+  w: number
+  h: number
+}
+
+const isTextInputTarget = (target: EventTarget | null): boolean => {
+  if (!(target instanceof HTMLElement)) return false
+  return target.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName)
+}
+
+const normalizeRect = (a: LogicalPoint, b: LogicalPoint): MarqueeRect => ({
+  x: Math.min(a.x, b.x),
+  y: Math.min(a.y, b.y),
+  w: Math.abs(a.x - b.x),
+  h: Math.abs(a.y - b.y),
+})
+
+const rectsIntersect = (a: MarqueeRect, b: MarqueeRect): boolean =>
+  a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y
+
+const getAxisRefs = (start: number, size: number): number[] => [
+  start,
+  start + size / 2,
+  start + size,
+]
+
+function resolveSnapRect(
+  moving: RectBounds,
+  others: RectBounds[],
+): { x: number; y: number; guides: SnapGuide[] } {
+  const movingXRefs = getAxisRefs(moving.x, moving.w)
+  const movingYRefs = getAxisRefs(moving.y, moving.h)
+  let bestXDelta: number | null = null
+  let bestYDelta: number | null = null
+  let bestXGuide: number | null = null
+  let bestYGuide: number | null = null
+
+  for (const other of others) {
+    const otherXRefs = getAxisRefs(other.x, other.w)
+    const otherYRefs = getAxisRefs(other.y, other.h)
+
+    for (const refX of movingXRefs) {
+      for (const guideX of otherXRefs) {
+        const delta = guideX - refX
+        if (Math.abs(delta) > SNAP_THRESHOLD) continue
+        if (bestXDelta === null || Math.abs(delta) < Math.abs(bestXDelta)) {
+          bestXDelta = delta
+          bestXGuide = guideX
+        }
+      }
+    }
+
+    for (const refY of movingYRefs) {
+      for (const guideY of otherYRefs) {
+        const delta = guideY - refY
+        if (Math.abs(delta) > SNAP_THRESHOLD) continue
+        if (bestYDelta === null || Math.abs(delta) < Math.abs(bestYDelta)) {
+          bestYDelta = delta
+          bestYGuide = guideY
+        }
+      }
+    }
+  }
+
+  const x = moving.x + (bestXDelta ?? 0)
+  const y = moving.y + (bestYDelta ?? 0)
+  const guides: SnapGuide[] = []
+  if (bestXGuide !== null) guides.push({ axis: "x", position: bestXGuide })
+  if (bestYGuide !== null) guides.push({ axis: "y", position: bestYGuide })
+  return { x, y, guides }
+}
+
 export function Canvas({
   entities,
   selectedId,
+  selectedIds,
   activeTool,
   onEntityMove,
-  onEntitySelect,
+  onEntitiesMoveByDelta,
+  onSelectionChange,
   onCanvasClick,
   onEntityResize,
   edgeStyles,
@@ -37,13 +133,19 @@ export function Canvas({
   const canvasRef = useRef<HTMLDivElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const dragRef = useRef<{
-    entityId: string
+    entityIds: string[]
+    primaryId: string
     startMouseX: number
     startMouseY: number
-    startEntityX: number
-    startEntityY: number
+    startPrimaryX: number
+    startPrimaryY: number
+    appliedDeltaX: number
+    appliedDeltaY: number
     moved: boolean
   } | null>(null)
+  const marqueeRef = useRef<{ start: LogicalPoint } | null>(null)
+  const [marqueeRect, setMarqueeRect] = useState<MarqueeRect | null>(null)
+  const [snapGuides, setSnapGuides] = useState<SnapGuide[]>([])
 
   const panDragRef = useRef<{
     startX: number
@@ -121,35 +223,108 @@ export function Canvas({
     }
   }, [])
 
+  const entitiesById = useMemo(
+    () => new Map(entities.map((entity) => [entity.id, entity])),
+    [entities],
+  )
+  const activeSelectionIds = useMemo(
+    () => (selectedIds.length > 0 ? selectedIds : selectedId ? [selectedId] : []),
+    [selectedIds, selectedId],
+  )
+  const selectedSet = useMemo(() => new Set(activeSelectionIds), [activeSelectionIds])
+
+  const getLogicalPointFromMouse = useCallback(
+    (clientX: number, clientY: number): LogicalPoint | null => {
+      const rect = canvasRef.current?.getBoundingClientRect()
+      if (!rect) return null
+      return { x: (clientX - rect.left) / scale, y: (clientY - rect.top) / scale }
+    },
+    [scale],
+  )
+
+  const toggleSelection = useCallback(
+    (id: string) => {
+      const alreadySelected = selectedSet.has(id)
+      if (alreadySelected) {
+        const nextIds = activeSelectionIds.filter((selected) => selected !== id)
+        onSelectionChange(nextIds, nextIds[0] ?? null)
+      } else {
+        onSelectionChange([...activeSelectionIds, id], id)
+      }
+    },
+    [activeSelectionIds, onSelectionChange, selectedSet],
+  )
+
+  const selectSingle = useCallback(
+    (id: string) => {
+      onSelectionChange([id], id)
+    },
+    [onSelectionChange],
+  )
+
   const onBlockMouseDown = useCallback(
     (e: React.MouseEvent, id: string) => {
       if (e.button !== 0) return
+      if (activeTool && activeTool !== "select" && activeTool !== "pan") return
       e.preventDefault()
       e.stopPropagation()
-      onEntitySelect(id)
-      const entity = entities.find((en) => en.id === id)
-      if (!entity) return
+
+      const withModifier = e.metaKey || e.ctrlKey || e.shiftKey
+      if (withModifier) {
+        toggleSelection(id)
+        return
+      }
+
+      const dragIds =
+        selectedSet.has(id) && activeSelectionIds.length > 0 ? activeSelectionIds : [id]
+      const primaryEntity = entitiesById.get(id)
+      if (!primaryEntity) return
+      onSelectionChange(dragIds, id)
 
       dragRef.current = {
-        entityId: id,
+        entityIds: dragIds,
+        primaryId: id,
         startMouseX: e.clientX,
         startMouseY: e.clientY,
-        startEntityX: entity.x,
-        startEntityY: entity.y,
+        startPrimaryX: primaryEntity.x,
+        startPrimaryY: primaryEntity.y,
+        appliedDeltaX: 0,
+        appliedDeltaY: 0,
         moved: false,
       }
     },
-    [entities, onEntitySelect],
+    [activeSelectionIds, activeTool, entitiesById, onSelectionChange, selectedSet, toggleSelection],
+  )
+
+  const handleBlockClick = useCallback(
+    (e: React.MouseEvent | React.KeyboardEvent, id: string) => {
+      if (e.type !== "keydown") return
+      if (e.metaKey || e.ctrlKey || e.shiftKey) {
+        toggleSelection(id)
+        return
+      }
+      selectSingle(id)
+    },
+    [selectSingle, toggleSelection],
   )
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       const pan = panDragRef.current
       if (pan) {
+        if (snapGuides.length > 0) setSnapGuides([])
         const el = containerRef.current
         if (!el) return
         el.scrollLeft = pan.startScrollLeft - (e.clientX - pan.startX)
         el.scrollTop = pan.startScrollTop - (e.clientY - pan.startY)
+        return
+      }
+      const marquee = marqueeRef.current
+      if (marquee) {
+        if (snapGuides.length > 0) setSnapGuides([])
+        const point = getLogicalPointFromMouse(e.clientX, e.clientY)
+        if (!point) return
+        setMarqueeRect(normalizeRect(marquee.start, point))
         return
       }
 
@@ -164,16 +339,68 @@ export function Canvas({
 
       const logicalDx = dx / scale
       const logicalDy = dy / scale
-      const newX = snap(drag.startEntityX * GRID + logicalDx) / GRID
-      const newY = snap(drag.startEntityY * GRID + logicalDy) / GRID
-      onEntityMove(drag.entityId, newX, newY)
+      const rawX = snap(drag.startPrimaryX * GRID + logicalDx) / GRID
+      const rawY = snap(drag.startPrimaryY * GRID + logicalDy) / GRID
+      const primaryEntity = entitiesById.get(drag.primaryId)
+      if (!primaryEntity) return
+      const snapCandidates = entities
+        .filter((entity) => !drag.entityIds.includes(entity.id))
+        .map((entity) => ({ x: entity.x, y: entity.y, w: entity.w, h: entity.h }))
+      const snapped = resolveSnapRect(
+        { x: rawX, y: rawY, w: primaryEntity.w, h: primaryEntity.h },
+        snapCandidates,
+      )
+      if (snapped.guides.length > 0) {
+        setSnapGuides(snapped.guides)
+      } else if (snapGuides.length > 0) {
+        setSnapGuides([])
+      }
+      const newX = snapped.x
+      const newY = snapped.y
+      if (drag.entityIds.length <= 1) {
+        onEntityMove(drag.primaryId, newX, newY)
+        return
+      }
+      const deltaX = newX - drag.startPrimaryX
+      const deltaY = newY - drag.startPrimaryY
+      const stepX = deltaX - drag.appliedDeltaX
+      const stepY = deltaY - drag.appliedDeltaY
+      if (stepX === 0 && stepY === 0) return
+      drag.appliedDeltaX = deltaX
+      drag.appliedDeltaY = deltaY
+      onEntitiesMoveByDelta(drag.entityIds, stepX, stepY)
     }
 
-    const handleMouseUp = () => {
+    const handleMouseUp = (e: MouseEvent) => {
       if (panDragRef.current) {
         panDragRef.current = null
         if (containerRef.current) containerRef.current.style.cursor = ""
       }
+      if (marqueeRef.current) {
+        const point = getLogicalPointFromMouse(e.clientX, e.clientY)
+        const start = marqueeRef.current.start
+        marqueeRef.current = null
+        if (point) {
+          const selection = normalizeRect(start, point)
+          if (selection.w < 6 && selection.h < 6) {
+            onSelectionChange([], null)
+          } else {
+            const selectedEntityIds = entities
+              .filter((entity) =>
+                rectsIntersect(selection, {
+                  x: entity.x * GRID,
+                  y: entity.y * GRID,
+                  w: entity.w * GRID,
+                  h: entity.h * GRID,
+                }),
+              )
+              .map((entity) => entity.id)
+            onSelectionChange(selectedEntityIds, selectedEntityIds[0] ?? null)
+          }
+        }
+        setMarqueeRect(null)
+      }
+      if (snapGuides.length > 0) setSnapGuides([])
       dragRef.current = null
     }
 
@@ -183,7 +410,16 @@ export function Canvas({
       window.removeEventListener("mousemove", handleMouseMove)
       window.removeEventListener("mouseup", handleMouseUp)
     }
-  }, [onEntityMove, scale])
+  }, [
+    entities,
+    entitiesById,
+    getLogicalPointFromMouse,
+    onEntitiesMoveByDelta,
+    onEntityMove,
+    onSelectionChange,
+    scale,
+    snapGuides.length,
+  ])
 
   const handleCanvasMouseDown = useCallback(
     (e: React.MouseEvent) => {
@@ -192,6 +428,7 @@ export function Canvas({
       if (target.closest(".editor-block")) return
 
       if (activeTool && activeTool !== "select" && activeTool !== "pan") {
+        if (snapGuides.length > 0) setSnapGuides([])
         const rect = canvasRef.current?.getBoundingClientRect()
         if (!rect) return
         const logicalX = (e.clientX - rect.left) / scale
@@ -200,21 +437,26 @@ export function Canvas({
         const gridY = snap(logicalY) / GRID
         onCanvasClick(gridX, gridY)
       } else {
-        onEntitySelect(null)
+        if (snapGuides.length > 0) setSnapGuides([])
+        const start = getLogicalPointFromMouse(e.clientX, e.clientY)
+        if (!start) return
+        marqueeRef.current = { start }
+        setMarqueeRect({ x: start.x, y: start.y, w: 0, h: 0 })
       }
     },
-    [activeTool, onCanvasClick, onEntitySelect, scale],
+    [activeTool, getLogicalPointFromMouse, onCanvasClick, scale, snapGuides.length],
   )
 
   const renderBlock = (entity: EditorEntity) => {
-    const selected = entity.id === selectedId
+    const selected = selectedSet.has(entity.id)
+    const allowResize = selected && selectedId === entity.id && activeSelectionIds.length === 1
     const props = {
       entity,
       selected,
       onMouseDown: onBlockMouseDown,
-      onClick: onEntitySelect,
-      onResize: onEntityResize,
-      onMove: onEntityMove,
+      onClick: handleBlockClick,
+      onResize: allowResize ? onEntityResize : undefined,
+      onMove: allowResize ? onEntityMove : undefined,
       canvasScale: scale,
       canvasCols,
       canvasRows,
@@ -236,7 +478,7 @@ export function Canvas({
   // Keyboard editing for the selected entity: arrows move by one grid cell,
   // Shift+arrows resize. The reducer clamps both, so this stays on-canvas.
   useEffect(() => {
-    if (!selectedId) return
+    if (activeSelectionIds.length === 0) return
     const ARROWS: Record<string, [number, number]> = {
       ArrowLeft: [-1, 0],
       ArrowRight: [1, 0],
@@ -246,22 +488,27 @@ export function Canvas({
     const handleKeyDown = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement | null
       // Don't hijack arrow keys while typing in the properties sidebar.
-      if (target && ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName)) return
+      if (isTextInputTarget(target)) return
       const delta = ARROWS[e.key]
       if (!delta) return
-      const entity = entities.find((en) => en.id === selectedId)
-      if (!entity) return
       e.preventDefault()
       const [dx, dy] = delta
-      if (e.shiftKey) {
-        onEntityResize(entity.id, entity.w + dx, entity.h + dy)
-      } else {
-        onEntityMove(entity.id, entity.x + dx, entity.y + dy)
+      if (activeSelectionIds.length === 1) {
+        const entity = entities.find((en) => en.id === activeSelectionIds[0])
+        if (!entity) return
+        if (e.shiftKey) {
+          onEntityResize(entity.id, entity.w + dx, entity.h + dy)
+        } else {
+          onEntityMove(entity.id, entity.x + dx, entity.y + dy)
+        }
+        return
       }
+      if (e.shiftKey) return
+      onEntitiesMoveByDelta(activeSelectionIds, dx, dy)
     }
     window.addEventListener("keydown", handleKeyDown)
     return () => window.removeEventListener("keydown", handleKeyDown)
-  }, [selectedId, entities, onEntityMove, onEntityResize])
+  }, [activeSelectionIds, entities, onEntitiesMoveByDelta, onEntityMove, onEntityResize])
 
   const handleContainerMouseDown = useCallback((e: React.MouseEvent) => {
     if (e.button !== 1) return
@@ -328,7 +575,29 @@ export function Canvas({
           aria-label="Floor plan editor"
         >
           <div className="editor-canvas__content" style={contentStyle}>
+            {snapGuides.map((guide, index) => (
+              <div
+                key={`${guide.axis}-${guide.position}-${index}`}
+                className={`editor-canvas__snap-line editor-canvas__snap-line--${guide.axis === "x" ? "vertical" : "horizontal"}`}
+                style={
+                  guide.axis === "x"
+                    ? { left: guide.position * GRID }
+                    : { top: guide.position * GRID }
+                }
+              />
+            ))}
             {entities.map(renderBlock)}
+            {marqueeRect && (
+              <div
+                className="editor-canvas__marquee"
+                style={{
+                  left: marqueeRect.x,
+                  top: marqueeRect.y,
+                  width: marqueeRect.w,
+                  height: marqueeRect.h,
+                }}
+              />
+            )}
             <div
               className={`editor-canvas__edge editor-canvas__edge--top${edgeStyles.top === "solid" ? " editor-canvas__edge--solid" : ""}`}
             />
