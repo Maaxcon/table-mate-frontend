@@ -150,9 +150,76 @@
   text-transform: uppercase;
   letter-spacing: 0.18em;
   cursor: pointer;
-  transition: background 0.2s ease;
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .editor-sidebar__delete:hover {
   background: color-mix(in srgb, var(--color-error) 18%, var(--color-bg-surface));
+  transform: translateY(-1px);
+  box-shadow: 0 12px 20px color-mix(in srgb, var(--color-error) 22%, transparent);
+}
+
+.editor-sidebar__button {
+  padding: 9px 12px;
+  border-radius: 12px;
+  border: 1px solid #8ab5ee;
+  background: linear-gradient(120deg, #edf4ff, #dcecff);
+  color: #1f3e73;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 42%, transparent);
+  background: linear-gradient(
+    120deg,
+    color-mix(in srgb, var(--color-primary) 16%, transparent),
+    color-mix(in srgb, var(--color-bg-page) 94%, transparent)
+  );
+  color: color-mix(in srgb, var(--color-primary) 78%, var(--color-text-primary));
+  font-family: inherit;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    background 0.18s ease,
+    border-color 0.18s ease;
+}
+
+.editor-sidebar__button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 18px rgb(95 153 228 / 28%);
+  border-color: #5f99e4;
+  box-shadow: 0 10px 18px color-mix(in srgb, var(--color-primary) 18%, transparent);
+  border-color: color-mix(in srgb, var(--color-primary) 56%, transparent);
+}
+
+.editor-sidebar__button:active {
+  transform: translateY(0);
+}
+
+[data-theme="light"] .editor-sidebar__button {
+  color: #1f3e73;
+  border-color: #8ab5ee;
+  background: linear-gradient(120deg, #edf4ff, #dcecff);
+}
+
+[data-theme="light"] .editor-sidebar__button:hover {
+  border-color: #5f99e4;
+  box-shadow: 0 10px 18px rgb(95 153 228 / 28%);
+}
+
+@supports not (background: color-mix(in srgb, black 50%, white)) {
+  .editor-sidebar__button {
+    border: 1px solid #8ab5ee;
+    background: linear-gradient(120deg, #edf4ff, #dcecff);
+    color: #1f3e73;
+  }
+
+  .editor-sidebar__button:hover {
+    border-color: #5f99e4;
+    box-shadow: 0 10px 18px rgb(95 153 228 / 28%);
+  }
 }
