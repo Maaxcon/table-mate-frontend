@@ -1,4 +1,12 @@
-import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react"
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from "react"
 import {
   DEFAULT_CANVAS_COLS,
   DEFAULT_CANVAS_ROWS,
@@ -12,11 +20,6 @@ import "./FloorPlanView.css"
 
 export type FloorVisualStatus = "free" | "reserved" | "occupied"
 
-/**
- * Identity carried by each layout table, passed to the consumer callbacks so they
- * can join the layout entity to a live table by `id` (the table public_id when the
- * layout was published correctly) and fall back to `publicNumber`.
- */
 export interface FloorPlanTableRef {
   id: string
   publicNumber: string
@@ -24,29 +27,21 @@ export interface FloorPlanTableRef {
 }
 
 interface FloorPlanViewProps {
-  /** The published layout payload (LayoutVersion.layout_json / Layout.payload). */
   payload: LayoutPayload | null | undefined
-  /** When set, only entities belonging to this zone are shown. */
   selectedZoneId?: string | null
-  /** public_id of the currently selected table. */
   selectedId?: string | null
-  /** Per-zone edge styles override (computed externally from zone data). */
   edgeStyles?: Record<string, "dashed" | "solid">
-  /** Per-zone canvas dimensions in grid units. Falls back to defaults. */
   canvasCols?: number
   canvasRows?: number
   onTableSelect?: (table: FloorPlanTableRef) => void
-  /** Resolve a table's visual status (defaults to "free"). */
   tableStatus?: (table: FloorPlanTableRef) => FloorVisualStatus
-  /** Extra content rendered inside a table (badges, guest info, timers, ...). */
   renderTableContent?: (table: FloorPlanTableRef) => ReactNode
-  /** Navigate to a portal's target zone on click (makes portals interactive links). */
   onPortalNavigate?: (targetZoneId: string) => void
-  /** Shown when there is no published layout to render. */
   emptyMessage?: string
-  /** Clamp auto-fit scale (default min 0.3, no max). */
   minScale?: number
   maxScale?: number
+  enableZoom?: boolean
+  enablePan?: boolean
 }
 
 const px = (v: number) => v * GRID
@@ -57,6 +52,9 @@ const px = (v: number) => v * GRID
  * thresholds and portals — uniformly scaled to fit the container. Shared by the
  * customer and waiter floor views so all three stay visually identical.
  */
+const MIN_ZOOM = 0.3
+const MAX_ZOOM = 4
+
 export function FloorPlanView({
   payload,
   selectedZoneId = null,
@@ -71,9 +69,26 @@ export function FloorPlanView({
   emptyMessage = "No floor plan published yet.",
   minScale: minScaleProp,
   maxScale: maxScaleProp,
+  enableZoom = false,
+  enablePan = false,
 }: FloorPlanViewProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [viewBox, setViewBox] = useState({ scale: 1, width: 0, height: 0 })
+  const [zoom, setZoom] = useState(1)
+  const [panOffset, setPanOffset] = useState({ x: 0, y: 0 })
+  const isPanning = useRef(false)
+  const panStart = useRef({ x: 0, y: 0, offsetX: 0, offsetY: 0 })
+  const pinchStartRef = useRef<{ dist: number; zoom: number } | null>(null)
+  const zoomRef = useRef(zoom)
+  const panOffsetRef = useRef(panOffset)
+  useEffect(() => {
+    zoomRef.current = zoom
+  }, [zoom])
+  useEffect(() => {
+    panOffsetRef.current = panOffset
+  }, [panOffset])
+
+  const clampZoom = useCallback((z: number) => Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, z)), [])
 
   const canvasCols = canvasColsProp ?? DEFAULT_CANVAS_COLS
   const canvasRows = canvasRowsProp ?? DEFAULT_CANVAS_ROWS
@@ -89,9 +104,6 @@ export function FloorPlanView({
   useEffect(() => {
     const el = containerRef.current
     if (!el) return
-    // Fit the canvas plus its proportional overhang (one grid cell each side, where
-    // grid -1 portals/thresholds live). With padding = GRID * scale the scale factors
-    // out cleanly: clientWidth = (canvasPxW + 2 * GRID) * scale.
     const minScale = minScaleProp ?? 0.3
     const maxScale = maxScaleProp ?? Number.POSITIVE_INFINITY
     const update = () => {
@@ -108,6 +120,129 @@ export function FloorPlanView({
     observer.observe(el)
     return () => observer.disconnect()
   }, [canvasPxW, canvasPxH, minScaleProp, maxScaleProp])
+
+  const handleWheel = useCallback(
+    (e: WheelEvent) => {
+      if (!enableZoom) return
+      if (!e.ctrlKey && !e.metaKey) return
+      e.preventDefault()
+      setZoom((z) => clampZoom(z * (1 - e.deltaY * 0.01)))
+    },
+    [enableZoom, clampZoom],
+  )
+
+  const handleTouchStart = useCallback(
+    (e: TouchEvent) => {
+      if (!enableZoom && !enablePan) return
+      if (e.touches.length === 2 && enableZoom) {
+        const dist = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY,
+        )
+        pinchStartRef.current = { dist, zoom: zoomRef.current }
+      }
+    },
+    [enableZoom, enablePan],
+  )
+
+  const handleTouchMove = useCallback(
+    (e: TouchEvent) => {
+      if (!enableZoom && !enablePan) return
+      if (e.touches.length === 2 && enableZoom) {
+        e.preventDefault()
+        const pinch = pinchStartRef.current
+        if (!pinch || pinch.dist === 0) return
+        const dist = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY,
+        )
+        setZoom(clampZoom(pinch.zoom * (dist / pinch.dist)))
+      } else if (e.touches.length === 1 && enablePan) {
+        const target = e.target as HTMLElement
+        if (target.closest(".fp-block")) return
+        if (!isPanning.current) {
+          isPanning.current = true
+          panStart.current = {
+            x: e.touches[0].clientX,
+            y: e.touches[0].clientY,
+            offsetX: panOffsetRef.current.x,
+            offsetY: panOffsetRef.current.y,
+          }
+        } else {
+          const dx = e.touches[0].clientX - panStart.current.x
+          const dy = e.touches[0].clientY - panStart.current.y
+          setPanOffset({
+            x: panStart.current.offsetX + dx,
+            y: panStart.current.offsetY + dy,
+          })
+        }
+      }
+    },
+    [enableZoom, enablePan, clampZoom],
+  )
+
+  const handleTouchEnd = useCallback(() => {
+    isPanning.current = false
+    pinchStartRef.current = null
+  }, [])
+
+  useEffect(() => {
+    if (!enablePan) return
+    const el = containerRef.current
+    if (!el) return
+    const onMouseDown = (e: MouseEvent) => {
+      if (e.button !== 0) return
+      const target = e.target as HTMLElement
+      if (target.closest(".fp-block")) return
+      isPanning.current = true
+      panStart.current = {
+        x: e.clientX,
+        y: e.clientY,
+        offsetX: panOffsetRef.current.x,
+        offsetY: panOffsetRef.current.y,
+      }
+      e.preventDefault()
+    }
+    el.addEventListener("mousedown", onMouseDown)
+    return () => el.removeEventListener("mousedown", onMouseDown)
+  }, [enablePan])
+
+  useEffect(() => {
+    if (!enablePan) return
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isPanning.current) return
+      const dx = e.clientX - panStart.current.x
+      const dy = e.clientY - panStart.current.y
+      setPanOffset({
+        x: panStart.current.offsetX + dx,
+        y: panStart.current.offsetY + dy,
+      })
+    }
+    const handleMouseUp = () => {
+      isPanning.current = false
+    }
+    window.addEventListener("mousemove", handleMouseMove)
+    window.addEventListener("mouseup", handleMouseUp)
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove)
+      window.removeEventListener("mouseup", handleMouseUp)
+    }
+  }, [enablePan])
+
+  useEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+    el.addEventListener("wheel", handleWheel, { passive: false })
+    el.addEventListener("touchstart", handleTouchStart, { passive: true })
+    el.addEventListener("touchmove", handleTouchMove, { passive: false })
+    el.addEventListener("touchend", handleTouchEnd)
+    return () => {
+      el.removeEventListener("wheel", handleWheel)
+      el.removeEventListener("touchstart", handleTouchStart)
+      el.removeEventListener("touchmove", handleTouchMove)
+      el.removeEventListener("touchend", handleTouchEnd)
+    }
+  }, [handleWheel, handleTouchStart, handleTouchMove, handleTouchEnd])
 
   const entities = useMemo<EditorEntity[]>(
     () => (payload ? deserializeLayout(payload) : []),
@@ -126,6 +261,13 @@ export function FloorPlanView({
     [entities, selectedZoneId],
   )
 
+  const totalScale = scale * zoom
+  const pad = GRID * totalScale
+  const scaledW = canvasPxW * totalScale + 2 * pad
+  const scaledH = canvasPxH * totalScale + 2 * pad
+  const offsetX = Math.max((containerWidth - scaledW) / 2, 0)
+  const offsetY = Math.max((containerHeight - scaledH) / 2, 0)
+
   if (!payload || entities.length === 0) {
     return (
       <div className="fp-view fp-view--empty" ref={containerRef}>
@@ -134,14 +276,22 @@ export function FloorPlanView({
     )
   }
 
-  const pad = GRID * scale
-  const scaledW = canvasPxW * scale + 2 * pad
-  const scaledH = canvasPxH * scale + 2 * pad
-  const offsetX = Math.max((containerWidth - scaledW) / 2, 0)
-  const offsetY = Math.max((containerHeight - scaledH) / 2, 0)
+  const stageStyle: CSSProperties = {
+    position: "absolute",
+    top: pad + offsetY + panOffset.y,
+    left: pad + offsetX + panOffset.x,
+    width: canvasPxW,
+    height: canvasPxH,
+    transform: `scale(${totalScale})`,
+    transformOrigin: "top left",
+  }
+
+  const containerClass = ["fp-view", enablePan ? "fp-view--pan-enabled" : ""]
+    .filter(Boolean)
+    .join(" ")
 
   return (
-    <div className="fp-view" ref={containerRef} style={containerStyle}>
+    <div className={containerClass} ref={containerRef} style={containerStyle}>
       <div
         style={{
           width: scaledW,
@@ -155,18 +305,7 @@ export function FloorPlanView({
           visibility: "hidden",
         }}
       />
-      <div
-        className="fp-view__stage"
-        style={{
-          position: "absolute",
-          top: pad + offsetY,
-          left: pad + offsetX,
-          width: canvasPxW,
-          height: canvasPxH,
-          transform: `scale(${scale})`,
-          transformOrigin: "top left",
-        }}
-      >
+      <div className="fp-view__stage" style={stageStyle}>
         {visible.map((e) =>
           renderEntity(e, {
             selectedId,

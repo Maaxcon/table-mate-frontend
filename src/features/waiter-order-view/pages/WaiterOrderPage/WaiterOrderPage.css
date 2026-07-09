@@ -212,7 +212,6 @@
 
 @media (max-width: 1180px) {
   .waiter-view__floor-card .fp-view {
-    overflow: auto;
     overscroll-behavior: contain;
     scrollbar-width: thin;
     scrollbar-color: color-mix(in srgb, var(--color-border-strong) 35%, transparent) transparent;

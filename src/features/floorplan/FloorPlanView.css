@@ -20,6 +20,14 @@
   background-image: none;
 }
 
+.fp-view--pan-enabled {
+  cursor: grab;
+}
+
+.fp-view--pan-enabled:active {
+  cursor: grabbing;
+}
+
 .fp-view__empty-text {
   color: var(--color-text-secondary);
   font-weight: 700;

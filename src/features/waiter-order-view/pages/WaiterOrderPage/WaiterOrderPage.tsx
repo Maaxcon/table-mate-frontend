@@ -400,8 +400,8 @@ export function WaiterOrderPage() {
             canvasCols={zones.find((z) => z.public_id === selectedZoneId)?.canvas_cols}
             canvasRows={zones.find((z) => z.public_id === selectedZoneId)?.canvas_rows}
             edgeStyles={zones.find((z) => z.public_id === selectedZoneId)?.edge_styles}
-            enableZoom={isTabletLayout}
-            enablePan={isTabletLayout}
+            enableZoom={true}
+            enablePan={true}
           />
         </div>
 
