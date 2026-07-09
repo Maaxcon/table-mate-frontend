@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { snap, GRID, EDITOR_MIN_SCALE, EDITOR_MAX_SCALE } from "@/features/editor/types"
 import type { EditorEntity } from "@/features/editor/types"
 import { TableBlock } from "./entities/TableBlock"
@@ -47,6 +47,11 @@ type RectBounds = {
   y: number
   w: number
   h: number
+}
+
+type ZoomAnchor = {
+  worldX: number
+  worldY: number
 }
 
 const isTextInputTarget = (target: EventTarget | null): boolean => {
@@ -116,6 +121,14 @@ function resolveSnapRect(
   return { x, y, guides }
 }
 
+const getTouchDistance = (touches: TouchList) =>
+  Math.hypot(touches[0].clientX - touches[1].clientX, touches[0].clientY - touches[1].clientY)
+
+const getTouchMidpoint = (touches: TouchList) => ({
+  clientX: (touches[0].clientX + touches[1].clientX) / 2,
+  clientY: (touches[0].clientY + touches[1].clientY) / 2,
+})
+
 export function Canvas({
   entities,
   selectedId,
@@ -162,53 +175,130 @@ export function Canvas({
     scaleRef.current = scale
   }, [scale])
 
-  // One-shot auto-fit: on first load, scale the canvas to fit within the
-  // viewport so the entire map is visible at once.
-  const autoFitted = useRef(false)
-  useLayoutEffect(() => {
-    if (autoFitted.current || entities.length === 0) return
-    autoFitted.current = true
+  const userAdjustedZoomRef = useRef(false)
 
+  const centerCanvasInView = useCallback(
+    (nextScale: number) => {
+      const container = containerRef.current
+      if (!container) return
+      const visualWidth = canvasCols * GRID * nextScale
+      const visualHeight = canvasRows * GRID * nextScale
+      container.scrollLeft = Math.max(0, (visualWidth - container.clientWidth) / 2)
+      container.scrollTop = Math.max(0, (visualHeight - container.clientHeight) / 2)
+    },
+    [canvasCols, canvasRows],
+  )
+
+  const computeFitScale = useCallback(() => {
+    const container = containerRef.current
+    if (!container) return 1
+    const w = canvasCols * GRID
+    const h = canvasRows * GRID
+    const styles = window.getComputedStyle(container)
+    const horizontalPadding =
+      parseFloat(styles.paddingLeft || "0") + parseFloat(styles.paddingRight || "0")
+    const verticalPadding =
+      parseFloat(styles.paddingTop || "0") + parseFloat(styles.paddingBottom || "0")
+    const availableWidth = Math.max(1, container.clientWidth - horizontalPadding)
+    const availableHeight = Math.max(1, container.clientHeight - verticalPadding)
+    return clampScale(Math.min(availableWidth / w, availableHeight / h))
+  }, [canvasCols, canvasRows])
+
+  const fitCanvasToViewport = useCallback(() => {
+    const nextScale = computeFitScale()
+    setScale(nextScale)
+    requestAnimationFrame(() => {
+      centerCanvasInView(nextScale)
+    })
+  }, [centerCanvasInView, computeFitScale])
+
+  // Fit current zone on mount/resize while user hasn't manually changed zoom.
+  // ResizeObserver handles viewport changes and panel resizes without forcing
+  // synchronous setState in an effect body.
+  useEffect(() => {
     const container = containerRef.current
     if (!container) return
 
-    const w = canvasCols * GRID
-    const h = canvasRows * GRID
-    const gap = 200 // 2 × container padding (100px each side)
-    setScale(
-      clampScale(Math.min((container.clientWidth - gap) / w, (container.clientHeight - gap) / h)),
-    )
-  }, [canvasCols, canvasRows, entities.length])
+    userAdjustedZoomRef.current = false
+    const rafId = requestAnimationFrame(() => {
+      if (!userAdjustedZoomRef.current) fitCanvasToViewport()
+    })
+
+    const observer = new ResizeObserver(() => {
+      if (!userAdjustedZoomRef.current) fitCanvasToViewport()
+    })
+    observer.observe(container)
+
+    return () => {
+      cancelAnimationFrame(rafId)
+      observer.disconnect()
+    }
+  }, [canvasCols, canvasRows, fitCanvasToViewport])
 
   // Pinch (two-finger) and ctrl+wheel zoom of the canvas. Native non-passive
   // listeners so we can preventDefault the browser's own page zoom/scroll.
   useEffect(() => {
     const el = containerRef.current
     if (!el) return
-    let pinchStart: { dist: number; scale: number } | null = null
-    const distance = (touches: TouchList) =>
-      Math.hypot(touches[0].clientX - touches[1].clientX, touches[0].clientY - touches[1].clientY)
+
+    let pinchStart: { dist: number; scale: number; anchor: ZoomAnchor } | null = null
+
+    const getAnchor = (clientX: number, clientY: number, baseScale: number): ZoomAnchor => {
+      const rect = el.getBoundingClientRect()
+      const localX = clientX - rect.left
+      const localY = clientY - rect.top
+      return {
+        worldX: (el.scrollLeft + localX) / baseScale,
+        worldY: (el.scrollTop + localY) / baseScale,
+      }
+    }
+
+    const zoomTo = (nextScale: number, clientX: number, clientY: number, anchor: ZoomAnchor) => {
+      const rect = el.getBoundingClientRect()
+      const localX = clientX - rect.left
+      const localY = clientY - rect.top
+      userAdjustedZoomRef.current = true
+      setScale(nextScale)
+      requestAnimationFrame(() => {
+        el.scrollLeft = anchor.worldX * nextScale - localX
+        el.scrollTop = anchor.worldY * nextScale - localY
+      })
+    }
 
     const onTouchStart = (e: TouchEvent) => {
       if (e.touches.length === 2) {
-        pinchStart = { dist: distance(e.touches), scale: scaleRef.current }
+        const midpoint = getTouchMidpoint(e.touches)
+        pinchStart = {
+          dist: getTouchDistance(e.touches),
+          scale: scaleRef.current,
+          anchor: getAnchor(midpoint.clientX, midpoint.clientY, scaleRef.current),
+        }
+        e.preventDefault()
       }
     }
+
     const onTouchMove = (e: TouchEvent) => {
       if (pinchStart && e.touches.length === 2) {
         e.preventDefault()
-        const d = distance(e.touches)
+        const d = getTouchDistance(e.touches)
         if (pinchStart.dist === 0 || d === 0) return
-        setScale(clampScale(pinchStart.scale * (d / pinchStart.dist)))
+        const midpoint = getTouchMidpoint(e.touches)
+        const nextScale = clampScale(pinchStart.scale * (d / pinchStart.dist))
+        zoomTo(nextScale, midpoint.clientX, midpoint.clientY, pinchStart.anchor)
       }
     }
+
     const onTouchEnd = (e: TouchEvent) => {
       if (e.touches.length < 2) pinchStart = null
     }
+
     const onWheel = (e: WheelEvent) => {
       if (!e.ctrlKey) return // trackpad pinch surfaces as ctrl+wheel
       e.preventDefault()
-      setScale((s) => clampScale(s * (1 - e.deltaY * 0.01)))
+      const currentScale = scaleRef.current
+      const nextScale = clampScale(currentScale * (1 - e.deltaY * 0.01))
+      const anchor = getAnchor(e.clientX, e.clientY, currentScale)
+      zoomTo(nextScale, e.clientX, e.clientY, anchor)
     }
 
     el.addEventListener("touchstart", onTouchStart, { passive: false })

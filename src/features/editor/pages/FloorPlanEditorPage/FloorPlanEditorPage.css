@@ -267,4 +267,14 @@
   .editor-page {
     padding: 16px;
   }
+
+  .editor-page__panel {
+    padding: 10px;
+    border-radius: 20px;
+  }
+
+  .editor-page__stage {
+    padding: 8px;
+    border-radius: 18px;
+  }
 }

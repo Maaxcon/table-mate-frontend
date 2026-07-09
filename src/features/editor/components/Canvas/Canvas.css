@@ -4,6 +4,7 @@
   min-height: 0;
   position: relative;
   overflow: auto;
+  overscroll-behavior: contain;
   padding: clamp(16px, 3vw, 48px);
   box-sizing: border-box;
   border-radius: 24px;
@@ -12,6 +13,13 @@
     inset 0 0 0 1px color-mix(in srgb, var(--color-bg-page) 70%, transparent),
     inset 0 -30px 60px color-mix(in srgb, var(--color-bg-secondary) 40%, transparent);
   height: 100%;
+}
+
+@media (max-width: 768px) {
+  .editor-canvas__container {
+    padding: 10px;
+    border-radius: 18px;
+  }
 }
 
 .editor-canvas {
