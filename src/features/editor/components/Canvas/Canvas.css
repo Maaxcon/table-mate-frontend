@@ -38,6 +38,26 @@
   z-index: 12;
 }
 
+.editor-canvas__snap-line {
+  position: absolute;
+  pointer-events: none;
+  z-index: 11;
+  background: color-mix(in srgb, var(--color-primary) 82%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-bg-surface) 38%, transparent);
+}
+
+.editor-canvas__snap-line--vertical {
+  top: 0;
+  bottom: 0;
+  width: 1px;
+}
+
+.editor-canvas__snap-line--horizontal {
+  left: 0;
+  right: 0;
+  height: 1px;
+}
+
 .editor-canvas__edge {
   position: absolute;
   pointer-events: none;

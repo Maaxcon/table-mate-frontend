@@ -251,10 +251,24 @@
   cursor: nwse-resize;
 }
 
+.editor-block__resize--n {
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  cursor: ns-resize;
+}
+
 .editor-block__resize--ne {
   top: -8px;
   right: -8px;
   cursor: nesw-resize;
+}
+
+.editor-block__resize--e {
+  top: 50%;
+  right: -8px;
+  transform: translateY(-50%);
+  cursor: ew-resize;
 }
 
 .editor-block__resize--sw {
@@ -263,8 +277,22 @@
   cursor: nesw-resize;
 }
 
+.editor-block__resize--s {
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  cursor: ns-resize;
+}
+
 .editor-block__resize--se {
   bottom: -8px;
   right: -8px;
   cursor: nwse-resize;
+}
+
+.editor-block__resize--w {
+  top: 50%;
+  left: -8px;
+  transform: translateY(-50%);
+  cursor: ew-resize;
 }
