@@ -185,11 +185,10 @@
   box-shadow:
     inset 0 0 0 1px var(--color-border-light),
     0 20px 40px color-mix(in srgb, var(--color-border-strong) 8%, transparent);
-  flex: 0 1 auto;
+  flex: 1 1 auto;
   min-height: 0;
   width: 100%;
-  height: auto;
-
+  height: 100%;
   align-self: stretch;
 }
 
@@ -209,6 +208,29 @@
   background-position:
     0 0,
     17px 17px;
+}
+
+@media (max-width: 1180px) {
+  .waiter-view__floor-card .fp-view {
+    overflow: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in srgb, var(--color-border-strong) 35%, transparent) transparent;
+  }
+
+  .waiter-view__floor-card .fp-view::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .waiter-view__floor-card .fp-view::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .waiter-view__floor-card .fp-view::-webkit-scrollbar-thumb {
+    background: color-mix(in srgb, var(--color-border-strong) 35%, transparent);
+    border-radius: 999px;
+  }
 }
 
 .waiter-view__floor-card .fp-view--empty {
