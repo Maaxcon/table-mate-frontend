@@ -13,6 +13,7 @@ interface FloorPlanProps {
   upcomingReservations?: UpcomingReservation[]
   currentTime: Date
   activeReservationsByTable?: Record<string, ReservationItem>
+  overdueByTableId?: Record<string, number>
   onSelect: (table: FloorTable) => void
   onZoneChange?: (zoneId: string) => void
   canvasCols?: number
@@ -35,6 +36,7 @@ export function FloorPlan({
   upcomingReservations = [],
   currentTime,
   activeReservationsByTable = {},
+  overdueByTableId = {},
   onSelect,
   onZoneChange,
   canvasCols,
@@ -92,8 +94,10 @@ export function FloorPlan({
           const number = table?.public_number ?? ref.publicNumber ?? ""
           const capacity = table?.capacity ?? ref.capacity
           const capacityDisplay = capacity ?? null
+          const overdueMinutes = table ? overdueByTableId[table.public_id] : undefined
           const activeReservationForTable =
             number && activeReservationsByTable ? activeReservationsByTable[number] : undefined
+          const badgeVariant = overdueMinutes != null ? "overdue" : visualStatus
           const seatedGuests =
             visualStatus === "occupied"
               ? (table?.activeSession?.guest_count ??
@@ -104,8 +108,10 @@ export function FloorPlan({
 
           return (
             <>
-              <span className={`fp-block__badge fp-block__badge--${visualStatus}`}>
-                {statusLabel[visualStatus] ?? visualStatus.toUpperCase()}
+              <span className={`fp-block__badge fp-block__badge--${badgeVariant}`}>
+                {overdueMinutes != null
+                  ? `OVERDUE ${overdueMinutes}M`
+                  : (statusLabel[visualStatus] ?? visualStatus.toUpperCase())}
               </span>
               <span className="fp-block__label">{number}</span>
 
@@ -144,6 +150,11 @@ export function FloorPlan({
               )}
             </>
           )
+        }}
+        tableClassName={(ref) => {
+          const table = resolve(ref)
+          if (!table) return undefined
+          return overdueByTableId[table.public_id] != null ? "fp-block--overdue" : undefined
         }}
       />
     </div>

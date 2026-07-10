@@ -22,6 +22,18 @@ import type { LayoutResponse, Table } from "@/types/api"
 import type { LayoutPayload } from "@/features/editor/types"
 import "./WaiterOrderPage.css"
 
+const CLOCK_TICK_MS = 10_000
+const FLOOR_REFRESH_POLL_MS = 30_000
+const OVERDUE_UI_CAP_MINUTES = 999
+
+function getOverdueMinutes(endAt: string, nowMs: number): number | null {
+  const endMs = new Date(endAt).getTime()
+  if (!Number.isFinite(endMs)) return null
+  const diffMs = nowMs - endMs
+  if (diffMs <= 0) return null
+  return Math.max(1, Math.floor(diffMs / 60_000))
+}
+
 function mapTableToFloorTable(t: Table): FloorTable {
   const item = t as Table & { shape: string; position_x: number | null; position_y: number | null }
   return {
@@ -71,7 +83,7 @@ export function WaiterOrderPage() {
   }, [reservations])
 
   useEffect(() => {
-    const id = setInterval(() => setCurrentTime(new Date()), 60_000)
+    const id = setInterval(() => setCurrentTime(new Date()), CLOCK_TICK_MS)
     return () => clearInterval(id)
   }, [])
 
@@ -172,6 +184,13 @@ export function WaiterOrderPage() {
       // keep current zones on failure
     }
   }, [])
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      void refreshFloor()
+    }, FLOOR_REFRESH_POLL_MS)
+    return () => clearInterval(id)
+  }, [refreshFloor])
 
   // A publish may have added/removed a zone, so refresh zones (not just the floor)
   // — otherwise a new zone's tab is missing until a manual page refresh.
@@ -309,6 +328,22 @@ export function WaiterOrderPage() {
     ? mergedReservations.filter((r) => r.table === selectedTable.public_number)
     : []
 
+  const overdueByTableId = useMemo(() => {
+    const tableByNumber = new Map(tables.map((table) => [table.public_number, table]))
+    const nowMs = currentTime.getTime()
+    const result: Record<string, number> = {}
+    for (const reservation of mergedReservations) {
+      if (reservation.status !== "active") continue
+      if (!reservation.table) continue
+      const table = tableByNumber.get(reservation.table)
+      if (!table || !table.is_occupied) continue
+      const minutes = getOverdueMinutes(reservation.end_at, nowMs)
+      if (minutes == null) continue
+      result[table.public_id] = Math.min(minutes, OVERDUE_UI_CAP_MINUTES)
+    }
+    return result
+  }, [tables, mergedReservations, currentTime])
+
   const handleTableSelect = (table: FloorTable) => {
     clearActionError()
     setSelectedTableId(table.public_id)
@@ -383,6 +418,7 @@ export function WaiterOrderPage() {
             upcomingReservations={layoutReservations}
             currentTime={currentTime}
             activeReservationsByTable={activeReservationsByTable}
+            overdueByTableId={overdueByTableId}
             onSelect={handleTableSelect}
             onZoneChange={setSelectedZoneId}
             canvasCols={zones.find((z) => z.public_id === selectedZoneId)?.canvas_cols}

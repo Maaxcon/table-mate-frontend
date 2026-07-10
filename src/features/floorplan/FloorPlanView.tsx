@@ -46,6 +46,8 @@ export interface FloorPlanViewProps {
   onTableSelect?: (table: FloorPlanTableRef) => void
   /** Resolve a table's visual status (defaults to "free"). */
   tableStatus?: (table: FloorPlanTableRef) => FloorVisualStatus
+  /** Optional extra className for a table block (e.g. overdue highlight). */
+  tableClassName?: (table: FloorPlanTableRef) => string | undefined
   /** Extra content rendered inside a table (badges, guest info, timers, ...). */
   renderTableContent?: (table: FloorPlanTableRef) => ReactNode
   /** Navigate to a portal's target zone on click (makes portals interactive links). */
@@ -96,6 +98,7 @@ function FloorPlanViewImpl({
   canvasRows: canvasRowsProp,
   onTableSelect,
   tableStatus,
+  tableClassName,
   renderTableContent,
   onPortalNavigate,
   renderEntity: renderEntityProp,
@@ -252,6 +255,7 @@ function FloorPlanViewImpl({
             selectedId,
             onTableSelect,
             tableStatus,
+            tableClassName,
             renderTableContent,
             onPortalNavigate,
           })
@@ -286,6 +290,7 @@ interface RenderOpts {
   selectedId: string | null
   onTableSelect?: (table: FloorPlanTableRef) => void
   tableStatus?: (table: FloorPlanTableRef) => FloorVisualStatus
+  tableClassName?: (table: FloorPlanTableRef) => string | undefined
   renderTableContent?: (table: FloorPlanTableRef) => ReactNode
   onPortalNavigate?: (targetZoneId: string) => void
 }
@@ -317,6 +322,7 @@ function defaultRenderEntity(e: EditorEntity, opts: RenderOpts): ReactNode {
           "fp-block--table",
           `fp-block--${e.type}`,
           `fp-block--${status}`,
+          opts.tableClassName?.(tableRef) ?? "",
           selected ? "fp-block--selected" : "",
         ]
           .filter(Boolean)
