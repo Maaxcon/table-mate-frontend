@@ -429,8 +429,10 @@ export function Canvas({
 
       const logicalDx = dx / scale
       const logicalDy = dy / scale
-      const rawX = snap(drag.startPrimaryX * GRID + logicalDx) / GRID
-      const rawY = snap(drag.startPrimaryY * GRID + logicalDy) / GRID
+      // Keep sub-grid precision until snap-guide resolution so the magnetic
+      // threshold can actually engage before final grid quantization.
+      const rawX = (drag.startPrimaryX * GRID + logicalDx) / GRID
+      const rawY = (drag.startPrimaryY * GRID + logicalDy) / GRID
       const primaryEntity = entitiesById.get(drag.primaryId)
       if (!primaryEntity) return
       const snapCandidates = entities
@@ -445,8 +447,8 @@ export function Canvas({
       } else if (snapGuides.length > 0) {
         setSnapGuides([])
       }
-      const newX = snapped.x
-      const newY = snapped.y
+      const newX = snap(snapped.x * GRID) / GRID
+      const newY = snap(snapped.y * GRID) / GRID
       if (drag.entityIds.length <= 1) {
         onEntityMove(drag.primaryId, newX, newY)
         return
