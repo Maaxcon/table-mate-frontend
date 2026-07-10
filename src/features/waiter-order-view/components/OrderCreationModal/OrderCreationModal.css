@@ -175,6 +175,7 @@
   flex-direction: column;
   overflow-y: auto;
   padding: 16px;
+  box-sizing: border-box;
 }
 
 .ocm__summary-title {
