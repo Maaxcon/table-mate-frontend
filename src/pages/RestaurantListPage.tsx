@@ -39,13 +39,23 @@ export function RestaurantListPage() {
 
   return (
     <main className="rlp">
-      <header className="rlp__bar">
-        <h1 className="rlp__heading">Restaurants</h1>
-        {user && (
-          <Link to="/cabinet" className="rlp__profile-link">
-            My Cabinet
+      <header className="rlp__hero">
+        <div className="rlp__hero-copy">
+          <h1 className="rlp__heading">Restaurants Directory</h1>
+          <p className="rlp__subtitle">
+            Browse available restaurants, open their menus, and quickly jump to your own workspace.
+          </p>
+        </div>
+        <div className="rlp__hero-actions">
+          <Link to="/" className="rlp__cta-link">
+            Add restaurant
           </Link>
-        )}
+          {user && (
+            <Link to="/cabinet" className="rlp__profile-link">
+              My Cabinet
+            </Link>
+          )}
+        </div>
       </header>
 
       {restaurants.length === 0 && <p className="rlp__empty">No restaurants available.</p>}
