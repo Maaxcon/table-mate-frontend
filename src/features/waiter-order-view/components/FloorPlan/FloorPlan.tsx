@@ -73,6 +73,24 @@ export function FloorPlan({
   return (
     <div className="floor-plan">
       <h2 className="floor-plan__title">FLOOR PLAN</h2>
+      <div className="floor-plan__legend" aria-label="Table status legend">
+        <span className="floor-plan__legend-item">
+          <span className="floor-plan__legend-dot floor-plan__legend-dot--free" aria-hidden />
+          Free
+        </span>
+        <span className="floor-plan__legend-item">
+          <span className="floor-plan__legend-dot floor-plan__legend-dot--reserved" aria-hidden />
+          Reserved
+        </span>
+        <span className="floor-plan__legend-item">
+          <span className="floor-plan__legend-dot floor-plan__legend-dot--occupied" aria-hidden />
+          Occupied
+        </span>
+        <span className="floor-plan__legend-item">
+          <span className="floor-plan__legend-dot floor-plan__legend-dot--overdue" aria-hidden />
+          Overdue
+        </span>
+      </div>
       <FloorPlanView
         payload={payload}
         selectedZoneId={selectedZoneId}

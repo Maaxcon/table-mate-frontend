@@ -14,3 +14,59 @@
   letter-spacing: 0.12em;
   color: var(--color-text-secondary);
 }
+
+.floor-plan__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  align-items: center;
+}
+
+.floor-plan__legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--color-border-default);
+  background: var(--color-bg-surface);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+}
+
+.floor-plan__legend-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.floor-plan__legend-dot--free {
+  background: var(--color-success);
+}
+
+.floor-plan__legend-dot--reserved {
+  background: var(--color-primary);
+}
+
+.floor-plan__legend-dot--occupied {
+  background: var(--color-error);
+}
+
+.floor-plan__legend-dot--overdue {
+  background: var(--color-warning);
+}
+
+@media (max-width: 640px) {
+  .floor-plan__legend {
+    gap: 8px;
+  }
+
+  .floor-plan__legend-item {
+    font-size: 0.62rem;
+    padding: 3px 7px;
+  }
+}
