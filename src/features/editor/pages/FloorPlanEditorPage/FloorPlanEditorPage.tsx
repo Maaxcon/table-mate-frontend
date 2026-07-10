@@ -74,6 +74,7 @@ function FloorPlanEditorPage() {
     deletedServerIds,
     createZone,
     updateZoneMeta,
+    updateZoneCanvasSize,
     deleteZone: deleteZoneMeta,
     clearPendingZones,
     pendingZones,
@@ -531,9 +532,9 @@ function FloorPlanEditorPage() {
   const handleCanvasSizeChange = useCallback(
     (cols: number, rows: number) => {
       if (!selectedZoneId) return
-      updateZoneMeta(selectedZoneId, { canvas_cols: cols, canvas_rows: rows })
+      updateZoneCanvasSize(selectedZoneId, cols, rows)
     },
-    [selectedZoneId, updateZoneMeta],
+    [selectedZoneId, updateZoneCanvasSize],
   )
 
   const handleRenameZone = useCallback(

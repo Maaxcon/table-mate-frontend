@@ -90,6 +90,7 @@ type Action =
       canvasRows?: number
     }
   | { type: "SET_CANVAS_SIZE"; cols: number; rows: number; zoneId?: string | null }
+  | { type: "UPDATE_ZONE_CANVAS_SIZE"; zoneId: string; cols: number; rows: number }
   | { type: "REMOVE_ENTITIES_BY_ZONE"; zoneId: string }
   | { type: "CLEAR" }
   | { type: "CREATE_ZONE"; zone: PendingZoneCreate }
@@ -223,6 +224,26 @@ function removeEntitiesBatch(state: EditorState, ids: Set<string>): EditorState 
           ? null
           : state.selectedId,
     dirty: computeDirty(entities, state.lastPublishedJson),
+  })
+}
+
+function reclampZoneEntities(
+  entities: EditorEntity[],
+  zoneId: string | null,
+  cols: number,
+  rows: number,
+): EditorEntity[] {
+  return entities.map((entity) => {
+    const applies = (entity.zoneId ?? null) === zoneId
+    if (!applies) return entity
+    const { x, y } = clampEntityToBackendLimits(entity.x, entity.y, entity.type, cols, rows)
+    let { w, h } = entity
+    if (x + w > cols) w = Math.max(1, cols - x)
+    if (y + h > rows) h = Math.max(1, rows - y)
+    if (w !== entity.w || h !== entity.h || x !== entity.x || y !== entity.y) {
+      return { ...entity, x, y, w, h }
+    }
+    return entity
   })
 }
 
@@ -531,18 +552,7 @@ function editorReducer(state: EditorState, action: Action): EditorState {
       // Only the active zone's entities are reclamped. A smaller zone's canvas
       // must not squash tables that live in a larger sibling zone.
       const targetZoneId = action.zoneId ?? null
-      const reclamped = state.entities.map((e) => {
-        const applies = (e.zoneId ?? null) === targetZoneId
-        if (!applies) return e
-        const { x, y } = clampEntityToBackendLimits(e.x, e.y, e.type, action.cols, action.rows)
-        let { w, h } = e
-        if (x + w > action.cols) w = Math.max(1, action.cols - x)
-        if (y + h > action.rows) h = Math.max(1, action.rows - y)
-        if (w !== e.w || h !== e.h || x !== e.x || y !== e.y) {
-          return { ...e, x, y, w, h }
-        }
-        return e
-      })
+      const reclamped = reclampZoneEntities(state.entities, targetZoneId, action.cols, action.rows)
       const hasEntityChanges = reclamped.some((entity, index) => entity !== state.entities[index])
       if (
         !hasEntityChanges &&
@@ -564,6 +574,59 @@ function editorReducer(state: EditorState, action: Action): EditorState {
         canvasRows: action.rows,
         entities: reclamped,
         dirty: state.dirty || computeDirty(reclamped, state.lastPublishedJson),
+      })
+    }
+    case "UPDATE_ZONE_CANVAS_SIZE": {
+      const patch = { canvas_cols: action.cols, canvas_rows: action.rows }
+      let pendingZones = state.pendingZones
+      const createdIndex = state.pendingZones.created.findIndex(
+        (z) => z._clientId === action.zoneId,
+      )
+      if (createdIndex >= 0) {
+        const current = state.pendingZones.created[createdIndex]
+        if (current.canvas_cols !== action.cols || current.canvas_rows !== action.rows) {
+          const created = [...state.pendingZones.created]
+          created[createdIndex] = { ...current, ...patch }
+          pendingZones = { ...state.pendingZones, created }
+        }
+      } else {
+        const currentPatch = state.pendingZones.updated[action.zoneId]
+        if (
+          currentPatch?.canvas_cols !== action.cols ||
+          currentPatch?.canvas_rows !== action.rows
+        ) {
+          pendingZones = {
+            ...state.pendingZones,
+            updated: {
+              ...state.pendingZones.updated,
+              [action.zoneId]: {
+                ...currentPatch,
+                ...patch,
+              },
+            },
+          }
+        }
+      }
+
+      const targetZoneId = action.zoneId ?? null
+      const reclamped = reclampZoneEntities(state.entities, targetZoneId, action.cols, action.rows)
+      const hasEntityChanges = reclamped.some((entity, index) => entity !== state.entities[index])
+      const pendingZonesChanged = pendingZones !== state.pendingZones
+      const canvasChanged = state.canvasCols !== action.cols || state.canvasRows !== action.rows
+
+      if (!pendingZonesChanged && !hasEntityChanges && !canvasChanged) return state
+
+      return pushHistory(state, {
+        ...state,
+        pendingZones,
+        canvasCols: action.cols,
+        canvasRows: action.rows,
+        entities: reclamped,
+        dirty: pendingZonesChanged
+          ? true
+          : hasEntityChanges
+            ? state.dirty || computeDirty(reclamped, state.lastPublishedJson)
+            : state.dirty,
       })
     }
     case "REMOVE_ENTITIES_BY_ZONE": {
@@ -822,6 +885,10 @@ export function useEditorState() {
     dispatch({ type: "UPDATE_ZONE_META", zoneId, patch })
   }, [])
 
+  const updateZoneCanvasSize = useCallback((zoneId: string, cols: number, rows: number) => {
+    dispatch({ type: "UPDATE_ZONE_CANVAS_SIZE", zoneId, cols, rows })
+  }, [])
+
   const deleteZone = useCallback((zoneId: string) => {
     dispatch({ type: "DELETE_ZONE", zoneId })
   }, [])
@@ -857,6 +924,7 @@ export function useEditorState() {
     removeEntitiesByZone,
     createZone,
     updateZoneMeta,
+    updateZoneCanvasSize,
     deleteZone,
     clearPendingZones,
     undo,

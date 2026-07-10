@@ -2,6 +2,11 @@ import { describe, it, expect } from "vitest"
 import { act, renderHook } from "@testing-library/react"
 import { useEditorState, getNextTableLabel } from "./useEditorState"
 import type { EditorEntity } from "@/features/editor/types"
+import {
+  DEFAULT_CANVAS_COLS,
+  DEFAULT_CANVAS_ROWS,
+  serializeEntities,
+} from "@/features/editor/types"
 
 describe("useEditorState — publishSuccess", () => {
   it("stays clean after publishing a newly created table (server id applied atomically)", () => {
@@ -233,5 +238,55 @@ describe("useEditorState — undo/redo", () => {
     expect(result.current.entities).toHaveLength(2)
     expect(result.current.entities.some((entity) => entity.id === firstId)).toBe(true)
     expect(result.current.entities.some((entity) => entity.id === secondId)).toBe(true)
+  })
+
+  it("keeps canvas resize as one undoable action even after sync SET_CANVAS_SIZE", () => {
+    const { result } = renderHook(() => useEditorState())
+    const initial: EditorEntity = {
+      id: "table-zone-1",
+      type: "table-square",
+      x: DEFAULT_CANVAS_COLS - 2,
+      y: 0,
+      w: 2,
+      h: 2,
+      rotation: 0,
+      zoneId: "zone-1",
+    }
+
+    act(() => {
+      result.current.loadEntities([initial], serializeEntities([initial]))
+    })
+    expect(result.current.past).toHaveLength(0)
+
+    act(() => {
+      result.current.updateZoneCanvasSize("zone-1", 10, 10)
+    })
+    expect(result.current.past).toHaveLength(1)
+    expect(result.current.pendingZones.updated["zone-1"]).toMatchObject({
+      canvas_cols: 10,
+      canvas_rows: 10,
+    })
+    expect(result.current.entities.find((entity) => entity.id === initial.id)?.x).toBe(8)
+
+    // Mirrors FloorPlanEditorPage sync effect after selected zone meta changes.
+    act(() => {
+      result.current.dispatch({
+        type: "SET_CANVAS_SIZE",
+        cols: 10,
+        rows: 10,
+        zoneId: "zone-1",
+      })
+    })
+    expect(result.current.past).toHaveLength(1)
+
+    act(() => {
+      result.current.undo()
+    })
+    expect(result.current.pendingZones.updated["zone-1"]).toBeUndefined()
+    expect(result.current.canvasCols).toBe(DEFAULT_CANVAS_COLS)
+    expect(result.current.canvasRows).toBe(DEFAULT_CANVAS_ROWS)
+    expect(result.current.entities.find((entity) => entity.id === initial.id)?.x).toBe(
+      DEFAULT_CANVAS_COLS - 2,
+    )
   })
 })
