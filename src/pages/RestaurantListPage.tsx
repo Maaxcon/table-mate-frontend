@@ -112,7 +112,7 @@ export function RestaurantListPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const user = useAppSelector((s) => s.auth.user)
-  const createRestaurantLink = user?.role === "admin" ? "/admin/restaurant" : "/"
+  const isAdmin = user?.role === "admin"
 
   const loadRestaurants = useCallback(async (signal?: AbortSignal) => {
     try {
@@ -241,16 +241,17 @@ export function RestaurantListPage() {
         <section className="rlp__state">
           <h2 className="rlp__state-title">No restaurants yet</h2>
           <p className="rlp__state-text">
-            Create your first restaurant to start building the menu and bookings.
+            {isAdmin
+              ? "Create your first restaurant to start building the menu and bookings."
+              : "No restaurants are available yet. Please check back later."}
           </p>
-          <div className="rlp__state-actions">
-            <Link
-              to={createRestaurantLink}
-              className="rlp__state-button rlp__state-button--primary"
-            >
-              Create restaurant
-            </Link>
-          </div>
+          {isAdmin && (
+            <div className="rlp__state-actions">
+              <Link to="/admin/restaurant" className="rlp__state-button rlp__state-button--primary">
+                Create restaurant
+              </Link>
+            </div>
+          )}
         </section>
       )}
 
