@@ -8,7 +8,7 @@ interface TableBlockProps {
   entity: EditorEntity
   selected: boolean
   onMouseDown: (e: React.MouseEvent, id: string) => void
-  onClick: (id: string) => void
+  onClick: (e: React.MouseEvent | React.KeyboardEvent, id: string) => void
   onResize?: (id: string, w: number, h: number) => void
   onMove?: (id: string, x: number, y: number) => void
   canvasScale?: number
@@ -55,9 +55,9 @@ export function TableBlock({
         entity.capacity ? `, ${entity.capacity} seats` : ""
       }`}
       onMouseDown={(e) => onMouseDown(e, entity.id)}
-      onClick={() => onClick(entity.id)}
+      onClick={(e) => onClick(e, entity.id)}
       onKeyDown={(e) => {
-        if (e.key === "Enter") onClick(entity.id)
+        if (e.key === "Enter") onClick(e, entity.id)
       }}
     >
       <span style={uprightContentStyle(entity.rotation)}>

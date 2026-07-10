@@ -19,6 +19,50 @@ interface ResizeHandlesProps {
 }
 
 type Corner = "nw" | "ne" | "sw" | "se"
+type Handle = Corner | "n" | "e" | "s" | "w"
+type Point = { x: number; y: number }
+
+function getOppositeAnchor(handle: Handle, w: number, h: number): Point {
+  switch (handle) {
+    case "n":
+      return { x: w / 2, y: h }
+    case "e":
+      return { x: 0, y: h / 2 }
+    case "s":
+      return { x: w / 2, y: 0 }
+    case "w":
+      return { x: w, y: h / 2 }
+    case "nw":
+      return { x: w, y: h }
+    case "ne":
+      return { x: 0, y: h }
+    case "sw":
+      return { x: w, y: 0 }
+    case "se":
+      return { x: 0, y: 0 }
+  }
+}
+
+function toWorldPoint(
+  rect: { x: number; y: number; w: number; h: number },
+  local: Point,
+  rotation?: number,
+): Point {
+  if (!rotation) {
+    return { x: rect.x + local.x, y: rect.y + local.y }
+  }
+  const rad = (rotation * Math.PI) / 180
+  const cos = Math.cos(rad)
+  const sin = Math.sin(rad)
+  const cx = rect.x + rect.w / 2
+  const cy = rect.y + rect.h / 2
+  const dx = local.x - rect.w / 2
+  const dy = local.y - rect.h / 2
+  return {
+    x: cx + dx * cos - dy * sin,
+    y: cy + dx * sin + dy * cos,
+  }
+}
 
 export function ResizeHandles({
   entityId,
@@ -35,7 +79,7 @@ export function ResizeHandles({
   canvasRows,
 }: ResizeHandlesProps) {
   const dragRef = useRef<{
-    corner: Corner
+    handle: Handle
     startX: number
     startY: number
     startW: number
@@ -45,13 +89,13 @@ export function ResizeHandles({
   } | null>(null)
 
   const handleMouseDown = useCallback(
-    (e: React.MouseEvent, corner: Corner) => {
+    (e: React.MouseEvent, handle: Handle) => {
       e.preventDefault()
       e.stopPropagation()
       const el = (e.currentTarget as HTMLElement).parentElement
       if (!el) return
       dragRef.current = {
-        corner,
+        handle,
         startX: e.clientX,
         startY: e.clientY,
         startW: Math.round(el.offsetWidth / GRID),
@@ -80,26 +124,136 @@ export function ResizeHandles({
         dx = rdx
         dy = rdy
       }
-      let newW = drag.startW
-      let newH = drag.startH
-      if (drag.corner.includes("e")) newW = Math.max(1, snap(drag.startW * GRID + dx) / GRID)
-      if (drag.corner.includes("w")) newW = Math.max(1, snap(drag.startW * GRID - dx) / GRID)
-      if (drag.corner.includes("s")) newH = Math.max(1, snap(drag.startH * GRID + dy) / GRID)
-      if (drag.corner.includes("n")) newH = Math.max(1, snap(drag.startH * GRID - dy) / GRID)
+      const stepX = snap(dx) / GRID
+      const stepY = snap(dy) / GRID
+
+      let left = drag.startEntityX
+      let top = drag.startEntityY
+      let right = drag.startEntityX + drag.startW
+      let bottom = drag.startEntityY + drag.startH
+
+      if (drag.handle.includes("w")) left = drag.startEntityX + stepX
+      if (drag.handle.includes("e")) right = drag.startEntityX + drag.startW + stepX
+      if (drag.handle.includes("n")) top = drag.startEntityY + stepY
+      if (drag.handle.includes("s")) bottom = drag.startEntityY + drag.startH + stepY
+
+      let newW = Math.max(1, right - left)
+      let newH = Math.max(1, bottom - top)
       const c = SIZE_CONSTRAINTS[entityType]
-      if (c) {
-        newW = Math.max(c.minW, Math.min(c.maxW, newW))
-        newH = Math.max(c.minH, Math.min(c.maxH, newH))
-        if (c.lockAspect) {
-          const side = Math.max(newW, newH)
+
+      if (c?.lockAspect) {
+        const minSide = c.minW
+        const maxSide = c.maxW
+        const startRight = drag.startEntityX + drag.startW
+        const startBottom = drag.startEntityY + drag.startH
+        const startCenterX = drag.startEntityX + drag.startW / 2
+        const startCenterY = drag.startEntityY + drag.startH / 2
+        const h = drag.handle
+
+        if (h === "n" || h === "s") {
+          let side = drag.startH + (h === "s" ? stepY : -stepY)
+          side = Math.max(minSide, Math.min(maxSide, side))
+          if (h === "s") {
+            top = drag.startEntityY
+            bottom = top + side
+          } else {
+            bottom = startBottom
+            top = bottom - side
+          }
+          left = startCenterX - side / 2
+          right = left + side
+          newW = side
+          newH = side
+        } else if (h === "w" || h === "e") {
+          let side = drag.startW + (h === "e" ? stepX : -stepX)
+          side = Math.max(minSide, Math.min(maxSide, side))
+          if (h === "e") {
+            left = drag.startEntityX
+            right = left + side
+          } else {
+            right = startRight
+            left = right - side
+          }
+          top = startCenterY - side / 2
+          bottom = top + side
+          newW = side
+          newH = side
+        } else {
+          let side = Math.max(newW, newH)
+          side = Math.max(minSide, Math.min(maxSide, side))
+          if (h === "se") {
+            left = drag.startEntityX
+            top = drag.startEntityY
+            right = left + side
+            bottom = top + side
+          } else if (h === "sw") {
+            right = startRight
+            top = drag.startEntityY
+            left = right - side
+            bottom = top + side
+          } else if (h === "ne") {
+            left = drag.startEntityX
+            bottom = startBottom
+            right = left + side
+            top = bottom - side
+          } else {
+            right = startRight
+            bottom = startBottom
+            left = right - side
+            top = bottom - side
+          }
           newW = side
           newH = side
         }
+      } else if (c) {
+        const startRight = drag.startEntityX + drag.startW
+        const startBottom = drag.startEntityY + drag.startH
+        newW = Math.max(c.minW, Math.min(c.maxW, newW))
+        newH = Math.max(c.minH, Math.min(c.maxH, newH))
+        if (drag.handle.includes("w") && !drag.handle.includes("e")) {
+          left = startRight - newW
+          right = startRight
+        } else if (drag.handle.includes("e") && !drag.handle.includes("w")) {
+          right = drag.startEntityX + newW
+          left = right - newW
+        }
+        if (drag.handle.includes("n") && !drag.handle.includes("s")) {
+          top = startBottom - newH
+          bottom = startBottom
+        } else if (drag.handle.includes("s") && !drag.handle.includes("n")) {
+          bottom = drag.startEntityY + newH
+          top = bottom - newH
+        }
       }
-      let newX = drag.startEntityX
-      let newY = drag.startEntityY
-      if (drag.corner.includes("w")) newX = drag.startEntityX + drag.startW - newW
-      if (drag.corner.includes("n")) newY = drag.startEntityY + drag.startH - newH
+
+      if (entityRotation) {
+        const startAnchor = toWorldPoint(
+          {
+            x: drag.startEntityX,
+            y: drag.startEntityY,
+            w: drag.startW,
+            h: drag.startH,
+          },
+          getOppositeAnchor(drag.handle, drag.startW, drag.startH),
+          entityRotation,
+        )
+        const nextAnchor = toWorldPoint(
+          {
+            x: left,
+            y: top,
+            w: newW,
+            h: newH,
+          },
+          getOppositeAnchor(drag.handle, newW, newH),
+          entityRotation,
+        )
+        left += startAnchor.x - nextAnchor.x
+        top += startAnchor.y - nextAnchor.y
+      }
+
+      const shouldRoundPosition = c?.lockAspect || Boolean(entityRotation)
+      const newX = shouldRoundPosition ? Math.round(left) : left
+      const newY = shouldRoundPosition ? Math.round(top) : top
       onResize(entityId, newW, newH)
       onMove(entityId, newX, newY)
     }
@@ -122,34 +276,38 @@ export function ResizeHandles({
   const atLeft = aabb.x <= 0
   const atRight = aabb.x + aabb.w >= canvasCols
 
-  const cornerLabels: Record<Corner, string> = {
+  const handleLabels: Record<Handle, string> = {
+    n: "top",
+    e: "right",
+    s: "bottom",
+    w: "left",
     nw: "top-left",
     ne: "top-right",
     sw: "bottom-left",
     se: "bottom-right",
   }
 
-  const allCorners: Corner[] = ["nw", "ne", "sw", "se"]
-  const corners = allCorners.filter((c) => {
-    if (c === "nw" && (atTop || atLeft)) return false
-    if (c === "ne" && (atTop || atRight)) return false
-    if (c === "sw" && (atBottom || atLeft)) return false
-    if (c === "se" && (atBottom || atRight)) return false
+  const allHandles: Handle[] = ["n", "e", "s", "w", "nw", "ne", "sw", "se"]
+  const handles = allHandles.filter((handle) => {
+    if (handle.includes("n") && atTop) return false
+    if (handle.includes("s") && atBottom) return false
+    if (handle.includes("w") && atLeft) return false
+    if (handle.includes("e") && atRight) return false
     return true
   })
 
   return (
     <>
-      {corners.map((c) => (
+      {handles.map((handle) => (
         <div
-          key={c}
-          className={`editor-block__resize editor-block__resize--${c}`}
+          key={handle}
+          className={`editor-block__resize editor-block__resize--${handle}`}
           role="button"
           tabIndex={0}
-          aria-label={`Resize ${cornerLabels[c]}`}
-          onMouseDown={(e) => handleMouseDown(e, c)}
+          aria-label={`Resize ${handleLabels[handle]}`}
+          onMouseDown={(e) => handleMouseDown(e, handle)}
           onKeyDown={(e) => {
-            if (e.key === "Enter") handleMouseDown(e as unknown as React.MouseEvent, c)
+            if (e.key === "Enter") handleMouseDown(e as unknown as React.MouseEvent, handle)
           }}
         />
       ))}

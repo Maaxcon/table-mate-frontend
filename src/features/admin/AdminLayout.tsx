@@ -1,7 +1,6 @@
 import { useMemo, useState } from "react"
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom"
 import {
-  LuArrowLeft,
   LuChefHat,
   LuLayoutDashboard,
   LuLogOut,
@@ -37,6 +36,7 @@ function AdminLayout() {
   const user = useAppSelector((state) => state.auth.user)
 
   const [dirty, setDirty] = useState(false)
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
   // A queued navigation, held back until the user confirms leaving unsaved edits.
   const [pending, setPending] = useState<(() => void) | null>(null)
 
@@ -63,18 +63,24 @@ function AdminLayout() {
   return (
     <ToastProvider>
       <UnsavedChangesContext.Provider value={unsavedValue}>
-        <div className="admin-layout">
+        <div
+          className={["admin-layout", isSidebarCollapsed ? "admin-layout--sidebar-collapsed" : ""]
+            .filter(Boolean)
+            .join(" ")}
+        >
           <aside className="admin-layout__sidebar">
             <div className="admin-layout__brand">
+              <span className="admin-layout__brand-name">Admin</span>
               <button
                 type="button"
-                className="admin-layout__icon-btn"
-                onClick={() => guarded(() => navigate("/cabinet"))}
-                aria-label="Back to cabinet"
+                className="admin-layout__icon-btn admin-layout__icon-btn--collapse"
+                onClick={() => setIsSidebarCollapsed((prev) => !prev)}
+                aria-expanded={!isSidebarCollapsed}
+                aria-label={isSidebarCollapsed ? "Expand side menu" : "Collapse side menu"}
+                title={isSidebarCollapsed ? "Expand side menu" : "Collapse side menu"}
               >
-                <LuArrowLeft aria-hidden="true" />
+                <span aria-hidden="true">{isSidebarCollapsed ? "»" : "«"}</span>
               </button>
-              <span className="admin-layout__brand-name">Admin</span>
             </div>
 
             <nav className="admin-layout__nav">
@@ -82,6 +88,8 @@ function AdminLayout() {
                 <NavLink
                   key={to}
                   to={to}
+                  aria-label={label}
+                  title={isSidebarCollapsed ? label : undefined}
                   className={({ isActive }) =>
                     `admin-layout__nav-link${isActive ? " admin-layout__nav-link--active" : ""}`
                   }
