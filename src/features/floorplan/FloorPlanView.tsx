@@ -180,8 +180,7 @@ function FloorPlanViewImpl({
     }
   }, [enableZoom, zoom, scale, framePxW, framePxH, containerWidth, containerHeight])
 
-  const { interactiveZoom, totalScale, pad, scaledW, scaledH, offsetX, offsetY, maxPanX, maxPanY } =
-    viewMetrics
+  const { totalScale, pad, scaledW, scaledH, offsetX, offsetY, maxPanX, maxPanY } = viewMetrics
 
   const clampPanRatio = useCallback(
     (next: { x: number; y: number }) => ({
@@ -237,7 +236,7 @@ function FloorPlanViewImpl({
         pinchStartRef.current = { dist, zoom: zoomRef.current }
       }
     },
-    [enableZoom, enablePan, maxPanX, maxPanY],
+    [enableZoom, enablePan],
   )
 
   const handleTouchMove = useCallback(
@@ -387,15 +386,6 @@ function FloorPlanViewImpl({
     )
   }
 
-  const interactiveZoom = enableZoom ? zoom : 1
-  const totalScale = scale * interactiveZoom
-  const pad = GRID * totalScale
-  const scaledW = framePxW * totalScale + 2 * pad
-  const scaledH = framePxH * totalScale + 2 * pad
-  const offsetX = Math.max((containerWidth - scaledW) / 2, 0)
-  const offsetY = Math.max((containerHeight - scaledH) / 2, 0)
-  const maxPanX = Math.max(0, (scaledW - containerWidth) / 2)
-  const maxPanY = Math.max(0, (scaledH - containerHeight) / 2)
   const interactivePan = enablePan
     ? {
         x: panRatio.x * maxPanX,
