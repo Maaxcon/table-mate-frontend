@@ -1,3 +1,4 @@
+/// <reference types="node" />
 import { describe, it, expect, beforeAll } from "vitest"
 
 beforeAll(() => {

@@ -1,3 +1,4 @@
+/// <reference types="node" />
 import { describe, it, expect, beforeAll } from "vitest"
 
 beforeAll(() => {
@@ -31,14 +32,19 @@ function getDayExtendedBounds(
   const nextHours = workingHours[nextDayKey]
 
   const prevClose = prevHours ? toMinutes(prevHours.close) : null
+  const prevOpen = prevHours ? toMinutes(prevHours.open) : null
   const nextOpen = nextHours ? toMinutes(nextHours.open) : null
 
   const thisOpen = openMin
 
   let minHour = 0
-  if (prevClose != null) {
-    const prevCloseAdjusted = prevClose <= thisOpen ? prevClose : prevClose - 24 * 60
-    minHour = Math.floor(prevCloseAdjusted / 60)
+  if (prevClose != null && prevOpen != null) {
+    if (prevClose < prevOpen) {
+      minHour = 0
+    } else {
+      const prevCloseAdjusted = prevClose <= thisOpen ? prevClose : prevClose - 24 * 60
+      minHour = Math.floor(prevCloseAdjusted / 60)
+    }
   }
 
   let maxHour = 24
@@ -87,6 +93,16 @@ describe("getDayExtendedBounds", () => {
     }
     const result = getDayExtendedBounds("2026-07-05", whOvernight)
     expect(result).toEqual({ minHour: -1, maxHour: 33 })
+  })
+
+  it("sets minHour to 0 when prev day closes after midnight", () => {
+    const whOvernightPrev = {
+      ...wh,
+      sat: { open: "18:00", close: "02:00" },
+    }
+    const result = getDayExtendedBounds("2026-07-05", whOvernightPrev)
+    expect(result?.minHour).toBe(0)
+    expect(result?.maxHour).toBe(33)
   })
 
   it("sets minHour to 0 when there is no previous day data", () => {

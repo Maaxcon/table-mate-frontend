@@ -1,3 +1,4 @@
+/// <reference types="node" />
 import { describe, it, expect, beforeAll } from "vitest"
 
 beforeAll(() => {
@@ -234,6 +235,10 @@ describe("checkOverlap", () => {
       new_date: "2026-07-02",
       new_start_time: "10:00",
       new_end_time: "12:00",
+      customer_name: "C",
+      guest_count: 2,
+      opened_at: null,
+      status: "pending",
     }
     const proposed: TimeRange = {
       table_id: "t1",

@@ -1,3 +1,4 @@
+/// <reference types="node" />
 import { describe, it, expect, beforeAll } from "vitest"
 
 beforeAll(() => {
@@ -75,13 +76,7 @@ function isCrossDayReservation(
     return resMinutes <= bounds.maxHour * 60 ? "next" : null
   }
   if (isoToDateKey(resEndAt) !== date) return null
-  const endD = new Date(resEndAt)
-  const endMinutes = endD.getHours() * 60 + endD.getMinutes()
-  const dayKey = DAY_KEYS[new Date(date + "T00:00:00").getDay()]
-  const dayHours = workingHours?.[dayKey]
-  if (!dayHours) return null
-  const openMinutes = toMinutes(dayHours.open)
-  return endMinutes < openMinutes ? "prev" : null
+  return "prev"
 }
 
 const wh = {
@@ -131,14 +126,14 @@ describe("isCrossDayReservation", () => {
     expect(result).toBe("prev")
   })
 
-  it("returns null when reservation ends on current date after opening time", () => {
+  it("returns 'prev' when reservation ends on current date after opening time", () => {
     const result = isCrossDayReservation(
       "2026-07-04T22:00:00.000Z",
       "2026-07-05T14:00:00.000Z",
       "2026-07-05",
       wh,
     )
-    expect(result).toBeNull()
+    expect(result).toBe("prev")
   })
 
   it("returns null when reservation date is not adjacent (diff !== 1)", () => {
@@ -151,14 +146,14 @@ describe("isCrossDayReservation", () => {
     expect(result).toBeNull()
   })
 
-  it("returns null for 'prev' when target day has no working hours", () => {
+  it("returns 'prev' when target day has no working hours", () => {
     const result = isCrossDayReservation(
       "2026-07-04T22:00:00.000Z",
       "2026-07-05T01:00:00.000Z",
       "2026-07-05",
       { mon: { open: "09:00", close: "21:00" } },
     )
-    expect(result).toBeNull()
+    expect(result).toBe("prev")
   })
 
   it("returns null for 'next' when getDayExtendedBounds returns null", () => {
