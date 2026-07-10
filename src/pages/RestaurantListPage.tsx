@@ -293,7 +293,6 @@ export function RestaurantListPage() {
                   <h2 className="rlp__card-name">{r.name}</h2>
                 </div>
                 <p className="rlp__card-address">{r.address}</p>
-                {r.cuisine && <p className="rlp__card-meta">{r.cuisine}</p>}
 
                 <dl className="rlp__card-facts">
                   <div>

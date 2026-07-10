@@ -325,13 +325,6 @@
   color: color-mix(in srgb, var(--color-text-primary) 76%, transparent);
 }
 
-.rlp__card-meta {
-  margin: 0;
-  font-size: 13px;
-  color: color-mix(in srgb, var(--color-primary) 78%, var(--color-text-primary));
-  font-weight: 600;
-}
-
 .rlp__card-facts {
   margin: 2px 0 0;
   display: grid;
