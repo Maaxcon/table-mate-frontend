@@ -165,8 +165,8 @@ function FloorPlanViewImpl({
     const scaledH = framePxH * totalScale + 2 * pad
     const offsetX = Math.max((containerWidth - scaledW) / 2, 0)
     const offsetY = Math.max((containerHeight - scaledH) / 2, 0)
-    const maxPanX = Math.max(0, (scaledW - containerWidth) / 2)
-    const maxPanY = Math.max(0, (scaledH - containerHeight) / 2)
+    const maxPanX = Math.max(0, scaledW - containerWidth)
+    const maxPanY = Math.max(0, scaledH - containerHeight)
     return {
       interactiveZoom,
       totalScale,
