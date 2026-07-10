@@ -88,6 +88,8 @@ function AdminLayout() {
                 <NavLink
                   key={to}
                   to={to}
+                  aria-label={label}
+                  title={isSidebarCollapsed ? label : undefined}
                   className={({ isActive }) =>
                     `admin-layout__nav-link${isActive ? " admin-layout__nav-link--active" : ""}`
                   }
