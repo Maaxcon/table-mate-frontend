@@ -727,16 +727,12 @@ export function ReservationScheduler() {
         refetch()
         toast.success("Reservations updated successfully.")
       } else {
+        toast.error(result.message)
         if (result.conflicting_reservation_id) {
           markConflict(result.conflicting_reservation_id)
-          toast.error(result.message)
-        } else {
-          handleResetChanges()
-          toast.error(result.message)
         }
       }
     } catch {
-      handleResetChanges()
       toast.error("Failed to save changes.")
     } finally {
       setSaving(false)
@@ -751,7 +747,6 @@ export function ReservationScheduler() {
     refetch,
     toast,
     markConflict,
-    handleResetChanges,
   ])
 
   const pendingCancelReservation = pendingCancelConfirmId
