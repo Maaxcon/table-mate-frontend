@@ -120,6 +120,53 @@
   padding: 0;
 }
 
+/* Medium: sidebar stays on the left but collapses to icon-only (like mini sidebar) */
+@media (min-width: 721px) and (max-width: 1300px) {
+  .admin-layout {
+    grid-template-columns: 84px 1fr;
+  }
+
+  .admin-layout__sidebar {
+    padding: 20px 10px;
+    align-items: center;
+  }
+
+  .admin-layout__brand {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .admin-layout__brand-name {
+    display: none;
+  }
+
+  .admin-layout__nav-link {
+    justify-content: center;
+    padding: 10px;
+  }
+
+  .admin-layout__nav-link span {
+    display: none;
+  }
+
+  .admin-layout__footer {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .admin-layout__user {
+    display: none;
+  }
+
+  .admin-layout__content {
+    padding: 24px;
+  }
+
+  .admin-layout__content--flush {
+    padding: 0;
+  }
+}
+
 /* Mobile: sidebar becomes a top bar with horizontal nav */
 @media (max-width: 720px) {
   .admin-layout {
