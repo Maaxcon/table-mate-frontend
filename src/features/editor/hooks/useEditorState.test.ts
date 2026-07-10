@@ -174,4 +174,45 @@ describe("useEditorState — undo/redo", () => {
     expect(restoredLeft?.x).toBe(1)
     expect(restoredRight?.x).toBe(10)
   })
+
+  it("adds multiple entities as one undoable action", () => {
+    const { result } = renderHook(() => useEditorState())
+
+    act(() => {
+      result.current.addEntities([
+        { id: "a", type: "table-square", x: 0, y: 0, w: 2, h: 2, rotation: 0 },
+        { id: "b", type: "table-square", x: 4, y: 0, w: 2, h: 2, rotation: 0 },
+      ])
+    })
+    expect(result.current.entities).toHaveLength(2)
+
+    act(() => {
+      result.current.undo()
+    })
+    expect(result.current.entities).toHaveLength(0)
+  })
+
+  it("removes multiple entities as one undoable action", () => {
+    const { result } = renderHook(() => useEditorState())
+
+    let firstId = ""
+    let secondId = ""
+    act(() => {
+      firstId = result.current.addEntity("table-square", 0, 0)!.id
+      secondId = result.current.addEntity("table-square", 4, 0)!.id
+    })
+    expect(result.current.entities).toHaveLength(2)
+
+    act(() => {
+      result.current.removeEntities([firstId, secondId])
+    })
+    expect(result.current.entities).toHaveLength(0)
+
+    act(() => {
+      result.current.undo()
+    })
+    expect(result.current.entities).toHaveLength(2)
+    expect(result.current.entities.some((entity) => entity.id === firstId)).toBe(true)
+    expect(result.current.entities.some((entity) => entity.id === secondId)).toBe(true)
+  })
 })

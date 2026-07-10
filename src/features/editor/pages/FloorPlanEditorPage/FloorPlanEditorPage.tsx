@@ -61,10 +61,12 @@ function FloorPlanEditorPage() {
     activeTool,
     lastPublishedJson,
     addEntity,
+    addEntities,
     updateEntity,
     moveEntity,
     moveEntitiesByDelta,
     removeEntity,
+    removeEntities,
     selectEntity,
     setTool,
     publishSuccess,
@@ -454,12 +456,22 @@ function FloorPlanEditorPage() {
   const handleDeleteSelected = useCallback(
     (ids: string[]) => {
       const uniqueIds = Array.from(new Set(ids))
+      const deletableIds: string[] = []
       for (const id of uniqueIds) {
-        handleDeleteEntity(id)
+        const entity = entities.find((item) => item.id === id)
+        const isTable = entity?.type === "table-square" || entity?.type === "table-round"
+        if (isTable && entity?.serverId && occupiedTableIds.has(entity.serverId)) {
+          toast.error("Can't delete an occupied table — close its visit first.")
+          continue
+        }
+        deletableIds.push(id)
       }
-      setSelectedIds((prev) => prev.filter((id) => !uniqueIds.includes(id)))
+      if (deletableIds.length === 0) return
+      const deletableSet = new Set(deletableIds)
+      removeEntities(deletableIds)
+      setSelectedIds((prev) => prev.filter((id) => !deletableSet.has(id)))
     },
-    [handleDeleteEntity],
+    [entities, occupiedTableIds, removeEntities, toast],
   )
 
   const zoneEntities = useMemo(
@@ -581,7 +593,7 @@ function FloorPlanEditorPage() {
         pasteStepRef.current += 1
         const offset = pasteStepRef.current
         const { minX, minY } = copiedBoundsRef.current
-        const createdIds: string[] = []
+        const created: EditorEntity[] = []
         let nextEntities = [...entities]
 
         for (const copied of copiedEntities) {
@@ -591,8 +603,11 @@ function FloorPlanEditorPage() {
           const pasteY = minY + relativeY + offset
           const copiedIntoZoneId = selectedZoneId ?? copied.zoneId
           const label = isTableEntity(copied) ? getNextTableLabel(nextEntities) : copied.label
-
-          const next = addEntity(copied.type, pasteX, pasteY, {
+          const next: EditorEntity = {
+            id: crypto.randomUUID(),
+            type: copied.type,
+            x: pasteX,
+            y: pasteY,
             w: copied.w,
             h: copied.h,
             label,
@@ -601,13 +616,13 @@ function FloorPlanEditorPage() {
             tags: copied.tags ? [...copied.tags] : undefined,
             zoneId: copiedIntoZoneId,
             targetZoneId: copied.targetZoneId,
-            rotation: copied.rotation,
-          })
-          if (next) {
-            createdIds.push(next.id)
-            nextEntities = [...nextEntities, { ...next, label }]
+            rotation: copied.rotation ?? 0,
           }
+          created.push(next)
+          nextEntities = [...nextEntities, next]
         }
+
+        const createdIds = addEntities(created).map((entity) => entity.id)
         if (createdIds.length > 0) {
           handleSelectionChange(createdIds, createdIds[0])
         }
@@ -630,7 +645,7 @@ function FloorPlanEditorPage() {
     window.addEventListener("keydown", onKeyDown)
     return () => window.removeEventListener("keydown", onKeyDown)
   }, [
-    addEntity,
+    addEntities,
     entities,
     handleDeleteSelected,
     handleSelectionChange,

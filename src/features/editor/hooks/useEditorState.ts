@@ -67,10 +67,12 @@ interface EditorHistorySnapshot {
 
 type Action =
   | { type: "ADD_ENTITY"; entity: EditorEntity }
+  | { type: "ADD_ENTITIES"; entities: EditorEntity[] }
   | { type: "UPDATE_ENTITY"; id: string; patch: Partial<EditorEntity> }
   | { type: "MOVE_ENTITY"; id: string; x: number; y: number; zoneId?: string }
   | { type: "MOVE_ENTITIES_BY_DELTA"; ids: string[]; dx: number; dy: number; zoneId?: string }
   | { type: "REMOVE_ENTITY"; id: string }
+  | { type: "REMOVE_ENTITIES"; ids: string[] }
   | { type: "SELECT_ENTITY"; id: string | null }
   | { type: "SET_TOOL"; tool: string | null }
   | {
@@ -186,32 +188,70 @@ function pushHistory(state: EditorState, next: EditorState): EditorState {
   }
 }
 
+function placeEntity(
+  entities: EditorEntity[],
+  entity: EditorEntity,
+  canvasCols: number,
+  canvasRows: number,
+): EditorEntity {
+  const entityZoneId = entity.zoneId
+  const others = entityZoneId ? entities.filter((e) => e.zoneId === entityZoneId) : entities
+  const free = findFreePosition({ ...entity }, others, canvasCols, canvasRows)
+  const clamped = clampEntityToBackendLimits(free.x, free.y, entity.type, canvasCols, canvasRows)
+  return { ...entity, x: clamped.x, y: clamped.y }
+}
+
+function removeEntitiesBatch(state: EditorState, ids: Set<string>): EditorState {
+  const removed = state.entities.filter((entity) => ids.has(entity.id))
+  if (removed.length === 0) return state
+  const entities = state.entities.filter((entity) => !ids.has(entity.id))
+
+  const deletedServerIds = [...state.deletedServerIds]
+  for (const entity of removed) {
+    if (!entity.serverId || deletedServerIds.includes(entity.serverId)) continue
+    deletedServerIds.push(entity.serverId)
+  }
+
+  return pushHistory(state, {
+    ...state,
+    entities,
+    deletedServerIds,
+    selectedId:
+      state.selectedId && ids.has(state.selectedId)
+        ? null
+        : state.selectedId && entities.every((entity) => entity.id !== state.selectedId)
+          ? null
+          : state.selectedId,
+    dirty: computeDirty(entities, state.lastPublishedJson),
+  })
+}
+
 function editorReducer(state: EditorState, action: Action): EditorState {
   switch (action.type) {
     case "ADD_ENTITY": {
-      const entityZoneId = action.entity.zoneId
-      const others = entityZoneId
-        ? state.entities.filter((e) => e.zoneId === entityZoneId)
-        : state.entities
-      const free = findFreePosition(
-        { ...action.entity },
-        others,
-        state.canvasCols,
-        state.canvasRows,
-      )
-      const clamped = clampEntityToBackendLimits(
-        free.x,
-        free.y,
-        action.entity.type,
-        state.canvasCols,
-        state.canvasRows,
-      )
-      const placed = { ...action.entity, x: clamped.x, y: clamped.y }
+      const placed = placeEntity(state.entities, action.entity, state.canvasCols, state.canvasRows)
       const entities = [...state.entities, placed]
       return pushHistory(state, {
         ...state,
         entities,
         selectedId: placed.id,
+        dirty: computeDirty(entities, state.lastPublishedJson),
+      })
+    }
+    case "ADD_ENTITIES": {
+      if (action.entities.length === 0) return state
+      const placedBatch: EditorEntity[] = []
+      let entities = [...state.entities]
+      for (const entity of action.entities) {
+        const placed = placeEntity(entities, entity, state.canvasCols, state.canvasRows)
+        placedBatch.push(placed)
+        entities = [...entities, placed]
+      }
+      const lastPlaced = placedBatch[placedBatch.length - 1]
+      return pushHistory(state, {
+        ...state,
+        entities,
+        selectedId: lastPlaced?.id ?? state.selectedId,
         dirty: computeDirty(entities, state.lastPublishedJson),
       })
     }
@@ -390,20 +430,10 @@ function editorReducer(state: EditorState, action: Action): EditorState {
       })
     }
     case "REMOVE_ENTITY": {
-      const removed = state.entities.find((e) => e.id === action.id)
-      if (!removed) return state
-      const entities = state.entities.filter((e) => e.id !== action.id)
-      const deletedServerIds =
-        removed?.serverId && !state.deletedServerIds.includes(removed.serverId)
-          ? [...state.deletedServerIds, removed.serverId]
-          : state.deletedServerIds
-      return pushHistory(state, {
-        ...state,
-        entities,
-        deletedServerIds,
-        selectedId: state.selectedId === action.id ? null : state.selectedId,
-        dirty: computeDirty(entities, state.lastPublishedJson),
-      })
+      return removeEntitiesBatch(state, new Set([action.id]))
+    }
+    case "REMOVE_ENTITIES": {
+      return removeEntitiesBatch(state, new Set(action.ids))
     }
     case "SELECT_ENTITY":
       return { ...state, selectedId: action.id }
@@ -679,6 +709,12 @@ export function useEditorState() {
     [state.entities],
   )
 
+  const addEntities = useCallback((entities: EditorEntity[]) => {
+    if (entities.length === 0) return []
+    dispatch({ type: "ADD_ENTITIES", entities })
+    return entities
+  }, [])
+
   const updateEntity = useCallback((id: string, patch: Partial<EditorEntity>) => {
     dispatch({ type: "UPDATE_ENTITY", id, patch })
   }, [])
@@ -696,6 +732,11 @@ export function useEditorState() {
 
   const removeEntity = useCallback((id: string) => {
     dispatch({ type: "REMOVE_ENTITY", id })
+  }, [])
+
+  const removeEntities = useCallback((ids: string[]) => {
+    if (ids.length === 0) return
+    dispatch({ type: "REMOVE_ENTITIES", ids })
   }, [])
 
   const selectEntity = useCallback((id: string | null) => {
@@ -763,10 +804,12 @@ export function useEditorState() {
     canUndo: state.past.length > 0,
     canRedo: state.future.length > 0,
     addEntity,
+    addEntities,
     updateEntity,
     moveEntity,
     moveEntitiesByDelta,
     removeEntity,
+    removeEntities,
     selectEntity,
     setTool,
     publishSuccess,
