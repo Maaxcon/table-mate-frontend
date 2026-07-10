@@ -210,28 +210,6 @@
     17px 17px;
 }
 
-@media (max-width: 1180px) {
-  .waiter-view__floor-card .fp-view {
-    overscroll-behavior: contain;
-    scrollbar-width: thin;
-    scrollbar-color: color-mix(in srgb, var(--color-border-strong) 35%, transparent) transparent;
-  }
-
-  .waiter-view__floor-card .fp-view::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-  }
-
-  .waiter-view__floor-card .fp-view::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  .waiter-view__floor-card .fp-view::-webkit-scrollbar-thumb {
-    background: color-mix(in srgb, var(--color-border-strong) 35%, transparent);
-    border-radius: 999px;
-  }
-}
-
 .waiter-view__floor-card .fp-view--empty {
   background: none;
 }
