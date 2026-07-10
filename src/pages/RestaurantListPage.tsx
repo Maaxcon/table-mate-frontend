@@ -53,7 +53,7 @@ const DAY_LABELS: Record<WeekDay, string> = {
   sun: "Sun",
 }
 
-function todayKey(timezone?: string): WeekDay {
+function todayKey(timezone?: string): WeekDay | null {
   if (!timezone) {
     const local = (new Date().getDay() + 6) % 7
     return (["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const)[local]
@@ -75,15 +75,16 @@ function todayKey(timezone?: string): WeekDay {
       sat: "sat",
       sun: "sun",
     }
-    return map[weekday] ?? "mon"
+    return map[weekday] ?? null
   } catch {
-    return "mon"
+    return null
   }
 }
 
 function formatTodayHours(workingHours?: WorkingHours, timezone?: string): string {
   if (!workingHours) return ""
   const key = todayKey(timezone)
+  if (!key) return ""
   const slot = workingHours[key]
   if (!slot) return ""
   return `${DAY_LABELS[key]} ${slot.open}-${slot.close}`
