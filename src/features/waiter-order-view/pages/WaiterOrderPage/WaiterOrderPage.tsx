@@ -26,6 +26,14 @@ import "./WaiterOrderPage.css"
 const CLOCK_TICK_MS = 10_000
 const FLOOR_REFRESH_POLL_MS = 30_000
 const OVERDUE_UI_CAP_MINUTES = 999
+const UNDO_SNACKBAR_MS = 6_000
+
+type PendingCriticalAction = {
+  id: number
+  message: string
+  expiresAt: number
+  commit: () => Promise<void>
+}
 
 function getOverdueMinutes(endAt: string, nowMs: number): number | null {
   const endMs = new Date(endAt).getTime()
@@ -72,6 +80,8 @@ export function WaiterOrderPage() {
   const [moveTarget, setMoveTarget] = useState<ReservationItem | null>(null)
   const [orderModalOpen, setOrderModalOpen] = useState(false)
   const [createResModalOpen, setCreateResModalOpen] = useState(false)
+  const [pendingUndoAction, setPendingUndoAction] = useState<PendingCriticalAction | null>(null)
+  const [undoNowMs, setUndoNowMs] = useState(() => Date.now())
   const [sidebarTab, setSidebarTab] = useState<"reservations" | "notifications">("reservations")
   const TABLET_BREAKPOINT = 1180
   const [isTabletLayout, setIsTabletLayout] = useState(() =>
@@ -80,6 +90,8 @@ export function WaiterOrderPage() {
   const { events: notificationEvents, isConnected: notificationConnected } = useNotificationStream()
   const tablesRef = useRef<FloorTable[]>([])
   const reservationsRef = useRef<ReservationItem[]>([])
+  const undoTimeoutRef = useRef<number | null>(null)
+  const pendingUndoRef = useRef<PendingCriticalAction | null>(null)
 
   useEffect(() => {
     const update = () => setIsTabletLayout(window.innerWidth <= TABLET_BREAKPOINT)
@@ -100,6 +112,21 @@ export function WaiterOrderPage() {
     const id = setInterval(() => setCurrentTime(new Date()), CLOCK_TICK_MS)
     return () => clearInterval(id)
   }, [])
+
+  useEffect(
+    () => () => {
+      if (undoTimeoutRef.current != null) {
+        window.clearTimeout(undoTimeoutRef.current)
+      }
+    },
+    [],
+  )
+
+  useEffect(() => {
+    if (!pendingUndoAction) return
+    const id = window.setInterval(() => setUndoNowMs(Date.now()), 250)
+    return () => window.clearInterval(id)
+  }, [pendingUndoAction])
 
   useEffect(() => {
     const controller = new AbortController()
@@ -217,7 +244,7 @@ export function WaiterOrderPage() {
     setOverlayDetail(null)
   }, [])
 
-  const handleCancel = useCallback(
+  const executeCancelReservation = useCallback(
     async (reservationId: string) => {
       setSidebarActionLoading(true)
       setSidebarError(null)
@@ -240,6 +267,72 @@ export function WaiterOrderPage() {
     },
     [refreshFloor],
   )
+
+  const executeMoveReservation = useCallback(
+    async (reservationId: string, targetTableId: string) => {
+      setSidebarActionLoading(true)
+      setSidebarError(null)
+      try {
+        const res = await apiFetch(`/api/reservations/reservations/${reservationId}/move-table/`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ table_id: targetTableId }),
+        })
+        if (!res.ok) {
+          const body = (await res.json().catch(() => null)) as { detail?: string } | null
+          throw new Error(body?.detail ?? "Failed to move table")
+        }
+        await refreshFloor()
+      } catch (err) {
+        setSidebarError(err instanceof Error ? err.message : "Failed to move table")
+      } finally {
+        setSidebarActionLoading(false)
+      }
+    },
+    [refreshFloor],
+  )
+
+  const scheduleCriticalAction = useCallback((message: string, commit: () => Promise<void>) => {
+    const previous = pendingUndoRef.current
+    if (previous) {
+      if (undoTimeoutRef.current != null) {
+        window.clearTimeout(undoTimeoutRef.current)
+      }
+      pendingUndoRef.current = null
+      setPendingUndoAction(null)
+      void previous.commit()
+    }
+
+    const id = Date.now() + Math.random()
+    const pending: PendingCriticalAction = {
+      id,
+      message,
+      expiresAt: Date.now() + UNDO_SNACKBAR_MS,
+      commit,
+    }
+    pendingUndoRef.current = pending
+    setPendingUndoAction(pending)
+    setUndoNowMs(Date.now())
+
+    undoTimeoutRef.current = window.setTimeout(() => {
+      const queued = pendingUndoRef.current
+      if (!queued || queued.id !== id) return
+      pendingUndoRef.current = null
+      setPendingUndoAction(null)
+      undoTimeoutRef.current = null
+      void queued.commit()
+    }, UNDO_SNACKBAR_MS)
+  }, [])
+
+  const handleUndoPendingAction = useCallback(() => {
+    if (!pendingUndoRef.current) return
+    if (undoTimeoutRef.current != null) {
+      window.clearTimeout(undoTimeoutRef.current)
+      undoTimeoutRef.current = null
+    }
+    pendingUndoRef.current = null
+    setPendingUndoAction(null)
+  }, [])
 
   const onActionComplete = useCallback(async () => {
     await refreshFloor()
@@ -338,6 +431,40 @@ export function WaiterOrderPage() {
     return merged.filter((r) => !(r.status === "active" && !occupiedTableNumbers.has(r.table)))
   }, [reservations, layoutReservations, tables])
 
+  const scheduleCancelReservation = useCallback(
+    (reservationId: string) => {
+      const reservation = mergedReservations.find((item) => item.public_id === reservationId)
+      const guestName = reservation?.name ?? "guest"
+      scheduleCriticalAction(`Cancel ${guestName}'s reservation`, async () => {
+        await executeCancelReservation(reservationId)
+      })
+    },
+    [mergedReservations, scheduleCriticalAction, executeCancelReservation],
+  )
+
+  const scheduleMoveReservation = useCallback(
+    (reservation: ReservationItem, targetTableId: string) => {
+      const targetTableNumber =
+        tables.find((table) => table.public_id === targetTableId)?.public_number ?? "?"
+      scheduleCriticalAction(`Move ${reservation.name} to table ${targetTableNumber}`, async () => {
+        await executeMoveReservation(reservation.public_id, targetTableId)
+      })
+    },
+    [tables, scheduleCriticalAction, executeMoveReservation],
+  )
+
+  const scheduleCloseCheck = useCallback(
+    (sessionId: string, tableNumber?: string) => {
+      scheduleCriticalAction(
+        tableNumber ? `Close check for table ${tableNumber}` : "Close check",
+        async () => {
+          handleCloseCheck(sessionId)
+        },
+      )
+    },
+    [handleCloseCheck, scheduleCriticalAction],
+  )
+
   const selectedTableReservations = selectedTable
     ? mergedReservations.filter((r) => r.table === selectedTable.public_number)
     : []
@@ -396,6 +523,10 @@ export function WaiterOrderPage() {
     }
     return map
   }, [mergedReservations])
+
+  const undoSecondsLeft = pendingUndoAction
+    ? Math.max(0, Math.ceil((pendingUndoAction.expiresAt - undoNowMs) / 1000))
+    : 0
 
   if (loading)
     return (
@@ -469,7 +600,7 @@ export function WaiterOrderPage() {
               {sidebarTab === "reservations" ? (
                 <ReservationSidebar
                   reservations={pendingTodayReservations}
-                  onCancel={handleCancel}
+                  onCancel={scheduleCancelReservation}
                   onModify={handleModify}
                   actionLoading={sidebarActionLoading}
                   error={sidebarError}
@@ -486,7 +617,7 @@ export function WaiterOrderPage() {
           <div className="waiter-view__side-grid">
             <ReservationSidebar
               reservations={pendingTodayReservations}
-              onCancel={handleCancel}
+              onCancel={scheduleCancelReservation}
               onModify={handleModify}
               actionLoading={sidebarActionLoading}
               error={sidebarError}
@@ -514,8 +645,12 @@ export function WaiterOrderPage() {
           actionError={actionError}
           onOpenTable={handleOpenTable}
           onActivateReservation={handleActivateReservation}
-          onCancelReservation={(reservationId) => handleCancel(reservationId)}
-          onCloseCheck={overlayDetail ? () => handleCloseCheck(overlayDetail.public_id) : undefined}
+          onCancelReservation={scheduleCancelReservation}
+          onCloseCheck={
+            overlayDetail
+              ? () => scheduleCloseCheck(overlayDetail.public_id, selectedTable.public_number)
+              : undefined
+          }
           onAddItem={overlayDetail ? () => setOrderModalOpen(true) : undefined}
           onModifyReservation={(r) => setModifyTarget(r)}
           onMoveTable={(r) => setMoveTarget(r)}
@@ -573,11 +708,27 @@ export function WaiterOrderPage() {
             .filter((t) => getTableVisualStatus(t, layoutReservations, currentTime) === "free")
             .map((t) => ({ public_id: t.public_id, public_number: t.public_number }))}
           onClose={() => setMoveTarget(null)}
-          onSuccess={() => {
+          onSubmit={(targetTableId) => {
+            scheduleMoveReservation(moveTarget, targetTableId)
             setMoveTarget(null)
-            refreshFloor()
           }}
         />
+      )}
+
+      {pendingUndoAction && (
+        <div className="waiter-view__undo-snackbar" role="status" aria-live="polite">
+          <div className="waiter-view__undo-content">
+            <span className="waiter-view__undo-message">{pendingUndoAction.message}</span>
+            <span className="waiter-view__undo-timer">{undoSecondsLeft}s</span>
+          </div>
+          <button
+            type="button"
+            className="waiter-view__undo-action"
+            onClick={handleUndoPendingAction}
+          >
+            UNDO
+          </button>
+        </div>
       )}
     </div>
   )

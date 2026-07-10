@@ -1,5 +1,4 @@
 import { useState } from "react"
-import { apiFetch } from "@/api/client"
 import { useFocusTrap } from "@/hooks/useFocusTrap"
 import type { ReservationItem } from "../../types"
 import "../ModifyReservationModal/ModifyReservationModal.css"
@@ -8,10 +7,10 @@ interface MoveTableModalProps {
   reservation: ReservationItem
   tables: { public_id: string; public_number: string }[]
   onClose: () => void
-  onSuccess: () => void
+  onSubmit: (targetTableId: string) => void | Promise<void>
 }
 
-export function MoveTableModal({ reservation, tables, onClose, onSuccess }: MoveTableModalProps) {
+export function MoveTableModal({ reservation, tables, onClose, onSubmit }: MoveTableModalProps) {
   const [targetTableId, setTargetTableId] = useState("")
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -28,19 +27,7 @@ export function MoveTableModal({ reservation, tables, onClose, onSuccess }: Move
     setBusy(true)
     setError(null)
     try {
-      const res = await apiFetch(
-        `/api/reservations/reservations/${reservation.public_id}/move-table/`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ table_id: targetTableId }),
-        },
-      )
-      if (!res.ok) {
-        const body = (await res.json().catch(() => null)) as { detail?: string } | null
-        throw new Error(body?.detail ?? "Failed to move table")
-      }
-      onSuccess()
+      await onSubmit(targetTableId)
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to move table")
     } finally {

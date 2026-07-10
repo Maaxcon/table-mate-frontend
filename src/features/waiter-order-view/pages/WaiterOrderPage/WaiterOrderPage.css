@@ -152,6 +152,76 @@
   color: var(--color-error);
 }
 
+.waiter-view__undo-snackbar {
+  position: fixed;
+  left: 50%;
+  bottom: 22px;
+  transform: translateX(-50%);
+  z-index: 160;
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  min-width: min(540px, calc(100vw - 28px));
+  max-width: calc(100vw - 28px);
+  padding: 12px 14px;
+  border-radius: var(--w-radius-sm);
+  border: 1px solid rgba(var(--color-warning-rgb), 0.45);
+  background: color-mix(in srgb, var(--color-bg-surface) 80%, rgba(var(--color-warning-rgb), 0.2));
+  box-shadow: var(--w-shadow-lg);
+}
+
+.waiter-view__undo-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.waiter-view__undo-message {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.waiter-view__undo-timer {
+  font-size: 0.74rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  color: var(--color-warning);
+  border-radius: var(--w-radius-pill);
+  border: 1px solid rgba(var(--color-warning-rgb), 0.55);
+  background: rgba(var(--color-warning-rgb), 0.14);
+  padding: 4px 8px;
+  font-variant-numeric: tabular-nums;
+  flex: 0 0 auto;
+}
+
+.waiter-view__undo-action {
+  margin-left: auto;
+  border: none;
+  border-radius: var(--w-radius-pill);
+  padding: 8px 14px;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  color: var(--color-bg-surface);
+  background: var(--color-warning);
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.waiter-view__undo-action:hover {
+  opacity: 0.86;
+}
+
+.waiter-view__undo-action:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--color-warning) 65%, white 35%);
+  outline-offset: 2px;
+}
+
 .waiter-view__placeholder {
   display: flex;
   align-items: center;
@@ -567,6 +637,26 @@
 @media (max-width: 640px) {
   .waiter-view__content {
     padding: 16px;
+  }
+
+  .waiter-view__undo-snackbar {
+    bottom: 14px;
+    min-width: calc(100vw - 20px);
+    max-width: calc(100vw - 20px);
+    padding: 10px 12px;
+    gap: 10px;
+  }
+
+  .waiter-view__undo-content {
+    gap: 8px;
+  }
+
+  .waiter-view__undo-message {
+    font-size: 0.76rem;
+  }
+
+  .waiter-view__undo-action {
+    padding: 7px 12px;
   }
 }
 [data-theme="light"] .waiter-view__floor-card .fp-block--table::before,

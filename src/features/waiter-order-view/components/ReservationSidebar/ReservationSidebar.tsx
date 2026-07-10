@@ -130,7 +130,7 @@ export function ReservationSidebar({
       {confirmingId && (
         <ConfirmCancelModal
           title="Cancel Reservation"
-          message="Are you sure you want to cancel this reservation? This action cannot be undone."
+          message="Are you sure you want to cancel this reservation? You can undo for a few seconds."
           confirmLabel="Cancel Reservation"
           busy={actionLoading}
           onConfirm={() => {
