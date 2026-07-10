@@ -75,6 +75,8 @@ export function TableDetailOverlay({
     new Date(a.start_at).getTime() - new Date(b.start_at).getTime()
   const nearestReservation =
     tableReservations.length > 0 ? [...tableReservations].sort(byStart)[0] : null
+  const pendingReservation =
+    [...tableReservations].filter((r) => r.status === "pending").sort(byStart)[0] ?? null
   // The soonest booking that has not started yet — shown as the table's "next".
   const nextReservation =
     [...tableReservations]
@@ -89,6 +91,52 @@ export function TableDetailOverlay({
   const overdueMinutes = overdueActiveReservation
     ? getOverdueMinutes(overdueActiveReservation.end_at, currentTime.getTime())
     : null
+  const hasOrderItems = Boolean(detail && detail.items.length > 0)
+  const primaryAction =
+    !loading && isOccupied
+      ? hasOrderItems && onCloseCheck
+        ? {
+            type: "close-check" as const,
+            label: actionBusy ? "CLOSING…" : "CLOSE CHECK",
+            onClick: () => setShowCloseCheck(true),
+            disabled: actionBusy,
+          }
+        : onAddItem
+          ? {
+              type: "add-items" as const,
+              label: "ADD ITEMS",
+              onClick: () => onAddItem(),
+              disabled: actionBusy,
+            }
+          : onCloseCheck
+            ? {
+                type: "close-check" as const,
+                label: actionBusy ? "CLOSING…" : "CLOSE CHECK",
+                onClick: () => setShowCloseCheck(true),
+                disabled: actionBusy,
+              }
+            : null
+      : !loading && pendingReservation && onActivateReservation
+        ? {
+            type: "seat" as const,
+            label: busyActionId === pendingReservation.public_id ? "SEATING…" : "SEAT GUEST",
+            onClick: () => onActivateReservation(pendingReservation.public_id),
+            disabled: actionBusy,
+          }
+        : !loading && onOpenTable
+          ? {
+              type: "open" as const,
+              label: actionBusy ? "OPENING…" : "OPEN TABLE",
+              onClick: () => onOpenTable(guestCount),
+              disabled: actionBusy,
+            }
+          : null
+
+  const showAddItemSecondary = Boolean(onAddItem && primaryAction?.type !== "add-items")
+  const showMoveTableSecondary = Boolean(nearestReservation && onMoveTable)
+  const showCloseCheckSecondary = Boolean(onCloseCheck && primaryAction?.type !== "close-check")
+  const showOrderSecondaryActions =
+    showAddItemSecondary || showMoveTableSecondary || showCloseCheckSecondary
 
   return (
     <>
@@ -199,6 +247,26 @@ export function TableDetailOverlay({
           </div>
         )}
 
+        {!loading && primaryAction && primaryAction.type !== "open" && (
+          <div className="overlay__primary-action">
+            <p className="overlay__primary-action-label">Primary action</p>
+            {primaryAction.type === "seat" && pendingReservation && (
+              <p className="overlay__primary-action-meta">
+                {pendingReservation.name} &middot;{" "}
+                {formatTimeRange(pendingReservation.start_at, pendingReservation.end_at)}
+              </p>
+            )}
+            <button
+              type="button"
+              className="overlay__cta overlay__cta--primary-action"
+              onClick={primaryAction.onClick}
+              disabled={primaryAction.disabled}
+            >
+              {primaryAction.label}
+            </button>
+          </div>
+        )}
+
         {!isOccupied && !loading && (
           <div className="overlay__open-panel">
             {actionError && (
@@ -206,9 +274,11 @@ export function TableDetailOverlay({
                 {actionError}
               </p>
             )}
-            {tableReservations.some((r) => r.status === "pending") ? (
-              <p className="overlay__open-hint">Seat a booked guest from the Reservations tab.</p>
-            ) : (
+            {primaryAction?.type === "seat" ? (
+              <p className="overlay__open-hint">
+                This table has a pending reservation. Use the primary action above to seat.
+              </p>
+            ) : primaryAction?.type === "open" ? (
               <div className="overlay__open-row">
                 <label className="overlay__guests">
                   Guests
@@ -224,12 +294,14 @@ export function TableDetailOverlay({
                 <button
                   type="button"
                   className="overlay__cta"
-                  disabled={actionBusy}
-                  onClick={() => onOpenTable?.(guestCount)}
+                  disabled={primaryAction.disabled}
+                  onClick={primaryAction.onClick}
                 >
-                  {actionBusy ? "OPENING…" : "OPEN TABLE"}
+                  {primaryAction.label}
                 </button>
               </div>
+            ) : (
+              <p className="overlay__open-hint">No available table action right now.</p>
             )}
           </div>
         )}
@@ -285,29 +357,37 @@ export function TableDetailOverlay({
           <>
             {detail ? (
               <>
-                <div className="overlay__actions overlay__actions--pill">
-                  <button type="button" className="overlay__action-btn" onClick={onAddItem}>
-                    ADD ITEM
-                  </button>
-                  {nearestReservation && onMoveTable && (
-                    <button
-                      type="button"
-                      className="overlay__action-btn"
-                      onClick={() => onMoveTable(nearestReservation)}
-                    >
-                      MOVE TABLE
-                    </button>
-                  )}
-                  <button
-                    type="button"
-                    className="overlay__action-btn"
-                    onClick={() => setShowCloseCheck(true)}
-                  >
-                    CLOSE CHECK
-                  </button>
-                </div>
+                {showOrderSecondaryActions && (
+                  <>
+                    <div className="overlay__actions overlay__actions--pill">
+                      {showAddItemSecondary && (
+                        <button type="button" className="overlay__action-btn" onClick={onAddItem}>
+                          ADD ITEM
+                        </button>
+                      )}
+                      {showMoveTableSecondary && nearestReservation && onMoveTable && (
+                        <button
+                          type="button"
+                          className="overlay__action-btn"
+                          onClick={() => onMoveTable(nearestReservation)}
+                        >
+                          MOVE TABLE
+                        </button>
+                      )}
+                      {showCloseCheckSecondary && (
+                        <button
+                          type="button"
+                          className="overlay__action-btn"
+                          onClick={() => setShowCloseCheck(true)}
+                        >
+                          CLOSE CHECK
+                        </button>
+                      )}
+                    </div>
 
-                <div className="overlay__divider" />
+                    <div className="overlay__divider" />
+                  </>
+                )}
 
                 <div className="overlay__body">
                   {detail.items.length === 0 ? (

@@ -66,6 +66,11 @@
   .overlay__open-panel {
     padding: 12px 20px 0;
   }
+
+  .overlay__primary-action {
+    margin: 12px 20px 0;
+    padding: 12px 14px;
+  }
 }
 
 @media (max-width: 520px) {
@@ -156,6 +161,11 @@
 
   .overlay__open-panel {
     padding: 10px 14px 0;
+  }
+
+  .overlay__primary-action {
+    margin: 10px 14px 0;
+    padding: 10px 12px;
   }
 
   .overlay__status-value {
@@ -615,6 +625,38 @@
 
 .overlay__open-panel {
   padding: 16px 28px 0;
+}
+
+.overlay__primary-action {
+  margin: 14px 28px 0;
+  padding: 14px 16px;
+  border-radius: var(--w-radius-sm);
+  border: 1px solid rgba(var(--color-primary-rgb), 0.28);
+  background: rgba(var(--color-primary-rgb), 0.08);
+}
+
+.overlay__primary-action-label {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-primary);
+}
+
+.overlay__primary-action-meta {
+  margin: 6px 0 0;
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+}
+
+.overlay__cta--primary-action {
+  margin-top: 10px;
+}
+
+[data-theme="dark"] .overlay__primary-action {
+  border-color: rgba(var(--color-primary-rgb), 0.4);
+  background: rgba(var(--color-primary-rgb), 0.18);
 }
 
 .overlay__overdue-banner {
