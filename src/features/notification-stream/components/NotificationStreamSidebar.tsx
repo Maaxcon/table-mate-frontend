@@ -29,10 +29,18 @@ function renderDescription(description: string) {
 
 interface NotificationStreamSidebarProps {
   onConnectionChange?: (connected: boolean) => void
+  events?: NotificationEvent[]
+  isConnected?: boolean
 }
 
-export function NotificationStreamSidebar({ onConnectionChange }: NotificationStreamSidebarProps) {
-  const { events, isConnected } = useNotificationStream()
+export function NotificationStreamSidebar({
+  onConnectionChange,
+  events: externalEvents,
+  isConnected: externalIsConnected,
+}: NotificationStreamSidebarProps) {
+  const internal = useNotificationStream()
+  const events = externalEvents ?? internal.events
+  const isConnected = externalIsConnected ?? internal.isConnected
   const navigate = useNavigate()
 
   useEffect(() => {

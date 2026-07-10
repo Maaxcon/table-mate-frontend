@@ -10,6 +10,7 @@ import {
   MoveTableModal,
 } from "../../components"
 import { NotificationStreamSidebar } from "@/features/notification-stream/components/NotificationStreamSidebar"
+import { useNotificationStream } from "@/features/notification-stream/hooks/useNotificationStream"
 import { BookModal } from "@/features/reservation/BookModal"
 import { fetchRestaurantSettings } from "@/features/reservation/api"
 import type { WorkingHoursDay, Zone } from "@/features/reservation/api"
@@ -64,6 +65,7 @@ export function WaiterOrderPage() {
   const [isTabletLayout, setIsTabletLayout] = useState(() =>
     typeof window !== "undefined" ? window.innerWidth <= TABLET_BREAKPOINT : false,
   )
+  const { events: notificationEvents, isConnected: notificationConnected } = useNotificationStream()
   const tablesRef = useRef<FloorTable[]>([])
   const reservationsRef = useRef<ReservationItem[]>([])
 
@@ -438,7 +440,10 @@ export function WaiterOrderPage() {
                   error={sidebarError}
                 />
               ) : (
-                <NotificationStreamSidebar />
+                <NotificationStreamSidebar
+                  events={notificationEvents}
+                  isConnected={notificationConnected}
+                />
               )}
             </div>
           </div>
@@ -452,7 +457,10 @@ export function WaiterOrderPage() {
               error={sidebarError}
             />
 
-            <NotificationStreamSidebar />
+            <NotificationStreamSidebar
+              events={notificationEvents}
+              isConnected={notificationConnected}
+            />
           </div>
         )}
       </div>
