@@ -69,6 +69,24 @@ export interface FloorPlanViewProps {
 const px = (v: number) => v * GRID
 const MIN_INTERACTIVE_ZOOM = 0.3
 const MAX_INTERACTIVE_ZOOM = 4
+const DOM_DELTA_PIXEL = 0
+const DOM_DELTA_LINE = 1
+const DOM_DELTA_PAGE = 2
+const LINE_HEIGHT = 16
+const PAGE_HEIGHT = 800
+const WHEEL_SENSITIVITY = 0.0015
+
+const normalizeWheelDelta = (event: WheelEvent) => {
+  switch (event.deltaMode) {
+    case DOM_DELTA_LINE:
+      return event.deltaY * LINE_HEIGHT
+    case DOM_DELTA_PAGE:
+      return event.deltaY * PAGE_HEIGHT
+    case DOM_DELTA_PIXEL:
+    default:
+      return event.deltaY
+  }
+}
 
 function FloorPlanViewImpl({
   payload,
@@ -165,7 +183,9 @@ function FloorPlanViewImpl({
       if (!enableZoom) return
       if (!e.ctrlKey && !e.metaKey) return
       e.preventDefault()
-      setZoom((value) => clampZoom(value * (1 - e.deltaY * 0.01)))
+      const delta = normalizeWheelDelta(e)
+      const multiplier = Math.exp(-delta * WHEEL_SENSITIVITY)
+      setZoom((value) => clampZoom(value * multiplier))
     },
     [enableZoom, clampZoom],
   )
