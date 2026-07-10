@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { snap, GRID, EDITOR_MIN_SCALE, EDITOR_MAX_SCALE } from "@/features/editor/types"
+import { snap, GRID, EDITOR_MIN_SCALE, EDITOR_MAX_SCALE, cssVars } from "@/features/editor/types"
 import type { EditorEntity } from "@/features/editor/types"
 import { TableBlock } from "./entities/TableBlock"
 import { ObstacleBlock } from "./entities/ObstacleBlock"
@@ -654,7 +654,7 @@ export function Canvas({
     () => ({
       width: canvasCols * GRID,
       height: canvasRows * GRID,
-      ["--grid-size" as const]: `${GRID}px`,
+      ...cssVars({ "--grid-size": `${GRID}px` }),
     }),
     [canvasCols, canvasRows],
   )
