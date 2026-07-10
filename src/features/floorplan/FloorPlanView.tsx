@@ -165,6 +165,8 @@ function FloorPlanViewImpl({
     const update = () => {
       const availableW = el.clientWidth
       const availableH = el.clientHeight
+      // When the widget lives inside a display:none parent, ResizeObserver still
+      // fires with zeros; bail so we don't thrash scale until the panel is shown.
       if (availableW === 0 || availableH === 0) return
       const neededW = framePxW + 2 * GRID
       const neededH = framePxH + 2 * GRID
@@ -329,6 +331,9 @@ function FloorPlanViewImpl({
         height: px(e.h),
         rotation: e.rotation ?? 0,
       })),
+    // Rendering each entity touches these coordinates during React reconciliation;
+    // keeping the array stable unless the layout changes avoids redundant rerenders
+    // inside downstream memoized renderers (see issue #28 notes).
     [visible],
   )
 
@@ -377,6 +382,8 @@ function FloorPlanViewImpl({
           visibility: "hidden",
         }}
       />
+      {/* Fit→size→fit spacer: mirrors the centered footprint so the observer keeps
+          reporting the true viewport even after the stage scales away. */}
       <div className="fp-view__stage" style={stageStyle}>
         {visible.map((entity, index) => {
           if (renderEntityProp) {
