@@ -75,6 +75,7 @@ function AdminLayout() {
                 type="button"
                 className="admin-layout__icon-btn admin-layout__icon-btn--collapse"
                 onClick={() => setIsSidebarCollapsed((prev) => !prev)}
+                aria-expanded={!isSidebarCollapsed}
                 aria-label={isSidebarCollapsed ? "Expand side menu" : "Collapse side menu"}
                 title={isSidebarCollapsed ? "Expand side menu" : "Collapse side menu"}
               >

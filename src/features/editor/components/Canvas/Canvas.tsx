@@ -669,6 +669,15 @@ export function Canvas({
     [canvasCols, canvasRows, scale],
   )
 
+  const visualBoundsStyle = useMemo(
+    () => ({
+      width: canvasCols * GRID * scale,
+      height: canvasRows * GRID * scale,
+      overflow: "hidden",
+    }),
+    [canvasCols, canvasRows, scale],
+  )
+
   return (
     <div
       ref={containerRef}
@@ -678,7 +687,7 @@ export function Canvas({
     >
       {/* The wrapper is sized to the visual canvas extent so the scrollport
           matches what the user sees, avoiding dead scroll space when zoomed out. */}
-      <div style={{ width: canvasCols * GRID * scale, height: canvasRows * GRID * scale }}>
+      <div style={visualBoundsStyle}>
         {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions */}
         <div
           ref={canvasRef}
