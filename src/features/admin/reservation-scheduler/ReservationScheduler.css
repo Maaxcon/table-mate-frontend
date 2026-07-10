@@ -371,6 +371,7 @@
   background: var(--color-warning-icon, #d97706);
   border-color: var(--color-warning-icon, #d97706);
   box-shadow: 0 0 0 1px var(--color-warning-icon, #d97706);
+  color: var(--color-bg-surface, #fff);
 }
 
 .scheduler__block--completed {

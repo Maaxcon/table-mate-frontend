@@ -93,9 +93,9 @@ export function ReservationBlock({
       ref={setNodeRef}
       className={classNames}
       style={style}
-      aria-label={`${reservation.customer_name}, ${reservation.guest_count} guests, ${reservation.status}`}
+      aria-label={`${reservation.customer_name}, ${reservation.guest_count} guests, ${reservation.status}${isConflict ? ", conflict" : ""}${isModified ? ", modified" : ""}${isCancelling ? ", cancelling" : ""}`}
       aria-grabbed={isDragging}
-      {...attributes}
+      {...(crossDay ? {} : attributes)}
       {...listeners}
     >
       {reservation.status === "pending" && !crossDay && (

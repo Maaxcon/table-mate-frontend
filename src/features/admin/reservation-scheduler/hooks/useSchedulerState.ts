@@ -83,6 +83,8 @@ function reducer(state: SchedulerState, action: Action): SchedulerState {
       const injected = [...action.reservations]
       for (const change of state.pendingChanges) {
         if (!serverIds.has(change.reservation_id)) {
+          const stillPresent = state.reservations.some((r) => r.public_id === change.reservation_id)
+          if (!stillPresent) continue
           injected.push({
             public_id: change.reservation_id,
             table: change.new_table_id,

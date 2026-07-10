@@ -17,6 +17,11 @@ function overlaps(a: TimeRange, b: TimeRange): boolean {
   if (a.table_id !== b.table_id) return false
   if (a.date === b.date) {
     if (a.end_minutes <= a.start_minutes) {
+      if (b.end_minutes <= b.start_minutes) {
+        const aEnd = a.end_minutes + 24 * 60
+        const bEnd = b.end_minutes + 24 * 60
+        return a.start_minutes < bEnd && aEnd > b.start_minutes
+      }
       return a.start_minutes < b.end_minutes || b.start_minutes < a.end_minutes
     }
     if (b.end_minutes <= b.start_minutes) {
@@ -42,7 +47,7 @@ function overlaps(a: TimeRange, b: TimeRange): boolean {
 }
 
 function reservationToRange(r: SchedulerReservation, date: string): TimeRange {
-  const start = new Date(r.start_at)
+  const start = r.status === "active" && r.opened_at ? new Date(r.opened_at) : new Date(r.start_at)
   const end = new Date(r.end_at)
   return {
     table_id: r.table,

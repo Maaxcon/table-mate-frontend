@@ -79,10 +79,23 @@ export async function batchUpdateReservations(
     body: JSON.stringify(requestBody),
   })
   if (res.ok) return { ok: true }
-  const errBody = (await res.json().catch(() => ({}))) as Record<string, unknown>
-  return {
-    ok: false,
-    conflicting_reservation_id: errBody.conflicting_reservation_id as string | undefined,
-    message: (errBody.detail as string) ?? "Batch update failed",
+  const errBody: unknown = await res.json().catch(() => ({}))
+  if (Array.isArray(errBody)) {
+    return { ok: false, message: errBody.join("; ") }
   }
+  if (typeof errBody === "object" && errBody !== null) {
+    const obj = errBody as Record<string, unknown>
+    if (Array.isArray(obj.changes)) {
+      const msgs = (obj.changes as { message?: string }[])
+        .filter((c) => c.message)
+        .map((c) => c.message)
+      if (msgs.length > 0) return { ok: false, message: msgs.join("; ") }
+    }
+    return {
+      ok: false,
+      conflicting_reservation_id: obj.conflicting_reservation_id as string | undefined,
+      message: (obj.detail as string) ?? "Batch update failed",
+    }
+  }
+  return { ok: false, message: "Batch update failed" }
 }

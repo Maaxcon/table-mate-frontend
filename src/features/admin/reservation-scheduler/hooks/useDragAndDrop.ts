@@ -96,12 +96,15 @@ export function useDragAndDrop({
 
         const origStart = new Date(draggedReservation.start_at)
         const origEnd = new Date(draggedReservation.end_at)
+        crossMidnight =
+          isoToDateKey(draggedReservation.start_at) !== isoToDateKey(draggedReservation.end_at)
+        const endH = origEnd.getHours()
+        const endM = origEnd.getMinutes()
         startMinute = origStart.getHours() * 60 + origStart.getMinutes()
-        endMinute = origEnd.getHours() * 60 + origEnd.getMinutes()
+        endMinute = crossMidnight ? endH * 60 + endM + 24 * 60 : endH * 60 + endM
         startTime = `${String(origStart.getHours()).padStart(2, "0")}:${String(origStart.getMinutes()).padStart(2, "0")}`
-        endTime = `${String(origEnd.getHours()).padStart(2, "0")}:${String(origEnd.getMinutes()).padStart(2, "0")}`
+        endTime = `${String(endH).padStart(2, "0")}:${String(endM).padStart(2, "0")}`
         targetDate = date
-        crossMidnight = endMinute > 24 * 60
       } else {
         const { durationMinutes } = activeData
         const rect = over.rect

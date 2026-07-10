@@ -1,5 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { DndContext, DragOverlay, PointerSensor, useSensor, useSensors } from "@dnd-kit/core"
+import {
+  DndContext,
+  DragOverlay,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core"
 import type { DragMoveEvent, DragStartEvent } from "@dnd-kit/core"
 import { LuChevronLeft, LuChevronRight } from "react-icons/lu"
 import { useAppSelector } from "@/store/hooks"
@@ -191,6 +198,7 @@ export function ReservationScheduler() {
   const [dragCrossedBoundary, setDragCrossedBoundary] = useState(false)
   const [pendingCancelConfirmId, setPendingCancelConfirmId] = useState<string | null>(null)
   const [pendingNavAction, setPendingNavAction] = useState<(() => void) | null>(null)
+  const mountedRef = useRef(true)
 
   const { dayRanges, crossDayInfoByDate } = useMemo(() => {
     const ranges: Record<string, { hourStart: number; hourEnd: number }> = {}
@@ -338,6 +346,7 @@ export function ReservationScheduler() {
   useEffect(() => {
     if (!accessToken || env.wsUrl === "Not configured") return
 
+    mountedRef.current = true
     let ws: WebSocket | null = null
     let reconnectTimer: ReturnType<typeof setTimeout>
 
@@ -350,7 +359,8 @@ export function ReservationScheduler() {
           if (
             data.event_name === "HALL_RESERVATIONS_UPDATED" ||
             data.event_name === "HALL_NEW_RESERVATION" ||
-            data.event_name === "HALL_RESERVATION_CANCELLED"
+            data.event_name === "HALL_RESERVATION_CANCELLED" ||
+            data.event_name === "HALL_SESSION_AUTO_EXTENDED"
           ) {
             handleExternalUpdate()
           }
@@ -361,6 +371,8 @@ export function ReservationScheduler() {
 
       ws.onclose = (e) => {
         ws = null
+        if (!mountedRef.current) return
+        if (e.code === 4001 || e.code === 4003) return
         if (e.code !== 1000) {
           reconnectTimer = setTimeout(connect, 3000)
         }
@@ -370,6 +382,7 @@ export function ReservationScheduler() {
     connect()
 
     return () => {
+      mountedRef.current = false
       clearTimeout(reconnectTimer)
       if (ws) {
         ws.close(1000)
@@ -380,13 +393,16 @@ export function ReservationScheduler() {
 
   const handleCommitChanges = useCallback(() => {
     commitChanges()
+    pendingChangesRef.current = []
     setExternalUpdate(false)
   }, [commitChanges])
 
   const handleResetChanges = useCallback(() => {
     resetChanges()
+    pendingChangesRef.current = []
     setExternalUpdate(false)
-  }, [resetChanges])
+    refetch()
+  }, [resetChanges, refetch])
 
   const discardExternalUpdate = useCallback(() => {
     clearPending()
@@ -460,6 +476,7 @@ export function ReservationScheduler() {
     useSensor(PointerSensor, {
       activationConstraint: { distance: 5 },
     }),
+    useSensor(KeyboardSensor),
   )
 
   const modifiedIds = useMemo(
@@ -621,10 +638,14 @@ export function ReservationScheduler() {
         const curEnd = new Date(res.end_at)
 
         let effectiveClamped = clamped
+        if (edge === "end") {
+          const curStartMinutes = curStart.getHours() * 60 + curStart.getMinutes()
+          effectiveClamped = Math.max(clamped, curStartMinutes + SLOT_MINUTES)
+        }
         if (res.status === "active" && edge === "end") {
           const now = new Date()
           const nowMinutes = now.getHours() * 60 + now.getMinutes()
-          effectiveClamped = Math.max(clamped, nowMinutes + 15)
+          effectiveClamped = Math.max(effectiveClamped, nowMinutes + SLOT_MINUTES)
         }
 
         const ehh = String(Math.floor(effectiveClamped / 60)).padStart(2, "0")
