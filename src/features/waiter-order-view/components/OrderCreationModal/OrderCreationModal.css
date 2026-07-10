@@ -161,6 +161,11 @@
   font-size: 0.82rem;
   font-weight: 600;
   color: var(--color-text-primary);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .ocm__item-price {
