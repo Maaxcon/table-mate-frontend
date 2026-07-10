@@ -125,8 +125,6 @@ export function RestaurantListPage() {
   const [restaurants, setRestaurants] = useState<Restaurant[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [query, setQuery] = useState("")
-  const [isSearchExpanded, setIsSearchExpanded] = useState(false)
   const user = useAppSelector((s) => s.auth.user)
   const createRestaurantLink = user?.role === "admin" ? "/admin/restaurant" : "/"
 
@@ -193,67 +191,20 @@ export function RestaurantListPage() {
     [restaurants],
   )
 
-  const filteredRestaurants = useMemo(() => {
-    const q = query.trim().toLowerCase()
-    if (!q) return enrichedRestaurants
-    return enrichedRestaurants.filter((restaurant) => restaurant.name.toLowerCase().includes(q))
-  }, [enrichedRestaurants, query])
-
-  const clearSearch = () => {
-    setQuery("")
-  }
-
-  const hasActiveFilters = query.trim().length > 0
-
   return (
     <main className="rlp">
       <header className="rlp__hero">
-        <div className="rlp__hero-copy">
-          <p className="rlp__kicker">City Dining Guide</p>
-          <h1 className="rlp__heading">Curated Restaurant Collection</h1>
-          <p className="rlp__subtitle">
-            Discover standout venues, check live availability, and open the full menu in one click.
+        <div className="rlp__brand-row">
+          <p className="rlp__brand">
+            <span className="rlp__brand-dot" aria-hidden="true" />
+            Table Mate
           </p>
+          <Link to="/cabinet" className="rlp__cabinet-link">
+            Перейти в кабінет
+          </Link>
         </div>
-        <div className="rlp__hero-actions">
-          {user && (
-            <Link to="/cabinet" className="rlp__profile-link">
-              My Workspace
-            </Link>
-          )}
-        </div>
+        <h1 className="rlp__heading">Наші ресторани</h1>
       </header>
-
-      <section className="rlp__search-panel" aria-label="Search restaurant">
-        <button
-          type="button"
-          className="rlp__search-toggle"
-          aria-expanded={isSearchExpanded}
-          onClick={() => setIsSearchExpanded((prev) => !prev)}
-        >
-          Search by name
-        </button>
-        {isSearchExpanded && (
-          <div className="rlp__search-body">
-            <input
-              type="search"
-              placeholder="Type restaurant name"
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              className="rlp__search-input"
-              disabled={loading}
-            />
-            <button
-              type="button"
-              className="rlp__search-clear"
-              onClick={clearSearch}
-              disabled={!hasActiveFilters}
-            >
-              Clear
-            </button>
-          </div>
-        )}
-      </section>
 
       {loading && (
         <div className="rlp__cards rlp__cards--skeleton" aria-label="Loading restaurants">
@@ -307,34 +258,15 @@ export function RestaurantListPage() {
         </section>
       )}
 
-      {!loading && !error && enrichedRestaurants.length > 0 && filteredRestaurants.length === 0 && (
-        <section className="rlp__state">
-          <h2 className="rlp__state-title">No results</h2>
-          <p className="rlp__state-text">No restaurants match this name.</p>
-          <div className="rlp__state-actions">
-            <button
-              type="button"
-              className="rlp__state-button"
-              onClick={clearSearch}
-              disabled={!hasActiveFilters}
-            >
-              Clear search
-            </button>
-          </div>
-        </section>
-      )}
-
-      {!loading && !error && filteredRestaurants.length > 0 && (
+      {!loading && !error && enrichedRestaurants.length > 0 && (
         <div className="rlp__toolbar">
-          <p className="rlp__result-count">
-            Showing {filteredRestaurants.length} of {enrichedRestaurants.length}
-          </p>
+          <p className="rlp__result-count">Всього: {enrichedRestaurants.length}</p>
         </div>
       )}
 
-      {!loading && !error && filteredRestaurants.length > 0 && (
+      {!loading && !error && enrichedRestaurants.length > 0 && (
         <div className="rlp__cards">
-          {filteredRestaurants.map((r) => (
+          {enrichedRestaurants.map((r) => (
             <Link
               to={`/menu/${r.public_id}`}
               key={r.public_id}
