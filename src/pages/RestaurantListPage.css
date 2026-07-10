@@ -89,13 +89,6 @@
   outline-offset: 2px;
 }
 
-.rlp__loading,
-.rlp__empty {
-  text-align: center;
-  color: var(--color-text-muted, #888);
-  padding: 48px 0;
-}
-
 .rlp__filters {
   position: sticky;
   top: 12px;
@@ -324,6 +317,131 @@
   opacity: 0.9;
 }
 
+.rlp__state {
+  margin: 8px 0 0;
+  padding: 26px 22px;
+  border-radius: 14px;
+  border: 1px solid var(--color-border-default);
+  background: var(--color-bg-surface);
+  box-shadow: 0 8px 18px -18px color-mix(in srgb, var(--color-primary) 60%, transparent);
+}
+
+.rlp__state-title {
+  margin: 0;
+  font-size: 20px;
+  line-height: 1.2;
+  color: var(--color-text-primary);
+}
+
+.rlp__state-text {
+  margin: 10px 0 0;
+  color: color-mix(in srgb, var(--color-text-primary) 72%, transparent);
+}
+
+.rlp__state-actions {
+  margin-top: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.rlp__state-button {
+  height: 38px;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 26%, var(--color-border-default));
+  background: var(--color-bg-surface);
+  color: var(--color-primary);
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  padding: 0 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.rlp__state-button:hover {
+  background: color-mix(in srgb, var(--color-primary) 8%, var(--color-bg-surface));
+}
+
+.rlp__state-button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.rlp__state-button--primary {
+  background: var(--color-primary);
+  color: var(--color-bg-surface);
+  border-color: var(--color-primary);
+}
+
+.rlp__state-button--primary:hover {
+  background: color-mix(in srgb, var(--color-primary) 88%, #000);
+}
+
+.rlp__cards--skeleton .rlp__card {
+  pointer-events: none;
+}
+
+.rlp__card--skeleton {
+  border-color: color-mix(in srgb, var(--color-border-default) 85%, transparent);
+  box-shadow: none;
+}
+
+.rlp__skeleton {
+  position: relative;
+  overflow: hidden;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--color-bg-surface-subtle) 70%, var(--color-bg-surface));
+}
+
+.rlp__skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--color-bg-surface) 40%, transparent),
+    transparent
+  );
+  transform: translateX(-100%);
+  animation: rlp-shimmer 1.15s infinite;
+}
+
+.rlp__skeleton--title {
+  height: 22px;
+  width: 58%;
+}
+
+.rlp__skeleton--line {
+  height: 14px;
+  width: 78%;
+}
+
+.rlp__skeleton--line.short {
+  width: 46%;
+}
+
+.rlp__skeleton--facts {
+  height: 62px;
+  width: 100%;
+  border-radius: 12px;
+}
+
+.rlp__skeleton--cta {
+  margin-top: auto;
+  height: 16px;
+  width: 42%;
+}
+
+@keyframes rlp-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
 @media (max-width: 780px) {
   .rlp__hero {
     padding: 20px;
@@ -364,5 +482,10 @@
 
   .rlp__card-facts {
     grid-template-columns: 1fr;
+  }
+
+  .rlp__state-actions {
+    flex-direction: column;
+    align-items: stretch;
   }
 }

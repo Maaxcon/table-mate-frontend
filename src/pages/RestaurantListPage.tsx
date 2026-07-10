@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { Link } from "react-router-dom"
 import { apiFetch } from "@/api/client"
 import { useAppSelector } from "@/store/hooks"
@@ -53,24 +53,45 @@ function formatUpdatedAt(value?: string): string {
 export function RestaurantListPage() {
   const [restaurants, setRestaurants] = useState<Restaurant[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [query, setQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState<RestaurantStatus | "all">("all")
   const [cuisineFilter, setCuisineFilter] = useState("all")
   const [cityFilter, setCityFilter] = useState("all")
   const user = useAppSelector((s) => s.auth.user)
+  const createRestaurantLink = user?.role === "admin" ? "/admin/restaurant" : "/"
+
+  const loadRestaurants = useCallback(async (signal?: AbortSignal) => {
+    try {
+      const res = await apiFetch("/api/restaurants/restaurants-public/", { signal })
+      if (!res.ok) throw new Error("Failed")
+      const data = (await res.json()) as { results?: Restaurant[] }
+      setRestaurants(data.results ?? [])
+    } catch {
+      if (signal?.aborted) return
+      setRestaurants([])
+      setError("Could not load restaurants. Please try again.")
+    } finally {
+      if (!signal?.aborted) setLoading(false)
+    }
+  }, [])
 
   useEffect(() => {
     const controller = new AbortController()
-    apiFetch("/api/restaurants/restaurants-public/", { signal: controller.signal })
-      .then(async (res) => {
-        if (!res.ok) throw new Error("Failed")
-        const data = (await res.json()) as { results?: Restaurant[] }
-        setRestaurants(data.results ?? [])
-      })
-      .catch(() => setRestaurants([]))
-      .finally(() => setLoading(false))
-    return () => controller.abort()
-  }, [])
+    const timerId = window.setTimeout(() => {
+      void loadRestaurants(controller.signal)
+    }, 0)
+    return () => {
+      window.clearTimeout(timerId)
+      controller.abort()
+    }
+  }, [loadRestaurants])
+
+  const retryLoadRestaurants = () => {
+    setError(null)
+    setLoading(true)
+    void loadRestaurants()
+  }
 
   const enrichedRestaurants = useMemo(
     () =>
@@ -121,13 +142,11 @@ export function RestaurantListPage() {
     setCityFilter("all")
   }
 
-  if (loading) {
-    return (
-      <main className="rlp">
-        <p className="rlp__loading">Loading restaurants...</p>
-      </main>
-    )
-  }
+  const hasActiveFilters =
+    query.trim().length > 0 ||
+    statusFilter !== "all" ||
+    cuisineFilter !== "all" ||
+    cityFilter !== "all"
 
   return (
     <main className="rlp">
@@ -139,7 +158,7 @@ export function RestaurantListPage() {
           </p>
         </div>
         <div className="rlp__hero-actions">
-          <Link to="/" className="rlp__cta-link">
+          <Link to={createRestaurantLink} className="rlp__cta-link">
             Add restaurant
           </Link>
           {user && (
@@ -159,6 +178,7 @@ export function RestaurantListPage() {
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             className="rlp__input"
+            disabled={loading}
           />
         </label>
 
@@ -168,6 +188,7 @@ export function RestaurantListPage() {
             value={statusFilter}
             onChange={(event) => setStatusFilter(event.target.value as RestaurantStatus | "all")}
             className="rlp__select"
+            disabled={loading}
           >
             <option value="all">All statuses</option>
             <option value="active">{STATUS_LABELS.active}</option>
@@ -182,6 +203,7 @@ export function RestaurantListPage() {
             value={cuisineFilter}
             onChange={(event) => setCuisineFilter(event.target.value)}
             className="rlp__select"
+            disabled={loading}
           >
             <option value="all">All cuisines</option>
             {cuisineOptions.map((cuisine) => (
@@ -198,6 +220,7 @@ export function RestaurantListPage() {
             value={cityFilter}
             onChange={(event) => setCityFilter(event.target.value)}
             className="rlp__select"
+            disabled={loading}
           >
             <option value="all">All cities</option>
             {cityOptions.map((city) => (
@@ -213,12 +236,75 @@ export function RestaurantListPage() {
         </button>
       </section>
 
-      {enrichedRestaurants.length === 0 && <p className="rlp__empty">No restaurants available.</p>}
-      {enrichedRestaurants.length > 0 && filteredRestaurants.length === 0 && (
-        <p className="rlp__empty">No restaurants match these filters.</p>
+      {loading && (
+        <div className="rlp__cards rlp__cards--skeleton" aria-label="Loading restaurants">
+          {Array.from({ length: 6 }).map((_, index) => (
+            <article
+              key={`skeleton-${index}`}
+              className="rlp__card rlp__card--skeleton"
+              aria-hidden="true"
+            >
+              <div className="rlp__skeleton rlp__skeleton--title" />
+              <div className="rlp__skeleton rlp__skeleton--line" />
+              <div className="rlp__skeleton rlp__skeleton--line short" />
+              <div className="rlp__skeleton rlp__skeleton--facts" />
+              <div className="rlp__skeleton rlp__skeleton--cta" />
+            </article>
+          ))}
+        </div>
       )}
 
-      {filteredRestaurants.length > 0 && (
+      {!loading && error && (
+        <section className="rlp__state" role="alert">
+          <h2 className="rlp__state-title">Couldn’t load restaurants</h2>
+          <p className="rlp__state-text">{error}</p>
+          <div className="rlp__state-actions">
+            <button
+              type="button"
+              className="rlp__state-button rlp__state-button--primary"
+              onClick={retryLoadRestaurants}
+            >
+              Retry
+            </button>
+          </div>
+        </section>
+      )}
+
+      {!loading && !error && enrichedRestaurants.length === 0 && (
+        <section className="rlp__state">
+          <h2 className="rlp__state-title">No restaurants yet</h2>
+          <p className="rlp__state-text">
+            Create your first restaurant to start building the menu and bookings.
+          </p>
+          <div className="rlp__state-actions">
+            <Link
+              to={createRestaurantLink}
+              className="rlp__state-button rlp__state-button--primary"
+            >
+              Create restaurant
+            </Link>
+          </div>
+        </section>
+      )}
+
+      {!loading && !error && enrichedRestaurants.length > 0 && filteredRestaurants.length === 0 && (
+        <section className="rlp__state">
+          <h2 className="rlp__state-title">No results</h2>
+          <p className="rlp__state-text">No restaurants match the current filters.</p>
+          <div className="rlp__state-actions">
+            <button
+              type="button"
+              className="rlp__state-button"
+              onClick={resetFilters}
+              disabled={!hasActiveFilters}
+            >
+              Reset filters
+            </button>
+          </div>
+        </section>
+      )}
+
+      {!loading && !error && filteredRestaurants.length > 0 && (
         <div className="rlp__toolbar">
           <p className="rlp__result-count">
             Showing {filteredRestaurants.length} of {enrichedRestaurants.length}
@@ -226,7 +312,7 @@ export function RestaurantListPage() {
         </div>
       )}
 
-      {filteredRestaurants.length > 0 && (
+      {!loading && !error && filteredRestaurants.length > 0 && (
         <div className="rlp__cards">
           {filteredRestaurants.map((r) => (
             <Link
