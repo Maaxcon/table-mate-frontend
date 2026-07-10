@@ -502,9 +502,6 @@ function FloorPlanEditorPage() {
     (edge: string, style: "dashed" | "solid") => {
       if (!selectedZoneId) return
       const updated = { ...edgeStyles, [edge]: style }
-      setZones((prev) =>
-        prev.map((z) => (z.public_id === selectedZoneId ? { ...z, edge_styles: updated } : z)),
-      )
       updateZoneMeta(selectedZoneId, { edge_styles: updated })
     },
     [selectedZoneId, edgeStyles, updateZoneMeta],
@@ -513,11 +510,6 @@ function FloorPlanEditorPage() {
   const handleCanvasSizeChange = useCallback(
     (cols: number, rows: number) => {
       if (!selectedZoneId) return
-      setZones((prev) =>
-        prev.map((z) =>
-          z.public_id === selectedZoneId ? { ...z, canvas_cols: cols, canvas_rows: rows } : z,
-        ),
-      )
       updateZoneMeta(selectedZoneId, { canvas_cols: cols, canvas_rows: rows })
     },
     [selectedZoneId, updateZoneMeta],
@@ -526,7 +518,6 @@ function FloorPlanEditorPage() {
   const handleRenameZone = useCallback(
     (zoneId: string, name: string) => {
       updateZoneMeta(zoneId, { name })
-      setZones((prev) => prev.map((z) => (z.public_id === zoneId ? { ...z, name } : z)))
     },
     [updateZoneMeta],
   )
@@ -535,7 +526,6 @@ function FloorPlanEditorPage() {
     (zoneId: string) => {
       setDeleting(true)
       deleteZoneMeta(zoneId)
-      setZones((prev) => prev.filter((z) => z.public_id !== zoneId))
       if (selectedZoneId === zoneId) {
         const remaining = allZones.filter((z) => z.public_id !== zoneId)
         setSelectedZoneId(remaining.length > 0 ? remaining[0].public_id : null)
