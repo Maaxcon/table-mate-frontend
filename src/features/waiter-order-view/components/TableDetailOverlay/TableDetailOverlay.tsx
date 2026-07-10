@@ -7,6 +7,14 @@ import { OrderItemRow } from "../OrderItemRow"
 import { CloseCheckModal } from "../CloseCheckModal"
 import "./TableDetailOverlay.css"
 
+function getOverdueMinutes(endAt: string, nowMs: number): number | null {
+  const endMs = new Date(endAt).getTime()
+  if (!Number.isFinite(endMs)) return null
+  const overdueMs = nowMs - endMs
+  if (overdueMs <= 0) return null
+  return Math.max(1, Math.floor(overdueMs / 60_000))
+}
+
 interface TableDetailOverlayProps {
   table: FloorTable
   detail: OverlayDetail | null
@@ -74,6 +82,13 @@ export function TableDetailOverlay({
       .sort(byStart)[0] ?? null
   // All of the table's bookings for the day (active + upcoming), earliest first.
   const dayReservations = [...tableReservations].sort(byStart)
+  const overdueActiveReservation = dayReservations.find((reservation) => {
+    if (reservation.status !== "active") return false
+    return getOverdueMinutes(reservation.end_at, currentTime.getTime()) != null
+  })
+  const overdueMinutes = overdueActiveReservation
+    ? getOverdueMinutes(overdueActiveReservation.end_at, currentTime.getTime())
+    : null
 
   return (
     <>
@@ -150,6 +165,39 @@ export function TableDetailOverlay({
             )}
           </div>
         </div>
+
+        {isOccupied && overdueActiveReservation && overdueMinutes != null && (
+          <div className="overlay__overdue-banner" role="alert">
+            <div className="overlay__overdue-copy">
+              <p className="overlay__overdue-title">
+                Reservation time ended {overdueMinutes} min ago
+              </p>
+              <p className="overlay__overdue-text">Close this table or prolong the booking.</p>
+            </div>
+            <div className="overlay__overdue-actions">
+              {onModifyReservation && (
+                <button
+                  type="button"
+                  className="overlay__overdue-btn overlay__overdue-btn--ghost"
+                  onClick={() => onModifyReservation(overdueActiveReservation)}
+                  disabled={actionBusy}
+                >
+                  PROLONG
+                </button>
+              )}
+              {onCloseCheck && (
+                <button
+                  type="button"
+                  className="overlay__overdue-btn"
+                  onClick={() => setShowCloseCheck(true)}
+                  disabled={actionBusy}
+                >
+                  CLOSE CHECK
+                </button>
+              )}
+            </div>
+          </div>
+        )}
 
         {!isOccupied && !loading && (
           <div className="overlay__open-panel">

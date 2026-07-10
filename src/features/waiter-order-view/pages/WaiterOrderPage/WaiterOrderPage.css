@@ -287,6 +287,31 @@
   color: var(--color-text-primary);
 }
 
+@keyframes waiter-overdue-pulse {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 4px rgba(var(--color-warning-rgb), 0.18),
+      0 18px 38px color-mix(in srgb, var(--color-warning) 24%, transparent),
+      inset 0 0 16px color-mix(in srgb, var(--color-warning) 6%, transparent);
+  }
+  50% {
+    box-shadow:
+      0 0 0 7px rgba(var(--color-warning-rgb), 0.28),
+      0 24px 48px color-mix(in srgb, var(--color-warning) 34%, transparent),
+      inset 0 0 24px color-mix(in srgb, var(--color-warning) 14%, transparent);
+  }
+}
+
+.waiter-view__floor-card .fp-block--overdue {
+  border-color: var(--color-warning);
+  background:
+    linear-gradient(145deg, rgba(255, 247, 237, 0.96), rgba(255, 237, 213, 0.9)) padding-box,
+    linear-gradient(145deg, rgba(var(--color-warning-rgb), 0.28), rgba(var(--color-warning-rgb), 0))
+      border-box;
+  animation: waiter-overdue-pulse 1.6s ease-in-out infinite;
+}
+
 .waiter-view__floor-card .fp-block__badge--reserved {
   background: rgba(var(--color-primary-rgb), 0.1);
   color: var(--color-primary);
@@ -371,6 +396,12 @@
   background: rgba(var(--color-error-rgb), 0.08);
 }
 
+.waiter-view__floor-card .fp-block__badge--overdue {
+  border-color: rgba(var(--color-warning-rgb), 0.35);
+  color: var(--color-warning);
+  background: rgba(var(--color-warning-rgb), 0.14);
+}
+
 [data-theme="dark"] .waiter-view__floor-card .fp-view {
   background: linear-gradient(180deg, rgba(20, 24, 32, 0.85), rgba(11, 13, 19, 0.95));
   box-shadow:
@@ -450,6 +481,18 @@
       border-box;
 }
 
+[data-theme="dark"] .waiter-view__floor-card .fp-block--overdue {
+  border-color: color-mix(in srgb, rgba(var(--color-warning-rgb), 0.88), rgba(255, 255, 255, 0.25));
+  background:
+    linear-gradient(145deg, rgba(59, 35, 10, 0.92), rgba(42, 26, 11, 0.9)) padding-box,
+    linear-gradient(
+        145deg,
+        rgba(var(--color-warning-rgb), 0.38),
+        rgba(var(--color-warning-rgb), 0.06)
+      )
+      border-box;
+}
+
 [data-theme="dark"] .waiter-view__floor-card .fp-block--table:hover {
   border-color: rgba(255, 255, 255, 0.18);
   box-shadow:
@@ -481,6 +524,18 @@
   border-color: rgba(var(--color-primary-rgb), 0.45);
   color: color-mix(in srgb, var(--color-primary) 65%, white 35%);
   background: rgba(var(--color-primary-rgb), 0.2);
+}
+
+[data-theme="dark"] .waiter-view__floor-card .fp-block__badge--overdue {
+  border-color: rgba(var(--color-warning-rgb), 0.5);
+  color: color-mix(in srgb, var(--color-warning) 72%, white 28%);
+  background: rgba(var(--color-warning-rgb), 0.2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .waiter-view__floor-card .fp-block--overdue {
+    animation: none;
+  }
 }
 
 [data-theme="dark"] .waiter-view__floor-card .fp-block__badge--occupied {
