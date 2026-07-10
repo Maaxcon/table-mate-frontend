@@ -20,6 +20,49 @@ interface ResizeHandlesProps {
 
 type Corner = "nw" | "ne" | "sw" | "se"
 type Handle = Corner | "n" | "e" | "s" | "w"
+type Point = { x: number; y: number }
+
+function getOppositeAnchor(handle: Handle, w: number, h: number): Point {
+  switch (handle) {
+    case "n":
+      return { x: w / 2, y: h }
+    case "e":
+      return { x: 0, y: h / 2 }
+    case "s":
+      return { x: w / 2, y: 0 }
+    case "w":
+      return { x: w, y: h / 2 }
+    case "nw":
+      return { x: w, y: h }
+    case "ne":
+      return { x: 0, y: h }
+    case "sw":
+      return { x: w, y: 0 }
+    case "se":
+      return { x: 0, y: 0 }
+  }
+}
+
+function toWorldPoint(
+  rect: { x: number; y: number; w: number; h: number },
+  local: Point,
+  rotation?: number,
+): Point {
+  if (!rotation) {
+    return { x: rect.x + local.x, y: rect.y + local.y }
+  }
+  const rad = (rotation * Math.PI) / 180
+  const cos = Math.cos(rad)
+  const sin = Math.sin(rad)
+  const cx = rect.x + rect.w / 2
+  const cy = rect.y + rect.h / 2
+  const dx = local.x - rect.w / 2
+  const dy = local.y - rect.h / 2
+  return {
+    x: cx + dx * cos - dy * sin,
+    y: cy + dx * sin + dy * cos,
+  }
+}
 
 export function ResizeHandles({
   entityId,
@@ -183,8 +226,34 @@ export function ResizeHandles({
         }
       }
 
-      const newX = left
-      const newY = top
+      if (entityRotation) {
+        const startAnchor = toWorldPoint(
+          {
+            x: drag.startEntityX,
+            y: drag.startEntityY,
+            w: drag.startW,
+            h: drag.startH,
+          },
+          getOppositeAnchor(drag.handle, drag.startW, drag.startH),
+          entityRotation,
+        )
+        const nextAnchor = toWorldPoint(
+          {
+            x: left,
+            y: top,
+            w: newW,
+            h: newH,
+          },
+          getOppositeAnchor(drag.handle, newW, newH),
+          entityRotation,
+        )
+        left += startAnchor.x - nextAnchor.x
+        top += startAnchor.y - nextAnchor.y
+      }
+
+      const shouldRoundPosition = c?.lockAspect || Boolean(entityRotation)
+      const newX = shouldRoundPosition ? Math.round(left) : left
+      const newY = shouldRoundPosition ? Math.round(top) : top
       onResize(entityId, newW, newH)
       onMove(entityId, newX, newY)
     }

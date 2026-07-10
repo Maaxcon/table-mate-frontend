@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { snap, GRID, EDITOR_MIN_SCALE, EDITOR_MAX_SCALE } from "@/features/editor/types"
+import { snap, GRID, EDITOR_MIN_SCALE, EDITOR_MAX_SCALE, cssVars } from "@/features/editor/types"
 import type { EditorEntity } from "@/features/editor/types"
 import { TableBlock } from "./entities/TableBlock"
 import { ObstacleBlock } from "./entities/ObstacleBlock"
@@ -429,8 +429,10 @@ export function Canvas({
 
       const logicalDx = dx / scale
       const logicalDy = dy / scale
-      const rawX = snap(drag.startPrimaryX * GRID + logicalDx) / GRID
-      const rawY = snap(drag.startPrimaryY * GRID + logicalDy) / GRID
+      // Keep sub-grid precision until snap-guide resolution so the magnetic
+      // threshold can actually engage before final grid quantization.
+      const rawX = (drag.startPrimaryX * GRID + logicalDx) / GRID
+      const rawY = (drag.startPrimaryY * GRID + logicalDy) / GRID
       const primaryEntity = entitiesById.get(drag.primaryId)
       if (!primaryEntity) return
       const snapCandidates = entities
@@ -445,8 +447,8 @@ export function Canvas({
       } else if (snapGuides.length > 0) {
         setSnapGuides([])
       }
-      const newX = snapped.x
-      const newY = snapped.y
+      const newX = snap(snapped.x * GRID) / GRID
+      const newY = snap(snapped.y * GRID) / GRID
       if (drag.entityIds.length <= 1) {
         onEntityMove(drag.primaryId, newX, newY)
         return
@@ -510,6 +512,30 @@ export function Canvas({
     scale,
     snapGuides.length,
   ])
+
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return
+      if (isTextInputTarget(e.target)) return
+
+      const hadTransientDragState =
+        marqueeRef.current !== null || dragRef.current !== null || panDragRef.current !== null
+      if (!hadTransientDragState && !marqueeRect && snapGuides.length === 0) return
+
+      e.preventDefault()
+      marqueeRef.current = null
+      dragRef.current = null
+      panDragRef.current = null
+      setMarqueeRect(null)
+      if (snapGuides.length > 0) setSnapGuides([])
+      if (containerRef.current) {
+        containerRef.current.style.cursor = ""
+      }
+    }
+
+    window.addEventListener("keydown", handleEscape)
+    return () => window.removeEventListener("keydown", handleEscape)
+  }, [marqueeRect, snapGuides.length])
 
   const handleCanvasMouseDown = useCallback(
     (e: React.MouseEvent) => {
@@ -630,7 +656,7 @@ export function Canvas({
     () => ({
       width: canvasCols * GRID,
       height: canvasRows * GRID,
-      ["--grid-size" as const]: `${GRID}px`,
+      ...cssVars({ "--grid-size": `${GRID}px` }),
     }),
     [canvasCols, canvasRows],
   )
@@ -645,6 +671,15 @@ export function Canvas({
     [canvasCols, canvasRows, scale],
   )
 
+  const visualBoundsStyle = useMemo(
+    () => ({
+      width: canvasCols * GRID * scale,
+      height: canvasRows * GRID * scale,
+      overflow: "hidden",
+    }),
+    [canvasCols, canvasRows, scale],
+  )
+
   return (
     <div
       ref={containerRef}
@@ -654,7 +689,7 @@ export function Canvas({
     >
       {/* The wrapper is sized to the visual canvas extent so the scrollport
           matches what the user sees, avoiding dead scroll space when zoomed out. */}
-      <div style={{ width: canvasCols * GRID * scale, height: canvasRows * GRID * scale }}>
+      <div style={visualBoundsStyle}>
         {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions */}
         <div
           ref={canvasRef}

@@ -67,10 +67,12 @@ interface EditorHistorySnapshot {
 
 type Action =
   | { type: "ADD_ENTITY"; entity: EditorEntity }
+  | { type: "ADD_ENTITIES"; entities: EditorEntity[] }
   | { type: "UPDATE_ENTITY"; id: string; patch: Partial<EditorEntity> }
   | { type: "MOVE_ENTITY"; id: string; x: number; y: number; zoneId?: string }
   | { type: "MOVE_ENTITIES_BY_DELTA"; ids: string[]; dx: number; dy: number; zoneId?: string }
   | { type: "REMOVE_ENTITY"; id: string }
+  | { type: "REMOVE_ENTITIES"; ids: string[] }
   | { type: "SELECT_ENTITY"; id: string | null }
   | { type: "SET_TOOL"; tool: string | null }
   | {
@@ -88,6 +90,7 @@ type Action =
       canvasRows?: number
     }
   | { type: "SET_CANVAS_SIZE"; cols: number; rows: number; zoneId?: string | null }
+  | { type: "UPDATE_ZONE_CANVAS_SIZE"; zoneId: string; cols: number; rows: number }
   | { type: "REMOVE_ENTITIES_BY_ZONE"; zoneId: string }
   | { type: "CLEAR" }
   | { type: "CREATE_ZONE"; zone: PendingZoneCreate }
@@ -186,32 +189,90 @@ function pushHistory(state: EditorState, next: EditorState): EditorState {
   }
 }
 
+function placeEntity(
+  entities: EditorEntity[],
+  entity: EditorEntity,
+  canvasCols: number,
+  canvasRows: number,
+): EditorEntity {
+  const entityZoneId = entity.zoneId
+  const others = entityZoneId ? entities.filter((e) => e.zoneId === entityZoneId) : entities
+  const free = findFreePosition({ ...entity }, others, canvasCols, canvasRows)
+  const clamped = clampEntityToBackendLimits(free.x, free.y, entity.type, canvasCols, canvasRows)
+  return { ...entity, x: clamped.x, y: clamped.y }
+}
+
+function removeEntitiesBatch(state: EditorState, ids: Set<string>): EditorState {
+  const removed = state.entities.filter((entity) => ids.has(entity.id))
+  if (removed.length === 0) return state
+  const entities = state.entities.filter((entity) => !ids.has(entity.id))
+
+  const deletedServerIds = [...state.deletedServerIds]
+  for (const entity of removed) {
+    if (!entity.serverId || deletedServerIds.includes(entity.serverId)) continue
+    deletedServerIds.push(entity.serverId)
+  }
+
+  return pushHistory(state, {
+    ...state,
+    entities,
+    deletedServerIds,
+    selectedId:
+      state.selectedId && ids.has(state.selectedId)
+        ? null
+        : state.selectedId && entities.every((entity) => entity.id !== state.selectedId)
+          ? null
+          : state.selectedId,
+    dirty: computeDirty(entities, state.lastPublishedJson),
+  })
+}
+
+function reclampZoneEntities(
+  entities: EditorEntity[],
+  zoneId: string | null,
+  cols: number,
+  rows: number,
+): EditorEntity[] {
+  return entities.map((entity) => {
+    const applies = (entity.zoneId ?? null) === zoneId
+    if (!applies) return entity
+    const { x, y } = clampEntityToBackendLimits(entity.x, entity.y, entity.type, cols, rows)
+    let { w, h } = entity
+    if (x + w > cols) w = Math.max(1, cols - x)
+    if (y + h > rows) h = Math.max(1, rows - y)
+    if (w !== entity.w || h !== entity.h || x !== entity.x || y !== entity.y) {
+      return { ...entity, x, y, w, h }
+    }
+    return entity
+  })
+}
+
 function editorReducer(state: EditorState, action: Action): EditorState {
   switch (action.type) {
     case "ADD_ENTITY": {
-      const entityZoneId = action.entity.zoneId
-      const others = entityZoneId
-        ? state.entities.filter((e) => e.zoneId === entityZoneId)
-        : state.entities
-      const free = findFreePosition(
-        { ...action.entity },
-        others,
-        state.canvasCols,
-        state.canvasRows,
-      )
-      const clamped = clampEntityToBackendLimits(
-        free.x,
-        free.y,
-        action.entity.type,
-        state.canvasCols,
-        state.canvasRows,
-      )
-      const placed = { ...action.entity, x: clamped.x, y: clamped.y }
+      const placed = placeEntity(state.entities, action.entity, state.canvasCols, state.canvasRows)
       const entities = [...state.entities, placed]
       return pushHistory(state, {
         ...state,
         entities,
         selectedId: placed.id,
+        dirty: computeDirty(entities, state.lastPublishedJson),
+      })
+    }
+    case "ADD_ENTITIES": {
+      if (action.entities.length === 0) return state
+      const placedBatch: EditorEntity[] = []
+      let entities = [...state.entities]
+      for (const entity of action.entities) {
+        const placed = placeEntity(entities, entity, state.canvasCols, state.canvasRows)
+        placedBatch.push(placed)
+        entities = [...entities, placed]
+      }
+      const lastPlaced = placedBatch[placedBatch.length - 1]
+      return pushHistory(state, {
+        ...state,
+        entities,
+        selectedId: lastPlaced?.id ?? state.selectedId,
         dirty: computeDirty(entities, state.lastPublishedJson),
       })
     }
@@ -334,23 +395,89 @@ function editorReducer(state: EditorState, action: Action): EditorState {
       if (action.ids.length === 0) return state
       const ids = new Set(action.ids)
       const targetZoneId = action.zoneId ?? null
+      const selected = state.entities.filter((entity) => {
+        if (!ids.has(entity.id)) return false
+        if (targetZoneId && (entity.zoneId ?? null) !== targetZoneId) return false
+        return true
+      })
+      if (selected.length === 0) return state
+
+      // Keep multi-select movement rigid: compute one shared delta that is valid
+      // for every selected entity, then apply it uniformly.
+      let minDx = -Infinity
+      let maxDx = Infinity
+      let minDy = -Infinity
+      let maxDy = Infinity
+
+      for (const entity of selected) {
+        const aabb = rotatedAABB(entity.x, entity.y, entity.w, entity.h, entity.rotation)
+        const minAabbX = entity.type === "threshold" || entity.type === "portal" ? -1 : 0
+        const maxAabbX =
+          (entity.type === "threshold" || entity.type === "portal"
+            ? state.canvasCols + 1
+            : state.canvasCols) - aabb.w
+        const minAabbY = entity.type === "threshold" || entity.type === "portal" ? -1 : 0
+        const maxAabbY =
+          (entity.type === "threshold" || entity.type === "portal"
+            ? state.canvasRows + 1
+            : state.canvasRows) - aabb.h
+
+        minDx = Math.max(minDx, minAabbX - aabb.x)
+        maxDx = Math.min(maxDx, maxAabbX - aabb.x)
+        minDy = Math.max(minDy, minAabbY - aabb.y)
+        maxDy = Math.min(maxDy, maxAabbY - aabb.y)
+
+        const minBackendX = clampEntityToBackendLimits(
+          Number.NEGATIVE_INFINITY,
+          entity.y,
+          entity.type,
+          state.canvasCols,
+          state.canvasRows,
+        ).x
+        const maxBackendX = clampEntityToBackendLimits(
+          Number.POSITIVE_INFINITY,
+          entity.y,
+          entity.type,
+          state.canvasCols,
+          state.canvasRows,
+        ).x
+        const minBackendY = clampEntityToBackendLimits(
+          entity.x,
+          Number.NEGATIVE_INFINITY,
+          entity.type,
+          state.canvasCols,
+          state.canvasRows,
+        ).y
+        const maxBackendY = clampEntityToBackendLimits(
+          entity.x,
+          Number.POSITIVE_INFINITY,
+          entity.type,
+          state.canvasCols,
+          state.canvasRows,
+        ).y
+
+        minDx = Math.max(minDx, minBackendX - entity.x)
+        maxDx = Math.min(maxDx, maxBackendX - entity.x)
+        minDy = Math.max(minDy, minBackendY - entity.y)
+        maxDy = Math.min(maxDy, maxBackendY - entity.y)
+      }
+
+      const sharedDx = Math.max(minDx, Math.min(action.dx, maxDx))
+      const sharedDy = Math.max(minDy, Math.min(action.dy, maxDy))
+      if (sharedDx === 0 && sharedDy === 0) return state
+
       let changed = false
       const entities = state.entities.map((entity) => {
         if (!ids.has(entity.id)) return entity
         if (targetZoneId && (entity.zoneId ?? null) !== targetZoneId) return entity
 
-        let x = entity.x + action.dx
-        let y = entity.y + action.dy
-        const aabb = rotatedAABB(x, y, entity.w, entity.h, entity.rotation)
-        const offsetX = (aabb.w - entity.w) / 2
-        const offsetY = (aabb.h - entity.h) / 2
-        if (entity.type === "threshold" || entity.type === "portal") {
-          x = Math.max(-1, Math.min(aabb.x, state.canvasCols + 1 - aabb.w)) + offsetX
-          y = Math.max(-1, Math.min(aabb.y, state.canvasRows + 1 - aabb.h)) + offsetY
-        } else {
-          x = Math.max(0, Math.min(aabb.x, state.canvasCols - aabb.w)) + offsetX
-          y = Math.max(0, Math.min(aabb.y, state.canvasRows - aabb.h)) + offsetY
-        }
+        const { x, y } = clampEntityToBackendLimits(
+          entity.x + sharedDx,
+          entity.y + sharedDy,
+          entity.type,
+          state.canvasCols,
+          state.canvasRows,
+        )
         if (x === entity.x && y === entity.y) return entity
         changed = true
         return { ...entity, x, y }
@@ -363,20 +490,10 @@ function editorReducer(state: EditorState, action: Action): EditorState {
       })
     }
     case "REMOVE_ENTITY": {
-      const removed = state.entities.find((e) => e.id === action.id)
-      if (!removed) return state
-      const entities = state.entities.filter((e) => e.id !== action.id)
-      const deletedServerIds =
-        removed?.serverId && !state.deletedServerIds.includes(removed.serverId)
-          ? [...state.deletedServerIds, removed.serverId]
-          : state.deletedServerIds
-      return pushHistory(state, {
-        ...state,
-        entities,
-        deletedServerIds,
-        selectedId: state.selectedId === action.id ? null : state.selectedId,
-        dirty: computeDirty(entities, state.lastPublishedJson),
-      })
+      return removeEntitiesBatch(state, new Set([action.id]))
+    }
+    case "REMOVE_ENTITIES": {
+      return removeEntitiesBatch(state, new Set(action.ids))
     }
     case "SELECT_ENTITY":
       return { ...state, selectedId: action.id }
@@ -435,18 +552,7 @@ function editorReducer(state: EditorState, action: Action): EditorState {
       // Only the active zone's entities are reclamped. A smaller zone's canvas
       // must not squash tables that live in a larger sibling zone.
       const targetZoneId = action.zoneId ?? null
-      const reclamped = state.entities.map((e) => {
-        const applies = (e.zoneId ?? null) === targetZoneId
-        if (!applies) return e
-        const { x, y } = clampEntityToBackendLimits(e.x, e.y, e.type, action.cols, action.rows)
-        let { w, h } = e
-        if (x + w > action.cols) w = Math.max(1, action.cols - x)
-        if (y + h > action.rows) h = Math.max(1, action.rows - y)
-        if (w !== e.w || h !== e.h || x !== e.x || y !== e.y) {
-          return { ...e, x, y, w, h }
-        }
-        return e
-      })
+      const reclamped = reclampZoneEntities(state.entities, targetZoneId, action.cols, action.rows)
       const hasEntityChanges = reclamped.some((entity, index) => entity !== state.entities[index])
       if (
         !hasEntityChanges &&
@@ -468,6 +574,59 @@ function editorReducer(state: EditorState, action: Action): EditorState {
         canvasRows: action.rows,
         entities: reclamped,
         dirty: state.dirty || computeDirty(reclamped, state.lastPublishedJson),
+      })
+    }
+    case "UPDATE_ZONE_CANVAS_SIZE": {
+      const patch = { canvas_cols: action.cols, canvas_rows: action.rows }
+      let pendingZones = state.pendingZones
+      const createdIndex = state.pendingZones.created.findIndex(
+        (z) => z._clientId === action.zoneId,
+      )
+      if (createdIndex >= 0) {
+        const current = state.pendingZones.created[createdIndex]
+        if (current.canvas_cols !== action.cols || current.canvas_rows !== action.rows) {
+          const created = [...state.pendingZones.created]
+          created[createdIndex] = { ...current, ...patch }
+          pendingZones = { ...state.pendingZones, created }
+        }
+      } else {
+        const currentPatch = state.pendingZones.updated[action.zoneId]
+        if (
+          currentPatch?.canvas_cols !== action.cols ||
+          currentPatch?.canvas_rows !== action.rows
+        ) {
+          pendingZones = {
+            ...state.pendingZones,
+            updated: {
+              ...state.pendingZones.updated,
+              [action.zoneId]: {
+                ...currentPatch,
+                ...patch,
+              },
+            },
+          }
+        }
+      }
+
+      const targetZoneId = action.zoneId ?? null
+      const reclamped = reclampZoneEntities(state.entities, targetZoneId, action.cols, action.rows)
+      const hasEntityChanges = reclamped.some((entity, index) => entity !== state.entities[index])
+      const pendingZonesChanged = pendingZones !== state.pendingZones
+      const canvasChanged = state.canvasCols !== action.cols || state.canvasRows !== action.rows
+
+      if (!pendingZonesChanged && !hasEntityChanges && !canvasChanged) return state
+
+      return pushHistory(state, {
+        ...state,
+        pendingZones,
+        canvasCols: action.cols,
+        canvasRows: action.rows,
+        entities: reclamped,
+        dirty: pendingZonesChanged
+          ? true
+          : hasEntityChanges
+            ? state.dirty || computeDirty(reclamped, state.lastPublishedJson)
+            : state.dirty,
       })
     }
     case "REMOVE_ENTITIES_BY_ZONE": {
@@ -652,6 +811,12 @@ export function useEditorState() {
     [state.entities],
   )
 
+  const addEntities = useCallback((entities: EditorEntity[]) => {
+    if (entities.length === 0) return []
+    dispatch({ type: "ADD_ENTITIES", entities })
+    return entities
+  }, [])
+
   const updateEntity = useCallback((id: string, patch: Partial<EditorEntity>) => {
     dispatch({ type: "UPDATE_ENTITY", id, patch })
   }, [])
@@ -669,6 +834,11 @@ export function useEditorState() {
 
   const removeEntity = useCallback((id: string) => {
     dispatch({ type: "REMOVE_ENTITY", id })
+  }, [])
+
+  const removeEntities = useCallback((ids: string[]) => {
+    if (ids.length === 0) return
+    dispatch({ type: "REMOVE_ENTITIES", ids })
   }, [])
 
   const selectEntity = useCallback((id: string | null) => {
@@ -715,6 +885,10 @@ export function useEditorState() {
     dispatch({ type: "UPDATE_ZONE_META", zoneId, patch })
   }, [])
 
+  const updateZoneCanvasSize = useCallback((zoneId: string, cols: number, rows: number) => {
+    dispatch({ type: "UPDATE_ZONE_CANVAS_SIZE", zoneId, cols, rows })
+  }, [])
+
   const deleteZone = useCallback((zoneId: string) => {
     dispatch({ type: "DELETE_ZONE", zoneId })
   }, [])
@@ -736,10 +910,12 @@ export function useEditorState() {
     canUndo: state.past.length > 0,
     canRedo: state.future.length > 0,
     addEntity,
+    addEntities,
     updateEntity,
     moveEntity,
     moveEntitiesByDelta,
     removeEntity,
+    removeEntities,
     selectEntity,
     setTool,
     publishSuccess,
@@ -748,6 +924,7 @@ export function useEditorState() {
     removeEntitiesByZone,
     createZone,
     updateZoneMeta,
+    updateZoneCanvasSize,
     deleteZone,
     clearPendingZones,
     undo,

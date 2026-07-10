@@ -253,12 +253,16 @@
 }
 
 .editor-toolbar__btn--publish {
-  background: linear-gradient(120deg, #4b9dff, #1f63e3);
-  border-color: #2b73eb;
-  color: #fff;
+  background: linear-gradient(
+    120deg,
+    color-mix(in srgb, var(--color-primary) 72%, var(--color-bg-page)),
+    color-mix(in srgb, var(--color-primary) 88%, var(--color-border-strong))
+  );
+  border-color: color-mix(in srgb, var(--color-primary) 66%, var(--color-border-default));
+  color: var(--color-bg-page);
   box-shadow:
     0 14px 26px color-mix(in srgb, var(--color-primary) 32%, transparent),
-    0 1px 0 color-mix(in srgb, #ffffff 35%, transparent) inset;
+    0 1px 0 color-mix(in srgb, var(--color-bg-page) 35%, transparent) inset;
 }
 
 .editor-toolbar__btn--publish::before {
@@ -266,25 +270,24 @@
 }
 
 .editor-toolbar__btn--publish:disabled {
-  color: rgba(255, 255, 255, 0.8);
+  color: color-mix(in srgb, var(--color-bg-page) 80%, transparent);
   box-shadow: none;
 }
 
 .editor-toolbar__btn--discard {
-  border-color: #d6a1af;
-  background: linear-gradient(120deg, #fff4f6, #ffe7ee);
-  border-color: color-mix(in srgb, #e06c87 35%, var(--color-border-default));
+  border-color: color-mix(in srgb, var(--color-error) 35%, var(--color-border-default));
   background: linear-gradient(
     120deg,
-    color-mix(in srgb, #ffccd8 26%, transparent),
+    color-mix(in srgb, var(--color-error-bg) 32%, transparent),
     color-mix(in srgb, var(--color-bg-surface) 95%, transparent)
   );
+  color: color-mix(in srgb, var(--color-error-text) 75%, var(--color-text-primary));
 }
 
 .editor-toolbar__btn--discard:hover:not(:disabled) {
   box-shadow:
-    0 12px 22px color-mix(in srgb, #e06c87 20%, transparent),
-    0 1px 0 color-mix(in srgb, #ffffff 24%, transparent) inset;
+    0 12px 22px color-mix(in srgb, var(--color-error) 20%, transparent),
+    0 1px 0 color-mix(in srgb, var(--color-bg-page) 24%, transparent) inset;
 }
 
 [data-theme="light"] .editor-toolbar__tool-hint {
@@ -292,31 +295,49 @@
 }
 
 [data-theme="light"] .editor-toolbar__btn {
-  color: #1f2d3d;
-  border-color: color-mix(in srgb, #7d8da4 42%, var(--color-border-default));
-  background: linear-gradient(120deg, #f8fbff, #edf3fb);
+  color: color-mix(in srgb, var(--color-text-primary) 88%, var(--color-primary));
+  border-color: color-mix(in srgb, var(--color-primary) 22%, var(--color-border-default));
+  background: linear-gradient(
+    120deg,
+    color-mix(in srgb, var(--color-bg-page) 96%, var(--color-primary)),
+    color-mix(in srgb, var(--color-bg-surface-subtle) 82%, var(--color-bg-page))
+  );
 }
 
 [data-theme="light"] .editor-toolbar__btn--publish {
-  background: linear-gradient(120deg, #4b9dff, #1f63e3);
-  border-color: #2b73eb;
-  color: #ffffff;
+  background: linear-gradient(
+    120deg,
+    color-mix(in srgb, var(--color-primary) 72%, var(--color-bg-page)),
+    color-mix(in srgb, var(--color-primary) 88%, var(--color-border-strong))
+  );
+  border-color: color-mix(in srgb, var(--color-primary) 66%, var(--color-border-default));
+  color: var(--color-bg-page);
 }
 
 [data-theme="dark"] .editor-toolbar__btn--publish {
-  background: linear-gradient(125deg, #4f8dff 0%, #2f6ef5 52%, #244fca 100%);
-  border-color: #6fa0ff;
-  color: #f5f8ff;
+  background: linear-gradient(
+    125deg,
+    color-mix(in srgb, var(--color-primary) 72%, var(--color-bg-page)) 0%,
+    color-mix(in srgb, var(--color-primary) 88%, var(--color-bg-page)) 52%,
+    color-mix(in srgb, var(--color-primary) 84%, var(--color-border-strong)) 100%
+  );
+  border-color: color-mix(in srgb, var(--color-primary) 74%, var(--color-border-default));
+  color: color-mix(in srgb, var(--color-bg-page) 94%, var(--color-text-primary));
   box-shadow:
-    0 14px 26px rgb(47 110 245 / 42%),
-    0 1px 0 rgb(201 223 255 / 28%) inset;
+    0 14px 26px color-mix(in srgb, var(--color-primary) 42%, transparent),
+    0 1px 0 color-mix(in srgb, var(--color-bg-page) 28%, transparent) inset;
 }
 
 [data-theme="dark"] .editor-toolbar__btn--publish:hover:not(:disabled),
 [data-theme="dark"] .editor-toolbar__btn--publish:active:not(:disabled) {
-  background: linear-gradient(125deg, #5b97ff 0%, #3674f6 52%, #2855d1 100%);
-  border-color: #7aa8ff;
-  color: #f5f8ff;
+  background: linear-gradient(
+    125deg,
+    color-mix(in srgb, var(--color-primary) 78%, var(--color-bg-page)) 0%,
+    color-mix(in srgb, var(--color-primary) 92%, var(--color-bg-page)) 52%,
+    color-mix(in srgb, var(--color-primary) 88%, var(--color-border-strong)) 100%
+  );
+  border-color: color-mix(in srgb, var(--color-primary) 80%, var(--color-border-default));
+  color: color-mix(in srgb, var(--color-bg-page) 94%, var(--color-text-primary));
 }
 
 @media (max-width: 1220px) {
@@ -420,15 +441,19 @@
 
 [data-theme="dark"] .editor-toolbar__btn--publish:disabled {
   opacity: 0.72;
-  color: rgb(245 248 255 / 88%);
+  color: color-mix(in srgb, var(--color-bg-page) 88%, transparent);
   box-shadow: none;
   filter: saturate(0.82);
 }
 
 [data-theme="light"] .editor-toolbar__btn--discard {
-  background: linear-gradient(120deg, #fff4f6, #ffe7ee);
-  border-color: #e49aad;
-  color: #7f2341;
+  background: linear-gradient(
+    120deg,
+    color-mix(in srgb, var(--color-error-bg) 42%, var(--color-bg-page)),
+    color-mix(in srgb, var(--color-error-bg) 68%, var(--color-bg-page))
+  );
+  border-color: color-mix(in srgb, var(--color-error) 42%, var(--color-border-default));
+  color: color-mix(in srgb, var(--color-error-text) 86%, var(--color-text-primary));
 }
 
 @supports not (background: color-mix(in srgb, black 50%, white)) {
@@ -461,15 +486,23 @@
   }
 
   .editor-toolbar__btn--publish {
-    background: linear-gradient(120deg, #4b9dff, #1f63e3);
-    border-color: #2b73eb;
-    color: #fff;
+    background: linear-gradient(
+      120deg,
+      color-mix(in srgb, var(--color-primary) 72%, var(--color-bg-page)),
+      color-mix(in srgb, var(--color-primary) 88%, var(--color-border-strong))
+    );
+    border-color: color-mix(in srgb, var(--color-primary) 66%, var(--color-border-default));
+    color: var(--color-bg-page);
   }
 
   .editor-toolbar__btn--discard {
-    background: linear-gradient(120deg, #fff4f6, #ffe7ee);
-    border-color: #e49aad;
-    color: #7f2341;
+    background: linear-gradient(
+      120deg,
+      color-mix(in srgb, var(--color-error-bg) 42%, var(--color-bg-page)),
+      color-mix(in srgb, var(--color-error-bg) 68%, var(--color-bg-page))
+    );
+    border-color: color-mix(in srgb, var(--color-error) 42%, var(--color-border-default));
+    color: color-mix(in srgb, var(--color-error-text) 86%, var(--color-text-primary));
   }
 }
 
