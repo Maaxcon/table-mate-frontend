@@ -52,7 +52,7 @@ export function ReservationBlock({
   const left = ((startMinutes - hourStart * 60) / totalMinutes) * 100
   const width = ((endMinutes - startMinutes) / totalMinutes) * 100
 
-  const dragDisabled = reservation.status === "completed" || crossDay
+  const dragDisabled = !!(reservation.status === "completed" || crossDay)
 
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: reservation.public_id,
@@ -93,8 +93,6 @@ export function ReservationBlock({
       ref={setNodeRef}
       className={classNames}
       style={style}
-      tabIndex={0}
-      role="button"
       aria-label={`${reservation.customer_name}, ${reservation.guest_count} guests, ${reservation.status}`}
       aria-grabbed={isDragging}
       {...attributes}
