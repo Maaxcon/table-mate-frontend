@@ -390,6 +390,7 @@ export function WaiterOrderPage() {
       <div className="waiter-view__content">
         <div className="waiter-view__floor-card">
           <FloorPlan
+            key={selectedZoneId ?? "all-zones"}
             payload={layoutPayload}
             tables={tables}
             selectedZoneId={selectedZoneId}

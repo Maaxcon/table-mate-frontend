@@ -110,20 +110,20 @@ function FloorPlanViewImpl({
   const containerRef = useRef<HTMLDivElement>(null)
   const [viewBox, setViewBox] = useState({ scale: 1, width: 0, height: 0 })
   const [zoom, setZoom] = useState(1)
-  const [panOffset, setPanOffset] = useState({ x: 0, y: 0 })
+  const [panRatio, setPanRatio] = useState({ x: 0, y: 0 })
   const isPanning = useRef(false)
   const panStart = useRef({ x: 0, y: 0, offsetX: 0, offsetY: 0 })
   const pinchStartRef = useRef<{ dist: number; zoom: number } | null>(null)
   const zoomRef = useRef(zoom)
-  const panOffsetRef = useRef(panOffset)
+  const panRatioRef = useRef(panRatio)
 
   useEffect(() => {
     zoomRef.current = zoom
   }, [zoom])
 
   useEffect(() => {
-    panOffsetRef.current = panOffset
-  }, [panOffset])
+    panRatioRef.current = panRatio
+  }, [panRatio])
 
   useEffect(() => {
     if (!enableZoom) {
@@ -155,6 +155,40 @@ function FloorPlanViewImpl({
   const containerStyle = useMemo<CSSProperties>(
     () => ({ aspectRatio: `${aspectRatio}` }),
     [aspectRatio],
+  )
+
+  const viewMetrics = useMemo(() => {
+    const interactiveZoom = enableZoom ? zoom : 1
+    const totalScale = scale * interactiveZoom
+    const pad = GRID * totalScale
+    const scaledW = framePxW * totalScale + 2 * pad
+    const scaledH = framePxH * totalScale + 2 * pad
+    const offsetX = Math.max((containerWidth - scaledW) / 2, 0)
+    const offsetY = Math.max((containerHeight - scaledH) / 2, 0)
+    const maxPanX = Math.max(0, (scaledW - containerWidth) / 2)
+    const maxPanY = Math.max(0, (scaledH - containerHeight) / 2)
+    return {
+      interactiveZoom,
+      totalScale,
+      pad,
+      scaledW,
+      scaledH,
+      offsetX,
+      offsetY,
+      maxPanX,
+      maxPanY,
+    }
+  }, [enableZoom, zoom, scale, framePxW, framePxH, containerWidth, containerHeight])
+
+  const { interactiveZoom, totalScale, pad, scaledW, scaledH, offsetX, offsetY, maxPanX, maxPanY } =
+    viewMetrics
+
+  const clampPanRatio = useCallback(
+    (next: { x: number; y: number }) => ({
+      x: maxPanX === 0 ? 0 : Math.max(-1, Math.min(1, next.x)),
+      y: maxPanY === 0 ? 0 : Math.max(-1, Math.min(1, next.y)),
+    }),
+    [maxPanX, maxPanY],
   )
 
   useEffect(() => {
@@ -203,7 +237,7 @@ function FloorPlanViewImpl({
         pinchStartRef.current = { dist, zoom: zoomRef.current }
       }
     },
-    [enableZoom, enablePan],
+    [enableZoom, enablePan, maxPanX, maxPanY],
   )
 
   const handleTouchMove = useCallback(
@@ -226,20 +260,24 @@ function FloorPlanViewImpl({
           panStart.current = {
             x: e.touches[0].clientX,
             y: e.touches[0].clientY,
-            offsetX: panOffsetRef.current.x,
-            offsetY: panOffsetRef.current.y,
+            offsetX: panRatioRef.current.x * maxPanX,
+            offsetY: panRatioRef.current.y * maxPanY,
           }
         } else {
           const dx = e.touches[0].clientX - panStart.current.x
           const dy = e.touches[0].clientY - panStart.current.y
-          setPanOffset({
-            x: panStart.current.offsetX + dx,
-            y: panStart.current.offsetY + dy,
+          setPanRatio((prev) => {
+            const nextActualX = panStart.current.offsetX + dx
+            const nextActualY = panStart.current.offsetY + dy
+            const ratioX = maxPanX === 0 ? 0 : nextActualX / maxPanX
+            const ratioY = maxPanY === 0 ? 0 : nextActualY / maxPanY
+            const next = clampPanRatio({ x: ratioX, y: ratioY })
+            return next.x === prev.x && next.y === prev.y ? prev : next
           })
         }
       }
     },
-    [enableZoom, enablePan, clampZoom],
+    [enableZoom, enablePan, clampZoom, clampPanRatio, maxPanX, maxPanY],
   )
 
   const handleTouchEnd = useCallback(() => {
@@ -259,14 +297,14 @@ function FloorPlanViewImpl({
       panStart.current = {
         x: e.clientX,
         y: e.clientY,
-        offsetX: panOffsetRef.current.x,
-        offsetY: panOffsetRef.current.y,
+        offsetX: panRatioRef.current.x * maxPanX,
+        offsetY: panRatioRef.current.y * maxPanY,
       }
       e.preventDefault()
     }
     el.addEventListener("mousedown", onMouseDown)
     return () => el.removeEventListener("mousedown", onMouseDown)
-  }, [enablePan])
+  }, [enablePan, maxPanX, maxPanY])
 
   useEffect(() => {
     if (!enablePan) return
@@ -274,9 +312,13 @@ function FloorPlanViewImpl({
       if (!isPanning.current) return
       const dx = e.clientX - panStart.current.x
       const dy = e.clientY - panStart.current.y
-      setPanOffset({
-        x: panStart.current.offsetX + dx,
-        y: panStart.current.offsetY + dy,
+      setPanRatio((prev) => {
+        const nextActualX = panStart.current.offsetX + dx
+        const nextActualY = panStart.current.offsetY + dy
+        const ratioX = maxPanX === 0 ? 0 : nextActualX / maxPanX
+        const ratioY = maxPanY === 0 ? 0 : nextActualY / maxPanY
+        const next = clampPanRatio({ x: ratioX, y: ratioY })
+        return next.x === prev.x && next.y === prev.y ? prev : next
       })
     }
     const handleMouseUp = () => {
@@ -288,7 +330,7 @@ function FloorPlanViewImpl({
       window.removeEventListener("mousemove", handleMouseMove)
       window.removeEventListener("mouseup", handleMouseUp)
     }
-  }, [enablePan])
+  }, [enablePan, clampPanRatio, maxPanX, maxPanY])
 
   useEffect(() => {
     const el = containerRef.current
@@ -346,14 +388,20 @@ function FloorPlanViewImpl({
   }
 
   const interactiveZoom = enableZoom ? zoom : 1
-  const interactivePan = enablePan ? panOffset : { x: 0, y: 0 }
-
   const totalScale = scale * interactiveZoom
   const pad = GRID * totalScale
   const scaledW = framePxW * totalScale + 2 * pad
   const scaledH = framePxH * totalScale + 2 * pad
   const offsetX = Math.max((containerWidth - scaledW) / 2, 0)
   const offsetY = Math.max((containerHeight - scaledH) / 2, 0)
+  const maxPanX = Math.max(0, (scaledW - containerWidth) / 2)
+  const maxPanY = Math.max(0, (scaledH - containerHeight) / 2)
+  const interactivePan = enablePan
+    ? {
+        x: panRatio.x * maxPanX,
+        y: panRatio.y * maxPanY,
+      }
+    : { x: 0, y: 0 }
 
   const containerClass = ["fp-view", enablePan ? "fp-view--pan-enabled" : ""]
     .filter(Boolean)
