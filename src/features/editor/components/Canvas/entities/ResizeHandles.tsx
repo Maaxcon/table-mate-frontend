@@ -183,8 +183,8 @@ export function ResizeHandles({
         }
       }
 
-      const newX = left
-      const newY = top
+      const newX = c?.lockAspect ? Math.round(left) : left
+      const newY = c?.lockAspect ? Math.round(top) : top
       onResize(entityId, newW, newH)
       onMove(entityId, newX, newY)
     }
