@@ -414,12 +414,21 @@ function FloorPlanEditorPage() {
     : 0
 
   const selectedEntity = visibleEntities.find((e) => e.id === selectedId) ?? null
+  const effectiveSelectedIds = useMemo(() => {
+    const visibleIds = new Set(visibleEntities.map((entity) => entity.id))
+    const filtered = selectedIds.filter((id) => visibleIds.has(id))
+    if (selectedId && visibleIds.has(selectedId) && !filtered.includes(selectedId)) {
+      return [selectedId, ...filtered]
+    }
+    return filtered
+  }, [selectedId, selectedIds, visibleEntities])
+
   const selectedEntities = useMemo(
     () =>
-      selectedIds
+      effectiveSelectedIds
         .map((id) => visibleEntities.find((entity) => entity.id === id))
         .filter((entity): entity is EditorEntity => Boolean(entity)),
-    [selectedIds, visibleEntities],
+    [effectiveSelectedIds, visibleEntities],
   )
 
   const handleSelectionChange = useCallback(
@@ -559,13 +568,33 @@ function FloorPlanEditorPage() {
 
       if (withCommand && key === "z") {
         event.preventDefault()
+        setSelectedIds([])
         if (event.shiftKey) redo()
         else undo()
         return
       }
       if (withCommand && key === "y") {
         event.preventDefault()
+        setSelectedIds([])
         redo()
+        return
+      }
+
+      if (withCommand && key === "a") {
+        event.preventDefault()
+        const ids = visibleEntities.map((entity) => entity.id)
+        if (ids.length === 0) {
+          handleSelectionChange([], null)
+          return
+        }
+        const primaryId = selectedId && ids.includes(selectedId) ? selectedId : ids[0]
+        handleSelectionChange(ids, primaryId)
+        return
+      }
+
+      if (key === "escape") {
+        event.preventDefault()
+        handleSelectionChange([], null)
         return
       }
 
@@ -650,9 +679,11 @@ function FloorPlanEditorPage() {
     handleDeleteSelected,
     handleSelectionChange,
     redo,
+    selectedId,
     selectedEntities,
     selectedEntity,
     selectedZoneId,
+    visibleEntities,
     undo,
   ])
 
@@ -777,7 +808,7 @@ function FloorPlanEditorPage() {
                 <Canvas
                   entities={visibleEntities}
                   selectedId={selectedId}
-                  selectedIds={selectedIds}
+                  selectedIds={effectiveSelectedIds}
                   activeTool={activeTool}
                   onEntityMove={(id, x, y) => moveEntity(id, x, y, selectedZoneId ?? undefined)}
                   onEntitiesMoveByDelta={(ids, dx, dy) =>

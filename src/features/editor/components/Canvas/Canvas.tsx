@@ -511,6 +511,30 @@ export function Canvas({
     snapGuides.length,
   ])
 
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return
+      if (isTextInputTarget(e.target)) return
+
+      const hadTransientDragState =
+        marqueeRef.current !== null || dragRef.current !== null || panDragRef.current !== null
+      if (!hadTransientDragState && !marqueeRect && snapGuides.length === 0) return
+
+      e.preventDefault()
+      marqueeRef.current = null
+      dragRef.current = null
+      panDragRef.current = null
+      setMarqueeRect(null)
+      if (snapGuides.length > 0) setSnapGuides([])
+      if (containerRef.current) {
+        containerRef.current.style.cursor = ""
+      }
+    }
+
+    window.addEventListener("keydown", handleEscape)
+    return () => window.removeEventListener("keydown", handleEscape)
+  }, [marqueeRect, snapGuides.length])
+
   const handleCanvasMouseDown = useCallback(
     (e: React.MouseEvent) => {
       if (e.button !== 0) return
