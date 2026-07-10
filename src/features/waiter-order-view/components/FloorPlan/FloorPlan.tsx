@@ -2,7 +2,7 @@ import { useMemo } from "react"
 import { FloorPlanView, type FloorPlanTableRef } from "@/features/floorplan/FloorPlanView"
 import type { LayoutPayload } from "@/features/editor/types"
 import type { FloorTable, ReservationItem, UpcomingReservation } from "../../types"
-import { getTableVisualStatus, formatDuration, formatETA } from "../../types"
+import { getTableVisualStatus, formatDuration, formatETA, formatTimeRange } from "../../types"
 import "./FloorPlan.css"
 
 interface FloorPlanProps {
@@ -143,9 +143,12 @@ export function FloorPlan({
                 (() => {
                   const res = table ? nearestByTable.get(table.public_id) : undefined
                   return res ? (
-                    <div className="fp-block__info">
+                    <div className="fp-block__info fp-block__info--next">
+                      <span className="fp-block__eta-badge">ETA {formatETA(res.start_at)}</span>
                       <span className="fp-block__info-name">{res.customer_name ?? "Guest"}</span>
-                      <span className="fp-block__info-sub">in {formatETA(res.start_at)}</span>
+                      <span className="fp-block__info-sub">
+                        {formatTimeRange(res.start_at, res.end_at)}
+                      </span>
                     </div>
                   ) : null
                 })()}

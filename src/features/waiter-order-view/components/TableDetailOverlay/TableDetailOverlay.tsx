@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { useFocusTrap } from "@/hooks/useFocusTrap"
-import { formatTimeRange } from "../../types"
+import { formatETA, formatTimeRange } from "../../types"
 import type { FloorTable, ReservationItem, OverlayDetail, VisualTableStatus } from "../../types"
 import { getCurrencySymbol } from "@/features/menu/utils"
 import { OrderItemRow } from "../OrderItemRow"
@@ -82,6 +82,11 @@ export function TableDetailOverlay({
     [...tableReservations]
       .filter((r) => new Date(r.start_at).getTime() > currentTime.getTime())
       .sort(byStart)[0] ?? null
+  const nextReservationEta = nextReservation ? formatETA(nextReservation.start_at) : null
+  const nextReservationName = nextReservation?.name?.trim() ? nextReservation.name : "Guest"
+  const nextReservationSlot = nextReservation
+    ? formatTimeRange(nextReservation.start_at, nextReservation.end_at)
+    : null
   // All of the table's bookings for the day (active + upcoming), earliest first.
   const dayReservations = [...tableReservations].sort(byStart)
   const overdueActiveReservation = dayReservations.find((reservation) => {
@@ -201,15 +206,17 @@ export function TableDetailOverlay({
             {(nextReservation || (isOccupied && detail)) && (
               <div className="overlay__status-card overlay__status-card--muted">
                 <p className="overlay__status-label">{isOccupied ? "Next Booking" : "Next"}</p>
-                <p className="overlay__status-value">
-                  {isOccupied && detail
-                    ? nextReservation
-                      ? `${nextReservation.name} • ${formatTimeRange(nextReservation.start_at, nextReservation.end_at)}`
-                      : detail.duration
-                    : nextReservation
-                      ? `${nextReservation.name} • ${formatTimeRange(nextReservation.start_at, nextReservation.end_at)}`
-                      : "None"}
-                </p>
+                {nextReservation && nextReservationEta && nextReservationSlot ? (
+                  <div className="overlay__next-reservation">
+                    <span className="overlay__next-reservation-eta">ETA {nextReservationEta}</span>
+                    <p className="overlay__next-reservation-name">{nextReservationName}</p>
+                    <p className="overlay__next-reservation-slot">{nextReservationSlot}</p>
+                  </div>
+                ) : (
+                  <p className="overlay__status-value">
+                    {isOccupied && detail ? detail.duration : "None"}
+                  </p>
+                )}
               </div>
             )}
           </div>

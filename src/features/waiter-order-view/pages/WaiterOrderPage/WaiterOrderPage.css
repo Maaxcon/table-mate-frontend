@@ -414,6 +414,23 @@
   gap: 2px;
 }
 
+.waiter-view__floor-card .fp-block__info--next {
+  gap: 4px;
+}
+
+.waiter-view__floor-card .fp-block__eta-badge {
+  padding: 4px 10px;
+  border-radius: var(--w-radius-pill);
+  border: 1px solid rgba(var(--color-primary-rgb), 0.35);
+  background: rgba(var(--color-primary-rgb), 0.12);
+  color: var(--color-primary);
+  font-size: 0.74rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+}
+
 .waiter-view__floor-card .fp-block__info-name {
   font-size: 1.2rem;
   font-weight: 800;
@@ -594,6 +611,12 @@
   border-color: rgba(var(--color-primary-rgb), 0.45);
   color: color-mix(in srgb, var(--color-primary) 65%, white 35%);
   background: rgba(var(--color-primary-rgb), 0.2);
+}
+
+[data-theme="dark"] .waiter-view__floor-card .fp-block__eta-badge {
+  border-color: rgba(var(--color-primary-rgb), 0.5);
+  color: color-mix(in srgb, var(--color-primary) 75%, white 25%);
+  background: rgba(var(--color-primary-rgb), 0.22);
 }
 
 [data-theme="dark"] .waiter-view__floor-card .fp-block__badge--overdue {

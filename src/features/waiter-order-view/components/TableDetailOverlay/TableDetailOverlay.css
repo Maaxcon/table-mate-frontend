@@ -281,6 +281,52 @@
   color: rgba(255, 255, 255, 0.92);
 }
 
+.overlay__next-reservation {
+  margin-top: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.overlay__next-reservation-eta {
+  width: fit-content;
+  padding: 3px 8px;
+  border-radius: var(--w-radius-pill);
+  border: 1px solid rgba(var(--color-primary-rgb), 0.35);
+  background: rgba(var(--color-primary-rgb), 0.12);
+  color: var(--color-primary);
+  font-size: 0.62rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+}
+
+.overlay__next-reservation-name {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+
+.overlay__next-reservation-slot {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .overlay__next-reservation-eta {
+  border-color: rgba(var(--color-primary-rgb), 0.5);
+  background: rgba(var(--color-primary-rgb), 0.22);
+  color: color-mix(in srgb, var(--color-primary) 70%, white 30%);
+}
+
+[data-theme="dark"] .overlay__next-reservation-name {
+  color: rgba(255, 255, 255, 0.94);
+}
+
 .overlay__actions {
   display: flex;
   gap: 8px;
