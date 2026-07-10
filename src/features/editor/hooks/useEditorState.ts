@@ -405,6 +405,40 @@ function editorReducer(state: EditorState, action: Action): EditorState {
         maxDx = Math.min(maxDx, maxAabbX - aabb.x)
         minDy = Math.max(minDy, minAabbY - aabb.y)
         maxDy = Math.min(maxDy, maxAabbY - aabb.y)
+
+        const minBackendX = clampEntityToBackendLimits(
+          Number.NEGATIVE_INFINITY,
+          entity.y,
+          entity.type,
+          state.canvasCols,
+          state.canvasRows,
+        ).x
+        const maxBackendX = clampEntityToBackendLimits(
+          Number.POSITIVE_INFINITY,
+          entity.y,
+          entity.type,
+          state.canvasCols,
+          state.canvasRows,
+        ).x
+        const minBackendY = clampEntityToBackendLimits(
+          entity.x,
+          Number.NEGATIVE_INFINITY,
+          entity.type,
+          state.canvasCols,
+          state.canvasRows,
+        ).y
+        const maxBackendY = clampEntityToBackendLimits(
+          entity.x,
+          Number.POSITIVE_INFINITY,
+          entity.type,
+          state.canvasCols,
+          state.canvasRows,
+        ).y
+
+        minDx = Math.max(minDx, minBackendX - entity.x)
+        maxDx = Math.min(maxDx, maxBackendX - entity.x)
+        minDy = Math.max(minDy, minBackendY - entity.y)
+        maxDy = Math.min(maxDy, maxBackendY - entity.y)
       }
 
       const sharedDx = Math.max(minDx, Math.min(action.dx, maxDx))
@@ -416,8 +450,13 @@ function editorReducer(state: EditorState, action: Action): EditorState {
         if (!ids.has(entity.id)) return entity
         if (targetZoneId && (entity.zoneId ?? null) !== targetZoneId) return entity
 
-        const x = entity.x + sharedDx
-        const y = entity.y + sharedDy
+        const { x, y } = clampEntityToBackendLimits(
+          entity.x + sharedDx,
+          entity.y + sharedDy,
+          entity.type,
+          state.canvasCols,
+          state.canvasRows,
+        )
         if (x === entity.x && y === entity.y) return entity
         changed = true
         return { ...entity, x, y }

@@ -175,6 +175,25 @@ describe("useEditorState — undo/redo", () => {
     expect(restoredRight?.x).toBe(10)
   })
 
+  it("respects backend coordinate limits during multi-move", () => {
+    const { result } = renderHook(() => useEditorState())
+
+    let obstacleId = ""
+    let portalId = ""
+    act(() => {
+      obstacleId = result.current.addEntity("obstacle", 0, 0)!.id
+      portalId = result.current.addEntity("portal", 0, 5)!.id
+      result.current.updateEntity(obstacleId, { w: 1 })
+    })
+
+    act(() => {
+      result.current.moveEntitiesByDelta([obstacleId, portalId], 10_000, 0)
+    })
+
+    const movedObstacle = result.current.entities.find((entity) => entity.id === obstacleId)
+    expect(movedObstacle?.x).toBe(result.current.canvasCols - 2)
+  })
+
   it("adds multiple entities as one undoable action", () => {
     const { result } = renderHook(() => useEditorState())
 
