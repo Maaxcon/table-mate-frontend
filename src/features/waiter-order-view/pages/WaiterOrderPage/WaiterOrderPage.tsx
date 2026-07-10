@@ -409,11 +409,10 @@ export function WaiterOrderPage() {
 
         {isTabletLayout ? (
           <div className="waiter-view__sidebar" role="complementary">
-            <div className="waiter-view__sidebar-tabs" role="tablist">
+            <div className="waiter-view__sidebar-tabs">
               <button
                 type="button"
-                role="tab"
-                aria-selected={sidebarTab === "reservations"}
+                aria-pressed={sidebarTab === "reservations"}
                 className={`waiter-view__sidebar-tab${sidebarTab === "reservations" ? " waiter-view__sidebar-tab--active" : ""}`}
                 onClick={() => setSidebarTab("reservations")}
               >
@@ -421,8 +420,7 @@ export function WaiterOrderPage() {
               </button>
               <button
                 type="button"
-                role="tab"
-                aria-selected={sidebarTab === "notifications"}
+                aria-pressed={sidebarTab === "notifications"}
                 className={`waiter-view__sidebar-tab${sidebarTab === "notifications" ? " waiter-view__sidebar-tab--active" : ""}`}
                 onClick={() => setSidebarTab("notifications")}
               >
@@ -430,7 +428,7 @@ export function WaiterOrderPage() {
               </button>
             </div>
 
-            <div className="waiter-view__sidebar-panel" role="tabpanel">
+            <div className="waiter-view__sidebar-panel">
               {sidebarTab === "reservations" ? (
                 <ReservationSidebar
                   reservations={pendingTodayReservations}
