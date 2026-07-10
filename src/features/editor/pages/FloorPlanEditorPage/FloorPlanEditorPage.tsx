@@ -3,31 +3,48 @@ import { useAppSelector } from "@/store/hooks"
 import { fetchZones } from "@/features/reservation/api"
 import type { Zone } from "@/features/reservation/api"
 import { apiFetch } from "@/api/client"
-import { Toolbar } from "./Toolbar"
-import { Canvas } from "./Canvas"
-import { PropertiesSidebar } from "./PropertiesSidebar"
-import { PublishConfirmModal } from "./PublishConfirmModal"
-import { ConfirmDeleteZoneModal } from "./ConfirmDeleteZoneModal"
-import { ZoneHeader } from "./ZoneHeader"
-import { useEditorState } from "./hooks/useEditorState"
-import type { EditorState } from "./hooks/useEditorState"
-import { usePublish } from "./hooks/usePublish"
-import type { PublishResult } from "./hooks/usePublish"
+import {
+  Canvas,
+  ConfirmDeleteZoneModal,
+  PropertiesSidebar,
+  PublishConfirmModal,
+  Toolbar,
+  ZoneHeader,
+} from "@/features/editor/components"
+import { useEditorState } from "@/features/editor/hooks/useEditorState"
+import type { EditorState } from "@/features/editor/hooks/useEditorState"
+import { usePublish } from "@/features/editor/hooks/usePublish"
+import type { PublishResult } from "@/features/editor/hooks/usePublish"
 import {
   DEFAULT_CANVAS_COLS,
   DEFAULT_CANVAS_ROWS,
   serializeEntities,
   deserializeLayout,
-} from "./types"
-import type { EditorEntity, LayoutPayload } from "./types"
-import "./Toolbar.css"
-import "./Canvas.css"
-import "./PropertiesSidebar.css"
-import "./FloorPlanSection.css"
+} from "@/features/editor/types"
+import type { EditorEntity, LayoutPayload } from "@/features/editor/types"
+import "./FloorPlanEditorPage.css"
 import { useToast } from "@/features/admin/hooks/toastContext"
 import { useHallSubscription } from "@/features/waiter-order-view/hooks/useHallSubscription"
 
-function FloorPlanSection() {
+function getTimeString(): string {
+  const now = new Date()
+  const hours = now.getHours().toString().padStart(2, "0")
+  const minutes = now.getMinutes().toString().padStart(2, "0")
+  return `${hours}:${minutes}`
+}
+
+function useCurrentTime(): string {
+  const [time, setTime] = useState(getTimeString)
+
+  useEffect(() => {
+    const intervalId = setInterval(() => setTime(getTimeString()), 10_000)
+    return () => clearInterval(intervalId)
+  }, [])
+
+  return time
+}
+
+function FloorPlanEditorPage() {
   const {
     entities,
     selectedId,
@@ -97,6 +114,22 @@ function FloorPlanSection() {
     [allZones, selectedZoneId],
   )
 
+  const layoutCanvasCols = useMemo(() => {
+    if (allZones.length === 0) return DEFAULT_CANVAS_COLS
+    return allZones.reduce(
+      (max, zone) => Math.max(max, zone.canvas_cols ?? DEFAULT_CANVAS_COLS),
+      DEFAULT_CANVAS_COLS,
+    )
+  }, [allZones])
+
+  const layoutCanvasRows = useMemo(() => {
+    if (allZones.length === 0) return DEFAULT_CANVAS_ROWS
+    return allZones.reduce(
+      (max, zone) => Math.max(max, zone.canvas_rows ?? DEFAULT_CANVAS_ROWS),
+      DEFAULT_CANVAS_ROWS,
+    )
+  }, [allZones])
+
   const edgeStyles = useMemo(
     () =>
       selectedZone?.edge_styles ?? {
@@ -113,8 +146,13 @@ function FloorPlanSection() {
 
   // Keep editor state in sync when zone changes canvas dimensions.
   useEffect(() => {
-    dispatch({ type: "SET_CANVAS_SIZE", cols: canvasCols, rows: canvasRows })
-  }, [canvasCols, canvasRows, dispatch])
+    dispatch({
+      type: "SET_CANVAS_SIZE",
+      cols: canvasCols,
+      rows: canvasRows,
+      zoneId: selectedZoneId ?? null,
+    })
+  }, [canvasCols, canvasRows, dispatch, selectedZoneId])
 
   useEffect(() => {
     if (!restaurantId) return
@@ -209,12 +247,14 @@ function FloorPlanSection() {
     }
   }, [loadEntities, clearPendingZones, restaurantId])
 
-  useHallSubscription({
+  const { isConnected } = useHallSubscription({
     onLayoutPublished: handleOtherAdminPublished,
     onZoneCreated: refreshZones,
     onZoneUpdated: refreshZones,
     onZoneDeleted: refreshZones,
   })
+
+  const currentTime = useCurrentTime()
 
   const handleAddZone = useCallback(
     (name: string) => {
@@ -281,7 +321,7 @@ function FloorPlanSection() {
       canvasRows,
       pendingZones,
     }
-    publish(entities, deletedServerIds, canvasCols, canvasRows, pendingZones)
+    publish(entities, deletedServerIds, layoutCanvasCols, layoutCanvasRows, pendingZones)
   }, [
     publish,
     entities,
@@ -292,6 +332,8 @@ function FloorPlanSection() {
     deletedServerIds,
     canvasCols,
     canvasRows,
+    layoutCanvasCols,
+    layoutCanvasRows,
     pendingZones,
   ])
 
@@ -301,6 +343,19 @@ function FloorPlanSection() {
     : 0
 
   const selectedEntity = visibleEntities.find((e) => e.id === selectedId) ?? null
+  const zoneEntities = useMemo(
+    () => entities.filter((e) => e.zoneId === selectedZoneId),
+    [entities, selectedZoneId],
+  )
+  const zoneTables = useMemo(
+    () => zoneEntities.filter((e) => e.type.startsWith("table-")).length,
+    [zoneEntities],
+  )
+  const zonePortals = useMemo(
+    () => zoneEntities.filter((e) => e.type === "portal").length,
+    [zoneEntities],
+  )
+  const canvasSizeLabel = `${canvasCols} × ${canvasRows}`
 
   const handleCanvasClick = useCallback(
     (gridX: number, gridY: number) => {
@@ -366,58 +421,121 @@ function FloorPlanSection() {
 
   return (
     <div className="editor-page">
-      <Toolbar
-        dirty={dirty}
-        publishing={publishing}
-        activeTool={activeTool}
-        onToolSelect={setTool}
-        onPublish={() => setShowPublishModal(true)}
-        onDiscard={handleDiscard}
-      />
-      <ZoneHeader
-        zones={allZones}
-        selectedZoneId={selectedZoneId}
-        onZoneSelect={setSelectedZoneId}
-        onAddZone={handleAddZone}
-        onRenameZone={handleRenameZone}
-        onDeleteZone={(zoneId) => {
-          const zone = allZones.find((z) => z.public_id === zoneId)
-          if (zone) setDeleteZoneTarget(zone)
-        }}
-      />
-      <div className="editor-page__body">
-        {noZones ? (
-          <div className="editor-page__empty">
-            <p>Please create a zone to start editing the floor plan.</p>
+      <header className="editor-topbar" role="banner">
+        <div className="editor-topbar__left">
+          <div className="editor-topbar__brand">
+            <span className="editor-topbar__logo" aria-hidden="true">
+              <span className="editor-topbar__logo-dot" />
+            </span>
+            <div className="editor-topbar__brand-copy">
+              <span className="editor-topbar__brand-title">FLOOR PLAN</span>
+              <span className="editor-topbar__brand-subtitle">ADMIN · LAYOUT</span>
+            </div>
           </div>
-        ) : (
-          <>
-            <Canvas
-              entities={visibleEntities}
-              selectedId={selectedId}
-              activeTool={activeTool}
-              onEntityMove={(id, x, y) => moveEntity(id, x, y, selectedZoneId ?? undefined)}
-              onEntitySelect={selectEntity}
-              onCanvasClick={handleCanvasClick}
-              onEntityResize={(id, w, h) => updateEntity(id, { w, h })}
-              edgeStyles={edgeStyles}
-              canvasCols={canvasCols}
-              canvasRows={canvasRows}
-            />
-            <PropertiesSidebar
-              entity={selectedEntity}
-              onUpdate={updateEntity}
-              onDelete={removeEntity}
-              zones={allZones}
-              selectedZone={selectedZone}
-              onZoneStyleChange={handleZoneStyleChange}
-              canvasCols={canvasCols}
-              canvasRows={canvasRows}
-              onCanvasSizeChange={handleCanvasSizeChange}
-            />
-          </>
-        )}
-      </div>
+          <div className="editor-topbar__details">
+            <div className="editor-topbar__title-row">
+              <h1 className="editor-topbar__title">Floor plan designer</h1>
+              <span
+                className={`editor-topbar__badge ${dirty ? "editor-topbar__badge--dirty" : "editor-topbar__badge--clean"}`}
+              >
+                {dirty ? "Unsaved" : "Synced"}
+              </span>
+            </div>
+            <p className="editor-topbar__subtitle">
+              {selectedZone
+                ? `Editing ${selectedZone.name} — adjust seating, portals, and traffic edges before publishing.`
+                : "Create a zone to start mapping the dining room."}
+            </p>
+          </div>
+        </div>
+        <div className="editor-topbar__right">
+          <div className="editor-topbar__metrics" role="group" aria-label="Layout metrics">
+            <div className="editor-metric">
+              <span className="editor-metric__label">ZONES</span>
+              <span className="editor-metric__value">{allZones.length}</span>
+              <span className="editor-metric__hint">ACTIVE</span>
+            </div>
+            <div className="editor-metric">
+              <span className="editor-metric__label">TABLES</span>
+              <span className="editor-metric__value">{selectedZone ? zoneTables : "—"}</span>
+              <span className="editor-metric__hint">
+                {selectedZone ? `${zonePortals} portals` : "SELECT ZONE"}
+              </span>
+            </div>
+            <div className="editor-metric">
+              <span className="editor-metric__label">GRID</span>
+              <span className="editor-metric__value">{selectedZone ? canvasSizeLabel : "—"}</span>
+              <span className="editor-metric__hint">COLS × ROWS</span>
+            </div>
+          </div>
+          <div className="editor-topbar__time" aria-label="Local time">
+            <span className="editor-topbar__clock">{currentTime}</span>
+            <span className="editor-topbar__clock-label">LOCAL TIME</span>
+          </div>
+          <span
+            className={`editor-topbar__connection ${isConnected ? "editor-topbar__connection--online" : ""}`}
+            role="status"
+            aria-label={isConnected ? "Live updates connected" : "Live updates offline"}
+          />
+        </div>
+      </header>
+
+      <section className="editor-page__panel">
+        <Toolbar
+          dirty={dirty}
+          publishing={publishing}
+          activeTool={activeTool}
+          onToolSelect={setTool}
+          onPublish={() => setShowPublishModal(true)}
+          onDiscard={handleDiscard}
+        />
+        <ZoneHeader
+          zones={allZones}
+          selectedZoneId={selectedZoneId}
+          onZoneSelect={setSelectedZoneId}
+          onAddZone={handleAddZone}
+          onRenameZone={handleRenameZone}
+          onDeleteZone={(zoneId) => {
+            const zone = allZones.find((z) => z.public_id === zoneId)
+            if (zone) setDeleteZoneTarget(zone)
+          }}
+        />
+        <div className="editor-page__body">
+          {noZones ? (
+            <div className="editor-page__empty">
+              <p>Please create a zone to start editing the floor plan.</p>
+            </div>
+          ) : (
+            <>
+              <div className="editor-page__stage">
+                <Canvas
+                  entities={visibleEntities}
+                  selectedId={selectedId}
+                  activeTool={activeTool}
+                  onEntityMove={(id, x, y) => moveEntity(id, x, y, selectedZoneId ?? undefined)}
+                  onEntitySelect={selectEntity}
+                  onCanvasClick={handleCanvasClick}
+                  onEntityResize={(id, w, h) => updateEntity(id, { w, h })}
+                  edgeStyles={edgeStyles}
+                  canvasCols={canvasCols}
+                  canvasRows={canvasRows}
+                />
+              </div>
+              <PropertiesSidebar
+                entity={selectedEntity}
+                onUpdate={updateEntity}
+                onDelete={removeEntity}
+                zones={allZones}
+                selectedZone={selectedZone}
+                onZoneStyleChange={handleZoneStyleChange}
+                canvasCols={canvasCols}
+                canvasRows={canvasRows}
+                onCanvasSizeChange={handleCanvasSizeChange}
+              />
+            </>
+          )}
+        </div>
+      </section>
 
       {showPublishModal && (
         <PublishConfirmModal
@@ -440,4 +558,4 @@ function FloorPlanSection() {
   )
 }
 
-export default FloorPlanSection
+export default FloorPlanEditorPage

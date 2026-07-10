@@ -1,7 +1,12 @@
 import { useCallback } from "react"
 import type { Zone } from "@/features/reservation/api"
-import type { EditorEntity } from "./types"
-import { CANVAS_MIN_COLS, CANVAS_MIN_ROWS, CANVAS_MAX_COLS, CANVAS_MAX_ROWS } from "./types"
+import type { EditorEntity } from "@/features/editor/types"
+import {
+  CANVAS_MIN_COLS,
+  CANVAS_MIN_ROWS,
+  CANVAS_MAX_COLS,
+  CANVAS_MAX_ROWS,
+} from "@/features/editor/types"
 import "./PropertiesSidebar.css"
 
 interface PropertiesSidebarProps {

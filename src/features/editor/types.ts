@@ -75,6 +75,16 @@ export function snap(val: number): number {
  * `display: contents`, leaving the original layout (and any custom content)
  * completely untouched.
  */
+/**
+ * Attach CSS custom properties (`--*`) to an inline style object. React's
+ * `CSSProperties` type has no index signature for custom props, so setting one
+ * directly is a TS2353 error — funnel them through here instead of casting at
+ * every call site.
+ */
+export function cssVars(vars: Record<`--${string}`, string | number>): CSSProperties {
+  return vars as CSSProperties
+}
+
 export function uprightContentStyle(rotation?: number): CSSProperties {
   return rotation
     ? {
@@ -222,18 +232,35 @@ export function deserializeLayout(layout: LayoutPayload): EditorEntity[] {
 
   for (const t of layout.tables) {
     const type = t.shape === "round" ? "table-round" : "table-square"
+    const tableLike = t as {
+      public_id?: string | null
+      publicNumber?: string | null
+      label?: string | null
+      number?: string | null
+      zoneId?: string | null
+    }
+    const serverId = t.id ?? tableLike.public_id ?? undefined
+    const publicNumberCandidate =
+      (typeof t.public_number === "string" && t.public_number.trim() !== ""
+        ? t.public_number
+        : undefined) ??
+      (tableLike.publicNumber && tableLike.publicNumber.trim() !== ""
+        ? tableLike.publicNumber
+        : undefined) ??
+      (tableLike.label && tableLike.label.trim() !== "" ? tableLike.label : undefined) ??
+      (tableLike.number && tableLike.number.trim() !== "" ? tableLike.number : undefined)
     entities.push({
-      id: t.id ?? generateId(),
-      serverId: t.id ?? undefined,
+      id: serverId ?? generateId(),
+      serverId,
       type,
       x: Math.round(t.x / GRID),
       y: Math.round(t.y / GRID),
       w: Math.round(t.width / GRID),
       h: Math.round(t.height / GRID),
-      label: t.public_number || undefined,
+      label: publicNumberCandidate,
       capacity: t.capacity,
       tags: t.tags,
-      zoneId: t.zone_id ?? undefined,
+      zoneId: t.zone_id ?? tableLike.zoneId ?? undefined,
       rotation: t.rotation,
     })
   }

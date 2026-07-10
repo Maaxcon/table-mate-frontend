@@ -81,6 +81,15 @@ export type AdminOverview = {
   staff_active: number
 }
 
+export type BillItem = {
+  readonly id: string
+  readonly name: string
+  guest_slot: number
+  quantity: number
+  readonly payable: string
+  is_paid?: boolean
+}
+
 export type BookingSettings = {
   readonly currency: string
   readonly timezone: string
@@ -104,17 +113,33 @@ export type BulkItemAction = {
 export type CartItem = {
   readonly public_id: string
   readonly menu_item: string
+  menu_item_detail: CartMenuItem
   quantity: number
   comment?: string | null
   readonly added_by: string
   readonly guest_slot: number | null
   readonly is_mine: boolean
-  readonly is_paid: boolean
   readonly display_name: string | null
   readonly cart_session: string
   readonly restaurant: string
   readonly created_at: string
   readonly updated_at: string
+}
+
+/**
+ * Just enough of the menu item to render a cart line on its own, so the
+ * cart never depends on which menu page/sort the client is currently showing.
+ *
+ * These are LIVE reads of the current MenuItem (name/price/image/availability),
+ * not an order-time snapshot — a later rename or price change is reflected here.
+ * The amount a guest owes is frozen separately on OrderItem.total_price.
+ */
+export type CartMenuItem = {
+  readonly id: string
+  name: string
+  price: string
+  image?: string | null
+  is_available?: boolean
 }
 
 export type CartSession = {
@@ -765,6 +790,12 @@ export type PatchedZone = {
   name?: string
   sort_order?: number
   edge_styles?: unknown
+  canvas_cols?: number
+  canvas_rows?: number
+}
+
+export type PayOrderItems = {
+  order_item_ids: Array<string>
 }
 
 export type Payment = {
@@ -802,6 +833,12 @@ export type PaymentStatusEnum =
   | "refunded"
   | "cancelled"
 
+export type PendingZone = {
+  created?: Array<ZoneCreate>
+  updated?: Array<ZoneUpdate>
+  deleted?: Array<string>
+}
+
 export type PortalEntity = {
   x: number
   y: number
@@ -834,11 +871,14 @@ export type PublicRestaurantSettings = {
 }
 
 export type PublishLayout = {
+  canvas_cols?: number
+  canvas_rows?: number
   tables?: Array<TableEntity>
   obstacles?: Array<ObstacleEntity>
   thresholds?: Array<ThresholdEntity>
   portals?: Array<PortalEntity>
   deleted_table_ids?: Array<string>
+  zones?: PendingZone
 }
 
 export type Receipt = {
@@ -1004,6 +1044,10 @@ export type Table = {
 
 export type TableEntity = {
   id?: string | null
+  /**
+   *  client id
+   */
+  _client_id?: string | null
   public_number?: string
   x: number
   y: number
@@ -1137,6 +1181,27 @@ export type Zone = {
   name: string
   sort_order?: number
   edge_styles?: unknown
+  canvas_cols?: number
+  canvas_rows?: number
+}
+
+export type ZoneCreate = {
+  /**
+   *  client id
+   */
+  _client_id: string
+  name: string
+  canvas_cols?: number
+  canvas_rows?: number
+  edge_styles?: unknown
+}
+
+export type ZoneUpdate = {
+  public_id: string
+  name?: string
+  canvas_cols?: number
+  canvas_rows?: number
+  edge_styles?: unknown
 }
 
 /**
@@ -1179,9 +1244,30 @@ export type AdminMenuItemWritable = {
   sort_order?: number
 }
 
+export type BillItemWritable = {
+  guest_slot: number
+  quantity: number
+  is_paid?: boolean
+}
+
 export type CartItemWritable = {
   quantity: number
   comment?: string | null
+}
+
+/**
+ * Just enough of the menu item to render a cart line on its own, so the
+ * cart never depends on which menu page/sort the client is currently showing.
+ *
+ * These are LIVE reads of the current MenuItem (name/price/image/availability),
+ * not an order-time snapshot — a later rename or price change is reflected here.
+ * The amount a guest owes is frozen separately on OrderItem.total_price.
+ */
+export type CartMenuItemWritable = {
+  name: string
+  price: string
+  image?: string | null
+  is_available?: boolean
 }
 
 export type CartSessionWritable = {
@@ -1575,6 +1661,8 @@ export type PatchedZoneWritable = {
   name?: string
   sort_order?: number
   edge_styles?: unknown
+  canvas_cols?: number
+  canvas_rows?: number
 }
 
 export type PaymentWritable = {
@@ -1682,6 +1770,8 @@ export type ZoneWritable = {
   name: string
   sort_order?: number
   edge_styles?: unknown
+  canvas_cols?: number
+  canvas_rows?: number
 }
 
 export type AuthCustomerContextCreateData = {
@@ -1878,6 +1968,22 @@ export type EditorLayoutsRetrieveResponses = {
 
 export type EditorLayoutsRetrieveResponse =
   EditorLayoutsRetrieveResponses[keyof EditorLayoutsRetrieveResponses]
+
+export type EditorLayoutsLatestRetrieveData = {
+  body?: never
+  path?: never
+  query?: never
+  url: "/api/editor/layouts/latest/"
+}
+
+export type EditorLayoutsLatestRetrieveResponses = {
+  200: {
+    [key: string]: unknown
+  }
+}
+
+export type EditorLayoutsLatestRetrieveResponse =
+  EditorLayoutsLatestRetrieveResponses[keyof EditorLayoutsLatestRetrieveResponses]
 
 export type EditorLayoutsPublishCreateData = {
   body?: PublishLayout
@@ -2585,6 +2691,22 @@ export type OrdersCartSessionsRetrieveResponses = {
 export type OrdersCartSessionsRetrieveResponse =
   OrdersCartSessionsRetrieveResponses[keyof OrdersCartSessionsRetrieveResponses]
 
+export type OrdersCartSessionsBillListData = {
+  body?: never
+  path: {
+    session_pk: string
+  }
+  query?: never
+  url: "/api/orders/cart/sessions/{session_pk}/bill/"
+}
+
+export type OrdersCartSessionsBillListResponses = {
+  200: Array<BillItem>
+}
+
+export type OrdersCartSessionsBillListResponse =
+  OrdersCartSessionsBillListResponses[keyof OrdersCartSessionsBillListResponses]
+
 export type OrdersCartSessionsCheckoutCreateData = {
   body?: never
   path: {
@@ -2705,6 +2827,22 @@ export type OrdersCartSessionsItemsPartialUpdateResponses = {
 
 export type OrdersCartSessionsItemsPartialUpdateResponse =
   OrdersCartSessionsItemsPartialUpdateResponses[keyof OrdersCartSessionsItemsPartialUpdateResponses]
+
+export type OrdersCartSessionsPayCreateData = {
+  body: PayOrderItems
+  path: {
+    session_pk: string
+  }
+  query?: never
+  url: "/api/orders/cart/sessions/{session_pk}/pay/"
+}
+
+export type OrdersCartSessionsPayCreateResponses = {
+  200: Array<BillItem>
+}
+
+export type OrdersCartSessionsPayCreateResponse =
+  OrdersCartSessionsPayCreateResponses[keyof OrdersCartSessionsPayCreateResponses]
 
 export type OrdersOrderItemsListData = {
   body?: never
@@ -3749,6 +3887,25 @@ export type RestaurantsZonesCreateResponses = {
 
 export type RestaurantsZonesCreateResponse =
   RestaurantsZonesCreateResponses[keyof RestaurantsZonesCreateResponses]
+
+export type RestaurantsZonesDestroyData = {
+  body?: never
+  path: {
+    public_id: string
+  }
+  query?: never
+  url: "/api/restaurants/zones/{public_id}/"
+}
+
+export type RestaurantsZonesDestroyResponses = {
+  /**
+   * No response body
+   */
+  204: void
+}
+
+export type RestaurantsZonesDestroyResponse =
+  RestaurantsZonesDestroyResponses[keyof RestaurantsZonesDestroyResponses]
 
 export type RestaurantsZonesRetrieveData = {
   body?: never
