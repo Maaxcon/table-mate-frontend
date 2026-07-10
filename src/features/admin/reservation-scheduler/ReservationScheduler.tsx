@@ -398,22 +398,6 @@ export function ReservationScheduler() {
     setExternalUpdate(false)
   }, [])
 
-  const toggleSplitView = useCallback(() => {
-    setDatesState((prev) => {
-      if (prev.length === 2) return [prev[0]]
-      const secondDate = formatDateKey(addDays(new Date(prev[0] + "T00:00:00"), 1))
-      return [prev[0], secondDate]
-    })
-  }, [])
-
-  const shiftDate = useCallback((index: number, delta: number) => {
-    setDatesState((prev) => {
-      const next = [...prev]
-      next[index] = formatDateKey(addDays(new Date(next[index] + "T00:00:00"), delta))
-      return next
-    })
-  }, [])
-
   const guardedDateNav = useCallback(
     (action: () => void) => {
       if (state.pendingChanges.length > 0 || state.pendingCancellationIds.length > 0) {
@@ -423,6 +407,29 @@ export function ReservationScheduler() {
       }
     },
     [state.pendingChanges.length, state.pendingCancellationIds.length],
+  )
+
+  const toggleSplitView = useCallback(() => {
+    guardedDateNav(() => {
+      setDatesState((prev) => {
+        if (prev.length === 2) return [prev[0]]
+        const secondDate = formatDateKey(addDays(new Date(prev[0] + "T00:00:00"), 1))
+        return [prev[0], secondDate]
+      })
+    })
+  }, [guardedDateNav])
+
+  const shiftDate = useCallback(
+    (index: number, delta: number) => {
+      guardedDateNav(() => {
+        setDatesState((prev) => {
+          const next = [...prev]
+          next[index] = formatDateKey(addDays(new Date(next[index] + "T00:00:00"), delta))
+          return next
+        })
+      })
+    },
+    [guardedDateNav],
   )
 
   const shiftAllDates = useCallback(
