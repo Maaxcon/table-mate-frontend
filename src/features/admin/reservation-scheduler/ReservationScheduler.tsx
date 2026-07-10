@@ -95,14 +95,19 @@ function getDayExtendedBounds(
   const nextHours = workingHours[nextDayKey]
 
   const prevClose = prevHours ? toMinutes(prevHours.close) : null
+  const prevOpen = prevHours ? toMinutes(prevHours.open) : null
   const nextOpen = nextHours ? toMinutes(nextHours.open) : null
 
   const thisOpen = openMin
 
   let minHour = 0
-  if (prevClose != null) {
-    const prevCloseAdjusted = prevClose <= thisOpen ? prevClose : prevClose - 24 * 60
-    minHour = Math.floor(prevCloseAdjusted / 60)
+  if (prevClose != null && prevOpen != null) {
+    if (prevClose < prevOpen) {
+      minHour = 0
+    } else {
+      const prevCloseAdjusted = prevClose <= thisOpen ? prevClose : prevClose - 24 * 60
+      minHour = Math.floor(prevCloseAdjusted / 60)
+    }
   }
 
   let maxHour = 24
@@ -134,13 +139,7 @@ function isCrossDayReservation(
     return resMinutes <= bounds.maxHour * 60 ? "next" : null
   }
   if (isoToDateKey(resEndAt) !== date) return null
-  const endD = new Date(resEndAt)
-  const endMinutes = endD.getHours() * 60 + endD.getMinutes()
-  const dayKey = DAY_KEYS[new Date(date + "T00:00:00").getDay()]
-  const dayHours = workingHours?.[dayKey]
-  if (!dayHours) return null
-  const openMinutes = toMinutes(dayHours.open)
-  return endMinutes < openMinutes ? "prev" : null
+  return "prev"
 }
 
 function formatDateKey(d: Date): string {
