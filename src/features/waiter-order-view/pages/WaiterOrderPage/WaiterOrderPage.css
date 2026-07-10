@@ -493,6 +493,9 @@
 @media (max-width: 960px) {
   .waiter-view__content {
     grid-template-columns: 1fr;
+    grid-template-rows: repeat(2, minmax(0, 1fr));
+    align-items: stretch;
+    row-gap: clamp(16px, 2vw, 24px);
   }
 
   .waiter-view__side-grid {
