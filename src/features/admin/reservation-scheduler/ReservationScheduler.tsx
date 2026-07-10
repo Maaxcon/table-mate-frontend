@@ -191,6 +191,7 @@ export function ReservationScheduler() {
   const [activeDragDate, setActiveDragDate] = useState<string | null>(null)
   const [dragCrossedBoundary, setDragCrossedBoundary] = useState(false)
   const [pendingCancelConfirmId, setPendingCancelConfirmId] = useState<string | null>(null)
+  const [pendingNavAction, setPendingNavAction] = useState<(() => void) | null>(null)
 
   const { dayRanges, crossDayInfoByDate } = useMemo(() => {
     const ranges: Record<string, { hourStart: number; hourEnd: number }> = {}
@@ -414,18 +415,36 @@ export function ReservationScheduler() {
     })
   }, [])
 
-  const shiftAllDates = useCallback((delta: number) => {
-    setDatesState((prev) =>
-      prev.map((d) => formatDateKey(addDays(new Date(d + "T00:00:00"), delta))),
-    )
-  }, [])
+  const guardedDateNav = useCallback(
+    (action: () => void) => {
+      if (state.pendingChanges.length > 0 || state.pendingCancellationIds.length > 0) {
+        setPendingNavAction(() => action)
+      } else {
+        action()
+      }
+    },
+    [state.pendingChanges.length, state.pendingCancellationIds.length],
+  )
+
+  const shiftAllDates = useCallback(
+    (delta: number) => {
+      guardedDateNav(() => {
+        setDatesState((prev) =>
+          prev.map((d) => formatDateKey(addDays(new Date(d + "T00:00:00"), delta))),
+        )
+      })
+    },
+    [guardedDateNav],
+  )
 
   const setTodayAll = useCallback(() => {
-    const today = formatDateKey(new Date())
-    setDatesState((prev) =>
-      prev.length === 2 ? [today, formatDateKey(addDays(new Date(), 1))] : [today],
-    )
-  }, [])
+    guardedDateNav(() => {
+      const today = formatDateKey(new Date())
+      setDatesState((prev) =>
+        prev.length === 2 ? [today, formatDateKey(addDays(new Date(), 1))] : [today],
+      )
+    })
+  }, [guardedDateNav])
 
   const scrollRefA = useRef<HTMLDivElement>(null)
   const scrollRefB = useRef<HTMLDivElement>(null)
@@ -858,6 +877,22 @@ export function ReservationScheduler() {
         onSave={handleSave}
         onReset={handleResetChanges}
       />
+
+      {pendingNavAction && (
+        <ConfirmDialog
+          title="Unsaved changes"
+          message="You have unsaved changes. Discard them and continue?"
+          confirmLabel="Discard"
+          cancelLabel="Keep editing"
+          tone="danger"
+          onConfirm={() => {
+            clearPending()
+            pendingNavAction()
+            setPendingNavAction(null)
+          }}
+          onClose={() => setPendingNavAction(null)}
+        />
+      )}
 
       {pendingCancelConfirmId && pendingCancelReservation && (
         <ConfirmDialog
