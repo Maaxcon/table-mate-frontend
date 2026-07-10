@@ -127,8 +127,9 @@ describe("TableDetailOverlay bill", () => {
     )
 
     expect(screen.getByText(/Reservation time ended/)).toBeInTheDocument()
+    expect(screen.getByText("+30m overdue")).toBeInTheDocument()
     fireEvent.click(screen.getByRole("button", { name: "PROLONG" }))
     expect(onModifyReservation).toHaveBeenCalledWith(overdueReservation)
-    expect(screen.getAllByRole("button", { name: "CLOSE CHECK" }).length).toBeGreaterThan(0)
+    expect(screen.getByRole("button", { name: "CLOSE" })).toBeInTheDocument()
   })
 })

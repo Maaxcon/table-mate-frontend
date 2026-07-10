@@ -91,6 +91,7 @@ export function TableDetailOverlay({
   const overdueMinutes = overdueActiveReservation
     ? getOverdueMinutes(overdueActiveReservation.end_at, currentTime.getTime())
     : null
+  const overdueTimerLabel = overdueMinutes != null ? `+${overdueMinutes}m overdue` : null
   const hasOrderItems = Boolean(detail && detail.items.length > 0)
   const primaryAction =
     !loading && isOccupied
@@ -217,11 +218,17 @@ export function TableDetailOverlay({
         {isOccupied && overdueActiveReservation && overdueMinutes != null && (
           <div className="overlay__overdue-banner" role="alert">
             <div className="overlay__overdue-copy">
-              <p className="overlay__overdue-title">
-                Reservation time ended {overdueMinutes} min ago
-              </p>
-              <p className="overlay__overdue-text">Close this table or prolong the booking.</p>
+              <p className="overlay__overdue-title">Reservation time ended</p>
+              <p className="overlay__overdue-text">Choose what to do next: prolong or close.</p>
             </div>
+            {overdueTimerLabel && (
+              <span
+                className="overlay__overdue-timer"
+                aria-label={`${overdueMinutes} minutes overdue`}
+              >
+                {overdueTimerLabel}
+              </span>
+            )}
             <div className="overlay__overdue-actions">
               {onModifyReservation && (
                 <button
@@ -240,7 +247,7 @@ export function TableDetailOverlay({
                   onClick={() => setShowCloseCheck(true)}
                   disabled={actionBusy}
                 >
-                  CLOSE CHECK
+                  CLOSE
                 </button>
               )}
             </div>

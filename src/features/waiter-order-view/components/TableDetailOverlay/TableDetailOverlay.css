@@ -171,6 +171,22 @@
   .overlay__status-value {
     font-size: 0.85rem;
   }
+
+  .overlay__overdue-banner {
+    margin: 10px 14px 0;
+    padding: 10px 12px;
+    align-items: flex-start;
+  }
+
+  .overlay__overdue-actions {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .overlay__overdue-btn {
+    flex: 1;
+    text-align: center;
+  }
 }
 
 .overlay__header {
@@ -691,10 +707,24 @@
   color: var(--color-text-secondary);
 }
 
+.overlay__overdue-timer {
+  padding: 6px 10px;
+  border-radius: var(--w-radius-pill);
+  border: 1px solid rgba(var(--color-warning-rgb), 0.5);
+  background: rgba(var(--color-warning-rgb), 0.18);
+  color: var(--color-text-primary);
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+}
+
 .overlay__overdue-actions {
   display: flex;
   align-items: center;
   gap: 8px;
+  margin-left: auto;
 }
 
 .overlay__overdue-btn {
@@ -724,6 +754,11 @@
 [data-theme="dark"] .overlay__overdue-banner {
   border-color: rgba(var(--color-warning-rgb), 0.5);
   background: rgba(var(--color-warning-rgb), 0.2);
+}
+
+[data-theme="dark"] .overlay__overdue-timer {
+  border-color: rgba(var(--color-warning-rgb), 0.55);
+  background: rgba(var(--color-warning-rgb), 0.28);
 }
 
 [data-theme="dark"] .overlay__overdue-btn {

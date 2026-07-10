@@ -134,7 +134,7 @@ export function FloorPlan({
             <>
               <span className={`fp-block__badge fp-block__badge--${badgeVariant}`}>
                 {overdueMinutes != null
-                  ? `OVERDUE ${overdueMinutes}M`
+                  ? `+${overdueMinutes}m overdue`
                   : (statusLabel[visualStatus] ?? visualStatus.toUpperCase())}
               </span>
               <span className="fp-block__label">{number}</span>
