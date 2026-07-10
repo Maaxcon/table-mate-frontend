@@ -111,6 +111,11 @@
   background: var(--color-bg-surface-subtle);
 }
 
+.admin-layout__icon-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .admin-layout__content {
   padding: 28px 32px;
   overflow-y: auto;
@@ -118,6 +123,46 @@
 
 .admin-layout__content--flush {
   padding: 0;
+}
+
+.admin-layout--sidebar-collapsed {
+  grid-template-columns: 84px 1fr;
+}
+
+.admin-layout--sidebar-collapsed .admin-layout__sidebar {
+  padding: 20px 10px;
+  align-items: center;
+}
+
+.admin-layout--sidebar-collapsed .admin-layout__brand {
+  flex-direction: column;
+  gap: 12px;
+}
+
+.admin-layout--sidebar-collapsed .admin-layout__brand-name {
+  display: none;
+}
+
+.admin-layout--sidebar-collapsed .admin-layout__nav-link {
+  justify-content: center;
+  padding: 10px;
+}
+
+.admin-layout--sidebar-collapsed .admin-layout__nav-link span {
+  display: none;
+}
+
+.admin-layout--sidebar-collapsed .admin-layout__footer {
+  flex-direction: column;
+  gap: 12px;
+}
+
+.admin-layout--sidebar-collapsed .admin-layout__user {
+  display: none;
+}
+
+.admin-layout--sidebar-collapsed .admin-layout__content {
+  padding: 24px;
 }
 
 /* Medium: sidebar stays on the left but collapses to icon-only (like mini sidebar) */

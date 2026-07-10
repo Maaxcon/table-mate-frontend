@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom"
 import {
   LuArrowLeft,
@@ -30,13 +30,38 @@ const NAV_ITEMS = [
   { to: "/admin/floor", label: "Floor", icon: LuMap },
 ] as const
 
+const useMediaQuery = (query: string) => {
+  const getMatches = () =>
+    typeof window !== "undefined" ? window.matchMedia(query).matches : false
+  const [matches, setMatches] = useState(getMatches)
+
+  useEffect(() => {
+    if (typeof window === "undefined") return
+
+    const matchMedia = window.matchMedia(query)
+    const handleChange = (event: MediaQueryListEvent) => setMatches(event.matches)
+
+    if (typeof matchMedia.addEventListener === "function") {
+      matchMedia.addEventListener("change", handleChange)
+      return () => matchMedia.removeEventListener("change", handleChange)
+    }
+
+    matchMedia.addListener(handleChange)
+    return () => matchMedia.removeListener(handleChange)
+  }, [query])
+
+  return matches
+}
+
 function AdminLayout() {
   const navigate = useNavigate()
   const location = useLocation()
   const { logout, logoutFailed } = useLogout()
   const user = useAppSelector((state) => state.auth.user)
 
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
+  const isAutoCollapseRange = useMediaQuery("(min-width: 721px) and (max-width: 1300px)")
+  const [isUserCollapsed, setIsUserCollapsed] = useState(false)
+  const isSidebarCollapsed = isAutoCollapseRange || isUserCollapsed
   const [dirty, setDirty] = useState(false)
   // A queued navigation, held back until the user confirms leaving unsaved edits.
   const [pending, setPending] = useState<(() => void) | null>(null)
@@ -61,6 +86,11 @@ function AdminLayout() {
     )
   }, [location.pathname])
 
+  const collapseButtonLabel = isSidebarCollapsed ? "Expand side menu" : "Collapse side menu"
+  const collapseButtonTitle = isAutoCollapseRange
+    ? "Sidebar auto-collapses on medium screens"
+    : collapseButtonLabel
+
   return (
     <ToastProvider>
       <UnsavedChangesContext.Provider value={unsavedValue}>
@@ -74,10 +104,15 @@ function AdminLayout() {
               <button
                 type="button"
                 className="admin-layout__icon-btn admin-layout__icon-btn--collapse"
-                onClick={() => setIsSidebarCollapsed((prev) => !prev)}
+                onClick={() => {
+                  if (isAutoCollapseRange) return
+                  setIsUserCollapsed((prev) => !prev)
+                }}
                 aria-expanded={!isSidebarCollapsed}
-                aria-label={isSidebarCollapsed ? "Expand side menu" : "Collapse side menu"}
-                title={isSidebarCollapsed ? "Expand side menu" : "Collapse side menu"}
+                aria-label={collapseButtonLabel}
+                title={collapseButtonTitle}
+                disabled={isAutoCollapseRange}
+                aria-disabled={isAutoCollapseRange}
               >
                 <LuArrowLeft aria-hidden="true" />
               </button>
