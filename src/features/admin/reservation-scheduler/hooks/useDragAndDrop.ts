@@ -3,7 +3,7 @@ import type { DragEndEvent } from "@dnd-kit/core"
 import type { SchedulerReservation, SchedulerTable } from "../types"
 import { checkOverlap, checkOrderingViolation, checkPastTimeViolation } from "./useOverlapCheck"
 import type { PendingChange } from "../types"
-import { addDays } from "../types"
+import { addDays, isoToDateKey } from "../types"
 
 interface UseDragAndDropOptions {
   tables: SchedulerTable[]
@@ -85,6 +85,14 @@ export function useDragAndDrop({
 
       if (draggedReservation && draggedReservation.status === "active") {
         if (draggedReservation.table === tableId) return
+
+        const currentDate = isoToDateKey(
+          draggedReservation.opened_at ?? draggedReservation.start_at,
+        )
+        if (currentDate !== date) {
+          onConflict(reservationId, "Cannot move an active session to a different date")
+          return
+        }
 
         const origStart = new Date(draggedReservation.start_at)
         const origEnd = new Date(draggedReservation.end_at)
