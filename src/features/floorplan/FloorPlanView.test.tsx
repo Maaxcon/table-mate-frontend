@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest"
 import { render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
-import { FloorPlanView, type FloorPlanTableRef } from "./FloorPlanView"
+import { FloorPlanView, type FloorPlanTableRef, type FloorPlanViewProps } from "./FloorPlanView"
 import { GRID, type LayoutPayload } from "@/features/editor/types"
 
 const px = (v: number) => v * GRID
@@ -122,5 +122,59 @@ describe("FloorPlanView", () => {
     const label = screen.getByText("1")
     const wrapper = label.parentElement!
     expect(wrapper.style.transform).toContain("rotate(-90deg)")
+  })
+
+  it("uses renderEntity to fully replace the default rendering when provided", () => {
+    const payload = makePayload({
+      tables: [tableEntry({ id: "t1", number: "1", zone: "A" })],
+    })
+    render(
+      <FloorPlanView
+        payload={payload}
+        renderEntity={(entity) => <div data-testid={`custom-${entity.id}`}>custom</div>}
+      />,
+    )
+    expect(screen.getByTestId("custom-t1")).toBeInTheDocument()
+    // Default fp-block markup must not also render alongside the override.
+    expect(screen.queryByRole("button", { name: "Table 1, free" })).not.toBeInTheDocument()
+  })
+
+  it("suppresses the default canvas edge lines when renderEntity is provided", () => {
+    const payload = makePayload({
+      tables: [tableEntry({ id: "t1", number: "1", zone: "A" })],
+    })
+    const { container } = render(<FloorPlanView payload={payload} renderEntity={() => <div />} />)
+    expect(container.querySelector(".fp-view__edge")).not.toBeInTheDocument()
+  })
+
+  it("passes selected=true to renderEntity for the selected table", () => {
+    const payload = makePayload({
+      tables: [tableEntry({ id: "t1", number: "1", zone: "A" })],
+    })
+    const renderEntity = vi.fn<NonNullable<FloorPlanViewProps["renderEntity"]>>(() => <div />)
+    render(<FloorPlanView payload={payload} selectedId="t1" renderEntity={renderEntity} />)
+    expect(renderEntity.mock.calls[0][2]).toMatchObject({ selected: true })
+  })
+
+  it("shifts the stage offset to fit/center on `frame` instead of the whole canvas", () => {
+    const payload = makePayload({
+      tables: [tableEntry({ id: "t1", number: "1", zone: "A" })],
+    })
+    const { container: withoutFrame } = render(
+      <FloorPlanView payload={payload} canvasCols={20} canvasRows={20} />,
+    )
+    const { container: withFrame } = render(
+      <FloorPlanView
+        payload={payload}
+        canvasCols={20}
+        canvasRows={20}
+        frame={{ x: 0, y: 1, width: 2, height: 2 }}
+      />,
+    )
+    const stageWithout = withoutFrame.querySelector<HTMLElement>(".fp-view__stage")!
+    const stageWith = withFrame.querySelector<HTMLElement>(".fp-view__stage")!
+    // Cropping to a frame whose y > 0 must shift the stage's top offset up
+    // relative to the uncropped (frame omitted) case.
+    expect(parseFloat(stageWith.style.top)).toBeLessThan(parseFloat(stageWithout.style.top))
   })
 })

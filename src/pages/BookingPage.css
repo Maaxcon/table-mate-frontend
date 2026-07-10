@@ -1,48 +1,212 @@
 .bp {
+  /* width:100% stops the auto margins from shrink-wrapping the page to its
+     content width inside the flex #root (which left a content-dependent side
+     gutter); max-width still caps + centers it on desktop. */
   width: 100%;
-  max-width: 1400px;
+  max-width: 1240px;
   margin: 0 auto;
-  padding: 24px 16px;
-  height: 100svh;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
+  padding: 0 10px 20px;
   box-sizing: border-box;
 }
 
-.bp__tabs {
+.bp__topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
   display: flex;
-  gap: 0;
-  margin-bottom: 24px;
-  border-bottom: 2px solid var(--color-border, #e0e0e0);
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 -10px 20px;
+  padding: 14px 10px;
+  background: var(--color-bg-frosted);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--color-border-default);
+}
+
+.bp__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 16px 9px 12px;
+  border: 1px solid var(--color-border-default);
+  border-radius: 100px;
+  background: var(--color-bg-surface);
+  color: var(--color-text-primary);
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.bp__back svg {
+  width: 16px;
+  height: 16px;
+  transition: transform 160ms ease;
+}
+
+.bp__back:hover {
+  border-color: var(--color-primary);
+  box-shadow: 0 6px 16px -8px rgb(0 0 0 / 30%);
+}
+
+.bp__back:hover svg {
+  transform: translateX(-3px);
+}
+
+.bp__topbar-title {
+  font-family: var(--font-family-display, inherit);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.bp__topbar-spacer {
+  width: 96px;
+}
+
+@media (max-width: 520px) {
+  .bp__topbar-title {
+    display: none;
+  }
+  .bp__topbar-spacer {
+    display: none;
+  }
+}
+
+/* On phones keep only a slim, consistent side gutter so the list runs nearly
+   edge to edge while cards stay off the very screen edge. */
+@media (max-width: 640px) {
+  .bp {
+    padding-left: 10px;
+    padding-right: 10px;
+    /* App-shell layout: fix the page to the viewport so .bp__content is the
+       scroller (its flex:1 + overflow-y:auto). This lets the zone bar pin to
+       the top of the list instead of scrolling away with the window. */
+    display: flex;
+    flex-direction: column;
+    height: 100svh;
+  }
+  .bp__topbar {
+    margin-left: -10px;
+    margin-right: -10px;
+    margin-bottom: 12px;
+  }
+  /* Full-width tab bar with the tabs centered. The compound selector outranks
+     the base .bp__tabs rule that follows it in the file. */
+  .bp .bp__tabs {
+    align-self: stretch;
+    justify-content: center;
+    position: relative;
+    margin-bottom: 10px;
+  }
+  /* Each tab fills half the bar with its label centred — a proper segmented
+     control, so the active highlight reads as one solid half. */
+  .bp .bp__tab {
+    flex: 1;
+    text-align: center;
+  }
+  /* Take the live-connection dot out of flow so it pins to the top-right corner
+     and doesn't eat a tab's width or collide with the centred labels. */
+  .bp .bp__connection {
+    position: absolute;
+    right: 8px;
+    top: 8px;
+    margin: 0;
+  }
+}
+
+.bp__tabs {
+  display: inline-flex;
+  gap: 4px;
+  margin-bottom: 28px;
+  padding: 5px;
+  border-radius: 100px;
+  background: var(--color-bg-surface-subtle);
 }
 
 .bp__tab {
   padding: 10px 24px;
   border: none;
+  border-radius: 100px;
   background: none;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--color-text-muted, #888);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
   cursor: pointer;
-  border-bottom: 2px solid transparent;
-  margin-bottom: -2px;
   transition:
-    color 0.2s,
-    border-bottom-color 0.2s;
+    color 200ms ease,
+    background 200ms ease,
+    box-shadow 200ms ease;
+}
+
+.bp__tab:hover {
+  color: var(--color-text-primary);
 }
 
 .bp__tab--active {
-  color: var(--color-primary, #1976d2);
-  border-bottom-color: var(--color-primary, #1976d2);
+  color: var(--color-primary);
+  background: var(--color-bg-surface);
+  box-shadow: 0 2px 8px -2px rgb(0 0 0 / 18%);
+}
+
+.bp__tab--active:hover {
+  color: var(--color-primary);
+}
+
+.bp__floor {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.bp__error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 48px 16px;
+  text-align: center;
+}
+
+.bp__error-text {
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
+.bp__retry {
+  padding: 8px 20px;
+  border: 1px solid var(--color-primary);
+  background: transparent;
+  color: var(--color-primary);
+  border-radius: 6px;
+  cursor: pointer;
+  font: inherit;
+}
+
+.bp__retry:hover {
+  background: var(--color-primary);
+  color: var(--color-bg-surface);
 }
 
 .bp__content {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
+  /* Clip any sub-pixel child overflow so the page never scrolls sideways. */
+  overflow-x: hidden;
 }
 
+/* Live-connection dot in the tab row (green = connected, red = dropped). */
 .bp__connection {
   width: 8px;
   height: 8px;
@@ -55,10 +219,4 @@
 
 .bp__connection--connected {
   background: #16a34a;
-}
-
-.bp__loading {
-  text-align: center;
-  color: var(--color-text-muted, #888);
-  padding: 48px 0;
 }

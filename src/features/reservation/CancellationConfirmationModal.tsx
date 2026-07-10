@@ -1,3 +1,5 @@
+import { useFocusTrap } from "@/hooks/useFocusTrap"
+import { bookStrings } from "./strings"
 import "./CancellationConfirmationModal.css"
 
 interface CancellationConfirmationModalProps {
@@ -11,35 +13,43 @@ export function CancellationConfirmationModal({
   onConfirm,
   onClose,
 }: CancellationConfirmationModalProps) {
+  const dialogRef = useFocusTrap<HTMLDivElement>({
+    onEscape: () => {
+      if (!isSubmitting) onClose()
+    },
+  })
+
   return (
     <div
       className="cancel-confirm"
+      role="presentation"
       onClick={(event) => {
         if (event.target === event.currentTarget && !isSubmitting) onClose()
       }}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(event) => {
-        if (event.key === "Escape" && !isSubmitting) onClose()
-      }}
     >
-      <div className="cancel-confirm__dialog" role="dialog" aria-modal="true">
+      <div
+        className="cancel-confirm__dialog"
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="cancel-confirm-title"
+      >
         <div className="cancel-confirm__header">
-          <h2 className="cancel-confirm__title">Cancel reservation</h2>
+          <h2 className="cancel-confirm__title" id="cancel-confirm-title">
+            {bookStrings.cancel.title}
+          </h2>
           <button
             type="button"
             className="cancel-confirm__close"
             onClick={onClose}
             disabled={isSubmitting}
-            aria-label="Close"
+            aria-label={bookStrings.cancel.close}
           >
             &times;
           </button>
         </div>
         <div className="cancel-confirm__body">
-          <p className="cancel-confirm__message">
-            Are you sure you want to cancel this reservation?
-          </p>
+          <p className="cancel-confirm__message">{bookStrings.cancel.message}</p>
         </div>
         <div className="cancel-confirm__actions">
           <button
@@ -48,7 +58,7 @@ export function CancellationConfirmationModal({
             onClick={onClose}
             disabled={isSubmitting}
           >
-            Keep
+            {bookStrings.cancel.keep}
           </button>
           <button
             type="button"
@@ -56,7 +66,7 @@ export function CancellationConfirmationModal({
             onClick={onConfirm}
             disabled={isSubmitting}
           >
-            {isSubmitting ? "Cancelling..." : "Cancel reservation"}
+            {isSubmitting ? bookStrings.cancel.submitting : bookStrings.cancel.confirm}
           </button>
         </div>
       </div>

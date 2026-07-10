@@ -702,6 +702,7 @@ export type PatchedReservation = {
   table_info?: TableInfo
   restaurant_info?: RestaurantInfo
   readonly customer_name?: string
+  guest_name?: string | null
   type?: TypeEnum
   guest_count?: number
   start_at?: string
@@ -844,6 +845,7 @@ export type PortalEntity = {
   y: number
   width: number
   height: number
+  rotation?: number
   target_zone_id?: string | null
   portal_label?: string
   zone_id: string
@@ -926,6 +928,7 @@ export type Reservation = {
   table_info: TableInfo
   restaurant_info: RestaurantInfo
   readonly customer_name: string
+  guest_name?: string | null
   type?: TypeEnum
   guest_count: number
   start_at: string
@@ -1042,6 +1045,15 @@ export type Table = {
   readonly updated_at: string
 }
 
+export type TableAvailabilityResponse = {
+  /**
+   * table public_id -> is it free for the requested slot
+   */
+  availability: {
+    [key: string]: boolean
+  }
+}
+
 export type TableEntity = {
   id?: string | null
   /**
@@ -1071,6 +1083,7 @@ export type ThresholdEntity = {
   y: number
   width: number
   height: number
+  rotation?: number
   threshold_label?: string
   zone_id: string
 }
@@ -1612,6 +1625,7 @@ export type PatchedOrderItemWritable = {
 
 export type PatchedReservationWritable = {
   table?: string
+  guest_name?: string | null
   type?: TypeEnum
   guest_count?: number
   start_at?: string
@@ -1697,6 +1711,7 @@ export type ReceiptWritable = {
 
 export type ReservationWritable = {
   table: string
+  guest_name?: string | null
   type?: TypeEnum
   guest_count: number
   start_at: string
@@ -3467,15 +3482,64 @@ export type ReservationsReservationsMoveTableCreateResponses = {
 export type ReservationsReservationsMoveTableCreateResponse =
   ReservationsReservationsMoveTableCreateResponses[keyof ReservationsReservationsMoveTableCreateResponses]
 
+export type ReservationsReservationsAvailabilityRetrieveData = {
+  body?: never
+  path?: never
+  query: {
+    /**
+     * YYYY-MM-DD.
+     */
+    date: string
+    /**
+     * Minutes, default 120, clamped to a minimum of 30.
+     */
+    duration?: number
+    /**
+     * Restaurant public ID.
+     */
+    restaurant: string
+    /**
+     * HH:MM, restaurant-local.
+     */
+    time: string
+  }
+  url: "/api/reservations/reservations/availability/"
+}
+
+export type ReservationsReservationsAvailabilityRetrieveResponses = {
+  200: TableAvailabilityResponse
+}
+
+export type ReservationsReservationsAvailabilityRetrieveResponse =
+  ReservationsReservationsAvailabilityRetrieveResponses[keyof ReservationsReservationsAvailabilityRetrieveResponses]
+
 export type ReservationsReservationsAvailableSlotsRetrieveData = {
   body?: never
   path?: never
-  query?: never
+  query: {
+    /**
+     * YYYY-MM-DD. Omit to get the next 14 days.
+     */
+    date?: string
+    /**
+     * Reservation public ID(s) to exclude, e.g. the booking currently being rescheduled.
+     */
+    exclude?: Array<string>
+    /**
+     * Table public ID.
+     */
+    table: string
+  }
   url: "/api/reservations/reservations/available-slots/"
 }
 
 export type ReservationsReservationsAvailableSlotsRetrieveResponses = {
-  200: Reservation
+  /**
+   * date (YYYY-MM-DD) -> list of bookable HH:MM slot start times
+   */
+  200: {
+    [key: string]: Array<string>
+  }
 }
 
 export type ReservationsReservationsAvailableSlotsRetrieveResponse =

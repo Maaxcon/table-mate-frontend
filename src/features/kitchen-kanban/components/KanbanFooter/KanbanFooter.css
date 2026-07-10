@@ -1,7 +1,6 @@
 .kanban__footer {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   padding: 12px 28px;
   background: var(--k-panel);
   border-top: 1px solid var(--k-divider);
@@ -53,25 +52,4 @@
   height: 14px;
   margin-right: 8px;
   color: var(--k-incoming);
-}
-
-.kanban__theme-toggle {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 34px;
-  height: 34px;
-  border-radius: var(--k-radius-pill);
-  background: var(--k-bg);
-  border: 1px solid var(--k-border);
-  color: var(--k-text-muted);
-  cursor: pointer;
-  transition:
-    background 0.15s,
-    color 0.15s;
-}
-
-.kanban__theme-toggle:hover {
-  background: var(--k-divider);
-  color: var(--k-text);
 }

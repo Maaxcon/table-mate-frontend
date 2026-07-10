@@ -64,6 +64,7 @@ export function mapTicketShort(ticket: KitchenTicket): KanbanTicket {
               60000,
           )
         : undefined,
+    completedAt: ticket.completed_at ? new Date(ticket.completed_at).getTime() : undefined,
     items: [],
   }
 }

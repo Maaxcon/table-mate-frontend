@@ -18,7 +18,7 @@ export const CANVAS_MAX_COLS = 50
 export const CANVAS_MAX_ROWS = 50
 
 // Bounds for pinch/ctrl-wheel zoom of the editor canvas.
-export const EDITOR_MIN_SCALE = 0.4
+export const EDITOR_MIN_SCALE = 0.1
 export const EDITOR_MAX_SCALE = 2
 
 export type EntityType = "table-square" | "table-round" | "obstacle" | "threshold" | "portal"

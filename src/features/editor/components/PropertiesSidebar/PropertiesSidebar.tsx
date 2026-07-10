@@ -1,4 +1,4 @@
-import { useCallback } from "react"
+import { useCallback, useMemo } from "react"
 import type { Zone } from "@/features/reservation/api"
 import type { EditorEntity } from "@/features/editor/types"
 import {
@@ -11,8 +11,12 @@ import "./PropertiesSidebar.css"
 
 interface PropertiesSidebarProps {
   entity: EditorEntity | null
+  zoneEntities: EditorEntity[]
   onUpdate: (id: string, patch: Partial<EditorEntity>) => void
+  onMove: (id: string, x: number, y: number) => void
   onDelete: (id: string) => void
+  onDuplicate: (id: string) => void
+  onToolSelect: (tool: EditorEntity["type"]) => void
   zones: Zone[]
   selectedZone: Zone | null
   onZoneStyleChange: (edge: string, style: "dashed" | "solid") => void
@@ -22,6 +26,7 @@ interface PropertiesSidebarProps {
 }
 
 const METADATA_TAGS = ["Window Seat", "Quiet", "Wheelchair Accessible"]
+const TABLE_CAPACITY_PRESETS = [2, 4, 6, 8, 10, 12]
 
 const EDGE_LABELS: Record<string, string> = {
   top: "Top Edge",
@@ -30,10 +35,32 @@ const EDGE_LABELS: Record<string, string> = {
   left: "Left Edge",
 }
 
+const ENTITY_COPY: Record<EditorEntity["type"], { title: string; icon: string; accent: string }> = {
+  "table-square": { title: "Square Table", icon: "▦", accent: "table" },
+  "table-round": { title: "Round Table", icon: "◯", accent: "table" },
+  obstacle: { title: "Obstacle", icon: "▧", accent: "obstacle" },
+  threshold: { title: "Threshold", icon: "⎯", accent: "threshold" },
+  portal: { title: "Portal", icon: "⇄", accent: "portal" },
+}
+
+function clampInt(raw: string, min: number, max: number): number | null {
+  const num = Number(raw)
+  if (raw === "" || Number.isNaN(num)) return null
+  return Math.max(min, Math.min(max, Math.round(num)))
+}
+
+function isTableEntity(entity: EditorEntity): boolean {
+  return entity.type === "table-square" || entity.type === "table-round"
+}
+
 export function PropertiesSidebar({
   entity,
+  zoneEntities,
   onUpdate,
+  onMove,
   onDelete,
+  onDuplicate,
+  onToolSelect,
   zones,
   selectedZone,
   onZoneStyleChange,
@@ -41,6 +68,52 @@ export function PropertiesSidebar({
   canvasRows,
   onCanvasSizeChange,
 }: PropertiesSidebarProps) {
+  const zoneEdgeStyles = selectedZone?.edge_styles ?? {
+    top: "dashed" as const,
+    right: "dashed" as const,
+    bottom: "dashed" as const,
+    left: "dashed" as const,
+  }
+
+  const zoneTableCount = useMemo(
+    () => zoneEntities.filter((item) => isTableEntity(item)).length,
+    [zoneEntities],
+  )
+  const zoneSeatCount = useMemo(
+    () =>
+      zoneEntities.reduce(
+        (sum, item) => (isTableEntity(item) ? sum + (item.capacity ?? 4) : sum),
+        0,
+      ),
+    [zoneEntities],
+  )
+  const zonePortalCount = useMemo(
+    () => zoneEntities.filter((item) => item.type === "portal").length,
+    [zoneEntities],
+  )
+  const zoneObstacleCount = useMemo(
+    () => zoneEntities.filter((item) => item.type === "obstacle").length,
+    [zoneEntities],
+  )
+
+  const entityWarnings = useMemo(() => {
+    if (!entity) return []
+    const warnings: string[] = []
+    if ((entity.type === "portal" || entity.type === "threshold") && !entity.label?.trim()) {
+      warnings.push("Add a label so staff can identify this passage quickly.")
+    }
+    if (entity.type === "portal" && !entity.targetZoneId) {
+      warnings.push("Portal has no target zone yet.")
+    }
+    if (isTableEntity(entity) && (entity.capacity ?? 0) < 1) {
+      warnings.push("Table capacity should be at least 1.")
+    }
+    if (entity.type !== "portal" && entity.type !== "threshold" && (entity.x < 0 || entity.y < 0)) {
+      warnings.push("Element is outside editable bounds.")
+    }
+    return warnings
+  }, [entity])
+
   const handleTargetZoneChange = useCallback(
     (e: React.ChangeEvent<HTMLSelectElement>) => {
       if (!entity) return
@@ -56,30 +129,102 @@ export function PropertiesSidebar({
     [entity, onUpdate, zones],
   )
 
-  if (!entity) {
-    if (selectedZone) {
-      const zoneEdgeStyles = selectedZone.edge_styles ?? {
-        top: "dashed" as const,
-        right: "dashed" as const,
-        bottom: "dashed" as const,
-        left: "dashed" as const,
+  const handleNumericUpdate = useCallback(
+    (
+      id: string,
+      field: "x" | "y" | "w" | "h" | "rotation" | "capacity",
+      raw: string,
+      min: number,
+      max: number,
+    ) => {
+      const next = clampInt(raw, min, max)
+      if (next === null) return
+      if (field === "rotation") {
+        const normalized = ((next % 360) + 360) % 360
+        onUpdate(id, { rotation: normalized })
+        return
       }
-      return (
-        <aside className="editor-sidebar">
-          <div className="editor-sidebar__header">
-            <h3 className="editor-sidebar__title">{selectedZone.name}</h3>
-            <span className="editor-sidebar__id">Zone</span>
+      if (field === "capacity") {
+        onUpdate(id, { capacity: next })
+        return
+      }
+      onUpdate(id, { [field]: next } as Partial<EditorEntity>)
+    },
+    [onUpdate],
+  )
+
+  if (!selectedZone && !entity) {
+    return (
+      <aside className="editor-sidebar">
+        <div className="editor-sidebar__header">
+          <h3 className="editor-sidebar__title">Inspector</h3>
+          <span className="editor-sidebar__id">Select a zone</span>
+        </div>
+        <div className="editor-sidebar__body">
+          <p className="editor-sidebar__empty">
+            Pick a zone tab first, then select any element to edit all properties.
+          </p>
+        </div>
+      </aside>
+    )
+  }
+
+  if (!entity) {
+    return (
+      <aside className="editor-sidebar">
+        <div className="editor-sidebar__header editor-sidebar__header--zone">
+          <div className="editor-sidebar__header-main">
+            <span className="editor-sidebar__icon" aria-hidden="true">
+              ◫
+            </span>
+            <div>
+              <h3 className="editor-sidebar__title">{selectedZone?.name ?? "Zone Inspector"}</h3>
+              <span className="editor-sidebar__id">Canvas & zone parameters</span>
+            </div>
           </div>
-          <div className="editor-sidebar__body">
-            <fieldset className="editor-sidebar__field">
-              <legend className="editor-sidebar__label">Canvas Size (grid units)</legend>
-              <div className="editor-sidebar__row">
-                <label
-                  htmlFor="canvas-cols"
-                  style={{ fontSize: "0.8rem", minWidth: 50, display: "inline-block" }}
+        </div>
+        <div className="editor-sidebar__body">
+          <section className="editor-sidebar__stats">
+            <article className="editor-sidebar__stat">
+              <span className="editor-sidebar__stat-label">Tables</span>
+              <span className="editor-sidebar__stat-value">{zoneTableCount}</span>
+            </article>
+            <article className="editor-sidebar__stat">
+              <span className="editor-sidebar__stat-label">Seats</span>
+              <span className="editor-sidebar__stat-value">{zoneSeatCount}</span>
+            </article>
+            <article className="editor-sidebar__stat">
+              <span className="editor-sidebar__stat-label">Portals</span>
+              <span className="editor-sidebar__stat-value">{zonePortalCount}</span>
+            </article>
+            <article className="editor-sidebar__stat">
+              <span className="editor-sidebar__stat-label">Obstacles</span>
+              <span className="editor-sidebar__stat-value">{zoneObstacleCount}</span>
+            </article>
+          </section>
+
+          <details open className="editor-sidebar__section">
+            <summary className="editor-sidebar__section-title">Quick Add</summary>
+            <div className="editor-sidebar__quick-add">
+              {(Object.keys(ENTITY_COPY) as EditorEntity["type"][]).map((type) => (
+                <button
+                  key={type}
+                  type="button"
+                  className="editor-sidebar__quick-btn"
+                  onClick={() => onToolSelect(type)}
                 >
-                  Columns
-                </label>
+                  <span aria-hidden="true">{ENTITY_COPY[type].icon}</span>
+                  <span>{ENTITY_COPY[type].title}</span>
+                </button>
+              ))}
+            </div>
+          </details>
+
+          <details open className="editor-sidebar__section">
+            <summary className="editor-sidebar__section-title">Canvas Size</summary>
+            <div className="editor-sidebar__field-grid">
+              <label className="editor-sidebar__field" htmlFor="canvas-cols">
+                <span className="editor-sidebar__label">Columns</span>
                 <input
                   id="canvas-cols"
                   type="number"
@@ -88,25 +233,14 @@ export function PropertiesSidebar({
                   max={CANVAS_MAX_COLS}
                   value={canvasCols}
                   onChange={(e) => {
-                    const v = Math.max(
-                      CANVAS_MIN_COLS,
-                      Math.min(CANVAS_MAX_COLS, Number(e.target.value)),
-                    )
-                    onCanvasSizeChange(v, canvasRows)
+                    const value = clampInt(e.target.value, CANVAS_MIN_COLS, CANVAS_MAX_COLS)
+                    if (value === null) return
+                    onCanvasSizeChange(value, canvasRows)
                   }}
-                  style={{ width: 60 }}
                 />
-                <label
-                  htmlFor="canvas-rows"
-                  style={{
-                    fontSize: "0.8rem",
-                    minWidth: 50,
-                    display: "inline-block",
-                    marginLeft: 8,
-                  }}
-                >
-                  Rows
-                </label>
+              </label>
+              <label className="editor-sidebar__field" htmlFor="canvas-rows">
+                <span className="editor-sidebar__label">Rows</span>
                 <input
                   id="canvas-rows"
                   type="number"
@@ -115,101 +249,239 @@ export function PropertiesSidebar({
                   max={CANVAS_MAX_ROWS}
                   value={canvasRows}
                   onChange={(e) => {
-                    const v = Math.max(
-                      CANVAS_MIN_ROWS,
-                      Math.min(CANVAS_MAX_ROWS, Number(e.target.value)),
-                    )
-                    onCanvasSizeChange(canvasCols, v)
+                    const value = clampInt(e.target.value, CANVAS_MIN_ROWS, CANVAS_MAX_ROWS)
+                    if (value === null) return
+                    onCanvasSizeChange(canvasCols, value)
                   }}
-                  style={{ width: 60 }}
                 />
-              </div>
-            </fieldset>
-            <fieldset className="editor-sidebar__field">
-              <legend className="editor-sidebar__label">Border Styles</legend>
+              </label>
+            </div>
+          </details>
+
+          <details open className="editor-sidebar__section">
+            <summary className="editor-sidebar__section-title">Border Styles</summary>
+            <div className="editor-sidebar__field-list">
               {Object.entries(EDGE_LABELS).map(([key, label]) => (
-                <div key={key} className="editor-sidebar__row" style={{ marginBottom: 6 }}>
-                  <label
-                    htmlFor={`zone-edge-${key}`}
-                    style={{ fontSize: "0.8rem", minWidth: 70, display: "inline-block" }}
-                  >
-                    {label}
-                  </label>
+                <label key={key} className="editor-sidebar__field editor-sidebar__field--inline">
+                  <span className="editor-sidebar__label">{label}</span>
                   <select
-                    id={`zone-edge-${key}`}
                     className="editor-sidebar__input"
                     value={zoneEdgeStyles[key]}
                     onChange={(e) => onZoneStyleChange(key, e.target.value as "dashed" | "solid")}
-                    style={{ width: "auto", flex: 1 }}
                   >
                     <option value="dashed">Dashed</option>
                     <option value="solid">Solid</option>
                   </select>
-                </div>
+                </label>
               ))}
-            </fieldset>
-          </div>
-        </aside>
-      )
-    }
-    return (
-      <aside className="editor-sidebar">
-        <p className="editor-sidebar__empty">Select an entity to edit properties</p>
+            </div>
+          </details>
+
+          <details className="editor-sidebar__section">
+            <summary className="editor-sidebar__section-title">Keyboard Shortcuts</summary>
+            <div className="editor-sidebar__shortcuts">
+              <span>`Cmd/Ctrl + C` copy selected element(s)</span>
+              <span>`Cmd/Ctrl + V` paste with offset</span>
+              <span>`Delete` remove selected element(s)</span>
+              <span>`Cmd/Ctrl + Z` undo last change</span>
+            </div>
+          </details>
+        </div>
       </aside>
     )
   }
 
-  const isTable = entity.type.startsWith("table")
+  const isTable = isTableEntity(entity)
+  const copy = ENTITY_COPY[entity.type]
 
   return (
     <aside className="editor-sidebar">
-      <div className="editor-sidebar__header">
-        <h3 className="editor-sidebar__title">{entity.type.replace("-", " ").toUpperCase()}</h3>
-        <span className="editor-sidebar__id">ID: {entity.id.slice(-6)}</span>
+      <div className={`editor-sidebar__header editor-sidebar__header--${copy.accent}`}>
+        <div className="editor-sidebar__header-main">
+          <span className="editor-sidebar__icon" aria-hidden="true">
+            {copy.icon}
+          </span>
+          <div>
+            <h3 className="editor-sidebar__title">{copy.title}</h3>
+            <span className="editor-sidebar__id">ID: {entity.id.slice(-6)}</span>
+          </div>
+        </div>
+        <span className="editor-sidebar__badge">
+          {zones.find((zone) => zone.public_id === (entity.zoneId ?? ""))?.name ?? "No zone"}
+        </span>
       </div>
 
       <div className="editor-sidebar__body">
-        <div className="editor-sidebar__field">
-          <span className="editor-sidebar__label">Position</span>
-          <div className="editor-sidebar__row">
-            <span className="editor-sidebar__value">X: {entity.x}</span>
-            <span className="editor-sidebar__value">Y: {entity.y}</span>
-          </div>
-        </div>
+        {entityWarnings.length > 0 && (
+          <section className="editor-sidebar__notice">
+            <span className="editor-sidebar__notice-title">Needs attention</span>
+            {entityWarnings.map((warning) => (
+              <p key={warning} className="editor-sidebar__notice-text">
+                {warning}
+              </p>
+            ))}
+          </section>
+        )}
 
-        <div className="editor-sidebar__field">
-          <span className="editor-sidebar__label">Size</span>
-          <div className="editor-sidebar__row">
-            <span className="editor-sidebar__value">
-              {entity.w} × {entity.h}
-            </span>
+        <details open className="editor-sidebar__section">
+          <summary className="editor-sidebar__section-title">Transform</summary>
+          <div className="editor-sidebar__field-grid">
+            <label className="editor-sidebar__field">
+              <span className="editor-sidebar__label">X</span>
+              <input
+                className="editor-sidebar__input"
+                type="number"
+                value={entity.x}
+                onChange={(e) => handleNumericUpdate(entity.id, "x", e.target.value, -1, 500)}
+              />
+            </label>
+            <label className="editor-sidebar__field">
+              <span className="editor-sidebar__label">Y</span>
+              <input
+                className="editor-sidebar__input"
+                type="number"
+                value={entity.y}
+                onChange={(e) => handleNumericUpdate(entity.id, "y", e.target.value, -1, 500)}
+              />
+            </label>
+            <label className="editor-sidebar__field">
+              <span className="editor-sidebar__label">Width</span>
+              <input
+                className="editor-sidebar__input"
+                type="number"
+                min={1}
+                value={entity.w}
+                onChange={(e) => handleNumericUpdate(entity.id, "w", e.target.value, 1, 50)}
+              />
+            </label>
+            <label className="editor-sidebar__field">
+              <span className="editor-sidebar__label">Height</span>
+              <input
+                className="editor-sidebar__input"
+                type="number"
+                min={1}
+                value={entity.h}
+                onChange={(e) => handleNumericUpdate(entity.id, "h", e.target.value, 1, 50)}
+              />
+            </label>
           </div>
-        </div>
-
-        <div className="editor-sidebar__field">
-          <span className="editor-sidebar__label">Rotation</span>
-          <div className="editor-sidebar__row">
-            <span className="editor-sidebar__value">{entity.rotation ?? 0}°</span>
+          <div className="editor-sidebar__row editor-sidebar__row--single">
+            <label className="editor-sidebar__field" htmlFor="sidebar-rotation">
+              <span className="editor-sidebar__label">Rotation</span>
+              <input
+                id="sidebar-rotation"
+                className="editor-sidebar__input"
+                type="number"
+                step={1}
+                value={entity.rotation ?? 0}
+                onChange={(e) =>
+                  handleNumericUpdate(entity.id, "rotation", e.target.value, -3600, 3600)
+                }
+                aria-label="Rotation in degrees"
+              />
+            </label>
             <button
               type="button"
-              className="editor-sidebar__input"
-              style={{ width: "auto" }}
+              className="editor-sidebar__button editor-sidebar__button--soft"
               onClick={() => onUpdate(entity.id, { rotation: ((entity.rotation ?? 0) + 45) % 360 })}
             >
-              Rotate 45°
+              Rotate +45°
             </button>
           </div>
-        </div>
+        </details>
+
+        <details open className="editor-sidebar__section">
+          <summary className="editor-sidebar__section-title">Placement</summary>
+          <div className="editor-sidebar__field">
+            <label className="editor-sidebar__label" htmlFor="sidebar-zone">
+              Zone
+            </label>
+            <select
+              id="sidebar-zone"
+              className="editor-sidebar__input"
+              value={entity.zoneId ?? ""}
+              onChange={(e) => onUpdate(entity.id, { zoneId: e.target.value || undefined })}
+            >
+              <option value="">-- None --</option>
+              {zones.map((z) => (
+                <option key={z.public_id} value={z.public_id}>
+                  {z.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="editor-sidebar__arrange">
+            <button
+              type="button"
+              className="editor-sidebar__quick-btn editor-sidebar__quick-btn--axis"
+              onClick={() => onMove(entity.id, Math.round((canvasCols - entity.w) / 2), entity.y)}
+            >
+              Center X
+            </button>
+            <button
+              type="button"
+              className="editor-sidebar__quick-btn editor-sidebar__quick-btn--axis"
+              onClick={() => onMove(entity.id, entity.x, Math.round((canvasRows - entity.h) / 2))}
+            >
+              Center Y
+            </button>
+            <button
+              type="button"
+              className="editor-sidebar__quick-btn editor-sidebar__quick-btn--nudge"
+              onClick={() => onMove(entity.id, entity.x, entity.y - 1)}
+              aria-label="Move up"
+            >
+              ↑
+            </button>
+            <button
+              type="button"
+              className="editor-sidebar__quick-btn editor-sidebar__quick-btn--nudge"
+              onClick={() => onMove(entity.id, entity.x - 1, entity.y)}
+              aria-label="Move left"
+            >
+              ←
+            </button>
+            <button
+              type="button"
+              className="editor-sidebar__quick-btn editor-sidebar__quick-btn--nudge"
+              onClick={() => onMove(entity.id, entity.x + 1, entity.y)}
+              aria-label="Move right"
+            >
+              →
+            </button>
+            <button
+              type="button"
+              className="editor-sidebar__quick-btn editor-sidebar__quick-btn--nudge"
+              onClick={() => onMove(entity.id, entity.x, entity.y + 1)}
+              aria-label="Move down"
+            >
+              ↓
+            </button>
+          </div>
+        </details>
 
         {isTable && (
-          <>
+          <details open className="editor-sidebar__section">
+            <summary className="editor-sidebar__section-title">Table Settings</summary>
             <div className="editor-sidebar__field">
               <span className="editor-sidebar__label">Table ID</span>
               <span className="editor-sidebar__value">
                 {entity.label || "Auto-assigned on publish"}
               </span>
             </div>
-
+            <div className="editor-sidebar__field">
+              <label className="editor-sidebar__label" htmlFor="sidebar-label">
+                Public label
+              </label>
+              <input
+                id="sidebar-label"
+                className="editor-sidebar__input"
+                type="text"
+                value={entity.label ?? ""}
+                onChange={(e) => onUpdate(entity.id, { label: e.target.value })}
+                placeholder="e.g. T12"
+              />
+            </div>
             <div className="editor-sidebar__field">
               <label className="editor-sidebar__label" htmlFor="sidebar-capacity">
                 Capacity
@@ -222,33 +494,27 @@ export function PropertiesSidebar({
                 max={20}
                 value={entity.capacity ?? 4}
                 onChange={(e) => {
-                  const raw = Number(e.target.value)
-                  if (e.target.value === "" || Number.isNaN(raw)) return
-                  const capacity = Math.max(1, Math.min(20, Math.round(raw)))
-                  onUpdate(entity.id, { capacity })
+                  handleNumericUpdate(entity.id, "capacity", e.target.value, 1, 20)
                 }}
               />
             </div>
-
-            <div className="editor-sidebar__field">
-              <label className="editor-sidebar__label" htmlFor="sidebar-zone">
-                Zone
-              </label>
-              <select
-                id="sidebar-zone"
-                className="editor-sidebar__input"
-                value={entity.zoneId ?? ""}
-                onChange={(e) => onUpdate(entity.id, { zoneId: e.target.value || undefined })}
-              >
-                <option value="">-- None --</option>
-                {zones.map((z) => (
-                  <option key={z.public_id} value={z.public_id}>
-                    {z.name}
-                  </option>
-                ))}
-              </select>
+            <div className="editor-sidebar__pill-row" role="group" aria-label="Capacity presets">
+              {TABLE_CAPACITY_PRESETS.map((size) => (
+                <button
+                  key={size}
+                  type="button"
+                  className={[
+                    "editor-sidebar__pill",
+                    (entity.capacity ?? 4) === size ? "editor-sidebar__pill--active" : "",
+                  ]
+                    .filter(Boolean)
+                    .join(" ")}
+                  onClick={() => onUpdate(entity.id, { capacity: size })}
+                >
+                  {size}
+                </button>
+              ))}
             </div>
-
             <fieldset className="editor-sidebar__field">
               <legend className="editor-sidebar__label">Tags</legend>
               {METADATA_TAGS.map((tag) => {
@@ -270,70 +536,64 @@ export function PropertiesSidebar({
                 )
               })}
             </fieldset>
-          </>
+          </details>
         )}
 
         {(entity.type === "portal" || entity.type === "threshold") && (
-          <div className="editor-sidebar__field">
-            <label className="editor-sidebar__label" htmlFor="sidebar-label-2">
-              Label
-            </label>
-            <input
-              id="sidebar-label-2"
-              className="editor-sidebar__input"
-              type="text"
-              value={entity.label ?? ""}
-              onChange={(e) => onUpdate(entity.id, { label: e.target.value })}
-              placeholder="e.g. BAR, ENTRANCE"
-            />
-          </div>
+          <details open className="editor-sidebar__section">
+            <summary className="editor-sidebar__section-title">Passage Settings</summary>
+            <div className="editor-sidebar__field">
+              <label className="editor-sidebar__label" htmlFor="sidebar-label-2">
+                Label
+              </label>
+              <input
+                id="sidebar-label-2"
+                className="editor-sidebar__input"
+                type="text"
+                value={entity.label ?? ""}
+                onChange={(e) => onUpdate(entity.id, { label: e.target.value })}
+                placeholder="e.g. BAR, ENTRANCE"
+              />
+            </div>
+          </details>
         )}
 
         {entity.type === "portal" && (
-          <div className="editor-sidebar__field">
-            <label className="editor-sidebar__label" htmlFor="sidebar-target">
-              Target Zone
-            </label>
-            <select
-              id="sidebar-target"
-              className="editor-sidebar__input"
-              value={entity.targetZoneId ?? ""}
-              onChange={handleTargetZoneChange}
-            >
-              <option value="">-- Select zone --</option>
-              {zones.map((z) => (
-                <option key={z.public_id} value={z.public_id}>
-                  {z.name}
-                </option>
-              ))}
-            </select>
-          </div>
+          <details open className="editor-sidebar__section">
+            <summary className="editor-sidebar__section-title">Navigation Link</summary>
+            <div className="editor-sidebar__field">
+              <label className="editor-sidebar__label" htmlFor="sidebar-target">
+                Target Zone
+              </label>
+              <select
+                id="sidebar-target"
+                className="editor-sidebar__input"
+                value={entity.targetZoneId ?? ""}
+                onChange={handleTargetZoneChange}
+              >
+                <option value="">-- Select zone --</option>
+                {zones.map((z) => (
+                  <option key={z.public_id} value={z.public_id}>
+                    {z.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </details>
         )}
+      </div>
 
-        {!isTable && (
-          <div className="editor-sidebar__field">
-            <label className="editor-sidebar__label" htmlFor="sidebar-zone-decor">
-              Zone
-            </label>
-            <select
-              id="sidebar-zone-decor"
-              className="editor-sidebar__input"
-              value={entity.zoneId ?? ""}
-              onChange={(e) => onUpdate(entity.id, { zoneId: e.target.value || undefined })}
-            >
-              <option value="">-- None --</option>
-              {zones.map((z) => (
-                <option key={z.public_id} value={z.public_id}>
-                  {z.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
-
+      <div className="editor-sidebar__footer">
         <button
           type="button"
-          className="editor-sidebar__delete"
+          className="editor-sidebar__button editor-sidebar__button--primary"
+          onClick={() => onDuplicate(entity.id)}
+        >
+          Duplicate
+        </button>
+        <button
+          type="button"
+          className="editor-sidebar__button editor-sidebar__button--danger"
           onClick={() => onDelete(entity.id)}
         >
           Delete

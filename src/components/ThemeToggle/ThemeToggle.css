@@ -26,4 +26,14 @@
   right: 20px;
   z-index: 9999;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+  transition:
+    opacity 0.18s ease,
+    transform 0.18s ease;
+}
+
+/* Booking modal owns the whole screen; hide the global theme switch there. */
+body.has-book-modal .theme-toggle--global {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(8px);
 }

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useAppSelector } from "@/store/hooks"
-import { fetchZones } from "@/features/reservation/api"
+import { fetchLayoutData, fetchZones } from "@/features/reservation/api"
 import type { Zone } from "@/features/reservation/api"
 import { apiFetch } from "@/api/client"
 import {
@@ -11,7 +11,7 @@ import {
   Toolbar,
   ZoneHeader,
 } from "@/features/editor/components"
-import { useEditorState } from "@/features/editor/hooks/useEditorState"
+import { getNextTableLabel, useEditorState } from "@/features/editor/hooks/useEditorState"
 import type { EditorState } from "@/features/editor/hooks/useEditorState"
 import { usePublish } from "@/features/editor/hooks/usePublish"
 import type { PublishResult } from "@/features/editor/hooks/usePublish"
@@ -44,6 +44,15 @@ function useCurrentTime(): string {
   return time
 }
 
+function isTypingTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return false
+  return target.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName)
+}
+
+function isTableEntity(entity: EditorEntity): boolean {
+  return entity.type === "table-square" || entity.type === "table-round"
+}
+
 function FloorPlanEditorPage() {
   const {
     entities,
@@ -52,9 +61,12 @@ function FloorPlanEditorPage() {
     activeTool,
     lastPublishedJson,
     addEntity,
+    addEntities,
     updateEntity,
     moveEntity,
+    moveEntitiesByDelta,
     removeEntity,
+    removeEntities,
     selectEntity,
     setTool,
     publishSuccess,
@@ -62,9 +74,14 @@ function FloorPlanEditorPage() {
     deletedServerIds,
     createZone,
     updateZoneMeta,
+    updateZoneCanvasSize,
     deleteZone: deleteZoneMeta,
     clearPendingZones,
     pendingZones,
+    past,
+    future,
+    undo,
+    redo,
     dispatch,
   } = useEditorState()
 
@@ -72,11 +89,33 @@ function FloorPlanEditorPage() {
   const [showPublishModal, setShowPublishModal] = useState(false)
   const [zones, setZones] = useState<Zone[]>([])
   const [selectedZoneId, setSelectedZoneId] = useState<string | null>(null)
+  const [selectedIds, setSelectedIds] = useState<string[]>([])
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
   const prePublishStateRef = useRef<EditorState | null>(null)
   const publishingRef = useRef(false)
+  const copiedEntitiesRef = useRef<EditorEntity[]>([])
+  const copiedBoundsRef = useRef<{ minX: number; minY: number }>({ minX: 0, minY: 0 })
+  const pasteStepRef = useRef(0)
   const [deleteZoneTarget, setDeleteZoneTarget] = useState<Zone | null>(null)
   const [deleting, setDeleting] = useState(false)
   const toast = useToast()
+
+  // Tables that currently have guests seated (open session). Deleting one is
+  // blocked up front — the publish would reject it anyway — so we warn instead.
+  // Uses the unpaginated /layout/ endpoint (like BookingPage) rather than the
+  // paginated /tables/ list — the latter only returns page 1 (20 tables), so a
+  // restaurant with more than that would silently miss occupied tables past it.
+  const [occupiedTableIds, setOccupiedTableIds] = useState<Set<string>>(new Set())
+  useEffect(() => {
+    if (!restaurantId) return
+    fetchLayoutData(String(restaurantId))
+      .then((data) => {
+        setOccupiedTableIds(
+          new Set(data.tables.filter((t) => t.is_occupied).map((t) => t.public_id)),
+        )
+      })
+      .catch(() => setOccupiedTableIds(new Set()))
+  }, [restaurantId])
 
   // Merge server zones with pending local zone changes so the UI always shows
   // the latest state (including un-published zone creates, renames, deletes).
@@ -252,6 +291,14 @@ function FloorPlanEditorPage() {
     onZoneCreated: refreshZones,
     onZoneUpdated: refreshZones,
     onZoneDeleted: refreshZones,
+    onTableStatusChanged: (event) => {
+      setOccupiedTableIds((prev) => {
+        const next = new Set(prev)
+        if (event.current_status === "occupied") next.add(event.table_id)
+        else next.delete(event.table_id)
+        return next
+      })
+    },
   })
 
   const currentTime = useCurrentTime()
@@ -261,15 +308,36 @@ function FloorPlanEditorPage() {
       const clientId = crypto.randomUUID()
       createZone(clientId, name)
       setSelectedZoneId(clientId)
+      setSelectedIds([])
+      selectEntity(null)
     },
-    [createZone],
+    [createZone, selectEntity],
+  )
+
+  // Block deleting a table that currently has guests seated, with an up-front
+  // warning — otherwise the removal only fails later, at publish time.
+  const handleDeleteEntity = useCallback(
+    (id: string) => {
+      const entity = entities.find((e) => e.id === id)
+      const isTable = entity?.type === "table-square" || entity?.type === "table-round"
+      if (isTable && entity?.serverId && occupiedTableIds.has(entity.serverId)) {
+        toast.error("Can't delete an occupied table — close its visit first.")
+        return
+      }
+      removeEntity(id)
+      setSelectedIds((prev) => prev.filter((selected) => selected !== id))
+    },
+    [entities, occupiedTableIds, removeEntity, toast],
   )
 
   // Strict filter: only ever show the selected zone's entities. The Canvas is
   // gated behind `noZones`, so when `selectedZoneId` is momentarily null (load
   // race, or a zone deselected via ZoneHeader) we render nothing rather than
   // leaking other zones' grid -1 portals/thresholds into the padding area.
-  const visibleEntities = entities.filter((e) => e.zoneId === selectedZoneId)
+  const visibleEntities = useMemo(
+    () => entities.filter((e) => e.zoneId === selectedZoneId),
+    [entities, selectedZoneId],
+  )
 
   const noZones = allZones.length === 0
 
@@ -320,6 +388,8 @@ function FloorPlanEditorPage() {
       canvasCols,
       canvasRows,
       pendingZones,
+      past,
+      future,
     }
     publish(entities, deletedServerIds, layoutCanvasCols, layoutCanvasRows, pendingZones)
   }, [
@@ -335,6 +405,8 @@ function FloorPlanEditorPage() {
     layoutCanvasCols,
     layoutCanvasRows,
     pendingZones,
+    past,
+    future,
   ])
 
   const deleteZoneTableCount = deleteZoneTarget
@@ -343,6 +415,75 @@ function FloorPlanEditorPage() {
     : 0
 
   const selectedEntity = visibleEntities.find((e) => e.id === selectedId) ?? null
+  const effectiveSelectedIds = useMemo(() => {
+    const visibleIds = new Set(visibleEntities.map((entity) => entity.id))
+    const filtered = selectedIds.filter((id) => visibleIds.has(id))
+    if (selectedId && visibleIds.has(selectedId) && !filtered.includes(selectedId)) {
+      return [selectedId, ...filtered]
+    }
+    return filtered
+  }, [selectedId, selectedIds, visibleEntities])
+
+  const selectedEntities = useMemo(
+    () =>
+      effectiveSelectedIds
+        .map((id) => visibleEntities.find((entity) => entity.id === id))
+        .filter((entity): entity is EditorEntity => Boolean(entity)),
+    [effectiveSelectedIds, visibleEntities],
+  )
+
+  const handleSelectionChange = useCallback(
+    (ids: string[], primaryId: string | null) => {
+      setSelectedIds(ids)
+      selectEntity(primaryId)
+    },
+    [selectEntity],
+  )
+
+  const handleDuplicateEntity = useCallback(
+    (id: string) => {
+      const source = entities.find((item) => item.id === id)
+      if (!source) return
+
+      const duplicated = addEntity(source.type, source.x + 1, source.y + 1, {
+        w: source.w,
+        h: source.h,
+        rotation: source.rotation ?? 0,
+        zoneId: selectedZoneId ?? source.zoneId,
+        targetZoneId: source.targetZoneId,
+        capacity: source.capacity,
+        sector: source.sector,
+        tags: source.tags ? [...source.tags] : undefined,
+        label: isTableEntity(source) ? getNextTableLabel(entities) : source.label,
+      })
+      if (duplicated) {
+        handleSelectionChange([duplicated.id], duplicated.id)
+      }
+    },
+    [addEntity, entities, handleSelectionChange, selectedZoneId],
+  )
+
+  const handleDeleteSelected = useCallback(
+    (ids: string[]) => {
+      const uniqueIds = Array.from(new Set(ids))
+      const deletableIds: string[] = []
+      for (const id of uniqueIds) {
+        const entity = entities.find((item) => item.id === id)
+        const isTable = entity?.type === "table-square" || entity?.type === "table-round"
+        if (isTable && entity?.serverId && occupiedTableIds.has(entity.serverId)) {
+          toast.error("Can't delete an occupied table — close its visit first.")
+          continue
+        }
+        deletableIds.push(id)
+      }
+      if (deletableIds.length === 0) return
+      const deletableSet = new Set(deletableIds)
+      removeEntities(deletableIds)
+      setSelectedIds((prev) => prev.filter((id) => !deletableSet.has(id)))
+    },
+    [entities, occupiedTableIds, removeEntities, toast],
+  )
+
   const zoneEntities = useMemo(
     () => entities.filter((e) => e.zoneId === selectedZoneId),
     [entities, selectedZoneId],
@@ -365,19 +506,24 @@ function FloorPlanEditorPage() {
           zoneId: selectedZoneId,
         })
         setTool("select")
-        if (entity) selectEntity(entity.id)
+        if (entity) handleSelectionChange([entity.id], entity.id)
       }
     },
-    [activeTool, addEntity, selectedZoneId, setTool, selectEntity],
+    [activeTool, addEntity, handleSelectionChange, selectedZoneId, setTool],
+  )
+
+  const handleSidebarToolSelect = useCallback(
+    (tool: EditorEntity["type"]) => {
+      setTool(tool)
+      handleSelectionChange([], null)
+    },
+    [handleSelectionChange, setTool],
   )
 
   const handleZoneStyleChange = useCallback(
     (edge: string, style: "dashed" | "solid") => {
       if (!selectedZoneId) return
       const updated = { ...edgeStyles, [edge]: style }
-      setZones((prev) =>
-        prev.map((z) => (z.public_id === selectedZoneId ? { ...z, edge_styles: updated } : z)),
-      )
       updateZoneMeta(selectedZoneId, { edge_styles: updated })
     },
     [selectedZoneId, edgeStyles, updateZoneMeta],
@@ -386,20 +532,14 @@ function FloorPlanEditorPage() {
   const handleCanvasSizeChange = useCallback(
     (cols: number, rows: number) => {
       if (!selectedZoneId) return
-      setZones((prev) =>
-        prev.map((z) =>
-          z.public_id === selectedZoneId ? { ...z, canvas_cols: cols, canvas_rows: rows } : z,
-        ),
-      )
-      updateZoneMeta(selectedZoneId, { canvas_cols: cols, canvas_rows: rows })
+      updateZoneCanvasSize(selectedZoneId, cols, rows)
     },
-    [selectedZoneId, updateZoneMeta],
+    [selectedZoneId, updateZoneCanvasSize],
   )
 
   const handleRenameZone = useCallback(
     (zoneId: string, name: string) => {
       updateZoneMeta(zoneId, { name })
-      setZones((prev) => prev.map((z) => (z.public_id === zoneId ? { ...z, name } : z)))
     },
     [updateZoneMeta],
   )
@@ -408,75 +548,213 @@ function FloorPlanEditorPage() {
     (zoneId: string) => {
       setDeleting(true)
       deleteZoneMeta(zoneId)
-      setZones((prev) => prev.filter((z) => z.public_id !== zoneId))
       if (selectedZoneId === zoneId) {
         const remaining = allZones.filter((z) => z.public_id !== zoneId)
         setSelectedZoneId(remaining.length > 0 ? remaining[0].public_id : null)
       }
+      setSelectedIds([])
+      selectEntity(null)
       setDeleteZoneTarget(null)
       setDeleting(false)
     },
-    [selectedZoneId, allZones, deleteZoneMeta],
+    [allZones, deleteZoneMeta, selectEntity, selectedZoneId],
   )
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (isTypingTarget(event.target)) return
+
+      const withCommand = event.metaKey || event.ctrlKey
+      const key = event.key.toLowerCase()
+
+      if (withCommand && key === "z") {
+        event.preventDefault()
+        setSelectedIds([])
+        if (event.shiftKey) redo()
+        else undo()
+        return
+      }
+      if (withCommand && key === "y") {
+        event.preventDefault()
+        setSelectedIds([])
+        redo()
+        return
+      }
+
+      if (withCommand && key === "a") {
+        event.preventDefault()
+        const ids = visibleEntities.map((entity) => entity.id)
+        if (ids.length === 0) {
+          handleSelectionChange([], null)
+          return
+        }
+        const primaryId = selectedId && ids.includes(selectedId) ? selectedId : ids[0]
+        handleSelectionChange(ids, primaryId)
+        return
+      }
+
+      if (key === "escape") {
+        event.preventDefault()
+        handleSelectionChange([], null)
+        return
+      }
+
+      if (withCommand && key === "c") {
+        const copied =
+          selectedEntities.length > 0 ? selectedEntities : selectedEntity ? [selectedEntity] : []
+        if (copied.length === 0) return
+        const minX = Math.min(...copied.map((entity) => entity.x))
+        const minY = Math.min(...copied.map((entity) => entity.y))
+        copiedEntitiesRef.current = copied.map((entity) => ({
+          ...entity,
+          tags: entity.tags ? [...entity.tags] : undefined,
+        }))
+        copiedBoundsRef.current = { minX, minY }
+        pasteStepRef.current = 0
+        event.preventDefault()
+        return
+      }
+
+      if (withCommand && key === "v") {
+        const copiedEntities = copiedEntitiesRef.current
+        if (copiedEntities.length === 0) return
+        event.preventDefault()
+
+        pasteStepRef.current += 1
+        const offset = pasteStepRef.current
+        const { minX, minY } = copiedBoundsRef.current
+        const created: EditorEntity[] = []
+        let nextEntities = [...entities]
+
+        for (const copied of copiedEntities) {
+          const relativeX = copied.x - minX
+          const relativeY = copied.y - minY
+          const pasteX = minX + relativeX + offset
+          const pasteY = minY + relativeY + offset
+          const copiedIntoZoneId = selectedZoneId ?? copied.zoneId
+          const label = isTableEntity(copied) ? getNextTableLabel(nextEntities) : copied.label
+          const next: EditorEntity = {
+            id: crypto.randomUUID(),
+            type: copied.type,
+            x: pasteX,
+            y: pasteY,
+            w: copied.w,
+            h: copied.h,
+            label,
+            capacity: copied.capacity,
+            sector: copied.sector,
+            tags: copied.tags ? [...copied.tags] : undefined,
+            zoneId: copiedIntoZoneId,
+            targetZoneId: copied.targetZoneId,
+            rotation: copied.rotation ?? 0,
+          }
+          created.push(next)
+          nextEntities = [...nextEntities, next]
+        }
+
+        const createdIds = addEntities(created).map((entity) => entity.id)
+        if (createdIds.length > 0) {
+          handleSelectionChange(createdIds, createdIds[0])
+        }
+        return
+      }
+
+      if (event.key === "Delete" || event.key === "Backspace") {
+        const idsToDelete =
+          selectedEntities.length > 0
+            ? selectedEntities.map((entity) => entity.id)
+            : selectedEntity
+              ? [selectedEntity.id]
+              : []
+        if (idsToDelete.length === 0) return
+        event.preventDefault()
+        handleDeleteSelected(idsToDelete)
+      }
+    }
+
+    window.addEventListener("keydown", onKeyDown)
+    return () => window.removeEventListener("keydown", onKeyDown)
+  }, [
+    addEntities,
+    entities,
+    handleDeleteSelected,
+    handleSelectionChange,
+    redo,
+    selectedId,
+    selectedEntities,
+    selectedEntity,
+    selectedZoneId,
+    visibleEntities,
+    undo,
+  ])
 
   return (
     <div className="editor-page">
       <header className="editor-topbar" role="banner">
-        <div className="editor-topbar__left">
-          <div className="editor-topbar__brand">
-            <span className="editor-topbar__logo" aria-hidden="true">
-              <span className="editor-topbar__logo-dot" />
-            </span>
-            <div className="editor-topbar__brand-copy">
-              <span className="editor-topbar__brand-title">FLOOR PLAN</span>
-              <span className="editor-topbar__brand-subtitle">ADMIN · LAYOUT</span>
-            </div>
-          </div>
-          <div className="editor-topbar__details">
-            <div className="editor-topbar__title-row">
-              <h1 className="editor-topbar__title">Floor plan designer</h1>
-              <span
-                className={`editor-topbar__badge ${dirty ? "editor-topbar__badge--dirty" : "editor-topbar__badge--clean"}`}
-              >
-                {dirty ? "Unsaved" : "Synced"}
+        <div className="editor-topbar__head">
+          <div className="editor-topbar__identity">
+            <div className="editor-topbar__brand">
+              <span className="editor-topbar__logo" aria-hidden="true">
+                <span className="editor-topbar__logo-dot" />
               </span>
+              <div className="editor-topbar__brand-copy">
+                <span className="editor-topbar__brand-title">Floor Plan</span>
+                <span className="editor-topbar__brand-subtitle">Admin Workspace</span>
+              </div>
             </div>
+            <h1 className="editor-topbar__title">Floor plan studio</h1>
             <p className="editor-topbar__subtitle">
               {selectedZone
-                ? `Editing ${selectedZone.name} — adjust seating, portals, and traffic edges before publishing.`
+                ? `Editing zone: ${selectedZone.name}`
                 : "Create a zone to start mapping the dining room."}
             </p>
           </div>
+          <div className="editor-topbar__meta">
+            <span
+              className={`editor-topbar__badge ${dirty ? "editor-topbar__badge--dirty" : "editor-topbar__badge--clean"}`}
+            >
+              {dirty ? "Unsaved changes" : "All changes synced"}
+            </span>
+            <span
+              className={`editor-topbar__live ${isConnected ? "editor-topbar__live--online" : ""}`}
+              role="status"
+              aria-label={isConnected ? "Live updates connected" : "Live updates offline"}
+            >
+              <span className="editor-topbar__live-dot" aria-hidden="true" />
+              {isConnected ? "Live updates" : "Offline mode"}
+            </span>
+            <div className="editor-topbar__time" aria-label="Local time">
+              <span className="editor-topbar__clock">{currentTime}</span>
+              <span className="editor-topbar__clock-label">Local time</span>
+            </div>
+          </div>
         </div>
-        <div className="editor-topbar__right">
-          <div className="editor-topbar__metrics" role="group" aria-label="Layout metrics">
-            <div className="editor-metric">
-              <span className="editor-metric__label">ZONES</span>
-              <span className="editor-metric__value">{allZones.length}</span>
-              <span className="editor-metric__hint">ACTIVE</span>
-            </div>
-            <div className="editor-metric">
-              <span className="editor-metric__label">TABLES</span>
-              <span className="editor-metric__value">{selectedZone ? zoneTables : "—"}</span>
-              <span className="editor-metric__hint">
-                {selectedZone ? `${zonePortals} portals` : "SELECT ZONE"}
-              </span>
-            </div>
-            <div className="editor-metric">
-              <span className="editor-metric__label">GRID</span>
-              <span className="editor-metric__value">{selectedZone ? canvasSizeLabel : "—"}</span>
-              <span className="editor-metric__hint">COLS × ROWS</span>
-            </div>
-          </div>
-          <div className="editor-topbar__time" aria-label="Local time">
-            <span className="editor-topbar__clock">{currentTime}</span>
-            <span className="editor-topbar__clock-label">LOCAL TIME</span>
-          </div>
-          <span
-            className={`editor-topbar__connection ${isConnected ? "editor-topbar__connection--online" : ""}`}
-            role="status"
-            aria-label={isConnected ? "Live updates connected" : "Live updates offline"}
-          />
+
+        <div className="editor-topbar__metrics" role="group" aria-label="Layout metrics">
+          <article className="editor-metric">
+            <span className="editor-metric__label">Zones</span>
+            <span className="editor-metric__value">{allZones.length}</span>
+            <span className="editor-metric__hint">Active zones</span>
+          </article>
+          <article className="editor-metric">
+            <span className="editor-metric__label">Tables</span>
+            <span className="editor-metric__value">{selectedZone ? zoneTables : "—"}</span>
+            <span className="editor-metric__hint">
+              {selectedZone ? "Ready for guests" : "Select zone"}
+            </span>
+          </article>
+          <article className="editor-metric">
+            <span className="editor-metric__label">Portals</span>
+            <span className="editor-metric__value">{selectedZone ? zonePortals : "—"}</span>
+            <span className="editor-metric__hint">
+              {selectedZone ? "Navigation links" : "Select zone"}
+            </span>
+          </article>
+          <article className="editor-metric">
+            <span className="editor-metric__label">Grid</span>
+            <span className="editor-metric__value">{selectedZone ? canvasSizeLabel : "—"}</span>
+            <span className="editor-metric__hint">Columns × rows</span>
+          </article>
         </div>
       </header>
 
@@ -492,7 +770,10 @@ function FloorPlanEditorPage() {
         <ZoneHeader
           zones={allZones}
           selectedZoneId={selectedZoneId}
-          onZoneSelect={setSelectedZoneId}
+          onZoneSelect={(zoneId) => {
+            setSelectedZoneId(zoneId)
+            handleSelectionChange([], null)
+          }}
           onAddZone={handleAddZone}
           onRenameZone={handleRenameZone}
           onDeleteZone={(zoneId) => {
@@ -500,7 +781,14 @@ function FloorPlanEditorPage() {
             if (zone) setDeleteZoneTarget(zone)
           }}
         />
-        <div className="editor-page__body">
+        <div
+          className={[
+            "editor-page__body",
+            isSidebarCollapsed ? "editor-page__body--sidebar-collapsed" : "",
+          ]
+            .filter(Boolean)
+            .join(" ")}
+        >
           {noZones ? (
             <div className="editor-page__empty">
               <p>Please create a zone to start editing the floor plan.</p>
@@ -508,12 +796,26 @@ function FloorPlanEditorPage() {
           ) : (
             <>
               <div className="editor-page__stage">
+                <div className="editor-page__stage-toolbar">
+                  <button
+                    type="button"
+                    className="editor-page__sidebar-toggle"
+                    aria-expanded={!isSidebarCollapsed}
+                    onClick={() => setIsSidebarCollapsed((prev) => !prev)}
+                  >
+                    {isSidebarCollapsed ? "Show side menu" : "Hide side menu"}
+                  </button>
+                </div>
                 <Canvas
                   entities={visibleEntities}
                   selectedId={selectedId}
+                  selectedIds={effectiveSelectedIds}
                   activeTool={activeTool}
                   onEntityMove={(id, x, y) => moveEntity(id, x, y, selectedZoneId ?? undefined)}
-                  onEntitySelect={selectEntity}
+                  onEntitiesMoveByDelta={(ids, dx, dy) =>
+                    moveEntitiesByDelta(ids, dx, dy, selectedZoneId ?? undefined)
+                  }
+                  onSelectionChange={handleSelectionChange}
                   onCanvasClick={handleCanvasClick}
                   onEntityResize={(id, w, h) => updateEntity(id, { w, h })}
                   edgeStyles={edgeStyles}
@@ -521,17 +823,23 @@ function FloorPlanEditorPage() {
                   canvasRows={canvasRows}
                 />
               </div>
-              <PropertiesSidebar
-                entity={selectedEntity}
-                onUpdate={updateEntity}
-                onDelete={removeEntity}
-                zones={allZones}
-                selectedZone={selectedZone}
-                onZoneStyleChange={handleZoneStyleChange}
-                canvasCols={canvasCols}
-                canvasRows={canvasRows}
-                onCanvasSizeChange={handleCanvasSizeChange}
-              />
+              {!isSidebarCollapsed && (
+                <PropertiesSidebar
+                  entity={selectedEntity}
+                  zoneEntities={zoneEntities}
+                  onUpdate={updateEntity}
+                  onMove={(id, x, y) => moveEntity(id, x, y, selectedZoneId ?? undefined)}
+                  onDelete={handleDeleteEntity}
+                  onDuplicate={handleDuplicateEntity}
+                  onToolSelect={handleSidebarToolSelect}
+                  zones={allZones}
+                  selectedZone={selectedZone}
+                  onZoneStyleChange={handleZoneStyleChange}
+                  canvasCols={canvasCols}
+                  canvasRows={canvasRows}
+                  onCanvasSizeChange={handleCanvasSizeChange}
+                />
+              )}
             </>
           )}
         </div>

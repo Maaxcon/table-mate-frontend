@@ -1,7 +1,7 @@
 .kanban__col--completed {
   --col-accent: var(--k-completed);
   flex: 0 0 var(--kanban-right-completed-height);
-  max-height: none;
+  max-height: var(--kanban-right-completed-height);
   min-height: 0;
 }
 
