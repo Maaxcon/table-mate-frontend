@@ -1,4 +1,5 @@
 import {
+  memo,
   useCallback,
   useEffect,
   useMemo,
@@ -20,42 +21,56 @@ import "./FloorPlanView.css"
 
 export type FloorVisualStatus = "free" | "reserved" | "occupied"
 
+/** Identity carried by each layout table, allowing consumers to join with live data. */
 export interface FloorPlanTableRef {
   id: string
   publicNumber: string
   capacity: number | null
 }
 
-interface FloorPlanViewProps {
+export interface FloorPlanViewProps {
+  /** The published layout payload (LayoutVersion.layout_json / Layout.payload). */
   payload: LayoutPayload | null | undefined
+  /** When set, only entities belonging to this zone are shown. */
   selectedZoneId?: string | null
+  /** public_id of the currently selected table. */
   selectedId?: string | null
+  /** Per-zone edge styles override (computed externally from zone data). */
   edgeStyles?: Record<string, "dashed" | "solid">
+  /** Per-zone canvas dimensions in grid units. Falls back to defaults. */
   canvasCols?: number
   canvasRows?: number
   onTableSelect?: (table: FloorPlanTableRef) => void
+  /** Resolve a table's visual status (defaults to "free"). */
   tableStatus?: (table: FloorPlanTableRef) => FloorVisualStatus
+  /** Extra content rendered inside a table (badges, guest info, timers, ...). */
   renderTableContent?: (table: FloorPlanTableRef) => ReactNode
+  /** Navigate to a portal's target zone on click (makes portals interactive links). */
   onPortalNavigate?: (targetZoneId: string) => void
+  /** Full per-entity override — replaces fp-block rendering entirely. */
+  renderEntity?: (
+    entity: EditorEntity,
+    geometry: { left: number; top: number; width: number; height: number; rotation: number },
+    ctx: { selected: boolean; index: number },
+  ) => ReactNode
+  /** Fit/center on this sub-rectangle instead of the whole canvas (GRID units). */
+  frame?: { x: number; y: number; width: number; height: number }
+  /** Shown when there is no published layout to render. */
   emptyMessage?: string
+  /** Clamp auto-fit scale (default min 0.3, unbounded max). */
   minScale?: number
   maxScale?: number
+  /** Enable user-driven zoom (wheel/pinch) on top of the auto-fit scale. */
   enableZoom?: boolean
+  /** Enable click-drag/touch-drag panning. */
   enablePan?: boolean
 }
 
 const px = (v: number) => v * GRID
+const MIN_INTERACTIVE_ZOOM = 0.3
+const MAX_INTERACTIVE_ZOOM = 4
 
-/**
- * Read-only renderer that draws a published floor layout exactly as the admin
- * editor does: every entity at its real position/size/shape, plus obstacles,
- * thresholds and portals — uniformly scaled to fit the container. Shared by the
- * customer and waiter floor views so all three stay visually identical.
- */
-const MIN_ZOOM = 0.3
-const MAX_ZOOM = 4
-
-export function FloorPlanView({
+function FloorPlanViewImpl({
   payload,
   selectedZoneId = null,
   selectedId = null,
@@ -66,6 +81,8 @@ export function FloorPlanView({
   tableStatus,
   renderTableContent,
   onPortalNavigate,
+  renderEntity: renderEntityProp,
+  frame,
   emptyMessage = "No floor plan published yet.",
   minScale: minScaleProp,
   maxScale: maxScaleProp,
@@ -81,21 +98,42 @@ export function FloorPlanView({
   const pinchStartRef = useRef<{ dist: number; zoom: number } | null>(null)
   const zoomRef = useRef(zoom)
   const panOffsetRef = useRef(panOffset)
+
   useEffect(() => {
     zoomRef.current = zoom
   }, [zoom])
+
   useEffect(() => {
     panOffsetRef.current = panOffset
   }, [panOffset])
 
-  const clampZoom = useCallback((z: number) => Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, z)), [])
+  useEffect(() => {
+    if (!enableZoom) {
+      pinchStartRef.current = null
+    }
+  }, [enableZoom])
+
+  useEffect(() => {
+    if (!enablePan) {
+      isPanning.current = false
+    }
+  }, [enablePan])
+
+  const clampZoom = useCallback(
+    (value: number) => Math.min(MAX_INTERACTIVE_ZOOM, Math.max(MIN_INTERACTIVE_ZOOM, value)),
+    [],
+  )
 
   const canvasCols = canvasColsProp ?? DEFAULT_CANVAS_COLS
   const canvasRows = canvasRowsProp ?? DEFAULT_CANVAS_ROWS
   const canvasPxW = canvasCols * GRID
   const canvasPxH = canvasRows * GRID
+  const framePxX = (frame?.x ?? 0) * GRID
+  const framePxY = (frame?.y ?? 0) * GRID
+  const framePxW = (frame?.width ?? canvasCols) * GRID
+  const framePxH = (frame?.height ?? canvasRows) * GRID
   const { scale, width: containerWidth, height: containerHeight } = viewBox
-  const aspectRatio = canvasPxH === 0 ? 1 : canvasPxW / canvasPxH
+  const aspectRatio = framePxH === 0 ? 1 : framePxW / framePxH
   const containerStyle = useMemo<CSSProperties>(
     () => ({ aspectRatio: `${aspectRatio}` }),
     [aspectRatio],
@@ -108,25 +146,26 @@ export function FloorPlanView({
     const maxScale = maxScaleProp ?? Number.POSITIVE_INFINITY
     const update = () => {
       const availableW = el.clientWidth
-      const availableH = el.clientHeight || availableW
-      const neededW = canvasPxW + 2 * GRID
-      const neededH = canvasPxH + 2 * GRID
+      const availableH = el.clientHeight
+      if (availableW === 0 || availableH === 0) return
+      const neededW = framePxW + 2 * GRID
+      const neededH = framePxH + 2 * GRID
       const fitted = Math.min(availableW / neededW, availableH / neededH)
-      const scale = Math.min(maxScale, Math.max(fitted, minScale))
-      setViewBox({ scale, width: availableW, height: availableH })
+      const nextScale = Math.min(maxScale, Math.max(fitted, minScale))
+      setViewBox({ scale: nextScale, width: availableW, height: availableH })
     }
     update()
     const observer = new ResizeObserver(update)
     observer.observe(el)
     return () => observer.disconnect()
-  }, [canvasPxW, canvasPxH, minScaleProp, maxScaleProp])
+  }, [framePxW, framePxH, minScaleProp, maxScaleProp])
 
   const handleWheel = useCallback(
     (e: WheelEvent) => {
       if (!enableZoom) return
       if (!e.ctrlKey && !e.metaKey) return
       e.preventDefault()
-      setZoom((z) => clampZoom(z * (1 - e.deltaY * 0.01)))
+      setZoom((value) => clampZoom(value * (1 - e.deltaY * 0.01)))
     },
     [enableZoom, clampZoom],
   )
@@ -261,12 +300,17 @@ export function FloorPlanView({
     [entities, selectedZoneId],
   )
 
-  const totalScale = scale * zoom
-  const pad = GRID * totalScale
-  const scaledW = canvasPxW * totalScale + 2 * pad
-  const scaledH = canvasPxH * totalScale + 2 * pad
-  const offsetX = Math.max((containerWidth - scaledW) / 2, 0)
-  const offsetY = Math.max((containerHeight - scaledH) / 2, 0)
+  const geometries = useMemo(
+    () =>
+      visible.map((e) => ({
+        left: px(e.x),
+        top: px(e.y),
+        width: px(e.w),
+        height: px(e.h),
+        rotation: e.rotation ?? 0,
+      })),
+    [visible],
+  )
 
   if (!payload || entities.length === 0) {
     return (
@@ -276,61 +320,82 @@ export function FloorPlanView({
     )
   }
 
+  const interactiveZoom = enableZoom ? zoom : 1
+  const interactivePan = enablePan ? panOffset : { x: 0, y: 0 }
+
+  const totalScale = scale * interactiveZoom
+  const pad = GRID * totalScale
+  const scaledW = framePxW * totalScale + 2 * pad
+  const scaledH = framePxH * totalScale + 2 * pad
+  const offsetX = Math.max((containerWidth - scaledW) / 2, 0)
+  const offsetY = Math.max((containerHeight - scaledH) / 2, 0)
+
+  const containerClass = ["fp-view", enablePan ? "fp-view--pan-enabled" : ""]
+    .filter(Boolean)
+    .join(" ")
+
   const stageStyle: CSSProperties = {
     position: "absolute",
-    top: pad + offsetY + panOffset.y,
-    left: pad + offsetX + panOffset.x,
+    top: pad + offsetY - framePxY * totalScale + interactivePan.y,
+    left: pad + offsetX - framePxX * totalScale + interactivePan.x,
     width: canvasPxW,
     height: canvasPxH,
     transform: `scale(${totalScale})`,
     transformOrigin: "top left",
   }
 
-  const containerClass = ["fp-view", enablePan ? "fp-view--pan-enabled" : ""]
-    .filter(Boolean)
-    .join(" ")
-
   return (
     <div className={containerClass} ref={containerRef} style={containerStyle}>
       <div
         style={{
+          position: "absolute",
+          top: offsetY,
+          left: offsetX,
           width: scaledW,
           height: scaledH,
-          marginLeft: offsetX,
-          marginRight: offsetX,
-          marginTop: offsetY,
-          marginBottom: offsetY,
-          flexShrink: 0,
           pointerEvents: "none",
           visibility: "hidden",
         }}
       />
       <div className="fp-view__stage" style={stageStyle}>
-        {visible.map((e) =>
-          renderEntity(e, {
+        {visible.map((entity, index) => {
+          if (renderEntityProp) {
+            const geometry = geometries[index]
+            const id = entity.serverId ?? entity.id
+            const selected = selectedId != null && selectedId === id
+            return renderEntityProp(entity, geometry, { selected, index })
+          }
+          return defaultRenderEntity(entity, {
             selectedId,
             onTableSelect,
             tableStatus,
             renderTableContent,
             onPortalNavigate,
-          }),
+          })
+        })}
+        {!renderEntityProp && (
+          <>
+            <div
+              className={`fp-view__edge fp-view__edge--top${edgeStyles.top === "solid" ? " fp-view__edge--solid" : ""}`}
+            />
+            <div
+              className={`fp-view__edge fp-view__edge--right${edgeStyles.right === "solid" ? " fp-view__edge--solid" : ""}`}
+            />
+            <div
+              className={`fp-view__edge fp-view__edge--bottom${edgeStyles.bottom === "solid" ? " fp-view__edge--solid" : ""}`}
+            />
+            <div
+              className={`fp-view__edge fp-view__edge--left${edgeStyles.left === "solid" ? " fp-view__edge--solid" : ""}`}
+            />
+          </>
         )}
-        <div
-          className={`fp-view__edge fp-view__edge--top${edgeStyles.top === "solid" ? " fp-view__edge--solid" : ""}`}
-        />
-        <div
-          className={`fp-view__edge fp-view__edge--right${edgeStyles.right === "solid" ? " fp-view__edge--solid" : ""}`}
-        />
-        <div
-          className={`fp-view__edge fp-view__edge--bottom${edgeStyles.bottom === "solid" ? " fp-view__edge--solid" : ""}`}
-        />
-        <div
-          className={`fp-view__edge fp-view__edge--left${edgeStyles.left === "solid" ? " fp-view__edge--solid" : ""}`}
-        />
       </div>
     </div>
   )
 }
+
+// Memoized so consumers can skip re-rendering large floor plans unless props change.
+export const FloorPlanView = memo(FloorPlanViewImpl)
 
 interface RenderOpts {
   selectedId: string | null
@@ -340,7 +405,7 @@ interface RenderOpts {
   onPortalNavigate?: (targetZoneId: string) => void
 }
 
-function renderEntity(e: EditorEntity, opts: RenderOpts): ReactNode {
+function defaultRenderEntity(e: EditorEntity, opts: RenderOpts): ReactNode {
   const style = {
     left: px(e.x),
     top: px(e.y),
@@ -405,7 +470,6 @@ function renderEntity(e: EditorEntity, opts: RenderOpts): ReactNode {
     )
   }
 
-  // portal — a link to another zone when it has a target and a navigate handler
   const canNavigate = Boolean(opts.onPortalNavigate && e.targetZoneId)
   if (canNavigate) {
     return (
@@ -426,6 +490,7 @@ function renderEntity(e: EditorEntity, opts: RenderOpts): ReactNode {
       </button>
     )
   }
+
   return (
     <div key={e.id} className="fp-block fp-block--portal" style={style}>
       <span style={uprightContentStyle(e.rotation)}>

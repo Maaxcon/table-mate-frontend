@@ -1,5 +1,6 @@
 import { useEffect, useRef, useCallback, useState } from "react"
 import { env } from "@/config/env"
+import { useAppSelector } from "@/store/hooks"
 
 export interface FloorTableStatusEvent {
   event_name: "HALL_TABLE_STATUS_CHANGED"
@@ -13,6 +14,7 @@ export interface FloorNewReservationEvent {
   reservation_id: string
   table_id: string
   start_at: string
+  end_at: string
   occurred_at: string
 }
 
@@ -69,6 +71,26 @@ interface UseFloorSubscriptionOptions {
   onZoneDeleted?: (event: FloorZoneDeletedEvent) => void
   onClose?: () => void
   onError?: (error: Event) => void
+  // Customers carry no restaurant in their token, so the restaurant they're
+  // viewing is passed explicitly to scope the floor stream.
+  restaurantId?: string | null
+}
+
+// Close codes the server uses to reject auth/scope — reconnecting would just loop.
+const NO_RETRY_CLOSE_CODES = new Set([4001, 4003])
+
+// WS diagnostics, dev-only so production consoles stay quiet.
+const wsLog: (...args: unknown[]) => void = import.meta.env.DEV
+  ? (...args) => console.debug("[FloorWS]", ...args)
+  : () => {}
+
+// Detach handlers before a deliberate close so the old socket's onclose can't
+// fire after a replacement is installed (it would null the live socket's ref,
+// leak it in the hall group, and let a reconnect double-deliver every event).
+function closeSilently(ws: WebSocket, reason: string) {
+  ws.onerror = null
+  ws.onclose = null
+  ws.close(1000, reason)
 }
 
 export function useFloorSubscription({
@@ -81,8 +103,9 @@ export function useFloorSubscription({
   onZoneDeleted,
   onClose,
   onError,
-  restaurantPublicId,
-}: UseFloorSubscriptionOptions & { restaurantPublicId?: string }) {
+  restaurantId,
+}: UseFloorSubscriptionOptions) {
+  const accessToken = useAppSelector((s) => s.auth.accessToken)
   const [isConnected, setIsConnected] = useState(false)
   const wsRef = useRef<WebSocket | null>(null)
   const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -125,19 +148,24 @@ export function useFloorSubscription({
   ])
 
   const connect = useCallback(() => {
-    if (env.wsUrl === "Not configured" || !restaurantPublicId) return
+    if (env.wsUrl === "Not configured" || !restaurantId) return
 
     if (wsRef.current) {
-      wsRef.current.close(1000, "Reconnecting")
+      closeSilently(wsRef.current, "Reconnecting")
       wsRef.current = null
     }
 
-    const ws = new WebSocket(`${env.wsUrl}/floor/?restaurant_id=${restaurantPublicId}`)
+    // The floor stream is public: anonymous guests connect with just the
+    // restaurant param, a token only adds the (optional) identity/claim.
+    const params = new URLSearchParams()
+    if (accessToken) params.set("token", accessToken)
+    if (restaurantId) params.set("restaurant", restaurantId)
+    const ws = new WebSocket(`${env.wsUrl}/floor/?${params}`)
     wsRef.current = ws
 
     ws.onopen = () => {
       if (!mountedRef.current) return
-      console.debug("[FloorWS] Connected")
+      wsLog("Connected")
       setIsConnected(true)
     }
 
@@ -160,28 +188,30 @@ export function useFloorSubscription({
           callbacksRef.current.onZoneDeleted?.(data as FloorZoneDeletedEvent)
         }
       } catch (err) {
-        console.warn("[FloorWS] Failed to parse message:", err)
+        wsLog("Failed to parse message:", err)
       }
     }
 
     ws.onerror = (error) => {
-      console.error("[FloorWS] Error:", error)
+      wsLog("Error:", error)
       setIsConnected(false)
       callbacksRef.current.onError?.(error)
     }
 
     ws.onclose = (event) => {
-      console.debug("[FloorWS] Disconnected:", event.code, event.reason)
-      wsRef.current = null
+      wsLog("Disconnected:", event.code, event.reason)
+      if (wsRef.current === ws) wsRef.current = null
       if (!mountedRef.current) return
       setIsConnected(false)
       callbacksRef.current.onClose?.()
 
-      if (event.code !== 1000) {
+      // Retry transient drops (guests included — the stream is public), but
+      // never loop on auth/scope rejections.
+      if (event.code !== 1000 && !NO_RETRY_CLOSE_CODES.has(event.code)) {
         reconnectTimeoutRef.current = setTimeout(() => connectRef.current?.(), 3000)
       }
     }
-  }, [restaurantPublicId])
+  }, [accessToken, restaurantId])
 
   useEffect(() => {
     connectRef.current = connect
@@ -194,7 +224,7 @@ export function useFloorSubscription({
       mountedRef.current = false
       if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current)
       if (wsRef.current) {
-        wsRef.current.close(1000, "Component unmounting")
+        closeSilently(wsRef.current, "Component unmounting")
         wsRef.current = null
       }
     }
@@ -203,8 +233,9 @@ export function useFloorSubscription({
   const disconnect = useCallback(() => {
     if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current)
     if (wsRef.current) {
-      wsRef.current.close(1000, "Manual disconnect")
+      closeSilently(wsRef.current, "Manual disconnect")
       wsRef.current = null
+      setIsConnected(false)
     }
   }, [])
 

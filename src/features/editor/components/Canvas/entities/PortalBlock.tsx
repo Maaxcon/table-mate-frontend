@@ -8,7 +8,7 @@ interface PortalBlockProps {
   entity: EditorEntity
   selected: boolean
   onMouseDown: (e: React.MouseEvent, id: string) => void
-  onClick: (id: string) => void
+  onClick: (e: React.MouseEvent | React.KeyboardEvent, id: string) => void
   onResize?: (id: string, w: number, h: number) => void
   onMove?: (id: string, x: number, y: number) => void
   canvasScale?: number
@@ -48,13 +48,16 @@ export function PortalBlock({
       tabIndex={0}
       aria-label={`Portal${entity.label ? ` to ${entity.label}` : ""}`}
       onMouseDown={(e) => onMouseDown(e, entity.id)}
-      onClick={() => onClick(entity.id)}
+      onClick={(e) => onClick(e, entity.id)}
       onKeyDown={(e) => {
-        if (e.key === "Enter") onClick(entity.id)
+        if (e.key === "Enter") onClick(e, entity.id)
       }}
     >
       <span style={uprightContentStyle(entity.rotation)}>
-        <span className="editor-block__zone-label">{entity.label ?? "Portal"}</span>
+        <span className="editor-block__portal-label">{entity.label ?? "Portal"}</span>
+        <span className="editor-block__portal-arrow" aria-hidden="true">
+          ↔
+        </span>
       </span>
       {selected && onResize && onMove && (
         <ResizeHandles

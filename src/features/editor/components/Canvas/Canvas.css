@@ -4,6 +4,8 @@
   min-height: 0;
   position: relative;
   overflow: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   padding: clamp(16px, 3vw, 48px);
   box-sizing: border-box;
   border-radius: 24px;
@@ -12,6 +14,27 @@
     inset 0 0 0 1px color-mix(in srgb, var(--color-bg-page) 70%, transparent),
     inset 0 -30px 60px color-mix(in srgb, var(--color-bg-secondary) 40%, transparent);
   height: 100%;
+}
+
+@media (max-width: 1024px) {
+  .editor-canvas__container {
+    padding: 12px;
+    border-radius: 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .editor-canvas__container {
+    padding: 10px;
+    border-radius: 18px;
+  }
+}
+
+@media (max-width: 520px) {
+  .editor-canvas__container {
+    padding: 6px;
+    border-radius: 12px;
+  }
 }
 
 .editor-canvas {
@@ -27,6 +50,35 @@
   left: 0;
   transform-origin: 0 0;
   background: transparent;
+}
+
+.editor-canvas__marquee {
+  position: absolute;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 70%, transparent);
+  background: color-mix(in srgb, var(--color-primary) 16%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-bg-surface) 40%, transparent);
+  pointer-events: none;
+  z-index: 12;
+}
+
+.editor-canvas__snap-line {
+  position: absolute;
+  pointer-events: none;
+  z-index: 11;
+  background: color-mix(in srgb, var(--color-primary) 82%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-bg-surface) 38%, transparent);
+}
+
+.editor-canvas__snap-line--vertical {
+  top: 0;
+  bottom: 0;
+  width: 1px;
+}
+
+.editor-canvas__snap-line--horizontal {
+  left: 0;
+  right: 0;
+  height: 1px;
 }
 
 .editor-canvas__edge {

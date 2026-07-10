@@ -1,13 +1,25 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
+import { useFocusTrap } from "@/hooks/useFocusTrap"
 import type { WorkingHoursDay } from "./api"
 import { fetchAvailableSlots, fetchRestaurantSettings, modifyReservation } from "./api"
+import { DurationInput } from "./DurationInput"
+import { GuestStepper } from "./GuestStepper"
+import { SlotSummary } from "./SlotSummary"
+import { bookStrings } from "./strings"
+import { TimeSlotGrid } from "./TimeSlotGrid"
 import {
   DAY_NAMES,
+  formatTimeInTz,
   generateTimeSlots,
+  getDurationError,
   localDateKey,
+  maxDurationBeforeClose,
   MIN_DURATION,
   minutesToTime,
+  openingDayOfInstant,
+  slotDateKey,
   timeToMinutes,
+  zonedWallTimeToUtcIso,
 } from "./utils"
 import "./BookModal.css"
 
@@ -15,62 +27,109 @@ interface RescheduleModalProps {
   publicId: string
   tableNumber: string
   tablePublicId: string
-  currentDate: string
   currentStart: string
   currentEnd: string
   currentGuests: number
   tableCapacity: number
   restaurantId?: string
   workingHours: Record<string, WorkingHoursDay> | null
+  timeZone?: string | null
   excludeReservationIds?: string[]
-  prolongOnly?: boolean
   endTimeOnly?: boolean
   onClose: () => void
   onSuccess: () => void
 }
 
-function msToTime(ms: number): string {
-  const d = new Date(ms)
-  const h = d.getHours()
-  const m = d.getMinutes()
-  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`
+// Loads restaurant settings when the caller doesn't supply them (e.g. the
+// cabinet passes workingHours=null), then renders the form only once the
+// timezone is known — so the form's tz-derived initial state isn't first
+// computed in the browser's zone and then stuck.
+export function RescheduleModal(props: RescheduleModalProps) {
+  const { workingHours, timeZone, restaurantId, onClose } = props
+  const [fetched, setFetched] = useState<{
+    workingHours: Record<string, WorkingHoursDay> | null
+    timeZone: string | null
+  } | null>(null)
+
+  const needsSettings = !workingHours && !!restaurantId
+
+  useEffect(() => {
+    if (!needsSettings || !restaurantId) return
+    let cancelled = false
+    fetchRestaurantSettings(restaurantId)
+      .then((s) => {
+        if (!cancelled) setFetched({ workingHours: s.working_hours, timeZone: s.timezone })
+      })
+      .catch(() => {
+        if (!cancelled) setFetched({ workingHours: null, timeZone: null })
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [needsSettings, restaurantId])
+
+  if (needsSettings && !fetched) {
+    return (
+      <div
+        className="book-overlay"
+        role="presentation"
+        onClick={(e) => {
+          if (e.target === e.currentTarget) onClose()
+        }}
+      >
+        <div className="book-modal" role="dialog" aria-modal="true" aria-busy="true">
+          <p className="book-modal__empty">{bookStrings.loading}</p>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <RescheduleForm
+      {...props}
+      workingHours={workingHours ?? fetched?.workingHours ?? null}
+      timeZone={timeZone ?? fetched?.timeZone ?? null}
+    />
+  )
 }
 
-export function RescheduleModal({
+// Inner form. By the time it mounts, workingHours/timeZone are resolved (from
+// props or the wrapper's fetch), so its tz-derived initial state — snapped start
+// time and duration — is computed in the correct zone.
+function RescheduleForm({
   publicId,
   tableNumber,
   tablePublicId,
-  currentDate,
   currentStart,
   currentEnd,
   currentGuests,
   tableCapacity,
-  restaurantId,
   workingHours,
+  timeZone,
   excludeReservationIds,
-  prolongOnly = false,
   endTimeOnly = false,
   onClose,
   onSuccess,
 }: RescheduleModalProps) {
-  const [internalWorkingHours, setInternalWorkingHours] = useState<Record<
-    string,
-    WorkingHoursDay
-  > | null>(null)
+  const effectiveTimeZone = timeZone ?? null
 
-  useEffect(() => {
-    if (!workingHours && restaurantId) {
-      fetchRestaurantSettings(restaurantId)
-        .then((settings) => setInternalWorkingHours(settings.working_hours))
-        .catch(() => setInternalWorkingHours(null))
-    }
-  }, [workingHours, restaurantId])
+  const currentStartTime = formatTimeInTz(currentStart, effectiveTimeZone)
+  // Derive duration from the actual instants, not the wall-clock HH:MM strings,
+  // so a booking that crosses midnight (e.g. 23:00–01:00) isn't computed as a
+  // negative span and clamped to the minimum.
+  const currentDurationMinutes = Math.round(
+    (new Date(currentEnd).getTime() - new Date(currentStart).getTime()) / 60000,
+  )
 
-  const currentStartTime = msToTime(new Date(currentStart).getTime())
-  const currentEndTime = msToTime(new Date(currentEnd).getTime())
-  const currentDurationMinutes = timeToMinutes(currentEndTime) - timeToMinutes(currentStartTime)
-
-  const parsedDate = useMemo(() => new Date(currentDate), [currentDate])
+  // The booking's OPENING day in the venue's zone — not the device-local date
+  // of the instant. For a post-midnight slot on an overnight day the instant's
+  // calendar day is already the day after the opening day, and slotDateKey
+  // advances post-midnight slots itself; deriving the opening day here keeps
+  // that advance from happening twice (which rewrote the booking +24h).
+  const parsedDate = useMemo(
+    () => openingDayOfInstant(currentStart, effectiveTimeZone, workingHours),
+    [currentStart, effectiveTimeZone, workingHours],
+  )
 
   const initialSnappedTime = useMemo(() => {
     const mins = timeToMinutes(currentStartTime)
@@ -79,7 +138,7 @@ export function RescheduleModal({
   }, [currentStartTime])
 
   const [selectedTime, setSelectedTime] = useState<string | null>(
-    prolongOnly || endTimeOnly ? currentStartTime : initialSnappedTime,
+    endTimeOnly ? currentStartTime : initialSnappedTime,
   )
   const [durationMinutes, setDurationMinutes] = useState(
     Math.max(MIN_DURATION, currentDurationMinutes),
@@ -104,52 +163,58 @@ export function RescheduleModal({
   }, [tablePublicId, dateStr, publicId, excludeReservationIds])
 
   const dayName = DAY_NAMES[parsedDate.getDay()]
-  const dayConfig = workingHours?.[dayName] || internalWorkingHours?.[dayName]
+  const dayConfig = workingHours?.[dayName]
+
+  const generatedTimeSlots = useMemo(
+    () => generateTimeSlots(parsedDate, dayConfig, effectiveTimeZone),
+    [parsedDate, dayConfig, effectiveTimeZone],
+  )
 
   const timeSlots = useMemo(() => {
+    if (availableSlots && generatedTimeSlots.length > 0) return generatedTimeSlots
     if (availableSlots) return availableSlots
-    return generateTimeSlots(parsedDate, dayConfig)
-  }, [availableSlots, parsedDate, dayConfig])
+    return generatedTimeSlots
+  }, [availableSlots, generatedTimeSlots])
+
+  const disabledTimeSlots = useMemo(() => {
+    if (!availableSlots) return []
+    const available = new Set(availableSlots)
+    return timeSlots.filter((slot) => !available.has(slot))
+  }, [availableSlots, timeSlots])
+
+  // Auto-cap the length to what fits before close (same behavior as BookModal):
+  // a late slot with the current 2h booking shrinks to the remaining window
+  // instead of tripping a validation error the guest has to resolve by hand.
+  const maxDuration = useMemo(
+    () => maxDurationBeforeClose(endTimeOnly ? currentStartTime : selectedTime, dayConfig),
+    [endTimeOnly, currentStartTime, selectedTime, dayConfig],
+  )
+  const effectiveDuration = Number.isFinite(maxDuration)
+    ? Math.min(durationMinutes, maxDuration)
+    : durationMinutes
 
   const endAt = useMemo(() => {
     if (!selectedTime) return ""
-    return minutesToTime(timeToMinutes(selectedTime) + durationMinutes)
-  }, [selectedTime, durationMinutes])
+    // When only the end moves (active booking), the start stays at its real,
+    // unsnapped value — anchor the end there, not on the snapped selectedTime.
+    const baseMins = endTimeOnly ? timeToMinutes(currentStartTime) : timeToMinutes(selectedTime)
+    return minutesToTime(baseMins + effectiveDuration)
+  }, [selectedTime, effectiveDuration, endTimeOnly, currentStartTime])
 
   const durationError = useMemo(() => {
-    if (!selectedTime || !durationMinutes) return null
+    if (!selectedTime || !effectiveDuration) return null
 
-    const endMins = timeToMinutes(selectedTime) + durationMinutes
+    const baseMins = endTimeOnly ? timeToMinutes(currentStartTime) : timeToMinutes(selectedTime)
+    const endMins = baseMins + effectiveDuration
+    const windowStartMins = timeToMinutes(selectedTime)
 
-    if (dayConfig) {
-      const closeMins = timeToMinutes(dayConfig.close)
-      const openMins = timeToMinutes(dayConfig.open)
-      const overnight = closeMins <= openMins
-      if (!overnight && endMins > closeMins) {
-        return `End time exceeds closing time (${dayConfig.close})`
-      }
-    }
-
-    if (availableSlots && !endTimeOnly) {
-      const startMins = prolongOnly ? timeToMinutes(currentEndTime) : timeToMinutes(selectedTime)
-      for (let m = startMins; m < endMins; m += 30) {
-        const slotTime = minutesToTime(m)
-        if (!availableSlots.includes(slotTime)) {
-          return "The selected duration is not fully available at this time. Choose a shorter duration or different start time."
-        }
-      }
-    }
-
-    return null
-  }, [
-    selectedTime,
-    durationMinutes,
-    dayConfig,
-    availableSlots,
-    prolongOnly,
-    currentEndTime,
-    endTimeOnly,
-  ])
+    return getDurationError(
+      windowStartMins,
+      endMins,
+      dayConfig,
+      endTimeOnly ? null : availableSlots,
+    )
+  }, [selectedTime, effectiveDuration, dayConfig, availableSlots, currentStartTime, endTimeOnly])
 
   const handleSave = useCallback(async () => {
     if (!selectedTime) return
@@ -157,10 +222,20 @@ export function RescheduleModal({
     setSubmitting(true)
 
     try {
-      const startDt = new Date(`${dateStr}T${selectedTime}:00`)
-      const endDt = new Date(startDt.getTime() + durationMinutes * 60000)
-      const startISO = startDt.toISOString()
-      const endISO = endDt.toISOString()
+      // A slot after midnight on an overnight day belongs to the next calendar
+      // day (the backend keys it under the opening day), so resolve its real date.
+      const slotKey = slotDateKey(parsedDate, selectedTime, dayConfig)
+      // Interpret the picked slot in the restaurant timezone, not the browser's.
+      const startISO = effectiveTimeZone
+        ? zonedWallTimeToUtcIso(slotKey, selectedTime, effectiveTimeZone)
+        : new Date(`${slotKey}T${selectedTime}:00`).toISOString()
+      // Extending an active booking only moves the end: anchor it to the real,
+      // unsnapped start so the stored duration is exactly what the guest picked
+      // (selectedTime is the start snapped to 30 min and would skew it by ±15m).
+      const endBaseMs = endTimeOnly
+        ? new Date(currentStart).getTime()
+        : new Date(startISO).getTime()
+      const endISO = new Date(endBaseMs + effectiveDuration * 60000).toISOString()
 
       if (endTimeOnly) {
         await modifyReservation(publicId, { end_at: endISO })
@@ -174,227 +249,184 @@ export function RescheduleModal({
 
       setSuccess(true)
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to modify reservation")
+      setError(err instanceof Error ? err.message : bookStrings.reschedule.modifyFailed)
     } finally {
       setSubmitting(false)
     }
-  }, [selectedTime, dateStr, durationMinutes, guestCount, publicId, endTimeOnly])
+  }, [
+    selectedTime,
+    parsedDate,
+    dayConfig,
+    effectiveDuration,
+    guestCount,
+    publicId,
+    endTimeOnly,
+    currentStart,
+    effectiveTimeZone,
+  ])
 
-  if (success) {
-    return (
-      <div
-        className="book-overlay"
-        onClick={(e) => {
-          if (e.target === e.currentTarget) {
-            onSuccess()
-            onClose()
-          }
-        }}
-        role="button"
-        tabIndex={0}
-        onKeyDown={(e) => {
-          if (e.key === "Escape") {
-            onSuccess()
-            onClose()
-          }
-        }}
-      >
-        <div className="book-modal">
-          <div className="book-modal__header">
-            <h2 className="book-modal__title">RESERVATION UPDATED</h2>
-            <button
-              className="book-modal__close"
-              onClick={() => {
-                onSuccess()
-                onClose()
-              }}
-              type="button"
-            >
-              &times;
-            </button>
-          </div>
-          <div className="book-modal__body">
-            <div className="book-modal__success-icon">&#10003;</div>
-            <p className="book-modal__success-text">
-              Your reservation at Table {tableNumber} has been updated.
-            </p>
-          </div>
-          <div className="book-modal__actions">
-            <button
-              className="book-modal__btn book-modal__btn--confirm"
-              onClick={() => {
-                onSuccess()
-                onClose()
-              }}
-              type="button"
-            >
-              OK
-            </button>
-          </div>
-        </div>
-      </div>
-    )
-  }
+  const handleDismiss = useCallback(() => {
+    if (success) onSuccess()
+    onClose()
+  }, [success, onSuccess, onClose])
+
+  const dialogRef = useFocusTrap<HTMLDivElement>({ onEscape: handleDismiss })
+
+  const formattedDate = parsedDate.toLocaleDateString("uk-UA", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  })
 
   return (
     <div
       className="book-overlay"
+      role="presentation"
       onClick={(e) => {
-        if (e.target === e.currentTarget) onClose()
-      }}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => {
-        if (e.key === "Escape") onClose()
+        if (e.target === e.currentTarget) handleDismiss()
       }}
     >
-      <div className="book-modal">
-        <div className="book-modal__header">
-          <h2 className="book-modal__title">RESCHEDULE TABLE {tableNumber}</h2>
-          <button className="book-modal__close" onClick={onClose} type="button">
-            &times;
-          </button>
-        </div>
-
-        <div className="book-modal__body">
-          <section className="book-modal__section">
-            <h3 className="book-modal__section-title">DATE</h3>
-            <p className="book-modal__empty">
-              {parsedDate.toLocaleDateString("en-US", {
-                weekday: "short",
-                month: "short",
-                day: "numeric",
-                year: "numeric",
-              })}
-            </p>
-          </section>
-
-          <section className="book-modal__section">
-            <h3 className="book-modal__section-title">TIME</h3>
-            {prolongOnly || endTimeOnly ? (
-              <p className="book-modal__empty">Starting from {currentStartTime}</p>
-            ) : slotsLoading ? (
-              <p className="book-modal__empty">Loading available slots…</p>
-            ) : !dayConfig ? (
-              <p className="book-modal__empty">Restaurant closed on this day</p>
-            ) : timeSlots.length === 0 ? (
-              <p className="book-modal__empty">No available slots</p>
-            ) : (
-              <div className="book-modal__times">
-                {timeSlots.map((t) => (
-                  <button
-                    key={t}
-                    type="button"
-                    className={[
-                      "book-modal__time-btn",
-                      selectedTime === t ? "book-modal__time-btn--active" : "",
-                    ]
-                      .filter(Boolean)
-                      .join(" ")}
-                    onClick={() => setSelectedTime(t)}
-                  >
-                    {t}
-                  </button>
-                ))}
-              </div>
-            )}
-          </section>
-
-          <section className="book-modal__section">
-            <h3 className="book-modal__section-title">DURATION (minutes)</h3>
-            <div className="book-modal__duration-input">
-              <input
-                type="number"
-                className="book-modal__duration-field"
-                min={MIN_DURATION}
-                step={15}
-                value={durationMinutes}
-                onChange={(e) => setDurationMinutes(Math.max(MIN_DURATION, Number(e.target.value)))}
-              />
-              {durationError && <p className="book-modal__hint">{durationError}</p>}
-            </div>
-          </section>
-
-          <section className="book-modal__section">
-            <h3 className="book-modal__section-title">GUESTS</h3>
-            <div className="book-modal__guests">
-              <button
-                type="button"
-                className="book-modal__guest-btn"
-                onClick={() => setGuestCount((g) => Math.max(1, g - 1))}
-                disabled={guestCount <= 1}
-              >
-                &minus;
-              </button>
-              <span className="book-modal__guest-count">{guestCount}</span>
-              <button
-                type="button"
-                className="book-modal__guest-btn"
-                onClick={() => setGuestCount((g) => g + 1)}
-                disabled={guestCount >= tableCapacity}
-              >
-                +
+      <div
+        className="book-modal"
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="reschedule-modal-title"
+      >
+        {success ? (
+          <>
+            <div className="book-modal__header">
+              <h2 className="book-modal__title" id="reschedule-modal-title">
+                {bookStrings.reschedule.updatedTitle}
+              </h2>
+              <button className="book-modal__close" onClick={handleDismiss} type="button">
+                &times;
               </button>
             </div>
-          </section>
+            <div className="book-modal__body">
+              <div className="book-modal__success-icon">&#10003;</div>
+              <p className="book-modal__success-text">
+                {bookStrings.reschedule.updatedText(tableNumber)}
+              </p>
+            </div>
+            <div className="book-modal__actions">
+              <button
+                className="book-modal__btn book-modal__btn--confirm"
+                onClick={handleDismiss}
+                type="button"
+              >
+                {bookStrings.modal.actions.ok}
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="book-modal__header">
+              <h2 className="book-modal__title" id="reschedule-modal-title">
+                {bookStrings.reschedule.title(tableNumber)}
+              </h2>
+              <button className="book-modal__close" onClick={onClose} type="button">
+                &times;
+              </button>
+            </div>
 
-          {selectedTime && (
-            <section className="book-modal__section book-modal__section--summary">
-              <h3 className="book-modal__section-title">SUMMARY</h3>
-              <div className="book-modal__summary">
-                <div className="book-modal__summary-row">
-                  <span>Table</span>
-                  <span>#{tableNumber}</span>
-                </div>
-                <div className="book-modal__summary-row">
-                  <span>Date</span>
-                  <span>
-                    {parsedDate.toLocaleDateString("en-US", {
-                      weekday: "short",
-                      month: "short",
-                      day: "numeric",
-                      year: "numeric",
-                    })}
-                  </span>
-                </div>
-                <div className="book-modal__summary-row">
-                  <span>Time</span>
-                  <span>
-                    {selectedTime} &ndash; {endAt}
-                  </span>
-                </div>
-                <div className="book-modal__summary-row">
-                  <span>Duration</span>
-                  <span>{durationMinutes} min</span>
-                </div>
-                <div className="book-modal__summary-row">
-                  <span>Guests</span>
-                  <span>{guestCount}</span>
-                </div>
-              </div>
-            </section>
-          )}
-        </div>
+            <div className="book-modal__body">
+              <section className="book-modal__section">
+                <h3 className="book-modal__section-title">
+                  {bookStrings.reschedule.sections.date}
+                </h3>
+                <p className="book-modal__empty">{formattedDate}</p>
+              </section>
 
-        {error && <p className="book-modal__error">{error}</p>}
+              <section className="book-modal__section">
+                <h3 className="book-modal__section-title">
+                  {bookStrings.reschedule.sections.time}
+                </h3>
+                {endTimeOnly ? (
+                  <p className="book-modal__empty">
+                    {bookStrings.reschedule.startingFrom(currentStartTime)}
+                  </p>
+                ) : slotsLoading ? (
+                  <p className="book-modal__empty">{bookStrings.modal.slots.loading}</p>
+                ) : !dayConfig && !availableSlots ? (
+                  // No day config to fall back to a client-generated grid, but
+                  // when real slots already came back from the server, trust
+                  // that over declaring the day closed.
+                  <p className="book-modal__empty">{bookStrings.modal.slots.closed}</p>
+                ) : timeSlots.length === 0 ? (
+                  <p className="book-modal__empty">{bookStrings.modal.slots.none}</p>
+                ) : (
+                  <TimeSlotGrid
+                    slots={timeSlots}
+                    selectedTime={selectedTime}
+                    onSelect={setSelectedTime}
+                    disabledSlots={disabledTimeSlots}
+                  />
+                )}
+              </section>
 
-        <div className="book-modal__actions">
-          <button
-            className="book-modal__btn book-modal__btn--cancel"
-            onClick={onClose}
-            type="button"
-          >
-            CANCEL
-          </button>
-          <button
-            className="book-modal__btn book-modal__btn--confirm"
-            onClick={handleSave}
-            disabled={!selectedTime || submitting || !!durationError}
-            type="button"
-          >
-            {submitting ? "SAVING..." : "SAVE"}
-          </button>
-        </div>
+              <section className="book-modal__section">
+                <h3 className="book-modal__section-title">
+                  {bookStrings.reschedule.sections.duration}
+                </h3>
+                <DurationInput
+                  value={effectiveDuration}
+                  min={MIN_DURATION}
+                  max={maxDuration}
+                  onChange={setDurationMinutes}
+                  error={durationError}
+                />
+              </section>
+
+              {/* Prolonging an active booking only moves end_at (the backend
+                  rejects other fields), so don't offer a guest edit that would
+                  silently be dropped on save. */}
+              {!endTimeOnly && (
+                <section className="book-modal__section">
+                  <h3 className="book-modal__section-title">
+                    {bookStrings.reschedule.sections.guests}
+                  </h3>
+                  <GuestStepper value={guestCount} max={tableCapacity} onChange={setGuestCount} />
+                </section>
+              )}
+
+              {selectedTime && (
+                <SlotSummary
+                  title={bookStrings.reschedule.sections.summary}
+                  tableNumber={tableNumber}
+                  date={formattedDate}
+                  time={selectedTime}
+                  endTime={endAt}
+                  duration={effectiveDuration}
+                  guests={guestCount}
+                />
+              )}
+            </div>
+
+            {error && <p className="book-modal__error">{error}</p>}
+
+            <div className="book-modal__actions">
+              <button
+                className="book-modal__btn book-modal__btn--cancel"
+                onClick={onClose}
+                type="button"
+              >
+                {bookStrings.reschedule.actions.cancel}
+              </button>
+              <button
+                className="book-modal__btn book-modal__btn--confirm"
+                onClick={handleSave}
+                disabled={!selectedTime || submitting || !!durationError}
+                type="button"
+              >
+                {submitting
+                  ? bookStrings.reschedule.actions.saving
+                  : bookStrings.reschedule.actions.save}
+              </button>
+            </div>
+          </>
+        )}
       </div>
     </div>
   )

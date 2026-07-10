@@ -6,6 +6,14 @@
   position: relative;
   display: flex;
   width: 100%;
+  /* Fills a definite-height ancestor when one is provided (e.g. the customer
+     floor's fixed-height viewport) — an explicit height always wins over the
+     aspect-ratio inline style, which only kicks in as a fallback when no
+     ancestor supplies one (e.g. the waiter panel). Without this, a height
+     that comes only from aspect-ratio can exceed what's actually visible
+     through an ancestor's max-height, get silently clipped, and fit its
+     scale to the untruncated (too generous) measurement. */
+  height: 100%;
   overflow: auto;
   background-color: var(--color-bg-surface);
   border: 2px solid var(--color-border-strong);

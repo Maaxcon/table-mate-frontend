@@ -1,19 +1,22 @@
-import { useCallback, useEffect, useState } from "react"
-import { useParams } from "react-router-dom"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useNavigate, useParams } from "react-router-dom"
+import { LuArrowLeft } from "react-icons/lu"
 import type { Table } from "@/types/api/types.gen"
-import type { ReservationWithTable, WorkingHoursDay, Zone } from "@/features/reservation/api"
-import {
-  fetchMyReservations,
-  fetchRestaurantSettings,
-  fetchLayoutData,
-  fetchZones,
-} from "@/features/reservation/api"
-import type { LayoutPayload } from "@/features/editor/types"
-import type { UpcomingReservation } from "@/features/waiter-order-view/types"
 import { ActiveBookings } from "@/features/reservation/ActiveBookings"
 import { BookModal } from "@/features/reservation/BookModal"
 import { CustomerFloorPlan } from "@/features/reservation/CustomerFloorPlan"
+import { FloorSlotPicker } from "@/features/reservation/FloorSlotPicker"
 import { LoginCtaModal } from "@/features/reservation/LoginCtaModal"
+import { FloorPlanSkeleton } from "@/features/reservation/BookingSkeleton"
+import { fetchSlotAvailability } from "@/features/reservation/api"
+import {
+  DEFAULT_DURATION,
+  DEFAULT_GUESTS,
+  localDateKey,
+  todayInTz,
+} from "@/features/reservation/utils"
+import { bookStrings } from "@/features/reservation/strings"
+import { useBookingData } from "@/features/reservation/hooks/useBookingData"
 import { useFloorSubscription } from "@/features/reservation/hooks/useFloorSubscription"
 import type {
   FloorTableStatusEvent,
@@ -27,91 +30,115 @@ type Tab = "floor" | "bookings"
 
 export function BookingPage() {
   const { public_restaurant_id } = useParams<{ public_restaurant_id: string }>()
+  const navigate = useNavigate()
   const user = useAppSelector((state) => state.auth.user)
+
+  const goToMenu = useCallback(() => {
+    if (public_restaurant_id) navigate(`/menu/${public_restaurant_id}`)
+    else navigate(-1)
+  }, [navigate, public_restaurant_id])
   const isAuthenticated = !!user
 
+  const {
+    tables,
+    setTables,
+    tablesLoading,
+    tablesError,
+    reloadTables,
+    zones,
+    selectedZone,
+    setSelectedZone,
+    reloadZones,
+    layoutPayload,
+    workingHours,
+    timezone,
+    reservations,
+    reservationsLoading,
+    reservationsError,
+    reloadReservations,
+    upcomingReservations,
+    setUpcomingReservations,
+  } = useBookingData(public_restaurant_id, isAuthenticated)
+
   const [tab, setTab] = useState<Tab>("floor")
-
-  const [tables, setTables] = useState<Table[]>([])
-  const [tablesLoading, setTablesLoading] = useState(true)
-
-  const [zones, setZones] = useState<Zone[]>([])
-  const [selectedZone, setSelectedZone] = useState<string | null>(null)
-
-  const [workingHours, setWorkingHours] = useState<Record<string, WorkingHoursDay> | null>(null)
-
   const [selectedTable, setSelectedTable] = useState<Table | null>(null)
   const [bookModalOpen, setBookModalOpen] = useState(false)
   const [loginCtaOpen, setLoginCtaOpen] = useState(false)
 
-  const [reservations, setReservations] = useState<ReservationWithTable[]>([])
-  const [reservationsLoading, setReservationsLoading] = useState(false)
-  const [upcomingReservations, setUpcomingReservations] = useState<UpcomingReservation[]>([])
-  const [layoutPayload, setLayoutPayload] = useState<LayoutPayload | null>(null)
+  // Slot the guest is browsing for. Table statuses on the floor reflect this slot
+  // (not "now"), and the booking modal opens prefilled with it. The venue's
+  // timezone loads async, so this starts on the device's "today" and gets
+  // corrected below once the real timezone is known.
+  const [slotDate, setSlotDate] = useState(() => {
+    const d = new Date()
+    d.setHours(0, 0, 0, 0)
+    return d
+  })
+  const [slotTime, setSlotTime] = useState<string | null>(null)
+  const [slotGuests, setSlotGuests] = useState(DEFAULT_GUESTS)
+  const [availability, setAvailability] = useState<Record<string, boolean> | null>(null)
+  const [availabilityNonce, setAvailabilityNonce] = useState(0)
+  const [userPickedDate, setUserPickedDate] = useState(false)
 
-  // Source the floor from the layout endpoint: it returns ALL active tables
-  // (unpaginated) plus the layout payload and upcoming reservations together, so
-  // every table the layout references is present to join against. /tables/ is
-  // paginated (PAGE_SIZE 20) and would drop tables for larger restaurants.
-  const loadTables = useCallback(async () => {
-    if (!public_restaurant_id) return
-    setTablesLoading(true)
-    try {
-      const data = await fetchLayoutData(public_restaurant_id)
-      setTables(data.tables)
-      setUpcomingReservations(data.upcoming_reservations)
-      setLayoutPayload(
-        data.layout && typeof data.layout === "object" ? (data.layout as LayoutPayload) : null,
-      )
-    } catch {
-      setTables([])
-    } finally {
-      setTablesLoading(false)
-    }
-  }, [public_restaurant_id])
+  const handleSlotChange = useCallback(
+    (next: { date?: Date; time?: string | null; guests?: number }) => {
+      // Switching day clears the now-stale availability until the new slot loads.
+      if (next.date !== undefined) {
+        setUserPickedDate(true)
+        setSlotDate(next.date)
+        setAvailability(null)
+      }
+      if (next.time !== undefined) {
+        setSlotTime(next.time)
+        // Time cleared (e.g. a closed day): drop stale slot data so the floor
+        // falls back to current-moment status instead of a slot no longer picked.
+        if (next.time === null) setAvailability(null)
+      }
+      if (next.guests !== undefined) setSlotGuests(next.guests)
+    },
+    [],
+  )
 
-  const loadZones = useCallback(async () => {
-    if (!public_restaurant_id) return
-    try {
-      const data = await fetchZones(public_restaurant_id)
-      setZones(data)
-      if (data.length > 0) setSelectedZone(data[0].public_id)
-    } catch {
-      setZones([])
+  // Once the venue's timezone is known, snap the still-default date to the
+  // venue's "today" — a device clock a day ahead/behind must not leave the
+  // guest browsing (and querying availability for) the wrong working day.
+  // Adjusted during render (not an effect) per React's guidance for state
+  // that depends on a prop transition, so it lands in the same commit.
+  const [syncedTimezone, setSyncedTimezone] = useState(timezone)
+  if (timezone !== syncedTimezone) {
+    setSyncedTimezone(timezone)
+    if (timezone && !userPickedDate) {
+      const venueToday = todayInTz(timezone)
+      if (localDateKey(venueToday) !== localDateKey(slotDate)) {
+        setSlotDate(venueToday)
+        setAvailability(null)
+      }
     }
-  }, [public_restaurant_id])
-
-  const loadSettings = useCallback(async () => {
-    if (!public_restaurant_id) return
-    try {
-      const settings = await fetchRestaurantSettings(public_restaurant_id)
-      setWorkingHours(settings.working_hours)
-    } catch {
-      setWorkingHours(null)
-    }
-  }, [public_restaurant_id])
-
-  const loadReservations = useCallback(async () => {
-    if (!public_restaurant_id || !isAuthenticated) return
-    setReservationsLoading(true)
-    try {
-      const data = await fetchMyReservations(public_restaurant_id)
-      setReservations(data)
-    } catch {
-      setReservations([])
-    } finally {
-      setReservationsLoading(false)
-    }
-  }, [public_restaurant_id, isAuthenticated])
+  }
 
   useEffect(() => {
-    /* eslint-disable react-hooks/set-state-in-effect */
-    loadTables()
-    loadSettings()
-    loadReservations()
-    loadZones()
-    /* eslint-enable react-hooks/set-state-in-effect */
-  }, [loadTables, loadSettings, loadReservations, loadZones])
+    if (!public_restaurant_id || !slotTime) return
+    let cancelled = false
+    // Probe the same default duration the booking modal opens with, so a table's
+    // free/taken state on the map matches what the modal will accept.
+    fetchSlotAvailability(public_restaurant_id, localDateKey(slotDate), slotTime, DEFAULT_DURATION)
+      .then((a) => {
+        if (!cancelled) setAvailability(a)
+      })
+      .catch(() => {
+        if (!cancelled) setAvailability(null)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [public_restaurant_id, slotDate, slotTime, availabilityNonce])
+
+  // Largest party the venue can seat = its biggest table. Caps the guest stepper
+  // per restaurant; falls back to 20 until tables load.
+  const maxGuests = useMemo(
+    () => tables.reduce((m, t) => Math.max(m, t.capacity ?? 0), 0) || 20,
+    [tables],
+  )
 
   const handleTableSelect = useCallback(
     (table: Table) => {
@@ -128,58 +155,103 @@ export function BookingPage() {
   const handleBookingSuccess = useCallback(() => {
     setBookModalOpen(false)
     setSelectedTable(null)
-    loadTables()
-    loadReservations()
-  }, [loadTables, loadReservations])
+    reloadTables()
+    reloadReservations()
+    setAvailabilityNonce((n) => n + 1)
+  }, [reloadTables, reloadReservations])
 
-  const handleRefresh = useCallback(() => {
-    loadReservations()
-  }, [loadReservations])
+  // Catch-up fallback for events the floor WebSocket missed — while the tab was
+  // hidden, or during a dropped connection's reconnect window. Refresh whenever
+  // the tab regains focus, but at most once every 10s so rapid alt-tabbing
+  // doesn't spam the API. Only one refetch is ever needed: with a slot picked,
+  // the floor's status comes entirely from slotAvailability, so reloadTables()
+  // (tables + layout + upcoming reservations) would be wasted work; without
+  // one, the fallback "now" status reads tables/upcoming instead, and the
+  // availability effect no-ops anyway (it bails out without slotTime).
+  const lastRefreshRef = useRef(0)
+  useEffect(() => {
+    const refresh = () => {
+      if (document.visibilityState === "hidden") return
+      const now = Date.now()
+      if (now - lastRefreshRef.current < 10_000) return
+      lastRefreshRef.current = now
+      if (slotTime) {
+        setAvailabilityNonce((n) => n + 1)
+      } else {
+        reloadTables()
+      }
+    }
+    window.addEventListener("focus", refresh)
+    document.addEventListener("visibilitychange", refresh)
+    return () => {
+      window.removeEventListener("focus", refresh)
+      document.removeEventListener("visibilitychange", refresh)
+    }
+  }, [reloadTables, slotTime])
 
-  const handleTableStatusChanged = useCallback((event: FloorTableStatusEvent) => {
-    const isOccupied = event.current_status === "occupied"
-    setTables((prev) =>
-      prev.map((t) => {
-        if (t.public_id !== event.table_id) return t
-        return { ...t, is_occupied: isOccupied }
-      }),
-    )
-  }, [])
+  const handleTableStatusChanged = useCallback(
+    (event: FloorTableStatusEvent) => {
+      const isOccupied = event.current_status === "occupied"
+      setTables((prev) =>
+        prev.map((t) => (t.public_id === event.table_id ? { ...t, is_occupied: isOccupied } : t)),
+      )
+    },
+    [setTables],
+  )
 
-  const handleNewReservation = useCallback((event: FloorNewReservationEvent) => {
-    setUpcomingReservations((prev) => [
-      ...prev,
-      {
-        public_id: event.reservation_id,
-        table_id: event.table_id,
-        start_at: event.start_at,
-      },
-    ])
-  }, [])
+  const handleNewReservation = useCallback(
+    (event: FloorNewReservationEvent) => {
+      setUpcomingReservations((prev) => [
+        ...prev,
+        {
+          public_id: event.reservation_id,
+          table_id: event.table_id,
+          start_at: event.start_at,
+          end_at: event.end_at,
+        },
+      ])
+      setAvailabilityNonce((n) => n + 1)
+    },
+    [setUpcomingReservations],
+  )
 
-  const handleReservationCancelled = useCallback((event: FloorReservationCancelledEvent) => {
-    setUpcomingReservations((prev) => prev.filter((r) => r.public_id !== event.reservation_id))
-  }, [])
+  const handleReservationCancelled = useCallback(
+    (event: FloorReservationCancelledEvent) => {
+      setUpcomingReservations((prev) => prev.filter((r) => r.public_id !== event.reservation_id))
+      setAvailabilityNonce((n) => n + 1)
+    },
+    [setUpcomingReservations],
+  )
 
   const handleLayoutPublished = useCallback(() => {
-    loadTables()
+    // reloadTables now refreshes tables + layout + upcoming in one call.
+    reloadTables()
     // A publish may have added/removed a zone; refresh zones so its tab appears live.
-    loadZones()
-  }, [loadTables, loadZones])
+    reloadZones()
+  }, [reloadTables, reloadZones])
 
   const { isConnected } = useFloorSubscription({
     onTableStatusChanged: handleTableStatusChanged,
     onNewReservation: handleNewReservation,
     onReservationCancelled: handleReservationCancelled,
     onLayoutPublished: handleLayoutPublished,
-    onZoneCreated: loadZones,
-    onZoneUpdated: loadZones,
-    onZoneDeleted: loadZones,
-    restaurantPublicId: public_restaurant_id,
+    onZoneCreated: reloadZones,
+    onZoneUpdated: reloadZones,
+    onZoneDeleted: reloadZones,
+    restaurantId: public_restaurant_id,
   })
 
   return (
     <div className="bp">
+      <header className="bp__topbar">
+        <button type="button" className="bp__back" onClick={goToMenu}>
+          <LuArrowLeft aria-hidden="true" />
+          <span>{bookStrings.backToMenu}</span>
+        </button>
+        <span className="bp__topbar-title">{bookStrings.pageTitle}</span>
+        <span className="bp__topbar-spacer" aria-hidden="true" />
+      </header>
+
       <div className="bp__tabs">
         <button
           type="button"
@@ -188,7 +260,7 @@ export function BookingPage() {
             .join(" ")}
           onClick={() => setTab("floor")}
         >
-          FLOOR PLAN
+          {bookStrings.tabs.floor}
         </button>
         {isAuthenticated && (
           <button
@@ -198,7 +270,7 @@ export function BookingPage() {
               .join(" ")}
             onClick={() => setTab("bookings")}
           >
-            MY BOOKINGS
+            {bookStrings.tabs.bookings}
           </button>
         )}
         <span
@@ -211,35 +283,71 @@ export function BookingPage() {
       <div className="bp__content">
         {tab === "floor" &&
           (tablesLoading ? (
-            <p className="bp__loading">LOADING...</p>
+            <FloorPlanSkeleton />
+          ) : tablesError ? (
+            <div className="bp__error" role="alert">
+              <p className="bp__error-text">{bookStrings.errors.floor}</p>
+              <button type="button" className="bp__retry" onClick={reloadTables}>
+                {bookStrings.retry}
+              </button>
+            </div>
           ) : (
-            <CustomerFloorPlan
-              tables={tables}
-              zones={zones}
-              selectedZone={selectedZone}
-              onZoneChange={setSelectedZone}
-              selectedId={selectedTable?.public_id ?? null}
-              onSelect={handleTableSelect}
-              upcomingReservations={upcomingReservations}
-              payload={layoutPayload}
-            />
+            <div className="bp__floor">
+              <FloorSlotPicker
+                workingHours={workingHours}
+                date={slotDate}
+                time={slotTime}
+                guests={slotGuests}
+                maxGuests={maxGuests}
+                timeZone={timezone}
+                onChange={handleSlotChange}
+              />
+              <CustomerFloorPlan
+                tables={tables}
+                zones={zones}
+                selectedZone={selectedZone}
+                onZoneChange={setSelectedZone}
+                selectedId={selectedTable?.public_id ?? null}
+                onSelect={handleTableSelect}
+                upcomingReservations={upcomingReservations}
+                slotAvailability={availability}
+                guests={slotGuests}
+                slotTime={slotTime}
+                payload={layoutPayload}
+              />
+            </div>
           ))}
 
-        {tab === "bookings" && isAuthenticated && (
-          <ActiveBookings
-            reservations={reservations}
-            loading={reservationsLoading}
-            workingHours={workingHours}
-            onRefresh={handleRefresh}
-          />
-        )}
+        {tab === "bookings" &&
+          isAuthenticated &&
+          (reservationsError ? (
+            <div className="bp__error" role="alert">
+              <p className="bp__error-text">{bookStrings.errors.bookings}</p>
+              <button type="button" className="bp__retry" onClick={reloadReservations}>
+                {bookStrings.retry}
+              </button>
+            </div>
+          ) : (
+            <ActiveBookings
+              reservations={reservations}
+              loading={reservationsLoading}
+              workingHours={workingHours}
+              timeZone={timezone}
+              restaurantId={public_restaurant_id}
+              onRefresh={reloadReservations}
+              onBrowseTables={() => setTab("floor")}
+            />
+          ))}
       </div>
 
       {bookModalOpen && selectedTable && (
         <BookModal
           table={selectedTable}
           workingHours={workingHours}
-          restaurantId={public_restaurant_id ?? ""}
+          timeZone={timezone}
+          initialDate={slotDate}
+          initialTime={slotTime}
+          initialGuests={slotGuests}
           onClose={() => {
             setBookModalOpen(false)
             setSelectedTable(null)

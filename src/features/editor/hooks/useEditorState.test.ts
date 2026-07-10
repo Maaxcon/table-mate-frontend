@@ -70,3 +70,76 @@ describe("getNextTableLabel", () => {
     expect(getNextTableLabel(entities)).toBe("T13")
   })
 })
+
+describe("useEditorState — undo/redo", () => {
+  it("undoes and redoes entity creation", () => {
+    const { result } = renderHook(() => useEditorState())
+
+    act(() => {
+      result.current.addEntity("table-square", 0, 0)
+    })
+    expect(result.current.entities).toHaveLength(1)
+    expect(result.current.canUndo).toBe(true)
+
+    act(() => {
+      result.current.undo()
+    })
+    expect(result.current.entities).toHaveLength(0)
+    expect(result.current.canRedo).toBe(true)
+
+    act(() => {
+      result.current.redo()
+    })
+    expect(result.current.entities).toHaveLength(1)
+  })
+
+  it("clears redo stack after a new edit", () => {
+    const { result } = renderHook(() => useEditorState())
+
+    act(() => {
+      result.current.addEntity("table-square", 0, 0)
+    })
+    act(() => {
+      result.current.undo()
+    })
+    expect(result.current.canRedo).toBe(true)
+
+    act(() => {
+      result.current.addEntity("obstacle", 2, 2)
+    })
+    expect(result.current.canRedo).toBe(false)
+  })
+
+  it("moves selected block as one undoable action", () => {
+    const { result } = renderHook(() => useEditorState())
+
+    let firstId = ""
+    let secondId = ""
+    act(() => {
+      firstId = result.current.addEntity("table-square", 0, 0)!.id
+      secondId = result.current.addEntity("table-square", 4, 4)!.id
+    })
+
+    act(() => {
+      result.current.moveEntitiesByDelta([firstId, secondId], 2, 1)
+    })
+
+    const movedFirst = result.current.entities.find((entity) => entity.id === firstId)
+    const movedSecond = result.current.entities.find((entity) => entity.id === secondId)
+    expect(movedFirst?.x).toBe(2)
+    expect(movedFirst?.y).toBe(1)
+    expect(movedSecond?.x).toBe(6)
+    expect(movedSecond?.y).toBe(5)
+
+    act(() => {
+      result.current.undo()
+    })
+
+    const originalFirst = result.current.entities.find((entity) => entity.id === firstId)
+    const originalSecond = result.current.entities.find((entity) => entity.id === secondId)
+    expect(originalFirst?.x).toBe(0)
+    expect(originalFirst?.y).toBe(0)
+    expect(originalSecond?.x).toBe(4)
+    expect(originalSecond?.y).toBe(4)
+  })
+})
