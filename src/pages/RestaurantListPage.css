@@ -284,38 +284,6 @@
   overflow-wrap: anywhere;
 }
 
-.rlp__status {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 66px;
-  height: 26px;
-  border-radius: 999px;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-  border: 1px solid transparent;
-}
-
-.rlp__status--active {
-  color: color-mix(in srgb, #2e7d32 80%, var(--color-text-primary));
-  background: color-mix(in srgb, #2e7d32 16%, var(--color-bg-surface));
-  border-color: color-mix(in srgb, #2e7d32 30%, var(--color-border-default));
-}
-
-.rlp__status--paused {
-  color: color-mix(in srgb, #ad6800 76%, var(--color-text-primary));
-  background: color-mix(in srgb, #ad6800 14%, var(--color-bg-surface));
-  border-color: color-mix(in srgb, #ad6800 30%, var(--color-border-default));
-}
-
-.rlp__status--draft {
-  color: color-mix(in srgb, #5d5d5d 85%, var(--color-text-primary));
-  background: color-mix(in srgb, #5d5d5d 14%, var(--color-bg-surface));
-  border-color: color-mix(in srgb, #5d5d5d 24%, var(--color-border-default));
-}
-
 .rlp__chip {
   display: inline-flex;
   align-items: center;

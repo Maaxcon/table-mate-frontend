@@ -6,8 +6,6 @@ import { useAppSelector } from "@/store/hooks"
 import type { WorkingHours, WeekDay } from "@/types/workingHours"
 import "./RestaurantListPage.css"
 
-type RestaurantStatus = "active" | "paused" | "draft"
-
 type Restaurant = {
   public_id: string
   name: string
@@ -25,12 +23,6 @@ type Restaurant = {
   } | null
 }
 
-const STATUS_LABELS: Record<RestaurantStatus, string> = {
-  active: "Active",
-  paused: "Paused",
-  draft: "Draft",
-}
-
 function extractCityFromAddress(address?: string): string {
   if (!address) return ""
   const parts = address
@@ -39,13 +31,6 @@ function extractCityFromAddress(address?: string): string {
     .filter(Boolean)
   if (parts.length === 0) return ""
   return parts[parts.length - 1]
-}
-
-function normalizeStatus(value?: string): RestaurantStatus {
-  const raw = value?.trim().toLowerCase()
-  if (raw === "paused") return "paused"
-  if (raw === "draft") return "draft"
-  return "active"
 }
 
 function formatUpdatedAt(value?: string): string {
@@ -166,7 +151,6 @@ export function RestaurantListPage() {
         const city =
           restaurant.city?.trim() || extractCityFromAddress(restaurant.address) || "Unknown"
         const cuisine = restaurant.cuisine?.trim() || ""
-        const status = normalizeStatus(restaurant.status)
         const updatedAtLabel = formatUpdatedAt(restaurant.updated_at)
         const ratingLabel = formatRating(restaurant.settings?.rating)
         const todayHoursLabel = formatTodayHours(
@@ -181,7 +165,6 @@ export function RestaurantListPage() {
           ...restaurant,
           city,
           cuisine,
-          status,
           updatedAtLabel,
           ratingLabel,
           todayHoursLabel,
@@ -281,9 +264,6 @@ export function RestaurantListPage() {
                 )}
                 <div className="rlp__card-veil" />
                 <div className="rlp__card-chips">
-                  <span className={`rlp__status rlp__status--${r.status}`}>
-                    {STATUS_LABELS[r.status]}
-                  </span>
                   {r.ratingLabel && <span className="rlp__chip">{r.ratingLabel}</span>}
                   {r.openNow !== null && (
                     <span
