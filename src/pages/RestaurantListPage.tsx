@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { Link } from "react-router-dom"
 import { apiFetch } from "@/api/client"
+import { isRestaurantOpenNow } from "@/features/menu/utils"
 import { useAppSelector } from "@/store/hooks"
+import type { WorkingHours, WeekDay } from "@/types/workingHours"
 import "./RestaurantListPage.css"
 
 type RestaurantStatus = "active" | "paused" | "draft"
@@ -11,10 +13,16 @@ type Restaurant = {
   name: string
   address: string
   phone?: string
+  cover_image?: string | null
   city?: string
   cuisine?: string
   status?: string
   updated_at?: string
+  settings?: {
+    timezone?: string
+    working_hours?: WorkingHours
+    rating?: string | null
+  } | null
 }
 
 const STATUS_LABELS: Record<RestaurantStatus, string> = {
@@ -50,14 +58,75 @@ function formatUpdatedAt(value?: string): string {
   }).format(parsed)
 }
 
+const DAY_LABELS: Record<WeekDay, string> = {
+  mon: "Mon",
+  tue: "Tue",
+  wed: "Wed",
+  thu: "Thu",
+  fri: "Fri",
+  sat: "Sat",
+  sun: "Sun",
+}
+
+function todayKey(timezone?: string): WeekDay {
+  if (!timezone) {
+    const local = (new Date().getDay() + 6) % 7
+    return (["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const)[local]
+  }
+  try {
+    const weekday = new Intl.DateTimeFormat("en-US", {
+      timeZone: timezone,
+      weekday: "short",
+    })
+      .format(new Date())
+      .toLowerCase()
+      .slice(0, 3)
+    const map: Record<string, WeekDay> = {
+      mon: "mon",
+      tue: "tue",
+      wed: "wed",
+      thu: "thu",
+      fri: "fri",
+      sat: "sat",
+      sun: "sun",
+    }
+    return map[weekday] ?? "mon"
+  } catch {
+    return "mon"
+  }
+}
+
+function formatTodayHours(workingHours?: WorkingHours, timezone?: string): string {
+  if (!workingHours) return ""
+  const key = todayKey(timezone)
+  const slot = workingHours[key]
+  if (!slot) return ""
+  return `${DAY_LABELS[key]} ${slot.open}-${slot.close}`
+}
+
+function formatRating(value?: string | null): string {
+  if (!value) return ""
+  const parsed = Number.parseFloat(value)
+  if (!Number.isFinite(parsed)) return ""
+  return `${parsed.toFixed(1)} ★`
+}
+
+function getMonogram(name: string): string {
+  const words = name
+    .split(/\s+/)
+    .map((word) => word.trim())
+    .filter(Boolean)
+  if (words.length === 0) return "R"
+  if (words.length === 1) return words[0].slice(0, 2).toUpperCase()
+  return `${words[0][0] ?? ""}${words[1][0] ?? ""}`.toUpperCase()
+}
+
 export function RestaurantListPage() {
   const [restaurants, setRestaurants] = useState<Restaurant[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [query, setQuery] = useState("")
-  const [statusFilter, setStatusFilter] = useState<RestaurantStatus | "all">("all")
-  const [cuisineFilter, setCuisineFilter] = useState("all")
-  const [cityFilter, setCityFilter] = useState("all")
+  const [isSearchExpanded, setIsSearchExpanded] = useState(false)
   const user = useAppSelector((s) => s.auth.user)
   const createRestaurantLink = user?.role === "admin" ? "/admin/restaurant" : "/"
 
@@ -101,139 +170,89 @@ export function RestaurantListPage() {
         const cuisine = restaurant.cuisine?.trim() || ""
         const status = normalizeStatus(restaurant.status)
         const updatedAtLabel = formatUpdatedAt(restaurant.updated_at)
-        return { ...restaurant, city, cuisine, status, updatedAtLabel }
+        const ratingLabel = formatRating(restaurant.settings?.rating)
+        const todayHoursLabel = formatTodayHours(
+          restaurant.settings?.working_hours,
+          restaurant.settings?.timezone,
+        )
+        const openNow =
+          restaurant.settings?.working_hours && restaurant.settings?.timezone
+            ? isRestaurantOpenNow(restaurant.settings.working_hours, restaurant.settings.timezone)
+            : null
+        return {
+          ...restaurant,
+          city,
+          cuisine,
+          status,
+          updatedAtLabel,
+          ratingLabel,
+          todayHoursLabel,
+          openNow,
+        }
       }),
     [restaurants],
   )
 
-  const cuisineOptions = useMemo(
-    () =>
-      Array.from(
-        new Set(
-          enrichedRestaurants
-            .map((restaurant) => restaurant.cuisine)
-            .filter((cuisine): cuisine is string => cuisine.length > 0),
-        ),
-      ).sort(),
-    [enrichedRestaurants],
-  )
-
-  const cityOptions = useMemo(
-    () => Array.from(new Set(enrichedRestaurants.map((restaurant) => restaurant.city))).sort(),
-    [enrichedRestaurants],
-  )
-
   const filteredRestaurants = useMemo(() => {
     const q = query.trim().toLowerCase()
-    return enrichedRestaurants.filter((restaurant) => {
-      if (statusFilter !== "all" && restaurant.status !== statusFilter) return false
-      if (cuisineFilter !== "all" && restaurant.cuisine !== cuisineFilter) return false
-      if (cityFilter !== "all" && restaurant.city !== cityFilter) return false
-      if (!q) return true
-      const haystack = `${restaurant.name} ${restaurant.address} ${restaurant.city}`.toLowerCase()
-      return haystack.includes(q)
-    })
-  }, [cityFilter, cuisineFilter, enrichedRestaurants, query, statusFilter])
+    if (!q) return enrichedRestaurants
+    return enrichedRestaurants.filter((restaurant) => restaurant.name.toLowerCase().includes(q))
+  }, [enrichedRestaurants, query])
 
-  const resetFilters = () => {
+  const clearSearch = () => {
     setQuery("")
-    setStatusFilter("all")
-    setCuisineFilter("all")
-    setCityFilter("all")
   }
 
-  const hasActiveFilters =
-    query.trim().length > 0 ||
-    statusFilter !== "all" ||
-    cuisineFilter !== "all" ||
-    cityFilter !== "all"
+  const hasActiveFilters = query.trim().length > 0
 
   return (
     <main className="rlp">
       <header className="rlp__hero">
         <div className="rlp__hero-copy">
-          <h1 className="rlp__heading">Restaurants Directory</h1>
+          <p className="rlp__kicker">City Dining Guide</p>
+          <h1 className="rlp__heading">Curated Restaurant Collection</h1>
           <p className="rlp__subtitle">
-            Browse available restaurants, open their menus, and quickly jump to your own workspace.
+            Discover standout venues, check live availability, and open the full menu in one click.
           </p>
         </div>
         <div className="rlp__hero-actions">
-          <Link to={createRestaurantLink} className="rlp__cta-link">
-            Add restaurant
-          </Link>
           {user && (
             <Link to="/cabinet" className="rlp__profile-link">
-              My Cabinet
+              My Workspace
             </Link>
           )}
         </div>
       </header>
 
-      <section className="rlp__filters" aria-label="Restaurants filters">
-        <label className="rlp__field rlp__field--search">
-          <span className="rlp__field-label">Search</span>
-          <input
-            type="search"
-            placeholder="Search by name or city"
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            className="rlp__input"
-            disabled={loading}
-          />
-        </label>
-
-        <label className="rlp__field">
-          <span className="rlp__field-label">Status</span>
-          <select
-            value={statusFilter}
-            onChange={(event) => setStatusFilter(event.target.value as RestaurantStatus | "all")}
-            className="rlp__select"
-            disabled={loading}
-          >
-            <option value="all">All statuses</option>
-            <option value="active">{STATUS_LABELS.active}</option>
-            <option value="paused">{STATUS_LABELS.paused}</option>
-            <option value="draft">{STATUS_LABELS.draft}</option>
-          </select>
-        </label>
-
-        <label className="rlp__field">
-          <span className="rlp__field-label">Cuisine</span>
-          <select
-            value={cuisineFilter}
-            onChange={(event) => setCuisineFilter(event.target.value)}
-            className="rlp__select"
-            disabled={loading}
-          >
-            <option value="all">All cuisines</option>
-            {cuisineOptions.map((cuisine) => (
-              <option key={cuisine} value={cuisine}>
-                {cuisine}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label className="rlp__field">
-          <span className="rlp__field-label">City</span>
-          <select
-            value={cityFilter}
-            onChange={(event) => setCityFilter(event.target.value)}
-            className="rlp__select"
-            disabled={loading}
-          >
-            <option value="all">All cities</option>
-            {cityOptions.map((city) => (
-              <option key={city} value={city}>
-                {city}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <button type="button" className="rlp__reset" onClick={resetFilters}>
-          Reset filters
+      <section className="rlp__search-panel" aria-label="Search restaurant">
+        <button
+          type="button"
+          className="rlp__search-toggle"
+          aria-expanded={isSearchExpanded}
+          onClick={() => setIsSearchExpanded((prev) => !prev)}
+        >
+          Search by name
         </button>
+        {isSearchExpanded && (
+          <div className="rlp__search-body">
+            <input
+              type="search"
+              placeholder="Type restaurant name"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              className="rlp__search-input"
+              disabled={loading}
+            />
+            <button
+              type="button"
+              className="rlp__search-clear"
+              onClick={clearSearch}
+              disabled={!hasActiveFilters}
+            >
+              Clear
+            </button>
+          </div>
+        )}
       </section>
 
       {loading && (
@@ -244,6 +263,7 @@ export function RestaurantListPage() {
               className="rlp__card rlp__card--skeleton"
               aria-hidden="true"
             >
+              <div className="rlp__skeleton rlp__skeleton--visual" />
               <div className="rlp__skeleton rlp__skeleton--title" />
               <div className="rlp__skeleton rlp__skeleton--line" />
               <div className="rlp__skeleton rlp__skeleton--line short" />
@@ -290,15 +310,15 @@ export function RestaurantListPage() {
       {!loading && !error && enrichedRestaurants.length > 0 && filteredRestaurants.length === 0 && (
         <section className="rlp__state">
           <h2 className="rlp__state-title">No results</h2>
-          <p className="rlp__state-text">No restaurants match the current filters.</p>
+          <p className="rlp__state-text">No restaurants match this name.</p>
           <div className="rlp__state-actions">
             <button
               type="button"
               className="rlp__state-button"
-              onClick={resetFilters}
+              onClick={clearSearch}
               disabled={!hasActiveFilters}
             >
-              Reset filters
+              Clear search
             </button>
           </div>
         </section>
@@ -321,35 +341,63 @@ export function RestaurantListPage() {
               className="rlp__card"
               aria-label={`Open ${r.name}`}
             >
-              <div className="rlp__card-head">
-                <h2 className="rlp__card-name">{r.name}</h2>
-                <span className={`rlp__status rlp__status--${r.status}`}>
-                  {STATUS_LABELS[r.status]}
-                </span>
-              </div>
-              <p className="rlp__card-address">{r.address}</p>
-              {r.cuisine && <p className="rlp__card-meta">{r.cuisine}</p>}
-
-              <dl className="rlp__card-facts">
-                <div>
-                  <dt>City</dt>
-                  <dd>{r.city}</dd>
+              <div className="rlp__card-visual" aria-hidden="true">
+                {r.cover_image ? (
+                  <img src={r.cover_image} alt="" className="rlp__card-image" loading="lazy" />
+                ) : (
+                  <div className="rlp__card-monogram">{getMonogram(r.name)}</div>
+                )}
+                <div className="rlp__card-veil" />
+                <div className="rlp__card-chips">
+                  <span className={`rlp__status rlp__status--${r.status}`}>
+                    {STATUS_LABELS[r.status]}
+                  </span>
+                  {r.ratingLabel && <span className="rlp__chip">{r.ratingLabel}</span>}
+                  {r.openNow !== null && (
+                    <span
+                      className={`rlp__chip ${r.openNow ? "rlp__chip--open" : "rlp__chip--closed"}`}
+                    >
+                      {r.openNow ? "Open now" : "Closed"}
+                    </span>
+                  )}
                 </div>
-                {r.cuisine && (
-                  <div>
-                    <dt>Cuisine</dt>
-                    <dd>{r.cuisine}</dd>
-                  </div>
-                )}
-                {r.updatedAtLabel && (
-                  <div>
-                    <dt>Last updated</dt>
-                    <dd>{r.updatedAtLabel}</dd>
-                  </div>
-                )}
-              </dl>
+              </div>
+              <div className="rlp__card-body">
+                <div className="rlp__card-head">
+                  <h2 className="rlp__card-name">{r.name}</h2>
+                </div>
+                <p className="rlp__card-address">{r.address}</p>
+                {r.cuisine && <p className="rlp__card-meta">{r.cuisine}</p>}
 
-              <p className="rlp__card-open">Open restaurant</p>
+                <dl className="rlp__card-facts">
+                  <div>
+                    <dt>City</dt>
+                    <dd>{r.city}</dd>
+                  </div>
+                  {r.cuisine && (
+                    <div>
+                      <dt>Cuisine</dt>
+                      <dd>{r.cuisine}</dd>
+                    </div>
+                  )}
+                  {r.todayHoursLabel && (
+                    <div>
+                      <dt>Today</dt>
+                      <dd>{r.todayHoursLabel}</dd>
+                    </div>
+                  )}
+                  {r.updatedAtLabel && (
+                    <div>
+                      <dt>Last updated</dt>
+                      <dd>{r.updatedAtLabel}</dd>
+                    </div>
+                  )}
+                </dl>
+
+                <p className="rlp__card-open">
+                  Open restaurant <span aria-hidden="true">&gt;</span>
+                </p>
+              </div>
             </Link>
           ))}
         </div>
