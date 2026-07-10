@@ -1,19 +1,62 @@
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { Link } from "react-router-dom"
 import { apiFetch } from "@/api/client"
 import { useAppSelector } from "@/store/hooks"
 import "./RestaurantListPage.css"
+
+type RestaurantStatus = "active" | "paused" | "draft"
 
 type Restaurant = {
   public_id: string
   name: string
   address: string
   phone?: string
+  city?: string
+  cuisine?: string
+  status?: string
+  updated_at?: string
+}
+
+const STATUS_LABELS: Record<RestaurantStatus, string> = {
+  active: "Active",
+  paused: "Paused",
+  draft: "Draft",
+}
+
+function extractCityFromAddress(address?: string): string {
+  if (!address) return ""
+  const parts = address
+    .split(",")
+    .map((part) => part.trim())
+    .filter(Boolean)
+  if (parts.length === 0) return ""
+  return parts[parts.length - 1]
+}
+
+function normalizeStatus(value?: string): RestaurantStatus {
+  const raw = value?.trim().toLowerCase()
+  if (raw === "paused") return "paused"
+  if (raw === "draft") return "draft"
+  return "active"
+}
+
+function formatUpdatedAt(value?: string): string {
+  if (!value) return ""
+  const parsed = new Date(value)
+  if (Number.isNaN(parsed.getTime())) return ""
+  return new Intl.DateTimeFormat(undefined, {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(parsed)
 }
 
 export function RestaurantListPage() {
   const [restaurants, setRestaurants] = useState<Restaurant[]>([])
   const [loading, setLoading] = useState(true)
+  const [query, setQuery] = useState("")
+  const [statusFilter, setStatusFilter] = useState<RestaurantStatus | "all">("all")
+  const [cuisineFilter, setCuisineFilter] = useState("all")
+  const [cityFilter, setCityFilter] = useState("all")
   const user = useAppSelector((s) => s.auth.user)
 
   useEffect(() => {
@@ -28,6 +71,55 @@ export function RestaurantListPage() {
       .finally(() => setLoading(false))
     return () => controller.abort()
   }, [])
+
+  const enrichedRestaurants = useMemo(
+    () =>
+      restaurants.map((restaurant) => {
+        const city =
+          restaurant.city?.trim() || extractCityFromAddress(restaurant.address) || "Unknown"
+        const cuisine = restaurant.cuisine?.trim() || ""
+        const status = normalizeStatus(restaurant.status)
+        const updatedAtLabel = formatUpdatedAt(restaurant.updated_at)
+        return { ...restaurant, city, cuisine, status, updatedAtLabel }
+      }),
+    [restaurants],
+  )
+
+  const cuisineOptions = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          enrichedRestaurants
+            .map((restaurant) => restaurant.cuisine)
+            .filter((cuisine): cuisine is string => cuisine.length > 0),
+        ),
+      ).sort(),
+    [enrichedRestaurants],
+  )
+
+  const cityOptions = useMemo(
+    () => Array.from(new Set(enrichedRestaurants.map((restaurant) => restaurant.city))).sort(),
+    [enrichedRestaurants],
+  )
+
+  const filteredRestaurants = useMemo(() => {
+    const q = query.trim().toLowerCase()
+    return enrichedRestaurants.filter((restaurant) => {
+      if (statusFilter !== "all" && restaurant.status !== statusFilter) return false
+      if (cuisineFilter !== "all" && restaurant.cuisine !== cuisineFilter) return false
+      if (cityFilter !== "all" && restaurant.city !== cityFilter) return false
+      if (!q) return true
+      const haystack = `${restaurant.name} ${restaurant.address} ${restaurant.city}`.toLowerCase()
+      return haystack.includes(q)
+    })
+  }, [cityFilter, cuisineFilter, enrichedRestaurants, query, statusFilter])
+
+  const resetFilters = () => {
+    setQuery("")
+    setStatusFilter("all")
+    setCuisineFilter("all")
+    setCityFilter("all")
+  }
 
   if (loading) {
     return (
@@ -58,16 +150,124 @@ export function RestaurantListPage() {
         </div>
       </header>
 
-      {restaurants.length === 0 && <p className="rlp__empty">No restaurants available.</p>}
+      <section className="rlp__filters" aria-label="Restaurants filters">
+        <label className="rlp__field rlp__field--search">
+          <span className="rlp__field-label">Search</span>
+          <input
+            type="search"
+            placeholder="Search by name or city"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            className="rlp__input"
+          />
+        </label>
 
-      <div className="rlp__grid">
-        {restaurants.map((r) => (
-          <Link to={`/menu/${r.public_id}`} key={r.public_id} className="rlp__card">
-            <h2 className="rlp__card-name">{r.name}</h2>
-            <p className="rlp__card-address">{r.address}</p>
-          </Link>
-        ))}
-      </div>
+        <label className="rlp__field">
+          <span className="rlp__field-label">Status</span>
+          <select
+            value={statusFilter}
+            onChange={(event) => setStatusFilter(event.target.value as RestaurantStatus | "all")}
+            className="rlp__select"
+          >
+            <option value="all">All statuses</option>
+            <option value="active">{STATUS_LABELS.active}</option>
+            <option value="paused">{STATUS_LABELS.paused}</option>
+            <option value="draft">{STATUS_LABELS.draft}</option>
+          </select>
+        </label>
+
+        <label className="rlp__field">
+          <span className="rlp__field-label">Cuisine</span>
+          <select
+            value={cuisineFilter}
+            onChange={(event) => setCuisineFilter(event.target.value)}
+            className="rlp__select"
+          >
+            <option value="all">All cuisines</option>
+            {cuisineOptions.map((cuisine) => (
+              <option key={cuisine} value={cuisine}>
+                {cuisine}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="rlp__field">
+          <span className="rlp__field-label">City</span>
+          <select
+            value={cityFilter}
+            onChange={(event) => setCityFilter(event.target.value)}
+            className="rlp__select"
+          >
+            <option value="all">All cities</option>
+            {cityOptions.map((city) => (
+              <option key={city} value={city}>
+                {city}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <button type="button" className="rlp__reset" onClick={resetFilters}>
+          Reset filters
+        </button>
+      </section>
+
+      {enrichedRestaurants.length === 0 && <p className="rlp__empty">No restaurants available.</p>}
+      {enrichedRestaurants.length > 0 && filteredRestaurants.length === 0 && (
+        <p className="rlp__empty">No restaurants match these filters.</p>
+      )}
+
+      {filteredRestaurants.length > 0 && (
+        <div className="rlp__toolbar">
+          <p className="rlp__result-count">
+            Showing {filteredRestaurants.length} of {enrichedRestaurants.length}
+          </p>
+        </div>
+      )}
+
+      {filteredRestaurants.length > 0 && (
+        <div className="rlp__cards">
+          {filteredRestaurants.map((r) => (
+            <Link
+              to={`/menu/${r.public_id}`}
+              key={r.public_id}
+              className="rlp__card"
+              aria-label={`Open ${r.name}`}
+            >
+              <div className="rlp__card-head">
+                <h2 className="rlp__card-name">{r.name}</h2>
+                <span className={`rlp__status rlp__status--${r.status}`}>
+                  {STATUS_LABELS[r.status]}
+                </span>
+              </div>
+              <p className="rlp__card-address">{r.address}</p>
+              {r.cuisine && <p className="rlp__card-meta">{r.cuisine}</p>}
+
+              <dl className="rlp__card-facts">
+                <div>
+                  <dt>City</dt>
+                  <dd>{r.city}</dd>
+                </div>
+                {r.cuisine && (
+                  <div>
+                    <dt>Cuisine</dt>
+                    <dd>{r.cuisine}</dd>
+                  </div>
+                )}
+                {r.updatedAtLabel && (
+                  <div>
+                    <dt>Last updated</dt>
+                    <dd>{r.updatedAtLabel}</dd>
+                  </div>
+                )}
+              </dl>
+
+              <p className="rlp__card-open">Open restaurant</p>
+            </Link>
+          ))}
+        </div>
+      )}
     </main>
   )
 }
