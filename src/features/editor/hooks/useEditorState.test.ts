@@ -142,4 +142,36 @@ describe("useEditorState — undo/redo", () => {
     expect(originalSecond?.x).toBe(4)
     expect(originalSecond?.y).toBe(4)
   })
+
+  it("applies one shared clamp delta for multi-select moves", () => {
+    const { result } = renderHook(() => useEditorState())
+
+    let leftId = ""
+    let rightId = ""
+    act(() => {
+      leftId = result.current.addEntity("table-square", 1, 1)!.id
+      rightId = result.current.addEntity("table-square", 10, 1)!.id
+    })
+
+    // Attempt to drag far left: the left table hits boundary first, so the
+    // whole group should move by -1 (not collapse spacing).
+    act(() => {
+      result.current.moveEntitiesByDelta([leftId, rightId], -5, 0)
+    })
+
+    const afterLeft = result.current.entities.find((entity) => entity.id === leftId)
+    const afterRight = result.current.entities.find((entity) => entity.id === rightId)
+    expect(afterLeft?.x).toBe(0)
+    expect(afterRight?.x).toBe(9)
+
+    // Drag back by +1 and ensure original spacing/positions are restored.
+    act(() => {
+      result.current.moveEntitiesByDelta([leftId, rightId], 1, 0)
+    })
+
+    const restoredLeft = result.current.entities.find((entity) => entity.id === leftId)
+    const restoredRight = result.current.entities.find((entity) => entity.id === rightId)
+    expect(restoredLeft?.x).toBe(1)
+    expect(restoredRight?.x).toBe(10)
+  })
 })

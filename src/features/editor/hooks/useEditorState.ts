@@ -334,23 +334,50 @@ function editorReducer(state: EditorState, action: Action): EditorState {
       if (action.ids.length === 0) return state
       const ids = new Set(action.ids)
       const targetZoneId = action.zoneId ?? null
+      const selected = state.entities.filter((entity) => {
+        if (!ids.has(entity.id)) return false
+        if (targetZoneId && (entity.zoneId ?? null) !== targetZoneId) return false
+        return true
+      })
+      if (selected.length === 0) return state
+
+      // Keep multi-select movement rigid: compute one shared delta that is valid
+      // for every selected entity, then apply it uniformly.
+      let minDx = -Infinity
+      let maxDx = Infinity
+      let minDy = -Infinity
+      let maxDy = Infinity
+
+      for (const entity of selected) {
+        const aabb = rotatedAABB(entity.x, entity.y, entity.w, entity.h, entity.rotation)
+        const minAabbX = entity.type === "threshold" || entity.type === "portal" ? -1 : 0
+        const maxAabbX =
+          (entity.type === "threshold" || entity.type === "portal"
+            ? state.canvasCols + 1
+            : state.canvasCols) - aabb.w
+        const minAabbY = entity.type === "threshold" || entity.type === "portal" ? -1 : 0
+        const maxAabbY =
+          (entity.type === "threshold" || entity.type === "portal"
+            ? state.canvasRows + 1
+            : state.canvasRows) - aabb.h
+
+        minDx = Math.max(minDx, minAabbX - aabb.x)
+        maxDx = Math.min(maxDx, maxAabbX - aabb.x)
+        minDy = Math.max(minDy, minAabbY - aabb.y)
+        maxDy = Math.min(maxDy, maxAabbY - aabb.y)
+      }
+
+      const sharedDx = Math.max(minDx, Math.min(action.dx, maxDx))
+      const sharedDy = Math.max(minDy, Math.min(action.dy, maxDy))
+      if (sharedDx === 0 && sharedDy === 0) return state
+
       let changed = false
       const entities = state.entities.map((entity) => {
         if (!ids.has(entity.id)) return entity
         if (targetZoneId && (entity.zoneId ?? null) !== targetZoneId) return entity
 
-        let x = entity.x + action.dx
-        let y = entity.y + action.dy
-        const aabb = rotatedAABB(x, y, entity.w, entity.h, entity.rotation)
-        const offsetX = (aabb.w - entity.w) / 2
-        const offsetY = (aabb.h - entity.h) / 2
-        if (entity.type === "threshold" || entity.type === "portal") {
-          x = Math.max(-1, Math.min(aabb.x, state.canvasCols + 1 - aabb.w)) + offsetX
-          y = Math.max(-1, Math.min(aabb.y, state.canvasRows + 1 - aabb.h)) + offsetY
-        } else {
-          x = Math.max(0, Math.min(aabb.x, state.canvasCols - aabb.w)) + offsetX
-          y = Math.max(0, Math.min(aabb.y, state.canvasRows - aabb.h)) + offsetY
-        }
+        const x = entity.x + sharedDx
+        const y = entity.y + sharedDy
         if (x === entity.x && y === entity.y) return entity
         changed = true
         return { ...entity, x, y }
