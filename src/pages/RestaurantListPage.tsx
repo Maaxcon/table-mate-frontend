@@ -177,13 +177,25 @@ export function RestaurantListPage() {
   return (
     <main className="rlp">
       <header className="rlp__hero">
-        <div className="rlp__brand-row">
-          <p className="rlp__brand">
-            <span className="rlp__brand-dot" aria-hidden="true" />
+        <div className="rlp__hero-top">
+          <p className="rlp__brand" aria-label="Table Mate">
             Table Mate
           </p>
-          <Link to="/cabinet" className="rlp__cabinet-link">
-            Перейти в кабінет
+          <Link to="/cabinet" className="rlp__cabinet-link" aria-label="Перейти в кабінет">
+            <svg
+              className="rlp__cabinet-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" />
+              <path d="M4 20a8 8 0 0 1 16 0" />
+            </svg>
+            <span className="rlp__cabinet-text">Перейти в кабінет</span>
           </Link>
         </div>
         <h1 className="rlp__heading">Наші ресторани</h1>

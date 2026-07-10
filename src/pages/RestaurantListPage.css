@@ -6,51 +6,97 @@
 }
 
 .rlp__hero {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: block;
   margin-bottom: 18px;
-  padding: 14px 16px;
-  border-radius: 16px;
-  border: 1px solid color-mix(in srgb, var(--color-primary) 24%, var(--color-border-default));
-  background: linear-gradient(
-    155deg,
-    color-mix(in srgb, var(--color-primary) 8%, var(--color-bg-surface)),
-    color-mix(in srgb, var(--color-bg-surface) 94%, var(--color-bg-surface-subtle))
-  );
+  padding: 16px;
+  border-radius: 20px;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 30%, var(--color-border-default));
+  background:
+    radial-gradient(
+      circle at 82% 18%,
+      color-mix(in srgb, var(--color-primary) 26%, transparent),
+      transparent 62%
+    ),
+    linear-gradient(
+      148deg,
+      color-mix(in srgb, var(--color-primary) 14%, var(--color-bg-surface)),
+      color-mix(in srgb, var(--color-bg-surface) 96%, var(--color-bg-surface-subtle))
+    );
+  box-shadow:
+    0 20px 36px -30px color-mix(in srgb, var(--color-primary) 72%, transparent),
+    0 10px 18px -14px color-mix(in srgb, var(--color-text-primary) 42%, transparent);
 }
 
-.rlp__brand-row {
+.rlp__hero::before {
+  content: "";
+  position: absolute;
+  right: -100px;
+  top: -112px;
+  width: 250px;
+  aspect-ratio: 1;
+  border-radius: 999px;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--color-primary) 34%, transparent),
+    transparent 68%
+  );
+  z-index: -1;
+}
+
+.rlp__hero::after {
+  content: "";
+  position: absolute;
+  left: -80px;
+  bottom: -150px;
+  width: 220px;
+  aspect-ratio: 1;
+  border-radius: 999px;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--color-primary) 16%, transparent),
+    transparent 70%
+  );
+  z-index: -1;
+}
+
+.rlp__hero-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
-  flex-wrap: wrap;
+  gap: 12px;
 }
 
 .rlp__brand {
   margin: 0;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 0.11em;
-  text-transform: uppercase;
-  color: color-mix(in srgb, var(--color-primary) 82%, var(--color-text-primary));
-}
-
-.rlp__brand-dot {
-  width: 9px;
-  height: 9px;
-  border-radius: 999px;
-  background: var(--color-primary);
-  box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-primary) 22%, transparent);
+  gap: 0;
+  min-width: 0;
+  font-family: var(--font-family-display), "Exo 2", "Manrope", sans-serif;
+  font-size: clamp(16px, 2.1vw, 20px);
+  line-height: 1;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: none;
+  color: color-mix(in srgb, var(--color-primary) 86%, var(--color-text-primary));
+  white-space: nowrap;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--color-primary) 88%, var(--color-text-primary)),
+    color-mix(in srgb, var(--color-primary) 52%, var(--color-text-primary))
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .rlp__cabinet-link {
-  height: 34px;
-  padding: 0 14px;
+  height: 36px;
+  width: 36px;
+  padding: 0;
   border-radius: 999px;
   display: inline-flex;
   align-items: center;
@@ -58,13 +104,21 @@
   text-decoration: none;
   font-size: 13px;
   font-weight: 700;
-  color: color-mix(in srgb, var(--color-primary) 88%, var(--color-text-primary));
-  border: 1px solid color-mix(in srgb, var(--color-primary) 28%, var(--color-border-default));
-  background: var(--color-bg-surface);
+  color: color-mix(in srgb, var(--color-primary) 90%, var(--color-text-primary));
+  border: 1px solid color-mix(in srgb, var(--color-primary) 34%, var(--color-border-default));
+  background: color-mix(in srgb, var(--color-bg-surface) 86%, transparent);
+  box-shadow: 0 8px 14px -14px color-mix(in srgb, var(--color-primary) 70%, transparent);
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    background-color 0.2s ease;
+  flex-shrink: 0;
 }
 
 .rlp__cabinet-link:hover {
-  background: color-mix(in srgb, var(--color-primary) 8%, var(--color-bg-surface));
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--color-primary) 44%, var(--color-border-default));
+  background: color-mix(in srgb, var(--color-primary) 10%, var(--color-bg-surface));
 }
 
 .rlp__cabinet-link:focus-visible {
@@ -72,14 +126,43 @@
   outline-offset: 2px;
 }
 
+.rlp__cabinet-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.rlp__cabinet-text {
+  display: none;
+}
+
 .rlp__heading {
-  margin: 0;
-  font-family: "Space Grotesk", "Manrope", sans-serif;
-  font-size: clamp(24px, 4.4vw, 34px);
-  font-weight: 800;
-  letter-spacing: -0.015em;
-  line-height: 1.14;
-  color: var(--color-text-primary);
+  margin: 10px 0 0;
+  position: relative;
+  display: inline-block;
+  padding-bottom: 6px;
+  font-family: var(--font-family-display), "Exo 2", "Manrope", sans-serif;
+  font-size: clamp(31px, 5.1vw, 48px);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.03;
+  color: color-mix(in srgb, var(--color-text-primary) 94%, var(--color-primary));
+  text-shadow: 0 10px 18px color-mix(in srgb, var(--color-primary) 18%, transparent);
+  text-wrap: balance;
+}
+
+.rlp__heading::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: min(190px, 72%);
+  height: 3px;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--color-primary) 78%, transparent),
+    color-mix(in srgb, var(--color-primary) 24%, transparent)
+  );
 }
 
 .rlp__result-count {
@@ -471,16 +554,26 @@
   }
 
   .rlp__hero {
-    gap: 14px;
     padding: 24px 26px;
   }
 
-  .rlp__brand-row {
+  .rlp__hero-top {
     flex-wrap: nowrap;
   }
 
+  .rlp__cabinet-link {
+    width: auto;
+    padding: 0 12px;
+    gap: 8px;
+  }
+
+  .rlp__cabinet-text {
+    display: inline;
+    white-space: nowrap;
+  }
+
   .rlp__heading {
-    font-size: clamp(31px, 2.7vw, 40px);
+    font-size: clamp(40px, 2.8vw, 54px);
   }
 
   .rlp__cards {
@@ -500,7 +593,7 @@
   }
 
   .rlp__heading {
-    font-size: clamp(34px, 2.5vw, 44px);
+    font-size: clamp(42px, 2.6vw, 58px);
   }
 
   .rlp__cards {
@@ -512,10 +605,6 @@
 @media (max-width: 780px) {
   .rlp__hero {
     padding: 16px;
-  }
-
-  .rlp__cabinet-link {
-    width: 100%;
   }
 
   .rlp__toolbar {
