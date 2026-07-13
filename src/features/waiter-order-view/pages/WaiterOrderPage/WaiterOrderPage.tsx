@@ -86,6 +86,8 @@ export function WaiterOrderPage() {
   } = useNotificationStream()
   const tablesRef = useRef<FloorTable[]>([])
   const reservationsRef = useRef<ReservationItem[]>([])
+  const showNotificationReminder =
+    isTabletLayout && sidebarTab !== "notifications" && notificationUnreadCount > 0
 
   useEffect(() => {
     const update = () => setIsTabletLayout(window.innerWidth <= TABLET_BREAKPOINT)
@@ -605,5 +607,3 @@ export function WaiterOrderPage() {
     </div>
   )
 }
-const showNotificationReminder =
-  isTabletLayout && sidebarTab !== "notifications" && notificationUnreadCount > 0
