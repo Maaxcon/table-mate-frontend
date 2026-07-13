@@ -139,6 +139,17 @@
   animation: waiterTabPulse 2.4s ease-in-out infinite;
 }
 
+[data-theme="dark"] .waiter-view__sidebar-tab-badge {
+  background: linear-gradient(
+    145deg,
+    color-mix(in srgb, var(--color-primary) 45%, rgba(0, 0, 0, 0.45)),
+    color-mix(in srgb, var(--color-primary) 28%, rgba(0, 0, 0, 0.25))
+  );
+  border-color: color-mix(in srgb, var(--color-primary) 60%, rgba(255, 255, 255, 0.15));
+  color: color-mix(in srgb, rgba(255, 255, 255, 0.9), var(--color-primary));
+  box-shadow: 0 10px 24px -12px color-mix(in srgb, var(--color-primary) 55%, transparent);
+}
+
 @keyframes waiterTabPulse {
   0% {
     transform: translateY(0) scale(0.96);

@@ -174,9 +174,15 @@
   letter-spacing: 0.08em;
   padding: 2px 9px;
   border-radius: 999px;
-  background: color-mix(in srgb, var(--k-active) 28%, transparent);
-  color: color-mix(in srgb, white 70%, var(--k-active));
-  box-shadow: 0 6px 16px -8px color-mix(in srgb, var(--k-active) 40%, transparent);
+  text-transform: uppercase;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--k-active) 68%, rgba(255, 255, 255, 0.15)),
+    color-mix(in srgb, var(--k-active) 35%, rgba(255, 255, 255, 0.08))
+  );
+  border: 1px solid color-mix(in srgb, var(--k-active) 60%, transparent);
+  color: color-mix(in srgb, white 85%, var(--k-active));
+  box-shadow: 0 6px 16px -8px color-mix(in srgb, var(--k-active) 45%, transparent);
 }
 
 @keyframes kanbanNotifPulse {

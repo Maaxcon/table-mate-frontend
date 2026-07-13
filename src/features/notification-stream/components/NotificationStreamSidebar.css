@@ -244,10 +244,15 @@
   font-weight: 700;
   letter-spacing: 0.08em;
   border-radius: 999px;
-  background: color-mix(in srgb, var(--color-primary) 25%, transparent);
-  color: var(--color-primary);
-  box-shadow: none;
-  text-shadow: none;
+  text-transform: uppercase;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--color-primary) 65%, rgba(255, 255, 255, 0.15)),
+    color-mix(in srgb, var(--color-primary) 35%, rgba(255, 255, 255, 0.05))
+  );
+  border: 1px solid color-mix(in srgb, var(--color-primary) 60%, transparent);
+  color: color-mix(in srgb, var(--color-bg-surface) 85%, var(--color-primary));
+  box-shadow: 0 4px 10px -6px color-mix(in srgb, var(--color-primary) 55%, transparent);
 }
 
 @keyframes notificationStreamPulse {
