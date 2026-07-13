@@ -10,7 +10,7 @@ import { notifyKitchenEvent } from "../kitchenEventBus"
 const MAX_EVENTS = 50
 const BASE_DELAY_MS = 1000
 const MAX_DELAY_MS = 30000
-const READ_IDS_STORAGE_KEY = "tablemate.staff.notifications.read"
+const DEFAULT_READ_IDS_STORAGE_KEY = "tablemate.staff.notifications.read"
 
 function jitter(delay: number): number {
   return delay * (0.5 + Math.random() * 0.5)
@@ -34,7 +34,11 @@ function parseMessage(msg: WSNotificationMessage): NotificationEvent | null {
   }
 }
 
-export function useNotificationStream() {
+type NotificationStreamOptions = {
+  readStorageKey?: string
+}
+
+export function useNotificationStream(options: NotificationStreamOptions = {}) {
   const [events, setEvents] = useState<NotificationEvent[]>([])
   const [isConnected, setIsConnected] = useState(false)
   const wsRef = useRef<WebSocket | null>(null)
@@ -45,20 +49,21 @@ export function useNotificationStream() {
   const eventsRef = useRef<NotificationEvent[]>([])
   const readIdsRef = useRef<Set<string>>(new Set())
   const storage = typeof window !== "undefined" ? (window.localStorage ?? null) : null
+  const readStorageKey = options.readStorageKey ?? DEFAULT_READ_IDS_STORAGE_KEY
 
   const persistReadIds = useCallback(() => {
     if (!storage) return
     try {
-      storage.setItem(READ_IDS_STORAGE_KEY, JSON.stringify([...readIdsRef.current]))
+      storage.setItem(readStorageKey, JSON.stringify([...readIdsRef.current]))
     } catch {
       // ignore storage failures
     }
-  }, [storage])
+  }, [storage, readStorageKey])
 
   useEffect(() => {
     if (!storage) return
     try {
-      const raw = storage.getItem(READ_IDS_STORAGE_KEY)
+      const raw = storage.getItem(readStorageKey)
       if (!raw) return
       const parsed = JSON.parse(raw)
       if (!Array.isArray(parsed)) return
@@ -74,7 +79,7 @@ export function useNotificationStream() {
     } catch {
       // ignore corrupted storage
     }
-  }, [storage])
+  }, [storage, readStorageKey])
 
   const upsertEvent = useCallback((incoming: NotificationEvent) => {
     const normalized = readIdsRef.current.has(incoming.id) ? { ...incoming, read: true } : incoming

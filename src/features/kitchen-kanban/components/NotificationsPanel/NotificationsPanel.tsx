@@ -25,8 +25,12 @@ function renderDescription(description: string) {
   )
 }
 
+const KITCHEN_READ_STORAGE_KEY = "tablemate.kitchen.notifications.read"
+
 export function NotificationsPanel() {
-  const { events, isConnected, markEventRead, markAllRead } = useNotificationStream()
+  const { events, isConnected, markEventRead, markAllRead } = useNotificationStream({
+    readStorageKey: KITCHEN_READ_STORAGE_KEY,
+  })
   const kitchenEvents = events.filter((event) => event.stream === "kitchen")
   const unreadEvents = kitchenEvents.filter((event) => !event.read)
   const readEvents = kitchenEvents.filter((event) => event.read)
