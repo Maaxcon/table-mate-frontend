@@ -797,12 +797,13 @@ export function ReservationScheduler() {
             <button type="button" className="scheduler__nav-btn" onClick={() => shiftAllDates(1)}>
               <LuChevronRight aria-hidden="true" />
             </button>
-          </div>
-          <div className="scheduler__toolbar-actions">
+            <div className="scheduler__toolbar-nav-divider" />
             <CancelZone
               activeDragId={activeDragId}
               pendingCancellationIds={state.pendingCancellationIds}
             />
+          </div>
+          <div className="scheduler__toolbar-actions">
             <span className="scheduler__timezone-label">{restaurantTimezone}</span>
             <button
               type="button"
