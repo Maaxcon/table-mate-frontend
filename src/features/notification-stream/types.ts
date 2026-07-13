@@ -38,6 +38,7 @@ export interface NotificationEvent {
   sessionId?: string
   reservationId?: string
   timestamp: Date
+  read: boolean
 }
 
 const CLIENT_EVENTS = new Set<KnownWSMessageType>([
@@ -65,6 +66,33 @@ export function getStream(type: WSMessageType): StreamType | null {
   return inferStreamFromType(type)
 }
 
+function humanizeFallbackTitle(type: string): string {
+  return type
+    .toLowerCase()
+    .split(/[_\s]+/)
+    .map((token) => token.charAt(0).toUpperCase() + token.slice(1))
+    .join(" ")
+}
+
+function fallbackDescription(data: WSNotificationData): string {
+  if (data.table_number && data.menu_item_name && data.status) {
+    return `Table ${data.table_number} — ${data.menu_item_name} → ${data.status}`
+  }
+  if (data.table_number && data.status) {
+    return `Table ${data.table_number} — ${data.status}`
+  }
+  if (data.table_number) {
+    return `Table ${data.table_number}`
+  }
+  if (data.ticket_id) {
+    return `Ticket ${data.ticket_id}`
+  }
+  if (data.session_id) {
+    return `Session ${data.session_id}`
+  }
+  return ""
+}
+
 export function formatEvent(
   type: WSMessageType,
   data: WSNotificationData,
@@ -72,7 +100,7 @@ export function formatEvent(
   title: string
   description: string
 } {
-  const titles: Record<WSMessageType, string> = {
+  const titles: Record<KnownWSMessageType, string> = {
     CART_CREATED: "Cart started",
     CART_CHECKED_OUT: "Cart checked out",
     HALL_NEW_RESERVATION: "New reservation",
@@ -80,7 +108,7 @@ export function formatEvent(
     KITCHEN_TICKET_INJECTED: "New ticket",
   }
 
-  const descriptions: Record<WSMessageType, string> = {
+  const descriptions: Record<KnownWSMessageType, string> = {
     CART_CREATED: `Table ${data.table_number} — ${data.guest_name ?? "Guest"}`,
     CART_CHECKED_OUT: `Table ${data.table_number}`,
     HALL_NEW_RESERVATION: `Table ${data.table_number} — ${data.guest_name ?? "Guest"}, ${data.guest_count} guests`,
@@ -88,8 +116,8 @@ export function formatEvent(
     KITCHEN_TICKET_INJECTED: `Table ${data.table_number} — ${data.items_count ?? 0} item(s)`,
   }
 
-  return {
-    title: titles[type] ?? type,
-    description: descriptions[type] ?? "",
-  }
+  const title = titles[type as KnownWSMessageType] ?? humanizeFallbackTitle(type)
+  const description = descriptions[type as KnownWSMessageType] ?? fallbackDescription(data)
+
+  return { title, description }
 }

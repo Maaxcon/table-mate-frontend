@@ -10,6 +10,7 @@ import { notifyKitchenEvent } from "../kitchenEventBus"
 const MAX_EVENTS = 50
 const BASE_DELAY_MS = 1000
 const MAX_DELAY_MS = 30000
+const READ_IDS_STORAGE_KEY = "tablemate.staff.notifications.read"
 
 function jitter(delay: number): number {
   return delay * (0.5 + Math.random() * 0.5)
@@ -29,6 +30,7 @@ function parseMessage(msg: WSNotificationMessage): NotificationEvent | null {
     sessionId: msg.data.session_id,
     reservationId: msg.data.reservation_id,
     timestamp: new Date(msg.data.timestamp),
+    read: false,
   }
 }
 
@@ -41,9 +43,42 @@ export function useNotificationStream() {
   const mountedRef = useRef(true)
   const connectRef = useRef<() => void>(() => {})
   const eventsRef = useRef<NotificationEvent[]>([])
+  const readIdsRef = useRef<Set<string>>(new Set())
+  const storage = typeof window !== "undefined" ? (window.localStorage ?? null) : null
+
+  const persistReadIds = useCallback(() => {
+    if (!storage) return
+    try {
+      storage.setItem(READ_IDS_STORAGE_KEY, JSON.stringify([...readIdsRef.current]))
+    } catch {
+      // ignore storage failures
+    }
+  }, [storage])
+
+  useEffect(() => {
+    if (!storage) return
+    try {
+      const raw = storage.getItem(READ_IDS_STORAGE_KEY)
+      if (!raw) return
+      const parsed = JSON.parse(raw)
+      if (!Array.isArray(parsed)) return
+      const validIds = parsed.filter((id): id is string => typeof id === "string")
+      readIdsRef.current = new Set(validIds)
+      if (eventsRef.current.length > 0) {
+        const nextEvents = eventsRef.current.map((event) =>
+          readIdsRef.current.has(event.id) ? { ...event, read: true } : event,
+        )
+        eventsRef.current = nextEvents
+        setEvents(nextEvents)
+      }
+    } catch {
+      // ignore corrupted storage
+    }
+  }, [storage])
 
   const upsertEvent = useCallback((incoming: NotificationEvent) => {
-    const existingIndex = eventsRef.current.findIndex((event) => event.id === incoming.id)
+    const normalized = readIdsRef.current.has(incoming.id) ? { ...incoming, read: true } : incoming
+    const existingIndex = eventsRef.current.findIndex((event) => event.id === normalized.id)
     const withoutExisting =
       existingIndex === -1
         ? eventsRef.current
@@ -51,11 +86,39 @@ export function useNotificationStream() {
             ...eventsRef.current.slice(0, existingIndex),
             ...eventsRef.current.slice(existingIndex + 1),
           ]
-    const nextEvents = [incoming, ...withoutExisting].slice(0, MAX_EVENTS)
+    const nextEvents = [normalized, ...withoutExisting].slice(0, MAX_EVENTS)
     eventsRef.current = nextEvents
     setEvents(nextEvents)
     return existingIndex === -1
   }, [])
+
+  const markEventRead = useCallback(
+    (eventId: string) => {
+      if (readIdsRef.current.has(eventId)) return
+      readIdsRef.current.add(eventId)
+      persistReadIds()
+      const nextEvents = eventsRef.current.map((event) =>
+        event.id === eventId ? { ...event, read: true } : event,
+      )
+      eventsRef.current = nextEvents
+      setEvents(nextEvents)
+    },
+    [persistReadIds],
+  )
+
+  const markAllRead = useCallback(() => {
+    let changed = false
+    const nextEvents = eventsRef.current.map((event) => {
+      if (event.read) return event
+      changed = true
+      return { ...event, read: true }
+    })
+    if (!changed) return
+    eventsRef.current = nextEvents
+    nextEvents.forEach((event) => readIdsRef.current.add(event.id))
+    setEvents(nextEvents)
+    persistReadIds()
+  }, [persistReadIds])
 
   const cleanup = useCallback(() => {
     if (reconnectTimeoutRef.current) {
@@ -160,5 +223,7 @@ export function useNotificationStream() {
     }
   }, [connect, cleanup])
 
-  return { events, isConnected }
+  const unreadCount = events.reduce((count, event) => (!event.read ? count + 1 : count), 0)
+
+  return { events, isConnected, unreadCount, markEventRead, markAllRead }
 }

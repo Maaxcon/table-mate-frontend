@@ -14,6 +14,12 @@
   background: var(--k-text-faint);
 }
 
+.kanban__notif-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .kanban__notif-status--on {
   background: var(--k-active);
   box-shadow: 0 0 0 3px var(--k-active-soft);
@@ -30,16 +36,64 @@
   padding: 20px 12px;
 }
 
+.kanban__notif-read-all {
+  border: none;
+  background: none;
+  color: var(--k-active);
+  font-size: 0.7rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+}
+
+.kanban__notif-read-all:hover {
+  text-decoration: underline;
+}
+
+.kanban__notif-subheading {
+  margin: 8px 0 4px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--k-text-muted);
+  text-transform: uppercase;
+}
+
 .kanban__notif {
   display: flex;
   flex-direction: column;
   gap: 3px;
+  text-align: left;
+  border: 1px solid color-mix(in srgb, var(--k-divider) 70%, transparent);
+  border-radius: 14px;
+  padding: 12px 14px;
+  background: color-mix(in srgb, var(--k-bg) 70%, #fff);
+  cursor: pointer;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.2s ease;
+}
+
+.kanban__notif:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px -12px rgba(0, 0, 0, 0.35);
+}
+
+.kanban__notif--unread {
+  border-color: color-mix(in srgb, var(--k-active) 60%, var(--k-divider));
+  box-shadow: 0 10px 24px -18px color-mix(in srgb, var(--k-active) 80%, transparent);
 }
 
 .kanban__notif-top {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
+  gap: 8px;
+}
+
+.kanban__notif-meta {
+  display: flex;
+  align-items: center;
   gap: 8px;
 }
 
@@ -61,6 +115,16 @@
   font-size: 0.78rem;
   color: var(--k-text-muted);
   line-height: 1.4;
+}
+
+.kanban__notif-pill {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--k-active) 20%, transparent);
+  color: var(--k-active);
 }
 
 .kanban__notif-arrow {

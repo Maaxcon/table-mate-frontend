@@ -77,7 +77,12 @@ export function WaiterOrderPage() {
   const [isTabletLayout, setIsTabletLayout] = useState(() =>
     typeof window !== "undefined" ? window.innerWidth <= TABLET_BREAKPOINT : false,
   )
-  const { events: notificationEvents, isConnected: notificationConnected } = useNotificationStream()
+  const {
+    events: notificationEvents,
+    isConnected: notificationConnected,
+    markEventRead,
+    markAllRead,
+  } = useNotificationStream()
   const tablesRef = useRef<FloorTable[]>([])
   const reservationsRef = useRef<ReservationItem[]>([])
 
@@ -478,6 +483,8 @@ export function WaiterOrderPage() {
                 <NotificationStreamSidebar
                   events={notificationEvents}
                   isConnected={notificationConnected}
+                  markEventRead={markEventRead}
+                  markAllRead={markAllRead}
                 />
               )}
             </div>
@@ -495,6 +502,8 @@ export function WaiterOrderPage() {
             <NotificationStreamSidebar
               events={notificationEvents}
               isConnected={notificationConnected}
+              markEventRead={markEventRead}
+              markAllRead={markAllRead}
             />
           </div>
         )}

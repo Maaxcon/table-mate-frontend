@@ -15,6 +15,12 @@
   justify-content: space-between;
 }
 
+.notification-stream__header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .notification-stream__title {
   font-size: 0.72rem;
   font-weight: 700;
@@ -42,6 +48,22 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
+}
+
+.notification-stream__read-all {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border: none;
+  background: none;
+  color: var(--color-primary);
+  cursor: pointer;
+  padding: 0;
+}
+
+.notification-stream__read-all:hover {
+  text-decoration: underline;
 }
 
 .notification-stream__sections {
@@ -78,6 +100,14 @@
   color: var(--color-text-secondary);
 }
 
+.notification-stream__subheading {
+  margin: 6px 0 4px;
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: var(--color-text-secondary);
+}
+
 .notification-stream__section-count {
   font-size: 0.7rem;
   color: var(--color-text-primary);
@@ -107,6 +137,12 @@
     transform 0.15s;
 }
 
+.notification-stream__event--unread {
+  border-color: color-mix(in srgb, var(--color-primary) 50%, var(--color-border-default));
+  box-shadow: 0 4px 14px -6px color-mix(in srgb, var(--color-primary) 50%, transparent);
+  background: color-mix(in srgb, var(--color-primary) 5%, var(--color-bg-secondary));
+}
+
 .notification-stream__event:hover {
   box-shadow: var(--w-shadow-md);
   transform: translateY(-1px);
@@ -118,6 +154,12 @@
   justify-content: space-between;
   margin-bottom: 4px;
   gap: 12px;
+}
+
+.notification-stream__event-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .notification-stream__event-title {
@@ -147,4 +189,15 @@
 
 .notification-stream__arrow--pending {
   color: var(--color-warning-icon);
+}
+.notification-stream__pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 6px;
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  color: var(--color-primary);
 }
