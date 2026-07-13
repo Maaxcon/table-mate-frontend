@@ -1,4 +1,5 @@
 import { useCallback, useMemo } from "react"
+import { LuQrCode } from "react-icons/lu"
 import type { Zone } from "@/features/reservation/api"
 import type { EditorEntity } from "@/features/editor/types"
 import {
@@ -465,23 +466,26 @@ export function PropertiesSidebar({
         {isTable && (
           <details open className="editor-sidebar__section">
             <summary className="editor-sidebar__section-title">Table Settings</summary>
-            <div className="editor-sidebar__field">
-              <span className="editor-sidebar__label">Table ID</span>
-              <span className="editor-sidebar__value">
-                {entity.label || "Auto-assigned on publish"}
-              </span>
+            <div className="editor-sidebar__qr-card">
+              <div>
+                <span className="editor-sidebar__label">Table ID</span>
+                <span className="editor-sidebar__value">
+                  {entity.label || "Auto-assigned on publish"}
+                </span>
+              </div>
+              {entity.serverId ? (
+                <button
+                  type="button"
+                  className="editor-sidebar__qr-btn"
+                  onClick={() => onShowQr(entity.serverId!, entity.label ?? "")}
+                >
+                  <LuQrCode aria-hidden="true" />
+                  Show QR
+                </button>
+              ) : (
+                <span className="editor-sidebar__hint">Publish to get a QR code</span>
+              )}
             </div>
-            {entity.serverId ? (
-              <button
-                type="button"
-                className="editor-sidebar__button editor-sidebar__button--soft"
-                onClick={() => onShowQr(entity.serverId!, entity.label ?? "")}
-              >
-                Show QR code
-              </button>
-            ) : (
-              <p className="editor-sidebar__hint">Publish this table to get its QR code.</p>
-            )}
             <div className="editor-sidebar__field">
               <label className="editor-sidebar__label" htmlFor="sidebar-label">
                 Public label
