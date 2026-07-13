@@ -170,9 +170,11 @@ export function useFloorSubscription({
     // The floor stream is public: anonymous guests connect with just the
     // restaurant param, a token only adds the (optional) identity/claim.
     const params = new URLSearchParams()
-    if (accessToken) params.set("token", accessToken)
     if (restaurantId) params.set("restaurant", restaurantId)
-    const ws = new WebSocket(`${env.wsUrl}/floor/?${params}`)
+    const ws = new WebSocket(
+      `${env.wsUrl}/floor/?${params}`,
+      accessToken ? ["access_token", accessToken] : undefined,
+    )
     wsRef.current = ws
 
     ws.onopen = () => {

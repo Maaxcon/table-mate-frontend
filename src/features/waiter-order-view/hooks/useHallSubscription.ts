@@ -166,7 +166,7 @@ export function useHallSubscription({
   const connect = useCallback(() => {
     if (!accessToken || env.wsUrl === "Not configured") return
 
-    const ws = new WebSocket(`${env.wsUrl}/hall/?token=${accessToken}`)
+    const ws = new WebSocket(`${env.wsUrl}/hall/`, ["access_token", accessToken])
     wsRef.current = ws
 
     ws.onopen = () => {
