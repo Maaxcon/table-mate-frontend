@@ -1,9 +1,22 @@
+import { useEffect } from "react"
 import { Navigate, Outlet } from "react-router-dom"
 import { useAppSelector } from "@/store/hooks"
+import { clearPostLoginRedirect, peekPostLoginRedirect } from "@/store/auth/postLoginRedirect"
 
 function PublicRoute() {
   const user = useAppSelector((state) => state.auth.user)
+
+  // Read-only during render (safe under StrictMode's double-render); the
+  // matching clear runs once the redirect has actually been committed.
+  useEffect(() => {
+    if (user) clearPostLoginRedirect()
+  }, [user])
+
   if (user) {
+    const redirectTarget = peekPostLoginRedirect()
+    if (redirectTarget) {
+      return <Navigate to={redirectTarget} replace />
+    }
     if (user.role === "cook") {
       return <Navigate to="/staff/orders" replace />
     }
