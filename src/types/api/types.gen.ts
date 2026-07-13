@@ -3875,6 +3875,22 @@ export type RestaurantsTablesRetrieveResponses = {
 export type RestaurantsTablesRetrieveResponse =
   RestaurantsTablesRetrieveResponses[keyof RestaurantsTablesRetrieveResponses]
 
+export type RestaurantsTablesQrRetrieveData = {
+  body?: never
+  path: {
+    public_id: string
+  }
+  query?: never
+  url: "/api/restaurants/tables/{public_id}/qr/"
+}
+
+export type RestaurantsTablesQrRetrieveResponses = {
+  200: Blob | File
+}
+
+export type RestaurantsTablesQrRetrieveResponse =
+  RestaurantsTablesQrRetrieveResponses[keyof RestaurantsTablesQrRetrieveResponses]
+
 export type RestaurantsTablesLayoutRetrieveData = {
   body?: never
   path?: never
