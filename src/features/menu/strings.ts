@@ -22,6 +22,8 @@ export const menuStrings = {
     signOut: "Вийти",
     openCabinet: "Open my cabinet",
     book: "Book the table",
+    adminArea: "До адмін-панелі",
+    waiterArea: "До робочого залу",
   },
   hero: {
     label: "Menu",
