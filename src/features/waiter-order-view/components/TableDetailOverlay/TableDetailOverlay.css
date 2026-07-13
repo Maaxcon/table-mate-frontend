@@ -25,9 +25,141 @@
   border-left-color: rgba(255, 255, 255, 0.08);
 }
 
+@media (max-width: 768px) {
+  .overlay {
+    width: min(460px, 100vw);
+  }
+
+  .overlay__header {
+    padding: 20px 20px 4px;
+  }
+
+  .overlay__title {
+    font-size: 1.5rem;
+  }
+
+  .overlay__actions--pill {
+    padding: 16px 20px;
+    margin: 8px 16px 0;
+  }
+
+  .overlay__body {
+    padding: 0 20px;
+  }
+
+  .overlay__footer {
+    padding: 0 20px 20px;
+  }
+
+  .overlay__tabs {
+    margin: 4px 20px 12px;
+  }
+
+  .overlay__divider {
+    margin: 16px 20px;
+  }
+
+  .overlay__skeleton {
+    padding: 0 20px;
+  }
+
+  .overlay__open-panel {
+    padding: 12px 20px 0;
+  }
+}
+
 @media (max-width: 520px) {
   .overlay {
     width: 100vw;
+  }
+
+  .overlay__header {
+    padding: 16px 14px 4px;
+  }
+
+  .overlay__title {
+    font-size: 1.3rem;
+  }
+
+  .overlay__status-cards {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .overlay__actions {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .overlay__actions--pill {
+    padding: 12px 14px;
+    margin: 6px 12px 0;
+  }
+
+  .overlay__action-btn {
+    flex: 1;
+    min-width: 0;
+    text-align: center;
+    padding: 8px 10px;
+    font-size: 0.7rem;
+  }
+
+  .overlay__body {
+    padding: 0 14px;
+  }
+
+  .overlay__footer {
+    padding: 0 14px 16px;
+  }
+
+  .overlay__tabs {
+    margin: 4px 14px 8px;
+  }
+
+  .overlay__tab {
+    padding: 10px 14px;
+    font-size: 0.68rem;
+  }
+
+  .overlay__divider {
+    margin: 12px 14px;
+  }
+
+  .overlay__reservation-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 14px;
+  }
+
+  .overlay__reservation-actions {
+    justify-content: stretch;
+  }
+
+  .overlay__reservation-actions button {
+    flex: 1;
+  }
+
+  .overlay__open-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .overlay__open-row .overlay__cta {
+    width: 100%;
+  }
+
+  .overlay__skeleton {
+    padding: 0 14px;
+  }
+
+  .overlay__open-panel {
+    padding: 10px 14px 0;
+  }
+
+  .overlay__status-value {
+    font-size: 0.85rem;
   }
 }
 
@@ -181,9 +313,28 @@
   flex: 1;
 }
 
+.overlay__body--reservations {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.overlay__body--reservations .overlay__reservation-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 4px;
+  max-height: clamp(220px, 45vh, 380px);
+}
+
+.overlay__body-footer--sticky {
+  padding: 0 28px 28px;
+  border-top: 1px solid var(--color-border-light);
+}
+
 .overlay__body-footer {
   padding: 24px 0 32px;
-  margin-top: 24px;
+  margin-top: 16px;
   border-top: 1px solid var(--color-border-light);
 }
 
@@ -273,7 +424,7 @@
 .overlay__tabs {
   display: flex;
   border-bottom: 1px solid var(--color-border-light);
-  margin: 8px 28px 16px;
+  margin: 8px 28px 4px;
 }
 
 .overlay__tab {
@@ -464,6 +615,82 @@
 
 .overlay__open-panel {
   padding: 16px 28px 0;
+}
+
+.overlay__overdue-banner {
+  margin: 14px 28px 0;
+  padding: 14px 16px;
+  border-radius: var(--w-radius-sm);
+  border: 1px solid rgba(var(--color-warning-rgb), 0.45);
+  background: rgba(var(--color-warning-rgb), 0.1);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.overlay__overdue-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.overlay__overdue-title {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+
+.overlay__overdue-text {
+  margin: 0;
+  font-size: 0.76rem;
+  color: var(--color-text-secondary);
+}
+
+.overlay__overdue-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.overlay__overdue-btn {
+  padding: 8px 12px;
+  border: none;
+  border-radius: var(--w-radius-sm);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  background: var(--color-warning);
+  color: var(--color-bg-secondary);
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.overlay__overdue-btn--ghost {
+  background: var(--color-bg-surface);
+  color: var(--color-warning);
+  border: 1px solid rgba(var(--color-warning-rgb), 0.45);
+}
+
+.overlay__overdue-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+[data-theme="dark"] .overlay__overdue-banner {
+  border-color: rgba(var(--color-warning-rgb), 0.5);
+  background: rgba(var(--color-warning-rgb), 0.2);
+}
+
+[data-theme="dark"] .overlay__overdue-btn {
+  color: #111;
+}
+
+[data-theme="dark"] .overlay__overdue-btn--ghost {
+  background: color-mix(in srgb, #111827 75%, var(--color-bg-surface) 25%);
+  color: color-mix(in srgb, var(--color-warning) 80%, white 20%);
 }
 
 .overlay__action-error {

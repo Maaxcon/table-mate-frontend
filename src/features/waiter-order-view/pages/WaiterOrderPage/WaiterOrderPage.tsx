@@ -10,6 +10,7 @@ import {
   MoveTableModal,
 } from "../../components"
 import { NotificationStreamSidebar } from "@/features/notification-stream/components/NotificationStreamSidebar"
+import { useNotificationStream } from "@/features/notification-stream/hooks/useNotificationStream"
 import { BookModal } from "@/features/reservation/BookModal"
 import { fetchRestaurantSettings } from "@/features/reservation/api"
 import type { WorkingHoursDay, Zone } from "@/features/reservation/api"
@@ -21,6 +22,18 @@ import { apiFetch } from "@/api/client"
 import type { LayoutResponse, Table } from "@/types/api"
 import type { LayoutPayload } from "@/features/editor/types"
 import "./WaiterOrderPage.css"
+
+const CLOCK_TICK_MS = 10_000
+const FLOOR_REFRESH_POLL_MS = 30_000
+const OVERDUE_UI_CAP_MINUTES = 999
+
+function getOverdueMinutes(endAt: string, nowMs: number): number | null {
+  const endMs = new Date(endAt).getTime()
+  if (!Number.isFinite(endMs)) return null
+  const diffMs = nowMs - endMs
+  if (diffMs <= 0) return null
+  return Math.max(1, Math.floor(diffMs / 60_000))
+}
 
 function mapTableToFloorTable(t: Table): FloorTable {
   const item = t as Table & { shape: string; position_x: number | null; position_y: number | null }
@@ -59,8 +72,21 @@ export function WaiterOrderPage() {
   const [moveTarget, setMoveTarget] = useState<ReservationItem | null>(null)
   const [orderModalOpen, setOrderModalOpen] = useState(false)
   const [createResModalOpen, setCreateResModalOpen] = useState(false)
+  const [sidebarTab, setSidebarTab] = useState<"reservations" | "notifications">("reservations")
+  const TABLET_BREAKPOINT = 1180
+  const [isTabletLayout, setIsTabletLayout] = useState(() =>
+    typeof window !== "undefined" ? window.innerWidth <= TABLET_BREAKPOINT : false,
+  )
+  const { events: notificationEvents, isConnected: notificationConnected } = useNotificationStream()
   const tablesRef = useRef<FloorTable[]>([])
   const reservationsRef = useRef<ReservationItem[]>([])
+
+  useEffect(() => {
+    const update = () => setIsTabletLayout(window.innerWidth <= TABLET_BREAKPOINT)
+    update()
+    window.addEventListener("resize", update)
+    return () => window.removeEventListener("resize", update)
+  }, [])
 
   useEffect(() => {
     tablesRef.current = tables
@@ -71,7 +97,7 @@ export function WaiterOrderPage() {
   }, [reservations])
 
   useEffect(() => {
-    const id = setInterval(() => setCurrentTime(new Date()), 60_000)
+    const id = setInterval(() => setCurrentTime(new Date()), CLOCK_TICK_MS)
     return () => clearInterval(id)
   }, [])
 
@@ -172,6 +198,13 @@ export function WaiterOrderPage() {
       // keep current zones on failure
     }
   }, [])
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      void refreshFloor()
+    }, FLOOR_REFRESH_POLL_MS)
+    return () => clearInterval(id)
+  }, [refreshFloor])
 
   // A publish may have added/removed a zone, so refresh zones (not just the floor)
   // — otherwise a new zone's tab is missing until a manual page refresh.
@@ -309,6 +342,22 @@ export function WaiterOrderPage() {
     ? mergedReservations.filter((r) => r.table === selectedTable.public_number)
     : []
 
+  const overdueByTableId = useMemo(() => {
+    const tableByNumber = new Map(tables.map((table) => [table.public_number, table]))
+    const nowMs = currentTime.getTime()
+    const result: Record<string, number> = {}
+    for (const reservation of mergedReservations) {
+      if (reservation.status !== "active") continue
+      if (!reservation.table) continue
+      const table = tableByNumber.get(reservation.table)
+      if (!table || !table.is_occupied) continue
+      const minutes = getOverdueMinutes(reservation.end_at, nowMs)
+      if (minutes == null) continue
+      result[table.public_id] = Math.min(minutes, OVERDUE_UI_CAP_MINUTES)
+    }
+    return result
+  }, [tables, mergedReservations, currentTime])
+
   const handleTableSelect = (table: FloorTable) => {
     clearActionError()
     setSelectedTableId(table.public_id)
@@ -376,6 +425,7 @@ export function WaiterOrderPage() {
       <div className="waiter-view__content">
         <div className="waiter-view__floor-card">
           <FloorPlan
+            key={selectedZoneId ?? "all-zones"}
             payload={layoutPayload}
             tables={tables}
             selectedZoneId={selectedZoneId}
@@ -383,25 +433,71 @@ export function WaiterOrderPage() {
             upcomingReservations={layoutReservations}
             currentTime={currentTime}
             activeReservationsByTable={activeReservationsByTable}
+            overdueByTableId={overdueByTableId}
             onSelect={handleTableSelect}
             onZoneChange={setSelectedZoneId}
             canvasCols={zones.find((z) => z.public_id === selectedZoneId)?.canvas_cols}
             canvasRows={zones.find((z) => z.public_id === selectedZoneId)?.canvas_rows}
             edgeStyles={zones.find((z) => z.public_id === selectedZoneId)?.edge_styles}
+            enableZoom={true}
+            enablePan={true}
           />
         </div>
 
-        <div className="waiter-view__side-grid">
-          <ReservationSidebar
-            reservations={pendingTodayReservations}
-            onCancel={handleCancel}
-            onModify={handleModify}
-            actionLoading={sidebarActionLoading}
-            error={sidebarError}
-          />
+        {isTabletLayout ? (
+          <div className="waiter-view__sidebar" role="complementary">
+            <div className="waiter-view__sidebar-tabs">
+              <button
+                type="button"
+                aria-pressed={sidebarTab === "reservations"}
+                className={`waiter-view__sidebar-tab${sidebarTab === "reservations" ? " waiter-view__sidebar-tab--active" : ""}`}
+                onClick={() => setSidebarTab("reservations")}
+              >
+                Reservations
+              </button>
+              <button
+                type="button"
+                aria-pressed={sidebarTab === "notifications"}
+                className={`waiter-view__sidebar-tab${sidebarTab === "notifications" ? " waiter-view__sidebar-tab--active" : ""}`}
+                onClick={() => setSidebarTab("notifications")}
+              >
+                Notifications
+              </button>
+            </div>
 
-          <NotificationStreamSidebar />
-        </div>
+            <div className="waiter-view__sidebar-panel">
+              {sidebarTab === "reservations" ? (
+                <ReservationSidebar
+                  reservations={pendingTodayReservations}
+                  onCancel={handleCancel}
+                  onModify={handleModify}
+                  actionLoading={sidebarActionLoading}
+                  error={sidebarError}
+                />
+              ) : (
+                <NotificationStreamSidebar
+                  events={notificationEvents}
+                  isConnected={notificationConnected}
+                />
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="waiter-view__side-grid">
+            <ReservationSidebar
+              reservations={pendingTodayReservations}
+              onCancel={handleCancel}
+              onModify={handleModify}
+              actionLoading={sidebarActionLoading}
+              error={sidebarError}
+            />
+
+            <NotificationStreamSidebar
+              events={notificationEvents}
+              isConnected={notificationConnected}
+            />
+          </div>
+        )}
       </div>
 
       {selectedTable && (

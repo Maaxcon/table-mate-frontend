@@ -1,5 +1,6 @@
 import {
   memo,
+  useCallback,
   useEffect,
   useMemo,
   useRef,
@@ -20,11 +21,7 @@ import "./FloorPlanView.css"
 
 export type FloorVisualStatus = "free" | "reserved" | "occupied"
 
-/**
- * Identity carried by each layout table, passed to the consumer callbacks so they
- * can join the layout entity to a live table by `id` (the table public_id when the
- * layout was published correctly) and fall back to `publicNumber`.
- */
+/** Identity carried by each layout table, allowing consumers to join with live data. */
 export interface FloorPlanTableRef {
   id: string
   publicNumber: string
@@ -46,47 +43,53 @@ export interface FloorPlanViewProps {
   onTableSelect?: (table: FloorPlanTableRef) => void
   /** Resolve a table's visual status (defaults to "free"). */
   tableStatus?: (table: FloorPlanTableRef) => FloorVisualStatus
+  /** Optional extra className for a table block (e.g. overdue highlight). */
+  tableClassName?: (table: FloorPlanTableRef) => string | undefined
   /** Extra content rendered inside a table (badges, guest info, timers, ...). */
   renderTableContent?: (table: FloorPlanTableRef) => ReactNode
   /** Navigate to a portal's target zone on click (makes portals interactive links). */
   onPortalNavigate?: (targetZoneId: string) => void
-  /**
-   * Full per-entity override. When provided, replaces the default fp-block
-   * rendering — including the canvas edge lines — for every entity (tables,
-   * obstacles, thresholds, portals alike). Geometry is raw numbers, not a
-   * prebuilt style/transform, so the consumer can apply rotation however it
-   * wants (e.g. a --rot custom property + CSS rule instead of an inline
-   * transform). tableStatus/renderTableContent/onTableSelect/onPortalNavigate
-   * are ignored when this is set — the override owns everything.
-   */
+  /** Full per-entity override — replaces fp-block rendering entirely. */
   renderEntity?: (
     entity: EditorEntity,
     geometry: { left: number; top: number; width: number; height: number; rotation: number },
     ctx: { selected: boolean; index: number },
   ) => ReactNode
-  /**
-   * Fit/center on this sub-rectangle instead of the whole canvas (GRID units,
-   * same space as canvasCols/canvasRows). Entities keep their normal
-   * canvas-relative positions; only the fitted/visible region shifts.
-   * Omitting it is exactly the {x:0,y:0,width:canvasCols,height:canvasRows}
-   * case — no behavior change for callers that don't pass it.
-   */
+  /** Fit/center on this sub-rectangle instead of the whole canvas (GRID units). */
   frame?: { x: number; y: number; width: number; height: number }
   /** Shown when there is no published layout to render. */
   emptyMessage?: string
-  /** Clamp auto-fit scale (default min 0.3, no max). */
+  /** Clamp auto-fit scale (default min 0.3, unbounded max). */
   minScale?: number
   maxScale?: number
+  /** Enable user-driven zoom (wheel/pinch) on top of the auto-fit scale. */
+  enableZoom?: boolean
+  /** Enable click-drag/touch-drag panning. */
+  enablePan?: boolean
 }
 
 const px = (v: number) => v * GRID
+const MIN_INTERACTIVE_ZOOM = 0.3
+const MAX_INTERACTIVE_ZOOM = 4
+const DOM_DELTA_PIXEL = 0
+const DOM_DELTA_LINE = 1
+const DOM_DELTA_PAGE = 2
+const LINE_HEIGHT = 16
+const PAGE_HEIGHT = 800
+const WHEEL_SENSITIVITY = 0.0015
 
-/**
- * Read-only renderer that draws a published floor layout exactly as the admin
- * editor does: every entity at its real position/size/shape, plus obstacles,
- * thresholds and portals — uniformly scaled to fit the container. Shared by the
- * customer and waiter floor views so all three stay visually identical.
- */
+const normalizeWheelDelta = (event: WheelEvent) => {
+  switch (event.deltaMode) {
+    case DOM_DELTA_LINE:
+      return event.deltaY * LINE_HEIGHT
+    case DOM_DELTA_PAGE:
+      return event.deltaY * PAGE_HEIGHT
+    case DOM_DELTA_PIXEL:
+    default:
+      return event.deltaY
+  }
+}
+
 function FloorPlanViewImpl({
   payload,
   selectedZoneId = null,
@@ -96,6 +99,7 @@ function FloorPlanViewImpl({
   canvasRows: canvasRowsProp,
   onTableSelect,
   tableStatus,
+  tableClassName,
   renderTableContent,
   onPortalNavigate,
   renderEntity: renderEntityProp,
@@ -103,16 +107,48 @@ function FloorPlanViewImpl({
   emptyMessage = "No floor plan published yet.",
   minScale: minScaleProp,
   maxScale: maxScaleProp,
+  enableZoom = false,
+  enablePan = false,
 }: FloorPlanViewProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [viewBox, setViewBox] = useState({ scale: 1, width: 0, height: 0 })
+  const [zoom, setZoom] = useState(1)
+  const [panRatio, setPanRatio] = useState({ x: 0, y: 0 })
+  const isPanning = useRef(false)
+  const panStart = useRef({ x: 0, y: 0, offsetX: 0, offsetY: 0 })
+  const pinchStartRef = useRef<{ dist: number; zoom: number } | null>(null)
+  const zoomRef = useRef(zoom)
+  const panRatioRef = useRef(panRatio)
+
+  useEffect(() => {
+    zoomRef.current = zoom
+  }, [zoom])
+
+  useEffect(() => {
+    panRatioRef.current = panRatio
+  }, [panRatio])
+
+  useEffect(() => {
+    if (!enableZoom) {
+      pinchStartRef.current = null
+    }
+  }, [enableZoom])
+
+  useEffect(() => {
+    if (!enablePan) {
+      isPanning.current = false
+    }
+  }, [enablePan])
+
+  const clampZoom = useCallback(
+    (value: number) => Math.min(MAX_INTERACTIVE_ZOOM, Math.max(MIN_INTERACTIVE_ZOOM, value)),
+    [],
+  )
 
   const canvasCols = canvasColsProp ?? DEFAULT_CANVAS_COLS
   const canvasRows = canvasRowsProp ?? DEFAULT_CANVAS_ROWS
   const canvasPxW = canvasCols * GRID
   const canvasPxH = canvasRows * GRID
-  // The sub-rectangle to fit/center on — defaults to the whole canvas, so
-  // omitting `frame` reduces every formula below to today's behavior exactly.
   const framePxX = (frame?.x ?? 0) * GRID
   const framePxY = (frame?.y ?? 0) * GRID
   const framePxW = (frame?.width ?? canvasCols) * GRID
@@ -124,37 +160,194 @@ function FloorPlanViewImpl({
     [aspectRatio],
   )
 
+  const viewMetrics = useMemo(() => {
+    const interactiveZoom = enableZoom ? zoom : 1
+    const totalScale = scale * interactiveZoom
+    const pad = GRID * totalScale
+    const scaledW = framePxW * totalScale + 2 * pad
+    const scaledH = framePxH * totalScale + 2 * pad
+    const offsetX = Math.max((containerWidth - scaledW) / 2, 0)
+    const offsetY = Math.max((containerHeight - scaledH) / 2, 0)
+    const maxPanX = Math.max(0, scaledW - containerWidth)
+    const maxPanY = Math.max(0, scaledH - containerHeight)
+    return {
+      interactiveZoom,
+      totalScale,
+      pad,
+      scaledW,
+      scaledH,
+      offsetX,
+      offsetY,
+      maxPanX,
+      maxPanY,
+    }
+  }, [enableZoom, zoom, scale, framePxW, framePxH, containerWidth, containerHeight])
+
+  const { totalScale, pad, scaledW, scaledH, offsetX, offsetY, maxPanX, maxPanY } = viewMetrics
+
+  const clampPanRatio = useCallback(
+    (next: { x: number; y: number }) => ({
+      x: maxPanX === 0 ? 0 : Math.max(-1, Math.min(1, next.x)),
+      y: maxPanY === 0 ? 0 : Math.max(-1, Math.min(1, next.y)),
+    }),
+    [maxPanX, maxPanY],
+  )
+
   useEffect(() => {
     const el = containerRef.current
     if (!el) return
-    // Fit the frame plus its proportional overhang (one grid cell each side, where
-    // grid -1 portals/thresholds live). With padding = GRID * scale the scale factors
-    // out cleanly: clientWidth = (framePxW + 2 * GRID) * scale.
     const minScale = minScaleProp ?? 0.3
     const maxScale = maxScaleProp ?? Number.POSITIVE_INFINITY
     const update = () => {
       const availableW = el.clientWidth
       const availableH = el.clientHeight
-      // The container's own height is aspect-ratio-derived (from its width),
-      // not fixed by an ancestor — nested inside a shrink-to-fit chain (as on
-      // the customer floor), the very first layout pass can briefly report
-      // clientHeight=0 before that resolves. Falling back to availableW
-      // (assuming a square) commits a too-small fit for a wide room and
-      // clips tables until something else happens to trigger a re-render.
-      // Skip and wait for the next callback instead — ResizeObserver keeps
-      // firing until the box has a real, non-zero size.
+      // When the widget lives inside a display:none parent, ResizeObserver still
+      // fires with zeros; bail so we don't thrash scale until the panel is shown.
       if (availableW === 0 || availableH === 0) return
       const neededW = framePxW + 2 * GRID
       const neededH = framePxH + 2 * GRID
       const fitted = Math.min(availableW / neededW, availableH / neededH)
-      const scale = Math.min(maxScale, Math.max(fitted, minScale))
-      setViewBox({ scale, width: availableW, height: availableH })
+      const nextScale = Math.min(maxScale, Math.max(fitted, minScale))
+      setViewBox({ scale: nextScale, width: availableW, height: availableH })
     }
     update()
     const observer = new ResizeObserver(update)
     observer.observe(el)
     return () => observer.disconnect()
   }, [framePxW, framePxH, minScaleProp, maxScaleProp])
+
+  const handleWheel = useCallback(
+    (e: WheelEvent) => {
+      if (!enableZoom) return
+      if (!e.ctrlKey && !e.metaKey) return
+      e.preventDefault()
+      const delta = normalizeWheelDelta(e)
+      const multiplier = Math.exp(-delta * WHEEL_SENSITIVITY)
+      setZoom((value) => clampZoom(value * multiplier))
+    },
+    [enableZoom, clampZoom],
+  )
+
+  const handleTouchStart = useCallback(
+    (e: TouchEvent) => {
+      if (!enableZoom && !enablePan) return
+      if (e.touches.length === 2 && enableZoom) {
+        const dist = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY,
+        )
+        pinchStartRef.current = { dist, zoom: zoomRef.current }
+      }
+    },
+    [enableZoom, enablePan],
+  )
+
+  const handleTouchMove = useCallback(
+    (e: TouchEvent) => {
+      if (!enableZoom && !enablePan) return
+      if (e.touches.length === 2 && enableZoom) {
+        e.preventDefault()
+        const pinch = pinchStartRef.current
+        if (!pinch || pinch.dist === 0) return
+        const dist = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY,
+        )
+        setZoom(clampZoom(pinch.zoom * (dist / pinch.dist)))
+      } else if (e.touches.length === 1 && enablePan) {
+        const target = e.target as HTMLElement
+        if (target.closest(".fp-block")) return
+        if (!isPanning.current) {
+          isPanning.current = true
+          panStart.current = {
+            x: e.touches[0].clientX,
+            y: e.touches[0].clientY,
+            offsetX: panRatioRef.current.x * maxPanX,
+            offsetY: panRatioRef.current.y * maxPanY,
+          }
+        } else {
+          const dx = e.touches[0].clientX - panStart.current.x
+          const dy = e.touches[0].clientY - panStart.current.y
+          setPanRatio((prev) => {
+            const nextActualX = panStart.current.offsetX + dx
+            const nextActualY = panStart.current.offsetY + dy
+            const ratioX = maxPanX === 0 ? 0 : nextActualX / maxPanX
+            const ratioY = maxPanY === 0 ? 0 : nextActualY / maxPanY
+            const next = clampPanRatio({ x: ratioX, y: ratioY })
+            return next.x === prev.x && next.y === prev.y ? prev : next
+          })
+        }
+      }
+    },
+    [enableZoom, enablePan, clampZoom, clampPanRatio, maxPanX, maxPanY],
+  )
+
+  const handleTouchEnd = useCallback(() => {
+    isPanning.current = false
+    pinchStartRef.current = null
+  }, [])
+
+  useEffect(() => {
+    if (!enablePan) return
+    const el = containerRef.current
+    if (!el) return
+    const onMouseDown = (e: MouseEvent) => {
+      if (e.button !== 0) return
+      const target = e.target as HTMLElement
+      if (target.closest(".fp-block")) return
+      isPanning.current = true
+      panStart.current = {
+        x: e.clientX,
+        y: e.clientY,
+        offsetX: panRatioRef.current.x * maxPanX,
+        offsetY: panRatioRef.current.y * maxPanY,
+      }
+      e.preventDefault()
+    }
+    el.addEventListener("mousedown", onMouseDown)
+    return () => el.removeEventListener("mousedown", onMouseDown)
+  }, [enablePan, maxPanX, maxPanY])
+
+  useEffect(() => {
+    if (!enablePan) return
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isPanning.current) return
+      const dx = e.clientX - panStart.current.x
+      const dy = e.clientY - panStart.current.y
+      setPanRatio((prev) => {
+        const nextActualX = panStart.current.offsetX + dx
+        const nextActualY = panStart.current.offsetY + dy
+        const ratioX = maxPanX === 0 ? 0 : nextActualX / maxPanX
+        const ratioY = maxPanY === 0 ? 0 : nextActualY / maxPanY
+        const next = clampPanRatio({ x: ratioX, y: ratioY })
+        return next.x === prev.x && next.y === prev.y ? prev : next
+      })
+    }
+    const handleMouseUp = () => {
+      isPanning.current = false
+    }
+    window.addEventListener("mousemove", handleMouseMove)
+    window.addEventListener("mouseup", handleMouseUp)
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove)
+      window.removeEventListener("mouseup", handleMouseUp)
+    }
+  }, [enablePan, clampPanRatio, maxPanX, maxPanY])
+
+  useEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+    el.addEventListener("wheel", handleWheel, { passive: false })
+    el.addEventListener("touchstart", handleTouchStart, { passive: true })
+    el.addEventListener("touchmove", handleTouchMove, { passive: false })
+    el.addEventListener("touchend", handleTouchEnd)
+    return () => {
+      el.removeEventListener("wheel", handleWheel)
+      el.removeEventListener("touchstart", handleTouchStart)
+      el.removeEventListener("touchmove", handleTouchMove)
+      el.removeEventListener("touchend", handleTouchEnd)
+    }
+  }, [handleWheel, handleTouchStart, handleTouchMove, handleTouchEnd])
 
   const entities = useMemo<EditorEntity[]>(
     () => (payload ? deserializeLayout(payload) : []),
@@ -173,10 +366,6 @@ function FloorPlanViewImpl({
     [entities, selectedZoneId],
   )
 
-  // Computed once per `visible` change, not on every render — otherwise a
-  // renderEntity override's props would get a fresh geometry object every
-  // time (e.g. a selectedId change elsewhere), defeating React.memo on
-  // whatever the consumer renders per entity.
   const geometries = useMemo(
     () =>
       visible.map((e) => ({
@@ -186,6 +375,9 @@ function FloorPlanViewImpl({
         height: px(e.h),
         rotation: e.rotation ?? 0,
       })),
+    // Rendering each entity touches these coordinates during React reconciliation;
+    // keeping the array stable unless the layout changes avoids redundant rerenders
+    // inside downstream memoized renderers (see issue #28 notes).
     [visible],
   )
 
@@ -197,23 +389,29 @@ function FloorPlanViewImpl({
     )
   }
 
-  const pad = GRID * scale
-  const scaledW = framePxW * scale + 2 * pad
-  const scaledH = framePxH * scale + 2 * pad
-  const offsetX = Math.max((containerWidth - scaledW) / 2, 0)
-  const offsetY = Math.max((containerHeight - scaledH) / 2, 0)
+  const interactivePan = enablePan
+    ? {
+        x: panRatio.x * maxPanX,
+        y: panRatio.y * maxPanY,
+      }
+    : { x: 0, y: 0 }
+
+  const containerClass = ["fp-view", enablePan ? "fp-view--pan-enabled" : ""]
+    .filter(Boolean)
+    .join(" ")
+
+  const stageStyle: CSSProperties = {
+    position: "absolute",
+    top: pad + offsetY - framePxY * totalScale + interactivePan.y,
+    left: pad + offsetX - framePxX * totalScale + interactivePan.x,
+    width: canvasPxW,
+    height: canvasPxH,
+    transform: `scale(${totalScale})`,
+    transformOrigin: "top left",
+  }
 
   return (
-    <div className="fp-view" ref={containerRef} style={containerStyle}>
-      {/* Absolutely positioned (not a normal-flow flex item) so its JS-computed
-          scaledW/H can never feed back into this container's own measured
-          size — it used to be a normal-flow child, which meant a larger
-          `scale` (computed FROM this element's height) produced a taller
-          spacer, which grew this element's height, which the next
-          ResizeObserver tick read back in as `containerHeight`: a circular
-          fit->size->fit loop that settled on a scale too large for the room,
-          clipping tables until an unrelated resize (e.g. clicking a table)
-          happened to jog it back to a smaller, correct value. */}
+    <div className={containerClass} ref={containerRef} style={containerStyle}>
       <div
         style={{
           position: "absolute",
@@ -225,33 +423,21 @@ function FloorPlanViewImpl({
           visibility: "hidden",
         }}
       />
-      <div
-        className="fp-view__stage"
-        style={{
-          position: "absolute",
-          // The stage stays sized to the FULL canvas (entities keep their
-          // normal canvas-relative positions) — only its screen offset shifts
-          // to bring the frame's top-left into view. With frame omitted,
-          // framePxX/Y are 0, so this is identical to the old pad+offset math.
-          top: pad + offsetY - framePxY * scale,
-          left: pad + offsetX - framePxX * scale,
-          width: canvasPxW,
-          height: canvasPxH,
-          transform: `scale(${scale})`,
-          transformOrigin: "top left",
-        }}
-      >
-        {visible.map((e, index) => {
+      {/* Fit→size→fit spacer: mirrors the centered footprint so the observer keeps
+          reporting the true viewport even after the stage scales away. */}
+      <div className="fp-view__stage" style={stageStyle}>
+        {visible.map((entity, index) => {
           if (renderEntityProp) {
             const geometry = geometries[index]
-            const id = e.serverId ?? e.id
+            const id = entity.serverId ?? entity.id
             const selected = selectedId != null && selectedId === id
-            return renderEntityProp(e, geometry, { selected, index })
+            return renderEntityProp(entity, geometry, { selected, index })
           }
-          return defaultRenderEntity(e, {
+          return defaultRenderEntity(entity, {
             selectedId,
             onTableSelect,
             tableStatus,
+            tableClassName,
             renderTableContent,
             onPortalNavigate,
           })
@@ -277,15 +463,14 @@ function FloorPlanViewImpl({
   )
 }
 
-// Memoized so a re-render triggered elsewhere in a consumer's tree (e.g. a
-// hover-only state update) skips this whole subtree — and therefore every
-// per-entity render — as long as none of these props actually changed.
+// Memoized so consumers can skip re-rendering large floor plans unless props change.
 export const FloorPlanView = memo(FloorPlanViewImpl)
 
 interface RenderOpts {
   selectedId: string | null
   onTableSelect?: (table: FloorPlanTableRef) => void
   tableStatus?: (table: FloorPlanTableRef) => FloorVisualStatus
+  tableClassName?: (table: FloorPlanTableRef) => string | undefined
   renderTableContent?: (table: FloorPlanTableRef) => ReactNode
   onPortalNavigate?: (targetZoneId: string) => void
 }
@@ -317,6 +502,7 @@ function defaultRenderEntity(e: EditorEntity, opts: RenderOpts): ReactNode {
           "fp-block--table",
           `fp-block--${e.type}`,
           `fp-block--${status}`,
+          opts.tableClassName?.(tableRef) ?? "",
           selected ? "fp-block--selected" : "",
         ]
           .filter(Boolean)
@@ -355,7 +541,6 @@ function defaultRenderEntity(e: EditorEntity, opts: RenderOpts): ReactNode {
     )
   }
 
-  // portal — a link to another zone when it has a target and a navigate handler
   const canNavigate = Boolean(opts.onPortalNavigate && e.targetZoneId)
   if (canNavigate) {
     return (
@@ -376,6 +561,7 @@ function defaultRenderEntity(e: EditorEntity, opts: RenderOpts): ReactNode {
       </button>
     )
   }
+
   return (
     <div key={e.id} className="fp-block fp-block--portal" style={style}>
       <span style={uprightContentStyle(e.rotation)}>

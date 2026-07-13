@@ -115,7 +115,7 @@ export function ModifyReservationModal({
       // For active reservations the start is in the past — only validate
       // the future tail (past slots are excluded by the backend).
       const scanStart = isActive
-        ? Math.floor(Math.max(currentEndMins, nowMins) / 30) * 30
+        ? Math.ceil(Math.max(currentEndMins, nowMins) / 30) * 30
         : Math.floor(startMins / 30) * 30
 
       for (let m = scanStart; m < slotEnd; m += 30) {

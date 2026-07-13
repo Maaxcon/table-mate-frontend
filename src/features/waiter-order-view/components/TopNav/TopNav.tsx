@@ -73,18 +73,27 @@ export function TopNav({
       <div className="top-nav__right">
         <div className="top-nav__stats">
           <div className="top-nav__stat">
+            <span className="top-nav__sr-only">Occupied tables</span>
             <span className="top-nav__stat-chip top-nav__stat-chip--occupied" aria-hidden="true" />
-            <span className="top-nav__stat-label">OCCUPIED</span>
+            <span className="top-nav__stat-label" aria-hidden="true">
+              OCCUPIED
+            </span>
             <span className="top-nav__stat-value">{occupiedCount}</span>
           </div>
           <div className="top-nav__stat">
+            <span className="top-nav__sr-only">Reserved tables</span>
             <span className="top-nav__stat-chip top-nav__stat-chip--reserved" aria-hidden="true" />
-            <span className="top-nav__stat-label">RESERVED</span>
+            <span className="top-nav__stat-label" aria-hidden="true">
+              RESERVED
+            </span>
             <span className="top-nav__stat-value">{reservedCount}</span>
           </div>
           <div className="top-nav__stat">
+            <span className="top-nav__sr-only">Free tables</span>
             <span className="top-nav__stat-chip top-nav__stat-chip--free" aria-hidden="true" />
-            <span className="top-nav__stat-label">FREE</span>
+            <span className="top-nav__stat-label" aria-hidden="true">
+              FREE
+            </span>
             <span className="top-nav__stat-value">{freeCount}</span>
           </div>
         </div>
