@@ -8,6 +8,7 @@ import {
   ConfirmDeleteZoneModal,
   PropertiesSidebar,
   PublishConfirmModal,
+  TableQrModal,
   Toolbar,
   ZoneHeader,
 } from "@/features/editor/components"
@@ -98,6 +99,7 @@ function FloorPlanEditorPage() {
   const pasteStepRef = useRef(0)
   const [deleteZoneTarget, setDeleteZoneTarget] = useState<Zone | null>(null)
   const [deleting, setDeleting] = useState(false)
+  const [qrTarget, setQrTarget] = useState<{ publicId: string; label: string } | null>(null)
   const toast = useToast()
 
   // Tables that currently have guests seated (open session). Deleting one is
@@ -838,6 +840,7 @@ function FloorPlanEditorPage() {
                   canvasCols={canvasCols}
                   canvasRows={canvasRows}
                   onCanvasSizeChange={handleCanvasSizeChange}
+                  onShowQr={(publicId, label) => setQrTarget({ publicId, label })}
                 />
               )}
             </>
@@ -860,6 +863,14 @@ function FloorPlanEditorPage() {
           onConfirm={() => handleDeleteZone(deleteZoneTarget.public_id)}
           onClose={() => setDeleteZoneTarget(null)}
           busy={deleting}
+        />
+      )}
+
+      {qrTarget && (
+        <TableQrModal
+          tablePublicId={qrTarget.publicId}
+          tableLabel={qrTarget.label}
+          onClose={() => setQrTarget(null)}
         />
       )}
     </div>

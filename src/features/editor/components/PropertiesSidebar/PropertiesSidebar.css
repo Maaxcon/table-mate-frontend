@@ -354,6 +354,12 @@
   color: var(--color-text-secondary);
 }
 
+.editor-sidebar__hint {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+}
+
 .editor-sidebar__row {
   margin-top: 9px;
   display: flex;

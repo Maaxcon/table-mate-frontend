@@ -23,6 +23,7 @@ interface PropertiesSidebarProps {
   canvasCols: number
   canvasRows: number
   onCanvasSizeChange: (cols: number, rows: number) => void
+  onShowQr: (tablePublicId: string, tableLabel: string) => void
 }
 
 const METADATA_TAGS = ["Window Seat", "Quiet", "Wheelchair Accessible"]
@@ -67,6 +68,7 @@ export function PropertiesSidebar({
   canvasCols,
   canvasRows,
   onCanvasSizeChange,
+  onShowQr,
 }: PropertiesSidebarProps) {
   const zoneEdgeStyles = selectedZone?.edge_styles ?? {
     top: "dashed" as const,
@@ -469,6 +471,17 @@ export function PropertiesSidebar({
                 {entity.label || "Auto-assigned on publish"}
               </span>
             </div>
+            {entity.serverId ? (
+              <button
+                type="button"
+                className="editor-sidebar__button editor-sidebar__button--soft"
+                onClick={() => onShowQr(entity.serverId!, entity.label ?? "")}
+              >
+                Show QR code
+              </button>
+            ) : (
+              <p className="editor-sidebar__hint">Publish this table to get its QR code.</p>
+            )}
             <div className="editor-sidebar__field">
               <label className="editor-sidebar__label" htmlFor="sidebar-label">
                 Public label

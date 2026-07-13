@@ -1,0 +1,18 @@
+.table-qr-modal {
+  max-width: 360px;
+}
+
+.table-qr-modal__image-wrap {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 22px;
+  padding: 16px;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.table-qr-modal__image {
+  width: 100%;
+  max-width: 260px;
+  height: auto;
+}

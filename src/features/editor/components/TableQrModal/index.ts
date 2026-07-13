@@ -1,0 +1,1 @@
+export { TableQrModal } from "./TableQrModal"
