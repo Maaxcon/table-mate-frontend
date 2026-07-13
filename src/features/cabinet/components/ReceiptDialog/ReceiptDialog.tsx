@@ -17,6 +17,7 @@ import { loadReceiptFont } from "@/features/cabinet/receiptFont"
 import { buildReceiptPdf } from "@/features/cabinet/receiptPdf"
 import { formatDateTime, formatMoney } from "@/features/cabinet/utils"
 import { FeedbackDialog } from "@/features/cabinet/components/FeedbackDialog/FeedbackDialog"
+import { downloadBlob } from "@/utils/downloadBlob"
 import "./ReceiptDialog.css"
 
 type ReceiptDialogProps = {
@@ -75,14 +76,7 @@ export function ReceiptDialog({ entry, onClose }: ReceiptDialogProps) {
       }
 
       // Desktop: download the PDF.
-      const url = URL.createObjectURL(blob)
-      const link = document.createElement("a")
-      link.href = url
-      link.download = filename
-      document.body.appendChild(link)
-      link.click()
-      link.remove()
-      URL.revokeObjectURL(url)
+      downloadBlob(blob, filename)
     } catch {
       setError("Could not create the PDF. Please check your connection and try again.")
     } finally {

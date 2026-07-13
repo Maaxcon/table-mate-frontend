@@ -381,46 +381,23 @@
   margin-top: 2px;
 }
 
-.editor-sidebar__qr-btn {
+/* Reuses .editor-sidebar__button's gradient/hover/active/theme styling —
+   only the inline icon layout and tighter sizing are qr-specific. */
+.editor-sidebar__button--qr {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   flex-shrink: 0;
   padding: 8px 13px;
-  border-radius: 10px;
-  border: 1px solid color-mix(in srgb, var(--color-primary) 55%, transparent);
-  background: linear-gradient(
-    125deg,
-    color-mix(in srgb, var(--color-primary) 20%, var(--color-bg-page)),
-    color-mix(in srgb, var(--color-bg-page) 94%, transparent)
-  );
-  color: color-mix(in srgb, var(--color-primary) 78%, var(--color-text-primary));
-  font-family: inherit;
   font-size: 0.68rem;
-  font-weight: 800;
   letter-spacing: 0.04em;
   white-space: nowrap;
-  cursor: pointer;
-  transition:
-    transform 0.15s ease,
-    box-shadow 0.15s ease,
-    border-color 0.15s ease;
 }
 
-.editor-sidebar__qr-btn svg {
+.editor-sidebar__button--qr svg {
   width: 14px;
   height: 14px;
   flex-shrink: 0;
-}
-
-.editor-sidebar__qr-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 8px 16px color-mix(in srgb, var(--color-primary) 22%, transparent);
-  border-color: color-mix(in srgb, var(--color-primary) 75%, transparent);
-}
-
-.editor-sidebar__qr-btn:active {
-  transform: translateY(0);
 }
 
 .editor-sidebar__row {

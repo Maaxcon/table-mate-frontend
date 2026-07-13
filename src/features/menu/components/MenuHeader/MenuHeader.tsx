@@ -1,8 +1,9 @@
 import { Fragment, type ReactElement } from "react"
-import { Link } from "react-router-dom"
-import { LuCalendarCheck } from "react-icons/lu"
+import { Link, useLocation } from "react-router-dom"
+import { LuCalendarCheck, LuClipboardList, LuLayoutDashboard } from "react-icons/lu"
 import logo from "@/assets/logo.png"
 import type { AuthUser } from "@/store/auth/authSlice"
+import { setPostLoginRedirect } from "@/store/auth/postLoginRedirect"
 import type { PublicRestaurantSettings } from "@/features/menu/types"
 import { getCurrencySymbol, isRestaurantOpenNow } from "@/features/menu/utils"
 import { menuStrings } from "@/features/menu/strings"
@@ -25,6 +26,7 @@ function MenuHeader({
   restaurantId,
   onSignOut,
 }: MenuHeaderProps) {
+  const location = useLocation()
   const currencySymbol = settings ? getCurrencySymbol(settings.currency) : ""
   const priceBand = settings
     ? currencySymbol.repeat(Math.max(1, Math.min(4, settings.price_band)))
@@ -33,6 +35,18 @@ function MenuHeader({
   const etaMin = settings?.eta_min_minutes ?? null
   const etaMax = settings?.eta_max_minutes ?? null
   const openNow = settings ? isRestaurantOpenNow(settings.working_hours, settings.timezone) : null
+  const isOwnRestaurantStaff =
+    Boolean(restaurantId) &&
+    user?.restaurantId === restaurantId &&
+    (user.role === "admin" || user.role === "waiter")
+  const staffArea =
+    user?.role === "admin"
+      ? { to: "/admin", label: menuStrings.header.adminArea, icon: LuLayoutDashboard }
+      : { to: "/waiter-order", label: menuStrings.header.waiterArea, icon: LuClipboardList }
+
+  const rememberMenuBeforeSignIn = () => {
+    setPostLoginRedirect(`${location.pathname}${location.search}${location.hash}`)
+  }
 
   const pills = [
     openNow !== null ? (
@@ -65,6 +79,12 @@ function MenuHeader({
           <img src={logo} alt="TableMate" className="menu-page__logo" />
         </div>
         <div className="menu-page__topbar-right">
+          {isOwnRestaurantStaff && (
+            <Link to={staffArea.to} className="menu-page__staff-btn">
+              <staffArea.icon size={16} aria-hidden="true" />
+              <span>{staffArea.label}</span>
+            </Link>
+          )}
           {restaurantId && (
             <Link to={`/${restaurantId}/book`} className="menu-page__book-btn">
               <LuCalendarCheck size={16} aria-hidden="true" />
@@ -87,7 +107,7 @@ function MenuHeader({
               </button>
             </>
           ) : (
-            <Link to="/" className="menu-page__signin">
+            <Link to="/" className="menu-page__signin" onClick={rememberMenuBeforeSignIn}>
               {menuStrings.header.signIn}
             </Link>
           )}

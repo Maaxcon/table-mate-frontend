@@ -55,13 +55,12 @@ type ActionCardProps = {
   icon: IconType
   label: string
   desc: string
-  to?: string
-  href?: string
+  to: string
 }
 
-function ActionCard({ icon: Icon, label, desc, to, href }: ActionCardProps) {
-  const inner = (
-    <>
+function ActionCard({ icon: Icon, label, desc, to }: ActionCardProps) {
+  return (
+    <Link className="overview-action" to={to}>
       <span className="overview-action__icon">
         <Icon aria-hidden="true" />
       </span>
@@ -70,15 +69,6 @@ function ActionCard({ icon: Icon, label, desc, to, href }: ActionCardProps) {
         <span className="overview-action__desc">{desc}</span>
       </span>
       <LuArrowRight className="overview-action__arrow" aria-hidden="true" />
-    </>
-  )
-  return href ? (
-    <a className="overview-action" href={href} target="_blank" rel="noreferrer">
-      {inner}
-    </a>
-  ) : (
-    <Link className="overview-action" to={to ?? "#"}>
-      {inner}
     </Link>
   )
 }
@@ -119,6 +109,12 @@ function OverviewSection() {
               <span className="overview-status__dot" aria-hidden="true" />
               {openNow ? "Open now" : "Closed"}
             </span>
+          )}
+          {restaurantId && (
+            <Link className="overview-restaurant-link" to={`/menu/${restaurantId}`}>
+              <LuExternalLink aria-hidden="true" />
+              Перейти до ресторану
+            </Link>
           )}
         </div>
         <p className="admin-section__description">A quick snapshot of your restaurant.</p>
@@ -238,14 +234,6 @@ function OverviewSection() {
               label="Settings"
               desc="Currency, tax, locale and hours"
             />
-            {restaurantId && (
-              <ActionCard
-                href={`/menu/${restaurantId}`}
-                icon={LuExternalLink}
-                label="View public menu"
-                desc="See what your customers see"
-              />
-            )}
           </div>
         </>
       )}

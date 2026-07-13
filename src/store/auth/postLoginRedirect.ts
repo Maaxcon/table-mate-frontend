@@ -4,9 +4,18 @@
 // not React/router state.
 const POST_LOGIN_REDIRECT_KEY = "tablemate.post_login_redirect.v1"
 
+// Long enough to cover a normal Google OAuth round trip; short enough that an
+// abandoned login attempt (e.g. bounced, then browsed as guest instead) can't
+// leak into a much later, unrelated login on the same tab — e.g. a different
+// person on a shared/kiosk device.
+const MAX_AGE_MS = 5 * 60 * 1000
+
+type StoredRedirect = { path: string; setAt: number }
+
 export function setPostLoginRedirect(path: string): void {
   try {
-    sessionStorage.setItem(POST_LOGIN_REDIRECT_KEY, path)
+    const entry: StoredRedirect = { path, setAt: Date.now() }
+    sessionStorage.setItem(POST_LOGIN_REDIRECT_KEY, JSON.stringify(entry))
   } catch {
     // storage unavailable — the caller falls back to the default redirect
   }
@@ -15,7 +24,11 @@ export function setPostLoginRedirect(path: string): void {
 /** Non-destructive read — pair with clearPostLoginRedirect() once it's used. */
 export function peekPostLoginRedirect(): string | null {
   try {
-    return sessionStorage.getItem(POST_LOGIN_REDIRECT_KEY)
+    const raw = sessionStorage.getItem(POST_LOGIN_REDIRECT_KEY)
+    if (!raw) return null
+    const entry = JSON.parse(raw) as StoredRedirect
+    if (Date.now() - entry.setAt > MAX_AGE_MS) return null
+    return entry.path
   } catch {
     return null
   }

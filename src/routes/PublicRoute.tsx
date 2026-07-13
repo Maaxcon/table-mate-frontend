@@ -8,6 +8,10 @@ function PublicRoute() {
 
   // Read-only during render (safe under StrictMode's double-render); the
   // matching clear runs once the redirect has actually been committed.
+  // Staleness (abandoned login, much later unrelated login) is handled by
+  // postLoginRedirect's own expiry, not by unmount timing — a cleanup-based
+  // clear would fire during StrictMode's dev-only mount/cleanup/mount
+  // rehearsal and wipe the flag before it's ever used.
   useEffect(() => {
     if (user) clearPostLoginRedirect()
   }, [user])
