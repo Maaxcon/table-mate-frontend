@@ -476,7 +476,7 @@ export function PropertiesSidebar({
               {entity.serverId ? (
                 <button
                   type="button"
-                  className="editor-sidebar__qr-btn"
+                  className="editor-sidebar__button editor-sidebar__button--qr"
                   onClick={() => onShowQr(entity.serverId!, entity.label ?? "")}
                 >
                   <LuQrCode aria-hidden="true" />

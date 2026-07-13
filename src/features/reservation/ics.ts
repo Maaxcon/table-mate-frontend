@@ -1,3 +1,5 @@
+import { downloadBlob } from "@/utils/downloadBlob"
+
 function pad(n: number): string {
   return String(n).padStart(2, "0")
 }
@@ -75,12 +77,5 @@ export function downloadReservationIcs(opts: {
   const blob = new Blob([lines.map(foldIcsLine).join("\r\n")], {
     type: "text/calendar;charset=utf-8",
   })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement("a")
-  a.href = url
-  a.download = `reservation-table-${tableNumber}.ics`
-  document.body.appendChild(a)
-  a.click()
-  a.remove()
-  URL.revokeObjectURL(url)
+  downloadBlob(blob, `reservation-table-${tableNumber}.ics`)
 }
