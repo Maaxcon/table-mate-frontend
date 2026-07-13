@@ -10,6 +10,7 @@ type SocialAuthGroupProps = {
   googleFeedback: string
   googleFeedbackType: GoogleFeedbackType
   loading?: boolean
+  disabled?: boolean
   children?: ReactNode
 }
 
@@ -18,6 +19,7 @@ function SocialAuthGroup({
   googleFeedback,
   googleFeedbackType,
   loading = false,
+  disabled = false,
   children,
 }: SocialAuthGroupProps) {
   // Live regions only announce content that changes after they mount. The
@@ -38,7 +40,7 @@ function SocialAuthGroup({
       <button
         aria-busy={loading}
         className="social-auth-group__google"
-        disabled={loading}
+        disabled={loading || disabled}
         onClick={onGoogleLogin}
         type="button"
       >
