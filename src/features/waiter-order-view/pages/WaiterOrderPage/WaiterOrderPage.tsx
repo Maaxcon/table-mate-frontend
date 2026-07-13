@@ -80,6 +80,7 @@ export function WaiterOrderPage() {
   const {
     events: notificationEvents,
     isConnected: notificationConnected,
+    unreadCount: notificationUnreadCount,
     markEventRead,
     markAllRead,
   } = useNotificationStream()
@@ -465,8 +466,21 @@ export function WaiterOrderPage() {
                 aria-pressed={sidebarTab === "notifications"}
                 className={`waiter-view__sidebar-tab${sidebarTab === "notifications" ? " waiter-view__sidebar-tab--active" : ""}`}
                 onClick={() => setSidebarTab("notifications")}
+                title={
+                  showNotificationReminder
+                    ? `${notificationUnreadCount} unread notifications`
+                    : undefined
+                }
               >
                 Notifications
+                {showNotificationReminder && (
+                  <span
+                    className="waiter-view__sidebar-tab-badge"
+                    aria-label={`${notificationUnreadCount} unread notifications`}
+                  >
+                    {notificationUnreadCount > 99 ? "99+" : notificationUnreadCount}
+                  </span>
+                )}
               </button>
             </div>
 
@@ -591,3 +605,5 @@ export function WaiterOrderPage() {
     </div>
   )
 }
+const showNotificationReminder =
+  isTabletLayout && sidebarTab !== "notifications" && notificationUnreadCount > 0

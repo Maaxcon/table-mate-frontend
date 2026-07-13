@@ -142,12 +142,51 @@
   transition:
     box-shadow 0.15s,
     transform 0.15s;
+  position: relative;
+  overflow: hidden;
+  flex: 0 0 auto;
+}
+
+.notification-stream__section > p,
+.notification-stream__section > button {
+  flex-shrink: 0;
 }
 
 .notification-stream__event--unread {
-  border-color: color-mix(in srgb, var(--color-primary) 50%, var(--color-border-default));
-  box-shadow: 0 4px 14px -6px color-mix(in srgb, var(--color-primary) 50%, transparent);
-  background: color-mix(in srgb, var(--color-primary) 5%, var(--color-bg-secondary));
+  border-color: color-mix(in srgb, var(--color-primary) 45%, var(--color-border-default));
+  box-shadow: 0 10px 22px -14px color-mix(in srgb, var(--color-primary) 45%, transparent);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--color-primary) 16%, var(--color-bg-secondary)),
+    color-mix(in srgb, var(--color-primary) 4%, var(--color-bg-secondary))
+  );
+}
+
+.notification-stream__event--unread::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 35%, transparent);
+  box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-primary) 30%, transparent);
+  animation: notificationStreamPulse 2.8s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.notification-stream__event--unread::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -1px;
+  width: 4px;
+  height: 100%;
+  border-radius: 6px 0 0 6px;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--color-primary) 90%, transparent),
+    color-mix(in srgb, var(--color-primary) 30%, transparent)
+  );
+  box-shadow: 0 4px 10px color-mix(in srgb, var(--color-primary) 30%, transparent);
 }
 
 .notification-stream__event:hover {
@@ -200,11 +239,34 @@
 .notification-stream__pill {
   display: inline-flex;
   align-items: center;
-  padding: 2px 6px;
+  padding: 2px 8px;
   font-size: 0.58rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   border-radius: 999px;
-  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  background: color-mix(in srgb, var(--color-primary) 25%, transparent);
   color: var(--color-primary);
+  box-shadow: none;
+  text-shadow: none;
+}
+
+@keyframes notificationStreamPulse {
+  0% {
+    opacity: 0.85;
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-primary) 18%, transparent);
+  }
+  55% {
+    opacity: 1;
+    box-shadow: 0 0 0 9px color-mix(in srgb, var(--color-primary) 4%, transparent);
+  }
+  100% {
+    opacity: 0.8;
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-primary) 0%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .notification-stream__event--unread::before {
+    animation: none;
+  }
 }

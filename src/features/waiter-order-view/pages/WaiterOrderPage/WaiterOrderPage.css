@@ -108,6 +108,7 @@
     color 0.2s ease,
     box-shadow 0.2s ease,
     transform 0.2s ease;
+  position: relative;
 }
 
 .waiter-view__sidebar-tab--active {
@@ -115,6 +116,44 @@
   color: var(--color-bg-surface);
   box-shadow: 0 12px 28px color-mix(in srgb, var(--color-text-primary) 18%, transparent);
   transform: translateY(-1px);
+}
+
+.waiter-view__sidebar-tab-badge {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  min-width: 28px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  background: color-mix(in srgb, var(--color-error) 15%, var(--color-bg-surface));
+  border: 1px solid color-mix(in srgb, var(--color-error) 55%, transparent);
+  color: var(--color-error);
+  box-shadow: 0 6px 14px -10px color-mix(in srgb, var(--color-error) 55%, transparent);
+  animation: waiterTabPulse 2s ease-in-out infinite;
+}
+
+@keyframes waiterTabPulse {
+  0% {
+    transform: scale(0.95);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.95);
+    opacity: 0.85;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .waiter-view__sidebar-tab-badge {
+    animation: none;
+  }
 }
 
 .waiter-view__sidebar-panel {
