@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import Modal from "@/features/admin/components/Modal"
 import { fetchTableQrCode } from "@/features/editor/api"
+import { downloadBlob } from "@/utils/downloadBlob"
 import "./TableQrModal.css"
 
 interface TableQrModalProps {
@@ -10,6 +11,7 @@ interface TableQrModalProps {
 }
 
 export function TableQrModal({ tablePublicId, tableLabel, onClose }: TableQrModalProps) {
+  const [blob, setBlob] = useState<Blob | null>(null)
   const [imageUrl, setImageUrl] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -18,9 +20,10 @@ export function TableQrModal({ tablePublicId, tableLabel, onClose }: TableQrModa
     let cancelled = false
 
     fetchTableQrCode(tablePublicId)
-      .then((blob) => {
+      .then((fetchedBlob) => {
         if (cancelled) return
-        objectUrl = URL.createObjectURL(blob)
+        objectUrl = URL.createObjectURL(fetchedBlob)
+        setBlob(fetchedBlob)
         setImageUrl(objectUrl)
       })
       .catch(() => {
@@ -34,13 +37,8 @@ export function TableQrModal({ tablePublicId, tableLabel, onClose }: TableQrModa
   }, [tablePublicId])
 
   const handleDownload = () => {
-    if (!imageUrl) return
-    const a = document.createElement("a")
-    a.href = imageUrl
-    a.download = `table-${tableLabel || tablePublicId}-qr.png`
-    document.body.appendChild(a)
-    a.click()
-    a.remove()
+    if (!blob) return
+    downloadBlob(blob, `table-${tableLabel || tablePublicId}-qr.png`)
   }
 
   return (
@@ -64,7 +62,7 @@ export function TableQrModal({ tablePublicId, tableLabel, onClose }: TableQrModa
           type="button"
           className="admin-modal__btn admin-modal__btn--primary"
           onClick={handleDownload}
-          disabled={!imageUrl}
+          disabled={!blob}
         >
           Download
         </button>
