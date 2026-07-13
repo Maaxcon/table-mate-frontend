@@ -37,17 +37,24 @@
 }
 
 .kanban__notif-read-all {
-  border: none;
-  background: none;
+  border: 1px solid color-mix(in srgb, var(--k-active) 35%, rgba(255, 255, 255, 0.3));
+  background: color-mix(in srgb, var(--k-active) 12%, transparent);
   color: var(--k-active);
   font-size: 0.7rem;
   font-weight: 600;
   cursor: pointer;
-  padding: 0;
+  padding: 6px 12px;
+  border-radius: 999px;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    transform 0.15s ease;
 }
 
 .kanban__notif-read-all:hover {
-  text-decoration: underline;
+  border-color: color-mix(in srgb, var(--k-active) 65%, rgba(255, 255, 255, 0.3));
+  box-shadow: 0 6px 18px -12px color-mix(in srgb, var(--k-active) 55%, transparent);
+  transform: translateY(-1px);
 }
 
 .kanban__notif-subheading {

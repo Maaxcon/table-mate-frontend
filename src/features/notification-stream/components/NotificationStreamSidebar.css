@@ -55,15 +55,22 @@
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  border: none;
-  background: none;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 36%, var(--color-border-default));
+  background: color-mix(in srgb, var(--color-primary) 8%, var(--color-bg-secondary));
   color: var(--color-primary);
   cursor: pointer;
-  padding: 0;
+  padding: 6px 12px;
+  border-radius: 999px;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    transform 0.15s ease;
 }
 
 .notification-stream__read-all:hover {
-  text-decoration: underline;
+  border-color: color-mix(in srgb, var(--color-primary) 60%, var(--color-border-default));
+  box-shadow: 0 6px 16px -10px color-mix(in srgb, var(--color-primary) 45%, transparent);
+  transform: translateY(-1px);
 }
 
 .notification-stream__sections {
