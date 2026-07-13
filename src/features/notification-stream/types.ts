@@ -4,7 +4,9 @@ export type ClientEventType = "CART_CREATED" | "CART_CHECKED_OUT" | "HALL_NEW_RE
 
 export type KitchenEventType = "ORDER_ITEM_STATUS_CHANGED" | "KITCHEN_TICKET_INJECTED"
 
-export type WSMessageType = ClientEventType | KitchenEventType
+export type KnownWSMessageType = ClientEventType | KitchenEventType
+
+export type WSMessageType = KnownWSMessageType | string
 
 export interface WSNotificationData {
   id?: string
@@ -38,21 +40,29 @@ export interface NotificationEvent {
   timestamp: Date
 }
 
-const CLIENT_EVENTS = new Set<WSMessageType>([
+const CLIENT_EVENTS = new Set<KnownWSMessageType>([
   "CART_CREATED",
   "CART_CHECKED_OUT",
   "HALL_NEW_RESERVATION",
 ])
 
-const KITCHEN_EVENTS = new Set<WSMessageType>([
+const KITCHEN_EVENTS = new Set<KnownWSMessageType>([
   "ORDER_ITEM_STATUS_CHANGED",
   "KITCHEN_TICKET_INJECTED",
 ])
 
-export function getStream(type: WSMessageType): StreamType | null {
-  if (CLIENT_EVENTS.has(type)) return "client"
-  if (KITCHEN_EVENTS.has(type)) return "kitchen"
+function inferStreamFromType(type: string): StreamType | null {
+  if (type.includes("KITCHEN") || type.includes("TICKET") || type.includes("ORDER_"))
+    return "kitchen"
+  if (type.includes("CART") || type.includes("HALL") || type.includes("RESERVATION"))
+    return "client"
   return null
+}
+
+export function getStream(type: WSMessageType): StreamType | null {
+  if (CLIENT_EVENTS.has(type as KnownWSMessageType)) return "client"
+  if (KITCHEN_EVENTS.has(type as KnownWSMessageType)) return "kitchen"
+  return inferStreamFromType(type)
 }
 
 export function formatEvent(

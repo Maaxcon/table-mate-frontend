@@ -17,15 +17,12 @@ function jitter(delay: number): number {
 
 function parseMessage(msg: WSNotificationMessage): NotificationEvent | null {
   const stream = getStream(msg.type)
-  if (!stream) {
-    if (import.meta.env.DEV) console.warn("unknown notification type:", msg.type)
-    return null
-  }
+  if (!stream && import.meta.env.DEV) console.warn("unknown notification type:", msg.type)
   const { title, description } = formatEvent(msg.type, msg.data)
   return {
     id: msg.data.id ?? `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
     type: msg.type,
-    stream,
+    stream: stream ?? "client",
     title,
     description,
     tableNumber: msg.data.table_number,
@@ -43,6 +40,22 @@ export function useNotificationStream() {
   const attemptRef = useRef(0)
   const mountedRef = useRef(true)
   const connectRef = useRef<() => void>(() => {})
+  const eventsRef = useRef<NotificationEvent[]>([])
+
+  const upsertEvent = useCallback((incoming: NotificationEvent) => {
+    const existingIndex = eventsRef.current.findIndex((event) => event.id === incoming.id)
+    const withoutExisting =
+      existingIndex === -1
+        ? eventsRef.current
+        : [
+            ...eventsRef.current.slice(0, existingIndex),
+            ...eventsRef.current.slice(existingIndex + 1),
+          ]
+    const nextEvents = [incoming, ...withoutExisting].slice(0, MAX_EVENTS)
+    eventsRef.current = nextEvents
+    setEvents(nextEvents)
+    return existingIndex === -1
+  }, [])
 
   const cleanup = useCallback(() => {
     if (reconnectTimeoutRef.current) {
@@ -123,8 +136,8 @@ export function useNotificationStream() {
         const msg = JSON.parse(event.data) as WSNotificationMessage
         const notificationEvent = parseMessage(msg)
         if (notificationEvent) {
-          setEvents((prev) => [notificationEvent, ...prev].slice(0, MAX_EVENTS))
-          if (notificationEvent.stream === "kitchen") {
+          const isNewEvent = upsertEvent(notificationEvent)
+          if (isNewEvent && notificationEvent.stream === "kitchen") {
             notifyKitchenEvent()
           }
         }
@@ -132,7 +145,7 @@ export function useNotificationStream() {
         // ignore malformed messages
       }
     }
-  }, [cleanup])
+  }, [cleanup, upsertEvent])
 
   useEffect(() => {
     connectRef.current = connect
