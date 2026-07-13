@@ -1,6 +1,5 @@
 import { useEffect } from "react"
 import { useNavigate } from "react-router-dom"
-import { useNotificationStream } from "../hooks/useNotificationStream"
 import type { NotificationEvent } from "../types"
 import "./NotificationStreamSidebar.css"
 
@@ -29,10 +28,15 @@ function renderDescription(description: string) {
 
 interface NotificationStreamSidebarProps {
   onConnectionChange?: (connected: boolean) => void
+  events: NotificationEvent[]
+  isConnected: boolean
 }
 
-export function NotificationStreamSidebar({ onConnectionChange }: NotificationStreamSidebarProps) {
-  const { events, isConnected } = useNotificationStream()
+export function NotificationStreamSidebar({
+  onConnectionChange,
+  events,
+  isConnected,
+}: NotificationStreamSidebarProps) {
   const navigate = useNavigate()
 
   useEffect(() => {

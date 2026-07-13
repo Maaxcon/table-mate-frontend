@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest"
-import { render, screen } from "@testing-library/react"
+import { fireEvent, render, screen } from "@testing-library/react"
 import { TableDetailOverlay } from "./TableDetailOverlay"
-import type { FloorTable, OverlayDetail, OverlayOrderItem } from "../../types"
+import type { FloorTable, OverlayDetail, OverlayOrderItem, ReservationItem } from "../../types"
 
 function makeTable(overrides: Partial<FloorTable> = {}): FloorTable {
   return {
@@ -96,5 +96,39 @@ describe("TableDetailOverlay bill", () => {
     // UAH → ₴; the old hardcoded euro must be gone.
     expect(screen.getByText(/₴68\.98/)).toBeInTheDocument()
     expect(screen.queryByText(/€/)).not.toBeInTheDocument()
+  })
+
+  it("shows overdue banner actions for an active reservation past end time", () => {
+    const overdueReservation: ReservationItem = {
+      public_id: "r-1",
+      start_at: "2026-06-19T10:00:00Z",
+      end_at: "2026-06-19T11:30:00Z",
+      guest_count: 2,
+      status: "active",
+      notes: null,
+      table: "5",
+      name: "Guest",
+    }
+    const onModifyReservation = vi.fn()
+    const onCloseCheck = vi.fn()
+
+    render(
+      <TableDetailOverlay
+        table={makeTable()}
+        detail={makeDetail()}
+        tableReservations={[overdueReservation]}
+        visualStatus="occupied"
+        loading={false}
+        currentTime={new Date("2026-06-19T12:00:00Z")}
+        onModifyReservation={onModifyReservation}
+        onCloseCheck={onCloseCheck}
+        onClose={vi.fn()}
+      />,
+    )
+
+    expect(screen.getByText(/Reservation time ended/)).toBeInTheDocument()
+    fireEvent.click(screen.getByRole("button", { name: "PROLONG" }))
+    expect(onModifyReservation).toHaveBeenCalledWith(overdueReservation)
+    expect(screen.getAllByRole("button", { name: "CLOSE CHECK" }).length).toBeGreaterThan(0)
   })
 })

@@ -6,10 +6,6 @@
   color: var(--color-text-primary);
 }
 
-.admin-layout--sidebar-collapsed {
-  grid-template-columns: 84px 1fr;
-}
-
 .admin-layout__sidebar {
   display: flex;
   flex-direction: column;
@@ -115,8 +111,9 @@
   background: var(--color-bg-surface-subtle);
 }
 
-.admin-layout__icon-btn--collapse {
-  margin-left: auto;
+.admin-layout__icon-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .admin-layout__content {
@@ -128,20 +125,22 @@
   padding: 0;
 }
 
+.admin-layout--sidebar-collapsed {
+  grid-template-columns: 84px 1fr;
+}
+
 .admin-layout--sidebar-collapsed .admin-layout__sidebar {
   padding: 20px 10px;
+  align-items: center;
+}
+
+.admin-layout--sidebar-collapsed .admin-layout__brand {
+  flex-direction: column;
+  gap: 12px;
 }
 
 .admin-layout--sidebar-collapsed .admin-layout__brand-name {
   display: none;
-}
-
-.admin-layout--sidebar-collapsed .admin-layout__brand {
-  justify-content: center;
-}
-
-.admin-layout--sidebar-collapsed .admin-layout__icon-btn--collapse {
-  margin-left: 0;
 }
 
 .admin-layout--sidebar-collapsed .admin-layout__nav-link {
@@ -154,17 +153,68 @@
 }
 
 .admin-layout--sidebar-collapsed .admin-layout__footer {
-  justify-content: center;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .admin-layout--sidebar-collapsed .admin-layout__user {
   display: none;
 }
 
+.admin-layout--sidebar-collapsed .admin-layout__content {
+  padding: 24px;
+}
+
+/* Medium: sidebar stays on the left but collapses to icon-only (like mini sidebar) */
+@media (min-width: 721px) and (max-width: 1300px) {
+  .admin-layout {
+    grid-template-columns: 84px 1fr;
+  }
+
+  .admin-layout__sidebar {
+    padding: 20px 10px;
+    align-items: center;
+  }
+
+  .admin-layout__brand {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .admin-layout__brand-name {
+    display: none;
+  }
+
+  .admin-layout__nav-link {
+    justify-content: center;
+    padding: 10px;
+  }
+
+  .admin-layout__nav-link span {
+    display: none;
+  }
+
+  .admin-layout__footer {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .admin-layout__user {
+    display: none;
+  }
+
+  .admin-layout__content {
+    padding: 24px;
+  }
+
+  .admin-layout__content--flush {
+    padding: 0;
+  }
+}
+
 /* Mobile: sidebar becomes a top bar with horizontal nav */
 @media (max-width: 720px) {
-  .admin-layout,
-  .admin-layout--sidebar-collapsed {
+  .admin-layout {
     grid-template-columns: 1fr;
     /* top bar hugs its content; the page fills the rest (no stretching the menu) */
     grid-template-rows: auto 1fr;
@@ -202,10 +252,6 @@
   }
 
   .admin-layout__user {
-    display: none;
-  }
-
-  .admin-layout__icon-btn--collapse {
     display: none;
   }
 
