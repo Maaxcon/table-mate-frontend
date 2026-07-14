@@ -28,6 +28,7 @@ import {
 } from "./hooks/useOverlapCheck"
 import { isoToDateKey } from "./types"
 import {
+  DAY_KEYS,
   getDayExtendedBounds,
   getDayWorkingBounds,
   isCrossDayReservation,
