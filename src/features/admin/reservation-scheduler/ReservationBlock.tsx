@@ -13,6 +13,7 @@ interface ReservationBlockProps {
   workingHourStart: number
   workingHourEnd: number
   onResizeStart: (reservationId: string, edge: "start" | "end", e: React.MouseEvent) => void
+  onResizeNudge?: (reservationId: string, edge: "start" | "end", direction: -1 | 1) => void
 }
 
 export function ReservationBlock({
@@ -25,6 +26,7 @@ export function ReservationBlock({
   crossDay,
   workingHourStart,
   onResizeStart,
+  onResizeNudge,
 }: ReservationBlockProps) {
   const displayStart =
     reservation.status === "active" && reservation.opened_at
@@ -112,6 +114,13 @@ export function ReservationBlock({
             e.stopPropagation()
             onResizeStart(reservation.public_id, "start", e)
           }}
+          onKeyDown={(e) => {
+            if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+              e.preventDefault()
+              e.stopPropagation()
+              onResizeNudge?.(reservation.public_id, "start", e.key === "ArrowLeft" ? -1 : 1)
+            }
+          }}
         />
       )}
       <div className="scheduler__block-content">
@@ -133,6 +142,13 @@ export function ReservationBlock({
           onMouseDown={(e) => {
             e.stopPropagation()
             onResizeStart(reservation.public_id, "end", e)
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+              e.preventDefault()
+              e.stopPropagation()
+              onResizeNudge?.(reservation.public_id, "end", e.key === "ArrowLeft" ? -1 : 1)
+            }
           }}
         />
       )}

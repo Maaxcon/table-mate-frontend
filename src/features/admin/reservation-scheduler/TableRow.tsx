@@ -15,6 +15,7 @@ interface TableRowProps {
   modifiedIds: Set<string>
   cancellingIds: Set<string>
   onResizeStart: (reservationId: string, edge: "start" | "end", e: React.MouseEvent) => void
+  onResizeNudge?: (reservationId: string, edge: "start" | "end", direction: -1 | 1) => void
 }
 
 export function TableRow({
@@ -30,6 +31,7 @@ export function TableRow({
   modifiedIds,
   cancellingIds,
   onResizeStart,
+  onResizeNudge,
 }: TableRowProps) {
   const { setNodeRef, isOver } = useDroppable({
     id: `${table.public_id}__${date}`,
@@ -76,6 +78,7 @@ export function TableRow({
             workingHourStart={workingHourStart}
             workingHourEnd={workingHourEnd}
             onResizeStart={onResizeStart}
+            onResizeNudge={onResizeNudge}
           />
         ))}
       </div>

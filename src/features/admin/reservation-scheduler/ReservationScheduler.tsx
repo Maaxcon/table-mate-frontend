@@ -722,6 +722,20 @@ export function ReservationScheduler() {
     ],
   )
 
+  const handleResizeNudge = useCallback(
+    (reservationId: string, edge: "start" | "end", direction: -1 | 1) => {
+      const reservation = state.reservations.find((r) => r.public_id === reservationId)
+      if (!reservation) return
+      const edgeDate = new Date(edge === "start" ? reservation.start_at : reservation.end_at)
+      const currentMinutes = edgeDate.getHours() * 60 + edgeDate.getMinutes()
+      const newMinutes = Math.max(0, currentMinutes + direction * SLOT_MINUTES)
+      const hh = String(Math.floor(newMinutes / 60)).padStart(2, "0")
+      const mm = String(newMinutes % 60).padStart(2, "0")
+      resizeReservation(reservationId, edge, `${hh}:${mm}`)
+    },
+    [state.reservations, resizeReservation],
+  )
+
   const handleSave = useCallback(async () => {
     if (
       !restaurantId ||
@@ -809,6 +823,8 @@ export function ReservationScheduler() {
             <CancelZone
               activeDragId={activeDragId}
               pendingCancellationIds={state.pendingCancellationIds}
+              onCancel={cancelReservation}
+              onUncancel={uncancelReservation}
             />
           </div>
           <div className="scheduler__toolbar-actions">
@@ -870,6 +886,7 @@ export function ReservationScheduler() {
                     modifiedIds={modifiedIds}
                     cancellingIds={cancellingIds}
                     onResizeStart={handleResizeStart}
+                    onResizeNudge={handleResizeNudge}
                     scrollRef={i === 0 ? scrollRefA : scrollRefB}
                     showNav={dates.length === 2}
                     onPrevDay={() => shiftDate(i, -1)}

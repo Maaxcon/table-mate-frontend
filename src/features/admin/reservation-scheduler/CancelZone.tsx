@@ -4,9 +4,16 @@ import { LuTrash2, LuUndo2 } from "react-icons/lu"
 interface CancelZoneProps {
   activeDragId: string | null
   pendingCancellationIds: string[]
+  onCancel?: (id: string) => void
+  onUncancel?: (id: string) => void
 }
 
-export function CancelZone({ activeDragId, pendingCancellationIds }: CancelZoneProps) {
+export function CancelZone({
+  activeDragId,
+  pendingCancellationIds,
+  onCancel,
+  onUncancel,
+}: CancelZoneProps) {
   const isUndoMode = activeDragId ? pendingCancellationIds.includes(activeDragId) : false
 
   const { setNodeRef, isOver } = useDroppable({
@@ -14,6 +21,15 @@ export function CancelZone({ activeDragId, pendingCancellationIds }: CancelZoneP
     data: { zone: "cancel" },
     disabled: !activeDragId,
   })
+
+  const handleActivate = () => {
+    if (!activeDragId) return
+    if (isUndoMode) {
+      onUncancel?.(activeDragId)
+    } else {
+      onCancel?.(activeDragId)
+    }
+  }
 
   const classNames = [
     "scheduler__cancel-zone",
@@ -30,7 +46,15 @@ export function CancelZone({ activeDragId, pendingCancellationIds }: CancelZoneP
       ref={setNodeRef}
       className={classNames}
       role="button"
+      tabIndex={activeDragId ? 0 : -1}
       aria-label={isUndoMode ? "Undo cancellation" : "Cancel reservation"}
+      onClick={handleActivate}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault()
+          handleActivate()
+        }
+      }}
     >
       {isUndoMode ? <LuUndo2 aria-hidden="true" /> : <LuTrash2 aria-hidden="true" />}
       {activeDragId && <span>{isUndoMode ? "Undo" : "Cancel"}</span>}

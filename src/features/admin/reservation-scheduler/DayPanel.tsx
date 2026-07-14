@@ -18,6 +18,7 @@ interface DayPanelProps {
   modifiedIds: Set<string>
   cancellingIds: Set<string>
   onResizeStart: (reservationId: string, edge: "start" | "end", e: React.MouseEvent) => void
+  onResizeNudge?: (reservationId: string, edge: "start" | "end", direction: -1 | 1) => void
   scrollRef?: RefObject<HTMLDivElement | null>
   showNav?: boolean
   onPrevDay?: () => void
@@ -37,6 +38,7 @@ export function DayPanel({
   modifiedIds,
   cancellingIds,
   onResizeStart,
+  onResizeNudge,
   scrollRef,
   showNav,
   onPrevDay,
@@ -100,6 +102,7 @@ export function DayPanel({
             modifiedIds={modifiedIds}
             cancellingIds={cancellingIds}
             onResizeStart={onResizeStart}
+            onResizeNudge={onResizeNudge}
           />
         ))}
       </div>
