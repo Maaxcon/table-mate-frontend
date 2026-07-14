@@ -25,6 +25,8 @@ type Action =
       edge: "start" | "end"
       newTime: string
     }
+  | { type: "CANCEL_RESERVATION"; reservationId: string }
+  | { type: "UNCANCEL_RESERVATION"; reservationId: string }
   | { type: "RESET_CHANGES" }
   | { type: "CLEAR_PENDING" }
   | { type: "MARK_CONFLICT"; reservationId: string }
@@ -36,6 +38,7 @@ interface SchedulerState {
   dates: string[]
   reservations: SchedulerReservation[]
   pendingChanges: PendingChange[]
+  pendingCancellationIds: string[]
   conflictReservationId: string | null
   saving: boolean
 }
@@ -257,6 +260,24 @@ function reducer(state: SchedulerState, action: Action): SchedulerState {
 
       return { ...state, reservations: updated, pendingChanges: newChanges }
     }
+    case "CANCEL_RESERVATION": {
+      if (state.pendingCancellationIds.includes(action.reservationId)) return state
+      return {
+        ...state,
+        pendingChanges: state.pendingChanges.filter(
+          (c) => c.reservation_id !== action.reservationId,
+        ),
+        pendingCancellationIds: [...state.pendingCancellationIds, action.reservationId],
+      }
+    }
+    case "UNCANCEL_RESERVATION": {
+      return {
+        ...state,
+        pendingCancellationIds: state.pendingCancellationIds.filter(
+          (id) => id !== action.reservationId,
+        ),
+      }
+    }
     case "RESET_CHANGES": {
       const restored = state.reservations.map((r) => {
         const change = state.pendingChanges.find((c) => c.reservation_id === r.public_id)
@@ -304,6 +325,7 @@ const baseState: SchedulerState = {
   dates: ["2026-07-02"],
   reservations: [baseReservation],
   pendingChanges: [],
+  pendingCancellationIds: [],
   conflictReservationId: null,
   saving: false,
 }
@@ -424,6 +446,39 @@ describe("scheduler reducer", () => {
     const restored = reset.reservations.find((r) => r.public_id === "res-1")
     expect(restored?.table).toBe("table-1")
     expect(restored?.table_number).toBe("T1")
+  })
+
+  it("CANCEL_RESERVATION adds id to pendingCancellationIds", () => {
+    const next = reducer(baseState, { type: "CANCEL_RESERVATION", reservationId: "res-1" })
+    expect(next.pendingCancellationIds).toEqual(["res-1"])
+  })
+
+  it("CANCEL_RESERVATION removes pending change for same id", () => {
+    const moved = reducer(baseState, {
+      type: "MOVE_RESERVATION",
+      reservationId: "res-1",
+      newTableId: "table-2",
+      newTableNumber: "T2",
+      newDate: "2026-07-02",
+      newStartTime: "19:00",
+      newEndTime: "21:00",
+    })
+    expect(moved.pendingChanges).toHaveLength(1)
+    const cancelled = reducer(moved, { type: "CANCEL_RESERVATION", reservationId: "res-1" })
+    expect(cancelled.pendingChanges).toHaveLength(0)
+    expect(cancelled.pendingCancellationIds).toEqual(["res-1"])
+  })
+
+  it("CANCEL_RESERVATION is idempotent", () => {
+    const once = reducer(baseState, { type: "CANCEL_RESERVATION", reservationId: "res-1" })
+    const twice = reducer(once, { type: "CANCEL_RESERVATION", reservationId: "res-1" })
+    expect(twice.pendingCancellationIds).toEqual(["res-1"])
+  })
+
+  it("UNCANCEL_RESERVATION removes id from pendingCancellationIds", () => {
+    const cancelled = reducer(baseState, { type: "CANCEL_RESERVATION", reservationId: "res-1" })
+    const uncancelled = reducer(cancelled, { type: "UNCANCEL_RESERVATION", reservationId: "res-1" })
+    expect(uncancelled.pendingCancellationIds).toEqual([])
   })
 
   it("CLEAR_PENDING clears pending changes without reverting", () => {
