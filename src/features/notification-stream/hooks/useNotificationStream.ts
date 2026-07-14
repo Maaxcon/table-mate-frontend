@@ -6,7 +6,6 @@ import { clearAuth } from "@/store/auth/authSlice"
 import type { NotificationEvent, WSNotificationMessage } from "../types"
 import { getStream, formatEvent } from "../types"
 import { notifyKitchenEvent } from "../kitchenEventBus"
-import { fetchNotificationHistory } from "../api"
 
 const DEFAULT_STREAM_LIMIT = 50
 const STREAM_LIMITS: Record<string, number> = {
@@ -55,7 +54,6 @@ export function useNotificationStream(options: NotificationStreamOptions = {}) {
   const eventsRef = useRef<NotificationEvent[]>([])
   const pendingEventsRef = useRef<NotificationEvent[]>([])
   const readIdsRef = useRef<Set<string>>(new Set())
-  const historyAbortRef = useRef<AbortController | null>(null)
   const storage = typeof window !== "undefined" ? (window.localStorage ?? null) : null
   const readStorageKey = options.readStorageKey ?? DEFAULT_READ_IDS_STORAGE_KEY
 
@@ -152,57 +150,6 @@ export function useNotificationStream(options: NotificationStreamOptions = {}) {
     persistReadIds()
   }, [persistReadIds])
 
-  const seedEvents = useCallback(
-    (incoming: NotificationEvent[]) => {
-      if (incoming.length === 0) return
-      const merged = new Map<string, NotificationEvent>()
-      for (const event of eventsRef.current) {
-        const normalized = readIdsRef.current.has(event.id) ? { ...event, read: true } : event
-        merged.set(normalized.id, normalized)
-      }
-      for (const event of incoming) {
-        const normalized = readIdsRef.current.has(event.id) ? { ...event, read: true } : event
-        merged.set(normalized.id, normalized)
-      }
-      const sorted = Array.from(merged.values()).sort(
-        (a, b) => b.timestamp.getTime() - a.timestamp.getTime(),
-      )
-      const nextEvents = enforceStreamLimits(sorted)
-      eventsRef.current = nextEvents
-      setEvents(nextEvents)
-    },
-    [enforceStreamLimits],
-  )
-
-  const loadHistory = useCallback(() => {
-    if (env.apiBaseUrl === ENV_NOT_CONFIGURED_VALUE) return
-    if (!store.getState().auth.accessToken) return
-    const controller = new AbortController()
-    if (historyAbortRef.current) {
-      historyAbortRef.current.abort()
-    }
-    historyAbortRef.current = controller
-    ;(async () => {
-      try {
-        const history = await fetchNotificationHistory(controller.signal)
-        const parsed = history
-          .map((entry) => parseMessage(entry))
-          .filter((event): event is NotificationEvent => event !== null)
-        if (parsed.length === 0) return
-        seedEvents(parsed)
-      } catch (error) {
-        if (controller.signal.aborted) return
-        if (import.meta.env.DEV) {
-          console.error("Failed to load notification history", error)
-        }
-      } finally {
-        if (historyAbortRef.current === controller) {
-          historyAbortRef.current = null
-        }
-      }
-    })()
-  }, [seedEvents])
-
   const flushPendingEvents = useCallback(() => {
     flushTimeoutRef.current = null
     if (pendingEventsRef.current.length === 0) return
@@ -229,10 +176,6 @@ export function useNotificationStream(options: NotificationStreamOptions = {}) {
     if (flushTimeoutRef.current) {
       clearTimeout(flushTimeoutRef.current)
       flushTimeoutRef.current = null
-    }
-    if (historyAbortRef.current) {
-      historyAbortRef.current.abort()
-      historyAbortRef.current = null
     }
     pendingEventsRef.current = []
     if (wsRef.current) {
@@ -272,7 +215,6 @@ export function useNotificationStream(options: NotificationStreamOptions = {}) {
       }
       attemptRef.current = 0
       setIsConnected(true)
-      loadHistory()
     }
 
     ws.onclose = (event) => {
@@ -317,7 +259,7 @@ export function useNotificationStream(options: NotificationStreamOptions = {}) {
         // ignore malformed messages
       }
     }
-  }, [cleanup, scheduleFlush, loadHistory])
+  }, [cleanup, scheduleFlush])
 
   useEffect(() => {
     connectRef.current = connect
@@ -325,13 +267,12 @@ export function useNotificationStream(options: NotificationStreamOptions = {}) {
 
   useEffect(() => {
     mountedRef.current = true
-    loadHistory()
     connect()
     return () => {
       mountedRef.current = false
       cleanup()
     }
-  }, [connect, cleanup, loadHistory])
+  }, [connect, cleanup])
 
   const unreadCount = events.reduce((count, event) => (!event.read ? count + 1 : count), 0)
 
