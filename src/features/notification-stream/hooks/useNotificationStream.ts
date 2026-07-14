@@ -43,10 +43,12 @@ export function useNotificationStream(options: NotificationStreamOptions = {}) {
   const [isConnected, setIsConnected] = useState(false)
   const wsRef = useRef<WebSocket | null>(null)
   const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const flushTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const attemptRef = useRef(0)
   const mountedRef = useRef(true)
   const connectRef = useRef<() => void>(() => {})
   const eventsRef = useRef<NotificationEvent[]>([])
+  const pendingEventsRef = useRef<NotificationEvent[]>([])
   const readIdsRef = useRef<Set<string>>(new Set())
   const storage = typeof window !== "undefined" ? (window.localStorage ?? null) : null
   const readStorageKey = options.readStorageKey ?? DEFAULT_READ_IDS_STORAGE_KEY
@@ -125,11 +127,34 @@ export function useNotificationStream(options: NotificationStreamOptions = {}) {
     persistReadIds()
   }, [persistReadIds])
 
+  const flushPendingEvents = useCallback(() => {
+    flushTimeoutRef.current = null
+    if (pendingEventsRef.current.length === 0) return
+    const queue = pendingEventsRef.current
+    pendingEventsRef.current = []
+    queue.forEach((event) => {
+      const isNewEvent = upsertEvent(event)
+      if (isNewEvent && event.stream === "kitchen") {
+        notifyKitchenEvent()
+      }
+    })
+  }, [upsertEvent, notifyKitchenEvent])
+
+  const scheduleFlush = useCallback(() => {
+    if (flushTimeoutRef.current != null) return
+    flushTimeoutRef.current = setTimeout(flushPendingEvents, 0)
+  }, [flushPendingEvents])
+
   const cleanup = useCallback(() => {
     if (reconnectTimeoutRef.current) {
       clearTimeout(reconnectTimeoutRef.current)
       reconnectTimeoutRef.current = null
     }
+    if (flushTimeoutRef.current) {
+      clearTimeout(flushTimeoutRef.current)
+      flushTimeoutRef.current = null
+    }
+    pendingEventsRef.current = []
     if (wsRef.current) {
       wsRef.current.onopen = null
       wsRef.current.onclose = null
@@ -204,16 +229,14 @@ export function useNotificationStream(options: NotificationStreamOptions = {}) {
         const msg = JSON.parse(event.data) as WSNotificationMessage
         const notificationEvent = parseMessage(msg)
         if (notificationEvent) {
-          const isNewEvent = upsertEvent(notificationEvent)
-          if (isNewEvent && notificationEvent.stream === "kitchen") {
-            notifyKitchenEvent()
-          }
+          pendingEventsRef.current.push(notificationEvent)
+          scheduleFlush()
         }
       } catch {
         // ignore malformed messages
       }
     }
-  }, [cleanup, upsertEvent])
+  }, [cleanup, scheduleFlush])
 
   useEffect(() => {
     connectRef.current = connect
