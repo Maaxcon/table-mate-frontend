@@ -1,5 +1,4 @@
 import "./NotificationsPanel.css"
-import { useNotificationStream } from "@/features/notification-stream/hooks/useNotificationStream"
 import type { NotificationEvent } from "@/features/notification-stream/types"
 
 function formatTime(date: Date): string {
@@ -25,12 +24,19 @@ function renderDescription(description: string) {
   )
 }
 
-const KITCHEN_READ_STORAGE_KEY = "tablemate.kitchen.notifications.read"
+interface NotificationsPanelProps {
+  events: NotificationEvent[]
+  isConnected: boolean
+  markEventRead: (eventId: string) => void
+  markAllRead: () => void
+}
 
-export function NotificationsPanel() {
-  const { events, isConnected, markEventRead, markAllRead } = useNotificationStream({
-    readStorageKey: KITCHEN_READ_STORAGE_KEY,
-  })
+export function NotificationsPanel({
+  events,
+  isConnected,
+  markEventRead,
+  markAllRead,
+}: NotificationsPanelProps) {
   const kitchenEvents = events.filter((event) => event.stream === "kitchen")
   const unreadEvents = kitchenEvents.filter((event) => !event.read)
   const readEvents = kitchenEvents.filter((event) => event.read)
