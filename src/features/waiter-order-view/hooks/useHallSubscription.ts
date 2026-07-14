@@ -81,6 +81,15 @@ export interface HallReservationsUpdatedEvent {
   occurred_at: string
 }
 
+export interface HallSessionAutoExtendedEvent {
+  event_name: "HALL_SESSION_AUTO_EXTENDED"
+  schema_version: string
+  table_id: string
+  ends_at: string
+  clamped_by: string
+  occurred_at: string
+}
+
 export type HallEvent =
   | HallTableStatusChangedEvent
   | HallNewReservationEvent
@@ -90,12 +99,14 @@ export type HallEvent =
   | HallZoneUpdatedEvent
   | HallZoneDeletedEvent
   | HallReservationsUpdatedEvent
+  | HallSessionAutoExtendedEvent
 
 interface UseHallSubscriptionOptions {
   onTableStatusChanged?: (event: HallTableStatusChangedEvent) => void
   onNewReservation?: (event: HallNewReservationEvent) => void
   onReservationCancelled?: (event: HallReservationCancelledEvent) => void
   onReservationsUpdated?: (event: HallReservationsUpdatedEvent) => void
+  onSessionAutoExtended?: (event: HallSessionAutoExtendedEvent) => void
   onLayoutPublished?: (event: HallLayoutPublishedEvent) => void
   onZoneCreated?: (event: HallZoneCreatedEvent) => void
   onZoneUpdated?: (event: HallZoneUpdatedEvent) => void
@@ -109,6 +120,7 @@ export function useHallSubscription({
   onNewReservation,
   onReservationCancelled,
   onReservationsUpdated,
+  onSessionAutoExtended,
   onLayoutPublished,
   onZoneCreated,
   onZoneUpdated,
@@ -129,6 +141,7 @@ export function useHallSubscription({
     onNewReservation,
     onReservationCancelled,
     onReservationsUpdated,
+    onSessionAutoExtended,
     onLayoutPublished,
     onZoneCreated,
     onZoneUpdated,
@@ -143,6 +156,7 @@ export function useHallSubscription({
       onNewReservation,
       onReservationCancelled,
       onReservationsUpdated,
+      onSessionAutoExtended,
       onLayoutPublished,
       onZoneCreated,
       onZoneUpdated,
@@ -155,6 +169,7 @@ export function useHallSubscription({
     onNewReservation,
     onReservationCancelled,
     onReservationsUpdated,
+    onSessionAutoExtended,
     onLayoutPublished,
     onZoneCreated,
     onZoneUpdated,
@@ -186,6 +201,8 @@ export function useHallSubscription({
           callbacksRef.current.onReservationCancelled?.(data)
         } else if (data.event_name === "HALL_RESERVATIONS_UPDATED") {
           callbacksRef.current.onReservationsUpdated?.(data as HallReservationsUpdatedEvent)
+        } else if (data.event_name === "HALL_SESSION_AUTO_EXTENDED") {
+          callbacksRef.current.onSessionAutoExtended?.(data as HallSessionAutoExtendedEvent)
         } else if (data.event_name === "LAYOUT_PUBLISHED") {
           callbacksRef.current.onLayoutPublished?.(data)
         } else if (data.event_name === "ZONE_CREATED") {

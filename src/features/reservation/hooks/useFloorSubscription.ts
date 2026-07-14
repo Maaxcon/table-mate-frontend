@@ -58,6 +58,14 @@ export interface FloorReservationsUpdatedEvent {
   occurred_at: string
 }
 
+export interface FloorSessionAutoExtendedEvent {
+  event_name: "HALL_SESSION_AUTO_EXTENDED"
+  table_id: string
+  ends_at: string
+  clamped_by: string
+  occurred_at: string
+}
+
 export type FloorEvent =
   | FloorTableStatusEvent
   | FloorNewReservationEvent
@@ -67,11 +75,13 @@ export type FloorEvent =
   | FloorZoneUpdatedEvent
   | FloorZoneDeletedEvent
   | FloorReservationsUpdatedEvent
+  | FloorSessionAutoExtendedEvent
 
 interface UseFloorSubscriptionOptions {
   onTableStatusChanged?: (event: FloorTableStatusEvent) => void
   onNewReservation?: (event: FloorNewReservationEvent) => void
   onReservationCancelled?: (event: FloorReservationCancelledEvent) => void
+  onSessionAutoExtended?: (event: FloorSessionAutoExtendedEvent) => void
   onLayoutPublished?: (event: FloorLayoutPublishedEvent) => void
   onZoneCreated?: (event: FloorZoneCreatedEvent) => void
   onZoneUpdated?: (event: FloorZoneUpdatedEvent) => void
@@ -105,6 +115,7 @@ export function useFloorSubscription({
   onTableStatusChanged,
   onNewReservation,
   onReservationCancelled,
+  onSessionAutoExtended,
   onLayoutPublished,
   onZoneCreated,
   onZoneUpdated,
@@ -124,6 +135,7 @@ export function useFloorSubscription({
     onTableStatusChanged,
     onNewReservation,
     onReservationCancelled,
+    onSessionAutoExtended,
     onLayoutPublished,
     onZoneCreated,
     onZoneUpdated,
@@ -138,6 +150,7 @@ export function useFloorSubscription({
       onTableStatusChanged,
       onNewReservation,
       onReservationCancelled,
+      onSessionAutoExtended,
       onLayoutPublished,
       onZoneCreated,
       onZoneUpdated,
@@ -150,6 +163,7 @@ export function useFloorSubscription({
     onTableStatusChanged,
     onNewReservation,
     onReservationCancelled,
+    onSessionAutoExtended,
     onLayoutPublished,
     onZoneCreated,
     onZoneUpdated,
@@ -200,6 +214,8 @@ export function useFloorSubscription({
           callbacksRef.current.onZoneDeleted?.(data as FloorZoneDeletedEvent)
         } else if (data.event_name === "HALL_RESERVATIONS_UPDATED") {
           callbacksRef.current.onReservationsUpdated?.(data as FloorReservationsUpdatedEvent)
+        } else if (data.event_name === "HALL_SESSION_AUTO_EXTENDED") {
+          callbacksRef.current.onSessionAutoExtended?.(data as FloorSessionAutoExtendedEvent)
         }
       } catch (err) {
         wsLog("Failed to parse message:", err)
