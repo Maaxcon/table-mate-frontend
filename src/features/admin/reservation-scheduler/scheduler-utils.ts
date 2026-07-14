@@ -8,6 +8,26 @@ export function toMinutes(hhmm: string): number {
 
 export const DAY_KEYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const
 
+export function getDayWorkingBounds(
+  date: string,
+  workingHours: Record<string, WorkingHoursDay> | null,
+): { start: number; end: number } {
+  if (!workingHours) return { start: 8, end: 23 }
+  const d = new Date(date + "T00:00:00")
+  const dayKey = DAY_KEYS[d.getDay()]
+  const dayHours = workingHours[dayKey]
+  if (!dayHours) return { start: 8, end: 23 }
+
+  const openMin = toMinutes(dayHours.open)
+  const closeMin = toMinutes(dayHours.close)
+  if (openMin == null || closeMin == null) return { start: 8, end: 23 }
+
+  return {
+    start: Math.floor(openMin / 60),
+    end: Math.ceil((closeMin > openMin ? closeMin : closeMin + 24 * 60) / 60),
+  }
+}
+
 export function getDayExtendedBounds(
   date: string,
   workingHours: Record<string, WorkingHoursDay> | null,
