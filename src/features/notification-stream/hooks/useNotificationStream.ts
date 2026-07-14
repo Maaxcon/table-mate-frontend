@@ -8,7 +8,11 @@ import { getStream, formatEvent } from "../types"
 import { notifyKitchenEvent } from "../kitchenEventBus"
 import { fetchNotificationHistory } from "../api"
 
-const MAX_EVENTS = 50
+const DEFAULT_STREAM_LIMIT = 50
+const STREAM_LIMITS: Record<string, number> = {
+  client: 50,
+  kitchen: 50,
+}
 const BASE_DELAY_MS = 1000
 const MAX_DELAY_MS = 30000
 const DEFAULT_READ_IDS_STORAGE_KEY = "tablemate.staff.notifications.read"
@@ -85,21 +89,40 @@ export function useNotificationStream(options: NotificationStreamOptions = {}) {
     }
   }, [storage, readStorageKey])
 
-  const upsertEvent = useCallback((incoming: NotificationEvent) => {
-    const normalized = readIdsRef.current.has(incoming.id) ? { ...incoming, read: true } : incoming
-    const existingIndex = eventsRef.current.findIndex((event) => event.id === normalized.id)
-    const withoutExisting =
-      existingIndex === -1
-        ? eventsRef.current
-        : [
-            ...eventsRef.current.slice(0, existingIndex),
-            ...eventsRef.current.slice(existingIndex + 1),
-          ]
-    const nextEvents = [normalized, ...withoutExisting].slice(0, MAX_EVENTS)
-    eventsRef.current = nextEvents
-    setEvents(nextEvents)
-    return existingIndex === -1
+  const enforceStreamLimits = useCallback((eventsToClamp: NotificationEvent[]) => {
+    const counts = new Map<string, number>()
+    const next: NotificationEvent[] = []
+    for (const event of eventsToClamp) {
+      const streamKey = event.stream ?? "default"
+      const limit = STREAM_LIMITS[streamKey] ?? DEFAULT_STREAM_LIMIT
+      const count = counts.get(streamKey) ?? 0
+      if (count >= limit) continue
+      counts.set(streamKey, count + 1)
+      next.push(event)
+    }
+    return next
   }, [])
+
+  const upsertEvent = useCallback(
+    (incoming: NotificationEvent) => {
+      const normalized = readIdsRef.current.has(incoming.id)
+        ? { ...incoming, read: true }
+        : incoming
+      const existingIndex = eventsRef.current.findIndex((event) => event.id === normalized.id)
+      const withoutExisting =
+        existingIndex === -1
+          ? eventsRef.current
+          : [
+              ...eventsRef.current.slice(0, existingIndex),
+              ...eventsRef.current.slice(existingIndex + 1),
+            ]
+      const nextEvents = enforceStreamLimits([normalized, ...withoutExisting])
+      eventsRef.current = nextEvents
+      setEvents(nextEvents)
+      return existingIndex === -1
+    },
+    [enforceStreamLimits],
+  )
 
   const markEventRead = useCallback(
     (eventId: string) => {
@@ -129,23 +152,27 @@ export function useNotificationStream(options: NotificationStreamOptions = {}) {
     persistReadIds()
   }, [persistReadIds])
 
-  const seedEvents = useCallback((incoming: NotificationEvent[]) => {
-    if (incoming.length === 0) return
-    const merged = new Map<string, NotificationEvent>()
-    for (const event of eventsRef.current) {
-      const normalized = readIdsRef.current.has(event.id) ? { ...event, read: true } : event
-      merged.set(normalized.id, normalized)
-    }
-    for (const event of incoming) {
-      const normalized = readIdsRef.current.has(event.id) ? { ...event, read: true } : event
-      merged.set(normalized.id, normalized)
-    }
-    const nextEvents = Array.from(merged.values())
-      .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
-      .slice(0, MAX_EVENTS)
-    eventsRef.current = nextEvents
-    setEvents(nextEvents)
-  }, [])
+  const seedEvents = useCallback(
+    (incoming: NotificationEvent[]) => {
+      if (incoming.length === 0) return
+      const merged = new Map<string, NotificationEvent>()
+      for (const event of eventsRef.current) {
+        const normalized = readIdsRef.current.has(event.id) ? { ...event, read: true } : event
+        merged.set(normalized.id, normalized)
+      }
+      for (const event of incoming) {
+        const normalized = readIdsRef.current.has(event.id) ? { ...event, read: true } : event
+        merged.set(normalized.id, normalized)
+      }
+      const sorted = Array.from(merged.values()).sort(
+        (a, b) => b.timestamp.getTime() - a.timestamp.getTime(),
+      )
+      const nextEvents = enforceStreamLimits(sorted)
+      eventsRef.current = nextEvents
+      setEvents(nextEvents)
+    },
+    [enforceStreamLimits],
+  )
 
   const loadHistory = useCallback(() => {
     if (env.apiBaseUrl === ENV_NOT_CONFIGURED_VALUE) return
