@@ -73,6 +73,7 @@ export function ReservationBlock({
 
   const classNames = [
     "scheduler__block",
+    reservation.status === "pending" && "scheduler__block--pending",
     isConflict && "scheduler__block--conflict",
     isModified && "scheduler__block--modified",
     isCancelling && "scheduler__block--cancelling",

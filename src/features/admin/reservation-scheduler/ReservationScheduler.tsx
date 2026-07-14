@@ -606,7 +606,7 @@ export function ReservationScheduler() {
       const dateKey = isoToDateKey(reservation.start_at)
       setActiveDragDate(dateKey)
 
-      const dayRange = computeDayHourRange(dateKey, workingHours)
+      const dayRange = dayRanges[dateKey] ?? computeDayHourRange(dateKey, workingHours)
       const startX = e.clientX
       const edgeTime = new Date(edge === "start" ? reservation.start_at : reservation.end_at)
       const edgeMinutesFromMidnight = edgeTime.getHours() * 60 + edgeTime.getMinutes()
@@ -711,7 +711,15 @@ export function ReservationScheduler() {
       document.addEventListener("mousemove", onMouseMove)
       document.addEventListener("mouseup", onMouseUp)
     },
-    [state.reservations, resizeReservation, markConflict, toast, workingHours, restaurantTimezone],
+    [
+      state.reservations,
+      resizeReservation,
+      markConflict,
+      toast,
+      workingHours,
+      restaurantTimezone,
+      dayRanges,
+    ],
   )
 
   const handleSave = useCallback(async () => {

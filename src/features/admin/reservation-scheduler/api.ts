@@ -86,10 +86,18 @@ export async function batchUpdateReservations(
   if (typeof errBody === "object" && errBody !== null) {
     const obj = errBody as Record<string, unknown>
     if (Array.isArray(obj.changes)) {
-      const msgs = (obj.changes as { message?: string }[])
-        .filter((c) => c.message)
-        .map((c) => c.message)
-      if (msgs.length > 0) return { ok: false, message: msgs.join("; ") }
+      const msgs: string[] = []
+      for (let i = 0; i < obj.changes.length; i++) {
+        const item = obj.changes[i] as Record<string, unknown>
+        if (item && typeof item === "object") {
+          for (const [field, errors] of Object.entries(item)) {
+            if (Array.isArray(errors)) {
+              msgs.push(`Item ${i + 1}, ${field}: ${errors.join("; ")}`)
+            }
+          }
+        }
+      }
+      if (msgs.length > 0) return { ok: false, message: msgs.join(" | ") }
     }
     return {
       ok: false,
