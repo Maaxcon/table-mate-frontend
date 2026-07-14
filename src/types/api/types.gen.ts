@@ -81,6 +81,25 @@ export type AdminOverview = {
   staff_active: number
 }
 
+export type BatchUpdate = {
+  changes: Array<BatchUpdateItem>
+  cancellations?: Array<string>
+}
+
+export type BatchUpdateError = {
+  detail: string
+  code?: string
+  conflicting_reservation_id?: string
+}
+
+export type BatchUpdateItem = {
+  reservation_id: string
+  new_table_id: string
+  new_date: string
+  new_start_time: string
+  new_end_time: string
+}
+
 export type BillItem = {
   readonly id: string
   readonly name: string
@@ -707,6 +726,10 @@ export type PatchedReservation = {
   guest_count?: number
   start_at?: string
   end_at?: string
+  readonly opened_at?: string | null
+  readonly session_ends_at?: string | null
+  readonly session_table?: string | null
+  readonly session_table_number?: string | null
   status?: ReservationStatus
   created_by_staff?: boolean
   notes?: string | null
@@ -933,6 +956,10 @@ export type Reservation = {
   guest_count: number
   start_at: string
   end_at: string
+  readonly opened_at: string | null
+  readonly session_ends_at: string | null
+  readonly session_table: string | null
+  readonly session_table_number: string | null
   status?: ReservationStatus
   created_by_staff?: boolean
   notes?: string | null
@@ -3366,6 +3393,8 @@ export type ReservationsReservationsListData = {
      * A page number within the paginated result set.
      */
     page?: number
+    start_at__date__gte?: string
+    start_at__date__lte?: string
     /**
      * * `pending` - Pending
      * * `active` - Active
@@ -3545,6 +3574,27 @@ export type ReservationsReservationsAvailableSlotsRetrieveResponses = {
 export type ReservationsReservationsAvailableSlotsRetrieveResponse =
   ReservationsReservationsAvailableSlotsRetrieveResponses[keyof ReservationsReservationsAvailableSlotsRetrieveResponses]
 
+export type ReservationsReservationsBatchUpdateCreateData = {
+  body: BatchUpdate
+  path?: never
+  query?: never
+  url: "/api/reservations/reservations/batch-update/"
+}
+
+export type ReservationsReservationsBatchUpdateCreateErrors = {
+  409: BatchUpdateError
+}
+
+export type ReservationsReservationsBatchUpdateCreateError =
+  ReservationsReservationsBatchUpdateCreateErrors[keyof ReservationsReservationsBatchUpdateCreateErrors]
+
+export type ReservationsReservationsBatchUpdateCreateResponses = {
+  /**
+   * No response body
+   */
+  200: unknown
+}
+
 export type ReservationsReservationsMyListData = {
   body?: never
   path?: never
@@ -3558,6 +3608,8 @@ export type ReservationsReservationsMyListData = {
      * A page number within the paginated result set.
      */
     page?: number
+    start_at__date__gte?: string
+    start_at__date__lte?: string
     /**
      * * `pending` - Pending
      * * `active` - Active
