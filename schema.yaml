@@ -290,6 +290,25 @@ paths:
               schema:
                 $ref: '#/components/schemas/Layout'
           description: ''
+  /api/editor/layouts/latest/:
+    get:
+      operationId: editor_layouts_latest_retrieve
+      description: Returns the layout_json from the most recent LayoutVersion for
+        the admin editor.
+      summary: Latest published layout JSON
+      tags:
+      - Editor
+      security:
+      - jwtAuth: []
+      - jwt_Auth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
   /api/editor/layouts/publish/:
     post:
       operationId: editor_layouts_publish_create
@@ -1388,6 +1407,32 @@ paths:
               schema:
                 $ref: '#/components/schemas/CartSession'
           description: ''
+  /api/orders/cart/sessions/{session_pk}/bill/:
+    get:
+      operationId: orders_cart_sessions_bill_list
+      description: Ordered (already-submitted) items for this table's visit — the
+        bill.
+      parameters:
+      - in: path
+        name: session_pk
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - Cart
+      security:
+      - jwtAuth: []
+      - jwt_Auth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BillItem'
+          description: ''
   /api/orders/cart/sessions/{session_pk}/checkout/:
     post:
       operationId: orders_cart_sessions_checkout_create
@@ -1573,6 +1618,44 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/orders/cart/sessions/{session_pk}/pay/:
+    post:
+      operationId: orders_cart_sessions_pay_create
+      description: Mark selected ordered items as paid (simulated). Returns the updated
+        bill.
+      parameters:
+      - in: path
+        name: session_pk
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - Cart
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PayOrderItems'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PayOrderItems'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PayOrderItems'
+        required: true
+      security:
+      - jwtAuth: []
+      - jwt_Auth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BillItem'
+          description: ''
   /api/orders/order-items/:
     get:
       operationId: orders_order_items_list
@@ -3260,7 +3343,6 @@ paths:
       security:
       - jwtAuth: []
       - jwt_Auth: []
-      - {}
       responses:
         '201':
           content:
@@ -3317,7 +3399,6 @@ paths:
       security:
       - jwtAuth: []
       - jwt_Auth: []
-      - {}
       responses:
         '200':
           content:
@@ -3350,7 +3431,6 @@ paths:
       security:
       - jwtAuth: []
       - jwt_Auth: []
-      - {}
       responses:
         '200':
           content:
@@ -3358,6 +3438,23 @@ paths:
               schema:
                 $ref: '#/components/schemas/Zone'
           description: ''
+    delete:
+      operationId: restaurants_zones_destroy
+      parameters:
+      - in: path
+        name: public_id
+        schema:
+          type: string
+          pattern: ^[0-9a-fA-F-]{36}$
+        required: true
+      tags:
+      - Restaurants
+      security:
+      - jwtAuth: []
+      - jwt_Auth: []
+      responses:
+        '204':
+          description: No response body
 components:
   schemas:
     ActionEnum:
@@ -3550,6 +3647,37 @@ components:
       - menus_total
       - staff_active
       - staff_total
+    BillItem:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          readOnly: true
+        guest_slot:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        quantity:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        payable:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,4})?$
+          readOnly: true
+        is_paid:
+          type: boolean
+      required:
+      - guest_slot
+      - id
+      - name
+      - payable
+      - quantity
     BookingSettings:
       type: object
       properties:
@@ -3601,6 +3729,10 @@ components:
           type: string
           format: uuid
           readOnly: true
+        menu_item_detail:
+          allOf:
+          - $ref: '#/components/schemas/CartMenuItem'
+          readOnly: true
         quantity:
           type: integer
           maximum: 2147483647
@@ -3617,9 +3749,6 @@ components:
           readOnly: true
           nullable: true
         is_mine:
-          type: boolean
-          readOnly: true
-        is_paid:
           type: boolean
           readOnly: true
         display_name:
@@ -3649,12 +3778,43 @@ components:
       - display_name
       - guest_slot
       - is_mine
-      - is_paid
       - menu_item
+      - menu_item_detail
       - public_id
       - quantity
       - restaurant
       - updated_at
+    CartMenuItem:
+      type: object
+      description: |-
+        Just enough of the menu item to render a cart line on its own, so the
+        cart never depends on which menu page/sort the client is currently showing.
+
+        These are LIVE reads of the current MenuItem (name/price/image/availability),
+        not an order-time snapshot — a later rename or price change is reflected here.
+        The amount a guest owes is frozen separately on OrderItem.total_price.
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+        price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,4})?$
+        image:
+          type: string
+          format: uri
+          nullable: true
+        is_available:
+          type: boolean
+      required:
+      - id
+      - name
+      - price
     CartSession:
       type: object
       properties:
@@ -4201,19 +4361,15 @@ components:
       properties:
         x:
           type: integer
-          maximum: 1800
           minimum: -100
         y:
           type: integer
-          maximum: 1900
           minimum: -100
         width:
           type: integer
-          maximum: 2000
           minimum: 1
         height:
           type: integer
-          maximum: 2000
           minimum: 1
         rotation:
           type: integer
@@ -5603,6 +5759,24 @@ components:
           maximum: 2147483647
           minimum: 0
         edge_styles: {}
+        canvas_cols:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        canvas_rows:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+    PayOrderItems:
+      type: object
+      properties:
+        order_item_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+      required:
+      - order_item_ids
     Payment:
       type: object
       properties:
@@ -5675,24 +5849,36 @@ components:
         * `settled` - Settled
         * `refunded` - Refunded
         * `cancelled` - Cancelled
+    PendingZone:
+      type: object
+      properties:
+        created:
+          type: array
+          items:
+            $ref: '#/components/schemas/ZoneCreate'
+        updated:
+          type: array
+          items:
+            $ref: '#/components/schemas/ZoneUpdate'
+        deleted:
+          type: array
+          items:
+            type: string
+            format: uuid
     PortalEntity:
       type: object
       properties:
         x:
           type: integer
-          maximum: 2000
           minimum: -100
         y:
           type: integer
-          maximum: 2000
           minimum: -100
         width:
           type: integer
-          maximum: 2000
           minimum: 1
         height:
           type: integer
-          maximum: 2000
           minimum: 1
         target_zone_id:
           type: string
@@ -5793,6 +5979,16 @@ components:
     PublishLayout:
       type: object
       properties:
+        canvas_cols:
+          type: integer
+          maximum: 50
+          minimum: 8
+          default: 20
+        canvas_rows:
+          type: integer
+          maximum: 50
+          minimum: 8
+          default: 20
         tables:
           type: array
           items:
@@ -5814,6 +6010,8 @@ components:
           items:
             type: string
             format: uuid
+        zones:
+          $ref: '#/components/schemas/PendingZone'
     Receipt:
       type: object
       properties:
@@ -6313,25 +6511,25 @@ components:
           type: string
           format: uuid
           nullable: true
+        _client_id:
+          type: string
+          nullable: true
+          title: ' client id'
         public_number:
           type: string
           default: ''
           maxLength: 64
         x:
           type: integer
-          maximum: 1800
           minimum: -100
         y:
           type: integer
-          maximum: 1800
           minimum: -100
         width:
           type: integer
-          maximum: 2000
           minimum: 1
         height:
           type: integer
-          maximum: 2000
           minimum: 1
         rotation:
           type: integer
@@ -6382,19 +6580,15 @@ components:
       properties:
         x:
           type: integer
-          maximum: 2000
           minimum: -100
         y:
           type: integer
-          maximum: 2000
           minimum: -100
         width:
           type: integer
-          maximum: 2000
           minimum: 1
         height:
           type: integer
-          maximum: 2000
           minimum: 1
         threshold_label:
           type: string
@@ -6468,17 +6662,11 @@ components:
           readOnly: true
       required:
       - created_at
-<<<<<<< HEAD
       - daily_number
       - guest_count
       - injected_at
       - items_count
       - label
-=======
-      - guest_count
-      - injected_at
-      - items_count
->>>>>>> origin/dev
       - order
       - public_id
       - restaurant
@@ -6680,8 +6868,60 @@ components:
           maximum: 2147483647
           minimum: 0
         edge_styles: {}
+        canvas_cols:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        canvas_rows:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
       required:
       - name
+      - public_id
+    ZoneCreate:
+      type: object
+      properties:
+        _client_id:
+          type: string
+          format: uuid
+          title: ' client id'
+        name:
+          type: string
+          maxLength: 128
+        canvas_cols:
+          type: integer
+          maximum: 50
+          minimum: 8
+          default: 20
+        canvas_rows:
+          type: integer
+          maximum: 50
+          minimum: 8
+          default: 20
+        edge_styles: {}
+      required:
+      - _client_id
+      - name
+    ZoneUpdate:
+      type: object
+      properties:
+        public_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          maxLength: 128
+        canvas_cols:
+          type: integer
+          maximum: 50
+          minimum: 8
+        canvas_rows:
+          type: integer
+          maximum: 50
+          minimum: 8
+        edge_styles: {}
+      required:
       - public_id
   securitySchemes:
     jwtAuth:
