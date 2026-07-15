@@ -257,9 +257,6 @@ function reducer(state: SchedulerState, action: Action): SchedulerState {
       if (state.pendingCancellationIds.includes(action.reservationId)) return state
       return {
         ...state,
-        pendingChanges: state.pendingChanges.filter(
-          (c) => c.reservation_id !== action.reservationId,
-        ),
         pendingCancellationIds: [...state.pendingCancellationIds, action.reservationId],
       }
     }

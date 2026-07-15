@@ -639,14 +639,82 @@ export function ReservationScheduler() {
     (reservationId: string, edge: "start" | "end", direction: -1 | 1) => {
       const reservation = state.reservations.find((r) => r.public_id === reservationId)
       if (!reservation) return
+      if (reservation.status === "active" && edge === "start") return
+      if (reservation.status === "completed") return
+
+      const dateKey = isoToDateKey(reservation.start_at)
+      const dayRange = dayRanges[dateKey] ?? computeDayHourRange(dateKey, workingHours)
+
+      const curStart = new Date(reservation.start_at)
+      const curEnd = new Date(reservation.end_at)
+      const curStartMinutes = curStart.getHours() * 60 + curStart.getMinutes()
+      const curEndMinutes = curEnd.getHours() * 60 + curEnd.getMinutes()
+
       const edgeDate = new Date(edge === "start" ? reservation.start_at : reservation.end_at)
       const currentMinutes = edgeDate.getHours() * 60 + edgeDate.getMinutes()
-      const newMinutes = Math.max(0, currentMinutes + direction * SLOT_MINUTES)
-      const hh = String(Math.floor(newMinutes / 60)).padStart(2, "0")
-      const mm = String(newMinutes % 60).padStart(2, "0")
+
+      const rawMinutes = currentMinutes + direction * SLOT_MINUTES
+
+      let validatedMinutes = Math.min(
+        Math.max(rawMinutes, dayRange.hourStart * 60),
+        Math.min(dayRange.hourEnd * 60, 24 * 60 - SLOT_MINUTES),
+      )
+
+      if (edge === "end") {
+        validatedMinutes = Math.max(validatedMinutes, curStartMinutes + SLOT_MINUTES)
+        if (reservation.status === "active") {
+          const now = new Date()
+          const nowMinutes = now.getHours() * 60 + now.getMinutes()
+          validatedMinutes = Math.max(validatedMinutes, nowMinutes + SLOT_MINUTES)
+        }
+      } else {
+        validatedMinutes = Math.min(validatedMinutes, curEndMinutes - SLOT_MINUTES)
+      }
+
+      if (validatedMinutes === currentMinutes) return
+
+      const hh = String(Math.floor(validatedMinutes / 60)).padStart(2, "0")
+      const mm = String(validatedMinutes % 60).padStart(2, "0")
+
+      const proposed = {
+        table_id: reservation.table,
+        date: dateKey,
+        start_minutes: edge === "start" ? validatedMinutes : curStartMinutes,
+        end_minutes: edge === "end" ? validatedMinutes : curEndMinutes,
+      }
+
+      if (checkOverlap(proposed, state.reservations, state.pendingChanges, reservationId)) {
+        markConflict(reservationId)
+        toast.error("Time slot overlaps with another reservation")
+        return
+      }
+
+      const orderingReason = checkOrderingViolation(proposed, state.reservations, reservationId)
+      if (orderingReason) {
+        markConflict(reservationId)
+        toast.error(orderingReason)
+        return
+      }
+
+      const pastReason = checkPastTimeViolation(proposed, reservation.status, restaurantTimezone)
+      if (pastReason) {
+        markConflict(reservationId)
+        toast.error(pastReason)
+        return
+      }
+
       resizeReservation(reservationId, edge, `${hh}:${mm}`)
     },
-    [state.reservations, resizeReservation],
+    [
+      state.reservations,
+      state.pendingChanges,
+      dayRanges,
+      workingHours,
+      markConflict,
+      toast,
+      restaurantTimezone,
+      resizeReservation,
+    ],
   )
 
   const handleSave = useCallback(async () => {
@@ -661,17 +729,19 @@ export function ReservationScheduler() {
 
     try {
       const payload = {
-        changes: state.pendingChanges.map((c) => {
-          const utcStart = localToISOString(c.new_date, c.new_start_time)
-          const utcEnd = localToISOString(c.new_end_date ?? c.new_date, c.new_end_time)
-          return {
-            reservation_id: c.reservation_id,
-            new_table_id: c.new_table_id,
-            new_date: utcStart.slice(0, 10),
-            new_start_time: utcStart.slice(11, 16),
-            new_end_time: utcEnd.slice(11, 16),
-          }
-        }),
+        changes: state.pendingChanges
+          .filter((c) => !state.pendingCancellationIds.includes(c.reservation_id))
+          .map((c) => {
+            const utcStart = localToISOString(c.new_date, c.new_start_time)
+            const utcEnd = localToISOString(c.new_end_date ?? c.new_date, c.new_end_time)
+            return {
+              reservation_id: c.reservation_id,
+              new_table_id: c.new_table_id,
+              new_date: utcStart.slice(0, 10),
+              new_start_time: utcStart.slice(11, 16),
+              new_end_time: utcEnd.slice(11, 16),
+            }
+          }),
         cancellations:
           state.pendingCancellationIds.length > 0 ? state.pendingCancellationIds : undefined,
       }
@@ -832,7 +902,11 @@ export function ReservationScheduler() {
       </DndContext>
 
       <SaveBar
-        changeCount={state.pendingChanges.length}
+        changeCount={
+          state.pendingChanges.filter(
+            (c) => !state.pendingCancellationIds.includes(c.reservation_id),
+          ).length
+        }
         cancellationCount={state.pendingCancellationIds.length}
         saving={state.saving}
         onSave={handleSave}

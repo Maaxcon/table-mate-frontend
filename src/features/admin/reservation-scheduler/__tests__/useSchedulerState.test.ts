@@ -264,9 +264,6 @@ function reducer(state: SchedulerState, action: Action): SchedulerState {
       if (state.pendingCancellationIds.includes(action.reservationId)) return state
       return {
         ...state,
-        pendingChanges: state.pendingChanges.filter(
-          (c) => c.reservation_id !== action.reservationId,
-        ),
         pendingCancellationIds: [...state.pendingCancellationIds, action.reservationId],
       }
     }
@@ -453,7 +450,7 @@ describe("scheduler reducer", () => {
     expect(next.pendingCancellationIds).toEqual(["res-1"])
   })
 
-  it("CANCEL_RESERVATION removes pending change for same id", () => {
+  it("CANCEL_RESERVATION preserves pending change for same id", () => {
     const moved = reducer(baseState, {
       type: "MOVE_RESERVATION",
       reservationId: "res-1",
@@ -465,7 +462,7 @@ describe("scheduler reducer", () => {
     })
     expect(moved.pendingChanges).toHaveLength(1)
     const cancelled = reducer(moved, { type: "CANCEL_RESERVATION", reservationId: "res-1" })
-    expect(cancelled.pendingChanges).toHaveLength(0)
+    expect(cancelled.pendingChanges).toHaveLength(1)
     expect(cancelled.pendingCancellationIds).toEqual(["res-1"])
   })
 
