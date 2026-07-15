@@ -6,6 +6,30 @@ export function useAdminStrings() {
 
   const raw = (key: string, options?: Record<string, unknown>) => t(`admin.${key}`, options)
 
+  const floorEntityLabels = {
+    tableSquare: t("admin.floor.entities.tableSquare"),
+    tableRound: t("admin.floor.entities.tableRound"),
+    obstacle: t("admin.floor.entities.obstacle"),
+    threshold: t("admin.floor.entities.threshold"),
+    portal: t("admin.floor.entities.portal"),
+  }
+
+  const floorTableTags = [
+    { value: "window-seat", label: t("admin.floor.sidebar.table.tags.windowSeat") },
+    { value: "quiet", label: t("admin.floor.sidebar.table.tags.quiet") },
+    {
+      value: "wheelchair-accessible",
+      label: t("admin.floor.sidebar.table.tags.wheelchairAccessible"),
+    },
+  ] as const
+
+  const floorShortcuts = [
+    t("admin.floor.sidebar.zone.shortcuts.copy"),
+    t("admin.floor.sidebar.zone.shortcuts.paste"),
+    t("admin.floor.sidebar.zone.shortcuts.delete"),
+    t("admin.floor.sidebar.zone.shortcuts.undo"),
+  ]
+
   return {
     locale,
     raw,
@@ -442,6 +466,236 @@ export function useAdminStrings() {
           update: t("admin.kitchen.page.mutations.update"),
           bump: t("admin.kitchen.page.mutations.bump"),
           accept: t("admin.kitchen.page.mutations.accept"),
+        },
+      },
+    },
+    floor: {
+      entities: floorEntityLabels,
+      page: {
+        brandTitle: t("admin.floor.page.brandTitle"),
+        brandSubtitle: t("admin.floor.page.brandSubtitle"),
+        title: t("admin.floor.page.title"),
+        subtitleEditing: (name: string) => t("admin.floor.page.subtitle.editing", { name }),
+        subtitleEmpty: t("admin.floor.page.subtitle.empty"),
+        status: {
+          dirty: t("admin.floor.page.status.dirty"),
+          clean: t("admin.floor.page.status.clean"),
+        },
+        live: {
+          ariaConnected: t("admin.floor.page.live.ariaConnected"),
+          ariaDisconnected: t("admin.floor.page.live.ariaDisconnected"),
+          connected: t("admin.floor.page.live.connected"),
+          disconnected: t("admin.floor.page.live.disconnected"),
+          timeLabel: t("admin.floor.page.live.timeLabel"),
+          timeAria: t("admin.floor.page.live.timeAria"),
+          metricsAria: t("admin.floor.page.live.metricsAria"),
+        },
+        metrics: {
+          zones: {
+            label: t("admin.floor.page.metrics.zones.label"),
+            hint: t("admin.floor.page.metrics.zones.hint"),
+          },
+          tables: {
+            label: t("admin.floor.page.metrics.tables.label"),
+            hintSelected: t("admin.floor.page.metrics.tables.hintSelected"),
+            hintEmpty: t("admin.floor.page.metrics.tables.hintEmpty"),
+          },
+          portals: {
+            label: t("admin.floor.page.metrics.portals.label"),
+            hintSelected: t("admin.floor.page.metrics.portals.hintSelected"),
+            hintEmpty: t("admin.floor.page.metrics.portals.hintEmpty"),
+          },
+          grid: {
+            label: t("admin.floor.page.metrics.grid.label"),
+            hint: t("admin.floor.page.metrics.grid.hint"),
+          },
+        },
+        emptyState: t("admin.floor.page.empty"),
+        sidebarToggle: {
+          show: t("admin.floor.page.sidebarToggle.show"),
+          hide: t("admin.floor.page.sidebarToggle.hide"),
+        },
+        toasts: {
+          stale: {
+            message: t("admin.floor.page.toasts.stale.message"),
+            action: t("admin.floor.page.toasts.stale.action"),
+          },
+          occupied: t("admin.floor.page.toasts.occupied"),
+        },
+      },
+      toolbar: {
+        section: {
+          kicker: t("admin.floor.toolbar.section.kicker"),
+          title: t("admin.floor.toolbar.section.title"),
+          project: t("admin.floor.toolbar.section.project"),
+        },
+        tools: {
+          select: {
+            label: t("admin.floor.toolbar.tools.select.label"),
+            hint: t("admin.floor.toolbar.tools.select.hint"),
+          },
+          tableSquare: {
+            label: floorEntityLabels.tableSquare,
+            hint: t("admin.floor.toolbar.tools.tableSquare.hint"),
+          },
+          tableRound: {
+            label: floorEntityLabels.tableRound,
+            hint: t("admin.floor.toolbar.tools.tableRound.hint"),
+          },
+          obstacle: {
+            label: floorEntityLabels.obstacle,
+            hint: t("admin.floor.toolbar.tools.obstacle.hint"),
+          },
+          threshold: {
+            label: floorEntityLabels.threshold,
+            hint: t("admin.floor.toolbar.tools.threshold.hint"),
+          },
+          portal: {
+            label: floorEntityLabels.portal,
+            hint: t("admin.floor.toolbar.tools.portal.hint"),
+          },
+        },
+        actions: {
+          discard: t("admin.floor.toolbar.actions.discard"),
+          publish: t("admin.floor.toolbar.actions.publish"),
+          publishing: t("admin.floor.toolbar.actions.publishing"),
+        },
+      },
+      zoneHeader: {
+        placeholder: t("admin.floor.zoneHeader.placeholder"),
+        add: t("admin.floor.zoneHeader.add"),
+        cancel: t("admin.floor.zoneHeader.cancel"),
+        addTab: t("admin.floor.zoneHeader.addTab"),
+        deleteAria: (name: string) => t("admin.floor.zoneHeader.deleteAria", { name }),
+      },
+      sidebar: {
+        empty: {
+          title: t("admin.floor.sidebar.empty.title"),
+          subtitle: t("admin.floor.sidebar.empty.subtitle"),
+          description: t("admin.floor.sidebar.empty.description"),
+        },
+        zone: {
+          titleFallback: t("admin.floor.sidebar.zone.titleFallback"),
+          subtitle: t("admin.floor.sidebar.zone.subtitle"),
+          stats: {
+            tables: t("admin.floor.sidebar.zone.stats.tables"),
+            seats: t("admin.floor.sidebar.zone.stats.seats"),
+            portals: t("admin.floor.sidebar.zone.stats.portals"),
+            obstacles: t("admin.floor.sidebar.zone.stats.obstacles"),
+          },
+          sections: {
+            quickAdd: t("admin.floor.sidebar.zone.sections.quickAdd"),
+            canvas: t("admin.floor.sidebar.zone.sections.canvas"),
+            borders: t("admin.floor.sidebar.zone.sections.borders"),
+            shortcuts: t("admin.floor.sidebar.zone.sections.shortcuts"),
+          },
+          fields: {
+            columns: t("admin.floor.sidebar.zone.fields.columns"),
+            rows: t("admin.floor.sidebar.zone.fields.rows"),
+          },
+          borders: {
+            edges: {
+              top: t("admin.floor.sidebar.zone.borders.edges.top"),
+              right: t("admin.floor.sidebar.zone.borders.edges.right"),
+              bottom: t("admin.floor.sidebar.zone.borders.edges.bottom"),
+              left: t("admin.floor.sidebar.zone.borders.edges.left"),
+            },
+            styles: {
+              dashed: t("admin.floor.sidebar.zone.borders.styles.dashed"),
+              solid: t("admin.floor.sidebar.zone.borders.styles.solid"),
+            },
+          },
+          shortcuts: floorShortcuts,
+        },
+        entity: {
+          idPrefix: t("admin.floor.sidebar.entity.idPrefix"),
+          noZone: t("admin.floor.sidebar.entity.noZone"),
+          noticeTitle: t("admin.floor.sidebar.entity.noticeTitle"),
+          warnings: {
+            missingLabel: t("admin.floor.sidebar.entity.warnings.missingLabel"),
+            missingTarget: t("admin.floor.sidebar.entity.warnings.missingTarget"),
+            capacity: t("admin.floor.sidebar.entity.warnings.capacity"),
+            bounds: t("admin.floor.sidebar.entity.warnings.bounds"),
+          },
+          sections: {
+            transform: t("admin.floor.sidebar.entity.sections.transform"),
+            placement: t("admin.floor.sidebar.entity.sections.placement"),
+            table: t("admin.floor.sidebar.entity.sections.table"),
+            passage: t("admin.floor.sidebar.entity.sections.passage"),
+            navigation: t("admin.floor.sidebar.entity.sections.navigation"),
+          },
+          fields: {
+            x: t("admin.floor.sidebar.entity.fields.x"),
+            y: t("admin.floor.sidebar.entity.fields.y"),
+            width: t("admin.floor.sidebar.entity.fields.width"),
+            height: t("admin.floor.sidebar.entity.fields.height"),
+            rotation: t("admin.floor.sidebar.entity.fields.rotation"),
+            rotationAria: t("admin.floor.sidebar.entity.fields.rotationAria"),
+            rotateStep: t("admin.floor.sidebar.entity.fields.rotateStep"),
+            zone: t("admin.floor.sidebar.entity.fields.zone"),
+            noneOption: t("admin.floor.sidebar.entity.fields.noneOption"),
+            centerX: t("admin.floor.sidebar.entity.fields.centerX"),
+            centerY: t("admin.floor.sidebar.entity.fields.centerY"),
+            move: {
+              up: t("admin.floor.sidebar.entity.fields.move.up"),
+              down: t("admin.floor.sidebar.entity.fields.move.down"),
+              left: t("admin.floor.sidebar.entity.fields.move.left"),
+              right: t("admin.floor.sidebar.entity.fields.move.right"),
+            },
+          },
+          table: {
+            idLabel: t("admin.floor.sidebar.table.idLabel"),
+            unassigned: t("admin.floor.sidebar.table.unassigned"),
+            showQr: t("admin.floor.sidebar.table.showQr"),
+            qrHint: t("admin.floor.sidebar.table.qrHint"),
+            publicLabel: t("admin.floor.sidebar.table.publicLabel"),
+            labelPlaceholder: t("admin.floor.sidebar.table.labelPlaceholder"),
+            capacity: t("admin.floor.sidebar.table.capacity"),
+            presetsAria: t("admin.floor.sidebar.table.presetsAria"),
+            tagsTitle: t("admin.floor.sidebar.table.tagsTitle"),
+            tags: floorTableTags,
+          },
+          passage: {
+            label: t("admin.floor.sidebar.passage.label"),
+            placeholder: t("admin.floor.sidebar.passage.placeholder"),
+          },
+          navigation: {
+            targetLabel: t("admin.floor.sidebar.navigation.targetLabel"),
+            placeholder: t("admin.floor.sidebar.navigation.placeholder"),
+          },
+          actions: {
+            duplicate: t("admin.floor.sidebar.actions.duplicate"),
+            delete: t("admin.floor.sidebar.actions.delete"),
+          },
+        },
+      },
+      modals: {
+        publish: {
+          title: t("admin.floor.modals.publish.title"),
+          bodyLine1: t("admin.floor.modals.publish.bodyLine1"),
+          bodyLine2: t("admin.floor.modals.publish.bodyLine2"),
+          cancel: t("admin.floor.modals.publish.cancel"),
+          confirm: t("admin.floor.modals.publish.confirm"),
+          confirming: t("admin.floor.modals.publish.confirming"),
+        },
+        deleteZone: {
+          title: t("admin.floor.modals.deleteZone.title"),
+          message: (name: string) => t("admin.floor.modals.deleteZone.message", { name }),
+          warning: (count: number) =>
+            t(`admin.floor.modals.deleteZone.warning_${count === 1 ? "one" : "other"}`, {
+              count,
+            }),
+          cancel: t("admin.floor.modals.deleteZone.cancel"),
+          confirm: t("admin.floor.modals.deleteZone.confirm"),
+          confirming: t("admin.floor.modals.deleteZone.confirming"),
+        },
+        qr: {
+          title: (table: string) => t("admin.floor.modals.qr.title", { table }),
+          loading: t("admin.floor.modals.qr.loading"),
+          error: t("admin.floor.modals.qr.error"),
+          download: t("admin.floor.modals.qr.download"),
+          close: t("admin.floor.modals.qr.close"),
+          alt: (table: string) => t("admin.floor.modals.qr.alt", { table }),
         },
       },
     },

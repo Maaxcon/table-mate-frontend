@@ -1,4 +1,5 @@
 import "./Toolbar.css"
+import { useAdminStrings } from "@/features/admin/strings"
 
 interface ToolbarProps {
   dirty: boolean
@@ -9,45 +10,6 @@ interface ToolbarProps {
   onDiscard: () => void
 }
 
-const TOOLS = [
-  {
-    id: "select",
-    label: "Select",
-    hint: "Pick and edit objects",
-    icon: "◎",
-  },
-  {
-    id: "table-square",
-    label: "Square Table",
-    hint: "Add seating table",
-    icon: "▦",
-  },
-  {
-    id: "table-round",
-    label: "Round Table",
-    hint: "Add round seating",
-    icon: "◯",
-  },
-  {
-    id: "obstacle",
-    label: "Obstacle",
-    hint: "Block access area",
-    icon: "▧",
-  },
-  {
-    id: "threshold",
-    label: "Threshold",
-    hint: "Passage / divider",
-    icon: "⎯",
-  },
-  {
-    id: "portal",
-    label: "Portal",
-    hint: "Jump to another zone",
-    icon: "⇄",
-  },
-] as const
-
 export function Toolbar({
   dirty,
   publishing,
@@ -56,15 +18,55 @@ export function Toolbar({
   onPublish,
   onDiscard,
 }: ToolbarProps) {
+  const strings = useAdminStrings()
+  const toolbarStrings = strings.floor.toolbar
+  const tools = [
+    {
+      id: "select",
+      label: toolbarStrings.tools.select.label,
+      hint: toolbarStrings.tools.select.hint,
+      icon: "◎",
+    },
+    {
+      id: "table-square",
+      label: toolbarStrings.tools.tableSquare.label,
+      hint: toolbarStrings.tools.tableSquare.hint,
+      icon: "▦",
+    },
+    {
+      id: "table-round",
+      label: toolbarStrings.tools.tableRound.label,
+      hint: toolbarStrings.tools.tableRound.hint,
+      icon: "◯",
+    },
+    {
+      id: "obstacle",
+      label: toolbarStrings.tools.obstacle.label,
+      hint: toolbarStrings.tools.obstacle.hint,
+      icon: "▧",
+    },
+    {
+      id: "threshold",
+      label: toolbarStrings.tools.threshold.label,
+      hint: toolbarStrings.tools.threshold.hint,
+      icon: "⎯",
+    },
+    {
+      id: "portal",
+      label: toolbarStrings.tools.portal.label,
+      hint: toolbarStrings.tools.portal.hint,
+      icon: "⇄",
+    },
+  ] as const
   return (
     <div className="editor-toolbar">
       <div className="editor-toolbar__tools-panel">
         <div className="editor-toolbar__section-head">
-          <span className="editor-toolbar__section-kicker">Layout Builder</span>
-          <span className="editor-toolbar__section-title">Add Elements</span>
+          <span className="editor-toolbar__section-kicker">{toolbarStrings.section.kicker}</span>
+          <span className="editor-toolbar__section-title">{toolbarStrings.section.title}</span>
         </div>
         <div className="editor-toolbar__tools">
-          {TOOLS.map((tool) => (
+          {tools.map((tool) => (
             <button
               key={tool.id}
               type="button"
@@ -90,7 +92,7 @@ export function Toolbar({
         </div>
       </div>
       <div className="editor-toolbar__actions-panel">
-        <span className="editor-toolbar__section-kicker">Project</span>
+        <span className="editor-toolbar__section-kicker">{toolbarStrings.section.project}</span>
         <div className="editor-toolbar__actions">
           <button
             type="button"
@@ -98,7 +100,7 @@ export function Toolbar({
             disabled={!dirty || publishing}
             onClick={onDiscard}
           >
-            Discard
+            {toolbarStrings.actions.discard}
           </button>
           <button
             type="button"
@@ -106,7 +108,7 @@ export function Toolbar({
             disabled={!dirty || publishing}
             onClick={onPublish}
           >
-            {publishing ? "Publishing..." : "Publish Layout"}
+            {publishing ? toolbarStrings.actions.publishing : toolbarStrings.actions.publish}
           </button>
         </div>
       </div>

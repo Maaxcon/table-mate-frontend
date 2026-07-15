@@ -901,6 +901,246 @@
           "accept": "Could not accept order."
         }
       }
+    },
+    "floor": {
+      "entities": {
+        "tableSquare": "Square Table",
+        "tableRound": "Round Table",
+        "obstacle": "Obstacle",
+        "threshold": "Threshold",
+        "portal": "Portal"
+      },
+      "page": {
+        "brandTitle": "Floor Plan",
+        "brandSubtitle": "Admin Workspace",
+        "title": "Floor plan studio",
+        "subtitle": {
+          "editing": "Editing zone: {{name}}",
+          "empty": "Create a zone to start mapping the dining room."
+        },
+        "status": {
+          "dirty": "Unsaved changes",
+          "clean": "All changes synced"
+        },
+        "live": {
+          "ariaConnected": "Live updates connected",
+          "ariaDisconnected": "Live updates offline",
+          "connected": "Live updates",
+          "disconnected": "Offline mode",
+          "timeLabel": "Local time",
+          "timeAria": "Local time",
+          "metricsAria": "Layout metrics"
+        },
+        "metrics": {
+          "zones": {
+            "label": "Zones",
+            "hint": "Active zones"
+          },
+          "tables": {
+            "label": "Tables",
+            "hintSelected": "Ready for guests",
+            "hintEmpty": "Select zone"
+          },
+          "portals": {
+            "label": "Portals",
+            "hintSelected": "Navigation links",
+            "hintEmpty": "Select zone"
+          },
+          "grid": {
+            "label": "Grid",
+            "hint": "Columns × rows"
+          }
+        },
+        "empty": "Please create a zone to start editing the floor plan.",
+        "sidebarToggle": {
+          "show": "Show side menu",
+          "hide": "Hide side menu"
+        },
+        "toasts": {
+          "stale": {
+            "message": "Layout was updated by another admin. Reload to see changes (your unsaved work will be lost).",
+            "action": "Reload now"
+          },
+          "occupied": "Can't delete an occupied table — close its visit first."
+        }
+      },
+      "toolbar": {
+        "section": {
+          "kicker": "Layout Builder",
+          "title": "Add Elements",
+          "project": "Project"
+        },
+        "tools": {
+          "select": {
+            "label": "Select",
+            "hint": "Pick and edit objects"
+          },
+          "tableSquare": {
+            "hint": "Add seating table"
+          },
+          "tableRound": {
+            "hint": "Add round seating"
+          },
+          "obstacle": {
+            "hint": "Block access area"
+          },
+          "threshold": {
+            "hint": "Passage / divider"
+          },
+          "portal": {
+            "hint": "Jump to another zone"
+          }
+        },
+        "actions": {
+          "discard": "Discard",
+          "publish": "Publish Layout",
+          "publishing": "Publishing..."
+        }
+      },
+      "zoneHeader": {
+        "placeholder": "Zone name",
+        "add": "Add",
+        "cancel": "Cancel",
+        "addTab": "+ Add zone",
+        "deleteAria": "Delete {{name}}"
+      },
+      "sidebar": {
+        "empty": {
+          "title": "Inspector",
+          "subtitle": "Select a zone",
+          "description": "Pick a zone tab first, then select any element to edit all properties."
+        },
+        "zone": {
+          "titleFallback": "Zone Inspector",
+          "subtitle": "Canvas & zone parameters",
+          "stats": {
+            "tables": "Tables",
+            "seats": "Seats",
+            "portals": "Portals",
+            "obstacles": "Obstacles"
+          },
+          "sections": {
+            "quickAdd": "Quick Add",
+            "canvas": "Canvas Size",
+            "borders": "Border Styles",
+            "shortcuts": "Keyboard Shortcuts"
+          },
+          "fields": {
+            "columns": "Columns",
+            "rows": "Rows"
+          },
+          "borders": {
+            "edges": {
+              "top": "Top Edge",
+              "right": "Right Edge",
+              "bottom": "Bottom Edge",
+              "left": "Left Edge"
+            },
+            "styles": {
+              "dashed": "Dashed",
+              "solid": "Solid"
+            }
+          },
+          "shortcuts": {
+            "copy": "`Cmd/Ctrl + C` copy selected element(s)",
+            "paste": "`Cmd/Ctrl + V` paste with offset",
+            "delete": "`Delete` remove selected element(s)",
+            "undo": "`Cmd/Ctrl + Z` undo last change"
+          }
+        },
+        "entity": {
+          "idPrefix": "ID",
+          "noZone": "No zone",
+          "noticeTitle": "Needs attention",
+          "warnings": {
+            "missingLabel": "Add a label so staff can identify this passage quickly.",
+            "missingTarget": "Portal has no target zone yet.",
+            "capacity": "Table capacity should be at least 1.",
+            "bounds": "Element is outside editable bounds."
+          },
+          "sections": {
+            "transform": "Transform",
+            "placement": "Placement",
+            "table": "Table Settings",
+            "passage": "Passage Settings",
+            "navigation": "Navigation Link"
+          },
+          "fields": {
+            "x": "X",
+            "y": "Y",
+            "width": "Width",
+            "height": "Height",
+            "rotation": "Rotation",
+            "rotationAria": "Rotation in degrees",
+            "rotateStep": "Rotate +45°",
+            "zone": "Zone",
+            "noneOption": "-- None --",
+            "centerX": "Center X",
+            "centerY": "Center Y",
+            "move": {
+              "up": "Move up",
+              "down": "Move down",
+              "left": "Move left",
+              "right": "Move right"
+            }
+          },
+          "table": {
+            "idLabel": "Table ID",
+            "unassigned": "Auto-assigned on publish",
+            "showQr": "Show QR",
+            "qrHint": "Publish to get a QR code",
+            "publicLabel": "Public label",
+            "labelPlaceholder": "e.g. T12",
+            "capacity": "Capacity",
+            "presetsAria": "Capacity presets",
+            "tagsTitle": "Tags",
+            "tags": {
+              "windowSeat": "Window Seat",
+              "quiet": "Quiet",
+              "wheelchairAccessible": "Wheelchair Accessible"
+            }
+          },
+          "passage": {
+            "label": "Label",
+            "placeholder": "e.g. BAR, ENTRANCE"
+          },
+          "navigation": {
+            "targetLabel": "Target Zone",
+            "placeholder": "-- Select zone --"
+          },
+          "actions": {
+            "duplicate": "Duplicate",
+            "delete": "Delete"
+          }
+        }
+      },
+      "modals": {
+        "publish": {
+          "title": "Publish Layout",
+          "bodyLine1": "Publishing will instantly update all active waiter tablets.",
+          "bodyLine2": "Active sessions will remain valid.",
+          "cancel": "Cancel",
+          "confirm": "Publish",
+          "confirming": "Publishing..."
+        },
+        "deleteZone": {
+          "title": "Delete zone",
+          "message": "Are you sure you want to delete zone \"{{name}}\"?",
+          "warning_one": "This zone has {{count}} table. It will be deactivated when you publish.",
+          "warning_other": "This zone has {{count}} tables. They will be deactivated when you publish.",
+          "cancel": "Cancel",
+          "confirm": "Delete",
+          "confirming": "Deleting..."
+        },
+        "qr": {
+          "title": "QR code — Table {{table}}",
+          "loading": "Loading...",
+          "error": "Could not load the QR code.",
+          "download": "Download",
+          "close": "Close",
+          "alt": "QR code for table {{table}}"
+        }
+      }
     }
   }
 }
