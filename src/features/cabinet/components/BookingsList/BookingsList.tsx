@@ -1,4 +1,5 @@
 import { LuCalendarClock, LuMapPin, LuTable2, LuUsers } from "react-icons/lu"
+import { useCabinetStrings } from "@/features/cabinet/strings"
 import type { Reservation } from "@/features/cabinet/types"
 import "./BookingsList.css"
 
@@ -12,17 +13,17 @@ type BookingsListProps = {
   onLoadMore: () => void
 }
 
-function formatBookingTime(startAt: string, endAt: string) {
+function formatBookingTime(startAt: string, endAt: string, locale: string) {
   const start = new Date(startAt)
   const end = new Date(endAt)
   return {
-    date: start.toLocaleDateString("en-US", {
+    date: start.toLocaleDateString(locale, {
       weekday: "short",
       month: "short",
       day: "numeric",
       year: "numeric",
     }),
-    time: `${String(start.getHours()).padStart(2, "0")}:${String(start.getMinutes()).padStart(2, "0")} - ${String(end.getHours()).padStart(2, "0")}:${String(end.getMinutes()).padStart(2, "0")}`,
+    time: `${start.toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" })} - ${end.toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" })}`,
   }
 }
 
@@ -35,23 +36,27 @@ export function BookingsList({
   onCancel,
   onLoadMore,
 }: BookingsListProps) {
+  const strings = useCabinetStrings()
+
   return (
     <section className="cabinet-section" aria-labelledby="cabinet-bookings-title">
       <h2 className="cabinet-section__title" id="cabinet-bookings-title">
-        Active bookings
+        {strings.bookings.title}
       </h2>
 
       {error ? (
         <p className="cabinet-section__empty cabinet-section__empty--error">{error}</p>
       ) : bookings.length === 0 ? (
-        <p className="cabinet-section__empty">You have no active bookings.</p>
+        <p className="cabinet-section__empty">{strings.bookings.empty}</p>
       ) : (
         <>
           <ul className="cabinet-bookings">
             {bookings.map((booking) => {
-              const dateTime = formatBookingTime(booking.start_at, booking.end_at)
-              const tableNumber = booking.table_info?.public_number ?? booking.table ?? "Unknown"
-              const restaurantName = booking.restaurant_info?.name ?? "Restaurant"
+              const dateTime = formatBookingTime(booking.start_at, booking.end_at, strings.locale)
+              const tableNumber =
+                booking.table_info?.public_number ?? booking.table ?? strings.bookings.unknownTable
+              const restaurantName =
+                booking.restaurant_info?.name ?? strings.bookings.fallbackRestaurant
               const isBusy = actionId === booking.public_id
 
               return (
@@ -70,7 +75,7 @@ export function BookingsList({
                     </div>
                     <p className="booking-card__row">
                       <LuTable2 aria-hidden="true" />
-                      <span>Table {tableNumber}</span>
+                      <span>{strings.bookings.tableLabel(tableNumber)}</span>
                     </p>
                     <p className="booking-card__row">
                       <LuCalendarClock aria-hidden="true" />
@@ -81,13 +86,16 @@ export function BookingsList({
                     <p className="booking-card__row booking-card__row--muted">
                       <LuUsers aria-hidden="true" />
                       <span>
-                        {booking.guest_count} {booking.guest_count === 1 ? "guest" : "guests"}
+                        {booking.guest_count}{" "}
+                        {booking.guest_count === 1
+                          ? strings.bookings.guest
+                          : strings.bookings.guests}
                       </span>
                     </p>
                   </div>
                   {booking.status === "active" ? (
                     <p className="booking-card__row booking-card__row--muted">
-                      Your table is active — ask the waiter for changes.
+                      {strings.bookings.activeNote}
                     </p>
                   ) : (
                     <div className="booking-card__actions">
@@ -97,7 +105,7 @@ export function BookingsList({
                         onClick={() => onModify(booking)}
                         disabled={isBusy}
                       >
-                        Modify
+                        {strings.bookings.modify}
                       </button>
                       <button
                         type="button"
@@ -105,7 +113,7 @@ export function BookingsList({
                         onClick={() => onCancel(booking)}
                         disabled={isBusy}
                       >
-                        {isBusy ? "Cancelling..." : "Cancel"}
+                        {isBusy ? strings.bookings.cancelling : strings.bookings.cancel}
                       </button>
                     </div>
                   )}
@@ -115,7 +123,7 @@ export function BookingsList({
           </ul>
           {hasMore && (
             <button type="button" className="cabinet-bookings__more" onClick={onLoadMore}>
-              Load More
+              {strings.bookings.loadMore}
             </button>
           )}
         </>

@@ -1,5 +1,6 @@
 import { apiFetch } from "@/api/client"
 import heroImage from "@/assets/hero.png"
+import i18n from "@/i18n/config"
 import type { MeResponse } from "@/features/auth/types"
 import type { CabinetProfile, HistoryEntry, Reservation } from "./types"
 
@@ -126,7 +127,7 @@ async function extractError(res: Response): Promise<string> {
   } catch {
     // fall through to the generic message
   }
-  return "Could not save changes. Please try again."
+  return i18n.t("cabinet.errors.saveChanges")
 }
 
 export const BOOKINGS_PAGE_SIZE = 10

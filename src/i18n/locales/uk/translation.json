@@ -351,5 +351,118 @@
       "confirm": "Скасувати бронь",
       "submitting": "Скасування…"
     }
+  },
+  "cabinet": {
+    "page": {
+      "backAria": "Назад",
+      "heading": "Мій кабінет",
+      "logoutAria": "Вийти",
+      "logoutError": "Не вдалося вийти. Спробуйте ще раз.",
+      "loading": "Завантажуємо ваш кабінет…",
+      "noProfile": "Не вдалося завантажити ваш профіль."
+    },
+    "stats": {
+      "aria": "Ваша статистика",
+      "visit": "Візит",
+      "visits": "Візити",
+      "totalSpent": "Всього витрачено",
+      "favoritePlace": "Улюблене місце",
+      "fallback": "—"
+    },
+    "profile": {
+      "settings": "Налаштування",
+      "firstName": "Ім'я",
+      "lastName": "Прізвище",
+      "phone": "Телефон",
+      "phonePrefix": "+380",
+      "phonePlaceholder": "67 123 45 67",
+      "email": "Електронна пошта",
+      "emailHint": "Електронна пошта прив'язана до вашого Google-акаунта і не може бути змінена тут.",
+      "paymentMethods": "Способи оплати",
+      "noneAdded": "Не додано",
+      "cancel": "Скасувати",
+      "save": "Зберегти",
+      "saving": "Збереження…",
+      "invalidPhoneTitle": "Невірний телефон",
+      "invalidPhoneMessage": "Введіть український номер: +380 та 9 цифр, напр. 67 123 45 67.",
+      "savedTitle": "Збережено",
+      "savedMessage": "Ваш профіль оновлено.",
+      "saveErrorTitle": "Не вдалося зберегти",
+      "saveErrorMessage": "Спробуйте ще раз.",
+      "memberSince": "З нами з {{year}}",
+      "fallbackInitials": "?"
+    },
+    "bookings": {
+      "title": "Активні броні",
+      "empty": "У вас немає активних броней.",
+      "unknownTable": "Невідомо",
+      "fallbackRestaurant": "Ресторан",
+      "tableLabel": "Стіл {{number}}",
+      "guest": "гість",
+      "guests": "гостей",
+      "activeNote": "Ваш стіл активний — зверніться до офіціанта для змін.",
+      "modify": "Змінити",
+      "cancel": "Скасувати",
+      "cancelling": "Скасування…",
+      "loadMore": "Завантажити більше"
+    },
+    "history": {
+      "title": "Історія",
+      "empty": "Ще немає минулих візитів.",
+      "item": "позиція",
+      "items": "позицій"
+    },
+    "calendar": {
+      "titleWithHistory": "Календар та історія",
+      "titleUpcoming": "Майбутні броні",
+      "prevAria": "Попередній місяць",
+      "nextAria": "Наступний місяць",
+      "loading": "Завантаження…",
+      "card": "Картка",
+      "cash": "Готівка",
+      "total": "Разом",
+      "guest": "гість",
+      "guests": "гостей",
+      "moreItems": "ще {{count}} позицій",
+      "emptyDay": "Немає броней або замовлень на цей день.",
+      "fallbackRestaurant": "Ресторан",
+      "tableLabel": "Стіл {{number}}",
+      "fallbackTable": "—"
+    },
+    "receipt": {
+      "closeAria": "Закрити чек",
+      "openMenuAria": "Відкрити меню {{name}}",
+      "viewMenu": "Переглянути меню",
+      "receipt": "Чек",
+      "date": "Дата",
+      "table": "Стіл",
+      "server": "Офіціант",
+      "guests": "Гості",
+      "each": "за шт",
+      "subtotal": "Підсумок ({{count}} позицій)",
+      "tax": "Податок",
+      "serviceCharge": "Сервісний збір",
+      "tip": "Чайові",
+      "total": "Разом",
+      "card": "Картка",
+      "cash": "Готівка",
+      "preparing": "Готуємо…",
+      "share": "Поділитися чеком",
+      "savePdf": "Зберегти PDF",
+      "thanks": "Дякуємо, що завітали!",
+      "errorTitle": "Щось пішло не так",
+      "errorMessage": "Не вдалося створити PDF. Перевірте підключення та спробуйте ще раз."
+    },
+    "feedback": {
+      "ok": "Гаразд"
+    },
+    "errors": {
+      "loadBookings": "Не вдалося завантажити ваші броні.",
+      "loadHistory": "Не вдалося завантажити історію.",
+      "refreshBookings": "Не вдалося оновити ваші броні.",
+      "loadMoreBookings": "Не вдалося завантажити більше броней.",
+      "cancelBooking": "Не вдалося скасувати цю бронь.",
+      "saveChanges": "Не вдалося зберегти зміни. Спробуйте ще раз."
+    }
   }
 }

@@ -346,5 +346,118 @@
       "confirm": "Cancel booking",
       "submitting": "Cancelling…"
     }
+  },
+  "cabinet": {
+    "page": {
+      "backAria": "Go back",
+      "heading": "My cabinet",
+      "logoutAria": "Log out",
+      "logoutError": "Couldn't sign you out. Please try again.",
+      "loading": "Loading your cabinet…",
+      "noProfile": "We could not load your profile."
+    },
+    "stats": {
+      "aria": "Your stats",
+      "visit": "Visit",
+      "visits": "Visits",
+      "totalSpent": "Total spent",
+      "favoritePlace": "Favorite place",
+      "fallback": "—"
+    },
+    "profile": {
+      "settings": "Settings",
+      "firstName": "First name",
+      "lastName": "Last name",
+      "phone": "Phone",
+      "phonePrefix": "+380",
+      "phonePlaceholder": "67 123 45 67",
+      "email": "Email",
+      "emailHint": "Email is linked to your Google account and can't be changed here.",
+      "paymentMethods": "Payment methods",
+      "noneAdded": "None added",
+      "cancel": "Cancel",
+      "save": "Save",
+      "saving": "Saving…",
+      "invalidPhoneTitle": "Invalid phone",
+      "invalidPhoneMessage": "Enter a Ukrainian number: +380 and 9 digits, e.g. 67 123 45 67.",
+      "savedTitle": "Saved",
+      "savedMessage": "Your profile has been updated.",
+      "saveErrorTitle": "Could not save",
+      "saveErrorMessage": "Please try again.",
+      "memberSince": "Member since {{year}}",
+      "fallbackInitials": "?"
+    },
+    "bookings": {
+      "title": "Active bookings",
+      "empty": "You have no active bookings.",
+      "unknownTable": "Unknown",
+      "fallbackRestaurant": "Restaurant",
+      "tableLabel": "Table {{number}}",
+      "guest": "guest",
+      "guests": "guests",
+      "activeNote": "Your table is active — ask the waiter for changes.",
+      "modify": "Modify",
+      "cancel": "Cancel",
+      "cancelling": "Cancelling...",
+      "loadMore": "Load More"
+    },
+    "history": {
+      "title": "History",
+      "empty": "No past visits yet.",
+      "item": "item",
+      "items": "items"
+    },
+    "calendar": {
+      "titleWithHistory": "Calendar & History",
+      "titleUpcoming": "Upcoming Reservations",
+      "prevAria": "Previous month",
+      "nextAria": "Next month",
+      "loading": "Loading...",
+      "card": "Card",
+      "cash": "Cash",
+      "total": "Total",
+      "guest": "guest",
+      "guests": "guests",
+      "moreItems": "+{{count}} more items",
+      "emptyDay": "No reservations or orders on this day.",
+      "fallbackRestaurant": "Restaurant",
+      "tableLabel": "Table {{number}}",
+      "fallbackTable": "—"
+    },
+    "receipt": {
+      "closeAria": "Close receipt",
+      "openMenuAria": "Open {{name}} menu",
+      "viewMenu": "View menu",
+      "receipt": "Receipt",
+      "date": "Date",
+      "table": "Table",
+      "server": "Server",
+      "guests": "Guests",
+      "each": "each",
+      "subtotal": "Subtotal ({{count}} items)",
+      "tax": "Tax",
+      "serviceCharge": "Service charge",
+      "tip": "Tip",
+      "total": "Total",
+      "card": "Card",
+      "cash": "Cash",
+      "preparing": "Preparing…",
+      "share": "Share receipt",
+      "savePdf": "Save PDF",
+      "thanks": "Thank you for dining with us!",
+      "errorTitle": "Something went wrong",
+      "errorMessage": "Could not create the PDF. Please check your connection and try again."
+    },
+    "feedback": {
+      "ok": "OK"
+    },
+    "errors": {
+      "loadBookings": "We could not load your bookings.",
+      "loadHistory": "We could not load your history.",
+      "refreshBookings": "We could not refresh your bookings.",
+      "loadMoreBookings": "We could not load more bookings.",
+      "cancelBooking": "We could not cancel this booking.",
+      "saveChanges": "Could not save changes. Please try again."
+    }
   }
 }

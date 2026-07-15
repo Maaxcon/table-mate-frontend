@@ -10,6 +10,7 @@ import {
   LuReceipt,
   LuCreditCard,
 } from "react-icons/lu"
+import { useCabinetStrings } from "@/features/cabinet/strings"
 import type { HistoryEntry, Reservation } from "../../types"
 import "./ReservationCalendar.css"
 
@@ -18,22 +19,6 @@ type Props = {
   history: HistoryEntry[]
   loading?: boolean
 }
-
-const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
-const MONTH_NAMES = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
-]
 
 function isSameDay(a: Date, b: Date) {
   return (
@@ -84,11 +69,26 @@ function buildCalendarDays(
 }
 
 export function ReservationCalendar({ reservations, history, loading }: Props) {
+  const strings = useCabinetStrings()
+  const locale = strings.locale
   const today = useMemo(() => {
     const d = new Date()
     return new Date(d.getFullYear(), d.getMonth(), d.getDate())
   }, [])
   const hasHistory = history.length > 0
+
+  const dayNames = useMemo(() => {
+    const formatter = new Intl.DateTimeFormat(locale, { weekday: "short" })
+    const base = new Date(Date.UTC(2024, 0, 7))
+    return Array.from({ length: 7 }, (_, i) =>
+      formatter.format(new Date(base.getTime() + i * 24 * 60 * 60 * 1000)),
+    )
+  }, [locale])
+
+  const monthLabelFormatter = useMemo(
+    () => new Intl.DateTimeFormat(locale, { month: "long", year: "numeric" }),
+    [locale],
+  )
 
   const earliestHistoryMonth = useMemo(() => {
     if (!hasHistory) return null
@@ -170,7 +170,7 @@ export function ReservationCalendar({ reservations, history, loading }: Props) {
     <section className="cabinet-section" aria-labelledby="cabinet-calendar-title">
       <h2 className="cabinet-section__title" id="cabinet-calendar-title">
         <LuCalendar aria-hidden="true" />{" "}
-        {hasHistory ? "Calendar & History" : "Upcoming Reservations"}
+        {hasHistory ? strings.calendar.titleWithHistory : strings.calendar.titleUpcoming}
       </h2>
 
       <div className="rc">
@@ -179,19 +179,19 @@ export function ReservationCalendar({ reservations, history, loading }: Props) {
             type="button"
             className={`rc__nav${!canGoPrev ? " rc__nav--disabled" : ""}`}
             onClick={prevMonth}
-            aria-label="Previous month"
+            aria-label={strings.calendar.prevAria}
             disabled={!canGoPrev}
           >
             <LuChevronLeft />
           </button>
           <span className="rc__title">
-            {MONTH_NAMES[curMonth]} {curYear}
+            {monthLabelFormatter.format(new Date(curYear, curMonth, 1))}
           </span>
           <button
             type="button"
             className={`rc__nav${!canGoNext ? " rc__nav--disabled" : ""}`}
             onClick={nextMonth}
-            aria-label="Next month"
+            aria-label={strings.calendar.nextAria}
             disabled={!canGoNext}
           >
             <LuChevronRight />
@@ -199,8 +199,8 @@ export function ReservationCalendar({ reservations, history, loading }: Props) {
         </div>
 
         <div className="rc__day-names">
-          {DAY_NAMES.map((name) => (
-            <div key={name} className="rc__day-name">
+          {dayNames.map((name, idx) => (
+            <div key={`${idx}-${name}`} className="rc__day-name">
               {name}
             </div>
           ))}
@@ -243,7 +243,7 @@ export function ReservationCalendar({ reservations, history, loading }: Props) {
       {selectedDate && selectedData && (
         <div className="rc__details">
           <h3 className="rc__details-title">
-            {selectedDate.toLocaleDateString("en-US", {
+            {selectedDate.toLocaleDateString(locale, {
               weekday: "long",
               month: "long",
               day: "numeric",
@@ -251,7 +251,7 @@ export function ReservationCalendar({ reservations, history, loading }: Props) {
             })}
           </h3>
           {loading ? (
-            <p className="cabinet-section__loading">Loading...</p>
+            <p className="cabinet-section__loading">{strings.calendar.loading}</p>
           ) : selectedData.orders.length > 0 ? (
             <div className="rc__order-list">
               {selectedData.orders.map((o) => (
@@ -261,7 +261,7 @@ export function ReservationCalendar({ reservations, history, loading }: Props) {
                     <span className="rc__order-number">{o.orderNumber}</span>
                     <span className={`rc__payment rc__payment--${o.paymentMethod}`}>
                       <LuCreditCard aria-hidden="true" />{" "}
-                      {o.paymentMethod === "card" ? "Card" : "Cash"}
+                      {o.paymentMethod === "card" ? strings.calendar.card : strings.calendar.cash}
                     </span>
                   </div>
                   <div className="rc__item-row">
@@ -274,7 +274,7 @@ export function ReservationCalendar({ reservations, history, loading }: Props) {
                   </div>
                   <div className="rc__item-row">
                     <LuUsers aria-hidden="true" />
-                    {o.guests} {o.guests === 1 ? "guest" : "guests"}
+                    {o.guests} {o.guests === 1 ? strings.calendar.guest : strings.calendar.guests}
                   </div>
                   <ul className="rc__order-items">
                     {o.items.slice(0, 3).map((item, idx) => (
@@ -285,12 +285,12 @@ export function ReservationCalendar({ reservations, history, loading }: Props) {
                     ))}
                     {o.items.length > 3 && (
                       <li className="rc__order-item rc__order-item--more">
-                        +{o.items.length - 3} more items
+                        {strings.calendar.moreItems(o.items.length - 3)}
                       </li>
                     )}
                   </ul>
                   <div className="rc__item-row rc__item-row--total">
-                    <span>Total</span>
+                    <span>{strings.calendar.total}</span>
                     <span>
                       {o.currency} {o.total.toFixed(2)}
                     </span>
@@ -307,33 +307,38 @@ export function ReservationCalendar({ reservations, history, loading }: Props) {
                   </span>
                   <span className="rc__item-row">
                     <LuMapPin aria-hidden="true" />
-                    {r.restaurant_info?.name ?? "Restaurant"}
+                    {r.restaurant_info?.name ?? strings.calendar.fallbackRestaurant}
                   </span>
                   <span className="rc__item-row">
                     <LuTable2 aria-hidden="true" />
-                    Table {r.table_info?.public_number ?? r.table ?? "—"}
+                    {r.table_info?.public_number
+                      ? strings.calendar.tableLabel(String(r.table_info.public_number))
+                      : r.table
+                        ? strings.calendar.tableLabel(r.table)
+                        : strings.calendar.fallbackTable}
                   </span>
                   <span className="rc__item-row">
                     <LuClock aria-hidden="true" />
-                    {new Date(r.start_at).toLocaleTimeString("en-US", {
+                    {new Date(r.start_at).toLocaleTimeString(locale, {
                       hour: "2-digit",
                       minute: "2-digit",
                     })}
                     {" — "}
-                    {new Date(r.end_at).toLocaleTimeString("en-US", {
+                    {new Date(r.end_at).toLocaleTimeString(locale, {
                       hour: "2-digit",
                       minute: "2-digit",
                     })}
                   </span>
                   <span className="rc__item-row rc__item-row--muted">
                     <LuUsers aria-hidden="true" />
-                    {r.guest_count} {r.guest_count === 1 ? "guest" : "guests"}
+                    {r.guest_count}{" "}
+                    {r.guest_count === 1 ? strings.calendar.guest : strings.calendar.guests}
                   </span>
                 </li>
               ))}
             </ul>
           ) : (
-            <p className="cabinet-section__empty">No reservations or orders on this day.</p>
+            <p className="cabinet-section__empty">{strings.calendar.emptyDay}</p>
           )}
         </div>
       )}

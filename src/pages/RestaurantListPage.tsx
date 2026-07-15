@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react"
 import { Link } from "react-router-dom"
 import { apiFetch } from "@/api/client"
 import { isRestaurantOpenNow } from "@/features/menu/utils"
+import { useMenuStrings } from "@/features/menu/strings"
 import { useAppSelector } from "@/store/hooks"
 import type { WorkingHours, WeekDay } from "@/types/workingHours"
 import "./RestaurantListPage.css"
@@ -113,6 +114,7 @@ export function RestaurantListPage() {
   const [error, setError] = useState<string | null>(null)
   const user = useAppSelector((s) => s.auth.user)
   const isAdmin = user?.role === "admin"
+  const menuStrings = useMenuStrings()
 
   const loadRestaurants = useCallback(async (signal?: AbortSignal) => {
     try {
@@ -182,7 +184,11 @@ export function RestaurantListPage() {
           <p className="rlp__brand" aria-label="Table Mate">
             Table Mate
           </p>
-          <Link to="/cabinet" className="rlp__cabinet-link" aria-label="Перейти в кабінет">
+          <Link
+            to="/cabinet"
+            className="rlp__cabinet-link"
+            aria-label={menuStrings.header.openCabinet}
+          >
             <svg
               className="rlp__cabinet-icon"
               viewBox="0 0 24 24"
@@ -196,7 +202,7 @@ export function RestaurantListPage() {
               <path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" />
               <path d="M4 20a8 8 0 0 1 16 0" />
             </svg>
-            <span className="rlp__cabinet-text">Перейти в кабінет</span>
+            <span className="rlp__cabinet-text">{menuStrings.header.openCabinet}</span>
           </Link>
         </div>
         <h1 className="rlp__heading">Наші ресторани</h1>

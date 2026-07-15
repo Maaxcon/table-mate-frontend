@@ -12,6 +12,7 @@ import {
   LuX,
 } from "react-icons/lu"
 import { useFocusTrap } from "@/hooks/useFocusTrap"
+import { useCabinetStrings } from "@/features/cabinet/strings"
 import type { HistoryEntry } from "@/features/cabinet/types"
 import { loadReceiptFont } from "@/features/cabinet/receiptFont"
 import { buildReceiptPdf } from "@/features/cabinet/receiptPdf"
@@ -25,8 +26,6 @@ type ReceiptDialogProps = {
   onClose: () => void
 }
 
-// Can this device share files (mobile)? If yes we use the native share sheet,
-// otherwise we just download the PDF (desktop).
 function canShareFiles(): boolean {
   if (typeof navigator === "undefined" || !navigator.canShare) return false
   try {
@@ -38,6 +37,7 @@ function canShareFiles(): boolean {
 }
 
 export function ReceiptDialog({ entry, onClose }: ReceiptDialogProps) {
+  const strings = useCabinetStrings()
   const dialogRef = useFocusTrap<HTMLDivElement>({ onEscape: onClose })
   const shareMode = useMemo(() => canShareFiles(), [])
   const navigate = useNavigate()
@@ -51,7 +51,6 @@ export function ReceiptDialog({ entry, onClose }: ReceiptDialogProps) {
   }
 
   useEffect(() => {
-    // Preload the PDF font so saving/sharing later feels instant.
     void loadReceiptFont()
   }, [])
 
@@ -64,7 +63,6 @@ export function ReceiptDialog({ entry, onClose }: ReceiptDialogProps) {
     try {
       const { blob, filename } = await buildReceiptPdf(entry)
 
-      // Mobile: open the native share sheet with the PDF file.
       if (shareMode) {
         const file = new File([blob], filename, { type: "application/pdf" })
         try {
@@ -75,22 +73,20 @@ export function ReceiptDialog({ entry, onClose }: ReceiptDialogProps) {
         return
       }
 
-      // Desktop: download the PDF.
       downloadBlob(blob, filename)
     } catch {
-      setError("Could not create the PDF. Please check your connection and try again.")
+      setError(strings.receipt.errorMessage)
     } finally {
       setBusy(false)
     }
   }
 
-  // Render to <body> so an ancestor transform can't anchor this fixed overlay.
   return createPortal(
     <div className="receipt-dialog__overlay">
       <button
         type="button"
         className="receipt-dialog__backdrop"
-        aria-label="Close receipt"
+        aria-label={strings.receipt.closeAria}
         tabIndex={-1}
         onClick={onClose}
       />
@@ -106,7 +102,7 @@ export function ReceiptDialog({ entry, onClose }: ReceiptDialogProps) {
           type="button"
           className="receipt-dialog__close"
           onClick={onClose}
-          aria-label="Close receipt"
+          aria-label={strings.receipt.closeAria}
         >
           <LuX aria-hidden="true" />
         </button>
@@ -115,14 +111,14 @@ export function ReceiptDialog({ entry, onClose }: ReceiptDialogProps) {
           type="button"
           className="receipt-dialog__cover"
           onClick={openMenu}
-          aria-label={`Open ${entry.restaurantName} menu`}
+          aria-label={strings.receipt.openMenuAria(entry.restaurantName)}
         >
           <img className="receipt-dialog__cover-img" src={entry.restaurantImage} alt="" />
           <span className="receipt-dialog__title" id="receipt-dialog-title">
             {entry.restaurantName}
           </span>
           <span className="receipt-dialog__cover-cta">
-            View menu <LuChevronRight aria-hidden="true" />
+            {strings.receipt.viewMenu} <LuChevronRight aria-hidden="true" />
           </span>
         </button>
 
@@ -140,23 +136,23 @@ export function ReceiptDialog({ entry, onClose }: ReceiptDialogProps) {
 
           <dl className="receipt-dialog__meta">
             <div>
-              <dt>Receipt</dt>
+              <dt>{strings.receipt.receipt}</dt>
               <dd>{entry.orderNumber}</dd>
             </div>
             <div>
-              <dt>Date</dt>
-              <dd>{formatDateTime(entry.date)}</dd>
+              <dt>{strings.receipt.date}</dt>
+              <dd>{formatDateTime(entry.date, strings.locale)}</dd>
             </div>
             <div>
-              <dt>Table</dt>
+              <dt>{strings.receipt.table}</dt>
               <dd>{entry.tableLabel}</dd>
             </div>
             <div>
-              <dt>Server</dt>
+              <dt>{strings.receipt.server}</dt>
               <dd>{entry.server}</dd>
             </div>
             <div>
-              <dt>Guests</dt>
+              <dt>{strings.receipt.guests}</dt>
               <dd>{entry.guests}</dd>
             </div>
           </dl>
@@ -169,7 +165,9 @@ export function ReceiptDialog({ entry, onClose }: ReceiptDialogProps) {
                 <span className="receipt-line__qty">{item.quantity}×</span>
                 <span className="receipt-line__name">
                   {item.name}
-                  <span className="receipt-line__unit">{money(item.unitPrice)} each</span>
+                  <span className="receipt-line__unit">
+                    {money(item.unitPrice)} {strings.receipt.each}
+                  </span>
                 </span>
                 <span className="receipt-line__price">{money(item.unitPrice * item.quantity)}</span>
               </li>
@@ -180,23 +178,23 @@ export function ReceiptDialog({ entry, onClose }: ReceiptDialogProps) {
 
           <div className="receipt-dialog__totals">
             <div className="receipt-row">
-              <span>Subtotal ({itemCount} items)</span>
+              <span>{strings.receipt.subtotal(itemCount)}</span>
               <span>{money(entry.subtotal)}</span>
             </div>
             <div className="receipt-row">
-              <span>Tax</span>
+              <span>{strings.receipt.tax}</span>
               <span>{money(entry.tax)}</span>
             </div>
             <div className="receipt-row">
-              <span>Service charge</span>
+              <span>{strings.receipt.serviceCharge}</span>
               <span>{money(entry.serviceCharge)}</span>
             </div>
             <div className="receipt-row">
-              <span>Tip</span>
+              <span>{strings.receipt.tip}</span>
               <span>{money(entry.tip)}</span>
             </div>
             <div className="receipt-row receipt-row--grand">
-              <span>Total</span>
+              <span>{strings.receipt.total}</span>
               <span>{money(entry.total)}</span>
             </div>
           </div>
@@ -208,7 +206,7 @@ export function ReceiptDialog({ entry, onClose }: ReceiptDialogProps) {
               ) : (
                 <LuBanknote aria-hidden="true" />
               )}
-              {entry.paymentMethod === "card" ? "Card" : "Cash"}
+              {entry.paymentMethod === "card" ? strings.receipt.card : strings.receipt.cash}
             </span>
             <span className="receipt-dialog__pay-status">{entry.paymentStatus}</span>
           </div>
@@ -220,17 +218,21 @@ export function ReceiptDialog({ entry, onClose }: ReceiptDialogProps) {
             disabled={busy}
           >
             {shareMode ? <LuShare2 aria-hidden="true" /> : <LuDownload aria-hidden="true" />}
-            {busy ? "Preparing…" : shareMode ? "Share receipt" : "Save PDF"}
+            {busy
+              ? strings.receipt.preparing
+              : shareMode
+                ? strings.receipt.share
+                : strings.receipt.savePdf}
           </button>
 
-          <p className="receipt-dialog__thanks">Thank you for dining with us!</p>
+          <p className="receipt-dialog__thanks">{strings.receipt.thanks}</p>
         </div>
       </div>
 
       {error && (
         <FeedbackDialog
           variant="error"
-          title="Something went wrong"
+          title={strings.receipt.errorTitle}
           message={error}
           onClose={() => setError(null)}
         />
