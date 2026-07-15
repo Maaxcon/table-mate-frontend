@@ -77,9 +77,17 @@ export function WaiterOrderPage() {
   const [isTabletLayout, setIsTabletLayout] = useState(() =>
     typeof window !== "undefined" ? window.innerWidth <= TABLET_BREAKPOINT : false,
   )
-  const { events: notificationEvents, isConnected: notificationConnected } = useNotificationStream()
+  const {
+    events: notificationEvents,
+    isConnected: notificationConnected,
+    unreadCount: notificationUnreadCount,
+    markEventRead,
+    markAllRead,
+  } = useNotificationStream()
   const tablesRef = useRef<FloorTable[]>([])
   const reservationsRef = useRef<ReservationItem[]>([])
+  const showNotificationReminder =
+    isTabletLayout && sidebarTab !== "notifications" && notificationUnreadCount > 0
 
   useEffect(() => {
     const update = () => setIsTabletLayout(window.innerWidth <= TABLET_BREAKPOINT)
@@ -460,8 +468,21 @@ export function WaiterOrderPage() {
                 aria-pressed={sidebarTab === "notifications"}
                 className={`waiter-view__sidebar-tab${sidebarTab === "notifications" ? " waiter-view__sidebar-tab--active" : ""}`}
                 onClick={() => setSidebarTab("notifications")}
+                title={
+                  showNotificationReminder
+                    ? `${notificationUnreadCount} unread notifications`
+                    : undefined
+                }
               >
                 Notifications
+                {showNotificationReminder && (
+                  <span
+                    className="waiter-view__sidebar-tab-badge"
+                    aria-label={`${notificationUnreadCount} unread notifications`}
+                  >
+                    {notificationUnreadCount > 99 ? "99+" : notificationUnreadCount}
+                  </span>
+                )}
               </button>
             </div>
 
@@ -478,6 +499,8 @@ export function WaiterOrderPage() {
                 <NotificationStreamSidebar
                   events={notificationEvents}
                   isConnected={notificationConnected}
+                  markEventRead={markEventRead}
+                  markAllRead={markAllRead}
                 />
               )}
             </div>
@@ -495,6 +518,8 @@ export function WaiterOrderPage() {
             <NotificationStreamSidebar
               events={notificationEvents}
               isConnected={notificationConnected}
+              markEventRead={markEventRead}
+              markAllRead={markAllRead}
             />
           </div>
         )}

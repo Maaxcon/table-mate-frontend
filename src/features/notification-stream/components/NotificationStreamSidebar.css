@@ -15,6 +15,12 @@
   justify-content: space-between;
 }
 
+.notification-stream__header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .notification-stream__title {
   font-size: 0.72rem;
   font-weight: 700;
@@ -42,6 +48,29 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
+}
+
+.notification-stream__read-all {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 36%, var(--color-border-default));
+  background: color-mix(in srgb, var(--color-primary) 8%, var(--color-bg-secondary));
+  color: var(--color-primary);
+  cursor: pointer;
+  padding: 6px 12px;
+  border-radius: 999px;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    transform 0.15s ease;
+}
+
+.notification-stream__read-all:hover {
+  border-color: color-mix(in srgb, var(--color-primary) 60%, var(--color-border-default));
+  box-shadow: 0 6px 16px -10px color-mix(in srgb, var(--color-primary) 45%, transparent);
+  transform: translateY(-1px);
 }
 
 .notification-stream__sections {
@@ -78,6 +107,14 @@
   color: var(--color-text-secondary);
 }
 
+.notification-stream__subheading {
+  margin: 6px 0 4px;
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: var(--color-text-secondary);
+}
+
 .notification-stream__section-count {
   font-size: 0.7rem;
   color: var(--color-text-primary);
@@ -105,6 +142,51 @@
   transition:
     box-shadow 0.15s,
     transform 0.15s;
+  position: relative;
+  overflow: hidden;
+  flex: 0 0 auto;
+}
+
+.notification-stream__section > p,
+.notification-stream__section > button {
+  flex-shrink: 0;
+}
+
+.notification-stream__event--unread {
+  border-color: color-mix(in srgb, var(--color-primary) 45%, var(--color-border-default));
+  box-shadow: 0 10px 22px -14px color-mix(in srgb, var(--color-primary) 45%, transparent);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--color-primary) 16%, var(--color-bg-secondary)),
+    color-mix(in srgb, var(--color-primary) 4%, var(--color-bg-secondary))
+  );
+}
+
+.notification-stream__event--unread::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 35%, transparent);
+  box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-primary) 30%, transparent);
+  animation: notificationStreamPulse 2.8s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.notification-stream__event--unread::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -1px;
+  width: 4px;
+  height: 100%;
+  border-radius: 6px 0 0 6px;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--color-primary) 90%, transparent),
+    color-mix(in srgb, var(--color-primary) 30%, transparent)
+  );
+  box-shadow: 0 4px 10px color-mix(in srgb, var(--color-primary) 30%, transparent);
 }
 
 .notification-stream__event:hover {
@@ -118,6 +200,12 @@
   justify-content: space-between;
   margin-bottom: 4px;
   gap: 12px;
+}
+
+.notification-stream__event-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .notification-stream__event-title {
@@ -147,4 +235,43 @@
 
 .notification-stream__arrow--pending {
   color: var(--color-warning-icon);
+}
+.notification-stream__pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  border-radius: 999px;
+  text-transform: uppercase;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--color-primary) 65%, rgba(255, 255, 255, 0.15)),
+    color-mix(in srgb, var(--color-primary) 35%, rgba(255, 255, 255, 0.05))
+  );
+  border: 1px solid color-mix(in srgb, var(--color-primary) 60%, transparent);
+  color: color-mix(in srgb, var(--color-bg-surface) 85%, var(--color-primary));
+  box-shadow: 0 4px 10px -6px color-mix(in srgb, var(--color-primary) 55%, transparent);
+}
+
+@keyframes notificationStreamPulse {
+  0% {
+    opacity: 0.85;
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-primary) 18%, transparent);
+  }
+  55% {
+    opacity: 1;
+    box-shadow: 0 0 0 9px color-mix(in srgb, var(--color-primary) 4%, transparent);
+  }
+  100% {
+    opacity: 0.8;
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-primary) 0%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .notification-stream__event--unread::before {
+    animation: none;
+  }
 }

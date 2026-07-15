@@ -20,6 +20,7 @@ import { CompletedColumn } from "../../components/CompletedColumn"
 import { NotificationsPanel } from "../../components/NotificationsPanel"
 import { KanbanFooter } from "../../components/KanbanFooter"
 import { useNotificationStream } from "@/features/notification-stream/hooks/useNotificationStream"
+const KITCHEN_READ_STORAGE_KEY = "tablemate.kitchen.notifications.read"
 
 function useCurrentTime(): string {
   const [time, setTime] = useState(() =>
@@ -48,7 +49,9 @@ function useCurrentTime(): string {
 
 export function KitchenKanbanPage() {
   const currentTime = useCurrentTime()
-  const { isConnected } = useNotificationStream()
+  const { events, isConnected, markEventRead, markAllRead } = useNotificationStream({
+    readStorageKey: KITCHEN_READ_STORAGE_KEY,
+  })
   const [tick, setTick] = useState(0)
   const [tickets, setTickets] = useState<KanbanTicket[]>([])
   const [completed, setCompleted] = useState<KanbanTicket[]>([])
@@ -245,7 +248,12 @@ export function KitchenKanbanPage() {
         <BatchColumn batches={batchCounts} />
         <div className="kanban__right">
           <CompletedColumn tickets={completed} />
-          <NotificationsPanel />
+          <NotificationsPanel
+            events={events}
+            isConnected={isConnected}
+            markEventRead={markEventRead}
+            markAllRead={markAllRead}
+          />
         </div>
       </div>
 

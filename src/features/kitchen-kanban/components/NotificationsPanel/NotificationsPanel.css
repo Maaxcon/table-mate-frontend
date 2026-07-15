@@ -14,6 +14,12 @@
   background: var(--k-text-faint);
 }
 
+.kanban__notif-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .kanban__notif-status--on {
   background: var(--k-active);
   box-shadow: 0 0 0 3px var(--k-active-soft);
@@ -21,6 +27,8 @@
 
 .kanban__notifs-list {
   gap: 14px;
+  overflow-y: auto;
+  min-height: 0;
 }
 
 .kanban__notif-empty {
@@ -30,16 +38,113 @@
   padding: 20px 12px;
 }
 
+.kanban__notif-read-all {
+  border: 1px solid color-mix(in srgb, var(--k-active) 35%, rgba(255, 255, 255, 0.3));
+  background: color-mix(in srgb, var(--k-active) 12%, transparent);
+  color: var(--k-active);
+  font-size: 0.7rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 6px 12px;
+  border-radius: 999px;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    transform 0.15s ease;
+}
+
+.kanban__notif-read-all:hover {
+  border-color: color-mix(in srgb, var(--k-active) 65%, rgba(255, 255, 255, 0.3));
+  box-shadow: 0 6px 18px -12px color-mix(in srgb, var(--k-active) 55%, transparent);
+  transform: translateY(-1px);
+}
+
+.kanban__notif-subheading {
+  margin: 8px 0 4px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--k-text-muted);
+  text-transform: uppercase;
+}
+
 .kanban__notif {
   display: flex;
   flex-direction: column;
   gap: 3px;
+  text-align: left;
+  border: 1px solid color-mix(in srgb, var(--k-divider) 70%, transparent);
+  border-radius: 14px;
+  padding: 12px 14px;
+  background: color-mix(in srgb, var(--k-bg) 70%, #fff);
+  cursor: pointer;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.2s ease;
+  position: relative;
+  overflow: hidden;
+  flex: 0 0 auto;
+}
+
+.kanban__notifs-list > p,
+.kanban__notifs-list > button {
+  flex-shrink: 0;
+}
+
+.kanban__notif:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px -12px rgba(0, 0, 0, 0.35);
+}
+
+.kanban__notif--unread {
+  border-color: color-mix(in srgb, var(--k-active) 70%, var(--k-divider));
+  box-shadow:
+    0 12px 26px -12px color-mix(in srgb, var(--k-active) 80%, transparent),
+    inset 0 0 0 1px color-mix(in srgb, var(--k-active) 35%, transparent);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--k-active) 24%, var(--k-bg)),
+    color-mix(in srgb, var(--k-active) 10%, var(--k-bg))
+  );
+}
+
+.kanban__notif--unread::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  border: 1px solid color-mix(in srgb, var(--k-active) 55%, transparent);
+  box-shadow: 0 0 0 0 color-mix(in srgb, var(--k-active) 35%, transparent);
+  animation: kanbanNotifPulse 2.2s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.kanban__notif--unread::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -2px;
+  width: 6px;
+  height: 100%;
+  border-radius: 6px 0 0 6px;
+  background: linear-gradient(
+    180deg,
+    var(--k-active),
+    color-mix(in srgb, var(--k-active) 40%, transparent)
+  );
+  box-shadow: 0 6px 14px color-mix(in srgb, var(--k-active) 45%, transparent);
 }
 
 .kanban__notif-top {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
+  gap: 8px;
+}
+
+.kanban__notif-meta {
+  display: flex;
+  align-items: center;
   gap: 8px;
 }
 
@@ -61,6 +166,44 @@
   font-size: 0.78rem;
   color: var(--k-text-muted);
   line-height: 1.4;
+}
+
+.kanban__notif-pill {
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  padding: 2px 9px;
+  border-radius: 999px;
+  text-transform: uppercase;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--k-active) 68%, rgba(255, 255, 255, 0.15)),
+    color-mix(in srgb, var(--k-active) 35%, rgba(255, 255, 255, 0.08))
+  );
+  border: 1px solid color-mix(in srgb, var(--k-active) 60%, transparent);
+  color: color-mix(in srgb, white 85%, var(--k-active));
+  box-shadow: 0 6px 16px -8px color-mix(in srgb, var(--k-active) 45%, transparent);
+}
+
+@keyframes kanbanNotifPulse {
+  0% {
+    opacity: 0.85;
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--k-active) 35%, transparent);
+  }
+  55% {
+    opacity: 1;
+    box-shadow: 0 0 0 10px color-mix(in srgb, var(--k-active) 8%, transparent);
+  }
+  100% {
+    opacity: 0.8;
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--k-active) 0%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kanban__notif--unread::before {
+    animation: none;
+  }
 }
 
 .kanban__notif-arrow {
