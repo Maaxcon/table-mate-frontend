@@ -172,6 +172,35 @@
       "sun": "Sun"
     }
   },
+  "restaurantsList": {
+    "heading": "Our restaurants",
+    "loadingAria": "Loading restaurants",
+    "errors": {
+      "load": "Could not load restaurants. Please try again."
+    },
+    "state": {
+      "errorTitle": "Couldn’t load restaurants",
+      "retry": "Retry",
+      "emptyTitle": "No restaurants yet",
+      "emptyAdmin": "Create your first restaurant to start building the menu and bookings.",
+      "emptyGuest": "No restaurants are available yet. Please check back later.",
+      "create": "Create restaurant"
+    },
+    "toolbar": {
+      "count": "Total: {{count}}"
+    },
+    "card": {
+      "city": "City",
+      "cuisine": "Cuisine",
+      "today": "Today",
+      "updated": "Last updated",
+      "openCta": "Open restaurant",
+      "openNow": "Open now",
+      "closed": "Closed",
+      "openAria": "Open {{name}}",
+      "cityUnknown": "Unknown"
+    }
+  },
   "reservation": {
     "pageTitle": "Booking",
     "backToMenu": "Back to menu",
