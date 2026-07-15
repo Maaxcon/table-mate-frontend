@@ -2,21 +2,21 @@
   "auth": {
     "hero": {
       "logoAlt": "TableMate",
-      "subtitle": "Discover, book, and dine. Effortlessly."
+      "subtitle": "Відкривайте, бронюйте й смакуйте без зайвих клопотів."
     },
     "socialAuth": {
-      "title": "Get started",
-      "text": "Unlock one-tap booking, favorites, and history.",
-      "googleButton": "Continue with Google",
-      "googleButtonLoading": "Connecting…",
-      "or": "or"
+      "title": "Розпочнімо",
+      "text": "Увімкніть бронювання в один дотик, улюблене та історію.",
+      "googleButton": "Продовжити з Google",
+      "googleButtonLoading": "З’єднуємося…",
+      "or": "або"
     },
     "guest": {
-      "button": "Continue as Guest",
-      "noteLine1": "Anonymous access to maps and menus.",
-      "noteLine2": "Registration required for booking."
+      "button": "Продовжити як гість",
+      "noteLine1": "Анонімний доступ до карт і меню.",
+      "noteLine2": "Для бронювання потрібна реєстрація."
     },
-    "footer": "Your table, one tap away."
+    "footer": "Ваш стіл — за один дотик."
   },
   "menu": {
     "header": {
