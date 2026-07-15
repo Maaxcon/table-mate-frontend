@@ -52,6 +52,20 @@ export interface FloorZoneDeletedEvent {
   occurred_at: string
 }
 
+export interface FloorReservationsUpdatedEvent {
+  event_name: "HALL_RESERVATIONS_UPDATED"
+  table_ids: string[]
+  occurred_at: string
+}
+
+export interface FloorSessionAutoExtendedEvent {
+  event_name: "HALL_SESSION_AUTO_EXTENDED"
+  table_id: string
+  ends_at: string
+  clamped_by: string
+  occurred_at: string
+}
+
 export type FloorEvent =
   | FloorTableStatusEvent
   | FloorNewReservationEvent
@@ -60,15 +74,19 @@ export type FloorEvent =
   | FloorZoneCreatedEvent
   | FloorZoneUpdatedEvent
   | FloorZoneDeletedEvent
+  | FloorReservationsUpdatedEvent
+  | FloorSessionAutoExtendedEvent
 
 interface UseFloorSubscriptionOptions {
   onTableStatusChanged?: (event: FloorTableStatusEvent) => void
   onNewReservation?: (event: FloorNewReservationEvent) => void
   onReservationCancelled?: (event: FloorReservationCancelledEvent) => void
+  onSessionAutoExtended?: (event: FloorSessionAutoExtendedEvent) => void
   onLayoutPublished?: (event: FloorLayoutPublishedEvent) => void
   onZoneCreated?: (event: FloorZoneCreatedEvent) => void
   onZoneUpdated?: (event: FloorZoneUpdatedEvent) => void
   onZoneDeleted?: (event: FloorZoneDeletedEvent) => void
+  onReservationsUpdated?: (event: FloorReservationsUpdatedEvent) => void
   onClose?: () => void
   onError?: (error: Event) => void
   // Customers carry no restaurant in their token, so the restaurant they're
@@ -97,10 +115,12 @@ export function useFloorSubscription({
   onTableStatusChanged,
   onNewReservation,
   onReservationCancelled,
+  onSessionAutoExtended,
   onLayoutPublished,
   onZoneCreated,
   onZoneUpdated,
   onZoneDeleted,
+  onReservationsUpdated,
   onClose,
   onError,
   restaurantId,
@@ -115,10 +135,12 @@ export function useFloorSubscription({
     onTableStatusChanged,
     onNewReservation,
     onReservationCancelled,
+    onSessionAutoExtended,
     onLayoutPublished,
     onZoneCreated,
     onZoneUpdated,
     onZoneDeleted,
+    onReservationsUpdated,
     onClose,
     onError,
   })
@@ -128,10 +150,12 @@ export function useFloorSubscription({
       onTableStatusChanged,
       onNewReservation,
       onReservationCancelled,
+      onSessionAutoExtended,
       onLayoutPublished,
       onZoneCreated,
       onZoneUpdated,
       onZoneDeleted,
+      onReservationsUpdated,
       onClose,
       onError,
     }
@@ -139,10 +163,12 @@ export function useFloorSubscription({
     onTableStatusChanged,
     onNewReservation,
     onReservationCancelled,
+    onSessionAutoExtended,
     onLayoutPublished,
     onZoneCreated,
     onZoneUpdated,
     onZoneDeleted,
+    onReservationsUpdated,
     onClose,
     onError,
   ])
@@ -186,6 +212,10 @@ export function useFloorSubscription({
           callbacksRef.current.onZoneUpdated?.(data as FloorZoneUpdatedEvent)
         } else if (data.event_name === "ZONE_DELETED") {
           callbacksRef.current.onZoneDeleted?.(data as FloorZoneDeletedEvent)
+        } else if (data.event_name === "HALL_RESERVATIONS_UPDATED") {
+          callbacksRef.current.onReservationsUpdated?.(data as FloorReservationsUpdatedEvent)
+        } else if (data.event_name === "HALL_SESSION_AUTO_EXTENDED") {
+          callbacksRef.current.onSessionAutoExtended?.(data as FloorSessionAutoExtendedEvent)
         }
       } catch (err) {
         wsLog("Failed to parse message:", err)

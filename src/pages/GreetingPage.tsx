@@ -1,15 +1,31 @@
 import { useCallback } from "react"
 import { useNavigate } from "react-router-dom"
 import Divider from "@/components/Divider"
+import { GoogleOAuthProvider } from "@react-oauth/google"
 import { AuthHero, GuestAccess, SocialAuthGroup } from "@/features/auth/components"
 import { useGoogleRedirectAuth } from "@/features/auth/hooks"
+import { googleAuthMessage } from "@/features/auth/hooks/googleAuth.constants"
 import { authStrings } from "@/features/auth/strings"
+import { ENV_NOT_CONFIGURED_VALUE, env } from "@/config/env"
 import AuthLayout from "@/layouts/AuthLayout"
 import "./GreetingPage.css"
 
-function GreetingPage() {
+type GreetingPageContentProps = {
+  onGoogleLogin: () => void
+  googleFeedback: string
+  googleFeedbackType: "success" | "error"
+  loading: boolean
+  googleDisabled?: boolean
+}
+
+function GreetingPageContent({
+  onGoogleLogin,
+  googleFeedback,
+  googleFeedbackType,
+  loading,
+  googleDisabled = false,
+}: GreetingPageContentProps) {
   const navigate = useNavigate()
-  const { googleFeedback, googleFeedbackType, handleGoogleLogin, loading } = useGoogleRedirectAuth()
   const handleContinueAsGuest = useCallback(() => navigate("/restaurants"), [navigate])
 
   return (
@@ -17,7 +33,8 @@ function GreetingPage() {
       <section className="greeting-page">
         <AuthHero />
         <SocialAuthGroup
-          onGoogleLogin={handleGoogleLogin}
+          disabled={googleDisabled}
+          onGoogleLogin={onGoogleLogin}
           googleFeedback={googleFeedback}
           googleFeedbackType={googleFeedbackType}
           loading={loading}
@@ -29,6 +46,47 @@ function GreetingPage() {
       </section>
     </AuthLayout>
   )
+}
+
+function GreetingPageGoogleBody() {
+  const { googleFeedback, googleFeedbackType, handleGoogleLogin, loading } = useGoogleRedirectAuth()
+
+  return (
+    <GreetingPageContent
+      onGoogleLogin={handleGoogleLogin}
+      googleFeedback={googleFeedback}
+      googleFeedbackType={googleFeedbackType}
+      loading={loading}
+    />
+  )
+}
+
+function GreetingPageWithGoogle() {
+  return (
+    <GoogleOAuthProvider clientId={env.googleClientId}>
+      <GreetingPageGoogleBody />
+    </GoogleOAuthProvider>
+  )
+}
+
+function GreetingPageWithoutGoogle() {
+  return (
+    <GreetingPageContent
+      onGoogleLogin={() => {}}
+      googleFeedback={googleAuthMessage.unavailable}
+      googleFeedbackType="error"
+      loading={false}
+      googleDisabled
+    />
+  )
+}
+
+function GreetingPage() {
+  if (env.googleClientId === ENV_NOT_CONFIGURED_VALUE) {
+    return <GreetingPageWithoutGoogle />
+  }
+
+  return <GreetingPageWithGoogle />
 }
 
 export default GreetingPage
