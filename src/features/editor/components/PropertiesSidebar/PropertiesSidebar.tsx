@@ -584,7 +584,7 @@ export function PropertiesSidebar({
             </summary>
             <div className="editor-sidebar__field">
               <label className="editor-sidebar__label" htmlFor="sidebar-label-2">
-                {sidebarStrings.passage.label}
+                {entityStrings.passage.label}
               </label>
               <input
                 id="sidebar-label-2"
@@ -592,7 +592,7 @@ export function PropertiesSidebar({
                 type="text"
                 value={entity.label ?? ""}
                 onChange={(e) => onUpdate(entity.id, { label: e.target.value })}
-                placeholder={sidebarStrings.passage.placeholder}
+                placeholder={entityStrings.passage.placeholder}
               />
             </div>
           </details>
@@ -605,7 +605,7 @@ export function PropertiesSidebar({
             </summary>
             <div className="editor-sidebar__field">
               <label className="editor-sidebar__label" htmlFor="sidebar-target">
-                {sidebarStrings.navigation.targetLabel}
+                {entityStrings.navigation.targetLabel}
               </label>
               <select
                 id="sidebar-target"
@@ -613,7 +613,7 @@ export function PropertiesSidebar({
                 value={entity.targetZoneId ?? ""}
                 onChange={handleTargetZoneChange}
               >
-                <option value="">{sidebarStrings.navigation.placeholder}</option>
+                <option value="">{entityStrings.navigation.placeholder}</option>
                 {zones.map((z) => (
                   <option key={z.public_id} value={z.public_id}>
                     {z.name}
