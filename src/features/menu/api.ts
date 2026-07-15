@@ -66,11 +66,13 @@ async function menuPost<T>(
   path: string,
   params: Record<string, string | undefined>,
   body: Record<string, string>,
+  signal?: AbortSignal,
 ): Promise<T> {
   const res = await fetch(buildUrl(path, params), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
+    signal,
   })
   if (!res.ok) throw await httpError(res)
   return res.json() as Promise<T>
@@ -147,6 +149,7 @@ export function toggleItemLike(
   restaurantId: string,
   itemPublicId: string,
   guestToken: string,
+  signal?: AbortSignal,
 ): Promise<ToggleLikeResponse> {
   return menuPost(
     MENU_API.toggleLike(itemPublicId),
@@ -154,6 +157,7 @@ export function toggleItemLike(
     {
       guest_token: guestToken,
     },
+    signal,
   )
 }
 

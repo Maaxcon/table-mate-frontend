@@ -138,10 +138,11 @@ function MenuItemCard({
           <button
             className={`menu-item-card__like${item.is_liked ? " menu-item-card__like--active" : ""}`}
             onClick={handleToggleLike}
-            disabled={likePending}
+            aria-busy={likePending}
             aria-label={
               item.is_liked ? menuStrings.card.unlike(item.name) : menuStrings.card.like(item.name)
             }
+            data-pending={likePending ? "true" : undefined}
           >
             <LuHeart className="menu-item-card__like-icon" size={12} />
             <span className="menu-item-card__like-count">
