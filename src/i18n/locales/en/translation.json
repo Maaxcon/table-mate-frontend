@@ -470,7 +470,9 @@
       "add": "Add",
       "confirm": "Confirm",
       "close": "Close",
-      "search": "Search"
+      "search": "Search",
+      "connected": "Connected",
+      "disconnected": "Disconnected"
     },
     "layout": {
       "brand": "Admin",
@@ -841,6 +843,62 @@
           "hidden": "Menu hidden",
           "deleted": "Menu deleted",
           "actionError": "Action failed."
+        }
+      }
+    },
+    "kitchen": {
+      "header": {
+        "brand": "KITCHEN KANBAN",
+        "stationLabel": "STATION:",
+        "stationValue": "HOT LINE",
+        "localTime": "LOCAL TIME",
+        "floorLink": "FLOOR"
+      },
+      "footer": {
+        "incoming": "INCOMING",
+        "active": "ACTIVE",
+        "completed": "COMPLETED",
+        "prepTime": "PREP TIME"
+      },
+      "incoming": {
+        "title": "INCOMING",
+        "empty": "No incoming orders",
+        "acceptHint": "Click to accept order",
+        "readOnlyHint": "Read only"
+      },
+      "active": {
+        "title": "ACTIVE ORDERS",
+        "subtitle": "PRIORITY QUEUE",
+        "empty": "No active orders",
+        "completeAria": "Complete order",
+        "bump": "BUMP",
+        "guestPrefix": "Guests",
+        "serverPrefix": "Server"
+      },
+      "batch": {
+        "title": "BATCH VIEW",
+        "empty": "No batches"
+      },
+      "completed": {
+        "title": "COMPLETED",
+        "empty": "No completed orders",
+        "aria": "Completed"
+      },
+      "notifications": {
+        "title": "NOTIFICATIONS",
+        "markAll": "Mark all read",
+        "empty": "No kitchen notifications",
+        "unread": "Unread",
+        "read": "Read",
+        "new": "NEW"
+      },
+      "page": {
+        "loadError": "Could not load tickets.",
+        "loading": "Loading tickets...",
+        "mutations": {
+          "update": "Could not update item.",
+          "bump": "Could not bump order.",
+          "accept": "Could not accept order."
         }
       }
     }

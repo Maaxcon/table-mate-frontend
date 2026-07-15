@@ -19,6 +19,8 @@ export function useAdminStrings() {
       confirm: t("admin.common.confirm"),
       close: t("admin.common.close"),
       search: t("admin.common.search"),
+      connected: t("admin.common.connected"),
+      disconnected: t("admin.common.disconnected"),
     },
     layout: {
       brand: t("admin.layout.brand"),
@@ -386,6 +388,62 @@ export function useAdminStrings() {
       },
       openAria: (day: string) => t("admin.workingHours.openAria", { day }),
       closeAria: (day: string) => t("admin.workingHours.closeAria", { day }),
+    },
+    kitchen: {
+      header: {
+        brand: t("admin.kitchen.header.brand"),
+        stationLabel: t("admin.kitchen.header.stationLabel"),
+        stationValue: t("admin.kitchen.header.stationValue"),
+        localTime: t("admin.kitchen.header.localTime"),
+        floorLink: t("admin.kitchen.header.floorLink"),
+      },
+      footer: {
+        incoming: t("admin.kitchen.footer.incoming"),
+        active: t("admin.kitchen.footer.active"),
+        completed: t("admin.kitchen.footer.completed"),
+        prepTime: t("admin.kitchen.footer.prepTime"),
+      },
+      incoming: {
+        title: t("admin.kitchen.incoming.title"),
+        empty: t("admin.kitchen.incoming.empty"),
+        acceptHint: t("admin.kitchen.incoming.acceptHint"),
+        readOnlyHint: t("admin.kitchen.incoming.readOnlyHint"),
+      },
+      active: {
+        title: t("admin.kitchen.active.title"),
+        subtitle: t("admin.kitchen.active.subtitle"),
+        empty: t("admin.kitchen.active.empty"),
+        completeAria: t("admin.kitchen.active.completeAria"),
+        bump: t("admin.kitchen.active.bump"),
+        guestPrefix: t("admin.kitchen.active.guestPrefix"),
+        serverPrefix: t("admin.kitchen.active.serverPrefix"),
+      },
+      batch: {
+        title: t("admin.kitchen.batch.title"),
+        empty: t("admin.kitchen.batch.empty"),
+      },
+      completed: {
+        title: t("admin.kitchen.completed.title"),
+        empty: t("admin.kitchen.completed.empty"),
+        aria: t("admin.kitchen.completed.aria"),
+      },
+      notifications: {
+        title: t("admin.kitchen.notifications.title"),
+        markAll: t("admin.kitchen.notifications.markAll"),
+        empty: t("admin.kitchen.notifications.empty"),
+        unread: t("admin.kitchen.notifications.unread"),
+        read: t("admin.kitchen.notifications.read"),
+        new: t("admin.kitchen.notifications.new"),
+      },
+      page: {
+        loadError: t("admin.kitchen.page.loadError"),
+        loading: t("admin.kitchen.page.loading"),
+        mutations: {
+          update: t("admin.kitchen.page.mutations.update"),
+          bump: t("admin.kitchen.page.mutations.bump"),
+          accept: t("admin.kitchen.page.mutations.accept"),
+        },
+      },
     },
   }
 }
