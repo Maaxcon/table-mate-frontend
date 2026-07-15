@@ -5,6 +5,7 @@ import type {
   PublicRestaurantSettings,
   SortOrder,
 } from "@/features/menu/types"
+import { useDebouncedValue } from "./useDebouncedValue"
 import { useRestaurantInfo } from "./useRestaurantInfo"
 import { useMenuCategories } from "./useMenuCategories"
 import { useMenuItems } from "./useMenuItems"
@@ -40,6 +41,8 @@ function useMenuPage(restaurantId: string, guestToken: string): UseMenuPageResul
   const [activeCategory, setActiveCategoryState] = useState<string | null>(null)
   const [searchQuery, setSearchQueryState] = useState("")
   const [sortOrder, setSortOrder] = useState<SortOrder>("sort_order")
+  const debouncedActiveCategory = useDebouncedValue(activeCategory, 300)
+  const debouncedSortOrder = useDebouncedValue(sortOrder, 300)
 
   const {
     name,
@@ -54,7 +57,7 @@ function useMenuPage(restaurantId: string, guestToken: string): UseMenuPageResul
   } = useRestaurantInfo(restaurantId)
   const { categories, categoriesLoading, categoriesError } = useMenuCategories(restaurantId)
   const { items, itemsLoading, loadingMore, hasMore, loadMore, itemsError, setItemLikeState } =
-    useMenuItems(restaurantId, activeCategory, searchQuery, guestToken, sortOrder)
+    useMenuItems(restaurantId, debouncedActiveCategory, searchQuery, guestToken, debouncedSortOrder)
 
   const setActiveCategory = useCallback((id: string | null) => {
     setActiveCategoryState(id)
