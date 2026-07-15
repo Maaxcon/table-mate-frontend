@@ -22,6 +22,7 @@ import { apiFetch } from "@/api/client"
 import type { LayoutResponse, Table } from "@/types/api"
 import type { LayoutPayload } from "@/features/editor/types"
 import "./WaiterOrderPage.css"
+import { useWaiterStrings } from "../../strings"
 
 const CLOCK_TICK_MS = 10_000
 const FLOOR_REFRESH_POLL_MS = 30_000
@@ -51,6 +52,7 @@ function mapTableToFloorTable(t: Table): FloorTable {
 }
 
 export function WaiterOrderPage() {
+  const waiterStrings = useWaiterStrings()
   const [selectedTableId, setSelectedTableId] = useState<string | null>(null)
   const [tables, setTables] = useState<FloorTable[]>([])
   const [layoutPayload, setLayoutPayload] = useState<LayoutPayload | null>(null)
@@ -140,7 +142,7 @@ export function WaiterOrderPage() {
       })
       .catch((err) => {
         if (err instanceof DOMException && err.name === "AbortError") return
-        setError(err instanceof Error ? err.message : "Failed to load data")
+        setError(err instanceof Error ? err.message : waiterStrings.page.loadError)
       })
       .finally(() => setLoading(false))
     return () => controller.abort()
@@ -241,7 +243,7 @@ export function WaiterOrderPage() {
         }
         await refreshFloor()
       } catch (err) {
-        setSidebarError(err instanceof Error ? err.message : "Failed to cancel")
+        setSidebarError(err instanceof Error ? err.message : waiterStrings.page.cancelError)
       } finally {
         setSidebarActionLoading(false)
       }
@@ -265,6 +267,7 @@ export function WaiterOrderPage() {
   } = useTableActions({
     selectedTableId,
     onActionComplete,
+    errorMessages: waiterStrings.actions,
   })
 
   const handleModify = useCallback(
@@ -408,7 +411,7 @@ export function WaiterOrderPage() {
   if (loading)
     return (
       <div className="waiter-view">
-        <p className="waiter-view__message">Loading floor plan…</p>
+        <p className="waiter-view__message">{waiterStrings.page.loading}</p>
       </div>
     )
   if (error)
@@ -461,7 +464,7 @@ export function WaiterOrderPage() {
                 className={`waiter-view__sidebar-tab${sidebarTab === "reservations" ? " waiter-view__sidebar-tab--active" : ""}`}
                 onClick={() => setSidebarTab("reservations")}
               >
-                Reservations
+                {waiterStrings.page.tabs.reservations}
               </button>
               <button
                 type="button"
@@ -470,15 +473,15 @@ export function WaiterOrderPage() {
                 onClick={() => setSidebarTab("notifications")}
                 title={
                   showNotificationReminder
-                    ? `${notificationUnreadCount} unread notifications`
+                    ? waiterStrings.page.notifications.unread(notificationUnreadCount)
                     : undefined
                 }
               >
-                Notifications
+                {waiterStrings.page.tabs.notifications}
                 {showNotificationReminder && (
                   <span
                     className="waiter-view__sidebar-tab-badge"
-                    aria-label={`${notificationUnreadCount} unread notifications`}
+                    aria-label={waiterStrings.page.notifications.unread(notificationUnreadCount)}
                   >
                     {notificationUnreadCount > 99 ? "99+" : notificationUnreadCount}
                   </span>

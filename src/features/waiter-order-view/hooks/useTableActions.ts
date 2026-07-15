@@ -5,11 +5,20 @@ type UseTableActionsOptions = {
   selectedTableId: string | null
   // Run after an action succeeds — e.g. refresh the floor and close the overlay.
   onActionComplete: () => void | Promise<void>
+  errorMessages?: {
+    openTable: string
+    activateReservation: string
+    closeCheck: string
+  }
 }
 
 // Owns the open-table / activate-reservation actions for the floor overlay,
 // plus their busy and error state.
-export function useTableActions({ selectedTableId, onActionComplete }: UseTableActionsOptions) {
+export function useTableActions({
+  selectedTableId,
+  onActionComplete,
+  errorMessages,
+}: UseTableActionsOptions) {
   const [actionBusy, setActionBusy] = useState(false)
   // Identifies which row triggered the in-flight action (e.g. a reservation
   // being activated) so only that row shows a spinner — actionBusy still
@@ -18,6 +27,12 @@ export function useTableActions({ selectedTableId, onActionComplete }: UseTableA
   const [actionError, setActionError] = useState<string | null>(null)
 
   const clearActionError = useCallback(() => setActionError(null), [])
+
+  const messages = errorMessages ?? {
+    openTable: "Failed to open table",
+    activateReservation: "Failed to activate reservation",
+    closeCheck: "Failed to close the check",
+  }
 
   const runTableAction = useCallback(
     async (request: () => Promise<Response>, fallbackMsg: string, actionId?: string) => {
@@ -51,10 +66,10 @@ export function useTableActions({ selectedTableId, onActionComplete }: UseTableA
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ table: selectedTableId, guest_count: guestCount }),
           }),
-        "Failed to open table",
+        messages.openTable,
       )
     },
-    [selectedTableId, runTableAction],
+    [selectedTableId, runTableAction, messages.openTable],
   )
 
   const handleActivateReservation = useCallback(
@@ -64,11 +79,11 @@ export function useTableActions({ selectedTableId, onActionComplete }: UseTableA
           apiFetch(`/api/reservations/reservations/${reservationId}/activate/`, {
             method: "POST",
           }),
-        "Failed to activate reservation",
+        messages.activateReservation,
         reservationId,
       )
     },
-    [runTableAction],
+    [runTableAction, messages.activateReservation],
   )
 
   // Close the check (end the visit). No payment step yet: this closes the
@@ -77,10 +92,10 @@ export function useTableActions({ selectedTableId, onActionComplete }: UseTableA
     (sessionId: string) => {
       void runTableAction(
         () => apiFetch(`/api/orders/sessions/${sessionId}/close/`, { method: "POST" }),
-        "Failed to close the check",
+        messages.closeCheck,
       )
     },
-    [runTableAction],
+    [runTableAction, messages.closeCheck],
   )
 
   return {

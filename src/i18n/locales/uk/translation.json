@@ -907,6 +907,229 @@
         }
       }
     },
+    "waiter": {
+      "page": {
+        "loading": "Завантажуємо план зали…",
+        "loadError": "Не вдалося завантажити план зали.",
+        "cancelError": "Не вдалося скасувати бронювання.",
+        "tabs": {
+          "reservations": "Бронювання",
+          "notifications": "Сповіщення"
+        },
+        "notifications": {
+          "unread": "{{count}} непрочитаних сповіщень"
+        }
+      },
+      "topNav": {
+        "brandTitle": "ЖИВА ЗАПОВНЕНІСТЬ",
+        "brandSubtitle": "СТАНЦІЯ · ЗАЛА",
+        "zonesAria": "Зали",
+        "stats": {
+          "occupied": {
+            "label": "ЗАЙНЯТІ",
+            "sr": "Зайняті столики"
+          },
+          "reserved": {
+            "label": "ЗАРЕЗЕРВОВАНІ",
+            "sr": "Зарезервовані столики"
+          },
+          "free": {
+            "label": "ВІЛЬНІ",
+            "sr": "Вільні столики"
+          }
+        },
+        "timeLabel": "МІСЦЕВИЙ ЧАС",
+        "connection": {
+          "connected": "Підключено",
+          "disconnected": "Відключено"
+        },
+        "navLink": "КУХНЯ"
+      },
+      "floorPlan": {
+        "title": "ПЛАН ЗАЛИ",
+        "status": {
+          "free": "ВІЛЬНО",
+          "reserved": "ЗАРЕЗЕРВОВАНО",
+          "occupied": "ЗАЙНЯТО"
+        },
+        "overdue": "ПРОТЕРМІНОВАНО {{minutes}}ХВ",
+        "reserved": {
+          "guestFallback": "Гість",
+          "eta": "через {{time}}"
+        },
+        "guestLabel": "ГОСТЬ {{slot}}"
+      },
+      "overlay": {
+        "title": "СТІЛ {{table}}",
+        "closeAria": "Закрити",
+        "status": {
+          "reserved": "Бронь",
+          "current": "Поточні гості",
+          "capacity": "Місткість",
+          "details": "Деталі",
+          "nextBooking": "Наступна бронь",
+          "next": "Далі"
+        },
+        "values": {
+          "upcoming": "Очікується",
+          "available": "Доступно",
+          "none": "Немає",
+          "guests": "{{count}} гостей"
+        },
+        "overdue": {
+          "title": "Час бронювання минув {{minutes}} хв тому",
+          "message": "Закрийте стіл або продовжіть бронювання.",
+          "prolong": "Продовжити",
+          "close": "Закрити рахунок"
+        },
+        "openPanel": {
+          "seatHint": "Посадіть гостя з вкладки \"Бронювання\".",
+          "guestLabel": "Гості",
+          "action": "Відкрити стіл",
+          "busy": "Відкриваємо…"
+        },
+        "tabs": {
+          "order": "Замовлення",
+          "reservations": "Бронювання"
+        },
+        "actions": {
+          "addItem": "Додати позицію",
+          "moveTable": "Пересадити",
+          "closeCheck": "Закрити рахунок",
+          "processPayment": "Провести оплату"
+        },
+        "empty": {
+          "order": "Ще немає замовлень.",
+          "orderMissing": "Для цього столу немає активного замовлення.",
+          "reservations": "Для цього столу немає бронювань."
+        },
+        "guestSlot": "ГОСТЬ {{slot}}",
+        "totals": {
+          "subtotal": "Проміжний підсумок",
+          "tax": "Податок",
+          "service": "Сервіс",
+          "total": "Разом"
+        },
+        "reservation": {
+          "tagSeated": "Вже сидять",
+          "seat": "Посадити",
+          "modify": "Змінити",
+          "cancel": "Скасувати",
+          "new": "Нова бронь"
+        },
+        "voidReasons": {
+          "mispick": "Не та позиція",
+          "guestChangedMind": "Гість передумав",
+          "qualityIssue": "Проблема з якістю",
+          "outOfStock": "Немає в наявності"
+        }
+      },
+      "reservations": {
+        "sidebar": {
+          "title": "Найближчі бронювання",
+          "searchPlaceholder": "Пошук гостей…",
+          "guestCount": "{{count}} гостей",
+          "status": {
+            "pending": "Очікує",
+            "active": "Активне",
+            "completed": "Завершено",
+            "cancelled": "Скасовано",
+            "unknown": "Невідомо"
+          },
+          "actions": {
+            "modify": "Змінити",
+            "cancel": "Скасувати",
+            "report": "Створити звіт зміни"
+          },
+          "confirm": {
+            "title": "Скасувати бронювання",
+            "message": "Скасувати це бронювання? Дію неможливо повернути.",
+            "confirm": "Скасувати бронювання"
+          }
+        }
+      },
+      "orderModal": {
+        "title": "Нове замовлення",
+        "searchPlaceholder": "Пошук по меню…",
+        "categories": {
+          "all": "Усе"
+        },
+        "loading": "Завантажуємо…",
+        "empty": "Нічого не знайдено.",
+        "summary": {
+          "title": "Підсумок замовлення",
+          "empty": "Ще не додано жодної позиції.",
+          "total": "Разом",
+          "submit": "Відправити на кухню",
+          "submitting": "Відправляємо…"
+        },
+        "removeAria": "Прибрати",
+        "guestOption": "Гість {{slot}}",
+        "commentPlaceholder": "Коментар…"
+      },
+      "closeCheck": {
+        "title": "Закрити рахунок",
+        "message": "Система оплат ще недоступна. Закриття рахунку завершить візит і звільнить стіл. Переконайтеся, що гості розрахувалися.",
+        "cancel": "Скасувати",
+        "confirm": "Закрити рахунок",
+        "confirming": "Закриваємо…",
+        "closeAria": "Закрити"
+      },
+      "modifyModal": {
+        "title": "Змінити бронювання",
+        "labels": {
+          "guest": "Гість",
+          "table": "Стіл",
+          "date": "Дата",
+          "time": "Час",
+          "duration": "Тривалість",
+          "guests": "Гості",
+          "summary": "Підсумок"
+        },
+        "time": {
+          "startingFrom": "Починаючи з {{time}}",
+          "loading": "Завантажуємо доступні слоти…",
+          "tableNotFound": "Стіл не знайдено",
+          "noSlots": "Немає доступних слотів",
+          "unavailable": "Поточний час: {{time}} (неможливо перевірити доступність)"
+        },
+        "duration": {
+          "unit": "хв",
+          "error": "Обрану тривалість неможливо повністю забронювати. Скоротіть час або змініть початок."
+        },
+        "summary": "{{start}} – {{end}} ({{minutes}} хв)",
+        "buttons": {
+          "cancel": "Скасувати",
+          "save": "Зберегти",
+          "saving": "Зберігаємо…"
+        },
+        "errors": {
+          "generic": "Не вдалося змінити бронювання"
+        }
+      },
+      "moveModal": {
+        "title": "Пересадити бронювання",
+        "summary": "{{name}} · Стіл {{table}} · {{guests}} гостей",
+        "labels": {
+          "guest": "Гість",
+          "target": "Новий стіл"
+        },
+        "targetPlaceholder": "Оберіть стіл…",
+        "buttons": {
+          "cancel": "Скасувати",
+          "move": "Пересадити",
+          "moving": "Пересаджуємо…"
+        },
+        "errors": {
+          "generic": "Не вдалося пересадити гостя"
+        }
+      },
+      "actions": {
+        "openTable": "Не вдалося відкрити стіл",
+        "activateReservation": "Не вдалося активувати бронювання",
+        "closeCheck": "Не вдалося закрити рахунок"
+      }
+    },
     "floor": {
       "entities": {
         "tableSquare": "Квадратний столик",

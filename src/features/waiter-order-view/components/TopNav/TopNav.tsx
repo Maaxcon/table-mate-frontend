@@ -2,6 +2,7 @@ import { useEffect, useState } from "react"
 import { Link } from "react-router-dom"
 import type { Zone } from "@/features/reservation/api"
 import "./TopNav.css"
+import { useWaiterStrings } from "../../strings"
 
 interface TopNavProps {
   occupiedCount: number
@@ -39,6 +40,7 @@ export function TopNav({
   onZoneChange,
 }: TopNavProps) {
   const currentTime = useCurrentTime()
+  const strings = useWaiterStrings().topNav
 
   return (
     <nav className="top-nav">
@@ -48,13 +50,13 @@ export function TopNav({
             <span className="top-nav__logo-dot" />
           </span>
           <div className="top-nav__brand-copy">
-            <span className="top-nav__brand-title">LIVE OCCUPANCY</span>
-            <span className="top-nav__brand-subtitle">STATION · FLOOR</span>
+            <span className="top-nav__brand-title">{strings.brandTitle}</span>
+            <span className="top-nav__brand-subtitle">{strings.brandSubtitle}</span>
           </div>
         </div>
 
         {zones.length > 0 && (
-          <div className="top-nav__zones" role="group" aria-label="Dining rooms">
+          <div className="top-nav__zones" role="group" aria-label={strings.zonesAria}>
             {zones.map((zone) => (
               <button
                 key={zone.public_id}
@@ -73,26 +75,26 @@ export function TopNav({
       <div className="top-nav__right">
         <div className="top-nav__stats">
           <div className="top-nav__stat">
-            <span className="top-nav__sr-only">Occupied tables</span>
+            <span className="top-nav__sr-only">{strings.stats.occupied.sr}</span>
             <span className="top-nav__stat-chip top-nav__stat-chip--occupied" aria-hidden="true" />
             <span className="top-nav__stat-label" aria-hidden="true">
-              OCCUPIED
+              {strings.stats.occupied.label}
             </span>
             <span className="top-nav__stat-value">{occupiedCount}</span>
           </div>
           <div className="top-nav__stat">
-            <span className="top-nav__sr-only">Reserved tables</span>
+            <span className="top-nav__sr-only">{strings.stats.reserved.sr}</span>
             <span className="top-nav__stat-chip top-nav__stat-chip--reserved" aria-hidden="true" />
             <span className="top-nav__stat-label" aria-hidden="true">
-              RESERVED
+              {strings.stats.reserved.label}
             </span>
             <span className="top-nav__stat-value">{reservedCount}</span>
           </div>
           <div className="top-nav__stat">
-            <span className="top-nav__sr-only">Free tables</span>
+            <span className="top-nav__sr-only">{strings.stats.free.sr}</span>
             <span className="top-nav__stat-chip top-nav__stat-chip--free" aria-hidden="true" />
             <span className="top-nav__stat-label" aria-hidden="true">
-              FREE
+              {strings.stats.free.label}
             </span>
             <span className="top-nav__stat-value">{freeCount}</span>
           </div>
@@ -100,17 +102,17 @@ export function TopNav({
 
         <div className="top-nav__time-wrap">
           <span className="top-nav__time">{currentTime}</span>
-          <span className="top-nav__time-label">LOCAL TIME</span>
+          <span className="top-nav__time-label">{strings.timeLabel}</span>
         </div>
 
         <span
           className={`top-nav__connection ${isConnected ? "top-nav__connection--connected" : ""}`}
           role="status"
-          aria-label={isConnected ? "Connected" : "Disconnected"}
+          aria-label={isConnected ? strings.connection.connected : strings.connection.disconnected}
         />
 
         <Link to="/staff/orders" className="top-nav__nav-link">
-          KITCHEN
+          {strings.navLink}
         </Link>
       </div>
     </nav>

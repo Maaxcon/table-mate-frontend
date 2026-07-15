@@ -902,6 +902,229 @@
         }
       }
     },
+    "waiter": {
+      "page": {
+        "loading": "Loading floor plan…",
+        "loadError": "Failed to load floor data.",
+        "cancelError": "Failed to cancel reservation.",
+        "tabs": {
+          "reservations": "Reservations",
+          "notifications": "Notifications"
+        },
+        "notifications": {
+          "unread": "{{count}} unread notifications"
+        }
+      },
+      "topNav": {
+        "brandTitle": "LIVE OCCUPANCY",
+        "brandSubtitle": "STATION · FLOOR",
+        "zonesAria": "Dining rooms",
+        "stats": {
+          "occupied": {
+            "label": "OCCUPIED",
+            "sr": "Occupied tables"
+          },
+          "reserved": {
+            "label": "RESERVED",
+            "sr": "Reserved tables"
+          },
+          "free": {
+            "label": "FREE",
+            "sr": "Free tables"
+          }
+        },
+        "timeLabel": "LOCAL TIME",
+        "connection": {
+          "connected": "Connected",
+          "disconnected": "Disconnected"
+        },
+        "navLink": "KITCHEN"
+      },
+      "floorPlan": {
+        "title": "FLOOR PLAN",
+        "status": {
+          "free": "FREE",
+          "reserved": "RESERVED",
+          "occupied": "OCCUPIED"
+        },
+        "overdue": "OVERDUE {{minutes}}M",
+        "reserved": {
+          "guestFallback": "Guest",
+          "eta": "in {{time}}"
+        },
+        "guestLabel": "GUEST {{slot}}"
+      },
+      "overlay": {
+        "title": "TABLE {{table}}",
+        "closeAria": "Close",
+        "status": {
+          "reserved": "Reserved",
+          "current": "Current party",
+          "capacity": "Capacity",
+          "details": "Details",
+          "nextBooking": "Next booking",
+          "next": "Next"
+        },
+        "values": {
+          "upcoming": "Upcoming",
+          "available": "Available",
+          "none": "None",
+          "guests": "{{count}} guests"
+        },
+        "overdue": {
+          "title": "Reservation time ended {{minutes}} min ago",
+          "message": "Close this table or prolong the booking.",
+          "prolong": "Prolong",
+          "close": "Close check"
+        },
+        "openPanel": {
+          "seatHint": "Seat a booked guest from the Reservations tab.",
+          "guestLabel": "Guests",
+          "action": "Open table",
+          "busy": "Opening…"
+        },
+        "tabs": {
+          "order": "Order",
+          "reservations": "Reservations"
+        },
+        "actions": {
+          "addItem": "Add item",
+          "moveTable": "Move table",
+          "closeCheck": "Close check",
+          "processPayment": "Process payment"
+        },
+        "empty": {
+          "order": "No dishes ordered yet.",
+          "orderMissing": "No active order for this table.",
+          "reservations": "No reservations for this table."
+        },
+        "guestSlot": "Guest {{slot}}",
+        "totals": {
+          "subtotal": "Subtotal",
+          "tax": "Tax",
+          "service": "Service",
+          "total": "Total"
+        },
+        "reservation": {
+          "tagSeated": "Seated now",
+          "seat": "Seat",
+          "modify": "Modify",
+          "cancel": "Cancel",
+          "new": "New reservation"
+        },
+        "voidReasons": {
+          "mispick": "Sent to wrong table",
+          "guestChangedMind": "Guest changed mind",
+          "qualityIssue": "Quality issue",
+          "outOfStock": "Out of stock"
+        }
+      },
+      "reservations": {
+        "sidebar": {
+          "title": "Next reservations",
+          "searchPlaceholder": "Search guests…",
+          "guestCount": "{{count}} guests",
+          "status": {
+            "pending": "Pending",
+            "active": "Active",
+            "completed": "Completed",
+            "cancelled": "Cancelled",
+            "unknown": "Unknown"
+          },
+          "actions": {
+            "modify": "Modify",
+            "cancel": "Cancel",
+            "report": "Generate shift report"
+          },
+          "confirm": {
+            "title": "Cancel reservation",
+            "message": "Are you sure you want to cancel this reservation? This action cannot be undone.",
+            "confirm": "Cancel reservation"
+          }
+        }
+      },
+      "orderModal": {
+        "title": "New order",
+        "searchPlaceholder": "Search menu…",
+        "categories": {
+          "all": "All"
+        },
+        "loading": "Loading…",
+        "empty": "No items found.",
+        "summary": {
+          "title": "Order summary",
+          "empty": "No items added yet.",
+          "total": "Total",
+          "submit": "Send to kitchen",
+          "submitting": "Sending…"
+        },
+        "removeAria": "Remove",
+        "guestOption": "Guest {{slot}}",
+        "commentPlaceholder": "Comment…"
+      },
+      "closeCheck": {
+        "title": "Close check",
+        "message": "There is no payment system yet. Closing the check will end the visit and free the table. Make sure the guests have paid before you continue.",
+        "cancel": "Cancel",
+        "confirm": "Close check",
+        "confirming": "Closing…",
+        "closeAria": "Close"
+      },
+      "modifyModal": {
+        "title": "Modify reservation",
+        "labels": {
+          "guest": "Guest",
+          "table": "Table",
+          "date": "Date",
+          "time": "Time",
+          "duration": "Duration",
+          "guests": "Guests",
+          "summary": "Summary"
+        },
+        "time": {
+          "startingFrom": "Starting from {{time}}",
+          "loading": "Loading available slots…",
+          "tableNotFound": "Table not found",
+          "noSlots": "No available slots",
+          "unavailable": "Current: {{time}} (unable to load availability)"
+        },
+        "duration": {
+          "unit": "min",
+          "error": "The selected duration is not fully available. Choose a shorter duration or different start time."
+        },
+        "summary": "{{start}} – {{end}} ({{minutes}} min)",
+        "buttons": {
+          "cancel": "Cancel",
+          "save": "Save",
+          "saving": "Saving…"
+        },
+        "errors": {
+          "generic": "Failed to modify reservation"
+        }
+      },
+      "moveModal": {
+        "title": "Move reservation",
+        "summary": "{{name}} · Table {{table}} · {{guests}} guests",
+        "labels": {
+          "guest": "Guest",
+          "target": "Target table"
+        },
+        "targetPlaceholder": "Select a table…",
+        "buttons": {
+          "cancel": "Cancel",
+          "move": "Move",
+          "moving": "Moving…"
+        },
+        "errors": {
+          "generic": "Failed to move table"
+        }
+      },
+      "actions": {
+        "openTable": "Failed to open table",
+        "activateReservation": "Failed to activate reservation",
+        "closeCheck": "Failed to close the check"
+      }
+    },
     "floor": {
       "entities": {
         "tableSquare": "Square Table",
