@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useReducer, useRef } from "react"
 import { addCartItem, deleteCartItem, fetchCartItems, updateCartItem } from "@/features/menu/api"
 import type { CartItemResponse, MenuItem } from "@/features/menu/types"
-import { menuStrings } from "@/features/menu/strings"
+import { useMenuStrings } from "@/features/menu/strings"
 
 // The bits of a menu item a cart line needs to render. Satisfied both by a full
 // MenuItem (from the browsed list) and by the cart line's own snapshot.
@@ -139,21 +139,23 @@ function isAuthError(err: unknown): boolean {
 function getUnavailableMessage(
   menuItemId: string | undefined,
   itemsById: Record<string, MenuItem>,
+  ms: ReturnType<typeof useMenuStrings>,
 ): string {
   if (!menuItemId) {
-    return menuStrings.cart.unavailable(menuStrings.cart.unknownItem)
+    return ms.cart.unavailable(ms.cart.unknownItem)
   }
-  const name = itemsById[menuItemId]?.name ?? menuStrings.cart.unknownItem
-  return menuStrings.cart.unavailable(name)
+  const name = itemsById[menuItemId]?.name ?? ms.cart.unknownItem
+  return ms.cart.unavailable(name)
 }
 
 function resolveCartError(
   err: unknown,
   fallback: string,
   info: { menuItemId?: string; itemsById: Record<string, MenuItem> },
+  ms: ReturnType<typeof useMenuStrings>,
 ): string {
   if (isUnavailableError(err)) {
-    return getUnavailableMessage(info.menuItemId, info.itemsById)
+    return getUnavailableMessage(info.menuItemId, info.itemsById, ms)
   }
   return err instanceof Error ? err.message : fallback
 }
@@ -186,6 +188,7 @@ export function useCart({
   reserved,
   onAuthError,
 }: UseCartOptions): UseCartResult {
+  const menuStrings = useMenuStrings()
   const [state, dispatch] = useReducer(reducer, initialState)
   const initialFetchDone = useRef(false)
 
@@ -220,7 +223,7 @@ export function useCart({
       }
       dispatch({
         type: "SET_ERROR",
-        error: resolveCartError(err, fallback, { menuItemId, itemsById }),
+        error: resolveCartError(err, fallback, { menuItemId, itemsById }, menuStrings),
         itemId,
       })
     },
@@ -241,6 +244,7 @@ export function useCart({
         dispatch({
           type: "SET_ERROR",
           error: err instanceof Error ? err.message : menuStrings.cart.errorFetch,
+          itemId: null,
         })
       }
     } finally {

@@ -3,11 +3,12 @@ import { useNavigate } from "react-router-dom"
 import Divider from "@/components/Divider"
 import { AuthHero, GuestAccess, SocialAuthGroup } from "@/features/auth/components"
 import { useGoogleRedirectAuth } from "@/features/auth/hooks"
-import { authStrings } from "@/features/auth/strings"
+import { useAuthStrings } from "@/features/auth/strings"
 import AuthLayout from "@/layouts/AuthLayout"
 import "./GreetingPage.css"
 
 function GreetingPage() {
+  const authStrings = useAuthStrings()
   const navigate = useNavigate()
   const { googleFeedback, googleFeedbackType, handleGoogleLogin, loading } = useGoogleRedirectAuth()
   const handleContinueAsGuest = useCallback(() => navigate("/restaurants"), [navigate])

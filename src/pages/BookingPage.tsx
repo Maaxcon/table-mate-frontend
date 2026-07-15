@@ -15,7 +15,7 @@ import {
   localDateKey,
   todayInTz,
 } from "@/features/reservation/utils"
-import { bookStrings } from "@/features/reservation/strings"
+import { useBookStrings } from "@/features/reservation/strings"
 import { useBookingData } from "@/features/reservation/hooks/useBookingData"
 import { useFloorSubscription } from "@/features/reservation/hooks/useFloorSubscription"
 import type {
@@ -29,6 +29,7 @@ import "./BookingPage.css"
 type Tab = "floor" | "bookings"
 
 export function BookingPage() {
+  const bookStrings = useBookStrings()
   const { public_restaurant_id } = useParams<{ public_restaurant_id: string }>()
   const navigate = useNavigate()
   const user = useAppSelector((state) => state.auth.user)

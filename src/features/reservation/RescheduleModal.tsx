@@ -5,7 +5,7 @@ import { fetchAvailableSlots, fetchRestaurantSettings, modifyReservation } from 
 import { DurationInput } from "./DurationInput"
 import { GuestStepper } from "./GuestStepper"
 import { SlotSummary } from "./SlotSummary"
-import { bookStrings } from "./strings"
+import { useBookStrings } from "./strings"
 import { TimeSlotGrid } from "./TimeSlotGrid"
 import {
   DAY_NAMES,
@@ -46,6 +46,7 @@ interface RescheduleModalProps {
 // computed in the browser's zone and then stuck.
 export function RescheduleModal(props: RescheduleModalProps) {
   const { workingHours, timeZone, restaurantId, onClose } = props
+  const bookStrings = useBookStrings()
   const [fetched, setFetched] = useState<{
     workingHours: Record<string, WorkingHoursDay> | null
     timeZone: string | null
@@ -111,6 +112,7 @@ function RescheduleForm({
   onClose,
   onSuccess,
 }: RescheduleModalProps) {
+  const bookStrings = useBookStrings()
   const effectiveTimeZone = timeZone ?? null
 
   const currentStartTime = formatTimeInTz(currentStart, effectiveTimeZone)

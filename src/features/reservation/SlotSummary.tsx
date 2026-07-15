@@ -1,4 +1,4 @@
-import { bookStrings } from "./strings"
+import { useBookStrings } from "./strings"
 
 interface SlotSummaryProps {
   title: string
@@ -20,6 +20,7 @@ export function SlotSummary({
   duration,
   guests,
 }: SlotSummaryProps) {
+  const bookStrings = useBookStrings()
   return (
     <section className="book-modal__section book-modal__section--summary">
       <h3 className="book-modal__section-title">{title}</h3>

@@ -4,7 +4,7 @@ import type { Table } from "@/types/api/types.gen"
 import { deserializeLayout } from "@/features/editor/types"
 import type { EditorEntity, LayoutPayload } from "@/features/editor/types"
 import { FloorPlanView } from "@/features/floorplan/FloorPlanView"
-import { bookStrings } from "@/features/reservation/strings"
+import { useBookStrings } from "@/features/reservation/strings"
 import { renderObstacle, renderPortal, renderThreshold } from "./FloorDecor"
 import { FloorTile } from "./FloorTile"
 import { useFloorZoomPan } from "./useFloorZoomPan"
@@ -57,6 +57,7 @@ function buildTile(
   entity: EditorEntity,
   viewByPublicId: Map<string, TableView>,
   guests: number,
+  freeLabel: string,
 ): Tile {
   const table = matchEntityTable(lookups, entity)
   const view = table ? viewByPublicId.get(table.public_id) : undefined
@@ -68,7 +69,7 @@ function buildTile(
     capacity,
     shape: entity.type === "table-round" ? "round" : "square",
     tone: view?.tone ?? "free",
-    label: view?.label ?? bookStrings.floorPlan.status.free,
+    label: view?.label ?? freeLabel,
     bookable: view?.bookable ?? false,
     perfect: view?.perfect ?? (capacity === guests && Boolean(table)),
   }
@@ -111,6 +112,7 @@ export function FloorMap({
   statusFilter: Tone | null
   dimTaken: boolean
 }) {
+  const bookStrings = useBookStrings()
   const viewportRef = useRef<HTMLDivElement>(null)
   const [viewportWidth, setViewportWidth] = useState(0)
   const [viewportHeight, setViewportHeight] = useState(0)
@@ -152,12 +154,14 @@ export function FloorMap({
   // renderEntity fallback covers the rare id-less entity, where
   // deserializeLayout mints a random id per parse).
   const tileByEntityId = useMemo(() => {
+    const freeLabel = bookStrings.floorPlan.status.free
     const tiles = new Map<string, Tile>()
     for (const entity of deserializeLayout(payload)) {
       if (entity.type === "table-square" || entity.type === "table-round") {
-        tiles.set(entity.id, buildTile(lookups, entity, viewByPublicId, guests))
+        tiles.set(entity.id, buildTile(lookups, entity, viewByPublicId, guests, freeLabel))
       }
     }
+    return tiles
     return tiles
   }, [payload, lookups, viewByPublicId, guests])
 
@@ -169,7 +173,8 @@ export function FloorMap({
     ) => {
       if (entity.type === "table-square" || entity.type === "table-round") {
         const tile =
-          tileByEntityId.get(entity.id) ?? buildTile(lookups, entity, viewByPublicId, guests)
+          tileByEntityId.get(entity.id) ??
+          buildTile(lookups, entity, viewByPublicId, guests, bookStrings.floorPlan.status.free)
         return (
           <FloorTile
             key={entity.id}

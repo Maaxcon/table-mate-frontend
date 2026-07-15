@@ -1,0 +1,355 @@
+{
+  "auth": {
+    "hero": {
+      "logoAlt": "TableMate",
+      "subtitle": "Discover, book, and dine. Effortlessly."
+    },
+    "socialAuth": {
+      "title": "Get started",
+      "text": "Unlock one-tap booking, favorites, and history.",
+      "googleButton": "Continue with Google",
+      "googleButtonLoading": "Connecting…",
+      "or": "or"
+    },
+    "guest": {
+      "button": "Continue as Guest",
+      "noteLine1": "Anonymous access to maps and menus.",
+      "noteLine2": "Registration required for booking."
+    },
+    "footer": "Your table, one tap away."
+  },
+  "menu": {
+    "header": {
+      "signIn": "Увійти",
+      "signOut": "Вийти",
+      "openCabinet": "Open my cabinet",
+      "book": "Book the table",
+      "adminArea": "До адмін-панелі",
+      "waiterArea": "До робочого залу"
+    },
+    "hero": {
+      "label": "Menu",
+      "tagline": "Fresh dishes, fast ordering, cozy taste.",
+      "openNow": "Відчинено",
+      "closedNow": "Зачинено"
+    },
+    "controls": {
+      "searchPlaceholder": "Search dishes...",
+      "sortAria": "Сортування",
+      "sortTitleDefault": "За замовчуванням",
+      "sortTitlePriceAsc": "Ціна: від низької",
+      "sortTitlePriceDesc": "Ціна: від високої",
+      "sortLabelDefault": "Сорт.",
+      "sortLabelPriceAsc": "↑ Ціна",
+      "sortLabelPriceDesc": "↓ Ціна",
+      "cartAria": "Кошик"
+    },
+    "grid": {
+      "loadMore": "Load more",
+      "loadingMore": "Loading...",
+      "noResults": "No results for \"{{query}}\".",
+      "noItems": "No items in this category."
+    },
+    "cartBar": {
+      "openAria": "Відкрити кошик",
+      "action": "Переглянути кошик",
+      "dismiss": "Сховати",
+      "items_one": "{{count}} позиція",
+      "items_few": "{{count}} позиції",
+      "items_many": "{{count}} позицій",
+      "items_other": "{{count}} позицій"
+    },
+    "footer": {
+      "brand": "TableMate",
+      "tagline": "Цифрове меню для ресторанів",
+      "rights": "© {{year}} {{name}}. Усі права захищено.",
+      "rightsDefault": "© {{year}} TableMate. Усі права захищено."
+    },
+    "card": {
+      "decrease": "Зменшити кількість",
+      "increase": "Збільшити кількість",
+      "addToCart": "Додати {{name}} до кошика",
+      "unavailable": "Недоступно",
+      "like": "Лайкнути {{name}}",
+      "unlike": "Прибрати лайк з {{name}}",
+      "likes": "{{count}} likes"
+    },
+    "cart": {
+      "title": "Кошик",
+      "close": "Закрити",
+      "confirmTitle": "Підтвердити замовлення?",
+      "positions_one": "{{count}} позиція",
+      "positions_few": "{{count}} позиції",
+      "positions_many": "{{count}} позицій",
+      "positions_other": "{{count}} позицій",
+      "confirmYes": "Так, замовити",
+      "confirmNo": "Скасувати",
+      "confirmedTitle": "Замовлення прийнято!",
+      "confirmedSub": "Офіціант отримав ваше замовлення",
+      "submitting": "Оформлюємо...",
+      "checkoutError": "Не вдалося оформити замовлення. Спробуйте ще раз.",
+      "changedTitle": "Деякі страви стали недоступні",
+      "changedSub": "Ці позиції прибрано з кошика. Перевірте замовлення й підтвердьте ще раз:",
+      "confirmRemaining": "Підтвердити решту",
+      "backToCart": "Назад до кошика",
+      "receiptLabel": "Ваше замовлення",
+      "subtotal": "Сума",
+      "tax": "Податок",
+      "serviceCharge": "Сервісний збір",
+      "total": "Разом",
+      "emptyTitle": "Кошик порожній",
+      "emptySub": "Додайте страви з меню",
+      "perUnit": "/ шт",
+      "decrease": "Зменшити",
+      "increase": "Збільшити",
+      "checkout": "Оформити замовлення",
+      "pay": "Сплатити",
+      "billTitle": "Рахунок",
+      "billToPay": "До сплати",
+      "billSelectAll": "Вибрати все",
+      "billPaidLabel": "Оплачено",
+      "billAllPaid": "Усе оплачено",
+      "billNoneToPay": "Немає позицій до сплати",
+      "billLoading": "Завантажуємо рахунок...",
+      "billPaidOf": "Оплачено {{paid}} з {{total}}",
+      "billSelected": "Обрано",
+      "billProgressLabel": "Прогрес оплати рахунку",
+      "paying": "Оплачуємо...",
+      "payError": "Оплата не пройшла. Спробуйте ще раз.",
+      "groupedBy": "Замовлення",
+      "you": "Ви",
+      "errorAdd": "Не вдалося додати страву",
+      "errorUpdate": "Не вдалося оновити кількість",
+      "errorRemove": "Не вдалося видалити страву",
+      "errorFetch": "Не вдалося завантажити кошик",
+      "requiresActiveTable": "Кошик доступний тільки зі столика або бронювання.",
+      "initializing": "Підключаємо кошик...",
+      "sessionUnavailable": "Активний кошик для цього столика не знайдено. Попросіть офіціанта відкрити столик.",
+      "noActiveReservation": "На цьому столику немає активного бронювання. Зверніться до офіціанта, щоб відкрити столик.",
+      "reservationNotYetActive": "Цей столик заброньований на {{time}}. Зверніться до офіціанта.",
+      "reservationNotYetActiveDefault": "Цей столик уже заброньований. Зверніться до офіціанта.",
+      "unavailable": "\"{{name}}\" більше недоступна",
+      "retry": "Спробувати знову",
+      "connecting": "Підключення...",
+      "connected": "Підключено",
+      "disconnected": "Відключено",
+      "sessionExpired": "Сесія завершена — відкрийте стіл заново",
+      "lobbyTitle": "Ласкаво просимо!",
+      "lobbySubtitle": "Як до вас звертатися?",
+      "lobbyPlaceholder": "Ваше ім'я",
+      "lobbyJoin": "Приєднатися",
+      "lobbySkipped": "Пропустити",
+      "guestPrefix": "Гість",
+      "slotLabel": "Гість {{slot}}",
+      "unknownItem": "Страва"
+    },
+    "item": {
+      "ingredients": "Склад",
+      "allergens": "Алергени",
+      "added": "Додано",
+      "addToCart": "До кошика",
+      "unavailable": "Недоступно",
+      "close": "Close",
+      "commentLabel": "Коментар (необов'язково)",
+      "commentPlaceholder": "Напр., без цибулі"
+    },
+    "info": {
+      "heading": "Про заклад",
+      "hours": "Графік роботи",
+      "openNow": "Відчинено",
+      "closedNow": "Зачинено",
+      "contacts": "Контакти",
+      "social": "Соцмережі",
+      "call": "Подзвонити",
+      "viewOnMap": "Переглянути на мапі",
+      "currency": "Валюта: {{code}}"
+    },
+    "weightGrams": "{{grams}} г",
+    "dayShort": {
+      "mon": "Пн",
+      "tue": "Вт",
+      "wed": "Ср",
+      "thu": "Чт",
+      "fri": "Пт",
+      "sat": "Сб",
+      "sun": "Нд"
+    }
+  },
+  "reservation": {
+    "pageTitle": "Бронювання",
+    "backToMenu": "До меню",
+    "tabs": {
+      "floor": "План залу",
+      "bookings": "Мої броні"
+    },
+    "loading": "Завантаження…",
+    "retry": "Спробувати ще раз",
+    "loginCta": {
+      "text": "Щоб забронювати стіл, потрібно увійти.",
+      "login": "Увійти",
+      "cancel": "Скасувати"
+    },
+    "errors": {
+      "floor": "Не вдалося завантажити план залу.",
+      "bookings": "Не вдалося завантажити ваші броні."
+    },
+    "floorPlan": {
+      "title": "План залу",
+      "status": {
+        "free": "Вільно",
+        "reserved": "Заброньовано",
+        "occupied": "Зайнято"
+      },
+      "seats_one": "{{count}} місце",
+      "seats_few": "{{count}} місця",
+      "seats_many": "{{count}} місць",
+      "seats_other": "{{count}} місць",
+      "tableShort": "Стіл",
+      "choose": "Обрати",
+      "tableAria": "Стіл {{number}}, {{seats}}, {{status}}",
+      "filterAll": "Усі",
+      "filterFree": "Вільні",
+      "noFree": "Немає вільних столів на цей час",
+      "noTables": "У цій зоні поки немає столів",
+      "showAll": "Показати всі",
+      "statusSmall": "Замало місць",
+      "freeCount": "вільно на {{time}}",
+      "freeCountDefault": "вільно",
+      "perfectFit": "Саме на {{guests}}",
+      "zoomIn": "Збільшити",
+      "zoomOut": "Зменшити",
+      "zoomFit": "Показати весь зал",
+      "showMap": "На плані",
+      "closeMap": "Закрити план",
+      "freeShort": "вільно",
+      "slot": {
+        "title": "Коли вам зручно?",
+        "hint": "Оберіть дату, час і кількість гостей — у плані залу підсвітяться столи, вільні саме на цей час.",
+        "date": "Дата",
+        "time": "Час",
+        "guests": "Гості",
+        "noTimes": "Цього дня немає вільного часу",
+        "today": "Сьогодні"
+      }
+    },
+    "modal": {
+      "title": "Бронь столу {{table}}",
+      "confirmedTitle": "Бронь підтверджено",
+      "today": "Сьогодні",
+      "sections": {
+        "date": "Дата",
+        "time": "Час",
+        "table": "Стіл",
+        "contacts": "Контакти",
+        "duration": "Тривалість (хв)",
+        "guests": "Гості",
+        "guestName": "Ім'я гостя",
+        "notes": "Нотатки (необов'язково)",
+        "confirmation": "Підтвердження"
+      },
+      "flow": {
+        "steps": ["Дата і час", "Стіл", "Контакти", "Підтвердження"],
+        "stepLabel": "Крок {{current}} з {{total}}",
+        "back": "Назад",
+        "next": "Далі",
+        "profileHint": "Контакти акаунта будуть використані для цієї броні.",
+        "notesHint": "Додайте ім'я, телефон або побажання для команди ресторану.",
+        "notesFallback": "Без нотаток"
+      },
+      "tzNote": "Час показано за часом ресторану ({{tz}})",
+      "slots": {
+        "loading": "Завантаження вільних слотів…",
+        "closed": "Цього дня ресторан зачинено",
+        "none": "Немає вільних слотів"
+      },
+      "guestNamePlaceholder": "Ім'я гостя",
+      "notesPlaceholder": "Ім'я гостя, телефон, особливі побажання…",
+      "summary": {
+        "table": "Стіл",
+        "date": "Дата",
+        "time": "Час",
+        "duration": "Тривалість",
+        "guests": "Гості"
+      },
+      "durationUnit": "хв",
+      "success": "Вашу бронь столу {{table}} створено.",
+      "ticket": {
+        "label": "Електронна бронь",
+        "tableLabel": "Стіл",
+        "reservationNumber": "Номер броні",
+        "addToCalendar": "Додати в календар",
+        "share": "Поділитися",
+        "shareCopied": "Деталі броні скопійовано",
+        "shareUnsupported": "Поділитися не вдалося на цьому пристрої",
+        "done": "Готово"
+      },
+      "actions": {
+        "ok": "Гаразд",
+        "cancel": "Скасувати",
+        "confirm": "Забронювати",
+        "submitting": "Бронюємо…"
+      },
+      "validation": {
+        "closingExceeded": "Час завершення перевищує час закриття ({{close}})",
+        "durationUnavailable": "Обрана тривалість недоступна повністю в цей час. Оберіть коротшу тривалість або інший початок.",
+        "guestNameRequired": "Вкажіть ім'я гостя"
+      },
+      "createFailed": "Не вдалося створити бронь"
+    },
+    "myBookings": {
+      "title": "Мої броні",
+      "empty": "Броней поки немає.",
+      "emptyCta": "Забронювати стіл",
+      "tzNote": "Час показано за часом ресторану ({{tz}})",
+      "pastShow": "Показати минулі ({{count}})",
+      "pastHide": "Сховати минулі",
+      "cancelFailed": "Не вдалося скасувати",
+      "status": {
+        "pending": "Очікує",
+        "active": "Активна",
+        "completed": "Завершена",
+        "cancelled": "Скасована"
+      },
+      "phase": {
+        "upcoming": "Незабаром",
+        "in_progress": "Триває",
+        "past": "Минула"
+      },
+      "card": {
+        "table": "Стіл {{table}}"
+      },
+      "actions": {
+        "modify": "Змінити",
+        "cancel": "Скасувати",
+        "cancelling": "Скасування…"
+      }
+    },
+    "reschedule": {
+      "title": "Змінити бронь столу {{table}}",
+      "updatedTitle": "Бронь оновлено",
+      "updatedText": "Вашу бронь столу {{table}} оновлено.",
+      "sections": {
+        "date": "Дата",
+        "time": "Час",
+        "duration": "Тривалість (хв)",
+        "guests": "Гості",
+        "summary": "Підсумок"
+      },
+      "startingFrom": "Початок о {{time}}",
+      "actions": {
+        "cancel": "Скасувати",
+        "save": "Зберегти",
+        "saving": "Збереження…"
+      },
+      "modifyFailed": "Не вдалося змінити бронь"
+    },
+    "cancel": {
+      "title": "Скасувати бронь?",
+      "message": "Ви впевнені, що хочете скасувати цю бронь?",
+      "close": "Закрити",
+      "keep": "Залишити",
+      "confirm": "Скасувати бронь",
+      "submitting": "Скасування…"
+    }
+  }
+}

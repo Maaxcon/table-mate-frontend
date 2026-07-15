@@ -1,0 +1,350 @@
+{
+  "auth": {
+    "hero": {
+      "logoAlt": "TableMate",
+      "subtitle": "Discover, book, and dine. Effortlessly."
+    },
+    "socialAuth": {
+      "title": "Get started",
+      "text": "Unlock one-tap booking, favorites, and history.",
+      "googleButton": "Continue with Google",
+      "googleButtonLoading": "Connecting…",
+      "or": "or"
+    },
+    "guest": {
+      "button": "Continue as Guest",
+      "noteLine1": "Anonymous access to maps and menus.",
+      "noteLine2": "Registration required for booking."
+    },
+    "footer": "Your table, one tap away."
+  },
+  "menu": {
+    "header": {
+      "signIn": "Sign in",
+      "signOut": "Sign out",
+      "openCabinet": "My cabinet",
+      "book": "Book a table",
+      "adminArea": "Admin panel",
+      "waiterArea": "Waiter area"
+    },
+    "hero": {
+      "label": "Menu",
+      "tagline": "Fresh dishes, fast ordering, cozy taste.",
+      "openNow": "Open now",
+      "closedNow": "Closed"
+    },
+    "controls": {
+      "searchPlaceholder": "Search dishes...",
+      "sortAria": "Sorting",
+      "sortTitleDefault": "Default",
+      "sortTitlePriceAsc": "Price: Low to High",
+      "sortTitlePriceDesc": "Price: High to Low",
+      "sortLabelDefault": "Sort",
+      "sortLabelPriceAsc": "↑ Price",
+      "sortLabelPriceDesc": "↓ Price",
+      "cartAria": "Cart"
+    },
+    "grid": {
+      "loadMore": "Load more",
+      "loadingMore": "Loading...",
+      "noResults": "No results for \"{{query}}\".",
+      "noItems": "No items in this category."
+    },
+    "cartBar": {
+      "openAria": "Open cart",
+      "action": "View cart",
+      "dismiss": "Dismiss",
+      "items_one": "{{count}} item",
+      "items_other": "{{count}} items"
+    },
+    "footer": {
+      "brand": "TableMate",
+      "tagline": "Digital menu for restaurants",
+      "rights": "© {{year}} {{name}}. All rights reserved.",
+      "rightsDefault": "© {{year}} TableMate. All rights reserved."
+    },
+    "card": {
+      "decrease": "Decrease quantity",
+      "increase": "Increase quantity",
+      "addToCart": "Add {{name}} to cart",
+      "unavailable": "Unavailable",
+      "like": "Like {{name}}",
+      "unlike": "Unlike {{name}}",
+      "likes_one": "{{count}} like",
+      "likes_other": "{{count}} likes"
+    },
+    "cart": {
+      "title": "Cart",
+      "close": "Close",
+      "confirmTitle": "Confirm order?",
+      "positions_one": "{{count}} item",
+      "positions_other": "{{count}} items",
+      "confirmYes": "Yes, order",
+      "confirmNo": "Cancel",
+      "confirmedTitle": "Order received!",
+      "confirmedSub": "The waiter has received your order",
+      "submitting": "Placing order...",
+      "checkoutError": "Could not place order. Please try again.",
+      "changedTitle": "Some items are no longer available",
+      "changedSub": "These items were removed from your cart. Please review and confirm again:",
+      "confirmRemaining": "Confirm remaining",
+      "backToCart": "Back to cart",
+      "receiptLabel": "Your order",
+      "subtotal": "Subtotal",
+      "tax": "Tax",
+      "serviceCharge": "Service charge",
+      "total": "Total",
+      "emptyTitle": "Cart is empty",
+      "emptySub": "Add items from the menu",
+      "perUnit": "/ pc",
+      "decrease": "Decrease",
+      "increase": "Increase",
+      "checkout": "Place order",
+      "pay": "Pay",
+      "billTitle": "Bill",
+      "billToPay": "To pay",
+      "billSelectAll": "Select all",
+      "billPaidLabel": "Paid",
+      "billAllPaid": "All paid",
+      "billNoneToPay": "No items to pay",
+      "billLoading": "Loading bill...",
+      "billPaidOf": "Paid {{paid}} of {{total}}",
+      "billSelected": "Selected",
+      "billProgressLabel": "Bill payment progress",
+      "paying": "Paying...",
+      "payError": "Payment failed. Please try again.",
+      "groupedBy": "Order",
+      "you": "You",
+      "errorAdd": "Failed to add item",
+      "errorUpdate": "Failed to update quantity",
+      "errorRemove": "Failed to remove item",
+      "errorFetch": "Failed to load cart",
+      "requiresActiveTable": "Cart is available only from a table or reservation.",
+      "initializing": "Connecting cart...",
+      "sessionUnavailable": "No active cart found for this table. Ask a waiter to open the table.",
+      "noActiveReservation": "No active reservation at this table. Contact a waiter to open the table.",
+      "reservationNotYetActive": "This table is reserved for {{time}}. Contact a waiter.",
+      "reservationNotYetActiveDefault": "This table is already reserved. Contact a waiter.",
+      "unavailable": "\"{{name}}\" is no longer available",
+      "retry": "Try again",
+      "connecting": "Connecting...",
+      "connected": "Connected",
+      "disconnected": "Disconnected",
+      "sessionExpired": "Session expired — reopen the table",
+      "lobbyTitle": "Welcome!",
+      "lobbySubtitle": "What's your name?",
+      "lobbyPlaceholder": "Your name",
+      "lobbyJoin": "Join",
+      "lobbySkipped": "Skip",
+      "guestPrefix": "Guest",
+      "slotLabel": "Guest {{slot}}",
+      "unknownItem": "Item"
+    },
+    "item": {
+      "ingredients": "Ingredients",
+      "allergens": "Allergens",
+      "added": "Added",
+      "addToCart": "Add to cart",
+      "unavailable": "Unavailable",
+      "close": "Close",
+      "commentLabel": "Comment (optional)",
+      "commentPlaceholder": "E.g., no onions"
+    },
+    "info": {
+      "heading": "About",
+      "hours": "Hours",
+      "openNow": "Open now",
+      "closedNow": "Closed",
+      "contacts": "Contacts",
+      "social": "Social",
+      "call": "Call",
+      "viewOnMap": "View on map",
+      "currency": "Currency: {{code}}"
+    },
+    "weightGrams": "{{grams}} g",
+    "dayShort": {
+      "mon": "Mon",
+      "tue": "Tue",
+      "wed": "Wed",
+      "thu": "Thu",
+      "fri": "Fri",
+      "sat": "Sat",
+      "sun": "Sun"
+    }
+  },
+  "reservation": {
+    "pageTitle": "Booking",
+    "backToMenu": "Back to menu",
+    "tabs": {
+      "floor": "Floor plan",
+      "bookings": "My bookings"
+    },
+    "loading": "Loading…",
+    "retry": "Try again",
+    "loginCta": {
+      "text": "You need to sign in to book a table.",
+      "login": "Sign in",
+      "cancel": "Cancel"
+    },
+    "errors": {
+      "floor": "Failed to load floor plan.",
+      "bookings": "Failed to load your bookings."
+    },
+    "floorPlan": {
+      "title": "Floor plan",
+      "status": {
+        "free": "Free",
+        "reserved": "Reserved",
+        "occupied": "Occupied"
+      },
+      "seats_one": "{{count}} seat",
+      "seats_other": "{{count}} seats",
+      "tableShort": "Table",
+      "choose": "Choose",
+      "tableAria": "Table {{number}}, {{seats}}, {{status}}",
+      "filterAll": "All",
+      "filterFree": "Free",
+      "noFree": "No free tables at this time",
+      "noTables": "No tables in this area yet",
+      "showAll": "Show all",
+      "statusSmall": "Too few seats",
+      "freeCount": "free at {{time}}",
+      "freeCountDefault": "free",
+      "perfectFit": "Perfect for {{guests}}",
+      "zoomIn": "Zoom in",
+      "zoomOut": "Zoom out",
+      "zoomFit": "Fit to view",
+      "showMap": "Show plan",
+      "closeMap": "Close plan",
+      "freeShort": "free",
+      "slot": {
+        "title": "When works for you?",
+        "hint": "Pick a date, time, and number of guests — the floor plan will highlight available tables.",
+        "date": "Date",
+        "time": "Time",
+        "guests": "Guests",
+        "noTimes": "No available times for this day",
+        "today": "Today"
+      }
+    },
+    "modal": {
+      "title": "Book table {{table}}",
+      "confirmedTitle": "Booking confirmed",
+      "today": "Today",
+      "sections": {
+        "date": "Date",
+        "time": "Time",
+        "table": "Table",
+        "contacts": "Contacts",
+        "duration": "Duration (min)",
+        "guests": "Guests",
+        "guestName": "Guest name",
+        "notes": "Notes (optional)",
+        "confirmation": "Confirmation"
+      },
+      "flow": {
+        "steps": ["Date & time", "Table", "Contacts", "Confirmation"],
+        "stepLabel": "Step {{current}} of {{total}}",
+        "back": "Back",
+        "next": "Next",
+        "profileHint": "Your account contacts will be used for this booking.",
+        "notesHint": "Add a name, phone number, or preferences for the restaurant team.",
+        "notesFallback": "No notes"
+      },
+      "tzNote": "Times shown in restaurant time ({{tz}})",
+      "slots": {
+        "loading": "Loading available slots…",
+        "closed": "Restaurant is closed on this day",
+        "none": "No available slots"
+      },
+      "guestNamePlaceholder": "Guest name",
+      "notesPlaceholder": "Guest name, phone, special requests…",
+      "summary": {
+        "table": "Table",
+        "date": "Date",
+        "time": "Time",
+        "duration": "Duration",
+        "guests": "Guests"
+      },
+      "durationUnit": "min",
+      "success": "Your booking for table {{table}} is confirmed.",
+      "ticket": {
+        "label": "E-ticket",
+        "tableLabel": "Table",
+        "reservationNumber": "Confirmation number",
+        "addToCalendar": "Add to calendar",
+        "share": "Share",
+        "shareCopied": "Booking details copied",
+        "shareUnsupported": "Sharing is not supported on this device",
+        "done": "Done"
+      },
+      "actions": {
+        "ok": "OK",
+        "cancel": "Cancel",
+        "confirm": "Book",
+        "submitting": "Booking…"
+      },
+      "validation": {
+        "closingExceeded": "End time exceeds closing time ({{close}})",
+        "durationUnavailable": "The selected duration is not fully available at this time. Choose a shorter duration or different start time.",
+        "guestNameRequired": "Guest name is required"
+      },
+      "createFailed": "Failed to create booking"
+    },
+    "myBookings": {
+      "title": "My bookings",
+      "empty": "No bookings yet.",
+      "emptyCta": "Book a table",
+      "tzNote": "Times shown in restaurant time ({{tz}})",
+      "pastShow": "Show past ({{count}})",
+      "pastHide": "Hide past",
+      "cancelFailed": "Failed to cancel",
+      "status": {
+        "pending": "Pending",
+        "active": "Active",
+        "completed": "Completed",
+        "cancelled": "Cancelled"
+      },
+      "phase": {
+        "upcoming": "Upcoming",
+        "in_progress": "In progress",
+        "past": "Past"
+      },
+      "card": {
+        "table": "Table {{table}}"
+      },
+      "actions": {
+        "modify": "Modify",
+        "cancel": "Cancel",
+        "cancelling": "Cancelling…"
+      }
+    },
+    "reschedule": {
+      "title": "Modify booking for table {{table}}",
+      "updatedTitle": "Booking updated",
+      "updatedText": "Your booking for table {{table}} has been updated.",
+      "sections": {
+        "date": "Date",
+        "time": "Time",
+        "duration": "Duration (min)",
+        "guests": "Guests",
+        "summary": "Summary"
+      },
+      "startingFrom": "Starts at {{time}}",
+      "actions": {
+        "cancel": "Cancel",
+        "save": "Save",
+        "saving": "Saving…"
+      },
+      "modifyFailed": "Failed to modify booking"
+    },
+    "cancel": {
+      "title": "Cancel booking?",
+      "message": "Are you sure you want to cancel this booking?",
+      "close": "Close",
+      "keep": "Keep",
+      "confirm": "Cancel booking",
+      "submitting": "Cancelling…"
+    }
+  }
+}

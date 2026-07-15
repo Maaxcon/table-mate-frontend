@@ -6,7 +6,7 @@ import { getTableVisualStatus } from "@/features/waiter-order-view/types"
 import { deserializeLayout, GRID } from "@/features/editor/types"
 import type { EditorEntity, LayoutPayload } from "@/features/editor/types"
 import type { Zone } from "@/features/reservation/api"
-import { bookStrings } from "@/features/reservation/strings"
+import { useBookStrings } from "@/features/reservation/strings"
 import { DEFAULT_GUESTS } from "@/features/reservation/utils"
 import { FloorCardList } from "./floor/FloorCardList"
 import { FloorMap } from "./floor/FloorMap"
@@ -94,6 +94,7 @@ export function CustomerFloorPlan({
   slotTime = null,
   payload = null,
 }: CustomerFloorPlanProps) {
+  const bookStrings = useBookStrings()
   const [currentTime, setCurrentTime] = useState(new Date())
   const [onlyFree, setOnlyFree] = useState(false)
   // Legend doubles as a filter: pick a status and the rest dim out.

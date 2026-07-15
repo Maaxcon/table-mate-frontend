@@ -5,10 +5,18 @@ import { CartDrawer } from "./CartDrawer"
 import { CartChangedError, type CheckoutResult } from "@/features/menu/api"
 import type { CartItemWithDetails } from "@/features/menu/hooks/useCart"
 import { formatAmount } from "@/features/menu/utils"
-import { menuStrings } from "@/features/menu/strings"
+import i18n from "@/i18n/config"
 import type { MenuItem } from "@/features/menu/types"
 
-const S = menuStrings.cart
+function cartKey(key: string, opts?: Record<string, unknown>) {
+  return i18n.t(`menu.cart.${key}`, opts)
+}
+const S = new Proxy({} as Record<string, string>, {
+  get(_, key: string) {
+    if (key === "confirmNo") return cartKey("confirmNo")
+    return cartKey(key)
+  },
+})
 
 function makeMenuItem(overrides: Partial<MenuItem> = {}): MenuItem {
   return {

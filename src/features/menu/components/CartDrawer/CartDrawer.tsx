@@ -17,7 +17,7 @@ import {
 } from "@/features/menu/api"
 import type { CartItemWithDetails } from "@/features/menu/hooks/useCart"
 import { formatAmount } from "@/features/menu/utils"
-import { menuStrings } from "@/features/menu/strings"
+import { useMenuStrings } from "@/features/menu/strings"
 import "./CartDrawer.css"
 
 type Props = {
@@ -64,9 +64,13 @@ function lineTotal(ci: CartItemWithDetails): number {
   return unitPrice(ci) * ci.quantity
 }
 
-function getGroupLabel(group: ItemGroup, displayName: string): string {
+function getGroupLabel(
+  group: ItemGroup,
+  displayName: string,
+  ms: ReturnType<typeof useMenuStrings>,
+): string {
   if (group.isMine) {
-    return displayName ? `${menuStrings.cart.you} · ${displayName}` : menuStrings.cart.you
+    return displayName ? `${ms.cart.you} · ${displayName}` : ms.cart.you
   }
 
   if (group.displayName) {
@@ -78,10 +82,10 @@ function getGroupLabel(group: ItemGroup, displayName: string): string {
   }
 
   if (group.guestSlot != null) {
-    return menuStrings.cart.slotLabel(group.guestSlot)
+    return ms.cart.slotLabel(group.guestSlot)
   }
 
-  return menuStrings.cart.groupedBy
+  return ms.cart.groupedBy
 }
 
 export function CartDrawer({
@@ -106,6 +110,7 @@ export function CartDrawer({
   onPayBill,
   onCartChanged,
 }: Props) {
+  const menuStrings = useMenuStrings()
   const [step, setStep] = useState<"cart" | "confirming" | "confirmed" | "changed" | "bill">("cart")
   const [confirmedItems, setConfirmedItems] = useState<CartItemWithDetails[]>([])
   const [confirmedTotals, setConfirmedTotals] = useState<ReceiptTotals>(EMPTY_TOTALS)
@@ -639,7 +644,7 @@ export function CartDrawer({
               {groupedItems.map((group) => (
                 <div key={group.key} className="cart-drawer__group">
                   <span className="cart-drawer__group-label">
-                    {getGroupLabel(group, displayName)}
+                    {getGroupLabel(group, displayName, menuStrings)}
                   </span>
                   <ul className="cart-drawer__group-list">
                     {group.items.map((ci) => (
