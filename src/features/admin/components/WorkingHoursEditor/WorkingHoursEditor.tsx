@@ -4,6 +4,7 @@ import {
   dayInvalid,
   hasInvalidWorkingHours,
 } from "@/features/admin/constants/workingHours"
+import { useAdminStrings } from "@/features/admin/strings"
 import "./hours.css"
 
 type WorkingHoursEditorProps = {
@@ -12,6 +13,7 @@ type WorkingHoursEditorProps = {
 }
 
 function WorkingHoursEditor({ value, onChange }: WorkingHoursEditorProps) {
+  const strings = useAdminStrings()
   const setDay = (key: WeekDay, open: string, close: string) => {
     onChange({ ...value, [key]: { open, close } })
   }
@@ -26,9 +28,10 @@ function WorkingHoursEditor({ value, onChange }: WorkingHoursEditorProps) {
 
   return (
     <div className="admin-field">
-      <span className="admin-field__label">Working hours</span>
+      <span className="admin-field__label">{strings.workingHours.label}</span>
       <div className="hours-editor">
-        {WEEK_DAYS.map(({ key, label }) => {
+        {WEEK_DAYS.map(({ key }) => {
+          const label = strings.workingHours.weekdays[key]
           const day = value[key]
           const isOpen = day != null
           const invalid = dayInvalid(day)
@@ -52,7 +55,7 @@ function WorkingHoursEditor({ value, onChange }: WorkingHoursEditorProps) {
                     type="time"
                     className={timeClass}
                     value={day.open}
-                    aria-label={`${label} opening time`}
+                    aria-label={strings.workingHours.openAria(label)}
                     aria-invalid={invalid}
                     onChange={(e) => setDay(key, e.target.value, day.close)}
                   />
@@ -61,27 +64,22 @@ function WorkingHoursEditor({ value, onChange }: WorkingHoursEditorProps) {
                     type="time"
                     className={timeClass}
                     value={day.close}
-                    aria-label={`${label} closing time`}
+                    aria-label={strings.workingHours.closeAria(label)}
                     aria-invalid={invalid}
                     onChange={(e) => setDay(key, day.open, e.target.value)}
                   />
                 </div>
               ) : (
-                <span className="hours-row__closed">Closed</span>
+                <span className="hours-row__closed">{strings.workingHours.closed}</span>
               )}
             </div>
           )
         })}
       </div>
       {anyInvalid ? (
-        <span className="admin-field__hint hours-editor__error">
-          Each open day needs both times set, and open and close can’t be the same.
-        </span>
+        <span className="admin-field__hint hours-editor__error">{strings.workingHours.error}</span>
       ) : (
-        <span className="admin-field__hint">
-          Used to show customers whether you are open. Overnight hours are allowed (e.g.
-          18:00–02:00).
-        </span>
+        <span className="admin-field__hint">{strings.workingHours.info}</span>
       )}
     </div>
   )

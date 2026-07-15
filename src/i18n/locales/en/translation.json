@@ -459,5 +459,390 @@
       "cancelBooking": "We could not cancel this booking.",
       "saveChanges": "Could not save changes. Please try again."
     }
+  },
+  "admin": {
+    "common": {
+      "loading": "Loading…",
+      "error": "Something went wrong.",
+      "save": "Save",
+      "saving": "Saving…",
+      "cancel": "Cancel",
+      "add": "Add",
+      "confirm": "Confirm",
+      "close": "Close",
+      "search": "Search"
+    },
+    "layout": {
+      "brand": "Admin",
+      "collapse": {
+        "expand": "Expand side menu",
+        "collapse": "Collapse side menu",
+        "auto": "Sidebar auto-collapses on medium screens"
+      },
+      "nav": {
+        "overview": "Overview",
+        "restaurant": "Restaurant",
+        "settings": "Settings",
+        "staff": "Staff",
+        "menu": "Menu",
+        "floorPlan": "Floor Plan",
+        "kitchen": "Kitchen",
+        "floor": "Floor"
+      },
+      "logout": {
+        "aria": "Log out",
+        "error": "Couldn't sign you out. Please try again."
+      },
+      "unsaved": {
+        "title": "Discard changes?",
+        "message": "You have unsaved changes. Leave without saving?",
+        "confirm": "Leave"
+      }
+    },
+    "overview": {
+      "titleGreeting": "Welcome back, {{name}}",
+      "titleFallback": "Overview",
+      "status": {
+        "open": "Open now",
+        "closed": "Closed"
+      },
+      "viewRestaurant": "View restaurant",
+      "description": "A quick snapshot of your restaurant.",
+      "error": "Could not load the overview.",
+      "stats": {
+        "menus": {
+          "label": "Active menus",
+          "sub": "of {{total}} total"
+        },
+        "dishes": {
+          "label": "Dishes",
+          "sub": "{{visible}} visible · {{hidden}} hidden"
+        },
+        "categories": {
+          "label": "Categories",
+          "sub": "across all menus"
+        },
+        "staff": {
+          "label": "Active staff",
+          "sub": "of {{total}} total"
+        }
+      },
+      "needsAttention": {
+        "title": "Needs attention",
+        "empty": "Everything looks good — nothing needs fixing.",
+        "fix": "Fix"
+      },
+      "insights": {
+        "title": "Insights",
+        "categories": {
+          "title": "Dishes by category",
+          "empty": "No dishes yet"
+        },
+        "price": {
+          "title": "Price distribution",
+          "empty": "No priced dishes yet"
+        },
+        "likes": {
+          "title": "Most liked dishes",
+          "empty": "No likes yet"
+        }
+      },
+      "actions": {
+        "title": "Quick actions",
+        "addDish": {
+          "label": "Add a dish",
+          "desc": "Create a new menu item"
+        },
+        "manageMenu": {
+          "label": "Manage menu",
+          "desc": "Menus, categories and dishes"
+        },
+        "manageStaff": {
+          "label": "Manage staff",
+          "desc": "Invite and manage employees"
+        },
+        "settings": {
+          "label": "Settings",
+          "desc": "Currency, tax, locale and hours"
+        }
+      }
+    },
+    "settings": {
+      "title": "Settings",
+      "description": "Tax rate, service charge, currency, locale, and timezone.",
+      "rateErrors": {
+        "required": "Required",
+        "number": "Enter a number",
+        "range": "Must be between 0 and 1 (e.g. 0.2 = 20%)"
+      },
+      "fields": {
+        "tax": {
+          "label": "Tax rate",
+          "hint": "Decimal, e.g. 0.20 = 20%"
+        },
+        "service": {
+          "label": "Service charge",
+          "hint": "Decimal, e.g. 0.10 = 10%"
+        },
+        "currency": {
+          "label": "Currency",
+          "hint": "Prices show as {{example}}"
+        },
+        "locale": {
+          "label": "Locale"
+        },
+        "timezone": {
+          "label": "Timezone"
+        }
+      }
+    },
+    "forms": {
+      "saved": "Changes saved",
+      "saveFailed": "Could not save changes.",
+      "discard": {
+        "title": "Discard changes?",
+        "message": "You have unsaved changes. Close without saving?",
+        "confirm": "Discard"
+      }
+    },
+    "staff": {
+      "title": "Staff",
+      "description": "Manage employees — change roles and enable or disable access.",
+      "add": "Add employee",
+      "empty": "No staff yet.",
+      "searchPlaceholder": "Search by name or email",
+      "searchAria": "Search staff",
+      "emptyQuery": "No staff match “{{query}}”.",
+      "table": {
+        "name": "Name",
+        "email": "Email",
+        "role": "Role"
+      }
+    },
+    "restaurant": {
+      "title": "Restaurant",
+      "description": "Edit your restaurant name, address, contact links, and hours.",
+      "fields": {
+        "name": "Name",
+        "address": "Address",
+        "phone": "Phone",
+        "phonePlaceholder": "+380...",
+        "telegram": "Telegram",
+        "telegramPlaceholder": "https://t.me/...",
+        "facebook": "Facebook",
+        "facebookPlaceholder": "https://facebook.com/..."
+      }
+    },
+    "toast": {
+      "regionLabel": "Notifications",
+      "dismiss": "Dismiss"
+    },
+    "workingHours": {
+      "label": "Working hours",
+      "closed": "Closed",
+      "error": "Each open day needs both times set, and open and close can’t be the same.",
+      "info": "Used to show customers whether you are open. Overnight hours are allowed (e.g. 18:00–02:00).",
+      "weekdays": {
+        "mon": "Monday",
+        "tue": "Tuesday",
+        "wed": "Wednesday",
+        "thu": "Thursday",
+        "fri": "Friday",
+        "sat": "Saturday",
+        "sun": "Sunday"
+      },
+      "openAria": "{{day}} opening time",
+      "closeAria": "{{day}} closing time"
+    },
+    "restaurantCover": {
+      "label": "Cover image",
+      "empty": "No cover image yet",
+      "uploading": "Uploading…",
+      "alt": "Restaurant cover",
+      "change": "Change cover",
+      "upload": "Upload cover",
+      "remove": "Remove",
+      "toasts": {
+        "updated": "Cover updated",
+        "removed": "Cover removed",
+        "uploadError": "Could not upload cover image.",
+        "removeError": "Could not remove cover image."
+      }
+    },
+    "menu": {
+      "title": "Menu",
+      "description": "Manage menus, categories, and dishes.",
+      "view": "View menu",
+      "addMenu": "Add menu",
+      "hiddenBadge": "hidden",
+      "empty": "No menus yet. Add one to start.",
+      "categoriesTitle": "Categories",
+      "categoriesEmpty": "No categories in this menu yet.",
+      "namePlaceholder": "Lunch menu",
+      "toastAdded": "Menu added",
+      "createError": "Could not create menu.",
+      "adding": "Adding…",
+      "categories": {
+        "newPlaceholder": "New category name",
+        "nameAria": "Category name",
+        "dragAria": "Drag to reorder category {{name}}",
+        "color": {
+          "change": "Change accent color",
+          "set": "Set accent color",
+          "clear": "Clear"
+        },
+        "buttons": {
+          "add": "Add",
+          "save": "Save"
+        },
+        "deleteAria": "Delete category",
+        "confirmDelete": {
+          "title": "Delete category",
+          "message": "Delete category \"{{name}}\"? This cannot be undone.",
+          "confirm": "Delete"
+        },
+        "toasts": {
+          "updated": "Category updated",
+          "deleted": "Category deleted",
+          "added": "Category added",
+          "addError": "Could not add category.",
+          "actionError": "Action failed."
+        }
+      },
+      "dishes": {
+        "title": "Dishes",
+        "add": "Add dish",
+        "empty": "No dishes in this menu yet.",
+        "searchPlaceholder": "Search by name, description, ingredient",
+        "searchAria": "Search dishes",
+        "sortAria": "Sort dishes",
+        "sort": {
+          "manual": "Manual order",
+          "name": "Name (A–Z)",
+          "priceAsc": "Price (low–high)",
+          "priceDesc": "Price (high–low)"
+        },
+        "emptyQuery": "No dishes match “{{query}}”.",
+        "groupUncategorized": "Uncategorized",
+        "dragHere": "Drag dishes here",
+        "bulk": {
+          "selectAll": "Select all",
+          "selected": "{{count}} selected",
+          "show": "Show",
+          "hide": "Hide",
+          "moveAria": "Move selected dishes to category",
+          "moveLabel": "Move to…",
+          "noCategory": "No category",
+          "delete": "Delete",
+          "clear": "Clear"
+        },
+        "confirmDelete": {
+          "title": "Delete dishes",
+          "message_one": "Delete 1 selected dish? This cannot be undone.",
+          "message_other": "Delete {{count}} selected dishes? This cannot be undone.",
+          "confirm": "Delete"
+        }
+      },
+      "dishCard": {
+        "noPhoto": "No photo",
+        "selectAria": "Select {{name}}",
+        "dragAria": "Drag to reorder {{name}}",
+        "hideAria": "Hide {{name}} from customers",
+        "showAria": "Show {{name}}",
+        "availableTitle": "Available — click to hide",
+        "hiddenTitle": "Hidden — click to show",
+        "available": "Available",
+        "hidden": "Hidden",
+        "weight": "{{grams}} g",
+        "allergensPrefix": "⚠ {{list}}"
+      },
+      "dishModal": {
+        "titleAdd": "Add dish",
+        "titleEdit": "Edit dish",
+        "aria": "Dish",
+        "fields": {
+          "name": "Name",
+          "description": "Description",
+          "price": "Price",
+          "weight": "Weight (g)",
+          "weightPlaceholder": "optional",
+          "category": "Category",
+          "noCategory": "No category",
+          "available": "Available to customers"
+        },
+        "validation": {
+          "priceRequired": "Price is required.",
+          "number": "Enter a valid number.",
+          "pricePositive": "Price must be greater than 0.",
+          "weightPositive": "Weight must be greater than 0."
+        },
+        "buttons": {
+          "save": "Save",
+          "saving": "Saving…",
+          "duplicate": "Duplicate",
+          "duplicating": "Duplicating…",
+          "delete": "Delete",
+          "deleting": "Deleting…"
+        },
+        "toasts": {
+          "added": "Dish added",
+          "updated": "Dish updated",
+          "duplicated": "Dish duplicated",
+          "deleted": "Dish deleted",
+          "saveError": "Could not save dish.",
+          "duplicateError": "Could not duplicate dish.",
+          "deleteError": "Could not delete dish."
+        },
+        "confirmDelete": {
+          "title": "Delete dish",
+          "message": "Delete dish \"{{name}}\"? This cannot be undone.",
+          "confirm": "Delete"
+        }
+      },
+      "dishPhoto": {
+        "add": "Add a photo",
+        "change": "Change photo",
+        "remove": "Remove photo",
+        "uploading": "Uploading photo"
+      },
+      "ingredients": {
+        "label": "Ingredients",
+        "placeholder": "Type an ingredient, press Enter",
+        "add": "Add",
+        "remove": "Remove {{item}}"
+      },
+      "allergens": {
+        "label": "Allergens",
+        "placeholder": "Add allergen…",
+        "remove": "Remove {{item}}"
+      },
+      "toolbar": {
+        "rename": "Rename",
+        "show": "Show",
+        "hide": "Hide",
+        "deleteAria": "Delete menu",
+        "renameTitle": "Rename menu",
+        "nameLabel": "Menu name",
+        "cancel": "Cancel",
+        "save": "Save",
+        "confirmDelete": {
+          "title": "Delete menu",
+          "message": "Delete \"{{name}}\"? All its categories and dishes will be removed.",
+          "confirm": "Delete"
+        },
+        "confirmHide": {
+          "title": "Hide menu",
+          "message": "Hide \"{{name}}\" from customers? You can show it again later.",
+          "confirm": "Hide"
+        },
+        "toasts": {
+          "renamed": "Menu renamed",
+          "shown": "Menu shown",
+          "hidden": "Menu hidden",
+          "deleted": "Menu deleted",
+          "actionError": "Action failed."
+        }
+      }
+    }
   }
 }

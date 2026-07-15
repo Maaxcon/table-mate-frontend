@@ -6,6 +6,7 @@ import TextField from "@/features/admin/components/TextField"
 import DiscardChangesDialog from "@/features/admin/components/DiscardChangesDialog"
 import { useToast } from "@/features/admin/hooks/toastContext"
 import { useUnsavedGuard } from "@/features/admin/hooks/useUnsavedGuard"
+import { useAdminStrings } from "@/features/admin/strings"
 import "@/features/admin/components/styles/adminForm.css"
 
 type AddMenuModalProps = {
@@ -15,6 +16,7 @@ type AddMenuModalProps = {
 
 function AddMenuModal({ onClose, onCreated }: AddMenuModalProps) {
   const toast = useToast()
+  const strings = useAdminStrings()
   const [name, setName] = useState("")
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -26,20 +28,25 @@ function AddMenuModal({ onClose, onCreated }: AddMenuModalProps) {
     setError(null)
     try {
       const menu = await createMenu(name.trim())
-      toast.success("Menu added")
+      toast.success(strings.menu.toastAdded)
       onCreated(menu)
       onClose()
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not create menu.")
+      setError(err instanceof Error ? err.message : strings.menu.createError)
       setSubmitting(false)
     }
   }
 
   return (
     <>
-      <Modal title="Add menu" onClose={guard.requestClose} active={!guard.confirming}>
+      <Modal title={strings.menu.addMenu} onClose={guard.requestClose} active={!guard.confirming}>
         <form className="admin-form" onSubmit={handleSubmit}>
-          <TextField label="Name" value={name} onChange={setName} placeholder="Lunch menu" />
+          <TextField
+            label={strings.restaurant.fields.name}
+            value={name}
+            onChange={setName}
+            placeholder={strings.menu.namePlaceholder}
+          />
           {error && <p className="admin-form__status admin-form__status--error">{error}</p>}
           <div className="admin-form__actions">
             <button
@@ -47,7 +54,7 @@ function AddMenuModal({ onClose, onCreated }: AddMenuModalProps) {
               className="admin-form__save"
               disabled={submitting || !name.trim()}
             >
-              {submitting ? "Adding…" : "Add menu"}
+              {submitting ? strings.menu.adding : strings.menu.addMenu}
             </button>
           </div>
         </form>

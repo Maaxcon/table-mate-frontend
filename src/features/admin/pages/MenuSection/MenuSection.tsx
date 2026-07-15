@@ -5,6 +5,7 @@ import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable"
 import { useAppSelector } from "@/store/hooks"
 import { useMenuAdmin } from "@/features/admin/hooks/useMenuAdmin"
 import { useDndSensors } from "@/features/admin/hooks/useDndSensors"
+import { useAdminStrings } from "@/features/admin/strings"
 import EmptyState from "@/features/admin/components/EmptyState"
 import AddMenuModal from "@/features/admin/components/AddMenuModal"
 import MenuToolbar from "@/features/admin/components/MenuToolbar"
@@ -37,6 +38,7 @@ function MenuSection() {
   const [addingMenu, setAddingMenu] = useState(false)
   const restaurantId = useAppSelector((s) => s.auth.user?.restaurantId ?? null)
   const sensors = useDndSensors()
+  const strings = useAdminStrings()
 
   const handleCategoryDragEnd = ({ active, over }: DragEndEvent) => {
     if (over && active.id !== over.id) reorderCategory(String(active.id), String(over.id))
@@ -48,8 +50,8 @@ function MenuSection() {
     <section className="admin-section admin-section--wide">
       <header className="admin-section__header menu-admin__page-head">
         <div>
-          <h1 className="admin-section__title">Menu</h1>
-          <p className="admin-section__description">Manage menus, categories, and dishes.</p>
+          <h1 className="admin-section__title">{strings.menu.title}</h1>
+          <p className="admin-section__description">{strings.menu.description}</p>
         </div>
         {restaurantId && (
           <a
@@ -59,7 +61,7 @@ function MenuSection() {
             rel="noreferrer"
           >
             <LuExternalLink aria-hidden="true" />
-            <span>View menu</span>
+            <span>{strings.menu.view}</span>
           </a>
         )}
       </header>
@@ -67,7 +69,7 @@ function MenuSection() {
       {error && <p className="menu-admin__error">{error}</p>}
 
       {loadingMenus ? (
-        <p className="admin-section__description">Loading…</p>
+        <p className="admin-section__description">{strings.common.loading}</p>
       ) : (
         <>
           <div className="menu-admin__menus">
@@ -81,7 +83,9 @@ function MenuSection() {
                 onClick={() => selectMenu(m.public_id)}
               >
                 {m.name}
-                {!m.is_active && <span className="menu-admin__tab-badge">hidden</span>}
+                {!m.is_active && (
+                  <span className="menu-admin__tab-badge">{strings.menu.hiddenBadge}</span>
+                )}
               </button>
             ))}
             <button
@@ -90,7 +94,7 @@ function MenuSection() {
               onClick={() => setAddingMenu(true)}
             >
               <LuPlus aria-hidden="true" />
-              <span>Add menu</span>
+              <span>{strings.menu.addMenu}</span>
             </button>
           </div>
 
@@ -105,23 +109,21 @@ function MenuSection() {
 
           {menus.length === 0 ? (
             <EmptyState
-              message="No menus yet. Add one to start."
-              actionLabel="Add menu"
+              message={strings.menu.empty}
+              actionLabel={strings.menu.addMenu}
               onAction={() => setAddingMenu(true)}
             />
           ) : (
             selectedMenu && (
               <div className="menu-admin__columns">
                 <section className="menu-admin__col">
-                  <h2 className="menu-admin__subtitle">Categories</h2>
+                  <h2 className="menu-admin__subtitle">{strings.menu.categoriesTitle}</h2>
                   {loadingCategories ? (
-                    <p className="admin-section__description">Loading…</p>
+                    <p className="admin-section__description">{strings.common.loading}</p>
                   ) : (
                     <>
                       {categories.length === 0 ? (
-                        <p className="admin-section__description">
-                          No categories in this menu yet.
-                        </p>
+                        <p className="admin-section__description">{strings.menu.categoriesEmpty}</p>
                       ) : (
                         <DndContext
                           sensors={sensors}

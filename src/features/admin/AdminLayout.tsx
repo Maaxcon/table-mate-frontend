@@ -14,20 +14,21 @@ import {
 } from "react-icons/lu"
 import { useAppSelector } from "@/store/hooks"
 import { useLogout } from "@/features/auth/hooks/useLogout"
+import { useAdminStrings } from "@/features/admin/strings"
 import { ToastProvider } from "./components/toast"
 import ConfirmDialog from "./components/ConfirmDialog"
 import { UnsavedChangesContext } from "./hooks/unsavedChanges"
 import "./AdminLayout.css"
 
 const NAV_ITEMS = [
-  { to: "/admin/overview", label: "Overview", icon: LuLayoutDashboard },
-  { to: "/admin/restaurant", label: "Restaurant", icon: LuStore },
-  { to: "/admin/settings", label: "Settings", icon: LuSettings },
-  { to: "/admin/staff", label: "Staff", icon: LuUsers },
-  { to: "/admin/menu", label: "Menu", icon: LuUtensilsCrossed },
-  { to: "/admin/floor-plan/edit", label: "Floor Plan", icon: LuPencilRuler },
-  { to: "/admin/kitchen", label: "Kitchen", icon: LuChefHat },
-  { to: "/admin/floor", label: "Floor", icon: LuMap },
+  { to: "/admin/overview", key: "overview", icon: LuLayoutDashboard },
+  { to: "/admin/restaurant", key: "restaurant", icon: LuStore },
+  { to: "/admin/settings", key: "settings", icon: LuSettings },
+  { to: "/admin/staff", key: "staff", icon: LuUsers },
+  { to: "/admin/menu", key: "menu", icon: LuUtensilsCrossed },
+  { to: "/admin/floor-plan/edit", key: "floorPlan", icon: LuPencilRuler },
+  { to: "/admin/kitchen", key: "kitchen", icon: LuChefHat },
+  { to: "/admin/floor", key: "floor", icon: LuMap },
 ] as const
 
 const useMediaQuery = (query: string) => {
@@ -58,6 +59,7 @@ function AdminLayout() {
   const location = useLocation()
   const { logout, logoutFailed } = useLogout()
   const user = useAppSelector((state) => state.auth.user)
+  const strings = useAdminStrings()
 
   const isAutoCollapseRange = useMediaQuery("(min-width: 721px) and (max-width: 1300px)")
   const [isUserCollapsed, setIsUserCollapsed] = useState(false)
@@ -86,9 +88,11 @@ function AdminLayout() {
     )
   }, [location.pathname])
 
-  const collapseButtonLabel = isSidebarCollapsed ? "Expand side menu" : "Collapse side menu"
+  const collapseButtonLabel = isSidebarCollapsed
+    ? strings.layout.collapseExpand
+    : strings.layout.collapseCollapse
   const collapseButtonTitle = isAutoCollapseRange
-    ? "Sidebar auto-collapses on medium screens"
+    ? strings.layout.collapseAuto
     : collapseButtonLabel
 
   return (
@@ -116,28 +120,31 @@ function AdminLayout() {
               >
                 <LuArrowLeft aria-hidden="true" />
               </button>
-              <span className="admin-layout__brand-name">Admin</span>
+              <span className="admin-layout__brand-name">{strings.layout.brand}</span>
             </div>
 
             <nav className="admin-layout__nav">
-              {NAV_ITEMS.map(({ to, label, icon: Icon }) => (
-                <NavLink
-                  key={to}
-                  to={to}
-                  aria-label={label}
-                  title={isSidebarCollapsed ? label : undefined}
-                  className={({ isActive }) =>
-                    `admin-layout__nav-link${isActive ? " admin-layout__nav-link--active" : ""}`
-                  }
-                  onClick={(e) => {
-                    e.preventDefault()
-                    guarded(() => navigate(to))
-                  }}
-                >
-                  <Icon aria-hidden="true" className="admin-layout__nav-icon" />
-                  <span>{label}</span>
-                </NavLink>
-              ))}
+              {NAV_ITEMS.map(({ to, key: navKey, icon: Icon }) => {
+                const label = strings.layout.nav[navKey]
+                return (
+                  <NavLink
+                    key={to}
+                    to={to}
+                    aria-label={label}
+                    title={isSidebarCollapsed ? label : undefined}
+                    className={({ isActive }) =>
+                      `admin-layout__nav-link${isActive ? " admin-layout__nav-link--active" : ""}`
+                    }
+                    onClick={(e) => {
+                      e.preventDefault()
+                      guarded(() => navigate(to))
+                    }}
+                  >
+                    <Icon aria-hidden="true" className="admin-layout__nav-icon" />
+                    <span>{label}</span>
+                  </NavLink>
+                )
+              })}
             </nav>
 
             <div className="admin-layout__footer">
@@ -150,13 +157,13 @@ function AdminLayout() {
                 type="button"
                 className="admin-layout__icon-btn"
                 onClick={() => guarded(() => void logout())}
-                aria-label="Log out"
+                aria-label={strings.layout.logoutAria}
               >
                 <LuLogOut aria-hidden="true" />
               </button>
               {logoutFailed && (
                 <p className="admin-layout__logout-error" role="alert">
-                  Couldn't sign you out. Please try again.
+                  {strings.layout.logoutError}
                 </p>
               )}
             </div>
@@ -171,9 +178,9 @@ function AdminLayout() {
 
         {pending && (
           <ConfirmDialog
-            title="Discard changes?"
-            message="You have unsaved changes. Leave without saving?"
-            confirmLabel="Leave"
+            title={strings.layout.unsaved.title}
+            message={strings.layout.unsaved.message}
+            confirmLabel={strings.layout.unsaved.confirm}
             tone="danger"
             onConfirm={confirmLeave}
             onClose={() => setPending(null)}

@@ -5,6 +5,7 @@ import type { AdminCategory, AdminMenuItem } from "@/features/admin/types"
 import { GROUP_DROP_PREFIX } from "@/features/admin/hooks/useMenuMutations"
 import { useDndSensors } from "@/features/admin/hooks/useDndSensors"
 import DishCard from "@/features/admin/components/DishCard"
+import { useAdminStrings } from "@/features/admin/strings"
 
 type DishListProps = {
   items: AdminMenuItem[]
@@ -43,6 +44,7 @@ function DishList({
   onToggleSelect,
 }: DishListProps) {
   const sensors = useDndSensors()
+  const strings = useAdminStrings()
   const categoryName = new Map(categories.map((c) => [c.public_id, c.name]))
 
   // Group items by category, keeping category order, with uncategorized last.
@@ -71,7 +73,9 @@ function DishList({
         {visibleGroups.map(([key, list]) => (
           <div key={key} className="menu-admin__group">
             <h3 className="menu-admin__group-title">
-              {key === UNCATEGORIZED ? "Uncategorized" : (categoryName.get(key) ?? "—")}
+              {key === UNCATEGORIZED
+                ? strings.menu.dishes.groupUncategorized
+                : (categoryName.get(key) ?? "—")}
             </h3>
             <GroupDropZone groupKey={key}>
               <SortableContext items={list.map((i) => i.public_id)} strategy={rectSortingStrategy}>
@@ -88,7 +92,7 @@ function DishList({
                     />
                   ))}
                   {list.length === 0 && (
-                    <li className="menu-admin__group-empty">Drag dishes here</li>
+                    <li className="menu-admin__group-empty">{strings.menu.dishes.dragHere}</li>
                   )}
                 </ul>
               </SortableContext>

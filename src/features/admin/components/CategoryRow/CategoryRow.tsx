@@ -7,6 +7,7 @@ import type { AdminCategory } from "@/features/admin/types"
 import ConfirmDialog from "@/features/admin/components/ConfirmDialog"
 import { useToast } from "@/features/admin/hooks/toastContext"
 import { DEFAULT_CATEGORY_COLOR } from "@/features/admin/constants/menu"
+import { useAdminStrings } from "@/features/admin/strings"
 
 type CategoryRowProps = {
   category: AdminCategory
@@ -20,6 +21,7 @@ function CategoryRow({ category, onChanged, onDeleted }: CategoryRowProps) {
     id: category.public_id,
   })
   const toast = useToast()
+  const strings = useAdminStrings()
   const [name, setName] = useState(category.name)
   const [busy, setBusy] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
@@ -34,7 +36,7 @@ function CategoryRow({ category, onChanged, onDeleted }: CategoryRowProps) {
       after()
       toast.success(successMsg)
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Action failed.")
+      toast.error(err instanceof Error ? err.message : strings.menu.categories.toasts.actionError)
     } finally {
       setBusy(false)
     }
@@ -67,11 +69,19 @@ function CategoryRow({ category, onChanged, onDeleted }: CategoryRowProps) {
       return
     }
 
-    void run(() => updateCategory(category.public_id, patch), onChanged, "Category updated")
+    void run(
+      () => updateCategory(category.public_id, patch),
+      onChanged,
+      strings.menu.categories.toasts.updated,
+    )
   }
 
   const confirmDeleteAction = async () => {
-    await run(() => deleteCategory(category.public_id), onDeleted, "Category deleted")
+    await run(
+      () => deleteCategory(category.public_id),
+      onDeleted,
+      strings.menu.categories.toasts.deleted,
+    )
     setConfirmDelete(false)
   }
 
@@ -90,7 +100,7 @@ function CategoryRow({ category, onChanged, onDeleted }: CategoryRowProps) {
         <button
           type="button"
           className="menu-admin__drag"
-          aria-label={`Drag to reorder category ${category.name}`}
+          aria-label={strings.menu.categories.dragAria(category.name)}
           {...attributes}
           {...listeners}
         >
@@ -103,7 +113,7 @@ function CategoryRow({ category, onChanged, onDeleted }: CategoryRowProps) {
             className="admin-field__input menu-admin__row-input"
             value={name}
             disabled={busy}
-            aria-label="Category name"
+            aria-label={strings.menu.categories.nameAria}
             onChange={(e) => setName(e.target.value)}
             onBlur={saveChanges}
           />
@@ -116,8 +126,8 @@ function CategoryRow({ category, onChanged, onDeleted }: CategoryRowProps) {
               style={{ backgroundColor: colorEnabled ? color : "transparent" }}
               aria-label={
                 colorEnabled
-                  ? `Change color for ${category.name}`
-                  : `Set color for ${category.name}`
+                  ? strings.menu.categories.color.change
+                  : strings.menu.categories.color.set
               }
               disabled={busy}
               onClick={() => {
@@ -143,7 +153,7 @@ function CategoryRow({ category, onChanged, onDeleted }: CategoryRowProps) {
                 setColor(DEFAULT_CATEGORY_COLOR)
               }}
             >
-              Clear
+              {strings.menu.categories.color.clear}
             </button>
           </div>
           <div className="menu-admin__row-bottom-actions">
@@ -152,7 +162,7 @@ function CategoryRow({ category, onChanged, onDeleted }: CategoryRowProps) {
               className="menu-admin__btn menu-admin__btn--danger"
               disabled={busy}
               onClick={() => setConfirmDelete(true)}
-              aria-label="Delete category"
+              aria-label={strings.menu.categories.deleteAria}
             >
               <LuTrash2 aria-hidden="true" />
             </button>
@@ -162,7 +172,7 @@ function CategoryRow({ category, onChanged, onDeleted }: CategoryRowProps) {
               disabled={busy || !canSave}
               onClick={saveChanges}
             >
-              Save
+              {strings.menu.categories.buttons.save}
             </button>
           </div>
         </div>
@@ -170,9 +180,9 @@ function CategoryRow({ category, onChanged, onDeleted }: CategoryRowProps) {
 
       {confirmDelete && (
         <ConfirmDialog
-          title="Delete category"
-          message={`Delete category "${category.name}"? This cannot be undone.`}
-          confirmLabel="Delete"
+          title={strings.menu.categories.confirmDelete.title}
+          message={strings.menu.categories.confirmDelete.message(category.name)}
+          confirmLabel={strings.menu.categories.confirmDelete.confirm}
           tone="danger"
           busy={busy}
           onConfirm={() => void confirmDeleteAction()}

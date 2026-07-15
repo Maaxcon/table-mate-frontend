@@ -1,4 +1,5 @@
 import ConfirmDialog from "@/features/admin/components/ConfirmDialog"
+import { useAdminStrings } from "@/features/admin/strings"
 
 type DiscardChangesDialogProps = {
   onConfirm: () => void
@@ -7,11 +8,12 @@ type DiscardChangesDialogProps = {
 
 /** Standard "you have unsaved edits" prompt, shared by the form modals. */
 function DiscardChangesDialog({ onConfirm, onClose }: DiscardChangesDialogProps) {
+  const strings = useAdminStrings()
   return (
     <ConfirmDialog
-      title="Discard changes?"
-      message="You have unsaved changes. Close without saving?"
-      confirmLabel="Discard"
+      title={strings.forms.discard.title}
+      message={strings.forms.discard.message}
+      confirmLabel={strings.forms.discard.confirm}
       tone="danger"
       onConfirm={onConfirm}
       onClose={onClose}

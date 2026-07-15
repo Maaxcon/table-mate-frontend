@@ -20,6 +20,7 @@ import AllergensField from "./AllergensField"
 import { useToast } from "@/features/admin/hooks/toastContext"
 import { useAllergens } from "@/features/admin/hooks/useAllergens"
 import { useUnsavedGuard } from "@/features/admin/hooks/useUnsavedGuard"
+import { useAdminStrings } from "@/features/admin/strings"
 import "@/features/admin/components/styles/adminForm.css"
 import "@/features/admin/components/styles/modal.css"
 import "@/features/admin/components/styles/menu.css"
@@ -36,6 +37,7 @@ function DishModal({ menuId, categories, item, onClose, onSaved }: DishModalProp
   const editing = item !== null
   const toast = useToast()
   const allergenOptions = useAllergens()
+  const strings = useAdminStrings()
   const [name, setName] = useState(item?.name ?? "")
   const [description, setDescription] = useState(item?.description ?? "")
   const [price, setPrice] = useState(item?.price ?? "")
@@ -65,10 +67,10 @@ function DishModal({ menuId, categories, item, onClose, onSaved }: DishModalProp
 
   const priceError = useMemo(() => {
     const v = price.trim()
-    if (!v) return "Price is required."
+    if (!v) return strings.menu.dishModal.validation.priceRequired
     const n = Number(v)
-    if (!Number.isFinite(n)) return "Enter a valid number."
-    if (n <= 0) return "Price must be greater than 0."
+    if (!Number.isFinite(n)) return strings.menu.dishModal.validation.number
+    if (n <= 0) return strings.menu.dishModal.validation.pricePositive
     return null
   }, [price])
 
@@ -77,8 +79,8 @@ function DishModal({ menuId, categories, item, onClose, onSaved }: DishModalProp
     const v = weight.trim()
     if (!v) return null
     const n = Number(v)
-    if (!Number.isFinite(n)) return "Enter a valid number."
-    if (n <= 0) return "Weight must be greater than 0."
+    if (!Number.isFinite(n)) return strings.menu.dishModal.validation.number
+    if (n <= 0) return strings.menu.dishModal.validation.weightPositive
     return null
   }, [weight])
 
@@ -171,11 +173,13 @@ function DishModal({ menuId, categories, item, onClose, onSaved }: DishModalProp
         await clearItemImage(publicId)
       }
 
-      toast.success(editing ? "Dish updated" : "Dish added")
+      toast.success(
+        editing ? strings.menu.dishModal.toasts.updated : strings.menu.dishModal.toasts.added,
+      )
       onSaved()
       onClose()
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not save dish.")
+      setError(err instanceof Error ? err.message : strings.menu.dishModal.toasts.saveError)
       setSubmitting(false)
       setUploadingImage(false)
     }
@@ -189,11 +193,11 @@ function DishModal({ menuId, categories, item, onClose, onSaved }: DishModalProp
     setError(null)
     try {
       await duplicateItem(item.public_id)
-      toast.success("Dish duplicated")
+      toast.success(strings.menu.dishModal.toasts.duplicated)
       onSaved()
       onClose()
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not duplicate dish.")
+      setError(err instanceof Error ? err.message : strings.menu.dishModal.toasts.duplicateError)
       setDuplicating(false)
     }
   }
@@ -204,11 +208,11 @@ function DishModal({ menuId, categories, item, onClose, onSaved }: DishModalProp
     setError(null)
     try {
       await deleteItem(item.public_id)
-      toast.success("Dish deleted")
+      toast.success(strings.menu.dishModal.toasts.deleted)
       onSaved()
       onClose()
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not delete dish.")
+      setError(err instanceof Error ? err.message : strings.menu.dishModal.toasts.deleteError)
       setDeleting(false)
       setConfirmDelete(false)
     }
@@ -217,8 +221,8 @@ function DishModal({ menuId, categories, item, onClose, onSaved }: DishModalProp
   return (
     <>
       <Modal
-        title={editing ? "Edit dish" : "Add dish"}
-        ariaLabel="Dish"
+        title={strings.menu.dishModal.title(editing)}
+        ariaLabel={strings.menu.dishModal.aria}
         onClose={guard.requestClose}
         className="admin-modal--dish"
         active={!confirmDelete && !guard.confirming}
@@ -233,11 +237,19 @@ function DishModal({ menuId, categories, item, onClose, onSaved }: DishModalProp
             />
 
             <div className="dish-form__fields">
-              <TextField label="Name" value={name} onChange={setName} />
-              <TextField label="Description" value={description} onChange={setDescription} />
+              <TextField
+                label={strings.menu.dishModal.fields.name}
+                value={name}
+                onChange={setName}
+              />
+              <TextField
+                label={strings.menu.dishModal.fields.description}
+                value={description}
+                onChange={setDescription}
+              />
               <div className="admin-form__row">
                 <TextField
-                  label="Price"
+                  label={strings.menu.dishModal.fields.price}
                   type="number"
                   inputMode="decimal"
                   step="0.01"
@@ -247,24 +259,24 @@ function DishModal({ menuId, categories, item, onClose, onSaved }: DishModalProp
                   error={touched.price || submitted ? (priceError ?? undefined) : undefined}
                 />
                 <TextField
-                  label="Weight (g)"
+                  label={strings.menu.dishModal.fields.weight}
                   type="number"
                   value={weight}
                   onChange={setWeight}
-                  placeholder="optional"
+                  placeholder={strings.menu.dishModal.fields.weightPlaceholder}
                   onBlur={() => setTouched((t) => ({ ...t, weight: true }))}
                   error={touched.weight || submitted ? (weightError ?? undefined) : undefined}
                 />
               </div>
 
               <label className="admin-field">
-                <span className="admin-field__label">Category</span>
+                <span className="admin-field__label">{strings.menu.dishModal.fields.category}</span>
                 <select
                   className="admin-field__input"
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
                 >
-                  <option value="">No category</option>
+                  <option value="">{strings.menu.dishModal.fields.noCategory}</option>
                   {categories.map((c) => (
                     <option key={c.public_id} value={c.public_id}>
                       {c.name}
@@ -279,7 +291,9 @@ function DishModal({ menuId, categories, item, onClose, onSaved }: DishModalProp
                   checked={isAvailable}
                   onChange={(e) => setIsAvailable(e.target.checked)}
                 />
-                <span className="admin-field__label">Available to customers</span>
+                <span className="admin-field__label">
+                  {strings.menu.dishModal.fields.available}
+                </span>
               </label>
 
               <IngredientsField value={ingredients} onChange={setIngredients} />
@@ -295,7 +309,9 @@ function DishModal({ menuId, categories, item, onClose, onSaved }: DishModalProp
               className="admin-form__save"
               disabled={submitting || deleting || duplicating || !name.trim() || invalid}
             >
-              {submitting ? "Saving…" : "Save"}
+              {submitting
+                ? strings.menu.dishModal.buttons.saving
+                : strings.menu.dishModal.buttons.save}
             </button>
             {editing && (
               <button
@@ -305,7 +321,11 @@ function DishModal({ menuId, categories, item, onClose, onSaved }: DishModalProp
                 disabled={submitting || deleting || duplicating}
               >
                 <LuCopy aria-hidden="true" />
-                <span>{duplicating ? "Duplicating…" : "Duplicate"}</span>
+                <span>
+                  {duplicating
+                    ? strings.menu.dishModal.buttons.duplicating
+                    : strings.menu.dishModal.buttons.duplicate}
+                </span>
               </button>
             )}
             {editing && (
@@ -316,7 +336,11 @@ function DishModal({ menuId, categories, item, onClose, onSaved }: DishModalProp
                 disabled={submitting || deleting || duplicating}
               >
                 <LuTrash2 aria-hidden="true" />
-                <span>{deleting ? "Deleting…" : "Delete"}</span>
+                <span>
+                  {deleting
+                    ? strings.menu.dishModal.buttons.deleting
+                    : strings.menu.dishModal.buttons.delete}
+                </span>
               </button>
             )}
           </div>
@@ -325,9 +349,9 @@ function DishModal({ menuId, categories, item, onClose, onSaved }: DishModalProp
 
       {confirmDelete && item && (
         <ConfirmDialog
-          title="Delete dish"
-          message={`Delete dish "${item.name}"? This cannot be undone.`}
-          confirmLabel="Delete"
+          title={strings.menu.dishModal.confirmDelete.title}
+          message={strings.menu.dishModal.confirmDelete.message(item.name)}
+          confirmLabel={strings.menu.dishModal.confirmDelete.confirm}
           tone="danger"
           busy={deleting}
           onConfirm={() => void handleDelete()}

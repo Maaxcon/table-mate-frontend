@@ -3,10 +3,11 @@ import { LuX } from "react-icons/lu"
 type RemovableChipListProps = {
   items: string[]
   onRemove: (item: string) => void
+  getRemoveLabel?: (item: string) => string
 }
 
 /** Shared chip list with a remove button per item (ingredients, allergens). */
-function RemovableChipList({ items, onRemove }: RemovableChipListProps) {
+function RemovableChipList({ items, onRemove, getRemoveLabel }: RemovableChipListProps) {
   if (items.length === 0) return null
   return (
     <div className="dish-allergens">
@@ -16,7 +17,7 @@ function RemovableChipList({ items, onRemove }: RemovableChipListProps) {
           <button
             type="button"
             className="dish-allergen__remove"
-            aria-label={`Remove ${item}`}
+            aria-label={getRemoveLabel ? getRemoveLabel(item) : `Remove ${item}`}
             onClick={() => onRemove(item)}
           >
             <LuX aria-hidden="true" />
