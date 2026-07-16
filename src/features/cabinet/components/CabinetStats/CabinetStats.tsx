@@ -22,9 +22,7 @@ export function CabinetStats({ history }: CabinetStatsProps) {
         </span>
         <div className="cabinet-stat__body">
           <span className="cabinet-stat__value">{stats.visits}</span>
-          <span className="cabinet-stat__label">
-            {stats.visits === 1 ? strings.stats.visit : strings.stats.visits}
-          </span>
+          <span className="cabinet-stat__label">{strings.stats.visitsLabel(stats.visits)}</span>
         </div>
       </div>
 

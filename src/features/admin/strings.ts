@@ -421,10 +421,7 @@ export function useAdminStrings() {
         },
         confirmDelete: {
           title: t("admin.menu.dishes.confirmDelete.title"),
-          message: (count: number) =>
-            count === 1
-              ? t("admin.menu.dishes.confirmDelete.message_one")
-              : t("admin.menu.dishes.confirmDelete.message_other", { count }),
+          message: (count: number) => t("admin.menu.dishes.confirmDelete.message", { count }),
           confirm: t("admin.menu.dishes.confirmDelete.confirm"),
         },
       },
@@ -818,10 +815,7 @@ export function useAdminStrings() {
         deleteZone: {
           title: t("admin.floor.modals.deleteZone.title"),
           message: (name: string) => t("admin.floor.modals.deleteZone.message", { name }),
-          warning: (count: number) =>
-            t(`admin.floor.modals.deleteZone.warning_${count === 1 ? "one" : "other"}`, {
-              count,
-            }),
+          warning: (count: number) => t("admin.floor.modals.deleteZone.warning", { count }),
           cancel: t("admin.floor.modals.deleteZone.cancel"),
           confirm: t("admin.floor.modals.deleteZone.confirm"),
           confirming: t("admin.floor.modals.deleteZone.confirming"),

@@ -86,10 +86,7 @@ export function BookingsList({
                     <p className="booking-card__row booking-card__row--muted">
                       <LuUsers aria-hidden="true" />
                       <span>
-                        {booking.guest_count}{" "}
-                        {booking.guest_count === 1
-                          ? strings.bookings.guest
-                          : strings.bookings.guests}
+                        {booking.guest_count} {strings.bookings.guestLabel(booking.guest_count)}
                       </span>
                     </p>
                   </div>

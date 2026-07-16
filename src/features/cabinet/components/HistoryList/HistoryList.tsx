@@ -38,7 +38,7 @@ export function HistoryList({ history, error, onOpenReceipt }: HistoryListProps)
                     <span className="history-card__title">{entry.restaurantName}</span>
                     <span className="history-card__meta">
                       {formatDateTime(entry.date, strings.locale)} · {itemCount}{" "}
-                      {itemCount === 1 ? strings.history.item : strings.history.items}
+                      {strings.history.itemsLabel(itemCount)}
                     </span>
                   </span>
                   <span className="history-card__total">

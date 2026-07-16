@@ -387,8 +387,8 @@
     },
     "stats": {
       "aria": "Your stats",
-      "visit": "Visit",
-      "visits": "Visits",
+      "visits_one": "Visit",
+      "visits_other": "Visits",
       "totalSpent": "Total spent",
       "favoritePlace": "Favorite place",
       "fallback": "—"
@@ -422,8 +422,8 @@
       "unknownTable": "Unknown",
       "fallbackRestaurant": "Restaurant",
       "tableLabel": "Table {{number}}",
-      "guest": "guest",
-      "guests": "guests",
+      "guests_one": "guest",
+      "guests_other": "guests",
       "activeNote": "Your table is active — ask the waiter for changes.",
       "modify": "Modify",
       "cancel": "Cancel",
@@ -433,8 +433,8 @@
     "history": {
       "title": "History",
       "empty": "No past visits yet.",
-      "item": "item",
-      "items": "items"
+      "items_one": "item",
+      "items_other": "items"
     },
     "calendar": {
       "titleWithHistory": "Calendar & History",
@@ -445,8 +445,8 @@
       "card": "Card",
       "cash": "Cash",
       "total": "Total",
-      "guest": "guest",
-      "guests": "guests",
+      "guests_one": "guest",
+      "guests_other": "guests",
       "moreItems": "+{{count}} more items",
       "emptyDay": "No reservations or orders on this day.",
       "fallbackRestaurant": "Restaurant",

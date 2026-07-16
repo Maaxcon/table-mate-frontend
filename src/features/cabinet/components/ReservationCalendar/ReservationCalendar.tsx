@@ -274,7 +274,7 @@ export function ReservationCalendar({ reservations, history, loading }: Props) {
                   </div>
                   <div className="rc__item-row">
                     <LuUsers aria-hidden="true" />
-                    {o.guests} {o.guests === 1 ? strings.calendar.guest : strings.calendar.guests}
+                    {o.guests} {strings.calendar.guestLabel(o.guests)}
                   </div>
                   <ul className="rc__order-items">
                     {o.items.slice(0, 3).map((item, idx) => (
@@ -331,8 +331,7 @@ export function ReservationCalendar({ reservations, history, loading }: Props) {
                   </span>
                   <span className="rc__item-row rc__item-row--muted">
                     <LuUsers aria-hidden="true" />
-                    {r.guest_count}{" "}
-                    {r.guest_count === 1 ? strings.calendar.guest : strings.calendar.guests}
+                    {r.guest_count} {strings.calendar.guestLabel(r.guest_count)}
                   </span>
                 </li>
               ))}
