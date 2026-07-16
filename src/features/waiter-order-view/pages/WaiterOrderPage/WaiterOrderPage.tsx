@@ -289,6 +289,7 @@ export function WaiterOrderPage() {
     onTableStatusChanged: refreshFloor,
     onNewReservation: refreshFloor,
     onReservationCancelled: refreshFloor,
+    onReservationsUpdated: refreshFloor,
     onZoneCreated: refreshZones,
     onZoneUpdated: refreshZones,
     onZoneDeleted: refreshZones,
