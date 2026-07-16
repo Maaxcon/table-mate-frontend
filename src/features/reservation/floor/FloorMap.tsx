@@ -162,7 +162,6 @@ export function FloorMap({
       }
     }
     return tiles
-    return tiles
   }, [payload, lookups, viewByPublicId, guests])
 
   const renderEntity = useCallback(

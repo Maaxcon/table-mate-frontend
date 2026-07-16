@@ -98,7 +98,8 @@ export function KitchenKanbanPage() {
         setError(null)
       } catch (err) {
         if (err instanceof DOMException && err.name === "AbortError") return
-        setError(err instanceof Error ? err.message : pageStrings.loadError)
+        console.error(err)
+        setError(pageStrings.loadError)
       } finally {
         setLoading(false)
       }
@@ -126,7 +127,8 @@ export function KitchenKanbanPage() {
           ),
         )
       } catch (err) {
-        setMutationError(err instanceof Error ? err.message : mutationStrings.update)
+        console.error(err)
+        setMutationError(mutationStrings.update)
       }
     },
     [tickets, canManageTickets, mutationStrings],
@@ -152,7 +154,8 @@ export function KitchenKanbanPage() {
         ])
         setTickets((prev) => prev.filter((t) => t.id !== ticketId))
       } catch (err) {
-        setMutationError(err instanceof Error ? err.message : mutationStrings.bump)
+        console.error(err)
+        setMutationError(mutationStrings.bump)
       }
     },
     [tickets, canManageTickets, mutationStrings],
@@ -165,7 +168,8 @@ export function KitchenKanbanPage() {
         await updateTicketStatus(ticketId, "active")
         setTickets((prev) => prev.map((t) => (t.id === ticketId ? { ...t, status: "active" } : t)))
       } catch (err) {
-        setMutationError(err instanceof Error ? err.message : mutationStrings.accept)
+        console.error(err)
+        setMutationError(mutationStrings.accept)
       }
     },
     [canManageTickets, mutationStrings],

@@ -28,13 +28,13 @@
       "waiterArea": "До робочого залу"
     },
     "hero": {
-      "label": "Menu",
-      "tagline": "Fresh dishes, fast ordering, cozy taste.",
+      "label": "Меню",
+      "tagline": "Свіжі страви, швидке замовлення, затишний смак.",
       "openNow": "Відчинено",
       "closedNow": "Зачинено"
     },
     "controls": {
-      "searchPlaceholder": "Search dishes...",
+      "searchPlaceholder": "Пошук страв...",
       "sortAria": "Сортування",
       "sortTitleDefault": "За замовчуванням",
       "sortTitlePriceAsc": "Ціна: від низької",
@@ -45,10 +45,10 @@
       "cartAria": "Кошик"
     },
     "grid": {
-      "loadMore": "Load more",
-      "loadingMore": "Loading...",
-      "noResults": "No results for \"{{query}}\".",
-      "noItems": "No items in this category."
+      "loadMore": "Показати більше",
+      "loadingMore": "Завантажуємо...",
+      "noResults": "Немає результатів для \"{{query}}\".",
+      "noItems": "У цій категорії поки немає позицій."
     },
     "cartBar": {
       "openAria": "Відкрити кошик",

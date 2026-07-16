@@ -78,7 +78,7 @@ export function ReservationCalendar({ reservations, history, loading }: Props) {
   const hasHistory = history.length > 0
 
   const dayNames = useMemo(() => {
-    const formatter = new Intl.DateTimeFormat(locale, { weekday: "short" })
+    const formatter = new Intl.DateTimeFormat(locale, { weekday: "short", timeZone: "UTC" })
     const base = new Date(Date.UTC(2024, 0, 7))
     return Array.from({ length: 7 }, (_, i) =>
       formatter.format(new Date(base.getTime() + i * 24 * 60 * 60 * 1000)),

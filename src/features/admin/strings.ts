@@ -15,11 +15,11 @@ export function useAdminStrings() {
   }
 
   const floorTableTags = [
-    { value: "window-seat", label: t("admin.floor.sidebar.table.tags.windowSeat") },
-    { value: "quiet", label: t("admin.floor.sidebar.table.tags.quiet") },
+    { value: "window-seat", label: t("admin.floor.sidebar.entity.table.tags.windowSeat") },
+    { value: "quiet", label: t("admin.floor.sidebar.entity.table.tags.quiet") },
     {
       value: "wheelchair-accessible",
-      label: t("admin.floor.sidebar.table.tags.wheelchairAccessible"),
+      label: t("admin.floor.sidebar.entity.table.tags.wheelchairAccessible"),
     },
   ] as const
 
@@ -778,28 +778,28 @@ export function useAdminStrings() {
             },
           },
           table: {
-            idLabel: t("admin.floor.sidebar.table.idLabel"),
-            unassigned: t("admin.floor.sidebar.table.unassigned"),
-            showQr: t("admin.floor.sidebar.table.showQr"),
-            qrHint: t("admin.floor.sidebar.table.qrHint"),
-            publicLabel: t("admin.floor.sidebar.table.publicLabel"),
-            labelPlaceholder: t("admin.floor.sidebar.table.labelPlaceholder"),
-            capacity: t("admin.floor.sidebar.table.capacity"),
-            presetsAria: t("admin.floor.sidebar.table.presetsAria"),
-            tagsTitle: t("admin.floor.sidebar.table.tagsTitle"),
+            idLabel: t("admin.floor.sidebar.entity.table.idLabel"),
+            unassigned: t("admin.floor.sidebar.entity.table.unassigned"),
+            showQr: t("admin.floor.sidebar.entity.table.showQr"),
+            qrHint: t("admin.floor.sidebar.entity.table.qrHint"),
+            publicLabel: t("admin.floor.sidebar.entity.table.publicLabel"),
+            labelPlaceholder: t("admin.floor.sidebar.entity.table.labelPlaceholder"),
+            capacity: t("admin.floor.sidebar.entity.table.capacity"),
+            presetsAria: t("admin.floor.sidebar.entity.table.presetsAria"),
+            tagsTitle: t("admin.floor.sidebar.entity.table.tagsTitle"),
             tags: floorTableTags,
           },
           passage: {
-            label: t("admin.floor.sidebar.passage.label"),
-            placeholder: t("admin.floor.sidebar.passage.placeholder"),
+            label: t("admin.floor.sidebar.entity.passage.label"),
+            placeholder: t("admin.floor.sidebar.entity.passage.placeholder"),
           },
           navigation: {
-            targetLabel: t("admin.floor.sidebar.navigation.targetLabel"),
-            placeholder: t("admin.floor.sidebar.navigation.placeholder"),
+            targetLabel: t("admin.floor.sidebar.entity.navigation.targetLabel"),
+            placeholder: t("admin.floor.sidebar.entity.navigation.placeholder"),
           },
           actions: {
-            duplicate: t("admin.floor.sidebar.actions.duplicate"),
-            delete: t("admin.floor.sidebar.actions.delete"),
+            duplicate: t("admin.floor.sidebar.entity.actions.duplicate"),
+            delete: t("admin.floor.sidebar.entity.actions.delete"),
           },
         },
       },
