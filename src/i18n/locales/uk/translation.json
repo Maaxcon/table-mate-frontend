@@ -72,7 +72,10 @@
       "unavailable": "Недоступно",
       "like": "Лайкнути {{name}}",
       "unlike": "Прибрати лайк з {{name}}",
-      "likes": "{{count}} likes"
+      "likes_one": "{{count}} лайк",
+      "likes_few": "{{count}} лайки",
+      "likes_many": "{{count}} лайків",
+      "likes_other": "{{count}} лайків"
     },
     "cart": {
       "title": "Кошик",
