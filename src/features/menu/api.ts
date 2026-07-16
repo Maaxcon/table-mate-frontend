@@ -21,7 +21,7 @@ function buildUrl(path: string, params: Record<string, string | undefined>): str
   if (env.apiBaseUrl === ENV_NOT_CONFIGURED_VALUE) {
     throw new Error("VITE_API_BASE_URL is not configured")
   }
-  const url = new URL(`${env.apiBaseUrl}${path}`)
+  const url = new URL(`${env.apiBaseUrl}${path}`, window.location.origin)
   for (const [key, value] of Object.entries(params)) {
     if (value !== undefined) url.searchParams.set(key, value)
   }
