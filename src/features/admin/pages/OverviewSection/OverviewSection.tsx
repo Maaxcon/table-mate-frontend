@@ -20,6 +20,7 @@ import { isRestaurantOpenNow } from "@/features/menu/utils"
 import { useAdminOverview } from "@/features/admin/hooks/useAdminOverview"
 import { useMenuData } from "@/features/admin/hooks/useMenuData"
 import { useResource } from "@/features/admin/hooks/useResource"
+import { useAdminStrings } from "@/features/admin/strings"
 import BarChart from "@/features/admin/components/BarChart"
 import {
   deriveDishesByCategory,
@@ -78,6 +79,7 @@ function OverviewSection() {
   const user = useAppSelector((s) => s.auth.user)
   const restaurantId = user?.restaurantId ?? null
   const firstName = user?.firstName?.trim()
+  const strings = useAdminStrings()
 
   // Pull working hours + timezone from the public restaurant endpoint to show
   // whether the restaurant is open right now.
@@ -101,23 +103,21 @@ function OverviewSection() {
     <section className="admin-section admin-section--wide">
       <header className="admin-section__header">
         <div className="overview-titlebar">
-          <h1 className="admin-section__title">
-            {firstName ? `Welcome back, ${firstName}` : "Overview"}
-          </h1>
+          <h1 className="admin-section__title">{strings.overview.title(firstName)}</h1>
           {openNow !== null && (
             <span className={`overview-status overview-status--${openNow ? "open" : "closed"}`}>
               <span className="overview-status__dot" aria-hidden="true" />
-              {openNow ? "Open now" : "Closed"}
+              {openNow ? strings.overview.status.open : strings.overview.status.closed}
             </span>
           )}
           {restaurantId && (
             <Link className="overview-restaurant-link" to={`/menu/${restaurantId}`}>
               <LuExternalLink aria-hidden="true" />
-              Перейти до ресторану
+              {strings.overview.viewRestaurant}
             </Link>
           )}
         </div>
-        <p className="admin-section__description">A quick snapshot of your restaurant.</p>
+        <p className="admin-section__description">{strings.overview.description}</p>
       </header>
 
       {loading ? (
@@ -127,7 +127,7 @@ function OverviewSection() {
           ))}
         </div>
       ) : error || !data ? (
-        <p className="overview-error">{error ?? "Could not load the overview."}</p>
+        <p className="overview-error">{error ?? strings.overview.error}</p>
       ) : (
         <>
           <div className="overview-grid">
@@ -135,39 +135,42 @@ function OverviewSection() {
               tone="violet"
               icon={LuBookOpen}
               value={data.menusActive}
-              label="Active menus"
-              sub={`of ${data.menusTotal} total`}
+              label={strings.overview.stats.menus.label}
+              sub={strings.overview.stats.menus.sub(data.menusTotal)}
             />
             <StatCard
               tone="blue"
               icon={LuUtensilsCrossed}
               value={data.dishesTotal}
-              label="Dishes"
-              sub={`${data.dishesTotal - data.dishesHidden} visible · ${data.dishesHidden} hidden`}
+              label={strings.overview.stats.dishes.label}
+              sub={strings.overview.stats.dishes.sub(
+                data.dishesTotal - data.dishesHidden,
+                data.dishesHidden,
+              )}
             />
             <StatCard
               tone="green"
               icon={LuLayers}
               value={data.categoriesTotal}
-              label="Categories"
-              sub="across all menus"
+              label={strings.overview.stats.categories.label}
+              sub={strings.overview.stats.categories.sub}
             />
             <StatCard
               tone="amber"
               icon={LuUsers}
               value={data.staffActive}
-              label="Active staff"
-              sub={`of ${data.staffTotal} total`}
+              label={strings.overview.stats.staff.label}
+              sub={strings.overview.stats.staff.sub(data.staffTotal)}
             />
           </div>
 
           {issues !== null && (
             <>
-              <h2 className="overview-subtitle">Needs attention</h2>
+              <h2 className="overview-subtitle">{strings.overview.needsAttention.title}</h2>
               {issues.length === 0 ? (
                 <p className="overview-allgood">
                   <LuCircleCheck aria-hidden="true" />
-                  Everything looks good — nothing needs fixing.
+                  {strings.overview.needsAttention.empty}
                 </p>
               ) : (
                 <ul className="overview-issues">
@@ -177,7 +180,7 @@ function OverviewSection() {
                         <LuCircleAlert className="overview-issue__icon" aria-hidden="true" />
                         <span className="overview-issue__label">{issue.label}</span>
                         <span className="overview-issue__fix">
-                          Fix
+                          {strings.overview.needsAttention.fix}
                           <LuArrowRight aria-hidden="true" />
                         </span>
                       </Link>
@@ -190,49 +193,54 @@ function OverviewSection() {
 
           {menuData && (
             <>
-              <h2 className="overview-subtitle">Insights</h2>
+              <h2 className="overview-subtitle">{strings.overview.insights.title}</h2>
               <div className="overview-charts">
                 <div className="overview-chart">
-                  <h3 className="overview-chart__title">Dishes by category</h3>
-                  <BarChart data={dishesByCategory} emptyText="No dishes yet" />
+                  <h3 className="overview-chart__title">
+                    {strings.overview.insights.categoriesTitle}
+                  </h3>
+                  <BarChart
+                    data={dishesByCategory}
+                    emptyText={strings.overview.insights.categoriesEmpty}
+                  />
                 </div>
                 <div className="overview-chart">
-                  <h3 className="overview-chart__title">Price distribution</h3>
-                  <BarChart data={priceBuckets} emptyText="No priced dishes yet" />
+                  <h3 className="overview-chart__title">{strings.overview.insights.priceTitle}</h3>
+                  <BarChart data={priceBuckets} emptyText={strings.overview.insights.priceEmpty} />
                 </div>
                 <div className="overview-chart">
-                  <h3 className="overview-chart__title">Most liked dishes</h3>
-                  <BarChart data={topLiked} emptyText="No likes yet" />
+                  <h3 className="overview-chart__title">{strings.overview.insights.likesTitle}</h3>
+                  <BarChart data={topLiked} emptyText={strings.overview.insights.likesEmpty} />
                 </div>
               </div>
             </>
           )}
 
-          <h2 className="overview-subtitle">Quick actions</h2>
+          <h2 className="overview-subtitle">{strings.overview.actions.title}</h2>
           <div className="overview-actions">
             <ActionCard
               to="/admin/menu"
               icon={LuPlus}
-              label="Add a dish"
-              desc="Create a new menu item"
+              label={strings.overview.actions.addDish.label}
+              desc={strings.overview.actions.addDish.desc}
             />
             <ActionCard
               to="/admin/menu"
               icon={LuUtensilsCrossed}
-              label="Manage menu"
-              desc="Menus, categories and dishes"
+              label={strings.overview.actions.manageMenu.label}
+              desc={strings.overview.actions.manageMenu.desc}
             />
             <ActionCard
               to="/admin/staff"
               icon={LuUsers}
-              label="Manage staff"
-              desc="Invite and manage employees"
+              label={strings.overview.actions.manageStaff.label}
+              desc={strings.overview.actions.manageStaff.desc}
             />
             <ActionCard
               to="/admin/settings"
               icon={LuSettings}
-              label="Settings"
-              desc="Currency, tax, locale and hours"
+              label={strings.overview.actions.settings.label}
+              desc={strings.overview.actions.settings.desc}
             />
           </div>
         </>

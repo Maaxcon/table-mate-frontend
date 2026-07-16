@@ -1,4 +1,4 @@
-import { menuStrings } from "@/features/menu/strings"
+import { useMenuStrings } from "@/features/menu/strings"
 import "./MenuFooter.css"
 
 type MenuFooterProps = {
@@ -7,6 +7,7 @@ type MenuFooterProps = {
 
 /** Minimal closing footer: brand wordmark, tagline and copyright. */
 function MenuFooter({ restaurantName }: MenuFooterProps) {
+  const menuStrings = useMenuStrings()
   const year = new Date().getFullYear()
   return (
     <footer className="menu-footer">

@@ -2,6 +2,7 @@ import { StatusChip } from "@/components/StatusChip/StatusChip"
 import type { OverlayOrderItem } from "../../types"
 import { VOID_REASON_LABELS } from "../../types"
 import "./OrderItemRow.css"
+import { useWaiterStrings } from "../../strings"
 
 interface OrderItemRowProps {
   item: OverlayOrderItem
@@ -9,11 +10,12 @@ interface OrderItemRowProps {
 }
 
 export function OrderItemRow({ item, currencySymbol }: OrderItemRowProps) {
+  const voidReasonStrings = useWaiterStrings().overlay.voidReasons
   const isVoided = item.status === "voided"
-  const voidReasonLabel =
-    item.void_reason != null
-      ? (VOID_REASON_LABELS[item.void_reason] ?? `reason_${item.void_reason}`)
-      : null
+  const reasonKey = item.void_reason != null ? VOID_REASON_LABELS[item.void_reason] : null
+  const voidReasonLabel = reasonKey
+    ? (voidReasonStrings[reasonKey as keyof typeof voidReasonStrings] ?? reasonKey)
+    : null
 
   return (
     <div className={`order-item-row ${isVoided ? "order-item-row--voided" : ""}`}>

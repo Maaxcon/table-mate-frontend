@@ -1,0 +1,1507 @@
+{
+  "auth": {
+    "hero": {
+      "logoAlt": "TableMate",
+      "subtitle": "Discover, book, and dine. Effortlessly."
+    },
+    "socialAuth": {
+      "title": "Get started",
+      "text": "Unlock one-tap booking, favorites, and history.",
+      "googleButton": "Continue with Google",
+      "googleButtonLoading": "Connecting…",
+      "or": "or"
+    },
+    "guest": {
+      "button": "Continue as Guest",
+      "noteLine1": "Anonymous access to maps and menus.",
+      "noteLine2": "Registration required for booking."
+    },
+    "footer": "Your table, one tap away."
+  },
+  "menu": {
+    "header": {
+      "signIn": "Sign in",
+      "signOut": "Sign out",
+      "openCabinet": "My cabinet",
+      "book": "Book a table",
+      "adminArea": "Admin panel",
+      "waiterArea": "Waiter area"
+    },
+    "hero": {
+      "label": "Menu",
+      "tagline": "Fresh dishes, fast ordering, cozy taste.",
+      "openNow": "Open now",
+      "closedNow": "Closed"
+    },
+    "controls": {
+      "searchPlaceholder": "Search dishes...",
+      "sortAria": "Sorting",
+      "sortTitleDefault": "Default",
+      "sortTitlePriceAsc": "Price: Low to High",
+      "sortTitlePriceDesc": "Price: High to Low",
+      "sortLabelDefault": "Sort",
+      "sortLabelPriceAsc": "↑ Price",
+      "sortLabelPriceDesc": "↓ Price",
+      "cartAria": "Cart"
+    },
+    "grid": {
+      "loadMore": "Load more",
+      "loadingMore": "Loading...",
+      "noResults": "No results for \"{{query}}\".",
+      "noItems": "No items in this category."
+    },
+    "cartBar": {
+      "openAria": "Open cart",
+      "action": "View cart",
+      "dismiss": "Dismiss",
+      "items_one": "{{count}} item",
+      "items_other": "{{count}} items"
+    },
+    "footer": {
+      "brand": "TableMate",
+      "tagline": "Digital menu for restaurants",
+      "rights": "© {{year}} {{name}}. All rights reserved.",
+      "rightsDefault": "© {{year}} TableMate. All rights reserved."
+    },
+    "card": {
+      "decrease": "Decrease quantity",
+      "increase": "Increase quantity",
+      "addToCart": "Add {{name}} to cart",
+      "unavailable": "Unavailable",
+      "like": "Like {{name}}",
+      "unlike": "Unlike {{name}}",
+      "likes_one": "{{count}} like",
+      "likes_few": "{{count}} likes",
+      "likes_many": "{{count}} likes",
+      "likes_other": "{{count}} likes"
+    },
+    "cart": {
+      "title": "Cart",
+      "close": "Close",
+      "confirmTitle": "Confirm order?",
+      "positions_one": "{{count}} item",
+      "positions_other": "{{count}} items",
+      "confirmYes": "Yes, order",
+      "confirmNo": "Cancel",
+      "confirmedTitle": "Order received!",
+      "confirmedSub": "The waiter has received your order",
+      "submitting": "Placing order...",
+      "checkoutError": "Could not place order. Please try again.",
+      "changedTitle": "Some items are no longer available",
+      "changedSub": "These items were removed from your cart. Please review and confirm again:",
+      "confirmRemaining": "Confirm remaining",
+      "backToCart": "Back to cart",
+      "receiptLabel": "Your order",
+      "subtotal": "Subtotal",
+      "tax": "Tax",
+      "serviceCharge": "Service charge",
+      "total": "Total",
+      "emptyTitle": "Cart is empty",
+      "emptySub": "Add items from the menu",
+      "perUnit": "/ pc",
+      "decrease": "Decrease",
+      "increase": "Increase",
+      "checkout": "Place order",
+      "pay": "Pay",
+      "billTitle": "Bill",
+      "billToPay": "To pay",
+      "billSelectAll": "Select all",
+      "billPaidLabel": "Paid",
+      "billAllPaid": "All paid",
+      "billNoneToPay": "No items to pay",
+      "billLoading": "Loading bill...",
+      "billPaidOf": "Paid {{paid}} of {{total}}",
+      "billSelected": "Selected",
+      "billProgressLabel": "Bill payment progress",
+      "paying": "Paying...",
+      "payError": "Payment failed. Please try again.",
+      "groupedBy": "Order",
+      "you": "You",
+      "errorAdd": "Failed to add item",
+      "errorUpdate": "Failed to update quantity",
+      "errorRemove": "Failed to remove item",
+      "errorFetch": "Failed to load cart",
+      "requiresActiveTable": "Cart is available only from a table or reservation.",
+      "initializing": "Connecting cart...",
+      "sessionUnavailable": "No active cart found for this table. Ask a waiter to open the table.",
+      "noActiveReservation": "No active reservation at this table. Contact a waiter to open the table.",
+      "reservationNotYetActive": "This table is reserved for {{time}}. Contact a waiter.",
+      "reservationNotYetActiveDefault": "This table is already reserved. Contact a waiter.",
+      "unavailable": "\"{{name}}\" is no longer available",
+      "retry": "Try again",
+      "connecting": "Connecting...",
+      "connected": "Connected",
+      "disconnected": "Disconnected",
+      "sessionExpired": "Session expired — reopen the table",
+      "lobbyTitle": "Welcome!",
+      "lobbySubtitle": "What's your name?",
+      "lobbyPlaceholder": "Your name",
+      "lobbyJoin": "Join",
+      "lobbySkipped": "Skip",
+      "guestPrefix": "Guest",
+      "slotLabel": "Guest {{slot}}",
+      "unknownItem": "Item"
+    },
+    "item": {
+      "ingredients": "Ingredients",
+      "allergens": "Allergens",
+      "added": "Added",
+      "addToCart": "Add to cart",
+      "unavailable": "Unavailable",
+      "close": "Close",
+      "commentLabel": "Comment (optional)",
+      "commentPlaceholder": "E.g., no onions"
+    },
+    "info": {
+      "heading": "About",
+      "hours": "Hours",
+      "openNow": "Open now",
+      "closedNow": "Closed",
+      "contacts": "Contacts",
+      "social": "Social",
+      "call": "Call",
+      "viewOnMap": "View on map",
+      "currency": "Currency: {{code}}"
+    },
+    "weightGrams": "{{grams}} g",
+    "dayShort": {
+      "mon": "Mon",
+      "tue": "Tue",
+      "wed": "Wed",
+      "thu": "Thu",
+      "fri": "Fri",
+      "sat": "Sat",
+      "sun": "Sun"
+    }
+  },
+  "restaurantsList": {
+    "heading": "Our restaurants",
+    "loadingAria": "Loading restaurants",
+    "errors": {
+      "load": "Could not load restaurants. Please try again."
+    },
+    "state": {
+      "errorTitle": "Couldn’t load restaurants",
+      "retry": "Retry",
+      "emptyTitle": "No restaurants yet",
+      "emptyAdmin": "Create your first restaurant to start building the menu and bookings.",
+      "emptyGuest": "No restaurants are available yet. Please check back later.",
+      "create": "Create restaurant"
+    },
+    "toolbar": {
+      "count": "Total: {{count}}"
+    },
+    "card": {
+      "city": "City",
+      "cuisine": "Cuisine",
+      "today": "Today",
+      "updated": "Last updated",
+      "openCta": "Open restaurant",
+      "openNow": "Open now",
+      "closed": "Closed",
+      "openAria": "Open {{name}}",
+      "cityUnknown": "Unknown"
+    }
+  },
+  "reservation": {
+    "pageTitle": "Booking",
+    "backToMenu": "Back to menu",
+    "tabs": {
+      "floor": "Floor plan",
+      "bookings": "My bookings"
+    },
+    "loading": "Loading…",
+    "retry": "Try again",
+    "loginCta": {
+      "text": "You need to sign in to book a table.",
+      "login": "Sign in",
+      "cancel": "Cancel"
+    },
+    "errors": {
+      "floor": "Failed to load floor plan.",
+      "bookings": "Failed to load your bookings."
+    },
+    "floorPlan": {
+      "title": "Floor plan",
+      "status": {
+        "free": "Free",
+        "reserved": "Reserved",
+        "occupied": "Occupied"
+      },
+      "seats_one": "{{count}} seat",
+      "seats_other": "{{count}} seats",
+      "tableShort": "Table",
+      "choose": "Choose",
+      "tableAria": "Table {{number}}, {{seats}}, {{status}}",
+      "filterAll": "All",
+      "filterFree": "Free",
+      "noFree": "No free tables at this time",
+      "noTables": "No tables in this area yet",
+      "showAll": "Show all",
+      "statusSmall": "Too few seats",
+      "freeCount": "free at {{time}}",
+      "freeCountDefault": "free",
+      "perfectFit": "Perfect for {{guests}}",
+      "zoomIn": "Zoom in",
+      "zoomOut": "Zoom out",
+      "zoomFit": "Fit to view",
+      "showMap": "Show plan",
+      "closeMap": "Close plan",
+      "freeShort": "free",
+      "slot": {
+        "title": "When works for you?",
+        "hint": "Pick a date, time, and number of guests — the floor plan will highlight available tables.",
+        "date": "Date",
+        "time": "Time",
+        "guests": "Guests",
+        "noTimes": "No available times for this day",
+        "today": "Today"
+      }
+    },
+    "modal": {
+      "title": "Book table {{table}}",
+      "confirmedTitle": "Booking confirmed",
+      "today": "Today",
+      "sections": {
+        "date": "Date",
+        "time": "Time",
+        "table": "Table",
+        "contacts": "Contacts",
+        "duration": "Duration (min)",
+        "guests": "Guests",
+        "guestName": "Guest name",
+        "notes": "Notes (optional)",
+        "confirmation": "Confirmation"
+      },
+      "flow": {
+        "steps": ["Date & time", "Table", "Contacts", "Confirmation"],
+        "stepLabel": "Step {{current}} of {{total}}",
+        "back": "Back",
+        "next": "Next",
+        "profileHint": "Your account contacts will be used for this booking.",
+        "notesHint": "Add a name, phone number, or preferences for the restaurant team.",
+        "notesFallback": "No notes"
+      },
+      "tzNote": "Times shown in restaurant time ({{tz}})",
+      "slots": {
+        "loading": "Loading available slots…",
+        "closed": "Restaurant is closed on this day",
+        "none": "No available slots"
+      },
+      "guestNamePlaceholder": "Guest name",
+      "notesPlaceholder": "Guest name, phone, special requests…",
+      "summary": {
+        "table": "Table",
+        "date": "Date",
+        "time": "Time",
+        "duration": "Duration",
+        "guests": "Guests"
+      },
+      "durationUnit": "min",
+      "success": "Your booking for table {{table}} is confirmed.",
+      "ticket": {
+        "label": "E-ticket",
+        "tableLabel": "Table",
+        "reservationNumber": "Confirmation number",
+        "addToCalendar": "Add to calendar",
+        "share": "Share",
+        "shareCopied": "Booking details copied",
+        "shareUnsupported": "Sharing is not supported on this device",
+        "done": "Done"
+      },
+      "actions": {
+        "ok": "OK",
+        "cancel": "Cancel",
+        "confirm": "Book",
+        "submitting": "Booking…"
+      },
+      "validation": {
+        "closingExceeded": "End time exceeds closing time ({{close}})",
+        "durationUnavailable": "The selected duration is not fully available at this time. Choose a shorter duration or different start time.",
+        "guestNameRequired": "Guest name is required"
+      },
+      "createFailed": "Failed to create booking"
+    },
+    "myBookings": {
+      "title": "My bookings",
+      "empty": "No bookings yet.",
+      "emptyCta": "Book a table",
+      "tzNote": "Times shown in restaurant time ({{tz}})",
+      "pastShow": "Show past ({{count}})",
+      "pastHide": "Hide past",
+      "cancelFailed": "Failed to cancel",
+      "status": {
+        "pending": "Pending",
+        "active": "Active",
+        "completed": "Completed",
+        "cancelled": "Cancelled"
+      },
+      "phase": {
+        "upcoming": "Upcoming",
+        "in_progress": "In progress",
+        "past": "Past"
+      },
+      "card": {
+        "table": "Table {{table}}"
+      },
+      "actions": {
+        "modify": "Modify",
+        "cancel": "Cancel",
+        "cancelling": "Cancelling…"
+      }
+    },
+    "reschedule": {
+      "title": "Modify booking for table {{table}}",
+      "updatedTitle": "Booking updated",
+      "updatedText": "Your booking for table {{table}} has been updated.",
+      "sections": {
+        "date": "Date",
+        "time": "Time",
+        "duration": "Duration (min)",
+        "guests": "Guests",
+        "summary": "Summary"
+      },
+      "startingFrom": "Starts at {{time}}",
+      "actions": {
+        "cancel": "Cancel",
+        "save": "Save",
+        "saving": "Saving…"
+      },
+      "modifyFailed": "Failed to modify booking"
+    },
+    "cancel": {
+      "title": "Cancel booking?",
+      "message": "Are you sure you want to cancel this booking?",
+      "close": "Close",
+      "keep": "Keep",
+      "confirm": "Cancel booking",
+      "submitting": "Cancelling…"
+    }
+  },
+  "cabinet": {
+    "page": {
+      "backAria": "Go back",
+      "heading": "My cabinet",
+      "logoutAria": "Log out",
+      "logoutError": "Couldn't sign you out. Please try again.",
+      "loading": "Loading your cabinet…",
+      "noProfile": "We could not load your profile."
+    },
+    "stats": {
+      "aria": "Your stats",
+      "visits_one": "Visit",
+      "visits_other": "Visits",
+      "totalSpent": "Total spent",
+      "favoritePlace": "Favorite place",
+      "fallback": "—"
+    },
+    "profile": {
+      "settings": "Settings",
+      "firstName": "First name",
+      "lastName": "Last name",
+      "phone": "Phone",
+      "phonePrefix": "+380",
+      "phonePlaceholder": "67 123 45 67",
+      "email": "Email",
+      "emailHint": "Email is linked to your Google account and can't be changed here.",
+      "paymentMethods": "Payment methods",
+      "noneAdded": "None added",
+      "cancel": "Cancel",
+      "save": "Save",
+      "saving": "Saving…",
+      "invalidPhoneTitle": "Invalid phone",
+      "invalidPhoneMessage": "Enter a Ukrainian number: +380 and 9 digits, e.g. 67 123 45 67.",
+      "savedTitle": "Saved",
+      "savedMessage": "Your profile has been updated.",
+      "saveErrorTitle": "Could not save",
+      "saveErrorMessage": "Please try again.",
+      "memberSince": "Member since {{year}}",
+      "fallbackInitials": "?"
+    },
+    "bookings": {
+      "title": "Active bookings",
+      "empty": "You have no active bookings.",
+      "unknownTable": "Unknown",
+      "fallbackRestaurant": "Restaurant",
+      "tableLabel": "Table {{number}}",
+      "guests_one": "guest",
+      "guests_other": "guests",
+      "activeNote": "Your table is active — ask the waiter for changes.",
+      "modify": "Modify",
+      "cancel": "Cancel",
+      "cancelling": "Cancelling...",
+      "loadMore": "Load More"
+    },
+    "history": {
+      "title": "History",
+      "empty": "No past visits yet.",
+      "items_one": "item",
+      "items_other": "items"
+    },
+    "calendar": {
+      "titleWithHistory": "Calendar & History",
+      "titleUpcoming": "Upcoming Reservations",
+      "prevAria": "Previous month",
+      "nextAria": "Next month",
+      "loading": "Loading...",
+      "card": "Card",
+      "cash": "Cash",
+      "total": "Total",
+      "guests_one": "guest",
+      "guests_other": "guests",
+      "moreItems_one": "+{{count}} more item",
+      "moreItems_other": "+{{count}} more items",
+      "emptyDay": "No reservations or orders on this day.",
+      "fallbackRestaurant": "Restaurant",
+      "tableLabel": "Table {{number}}",
+      "fallbackTable": "—"
+    },
+    "receipt": {
+      "closeAria": "Close receipt",
+      "openMenuAria": "Open {{name}} menu",
+      "viewMenu": "View menu",
+      "receipt": "Receipt",
+      "date": "Date",
+      "table": "Table",
+      "server": "Server",
+      "guests": "Guests",
+      "each": "each",
+      "subtotal": "Subtotal ({{count}} items)",
+      "tax": "Tax",
+      "serviceCharge": "Service charge",
+      "tip": "Tip",
+      "total": "Total",
+      "card": "Card",
+      "cash": "Cash",
+      "preparing": "Preparing…",
+      "share": "Share receipt",
+      "savePdf": "Save PDF",
+      "thanks": "Thank you for dining with us!",
+      "errorTitle": "Something went wrong",
+      "errorMessage": "Could not create the PDF. Please check your connection and try again."
+    },
+    "feedback": {
+      "ok": "OK"
+    },
+    "errors": {
+      "loadBookings": "We could not load your bookings.",
+      "loadHistory": "We could not load your history.",
+      "refreshBookings": "We could not refresh your bookings.",
+      "loadMoreBookings": "We could not load more bookings.",
+      "cancelBooking": "We could not cancel this booking.",
+      "saveChanges": "Could not save changes. Please try again."
+    }
+  },
+  "admin": {
+    "common": {
+      "loading": "Loading…",
+      "error": "Something went wrong.",
+      "save": "Save",
+      "saving": "Saving…",
+      "cancel": "Cancel",
+      "add": "Add",
+      "confirm": "Confirm",
+      "close": "Close",
+      "search": "Search",
+      "connected": "Connected",
+      "disconnected": "Disconnected"
+    },
+    "layout": {
+      "brand": "Admin",
+      "collapse": {
+        "expand": "Expand side menu",
+        "collapse": "Collapse side menu",
+        "auto": "Sidebar auto-collapses on medium screens"
+      },
+      "nav": {
+        "overview": "Overview",
+        "restaurant": "Restaurant",
+        "settings": "Settings",
+        "staff": "Staff",
+        "menu": "Menu",
+        "scheduler": "Scheduler",
+        "floorPlan": "Floor Plan",
+        "kitchen": "Kitchen",
+        "floor": "Floor"
+      },
+      "logout": {
+        "aria": "Log out",
+        "error": "Couldn't sign you out. Please try again."
+      },
+      "unsaved": {
+        "title": "Discard changes?",
+        "message": "You have unsaved changes. Leave without saving?",
+        "confirm": "Leave"
+      }
+    },
+    "scheduler": {
+      "empty": {
+        "noRestaurant": "No restaurant selected."
+      },
+      "toolbar": {
+        "today": "Today",
+        "single": "Single view",
+        "split": "Split view"
+      },
+      "stale": {
+        "text": "Reservation data changed externally. Your unsaved changes may conflict.",
+        "discard": "Discard & reload",
+        "continue": "Continue editing"
+      },
+      "loading": "Loading…",
+      "errors": {
+        "load": "Failed to load data."
+      },
+      "saveBar": {
+        "changes_one": "{{count}} change",
+        "changes_other": "{{count}} changes",
+        "cancellations_one": "{{count}} cancellation",
+        "cancellations_other": "{{count}} cancellations",
+        "unsaved": "unsaved",
+        "reset": "Reset",
+        "save": "Save changes",
+        "saving": "Saving…"
+      },
+      "confirm": {
+        "nav": {
+          "title": "Unsaved changes",
+          "message": "You have unsaved changes. Discard them and continue?",
+          "confirm": "Discard",
+          "cancel": "Keep editing"
+        },
+        "active": {
+          "title": "Complete active reservation?",
+          "message": "{{name}} at table {{table}} has an active session with a bill. Complete it anyway?",
+          "confirm": "Complete",
+          "cancel": "Keep"
+        }
+      },
+      "cancelZone": {
+        "ariaCancel": "Cancel reservation",
+        "ariaUndo": "Undo cancellation",
+        "cancel": "Cancel",
+        "undo": "Undo"
+      },
+      "dayNav": {
+        "prev": "Previous day",
+        "next": "Next day"
+      },
+      "table": {
+        "capacity": "{{count}}p"
+      },
+      "block": {
+        "guests_one": "{{count}} guest",
+        "guests_other": "{{count}} guests",
+        "duration": {
+          "hoursMinutes": "{{hours}}h{{minutes}}m",
+          "hours_one": "{{count}}h",
+          "hours_other": "{{count}}h",
+          "minutes_one": "{{count}}m",
+          "minutes_other": "{{count}}m"
+        },
+        "meta": "{{guests}} · {{duration}}",
+        "cancelled": "Cancelled",
+        "resizeStart": "Resize start",
+        "resizeEnd": "Resize end",
+        "aria": {
+          "base": "{{name}}, {{guests}}, {{status}}",
+          "conflict": ", conflict",
+          "modified": ", modified",
+          "cancelling": ", cancelling"
+        },
+        "status": {
+          "pending": "pending",
+          "active": "active",
+          "completed": "completed",
+          "cancelled": "cancelled"
+        }
+      },
+      "drag": {
+        "meta": "{{guests}} · {{time}}"
+      },
+      "toast": {
+        "conflict": {
+          "generic": "Cannot place reservation here.",
+          "overlap": "Time slot overlaps with another reservation.",
+          "beforeSeated": "Cannot place before a seated party.",
+          "pastDate": "Cannot move to a past date.",
+          "pastTime": "Cannot move to a past time.",
+          "activeDifferentDate": "Cannot move an active session to a different date.",
+          "beforeOpening": "Cannot start before opening time.",
+          "afterClosing": "Cannot end after closing time.",
+          "closedDay": "Restaurant is closed on this day."
+        },
+        "saveSuccess": "Reservations updated successfully.",
+        "saveFailed": "Failed to save changes."
+      }
+    },
+    "overview": {
+      "titleGreeting": "Welcome back, {{name}}",
+      "titleFallback": "Overview",
+      "status": {
+        "open": "Open now",
+        "closed": "Closed"
+      },
+      "viewRestaurant": "View restaurant",
+      "description": "A quick snapshot of your restaurant.",
+      "error": "Could not load the overview.",
+      "stats": {
+        "menus": {
+          "label": "Active menus",
+          "sub": "of {{total}} total"
+        },
+        "dishes": {
+          "label": "Dishes",
+          "sub": "{{visible}} visible · {{hidden}} hidden"
+        },
+        "categories": {
+          "label": "Categories",
+          "sub": "across all menus"
+        },
+        "staff": {
+          "label": "Active staff",
+          "sub": "of {{total}} total"
+        }
+      },
+      "needsAttention": {
+        "title": "Needs attention",
+        "empty": "Everything looks good — nothing needs fixing.",
+        "fix": "Fix"
+      },
+      "insights": {
+        "title": "Insights",
+        "categories": {
+          "title": "Dishes by category",
+          "empty": "No dishes yet"
+        },
+        "price": {
+          "title": "Price distribution",
+          "empty": "No priced dishes yet"
+        },
+        "likes": {
+          "title": "Most liked dishes",
+          "empty": "No likes yet"
+        }
+      },
+      "actions": {
+        "title": "Quick actions",
+        "addDish": {
+          "label": "Add a dish",
+          "desc": "Create a new menu item"
+        },
+        "manageMenu": {
+          "label": "Manage menu",
+          "desc": "Menus, categories and dishes"
+        },
+        "manageStaff": {
+          "label": "Manage staff",
+          "desc": "Invite and manage employees"
+        },
+        "settings": {
+          "label": "Settings",
+          "desc": "Currency, tax, locale and hours"
+        }
+      }
+    },
+    "settings": {
+      "title": "Settings",
+      "description": "Tax rate, service charge, currency, locale, and timezone.",
+      "rateErrors": {
+        "required": "Required",
+        "number": "Enter a number",
+        "range": "Must be between 0 and 1 (e.g. 0.2 = 20%)"
+      },
+      "fields": {
+        "tax": {
+          "label": "Tax rate",
+          "hint": "Decimal, e.g. 0.20 = 20%"
+        },
+        "service": {
+          "label": "Service charge",
+          "hint": "Decimal, e.g. 0.10 = 10%"
+        },
+        "currency": {
+          "label": "Currency",
+          "hint": "Prices show as {{example}}"
+        },
+        "locale": {
+          "label": "Locale"
+        },
+        "timezone": {
+          "label": "Timezone"
+        }
+      }
+    },
+    "forms": {
+      "saved": "Changes saved",
+      "saveFailed": "Could not save changes.",
+      "discard": {
+        "title": "Discard changes?",
+        "message": "You have unsaved changes. Close without saving?",
+        "confirm": "Discard"
+      }
+    },
+    "staff": {
+      "title": "Staff",
+      "description": "Manage employees — change roles and enable or disable access.",
+      "add": "Add employee",
+      "empty": "No staff yet.",
+      "searchPlaceholder": "Search by name or email",
+      "searchAria": "Search staff",
+      "emptyQuery": "No staff match “{{query}}”.",
+      "table": {
+        "name": "Name",
+        "email": "Email",
+        "role": "Role"
+      }
+    },
+    "restaurant": {
+      "title": "Restaurant",
+      "description": "Edit your restaurant name, address, contact links, and hours.",
+      "fields": {
+        "name": "Name",
+        "address": "Address",
+        "phone": "Phone",
+        "phonePlaceholder": "+380...",
+        "telegram": "Telegram",
+        "telegramPlaceholder": "https://t.me/...",
+        "facebook": "Facebook",
+        "facebookPlaceholder": "https://facebook.com/..."
+      }
+    },
+    "toast": {
+      "regionLabel": "Notifications",
+      "dismiss": "Dismiss"
+    },
+    "workingHours": {
+      "label": "Working hours",
+      "closed": "Closed",
+      "error": "Each open day needs both times set, and open and close can’t be the same.",
+      "info": "Used to show customers whether you are open. Overnight hours are allowed (e.g. 18:00–02:00).",
+      "weekdays": {
+        "mon": "Monday",
+        "tue": "Tuesday",
+        "wed": "Wednesday",
+        "thu": "Thursday",
+        "fri": "Friday",
+        "sat": "Saturday",
+        "sun": "Sunday"
+      },
+      "openAria": "{{day}} opening time",
+      "closeAria": "{{day}} closing time"
+    },
+    "restaurantCover": {
+      "label": "Cover image",
+      "empty": "No cover image yet",
+      "uploading": "Uploading…",
+      "alt": "Restaurant cover",
+      "change": "Change cover",
+      "upload": "Upload cover",
+      "remove": "Remove",
+      "toasts": {
+        "updated": "Cover updated",
+        "removed": "Cover removed",
+        "uploadError": "Could not upload cover image.",
+        "removeError": "Could not remove cover image."
+      }
+    },
+    "menu": {
+      "title": "Menu",
+      "description": "Manage menus, categories, and dishes.",
+      "view": "View menu",
+      "addMenu": "Add menu",
+      "hiddenBadge": "hidden",
+      "empty": "No menus yet. Add one to start.",
+      "categoriesTitle": "Categories",
+      "categoriesEmpty": "No categories in this menu yet.",
+      "namePlaceholder": "Lunch menu",
+      "toastAdded": "Menu added",
+      "createError": "Could not create menu.",
+      "adding": "Adding…",
+      "categories": {
+        "newPlaceholder": "New category name",
+        "nameAria": "Category name",
+        "dragAria": "Drag to reorder category {{name}}",
+        "color": {
+          "change": "Change accent color",
+          "set": "Set accent color",
+          "clear": "Clear"
+        },
+        "buttons": {
+          "add": "Add",
+          "save": "Save"
+        },
+        "deleteAria": "Delete category",
+        "confirmDelete": {
+          "title": "Delete category",
+          "message": "Delete category \"{{name}}\"? This cannot be undone.",
+          "confirm": "Delete"
+        },
+        "toasts": {
+          "updated": "Category updated",
+          "deleted": "Category deleted",
+          "added": "Category added",
+          "addError": "Could not add category.",
+          "actionError": "Action failed."
+        }
+      },
+      "dishes": {
+        "title": "Dishes",
+        "add": "Add dish",
+        "empty": "No dishes in this menu yet.",
+        "searchPlaceholder": "Search by name, description, ingredient",
+        "searchAria": "Search dishes",
+        "sortAria": "Sort dishes",
+        "sort": {
+          "manual": "Manual order",
+          "name": "Name (A–Z)",
+          "priceAsc": "Price (low–high)",
+          "priceDesc": "Price (high–low)"
+        },
+        "emptyQuery": "No dishes match “{{query}}”.",
+        "groupUncategorized": "Uncategorized",
+        "dragHere": "Drag dishes here",
+        "bulk": {
+          "selectAll": "Select all",
+          "selected": "{{count}} selected",
+          "show": "Show",
+          "hide": "Hide",
+          "moveAria": "Move selected dishes to category",
+          "moveLabel": "Move to…",
+          "noCategory": "No category",
+          "delete": "Delete",
+          "clear": "Clear"
+        },
+        "confirmDelete": {
+          "title": "Delete dishes",
+          "message_one": "Delete 1 selected dish? This cannot be undone.",
+          "message_few": "Delete {{count}} selected dishes? This cannot be undone.",
+          "message_many": "Delete {{count}} selected dishes? This cannot be undone.",
+          "message_other": "Delete {{count}} selected dishes? This cannot be undone.",
+          "confirm": "Delete"
+        }
+      },
+      "dishCard": {
+        "noPhoto": "No photo",
+        "selectAria": "Select {{name}}",
+        "dragAria": "Drag to reorder {{name}}",
+        "hideAria": "Hide {{name}} from customers",
+        "showAria": "Show {{name}}",
+        "availableTitle": "Available — click to hide",
+        "hiddenTitle": "Hidden — click to show",
+        "available": "Available",
+        "hidden": "Hidden",
+        "weight": "{{grams}} g",
+        "allergensPrefix": "⚠ {{list}}"
+      },
+      "dishModal": {
+        "titleAdd": "Add dish",
+        "titleEdit": "Edit dish",
+        "aria": "Dish",
+        "fields": {
+          "name": "Name",
+          "description": "Description",
+          "price": "Price",
+          "weight": "Weight (g)",
+          "weightPlaceholder": "optional",
+          "category": "Category",
+          "noCategory": "No category",
+          "available": "Available to customers"
+        },
+        "validation": {
+          "priceRequired": "Price is required.",
+          "number": "Enter a valid number.",
+          "pricePositive": "Price must be greater than 0.",
+          "weightPositive": "Weight must be greater than 0."
+        },
+        "buttons": {
+          "save": "Save",
+          "saving": "Saving…",
+          "duplicate": "Duplicate",
+          "duplicating": "Duplicating…",
+          "delete": "Delete",
+          "deleting": "Deleting…"
+        },
+        "toasts": {
+          "added": "Dish added",
+          "updated": "Dish updated",
+          "duplicated": "Dish duplicated",
+          "deleted": "Dish deleted",
+          "saveError": "Could not save dish.",
+          "duplicateError": "Could not duplicate dish.",
+          "deleteError": "Could not delete dish."
+        },
+        "confirmDelete": {
+          "title": "Delete dish",
+          "message": "Delete dish \"{{name}}\"? This cannot be undone.",
+          "confirm": "Delete"
+        }
+      },
+      "dishPhoto": {
+        "add": "Add a photo",
+        "change": "Change photo",
+        "remove": "Remove photo",
+        "uploading": "Uploading photo"
+      },
+      "ingredients": {
+        "label": "Ingredients",
+        "placeholder": "Type an ingredient, press Enter",
+        "add": "Add",
+        "remove": "Remove {{item}}"
+      },
+      "allergens": {
+        "label": "Allergens",
+        "placeholder": "Add allergen…",
+        "remove": "Remove {{item}}"
+      },
+      "toolbar": {
+        "rename": "Rename",
+        "show": "Show",
+        "hide": "Hide",
+        "deleteAria": "Delete menu",
+        "renameTitle": "Rename menu",
+        "nameLabel": "Menu name",
+        "cancel": "Cancel",
+        "save": "Save",
+        "confirmDelete": {
+          "title": "Delete menu",
+          "message": "Delete \"{{name}}\"? All its categories and dishes will be removed.",
+          "confirm": "Delete"
+        },
+        "confirmHide": {
+          "title": "Hide menu",
+          "message": "Hide \"{{name}}\" from customers? You can show it again later.",
+          "confirm": "Hide"
+        },
+        "toasts": {
+          "renamed": "Menu renamed",
+          "shown": "Menu shown",
+          "hidden": "Menu hidden",
+          "deleted": "Menu deleted",
+          "actionError": "Action failed."
+        }
+      }
+    },
+    "kitchen": {
+      "header": {
+        "brand": "KITCHEN KANBAN",
+        "stationLabel": "STATION:",
+        "stationValue": "HOT LINE",
+        "localTime": "LOCAL TIME",
+        "floorLink": "FLOOR"
+      },
+      "footer": {
+        "incoming": "INCOMING",
+        "active": "ACTIVE",
+        "completed": "COMPLETED",
+        "prepTime": "PREP TIME"
+      },
+      "incoming": {
+        "title": "INCOMING",
+        "empty": "No incoming orders",
+        "acceptHint": "Click to accept order",
+        "readOnlyHint": "Read only"
+      },
+      "active": {
+        "title": "ACTIVE ORDERS",
+        "subtitle": "PRIORITY QUEUE",
+        "empty": "No active orders",
+        "completeAria": "Complete order",
+        "bump": "BUMP",
+        "guestPrefix": "Guests",
+        "serverPrefix": "Server"
+      },
+      "batch": {
+        "title": "BATCH VIEW",
+        "empty": "No batches"
+      },
+      "completed": {
+        "title": "COMPLETED",
+        "empty": "No completed orders",
+        "aria": "Completed"
+      },
+      "notifications": {
+        "title": "NOTIFICATIONS",
+        "markAll": "Mark all read",
+        "empty": "No kitchen notifications",
+        "unread": "Unread",
+        "read": "Read",
+        "new": "NEW"
+      },
+      "page": {
+        "loadError": "Could not load tickets.",
+        "loading": "Loading tickets...",
+        "mutations": {
+          "update": "Could not update item.",
+          "bump": "Could not bump order.",
+          "accept": "Could not accept order."
+        }
+      }
+    },
+    "waiter": {
+      "page": {
+        "loading": "Loading floor plan…",
+        "loadError": "Failed to load floor data.",
+        "cancelError": "Failed to cancel reservation.",
+        "tabs": {
+          "reservations": "Reservations",
+          "notifications": "Notifications"
+        },
+        "notifications": {
+          "unread": "{{count}} unread notifications"
+        }
+      },
+      "topNav": {
+        "brandTitle": "LIVE OCCUPANCY",
+        "brandSubtitle": "STATION · FLOOR",
+        "zonesAria": "Dining rooms",
+        "stats": {
+          "occupied": {
+            "label": "OCCUPIED",
+            "sr": "Occupied tables"
+          },
+          "reserved": {
+            "label": "RESERVED",
+            "sr": "Reserved tables"
+          },
+          "free": {
+            "label": "FREE",
+            "sr": "Free tables"
+          }
+        },
+        "timeLabel": "LOCAL TIME",
+        "connection": {
+          "connected": "Connected",
+          "disconnected": "Disconnected"
+        },
+        "navLink": "KITCHEN"
+      },
+      "floorPlan": {
+        "title": "FLOOR PLAN",
+        "status": {
+          "free": "FREE",
+          "reserved": "RESERVED",
+          "occupied": "OCCUPIED"
+        },
+        "overdue": "OVERDUE {{minutes}}M",
+        "reserved": {
+          "guestFallback": "Guest",
+          "eta": "in {{time}}"
+        },
+        "guestLabel": "GUEST {{slot}}"
+      },
+      "overlay": {
+        "title": "TABLE {{table}}",
+        "closeAria": "Close",
+        "status": {
+          "reserved": "Reserved",
+          "current": "Current party",
+          "capacity": "Capacity",
+          "details": "Details",
+          "nextBooking": "Next booking",
+          "next": "Next"
+        },
+        "values": {
+          "upcoming": "Upcoming",
+          "available": "Available",
+          "none": "None",
+          "guests": "{{count}} guests"
+        },
+        "overdue": {
+          "title": "Reservation time ended {{minutes}} min ago",
+          "message": "Close this table or prolong the booking.",
+          "prolong": "Prolong",
+          "close": "Close check"
+        },
+        "openPanel": {
+          "seatHint": "Seat a booked guest from the Reservations tab.",
+          "guestLabel": "Guests",
+          "action": "Open table",
+          "busy": "Opening…"
+        },
+        "tabs": {
+          "order": "Order",
+          "reservations": "Reservations"
+        },
+        "actions": {
+          "addItem": "Add item",
+          "moveTable": "Move table",
+          "closeCheck": "Close check",
+          "processPayment": "Process payment"
+        },
+        "empty": {
+          "order": "No dishes ordered yet.",
+          "orderMissing": "No active order for this table.",
+          "reservations": "No reservations for this table."
+        },
+        "guestSlot": "Guest {{slot}}",
+        "totals": {
+          "subtotal": "Subtotal",
+          "tax": "Tax",
+          "service": "Service",
+          "total": "Total"
+        },
+        "reservation": {
+          "tagSeated": "Seated now",
+          "seat": "Seat",
+          "modify": "Modify",
+          "cancel": "Cancel",
+          "new": "New reservation"
+        },
+        "voidReasons": {
+          "mispick": "Sent to wrong table",
+          "guestChangedMind": "Guest changed mind",
+          "qualityIssue": "Quality issue",
+          "outOfStock": "Out of stock"
+        }
+      },
+      "reservations": {
+        "sidebar": {
+          "title": "Next reservations",
+          "searchPlaceholder": "Search guests…",
+          "guestCount": "{{count}} guests",
+          "status": {
+            "pending": "Pending",
+            "active": "Active",
+            "completed": "Completed",
+            "cancelled": "Cancelled",
+            "unknown": "Unknown"
+          },
+          "actions": {
+            "modify": "Modify",
+            "cancel": "Cancel",
+            "report": "Generate shift report"
+          },
+          "confirm": {
+            "title": "Cancel reservation",
+            "message": "Are you sure you want to cancel this reservation? This action cannot be undone.",
+            "confirm": "Cancel reservation"
+          }
+        }
+      },
+      "orderModal": {
+        "title": "New order",
+        "searchPlaceholder": "Search menu…",
+        "categories": {
+          "all": "All"
+        },
+        "loading": "Loading…",
+        "empty": "No items found.",
+        "summary": {
+          "title": "Order summary",
+          "empty": "No items added yet.",
+          "total": "Total",
+          "submit": "Send to kitchen",
+          "submitting": "Sending…"
+        },
+        "removeAria": "Remove",
+        "guestOption": "Guest {{slot}}",
+        "commentPlaceholder": "Comment…"
+      },
+      "closeCheck": {
+        "title": "Close check",
+        "message": "There is no payment system yet. Closing the check will end the visit and free the table. Make sure the guests have paid before you continue.",
+        "cancel": "Cancel",
+        "confirm": "Close check",
+        "confirming": "Closing…",
+        "closeAria": "Close"
+      },
+      "modifyModal": {
+        "title": "Modify reservation",
+        "labels": {
+          "guest": "Guest",
+          "table": "Table",
+          "date": "Date",
+          "time": "Time",
+          "duration": "Duration",
+          "guests": "Guests",
+          "summary": "Summary"
+        },
+        "time": {
+          "startingFrom": "Starting from {{time}}",
+          "loading": "Loading available slots…",
+          "tableNotFound": "Table not found",
+          "noSlots": "No available slots",
+          "unavailable": "Current: {{time}} (unable to load availability)"
+        },
+        "duration": {
+          "unit": "min",
+          "error": "The selected duration is not fully available. Choose a shorter duration or different start time."
+        },
+        "summary": "{{start}} – {{end}} ({{minutes}} min)",
+        "buttons": {
+          "cancel": "Cancel",
+          "save": "Save",
+          "saving": "Saving…"
+        },
+        "errors": {
+          "generic": "Failed to modify reservation"
+        }
+      },
+      "moveModal": {
+        "title": "Move reservation",
+        "summary": "{{name}} · Table {{table}} · {{guests}} guests",
+        "labels": {
+          "guest": "Guest",
+          "target": "Target table"
+        },
+        "targetPlaceholder": "Select a table…",
+        "buttons": {
+          "cancel": "Cancel",
+          "move": "Move",
+          "moving": "Moving…"
+        },
+        "errors": {
+          "generic": "Failed to move table"
+        }
+      },
+      "actions": {
+        "openTable": "Failed to open table",
+        "activateReservation": "Failed to activate reservation",
+        "closeCheck": "Failed to close the check"
+      }
+    },
+    "floor": {
+      "entities": {
+        "tableSquare": "Square Table",
+        "tableRound": "Round Table",
+        "obstacle": "Obstacle",
+        "threshold": "Threshold",
+        "portal": "Portal"
+      },
+      "page": {
+        "brandTitle": "Floor Plan",
+        "brandSubtitle": "Admin Workspace",
+        "title": "Floor plan studio",
+        "subtitle": {
+          "editing": "Editing zone: {{name}}",
+          "empty": "Create a zone to start mapping the dining room."
+        },
+        "status": {
+          "dirty": "Unsaved changes",
+          "clean": "All changes synced"
+        },
+        "live": {
+          "ariaConnected": "Live updates connected",
+          "ariaDisconnected": "Live updates offline",
+          "connected": "Live updates",
+          "disconnected": "Offline mode",
+          "timeLabel": "Local time",
+          "timeAria": "Local time",
+          "metricsAria": "Layout metrics"
+        },
+        "metrics": {
+          "zones": {
+            "label": "Zones",
+            "hint": "Active zones"
+          },
+          "tables": {
+            "label": "Tables",
+            "hintSelected": "Ready for guests",
+            "hintEmpty": "Select zone"
+          },
+          "portals": {
+            "label": "Portals",
+            "hintSelected": "Navigation links",
+            "hintEmpty": "Select zone"
+          },
+          "grid": {
+            "label": "Grid",
+            "hint": "Columns × rows"
+          }
+        },
+        "empty": "Please create a zone to start editing the floor plan.",
+        "sidebarToggle": {
+          "show": "Show side menu",
+          "hide": "Hide side menu"
+        },
+        "toasts": {
+          "stale": {
+            "message": "Layout was updated by another admin. Reload to see changes (your unsaved work will be lost).",
+            "action": "Reload now"
+          },
+          "occupied": "Can't delete an occupied table — close its visit first."
+        }
+      },
+      "toolbar": {
+        "section": {
+          "kicker": "Layout Builder",
+          "title": "Add Elements",
+          "project": "Project"
+        },
+        "tools": {
+          "select": {
+            "label": "Select",
+            "hint": "Pick and edit objects"
+          },
+          "tableSquare": {
+            "hint": "Add seating table"
+          },
+          "tableRound": {
+            "hint": "Add round seating"
+          },
+          "obstacle": {
+            "hint": "Block access area"
+          },
+          "threshold": {
+            "hint": "Passage / divider"
+          },
+          "portal": {
+            "hint": "Jump to another zone"
+          }
+        },
+        "actions": {
+          "discard": "Discard",
+          "publish": "Publish Layout",
+          "publishing": "Publishing..."
+        }
+      },
+      "zoneHeader": {
+        "placeholder": "Zone name",
+        "add": "Add",
+        "cancel": "Cancel",
+        "addTab": "+ Add zone",
+        "deleteAria": "Delete {{name}}"
+      },
+      "sidebar": {
+        "empty": {
+          "title": "Inspector",
+          "subtitle": "Select a zone",
+          "description": "Pick a zone tab first, then select any element to edit all properties."
+        },
+        "zone": {
+          "titleFallback": "Zone Inspector",
+          "subtitle": "Canvas & zone parameters",
+          "stats": {
+            "tables": "Tables",
+            "seats": "Seats",
+            "portals": "Portals",
+            "obstacles": "Obstacles"
+          },
+          "sections": {
+            "quickAdd": "Quick Add",
+            "canvas": "Canvas Size",
+            "borders": "Border Styles",
+            "shortcuts": "Keyboard Shortcuts"
+          },
+          "fields": {
+            "columns": "Columns",
+            "rows": "Rows"
+          },
+          "borders": {
+            "edges": {
+              "top": "Top Edge",
+              "right": "Right Edge",
+              "bottom": "Bottom Edge",
+              "left": "Left Edge"
+            },
+            "styles": {
+              "dashed": "Dashed",
+              "solid": "Solid"
+            }
+          },
+          "shortcuts": {
+            "copy": "`Cmd/Ctrl + C` copy selected element(s)",
+            "paste": "`Cmd/Ctrl + V` paste with offset",
+            "delete": "`Delete` remove selected element(s)",
+            "undo": "`Cmd/Ctrl + Z` undo last change"
+          }
+        },
+        "entity": {
+          "idPrefix": "ID",
+          "noZone": "No zone",
+          "noticeTitle": "Needs attention",
+          "warnings": {
+            "missingLabel": "Add a label so staff can identify this passage quickly.",
+            "missingTarget": "Portal has no target zone yet.",
+            "capacity": "Table capacity should be at least 1.",
+            "bounds": "Element is outside editable bounds."
+          },
+          "sections": {
+            "transform": "Transform",
+            "placement": "Placement",
+            "table": "Table Settings",
+            "passage": "Passage Settings",
+            "navigation": "Navigation Link"
+          },
+          "fields": {
+            "x": "X",
+            "y": "Y",
+            "width": "Width",
+            "height": "Height",
+            "rotation": "Rotation",
+            "rotationAria": "Rotation in degrees",
+            "rotateStep": "Rotate +45°",
+            "zone": "Zone",
+            "noneOption": "-- None --",
+            "centerX": "Center X",
+            "centerY": "Center Y",
+            "move": {
+              "up": "Move up",
+              "down": "Move down",
+              "left": "Move left",
+              "right": "Move right"
+            }
+          },
+          "table": {
+            "idLabel": "Table ID",
+            "unassigned": "Auto-assigned on publish",
+            "showQr": "Show QR",
+            "qrHint": "Publish to get a QR code",
+            "publicLabel": "Public label",
+            "labelPlaceholder": "e.g. T12",
+            "capacity": "Capacity",
+            "presetsAria": "Capacity presets",
+            "tagsTitle": "Tags",
+            "tags": {
+              "windowSeat": "Window Seat",
+              "quiet": "Quiet",
+              "wheelchairAccessible": "Wheelchair Accessible"
+            }
+          },
+          "passage": {
+            "label": "Label",
+            "placeholder": "e.g. BAR, ENTRANCE"
+          },
+          "navigation": {
+            "targetLabel": "Target Zone",
+            "placeholder": "-- Select zone --"
+          },
+          "actions": {
+            "duplicate": "Duplicate",
+            "delete": "Delete"
+          }
+        }
+      },
+      "modals": {
+        "publish": {
+          "title": "Publish Layout",
+          "bodyLine1": "Publishing will instantly update all active waiter tablets.",
+          "bodyLine2": "Active sessions will remain valid.",
+          "cancel": "Cancel",
+          "confirm": "Publish",
+          "confirming": "Publishing..."
+        },
+        "deleteZone": {
+          "title": "Delete zone",
+          "message": "Are you sure you want to delete zone \"{{name}}\"?",
+          "warning_one": "This zone has {{count}} table. It will be deactivated when you publish.",
+          "warning_few": "This zone has {{count}} tables. They will be deactivated when you publish.",
+          "warning_many": "This zone has {{count}} tables. They will be deactivated when you publish.",
+          "warning_other": "This zone has {{count}} tables. They will be deactivated when you publish.",
+          "cancel": "Cancel",
+          "confirm": "Delete",
+          "confirming": "Deleting..."
+        },
+        "qr": {
+          "title": "QR code — Table {{table}}",
+          "loading": "Loading...",
+          "error": "Could not load the QR code.",
+          "download": "Download",
+          "close": "Close",
+          "alt": "QR code for table {{table}}"
+        }
+      }
+    }
+  }
+}

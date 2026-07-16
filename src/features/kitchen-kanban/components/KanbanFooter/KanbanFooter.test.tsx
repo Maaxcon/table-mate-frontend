@@ -1,9 +1,13 @@
 import { describe, it, expect } from "vitest"
 import { render, screen } from "@testing-library/react"
 import { KanbanFooter } from "./KanbanFooter"
+import i18n from "@/i18n/config"
 
 describe("KanbanFooter", () => {
   it("renders all counts", () => {
+    const incoming = i18n.t("admin.kitchen.footer.incoming")
+    const active = i18n.t("admin.kitchen.footer.active")
+    const completed = i18n.t("admin.kitchen.footer.completed")
     render(
       <KanbanFooter
         incomingCount={3}
@@ -12,12 +16,13 @@ describe("KanbanFooter", () => {
         avgPrepTimeSeconds={null}
       />,
     )
-    expect(screen.getByText("INCOMING: 3")).toBeInTheDocument()
-    expect(screen.getByText("ACTIVE: 5")).toBeInTheDocument()
-    expect(screen.getByText("COMPLETED: 12")).toBeInTheDocument()
+    expect(screen.getByText(`${incoming}: 3`)).toBeInTheDocument()
+    expect(screen.getByText(`${active}: 5`)).toBeInTheDocument()
+    expect(screen.getByText(`${completed}: 12`)).toBeInTheDocument()
   })
 
   it("renders avg prep time in minutes", () => {
+    const prepLabel = i18n.t("admin.kitchen.footer.prepTime")
     render(
       <KanbanFooter
         incomingCount={0}
@@ -27,10 +32,11 @@ describe("KanbanFooter", () => {
       />,
     )
     // 900 seconds = 15 minutes
-    expect(screen.getByText("PREP TIME: 15m")).toBeInTheDocument()
+    expect(screen.getByText(`${prepLabel}: 15m`)).toBeInTheDocument()
   })
 
   it("rounds avg prep time to nearest minute", () => {
+    const prepLabel = i18n.t("admin.kitchen.footer.prepTime")
     render(
       <KanbanFooter
         incomingCount={0}
@@ -40,10 +46,11 @@ describe("KanbanFooter", () => {
       />,
     )
     // 1250 seconds ≈ 20.83 minutes → rounds to 21
-    expect(screen.getByText("PREP TIME: 21m")).toBeInTheDocument()
+    expect(screen.getByText(`${prepLabel}: 21m`)).toBeInTheDocument()
   })
 
   it("renders em dash when avg prep time is null", () => {
+    const prepLabel = i18n.t("admin.kitchen.footer.prepTime")
     render(
       <KanbanFooter
         incomingCount={0}
@@ -52,6 +59,6 @@ describe("KanbanFooter", () => {
         avgPrepTimeSeconds={null}
       />,
     )
-    expect(screen.getByText("PREP TIME: —")).toBeInTheDocument()
+    expect(screen.getByText(`${prepLabel}: —`)).toBeInTheDocument()
   })
 })

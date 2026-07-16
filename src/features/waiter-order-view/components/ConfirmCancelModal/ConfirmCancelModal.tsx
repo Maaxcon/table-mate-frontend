@@ -1,5 +1,6 @@
 import { useFocusTrap } from "@/hooks/useFocusTrap"
 import "./ConfirmCancelModal.css"
+import { useTranslation } from "react-i18next"
 
 interface ConfirmCancelModalProps {
   title?: string
@@ -13,15 +14,20 @@ interface ConfirmCancelModalProps {
 }
 
 export function ConfirmCancelModal({
-  title = "Confirm",
+  title,
   message,
-  confirmLabel = "Confirm",
-  cancelLabel = "Cancel",
+  confirmLabel,
+  cancelLabel,
   busy = false,
   error = null,
   onConfirm,
   onClose,
 }: ConfirmCancelModalProps) {
+  const { t } = useTranslation()
+  const resolvedTitle = title ?? t("admin.common.confirm")
+  const resolvedConfirm = confirmLabel ?? t("admin.common.confirm")
+  const resolvedCancel = cancelLabel ?? t("admin.common.cancel")
+  const closeLabel = t("admin.common.close")
   const dialogRef = useFocusTrap<HTMLDivElement>({
     onEscape: () => {
       if (!busy) onClose()
@@ -44,14 +50,14 @@ export function ConfirmCancelModal({
       >
         <div className="confirm-cancel__header">
           <h2 id="confirm-cancel-title" className="confirm-cancel__title">
-            {title}
+            {resolvedTitle}
           </h2>
           <button
             type="button"
             className="confirm-cancel__close"
             onClick={onClose}
             disabled={busy}
-            aria-label="Close"
+            aria-label={closeLabel}
           >
             &times;
           </button>
@@ -66,7 +72,7 @@ export function ConfirmCancelModal({
         </div>
         <div className="confirm-cancel__actions">
           <button type="button" className="confirm-cancel__btn" onClick={onClose} disabled={busy}>
-            {cancelLabel}
+            {resolvedCancel}
           </button>
           <button
             type="button"
@@ -74,7 +80,7 @@ export function ConfirmCancelModal({
             onClick={onConfirm}
             disabled={busy}
           >
-            {busy ? "…" : confirmLabel}
+            {busy ? "…" : resolvedConfirm}
           </button>
         </div>
       </div>

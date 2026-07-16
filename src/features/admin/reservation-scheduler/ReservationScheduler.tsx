@@ -11,6 +11,7 @@ import type { DragMoveEvent, DragStartEvent } from "@dnd-kit/core"
 import { LuChevronLeft, LuChevronRight } from "react-icons/lu"
 import { useAppSelector } from "@/store/hooks"
 import { useToast } from "@/features/admin/hooks/toastContext"
+import { useAdminStrings } from "@/features/admin/strings"
 import ConfirmDialog from "@/features/admin/components/ConfirmDialog"
 import type { WorkingHoursDay } from "@/features/reservation/api"
 import { fetchRestaurantSettings } from "@/features/reservation/api"
@@ -18,7 +19,7 @@ import { useUnsavedChanges } from "@/features/admin/hooks/unsavedChanges"
 import { env } from "@/config/env"
 import { batchUpdateReservations } from "./api"
 import { useSchedulerState } from "./hooks/useSchedulerState"
-import { useSchedulerData } from "./hooks/useSchedulerData"
+import { useSchedulerData, SCHEDULER_FALLBACK_ERROR } from "./hooks/useSchedulerData"
 import { useScrollSync } from "./hooks/useScrollSync"
 import { useDragAndDrop } from "./hooks/useDragAndDrop"
 import {
@@ -27,6 +28,7 @@ import {
   checkPastTimeViolation,
 } from "./hooks/useOverlapCheck"
 import { isoToDateKey } from "./types"
+import type { SchedulerConflictReason } from "./types"
 import {
   DAY_KEYS,
   getDayExtendedBounds,
@@ -83,6 +85,19 @@ export function ReservationScheduler() {
   const accessToken = useAppSelector((state) => state.auth.accessToken)
   const toast = useToast()
   const { setDirty } = useUnsavedChanges()
+  const adminStrings = useAdminStrings()
+  const schedulerStrings = adminStrings.scheduler
+  const conflictMessages = schedulerStrings.toasts.conflict
+  const getConflictMessage = useCallback(
+    (reason?: SchedulerConflictReason | string) => {
+      if (!reason) return conflictMessages.generic
+      if (typeof reason === "string" && reason in conflictMessages) {
+        return conflictMessages[reason as keyof typeof conflictMessages]
+      }
+      return typeof reason === "string" ? reason : conflictMessages.generic
+    },
+    [conflictMessages],
+  )
 
   const {
     state,
@@ -459,9 +474,9 @@ export function ReservationScheduler() {
         newEndTime,
         crossMidnight,
       ),
-    onConflict: (id: string, reason?: string) => {
+    onConflict: (id: string, reason) => {
       markConflict(id)
-      toast.error(reason ?? "Cannot place reservation here")
+      toast.error(getConflictMessage(reason))
     },
     onCancel: handleCancel,
     onUncancel: handleUncancel,
@@ -603,19 +618,19 @@ export function ReservationScheduler() {
           }
           if (checkOverlap(proposed, currentRes, currentChanges, reservationId)) {
             markConflict(reservationId)
-            toast.error("Time slot overlaps with another reservation")
+            toast.error(getConflictMessage("overlap"))
             return
           }
           const orderingReason = checkOrderingViolation(proposed, currentRes, reservationId)
           if (orderingReason) {
             markConflict(reservationId)
-            toast.error(orderingReason)
+            toast.error(getConflictMessage(orderingReason))
             return
           }
           const pastReason = checkPastTimeViolation(proposed, updated.status, restaurantTimezone)
           if (pastReason) {
             markConflict(reservationId)
-            toast.error(pastReason)
+            toast.error(getConflictMessage(pastReason))
             return
           }
         }
@@ -685,21 +700,21 @@ export function ReservationScheduler() {
 
       if (checkOverlap(proposed, state.reservations, state.pendingChanges, reservationId)) {
         markConflict(reservationId)
-        toast.error("Time slot overlaps with another reservation")
+        toast.error(getConflictMessage("overlap"))
         return
       }
 
       const orderingReason = checkOrderingViolation(proposed, state.reservations, reservationId)
       if (orderingReason) {
         markConflict(reservationId)
-        toast.error(orderingReason)
+        toast.error(getConflictMessage(orderingReason))
         return
       }
 
       const pastReason = checkPastTimeViolation(proposed, reservation.status, restaurantTimezone)
       if (pastReason) {
         markConflict(reservationId)
-        toast.error(pastReason)
+        toast.error(getConflictMessage(pastReason))
         return
       }
 
@@ -751,7 +766,7 @@ export function ReservationScheduler() {
       if (result.ok) {
         handleCommitChanges()
         refetch()
-        toast.success("Reservations updated successfully.")
+        toast.success(schedulerStrings.toasts.saveSuccess)
       } else {
         toast.error(result.message)
         if (result.conflicting_reservation_id) {
@@ -759,7 +774,7 @@ export function ReservationScheduler() {
         }
       }
     } catch {
-      toast.error("Failed to save changes.")
+      toast.error(schedulerStrings.toasts.saveFailed)
     } finally {
       setSaving(false)
     }
@@ -780,7 +795,7 @@ export function ReservationScheduler() {
     : null
 
   if (!restaurantId) {
-    return <div className="scheduler__empty">No restaurant selected.</div>
+    return <div className="scheduler__empty">{schedulerStrings.empty.noRestaurant}</div>
   }
 
   return (
@@ -797,7 +812,7 @@ export function ReservationScheduler() {
               <LuChevronLeft aria-hidden="true" />
             </button>
             <button type="button" className="scheduler__today-btn" onClick={setTodayAll}>
-              Today
+              {schedulerStrings.toolbar.today}
             </button>
             <button type="button" className="scheduler__nav-btn" onClick={() => shiftAllDates(1)}>
               <LuChevronRight aria-hidden="true" />
@@ -808,6 +823,7 @@ export function ReservationScheduler() {
               pendingCancellationIds={state.pendingCancellationIds}
               onCancel={cancelReservation}
               onUncancel={uncancelReservation}
+              labels={schedulerStrings.cancelZone}
             />
           </div>
           <div className="scheduler__toolbar-actions">
@@ -817,37 +833,41 @@ export function ReservationScheduler() {
               className={`scheduler__split-btn${dates.length === 2 ? " scheduler__split-btn--active" : ""}`}
               onClick={toggleSplitView}
             >
-              {dates.length === 2 ? "Single View" : "Split View"}
+              {dates.length === 2
+                ? schedulerStrings.toolbar.singleView
+                : schedulerStrings.toolbar.splitView}
             </button>
           </div>
         </div>
 
         {externalUpdate && (
           <div className="scheduler__stale-banner">
-            <span className="scheduler__stale-banner-text">
-              Reservation data changed externally. Your unsaved changes may conflict.
-            </span>
+            <span className="scheduler__stale-banner-text">{schedulerStrings.stale.text}</span>
             <div className="scheduler__stale-banner-actions">
               <button
                 type="button"
                 className="scheduler__stale-banner-btn scheduler__stale-banner-btn--primary"
                 onClick={discardExternalUpdate}
               >
-                Discard &amp; reload
+                {schedulerStrings.stale.discard}
               </button>
               <button
                 type="button"
                 className="scheduler__stale-banner-btn"
                 onClick={dismissExternalUpdate}
               >
-                Continue editing
+                {schedulerStrings.stale.continue}
               </button>
             </div>
           </div>
         )}
 
-        {loading && <div className="scheduler__loading">Loading...</div>}
-        {error && <div className="scheduler__error">{error}</div>}
+        {loading && <div className="scheduler__loading">{schedulerStrings.loading}</div>}
+        {error && (
+          <div className="scheduler__error">
+            {error === SCHEDULER_FALLBACK_ERROR ? schedulerStrings.errors.loadData : error}
+          </div>
+        )}
 
         {!loading && !error && (
           <>
@@ -874,6 +894,10 @@ export function ReservationScheduler() {
                     showNav={dates.length === 2}
                     onPrevDay={() => shiftDate(i, -1)}
                     onNextDay={() => shiftDate(i, 1)}
+                    locale={schedulerStrings.locale}
+                    navLabels={schedulerStrings.dayNav}
+                    tableStrings={schedulerStrings.table}
+                    blockStrings={schedulerStrings.block}
                   />
                 )
               })}
@@ -886,12 +910,12 @@ export function ReservationScheduler() {
                     const start = new Date(r.start_at)
                     const hh = String(start.getHours()).padStart(2, "0")
                     const mm = String(start.getMinutes()).padStart(2, "0")
+                    const guestsLabel = schedulerStrings.block.guests(r.guest_count)
+                    const metaLabel = schedulerStrings.dragOverlay.meta(guestsLabel, `${hh}:${mm}`)
                     return (
                       <div className="scheduler__drag-overlay">
                         <span className="scheduler__drag-overlay-name">{r.customer_name}</span>
-                        <span className="scheduler__drag-overlay-meta">
-                          {r.guest_count}p &middot; {hh}:{mm}
-                        </span>
+                        <span className="scheduler__drag-overlay-meta">{metaLabel}</span>
                       </div>
                     )
                   })()
@@ -911,14 +935,15 @@ export function ReservationScheduler() {
         saving={state.saving}
         onSave={handleSave}
         onReset={handleResetChanges}
+        strings={schedulerStrings.saveBar}
       />
 
       {pendingNavAction && (
         <ConfirmDialog
-          title="Unsaved changes"
-          message="You have unsaved changes. Discard them and continue?"
-          confirmLabel="Discard"
-          cancelLabel="Keep editing"
+          title={schedulerStrings.confirm.nav.title}
+          message={schedulerStrings.confirm.nav.message}
+          confirmLabel={schedulerStrings.confirm.nav.confirm}
+          cancelLabel={schedulerStrings.confirm.nav.cancel}
           tone="danger"
           onConfirm={() => {
             clearPending()
@@ -931,10 +956,13 @@ export function ReservationScheduler() {
 
       {pendingCancelConfirmId && pendingCancelReservation && (
         <ConfirmDialog
-          title="Complete active reservation?"
-          message={`${pendingCancelReservation.customer_name} at table ${pendingCancelReservation.table_number} has an active session with a bill. Complete it anyway?`}
-          confirmLabel="Complete"
-          cancelLabel="Keep"
+          title={schedulerStrings.confirm.active.title}
+          message={schedulerStrings.confirm.active.message(
+            pendingCancelReservation.customer_name,
+            pendingCancelReservation.table_number,
+          )}
+          confirmLabel={schedulerStrings.confirm.active.confirm}
+          cancelLabel={schedulerStrings.confirm.active.cancel}
           tone="danger"
           onConfirm={() => {
             cancelReservation(pendingCancelConfirmId)

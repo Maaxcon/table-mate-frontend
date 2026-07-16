@@ -1,5 +1,5 @@
+import { useAuthStrings } from "@/features/auth/strings"
 import Button from "@/components/Button"
-import { authStrings } from "@/features/auth/strings"
 import "./GuestAccess.css"
 
 type GuestAccessProps = {
@@ -7,6 +7,7 @@ type GuestAccessProps = {
 }
 
 function GuestAccess({ onContinueAsGuest }: GuestAccessProps) {
+  const authStrings = useAuthStrings()
   return (
     <section className="guest-access">
       <Button className="guest-access__button" onClick={onContinueAsGuest}>

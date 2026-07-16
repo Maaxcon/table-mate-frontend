@@ -1,6 +1,6 @@
 import { LuPlus, LuUsers } from "react-icons/lu"
 import type { Table } from "@/types/api/types.gen"
-import { bookStrings } from "@/features/reservation/strings"
+import { useBookStrings } from "@/features/reservation/strings"
 import { TableSeats } from "./TableSeats"
 import type { TableView, Tone } from "./types"
 
@@ -27,6 +27,7 @@ export function FloorCardList({
   statusFilter: Tone | null
   guests: number
 }) {
+  const bookStrings = useBookStrings()
   return (
     <>
       <div className="c-floor-plan__filters" role="group">

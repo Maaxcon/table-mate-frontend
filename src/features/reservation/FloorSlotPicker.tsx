@@ -2,7 +2,7 @@ import { useEffect, useMemo } from "react"
 import { LuCalendarDays, LuClock, LuMinus, LuPlus, LuSparkles, LuUsers } from "react-icons/lu"
 import type { WorkingHoursDay } from "./api"
 import { useDateWindow } from "./hooks/useDateWindow"
-import { bookStrings } from "./strings"
+import { useBookStrings } from "./strings"
 import { DAY_NAMES, generateTimeSlots, localDateKey } from "./utils"
 import "./FloorSlotPicker.css"
 
@@ -30,6 +30,7 @@ export function FloorSlotPicker({
   timeZone,
   onChange,
 }: FloorSlotPickerProps) {
+  const bookStrings = useBookStrings()
   // Keyed to the venue's calendar day (not the guest's device clock) so
   // "today" (and the 14-day window) matches the working day the backend
   // checks, and refreshes after midnight in the venue's zone if the page is

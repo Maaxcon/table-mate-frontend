@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react"
 import { LuCircleAlert, LuCircleCheck, LuInfo, LuX } from "react-icons/lu"
 import { ToastContext } from "@/features/admin/hooks/toastContext"
+import { useAdminStrings } from "@/features/admin/strings"
 import "./toast.css"
 
 type ToastType = "success" | "error" | "info"
@@ -18,6 +19,7 @@ const ICONS: Record<ToastType, typeof LuCircleCheck> = {
 
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([])
+  const strings = useAdminStrings()
 
   // Auto-dismiss timer per toast id, so they can be cleared on remove and unmount.
   const timers = useRef(new Map<number, number>())
@@ -60,7 +62,12 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <ToastContext.Provider value={value}>
       {children}
-      <div className="toast-stack" role="region" aria-live="polite" aria-label="Notifications">
+      <div
+        className="toast-stack"
+        role="region"
+        aria-live="polite"
+        aria-label={strings.toast.regionLabel}
+      >
         {toasts.map((t) => {
           const Icon = ICONS[t.type]
           return (
@@ -88,7 +95,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               <button
                 type="button"
                 className="toast__close"
-                aria-label="Dismiss"
+                aria-label={strings.toast.dismiss}
                 onClick={() => remove(t.id)}
               >
                 <LuX aria-hidden="true" />

@@ -1,6 +1,7 @@
 import { useRef, useState } from "react"
 import type { Zone } from "@/features/reservation/api"
 import "./ZoneHeader.css"
+import { useAdminStrings } from "@/features/admin/strings"
 
 interface ZoneHeaderProps {
   zones: Zone[]
@@ -19,6 +20,8 @@ export function ZoneHeader({
   onDeleteZone,
   onRenameZone,
 }: ZoneHeaderProps) {
+  const strings = useAdminStrings()
+  const zoneStrings = strings.floor.zoneHeader
   const [adding, setAdding] = useState(false)
   const [inputValue, setInputValue] = useState("")
   const [editingZoneId, setEditingZoneId] = useState<string | null>(null)
@@ -90,7 +93,7 @@ export function ZoneHeader({
                 <button
                   type="button"
                   className="editor-zone-header__delete"
-                  aria-label={`Delete ${z.name}`}
+                  aria-label={zoneStrings.deleteAria(z.name)}
                   onClick={() => onDeleteZone(z.public_id)}
                 >
                   ×
@@ -114,7 +117,7 @@ export function ZoneHeader({
                 setInputValue("")
               }
             }}
-            placeholder="Zone name"
+            placeholder={zoneStrings.placeholder}
           />
           <button
             type="button"
@@ -122,7 +125,7 @@ export function ZoneHeader({
             onClick={handleAdd}
             disabled={!inputValue.trim()}
           >
-            ADD
+            {zoneStrings.add}
           </button>
           <button
             type="button"
@@ -132,7 +135,7 @@ export function ZoneHeader({
               setInputValue("")
             }}
           >
-            CANCEL
+            {zoneStrings.cancel}
           </button>
         </div>
       ) : (
@@ -141,7 +144,7 @@ export function ZoneHeader({
           className="editor-zone-header__tab editor-zone-header__tab--add"
           onClick={() => setAdding(true)}
         >
-          + ADD ZONE
+          {zoneStrings.addTab}
         </button>
       )}
     </div>

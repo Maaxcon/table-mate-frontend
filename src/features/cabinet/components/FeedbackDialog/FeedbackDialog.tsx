@@ -1,6 +1,7 @@
 import { createPortal } from "react-dom"
 import { LuCircleCheck, LuCircleX } from "react-icons/lu"
 import { useFocusTrap } from "@/hooks/useFocusTrap"
+import { useCabinetStrings } from "@/features/cabinet/strings"
 import "./FeedbackDialog.css"
 
 type FeedbackDialogProps = {
@@ -11,13 +12,9 @@ type FeedbackDialogProps = {
 }
 
 export function FeedbackDialog({ variant, title, message, onClose }: FeedbackDialogProps) {
-  // Focus trap + Escape; this is an alert dialog, so it is dismissed only via
-  // its OK button or Escape (no backdrop click).
+  const strings = useCabinetStrings()
   const dialogRef = useFocusTrap<HTMLDivElement>({ onEscape: onClose })
 
-  // Render outside the cabinet card: an ancestor `transform` (the card's hover
-  // animation) would otherwise anchor this fixed overlay to the card and make
-  // it flicker. A portal to <body> keeps it relative to the viewport.
   return createPortal(
     <div className="feedback-dialog__overlay">
       <div
@@ -36,7 +33,7 @@ export function FeedbackDialog({ variant, title, message, onClose }: FeedbackDia
         </h2>
         {message && <p className="feedback-dialog__message">{message}</p>}
         <button type="button" className="feedback-dialog__btn" onClick={onClose}>
-          OK
+          {strings.feedback.ok}
         </button>
       </div>
     </div>,

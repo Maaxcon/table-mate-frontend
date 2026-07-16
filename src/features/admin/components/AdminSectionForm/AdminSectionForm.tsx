@@ -1,6 +1,7 @@
 import { useEffect, type FormEvent, type ReactNode } from "react"
 import type { SaveStatus } from "@/features/admin/hooks/useAdminResource"
 import { useToast } from "@/features/admin/hooks/toastContext"
+import { useAdminStrings } from "@/features/admin/strings"
 import "@/features/admin/components/styles/SectionPlaceholder.css"
 import "@/features/admin/components/styles/adminForm.css"
 
@@ -30,11 +31,12 @@ function AdminSectionForm({
   children,
 }: AdminSectionFormProps) {
   const toast = useToast()
+  const strings = useAdminStrings()
 
   useEffect(() => {
-    if (status === "saved") toast.success("Changes saved")
-    else if (status === "error") toast.error(saveError ?? "Could not save changes.")
-  }, [status, saveError, toast])
+    if (status === "saved") toast.success(strings.forms.saved)
+    else if (status === "error") toast.error(saveError ?? strings.forms.saveFailed)
+  }, [status, saveError, toast, strings.forms.saved, strings.forms.saveFailed])
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
@@ -49,7 +51,7 @@ function AdminSectionForm({
       </header>
 
       {loading ? (
-        <p className="admin-section__description">Loading…</p>
+        <p className="admin-section__description">{strings.common.loading}</p>
       ) : loadError ? (
         <p className="admin-form__status admin-form__status--error">{loadError}</p>
       ) : (
@@ -61,7 +63,7 @@ function AdminSectionForm({
               className="admin-form__save"
               disabled={status === "saving" || !dirty || saveDisabled}
             >
-              {status === "saving" ? "Saving…" : "Save"}
+              {status === "saving" ? strings.common.saving : strings.common.save}
             </button>
           </div>
         </form>

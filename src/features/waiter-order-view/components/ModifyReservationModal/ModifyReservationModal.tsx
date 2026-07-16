@@ -4,6 +4,7 @@ import { useFocusTrap } from "@/hooks/useFocusTrap"
 import { normalizeSlots } from "@/features/reservation/utils"
 import type { ReservationItem } from "../../types"
 import "./ModifyReservationModal.css"
+import { useWaiterStrings } from "../../strings"
 
 interface ModifyReservationModalProps {
   reservation: ReservationItem
@@ -43,8 +44,20 @@ export function ModifyReservationModal({
   onClose,
   onSuccess,
 }: ModifyReservationModalProps) {
+  const waiterStrings = useWaiterStrings()
+  const modifyStrings = waiterStrings.modifyModal
   const parsedDate = useMemo(() => new Date(reservation.start_at), [reservation.start_at])
   const dateStr = localDateKey(parsedDate)
+  const dateFormatter = useMemo(
+    () =>
+      new Intl.DateTimeFormat(waiterStrings.locale || undefined, {
+        weekday: "short",
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      }),
+    [waiterStrings.locale],
+  )
 
   const currentStartTime = msToTime(new Date(reservation.start_at).getTime())
   const currentEndTime = msToTime(new Date(reservation.end_at).getTime())
@@ -121,12 +134,19 @@ export function ModifyReservationModal({
       for (let m = scanStart; m < slotEnd; m += 30) {
         const slotTime = minutesToTime(m)
         if (!availableSlots.includes(slotTime)) {
-          return "The selected duration is not fully available. Choose a shorter duration or different start time."
+          return modifyStrings.duration.error
         }
       }
     }
     return null
-  }, [selectedTime, durationMinutes, availableSlots, isActive, currentEndTime])
+  }, [
+    selectedTime,
+    durationMinutes,
+    availableSlots,
+    isActive,
+    currentEndTime,
+    modifyStrings.duration.error,
+  ])
 
   const handleSave = async () => {
     if (!selectedTime) return
@@ -153,11 +173,11 @@ export function ModifyReservationModal({
       })
       if (!res.ok) {
         const body = (await res.json().catch(() => null)) as { detail?: string } | null
-        throw new Error(body?.detail ?? "Failed to modify reservation")
+        throw new Error(body?.detail ?? modifyStrings.errors.generic)
       }
       onSuccess()
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to modify reservation")
+      setError(err instanceof Error ? err.message : modifyStrings.errors.generic)
     } finally {
       setBusy(false)
     }
@@ -180,14 +200,14 @@ export function ModifyReservationModal({
       >
         <div className="modify-res__header">
           <h2 id="modify-res-title" className="modify-res__title">
-            Modify Reservation
+            {modifyStrings.title}
           </h2>
           <button
             type="button"
             className="modify-res__close"
             onClick={onClose}
             disabled={busy}
-            aria-label="Close"
+            aria-label={waiterStrings.common.close}
           >
             &times;
           </button>
@@ -196,7 +216,7 @@ export function ModifyReservationModal({
         <div className="modify-res__body">
           <div className="modify-res__field">
             <label className="modify-res__label" htmlFor="mod-res-name">
-              Guest
+              {modifyStrings.labels.guest}
             </label>
             <input
               id="mod-res-name"
@@ -208,35 +228,30 @@ export function ModifyReservationModal({
             />
           </div>
           <div className="modify-res__field">
-            <span className="modify-res__label">Table</span>
+            <span className="modify-res__label">{modifyStrings.labels.table}</span>
             <span className="modify-res__value">{reservation.table}</span>
           </div>
 
           <div className="modify-res__section">
-            <h3 className="modify-res__section-title">Date</h3>
-            <p className="modify-res__section-value">
-              {parsedDate.toLocaleDateString("en-US", {
-                weekday: "short",
-                month: "short",
-                day: "numeric",
-                year: "numeric",
-              })}
-            </p>
+            <h3 className="modify-res__section-title">{modifyStrings.labels.date}</h3>
+            <p className="modify-res__section-value">{dateFormatter.format(parsedDate)}</p>
           </div>
 
           <div className="modify-res__section">
-            <h3 className="modify-res__section-title">Time</h3>
+            <h3 className="modify-res__section-title">{modifyStrings.labels.time}</h3>
             {isActive ? (
-              <p className="modify-res__section-value">Starting from {currentStartTime}</p>
+              <p className="modify-res__section-value">
+                {modifyStrings.time.startingFrom(currentStartTime)}
+              </p>
             ) : slotsLoading ? (
-              <p className="modify-res__section-value">Loading available slots…</p>
+              <p className="modify-res__section-value">{modifyStrings.time.loading}</p>
             ) : !tableId ? (
-              <p className="modify-res__section-value">Table not found</p>
+              <p className="modify-res__section-value">{modifyStrings.time.tableNotFound}</p>
             ) : availableSlots && availableSlots.length === 0 ? (
-              <p className="modify-res__section-value">No available slots</p>
+              <p className="modify-res__section-value">{modifyStrings.time.noSlots}</p>
             ) : !availableSlots ? (
               <p className="modify-res__section-value">
-                Current: {currentStartTime} <em>(unable to load availability)</em>
+                {modifyStrings.time.unavailable(currentStartTime)}
               </p>
             ) : (
               <div className="modify-res__times">
@@ -259,14 +274,14 @@ export function ModifyReservationModal({
             )}
             {!slotsLoading && !availableSlots && !isActive && (
               <p className="modify-res__section-value">
-                Current: {currentStartTime} <em>(unable to load availability)</em>
+                {modifyStrings.time.unavailable(currentStartTime)}
               </p>
             )}
           </div>
 
           <div className="modify-res__field">
             <label className="modify-res__label" htmlFor="mod-res-duration">
-              Duration
+              {modifyStrings.labels.duration}
             </label>
             <input
               id="mod-res-duration"
@@ -278,14 +293,14 @@ export function ModifyReservationModal({
               onChange={(e) => setDurationMinutes(Math.max(30, Number(e.target.value) || 30))}
               disabled={busy}
             />
-            <span className="modify-res__unit">min</span>
+            <span className="modify-res__unit">{modifyStrings.duration.unit}</span>
             {durationError && <p className="modify-res__hint">{durationError}</p>}
           </div>
 
           {!isActive && (
             <div className="modify-res__field">
               <label className="modify-res__label" htmlFor="mod-res-guests">
-                Guests
+                {modifyStrings.labels.guests}
               </label>
               <input
                 id="mod-res-guests"
@@ -301,9 +316,9 @@ export function ModifyReservationModal({
 
           {selectedTime && (
             <div className="modify-res__field">
-              <span className="modify-res__label">Summary</span>
+              <span className="modify-res__label">{modifyStrings.labels.summary}</span>
               <span className="modify-res__value">
-                {selectedTime} &ndash; {endAt} ({durationMinutes} min)
+                {modifyStrings.summary(selectedTime, endAt, durationMinutes)}
               </span>
             </div>
           )}
@@ -317,7 +332,7 @@ export function ModifyReservationModal({
 
         <div className="modify-res__actions">
           <button type="button" className="modify-res__btn" onClick={onClose} disabled={busy}>
-            Cancel
+            {modifyStrings.buttons.cancel}
           </button>
           <button
             type="button"
@@ -325,7 +340,7 @@ export function ModifyReservationModal({
             onClick={handleSave}
             disabled={!selectedTime || busy || !!durationError}
           >
-            {busy ? "Saving…" : "Save"}
+            {busy ? modifyStrings.buttons.saving : modifyStrings.buttons.save}
           </button>
         </div>
       </div>

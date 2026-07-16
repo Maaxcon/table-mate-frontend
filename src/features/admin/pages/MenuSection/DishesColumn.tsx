@@ -7,6 +7,7 @@ import DishList from "@/features/admin/components/DishList"
 import DishModal from "@/features/admin/components/DishModal"
 import ConfirmDialog from "@/features/admin/components/ConfirmDialog"
 import DishBulkBar from "./DishBulkBar"
+import { useAdminStrings } from "@/features/admin/strings"
 
 type SortBy = "manual" | "name" | "price-asc" | "price-desc"
 
@@ -46,6 +47,7 @@ function DishesColumn({
     open: false,
     item: null,
   })
+  const strings = useAdminStrings()
 
   const filteredItems = useMemo(() => {
     const q = dishQuery.trim().toLowerCase()
@@ -97,23 +99,23 @@ function DishesColumn({
   return (
     <section className="menu-admin__col">
       <div className="menu-admin__dishes-head">
-        <h2 className="menu-admin__subtitle">Dishes</h2>
+        <h2 className="menu-admin__subtitle">{strings.menu.dishes.title}</h2>
         <button
           type="button"
           className="menu-admin__btn"
           onClick={() => setDishModal({ open: true, item: null })}
         >
           <LuPlus aria-hidden="true" />
-          <span>Add dish</span>
+          <span>{strings.menu.dishes.add}</span>
         </button>
       </div>
 
       {loading ? (
-        <p className="admin-section__description">Loading…</p>
+        <p className="admin-section__description">{strings.common.loading}</p>
       ) : items.length === 0 ? (
         <EmptyState
-          message="No dishes in this menu yet."
-          actionLabel="Add dish"
+          message={strings.menu.dishes.empty}
+          actionLabel={strings.menu.dishes.add}
           onAction={() => setDishModal({ open: true, item: null })}
         />
       ) : (
@@ -122,24 +124,26 @@ function DishesColumn({
             <SearchBox
               value={dishQuery}
               onChange={setDishQuery}
-              placeholder="Search by name, description, ingredient"
-              ariaLabel="Search dishes"
+              placeholder={strings.menu.dishes.searchPlaceholder}
+              ariaLabel={strings.menu.dishes.searchAria}
             />
             <select
               className="admin-field__input menu-admin__sort"
               value={sortBy}
-              aria-label="Sort dishes"
+              aria-label={strings.menu.dishes.sortAria}
               onChange={(e) => setSortBy(e.target.value as SortBy)}
             >
-              <option value="manual">Manual order</option>
-              <option value="name">Name (A–Z)</option>
-              <option value="price-asc">Price (low–high)</option>
-              <option value="price-desc">Price (high–low)</option>
+              <option value="manual">{strings.menu.dishes.sort.manual}</option>
+              <option value="name">{strings.menu.dishes.sort.name}</option>
+              <option value="price-asc">{strings.menu.dishes.sort.priceAsc}</option>
+              <option value="price-desc">{strings.menu.dishes.sort.priceDesc}</option>
             </select>
           </div>
 
           {filteredItems.length === 0 ? (
-            <p className="admin-section__description">No dishes match “{dishQuery.trim()}”.</p>
+            <p className="admin-section__description">
+              {strings.menu.dishes.emptyQuery(dishQuery.trim())}
+            </p>
           ) : (
             <>
               <DishBulkBar
@@ -181,11 +185,9 @@ function DishesColumn({
 
       {confirmBulkDelete && (
         <ConfirmDialog
-          title="Delete dishes"
-          message={`Delete ${selectedVisibleIds.length} selected dish${
-            selectedVisibleIds.length === 1 ? "" : "es"
-          }? This cannot be undone.`}
-          confirmLabel="Delete"
+          title={strings.menu.dishes.confirmDelete.title}
+          message={strings.menu.dishes.confirmDelete.message(selectedVisibleIds.length)}
+          confirmLabel={strings.menu.dishes.confirmDelete.confirm}
           tone="danger"
           onConfirm={() => {
             setConfirmBulkDelete(false)

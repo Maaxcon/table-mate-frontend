@@ -1,4 +1,5 @@
 import { LuChevronRight, LuReceipt } from "react-icons/lu"
+import { useCabinetStrings } from "@/features/cabinet/strings"
 import type { HistoryEntry } from "@/features/cabinet/types"
 import { formatDateTime, formatMoney } from "@/features/cabinet/utils"
 import "./HistoryList.css"
@@ -10,7 +11,7 @@ type HistoryListProps = {
 }
 
 export function HistoryList({ history, error, onOpenReceipt }: HistoryListProps) {
-  // Newest first.
+  const strings = useCabinetStrings()
   const sorted = [...history].sort(
     (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
   )
@@ -18,13 +19,13 @@ export function HistoryList({ history, error, onOpenReceipt }: HistoryListProps)
   return (
     <section className="cabinet-section" aria-labelledby="cabinet-history-title">
       <h2 className="cabinet-section__title" id="cabinet-history-title">
-        History
+        {strings.history.title}
       </h2>
 
       {error ? (
         <p className="cabinet-section__empty cabinet-section__empty--error">{error}</p>
       ) : sorted.length === 0 ? (
-        <p className="cabinet-section__empty">No past visits yet.</p>
+        <p className="cabinet-section__empty">{strings.history.empty}</p>
       ) : (
         <ul className="cabinet-history">
           {sorted.map((entry) => {
@@ -36,8 +37,8 @@ export function HistoryList({ history, error, onOpenReceipt }: HistoryListProps)
                   <span className="history-card__body">
                     <span className="history-card__title">{entry.restaurantName}</span>
                     <span className="history-card__meta">
-                      {formatDateTime(entry.date)} · {itemCount}{" "}
-                      {itemCount === 1 ? "item" : "items"}
+                      {formatDateTime(entry.date, strings.locale)} · {itemCount}{" "}
+                      {strings.history.itemsLabel(itemCount)}
                     </span>
                   </span>
                   <span className="history-card__total">

@@ -1,6 +1,7 @@
 import { type ReactNode } from "react"
 import { LuX } from "react-icons/lu"
 import { useFocusTrap } from "@/hooks/useFocusTrap"
+import { useAdminStrings } from "@/features/admin/strings"
 import "@/features/admin/components/styles/modal.css"
 
 type ModalProps = {
@@ -42,8 +43,9 @@ function Modal({
   active = true,
   className,
   overlayClassName,
-  backdropLabel = "Close",
+  backdropLabel,
 }: ModalProps) {
+  const strings = useAdminStrings()
   // Focus trap + Esc-to-close, both suspended when another modal is stacked on
   // top (active=false) or an action is running (closeDisabled).
   const dialogRef = useFocusTrap<HTMLDivElement>({
@@ -51,6 +53,8 @@ function Modal({
     preferFields: true,
     onEscape: closeDisabled ? undefined : onClose,
   })
+
+  const resolvedBackdropLabel = backdropLabel ?? strings.common.close
 
   const requestClose = () => {
     if (!closeDisabled) onClose()
@@ -61,7 +65,7 @@ function Modal({
       <button
         type="button"
         className="admin-modal__backdrop"
-        aria-label={backdropLabel}
+        aria-label={resolvedBackdropLabel}
         onClick={requestClose}
       />
       <div
@@ -78,7 +82,7 @@ function Modal({
               type="button"
               className="admin-modal__close"
               onClick={requestClose}
-              aria-label="Close"
+              aria-label={strings.common.close}
             >
               <LuX aria-hidden="true" />
             </button>

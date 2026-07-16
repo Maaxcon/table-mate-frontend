@@ -1,5 +1,5 @@
 import { useFocusTrap } from "@/hooks/useFocusTrap"
-import { bookStrings } from "./strings"
+import { useBookStrings } from "./strings"
 import "./CancellationConfirmationModal.css"
 
 interface CancellationConfirmationModalProps {
@@ -13,6 +13,7 @@ export function CancellationConfirmationModal({
   onConfirm,
   onClose,
 }: CancellationConfirmationModalProps) {
+  const bookStrings = useBookStrings()
   const dialogRef = useFocusTrap<HTMLDivElement>({
     onEscape: () => {
       if (!isSubmitting) onClose()

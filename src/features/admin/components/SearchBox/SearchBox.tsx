@@ -1,4 +1,5 @@
 import { LuSearch } from "react-icons/lu"
+import { useAdminStrings } from "@/features/admin/strings"
 import "./search.css"
 
 type SearchBoxProps = {
@@ -8,12 +9,10 @@ type SearchBoxProps = {
   ariaLabel?: string
 }
 
-function SearchBox({
-  value,
-  onChange,
-  placeholder = "Search",
-  ariaLabel = "Search",
-}: SearchBoxProps) {
+function SearchBox({ value, onChange, placeholder, ariaLabel }: SearchBoxProps) {
+  const strings = useAdminStrings()
+  const effectivePlaceholder = placeholder ?? strings.common.search
+  const effectiveAria = ariaLabel ?? strings.common.search
   return (
     <div className="admin-search">
       <LuSearch className="admin-search__icon" aria-hidden="true" />
@@ -22,8 +21,8 @@ function SearchBox({
         type="search"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        aria-label={ariaLabel}
+        placeholder={effectivePlaceholder}
+        aria-label={effectiveAria}
       />
     </div>
   )

@@ -1,4 +1,5 @@
 import Modal from "@/features/admin/components/Modal"
+import { useAdminStrings } from "@/features/admin/strings"
 import "@/features/admin/components/styles/modal.css"
 
 type ConfirmDialogProps = {
@@ -16,13 +17,17 @@ type ConfirmDialogProps = {
 function ConfirmDialog({
   title,
   message,
-  confirmLabel = "Confirm",
-  cancelLabel = "Cancel",
+  confirmLabel,
+  cancelLabel,
   tone = "default",
   busy = false,
   onConfirm,
   onClose,
 }: ConfirmDialogProps) {
+  const strings = useAdminStrings()
+  const confirmText = confirmLabel ?? strings.common.confirm
+  const cancelText = cancelLabel ?? strings.common.cancel
+
   return (
     <Modal
       title={title}
@@ -32,13 +37,13 @@ function ConfirmDialog({
       closeDisabled={busy}
       overlayClassName="admin-confirm__overlay"
       className="admin-modal--confirm"
-      backdropLabel="Cancel"
+      backdropLabel={cancelText}
     >
       <p className="admin-modal__message">{message}</p>
 
       <div className="admin-modal__actions">
         <button type="button" className="admin-modal__btn" onClick={onClose} disabled={busy}>
-          {cancelLabel}
+          {cancelText}
         </button>
         <button
           type="button"
@@ -48,7 +53,7 @@ function ConfirmDialog({
           onClick={onConfirm}
           disabled={busy}
         >
-          {busy ? "…" : confirmLabel}
+          {busy ? "…" : confirmText}
         </button>
       </div>
     </Modal>

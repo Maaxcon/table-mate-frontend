@@ -1,8 +1,9 @@
 import "./NotificationsPanel.css"
 import type { NotificationEvent } from "@/features/notification-stream/types"
+import { useAdminStrings } from "@/features/admin/strings"
 
-function formatTime(date: Date): string {
-  return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+function formatTime(date: Date, locale: string): string {
+  return date.toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" })
 }
 
 /**
@@ -37,6 +38,7 @@ export function NotificationsPanel({
   markEventRead,
   markAllRead,
 }: NotificationsPanelProps) {
+  const strings = useAdminStrings()
   const kitchenEvents = events.filter((event) => event.stream === "kitchen")
   const unreadEvents = kitchenEvents.filter((event) => !event.read)
   const readEvents = kitchenEvents.filter((event) => event.read)
@@ -48,16 +50,18 @@ export function NotificationsPanel({
   return (
     <div className="kanban__col kanban__notifs">
       <div className="kanban__col-header">
-        <span className="kanban__col-title kanban__col-title--muted">NOTIFICATIONS</span>
+        <span className="kanban__col-title kanban__col-title--muted">
+          {strings.kitchen.notifications.title}
+        </span>
         <div className="kanban__notif-actions">
           <span
             className={`kanban__notif-status ${isConnected ? "kanban__notif-status--on" : ""}`}
             role="status"
-            aria-label={isConnected ? "Connected" : "Disconnected"}
+            aria-label={isConnected ? strings.common.connected : strings.common.disconnected}
           />
           {unreadEvents.length > 0 && (
             <button type="button" className="kanban__notif-read-all" onClick={markAllRead}>
-              Mark all read
+              {strings.kitchen.notifications.markAll}
             </button>
           )}
         </div>
@@ -68,11 +72,11 @@ export function NotificationsPanel({
         aria-relevant="additions"
       >
         {kitchenEvents.length === 0 && (
-          <p className="kanban__notif-empty">No kitchen notifications</p>
+          <p className="kanban__notif-empty">{strings.kitchen.notifications.empty}</p>
         )}
         {unreadEvents.length > 0 && (
           <>
-            <p className="kanban__notif-subheading">Unread</p>
+            <p className="kanban__notif-subheading">{strings.kitchen.notifications.unread}</p>
             {unreadEvents.map((event) => (
               <button
                 key={event.id}
@@ -83,8 +87,10 @@ export function NotificationsPanel({
                 <div className="kanban__notif-top">
                   <span className="kanban__notif-title">{event.title}</span>
                   <span className="kanban__notif-meta">
-                    <span className="kanban__notif-pill">NEW</span>
-                    <span className="kanban__notif-time">{formatTime(event.timestamp)}</span>
+                    <span className="kanban__notif-pill">{strings.kitchen.notifications.new}</span>
+                    <span className="kanban__notif-time">
+                      {formatTime(event.timestamp, strings.locale)}
+                    </span>
                   </span>
                 </div>
                 <p className="kanban__notif-desc">{renderDescription(event.description)}</p>
@@ -94,7 +100,7 @@ export function NotificationsPanel({
         )}
         {readEvents.length > 0 && (
           <>
-            <p className="kanban__notif-subheading">Read</p>
+            <p className="kanban__notif-subheading">{strings.kitchen.notifications.read}</p>
             {readEvents.map((event) => (
               <button
                 key={event.id}
@@ -104,7 +110,9 @@ export function NotificationsPanel({
               >
                 <div className="kanban__notif-top">
                   <span className="kanban__notif-title">{event.title}</span>
-                  <span className="kanban__notif-time">{formatTime(event.timestamp)}</span>
+                  <span className="kanban__notif-time">
+                    {formatTime(event.timestamp, strings.locale)}
+                  </span>
                 </div>
                 <p className="kanban__notif-desc">{renderDescription(event.description)}</p>
               </button>

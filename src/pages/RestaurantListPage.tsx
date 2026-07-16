@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react"
 import { Link } from "react-router-dom"
 import { apiFetch } from "@/api/client"
 import { isRestaurantOpenNow } from "@/features/menu/utils"
+import { useTranslation } from "react-i18next"
 import { useAppSelector } from "@/store/hooks"
 import type { WorkingHours, WeekDay } from "@/types/workingHours"
 import "./RestaurantListPage.css"
@@ -12,7 +13,7 @@ type Restaurant = {
   address: string
   phone?: string
   cover_image?: string | null
-  city?: string
+  city?: string | null
   cuisine?: string
   status?: string
   updated_at?: string
@@ -23,13 +24,13 @@ type Restaurant = {
   } | null
 }
 
-function extractCityFromAddress(address?: string): string {
-  if (!address) return ""
+function extractCityFromAddress(address?: string): string | null {
+  if (!address) return null
   const parts = address
     .split(",")
     .map((part) => part.trim())
     .filter(Boolean)
-  if (parts.length === 0) return ""
+  if (parts.length === 0) return null
   return parts[parts.length - 1]
 }
 
@@ -43,7 +44,9 @@ function formatUpdatedAt(value?: string): string {
   }).format(parsed)
 }
 
-const DAY_LABELS: Record<WeekDay, string> = {
+const WEEK_DAYS: readonly WeekDay[] = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
+
+const FALLBACK_DAY_LABELS: Record<WeekDay, string> = {
   mon: "Mon",
   tue: "Tue",
   wed: "Wed",
@@ -56,7 +59,7 @@ const DAY_LABELS: Record<WeekDay, string> = {
 function todayKey(timezone?: string): WeekDay | null {
   if (!timezone) {
     const local = (new Date().getDay() + 6) % 7
-    return (["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const)[local]
+    return WEEK_DAYS[local] ?? null
   }
   try {
     const weekday = new Intl.DateTimeFormat("en-US", {
@@ -81,13 +84,18 @@ function todayKey(timezone?: string): WeekDay | null {
   }
 }
 
-function formatTodayHours(workingHours?: WorkingHours, timezone?: string): string {
+function formatTodayHours(
+  workingHours?: WorkingHours,
+  timezone?: string,
+  dayLabels?: Record<WeekDay, string>,
+): string {
   if (!workingHours) return ""
   const key = todayKey(timezone)
   if (!key) return ""
   const slot = workingHours[key]
   if (!slot) return ""
-  return `${DAY_LABELS[key]} ${slot.open}-${slot.close}`
+  const label = dayLabels?.[key] ?? FALLBACK_DAY_LABELS[key]
+  return `${label} ${slot.open}-${slot.close}`
 }
 
 function formatRating(value?: string | null): string {
@@ -113,21 +121,33 @@ export function RestaurantListPage() {
   const [error, setError] = useState<string | null>(null)
   const user = useAppSelector((s) => s.auth.user)
   const isAdmin = user?.role === "admin"
-
-  const loadRestaurants = useCallback(async (signal?: AbortSignal) => {
-    try {
-      const res = await apiFetch("/api/restaurants/restaurants-public/", { signal })
-      if (!res.ok) throw new Error("Failed")
-      const data = (await res.json()) as { results?: Restaurant[] }
-      setRestaurants(data.results ?? [])
-    } catch {
-      if (signal?.aborted) return
-      setRestaurants([])
-      setError("Could not load restaurants. Please try again.")
-    } finally {
-      if (!signal?.aborted) setLoading(false)
+  const { t } = useTranslation()
+  const openCabinetLabel = t("menu.header.openCabinet")
+  const dayShortLabels = useMemo<Record<WeekDay, string>>(() => {
+    const labels = {} as Record<WeekDay, string>
+    for (const day of WEEK_DAYS) {
+      labels[day] = t(`menu.dayShort.${day}`)
     }
-  }, [])
+    return labels
+  }, [t])
+
+  const loadRestaurants = useCallback(
+    async (signal?: AbortSignal) => {
+      try {
+        const res = await apiFetch("/api/restaurants/restaurants-public/", { signal })
+        if (!res.ok) throw new Error("Failed")
+        const data = (await res.json()) as { results?: Restaurant[] }
+        setRestaurants(data.results ?? [])
+      } catch {
+        if (signal?.aborted) return
+        setRestaurants([])
+        setError(t("restaurantsList.errors.load"))
+      } finally {
+        if (!signal?.aborted) setLoading(false)
+      }
+    },
+    [t],
+  )
 
   useEffect(() => {
     const controller = new AbortController()
@@ -149,14 +169,14 @@ export function RestaurantListPage() {
   const enrichedRestaurants = useMemo(
     () =>
       restaurants.map((restaurant) => {
-        const city =
-          restaurant.city?.trim() || extractCityFromAddress(restaurant.address) || "Unknown"
+        const city = restaurant.city?.trim() || extractCityFromAddress(restaurant.address)
         const cuisine = restaurant.cuisine?.trim() || ""
         const updatedAtLabel = formatUpdatedAt(restaurant.updated_at)
         const ratingLabel = formatRating(restaurant.settings?.rating)
         const todayHoursLabel = formatTodayHours(
           restaurant.settings?.working_hours,
           restaurant.settings?.timezone,
+          dayShortLabels,
         )
         const openNow =
           restaurant.settings?.working_hours && restaurant.settings?.timezone
@@ -172,7 +192,7 @@ export function RestaurantListPage() {
           openNow,
         }
       }),
-    [restaurants],
+    [restaurants, dayShortLabels],
   )
 
   return (
@@ -182,7 +202,7 @@ export function RestaurantListPage() {
           <p className="rlp__brand" aria-label="Table Mate">
             Table Mate
           </p>
-          <Link to="/cabinet" className="rlp__cabinet-link" aria-label="Перейти в кабінет">
+          <Link to="/cabinet" className="rlp__cabinet-link" aria-label={openCabinetLabel}>
             <svg
               className="rlp__cabinet-icon"
               viewBox="0 0 24 24"
@@ -196,14 +216,17 @@ export function RestaurantListPage() {
               <path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" />
               <path d="M4 20a8 8 0 0 1 16 0" />
             </svg>
-            <span className="rlp__cabinet-text">Перейти в кабінет</span>
+            <span className="rlp__cabinet-text">{openCabinetLabel}</span>
           </Link>
         </div>
-        <h1 className="rlp__heading">Наші ресторани</h1>
+        <h1 className="rlp__heading">{t("restaurantsList.heading")}</h1>
       </header>
 
       {loading && (
-        <div className="rlp__cards rlp__cards--skeleton" aria-label="Loading restaurants">
+        <div
+          className="rlp__cards rlp__cards--skeleton"
+          aria-label={t("restaurantsList.loadingAria")}
+        >
           {Array.from({ length: 6 }).map((_, index) => (
             <article
               key={`skeleton-${index}`}
@@ -223,7 +246,7 @@ export function RestaurantListPage() {
 
       {!loading && error && (
         <section className="rlp__state" role="alert">
-          <h2 className="rlp__state-title">Couldn’t load restaurants</h2>
+          <h2 className="rlp__state-title">{t("restaurantsList.state.errorTitle")}</h2>
           <p className="rlp__state-text">{error}</p>
           <div className="rlp__state-actions">
             <button
@@ -231,7 +254,7 @@ export function RestaurantListPage() {
               className="rlp__state-button rlp__state-button--primary"
               onClick={retryLoadRestaurants}
             >
-              Retry
+              {t("restaurantsList.state.retry")}
             </button>
           </div>
         </section>
@@ -239,16 +262,16 @@ export function RestaurantListPage() {
 
       {!loading && !error && enrichedRestaurants.length === 0 && (
         <section className="rlp__state">
-          <h2 className="rlp__state-title">No restaurants yet</h2>
+          <h2 className="rlp__state-title">{t("restaurantsList.state.emptyTitle")}</h2>
           <p className="rlp__state-text">
             {isAdmin
-              ? "Create your first restaurant to start building the menu and bookings."
-              : "No restaurants are available yet. Please check back later."}
+              ? t("restaurantsList.state.emptyAdmin")
+              : t("restaurantsList.state.emptyGuest")}
           </p>
           {isAdmin && (
             <div className="rlp__state-actions">
               <Link to="/admin/restaurant" className="rlp__state-button rlp__state-button--primary">
-                Create restaurant
+                {t("restaurantsList.state.create")}
               </Link>
             </div>
           )}
@@ -257,7 +280,9 @@ export function RestaurantListPage() {
 
       {!loading && !error && enrichedRestaurants.length > 0 && (
         <div className="rlp__toolbar">
-          <p className="rlp__result-count">Всього: {enrichedRestaurants.length}</p>
+          <p className="rlp__result-count">
+            {t("restaurantsList.toolbar.count", { count: enrichedRestaurants.length })}
+          </p>
         </div>
       )}
 
@@ -268,7 +293,7 @@ export function RestaurantListPage() {
               to={`/menu/${r.public_id}`}
               key={r.public_id}
               className="rlp__card"
-              aria-label={`Open ${r.name}`}
+              aria-label={t("restaurantsList.card.openAria", { name: r.name })}
             >
               <div className="rlp__card-visual" aria-hidden="true">
                 {r.cover_image ? (
@@ -283,7 +308,9 @@ export function RestaurantListPage() {
                     <span
                       className={`rlp__chip ${r.openNow ? "rlp__chip--open" : "rlp__chip--closed"}`}
                     >
-                      {r.openNow ? "Open now" : "Closed"}
+                      {r.openNow
+                        ? t("restaurantsList.card.openNow")
+                        : t("restaurantsList.card.closed")}
                     </span>
                   )}
                 </div>
@@ -296,31 +323,32 @@ export function RestaurantListPage() {
 
                 <dl className="rlp__card-facts">
                   <div>
-                    <dt>City</dt>
-                    <dd>{r.city}</dd>
+                    <dt>{t("restaurantsList.card.city")}</dt>
+                    <dd>{r.city ?? t("restaurantsList.card.cityUnknown")}</dd>
                   </div>
                   {r.cuisine && (
                     <div>
-                      <dt>Cuisine</dt>
+                      <dt>{t("restaurantsList.card.cuisine")}</dt>
                       <dd>{r.cuisine}</dd>
                     </div>
                   )}
                   {r.todayHoursLabel && (
                     <div>
-                      <dt>Today</dt>
+                      <dt>{t("restaurantsList.card.today")}</dt>
                       <dd>{r.todayHoursLabel}</dd>
                     </div>
                   )}
                   {r.updatedAtLabel && (
                     <div>
-                      <dt>Last updated</dt>
+                      <dt>{t("restaurantsList.card.updated")}</dt>
                       <dd>{r.updatedAtLabel}</dd>
                     </div>
                   )}
                 </dl>
 
                 <p className="rlp__card-open">
-                  Open restaurant <span aria-hidden="true">&gt;</span>
+                  {t("restaurantsList.card.openCta")}
+                  <span aria-hidden="true">&gt;</span>
                 </p>
               </div>
             </Link>

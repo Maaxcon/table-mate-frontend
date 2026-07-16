@@ -3,6 +3,7 @@ import { LuPlus } from "react-icons/lu"
 import { createCategory } from "@/features/admin/api/menu"
 import { DEFAULT_CATEGORY_COLOR } from "@/features/admin/constants/menu"
 import { useToast } from "@/features/admin/hooks/toastContext"
+import { useAdminStrings } from "@/features/admin/strings"
 
 type AddCategoryFormProps = {
   menuId: string
@@ -11,6 +12,7 @@ type AddCategoryFormProps = {
 
 function AddCategoryForm({ menuId, onCreated }: AddCategoryFormProps) {
   const toast = useToast()
+  const strings = useAdminStrings()
   const [name, setName] = useState("")
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -26,13 +28,13 @@ function AddCategoryForm({ menuId, onCreated }: AddCategoryFormProps) {
     try {
       const payloadColor = colorEnabled ? color.toUpperCase() : undefined
       await createCategory(menuId, name.trim(), payloadColor)
-      toast.success("Category added")
+      toast.success(strings.menu.categories.toasts.added)
       setName("")
       setColor(DEFAULT_CATEGORY_COLOR)
       setColorEnabled(false)
       onCreated()
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not add category.")
+      setError(err instanceof Error ? err.message : strings.menu.categories.toasts.addError)
     } finally {
       setBusy(false)
     }
@@ -45,8 +47,8 @@ function AddCategoryForm({ menuId, onCreated }: AddCategoryFormProps) {
           className="admin-field__input menu-admin__row-input"
           value={name}
           disabled={busy}
-          placeholder="New category name"
-          aria-label="New category name"
+          placeholder={strings.menu.categories.newPlaceholder}
+          aria-label={strings.menu.categories.nameAria}
           onChange={(e) => setName(e.target.value)}
         />
       </div>
@@ -56,7 +58,11 @@ function AddCategoryForm({ menuId, onCreated }: AddCategoryFormProps) {
             type="button"
             className={`menu-admin__color-swatch ${colorEnabled ? "" : "is-disabled"}`}
             style={{ backgroundColor: colorEnabled ? color : "transparent" }}
-            aria-label={colorEnabled ? "Change accent color" : "Set accent color"}
+            aria-label={
+              colorEnabled
+                ? strings.menu.categories.color.change
+                : strings.menu.categories.color.set
+            }
             disabled={busy}
             onClick={() => {
               if (busy) return
@@ -81,7 +87,7 @@ function AddCategoryForm({ menuId, onCreated }: AddCategoryFormProps) {
               setColor(DEFAULT_CATEGORY_COLOR)
             }}
           >
-            Clear
+            {strings.menu.categories.color.clear}
           </button>
         </div>
         <button
@@ -90,7 +96,7 @@ function AddCategoryForm({ menuId, onCreated }: AddCategoryFormProps) {
           disabled={busy || !name.trim()}
         >
           <LuPlus aria-hidden="true" />
-          <span>Add</span>
+          <span>{strings.menu.categories.buttons.add}</span>
         </button>
       </div>
       {error && <span className="menu-admin__error">{error}</span>}

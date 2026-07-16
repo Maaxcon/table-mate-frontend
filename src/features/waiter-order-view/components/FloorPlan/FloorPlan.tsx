@@ -1,9 +1,15 @@
 import { useMemo } from "react"
 import { FloorPlanView, type FloorPlanTableRef } from "@/features/floorplan/FloorPlanView"
 import type { LayoutPayload } from "@/features/editor/types"
-import type { FloorTable, ReservationItem, UpcomingReservation } from "../../types"
+import type {
+  FloorTable,
+  ReservationItem,
+  UpcomingReservation,
+  VisualTableStatus,
+} from "../../types"
 import { getTableVisualStatus, formatDuration, formatETA } from "../../types"
 import "./FloorPlan.css"
+import { useWaiterStrings } from "../../strings"
 
 interface FloorPlanProps {
   payload: LayoutPayload | null | undefined
@@ -24,12 +30,6 @@ interface FloorPlanProps {
   enablePan?: boolean
 }
 
-const statusLabel: Record<string, string> = {
-  free: "FREE",
-  reserved: "RESERVED",
-  occupied: "OCCUPIED",
-}
-
 export function FloorPlan({
   payload,
   tables,
@@ -48,6 +48,7 @@ export function FloorPlan({
   enableZoom = false,
   enablePan = false,
 }: FloorPlanProps) {
+  const floorStrings = useWaiterStrings().floorPlan
   // Join a layout table to its live table by public_id, falling back to public_number.
   const { byId, byNumber } = useMemo(() => {
     const byId = new Map(tables.map((t) => [t.public_id, t]))
@@ -72,7 +73,7 @@ export function FloorPlan({
 
   return (
     <div className="floor-plan">
-      <h2 className="floor-plan__title">FLOOR PLAN</h2>
+      <h2 className="floor-plan__title">{floorStrings.title}</h2>
       <FloorPlanView
         payload={payload}
         selectedZoneId={selectedZoneId}
@@ -116,8 +117,8 @@ export function FloorPlan({
             <>
               <span className={`fp-block__badge fp-block__badge--${badgeVariant}`}>
                 {overdueMinutes != null
-                  ? `OVERDUE ${overdueMinutes}M`
-                  : (statusLabel[visualStatus] ?? visualStatus.toUpperCase())}
+                  ? floorStrings.overdue(overdueMinutes)
+                  : floorStrings.statusLabel(visualStatus as VisualTableStatus)}
               </span>
               <span className="fp-block__label">{number}</span>
 
@@ -126,8 +127,12 @@ export function FloorPlan({
                   const res = table ? nearestByTable.get(table.public_id) : undefined
                   return res ? (
                     <div className="fp-block__info">
-                      <span className="fp-block__info-name">{res.customer_name ?? "Guest"}</span>
-                      <span className="fp-block__info-sub">in {formatETA(res.start_at)}</span>
+                      <span className="fp-block__info-name">
+                        {res.customer_name ?? floorStrings.reserved.guestFallback}
+                      </span>
+                      <span className="fp-block__info-sub">
+                        {floorStrings.reserved.eta(formatETA(res.start_at))}
+                      </span>
                     </div>
                   ) : null
                 })()}

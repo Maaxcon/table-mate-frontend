@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from "vitest"
 import { render, screen } from "@testing-library/react"
 import { ActiveColumn } from "./ActiveColumn"
 import type { KanbanTicket } from "../../types"
+import i18n from "@/i18n/config"
 
 function makeTicket(overrides: Partial<KanbanTicket> = {}): KanbanTicket {
   return {
@@ -29,8 +30,9 @@ describe("ActiveColumn", () => {
   })
 
   it("renders empty state when no tickets", () => {
+    const empty = i18n.t("admin.kitchen.active.empty")
     render(<ActiveColumn tickets={[]} onToggleItem={vi.fn()} onBump={vi.fn()} canManage />)
-    expect(screen.getByText("No active orders")).toBeInTheDocument()
+    expect(screen.getByText(empty)).toBeInTheDocument()
   })
 
   it("sets aria-pressed on ready items", () => {
@@ -53,10 +55,11 @@ describe("ActiveColumn", () => {
   })
 
   it("disables bump button when not all items are ready", () => {
+    const label = i18n.t("admin.kitchen.active.completeAria")
     render(
       <ActiveColumn tickets={[makeTicket()]} onToggleItem={vi.fn()} onBump={vi.fn()} canManage />,
     )
-    const bump = screen.getByRole("button", { name: "Complete order" })
+    const bump = screen.getByRole("button", { name: label })
     expect(bump).toBeDisabled()
   })
 
@@ -68,7 +71,7 @@ describe("ActiveColumn", () => {
       ],
     })
     render(<ActiveColumn tickets={[ticket]} onToggleItem={vi.fn()} onBump={vi.fn()} canManage />)
-    const bump = screen.getByRole("button", { name: "Complete order" })
+    const bump = screen.getByRole("button", { name: i18n.t("admin.kitchen.active.completeAria") })
     expect(bump).toBeEnabled()
   })
 
@@ -79,15 +82,16 @@ describe("ActiveColumn", () => {
       ],
     })
     render(<ActiveColumn tickets={[ticket]} onToggleItem={vi.fn()} onBump={vi.fn()} canManage />)
-    const bump = screen.getByRole("button", { name: "Complete order" })
+    const bump = screen.getByRole("button", { name: i18n.t("admin.kitchen.active.completeAria") })
     expect(bump.innerHTML).toContain("<polyline")
   })
 
   it("shows BUMP text when not all items are ready", () => {
+    const bumpText = i18n.t("admin.kitchen.active.bump")
     render(
       <ActiveColumn tickets={[makeTicket()]} onToggleItem={vi.fn()} onBump={vi.fn()} canManage />,
     )
-    expect(screen.getByText("BUMP")).toBeInTheDocument()
+    expect(screen.getByText(bumpText)).toBeInTheDocument()
   })
 
   it("renders modifier text when present", () => {
@@ -108,10 +112,12 @@ describe("ActiveColumn", () => {
   })
 
   it("renders guest count and server name", () => {
+    const guestPrefix = i18n.t("admin.kitchen.active.guestPrefix")
+    const serverPrefix = i18n.t("admin.kitchen.active.serverPrefix")
     render(
       <ActiveColumn tickets={[makeTicket()]} onToggleItem={vi.fn()} onBump={vi.fn()} canManage />,
     )
-    expect(screen.getByText("G: 3")).toBeInTheDocument()
-    expect(screen.getByText("SERVER: ALICE")).toBeInTheDocument()
+    expect(screen.getByText(`${guestPrefix}: 3`)).toBeInTheDocument()
+    expect(screen.getByText(`${serverPrefix}: ALICE`)).toBeInTheDocument()
   })
 })

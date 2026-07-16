@@ -6,7 +6,7 @@ import type { AuthUser } from "@/store/auth/authSlice"
 import { setPostLoginRedirect } from "@/store/auth/postLoginRedirect"
 import type { PublicRestaurantSettings } from "@/features/menu/types"
 import { getCurrencySymbol, isRestaurantOpenNow } from "@/features/menu/utils"
-import { menuStrings } from "@/features/menu/strings"
+import { useMenuStrings } from "@/features/menu/strings"
 
 type MenuHeaderProps = {
   name: string | null
@@ -26,6 +26,7 @@ function MenuHeader({
   restaurantId,
   onSignOut,
 }: MenuHeaderProps) {
+  const menuStrings = useMenuStrings()
   const location = useLocation()
   const currencySymbol = settings ? getCurrencySymbol(settings.currency) : ""
   const priceBand = settings

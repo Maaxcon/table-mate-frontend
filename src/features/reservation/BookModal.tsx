@@ -10,7 +10,7 @@ import { GuestStepper } from "./GuestStepper"
 import { useDateWindow } from "./hooks/useDateWindow"
 import { downloadReservationIcs } from "./ics"
 import { SlotSummary } from "./SlotSummary"
-import { bookStrings } from "./strings"
+import { useBookStrings } from "./strings"
 import { TimeSlotGrid } from "./TimeSlotGrid"
 import {
   DAY_NAMES,
@@ -63,6 +63,7 @@ export function BookModal({
   restaurantId,
   showNameField,
 }: BookModalProps) {
+  const bookStrings = useBookStrings()
   // Keyed to the venue's calendar day (not the guest's device clock), so
   // "today" matches the working day the backend checks.
   const { today, dates } = useDateWindow(timeZone ?? null)

@@ -5,10 +5,10 @@ export function memberSinceYear(isoDate: string): string {
 }
 
 // "18 May 2026, 19:30" — short, readable date + time for bookings/history.
-export function formatDateTime(isoDate: string): string {
+export function formatDateTime(isoDate: string, locale?: string): string {
   const date = new Date(isoDate)
   if (Number.isNaN(date.getTime())) return "—"
-  return date.toLocaleString(undefined, {
+  return date.toLocaleString(locale ?? undefined, {
     day: "numeric",
     month: "short",
     year: "numeric",

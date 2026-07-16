@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from "vitest"
 import { fireEvent, render, screen } from "@testing-library/react"
 import { TableDetailOverlay } from "./TableDetailOverlay"
 import type { FloorTable, OverlayDetail, OverlayOrderItem, ReservationItem } from "../../types"
+import i18n from "@/i18n/config"
 
 function makeTable(overrides: Partial<FloorTable> = {}): FloorTable {
   return {
@@ -70,7 +71,8 @@ describe("TableDetailOverlay bill", () => {
   it("shows a SERVICE row so the bill reconciles when a service charge exists", () => {
     renderOverlay(makeDetail({ service_charge: "3.00" }))
 
-    expect(screen.getByText("SERVICE")).toBeInTheDocument()
+    const serviceLabel = i18n.t("admin.waiter.overlay.totals.service")
+    expect(screen.getByText(serviceLabel)).toBeInTheDocument()
     expect(screen.getByText(/3\.00/)).toBeInTheDocument()
     // subtotal 59.98 + tax 6.00 + service 3.00 = total 68.98
     expect(screen.getByText(/59\.98/)).toBeInTheDocument()
@@ -81,13 +83,15 @@ describe("TableDetailOverlay bill", () => {
   it("hides the SERVICE row when there is no service charge", () => {
     renderOverlay(makeDetail({ service_charge: "0.00", total_amount: "65.98" }))
 
-    expect(screen.queryByText("SERVICE")).not.toBeInTheDocument()
+    const serviceLabel = i18n.t("admin.waiter.overlay.totals.service")
+    expect(screen.queryByText(serviceLabel)).not.toBeInTheDocument()
   })
 
   it("hides the SERVICE row when service_charge is omitted", () => {
     renderOverlay(makeDetail({ service_charge: undefined, total_amount: "65.98" }))
 
-    expect(screen.queryByText("SERVICE")).not.toBeInTheDocument()
+    const serviceLabel = i18n.t("admin.waiter.overlay.totals.service")
+    expect(screen.queryByText(serviceLabel)).not.toBeInTheDocument()
   })
 
   it("renders the bill with the session currency symbol, not a hardcoded euro", () => {
@@ -126,9 +130,14 @@ describe("TableDetailOverlay bill", () => {
       />,
     )
 
-    expect(screen.getByText(/Reservation time ended/)).toBeInTheDocument()
-    fireEvent.click(screen.getByRole("button", { name: "PROLONG" }))
+    const overdueText = i18n.t("admin.waiter.overlay.overdue.title", { minutes: 30 })
+    expect(screen.getByText(overdueText)).toBeInTheDocument()
+    fireEvent.click(
+      screen.getByRole("button", { name: i18n.t("admin.waiter.overlay.overdue.prolong") }),
+    )
     expect(onModifyReservation).toHaveBeenCalledWith(overdueReservation)
-    expect(screen.getAllByRole("button", { name: "CLOSE CHECK" }).length).toBeGreaterThan(0)
+    expect(
+      screen.getAllByRole("button", { name: i18n.t("admin.waiter.overlay.overdue.close") }).length,
+    ).toBeGreaterThan(0)
   })
 })

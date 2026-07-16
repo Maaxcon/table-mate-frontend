@@ -3,6 +3,7 @@ import type { ReservationItem } from "../../types"
 import { formatTimeRange } from "../../types"
 import { ConfirmCancelModal } from "../ConfirmCancelModal"
 import "./ReservationSidebar.css"
+import { useWaiterStrings } from "../../strings"
 
 interface ReservationSidebarProps {
   reservations: ReservationItem[]
@@ -10,19 +11,6 @@ interface ReservationSidebarProps {
   onModify: (reservation: ReservationItem) => void
   actionLoading: boolean
   error?: string | null
-}
-
-const STATUS_LABELS = {
-  pending: "PENDING",
-  active: "ACTIVE",
-  completed: "COMPLETED",
-  cancelled: "CANCELLED",
-} as const
-
-function getReservationStatusLabel(status?: ReservationItem["status"]) {
-  if (!status) return "UNKNOWN"
-  const key = status.toLowerCase() as keyof typeof STATUS_LABELS
-  return STATUS_LABELS[key] ?? status.replace(/_/g, " ").toUpperCase()
 }
 
 export function ReservationSidebar({
@@ -34,6 +22,13 @@ export function ReservationSidebar({
 }: ReservationSidebarProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [confirmingId, setConfirmingId] = useState<string | null>(null)
+  const sidebarStrings = useWaiterStrings().reservations.sidebar
+
+  const getReservationStatusLabel = (status?: ReservationItem["status"]) => {
+    if (!status) return sidebarStrings.status.unknown
+    const key = status.toLowerCase() as keyof typeof sidebarStrings.status
+    return sidebarStrings.status[key] ?? sidebarStrings.status.unknown
+  }
 
   const sorted = [...reservations].sort(
     (a, b) => new Date(a.start_at).getTime() - new Date(b.start_at).getTime(),
@@ -44,7 +39,7 @@ export function ReservationSidebar({
   return (
     <aside className="reservation-sidebar">
       <div className="reservation-sidebar__header">
-        <h2 className="reservation-sidebar__title">NEXT RESERVATIONS</h2>
+        <h2 className="reservation-sidebar__title">{sidebarStrings.title}</h2>
       </div>
 
       <div className="reservation-sidebar__search">
@@ -64,7 +59,7 @@ export function ReservationSidebar({
         <input
           type="text"
           className="reservation-sidebar__search-input"
-          placeholder="SEARCH GUESTS..."
+          placeholder={sidebarStrings.searchPlaceholder}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
@@ -89,7 +84,7 @@ export function ReservationSidebar({
               <div className="reservation-sidebar__item-info">
                 <span className="reservation-sidebar__item-name">{r.name}</span>
                 <span className="reservation-sidebar__item-meta">
-                  {r.guest_count} GUESTS
+                  {sidebarStrings.guestCount(r.guest_count)}
                   <span
                     className={`reservation-sidebar__item-status reservation-sidebar__item-status--${(r.status ?? "unknown").toLowerCase()}`}
                   >
@@ -107,7 +102,7 @@ export function ReservationSidebar({
                   onClick={() => onModify(r)}
                   disabled={actionLoading}
                 >
-                  MODIFY
+                  {sidebarStrings.actions.modify}
                 </button>
                 <button
                   type="button"
@@ -115,7 +110,7 @@ export function ReservationSidebar({
                   onClick={() => setConfirmingId(r.public_id)}
                   disabled={actionLoading}
                 >
-                  CANCEL
+                  {sidebarStrings.actions.cancel}
                 </button>
               </div>
             </div>
@@ -124,14 +119,14 @@ export function ReservationSidebar({
       </div>
 
       <button type="button" className="reservation-sidebar__action">
-        GENERATE SHIFT REPORT
+        {sidebarStrings.actions.report}
       </button>
 
       {confirmingId && (
         <ConfirmCancelModal
-          title="Cancel Reservation"
-          message="Are you sure you want to cancel this reservation? This action cannot be undone."
-          confirmLabel="Cancel Reservation"
+          title={sidebarStrings.confirm.title}
+          message={sidebarStrings.confirm.message}
+          confirmLabel={sidebarStrings.confirm.confirm}
           busy={actionLoading}
           onConfirm={() => {
             onCancel(confirmingId)
