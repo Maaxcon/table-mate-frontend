@@ -872,6 +872,8 @@
         "confirmDelete": {
           "title": "Delete dishes",
           "message_one": "Delete 1 selected dish? This cannot be undone.",
+          "message_few": "Delete {{count}} selected dishes? This cannot be undone.",
+          "message_many": "Delete {{count}} selected dishes? This cannot be undone.",
           "message_other": "Delete {{count}} selected dishes? This cannot be undone.",
           "confirm": "Delete"
         }
@@ -1481,6 +1483,8 @@
           "title": "Delete zone",
           "message": "Are you sure you want to delete zone \"{{name}}\"?",
           "warning_one": "This zone has {{count}} table. It will be deactivated when you publish.",
+          "warning_few": "This zone has {{count}} tables. They will be deactivated when you publish.",
+          "warning_many": "This zone has {{count}} tables. They will be deactivated when you publish.",
           "warning_other": "This zone has {{count}} tables. They will be deactivated when you publish.",
           "cancel": "Cancel",
           "confirm": "Delete",
