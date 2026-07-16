@@ -71,6 +71,8 @@
       "like": "Like {{name}}",
       "unlike": "Unlike {{name}}",
       "likes_one": "{{count}} like",
+      "likes_few": "{{count}} likes",
+      "likes_many": "{{count}} likes",
       "likes_other": "{{count}} likes"
     },
     "cart": {
