@@ -536,6 +536,117 @@
         "confirm": "Вийти"
       }
     },
+    "scheduler": {
+      "empty": {
+        "noRestaurant": "Заклад не вибрано."
+      },
+      "toolbar": {
+        "today": "Сьогодні",
+        "single": "Один день",
+        "split": "Два дні"
+      },
+      "stale": {
+        "text": "Дані про бронювання змінилися ззовні. Ваші незбережені зміни можуть конфліктувати.",
+        "discard": "Скинути й перезавантажити",
+        "continue": "Продовжити редагування"
+      },
+      "loading": "Завантаження…",
+      "errors": {
+        "load": "Не вдалося завантажити дані."
+      },
+      "saveBar": {
+        "changes_one": "{{count}} зміна",
+        "changes_few": "{{count}} зміни",
+        "changes_many": "{{count}} змін",
+        "changes_other": "{{count}} змін",
+        "cancellations_one": "{{count}} скасування",
+        "cancellations_few": "{{count}} скасування",
+        "cancellations_many": "{{count}} скасувань",
+        "cancellations_other": "{{count}} скасувань",
+        "unsaved": "не збережено",
+        "reset": "Скинути",
+        "save": "Зберегти зміни",
+        "saving": "Збереження…"
+      },
+      "confirm": {
+        "nav": {
+          "title": "Незбережені зміни",
+          "message": "У вас є незбережені зміни. Скасувати й продовжити?",
+          "confirm": "Скасувати",
+          "cancel": "Продовжити"
+        },
+        "active": {
+          "title": "Завершити активну бронь?",
+          "message": "{{name}} за столом {{table}} має активний сеанс із рахунком. Завершити все одно?",
+          "confirm": "Завершити",
+          "cancel": "Залишити"
+        }
+      },
+      "cancelZone": {
+        "ariaCancel": "Скасувати бронювання",
+        "ariaUndo": "Повернути бронювання",
+        "cancel": "Скасувати",
+        "undo": "Повернути"
+      },
+      "dayNav": {
+        "prev": "Попередній день",
+        "next": "Наступний день"
+      },
+      "table": {
+        "capacity": "{{count}} міс."
+      },
+      "block": {
+        "guests_one": "{{count}} гість",
+        "guests_few": "{{count}} гості",
+        "guests_many": "{{count}} гостей",
+        "guests_other": "{{count}} гостей",
+        "duration": {
+          "hoursMinutes": "{{hours}} год {{minutes}} хв",
+          "hours_one": "{{count}} год",
+          "hours_few": "{{count}} години",
+          "hours_many": "{{count}} годин",
+          "hours_other": "{{count}} годин",
+          "minutes_one": "{{count}} хв",
+          "minutes_few": "{{count}} хвилини",
+          "minutes_many": "{{count}} хвилин",
+          "minutes_other": "{{count}} хвилин"
+        },
+        "meta": "{{guests}} · {{duration}}",
+        "cancelled": "СКАСОВАНО",
+        "resizeStart": "Змінити початок",
+        "resizeEnd": "Змінити кінець",
+        "aria": {
+          "base": "{{name}}, {{guests}}, {{status}}",
+          "conflict": ", конфлікт",
+          "modified": ", змінено",
+          "cancelling": ", скасовується"
+        },
+        "status": {
+          "pending": "очікує",
+          "active": "активна",
+          "completed": "завершена",
+          "cancelled": "скасована"
+        }
+      },
+      "drag": {
+        "meta": "{{guests}} · {{time}}"
+      },
+      "toast": {
+        "conflict": {
+          "generic": "Не можна розмістити бронювання тут.",
+          "overlap": "Часовий слот перетинається з іншою бронню.",
+          "beforeSeated": "Не можна ставити до вже посаджених гостей.",
+          "pastDate": "Не можна переносити на минулу дату.",
+          "pastTime": "Не можна переносити на минулий час.",
+          "activeDifferentDate": "Не можна переносити активну сесію на іншу дату.",
+          "beforeOpening": "Не можна почати раніше відкриття.",
+          "afterClosing": "Не можна завершити після закриття.",
+          "closedDay": "Цього дня заклад зачинено."
+        },
+        "saveSuccess": "Бронювання успішно оновлено.",
+        "saveFailed": "Не вдалося зберегти зміни."
+      }
+    },
     "overview": {
       "titleGreeting": "З поверненням, {{name}}",
       "titleFallback": "Огляд",

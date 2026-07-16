@@ -30,6 +30,141 @@ export function useAdminStrings() {
     t("admin.floor.sidebar.zone.shortcuts.undo"),
   ]
 
+  const formatSchedulerSummary = (changeCount: number, cancellationCount: number) => {
+    const parts: string[] = []
+    if (changeCount > 0) {
+      parts.push(t("admin.scheduler.saveBar.changes", { count: changeCount }))
+    }
+    if (cancellationCount > 0) {
+      parts.push(t("admin.scheduler.saveBar.cancellations", { count: cancellationCount }))
+    }
+    if (parts.length === 0) return ""
+    return `${parts.join(", ")} ${t("admin.scheduler.saveBar.unsaved")}`
+  }
+
+  const schedulerBlockStatusLabels: Record<string, string> = {
+    pending: t("admin.scheduler.block.status.pending"),
+    active: t("admin.scheduler.block.status.active"),
+    completed: t("admin.scheduler.block.status.completed"),
+    cancelled: t("admin.scheduler.block.status.cancelled"),
+  }
+
+  const schedulerStrings = {
+    locale,
+    empty: {
+      noRestaurant: t("admin.scheduler.empty.noRestaurant"),
+    },
+    toolbar: {
+      today: t("admin.scheduler.toolbar.today"),
+      singleView: t("admin.scheduler.toolbar.single"),
+      splitView: t("admin.scheduler.toolbar.split"),
+    },
+    stale: {
+      text: t("admin.scheduler.stale.text"),
+      discard: t("admin.scheduler.stale.discard"),
+      continue: t("admin.scheduler.stale.continue"),
+    },
+    loading: t("admin.scheduler.loading"),
+    errors: {
+      loadData: t("admin.scheduler.errors.load"),
+    },
+    saveBar: {
+      summary: formatSchedulerSummary,
+      reset: t("admin.scheduler.saveBar.reset"),
+      save: t("admin.scheduler.saveBar.save"),
+      saving: t("admin.scheduler.saveBar.saving"),
+    },
+    confirm: {
+      nav: {
+        title: t("admin.scheduler.confirm.nav.title"),
+        message: t("admin.scheduler.confirm.nav.message"),
+        confirm: t("admin.scheduler.confirm.nav.confirm"),
+        cancel: t("admin.scheduler.confirm.nav.cancel"),
+      },
+      active: {
+        title: t("admin.scheduler.confirm.active.title"),
+        message: (name: string, table: string) =>
+          t("admin.scheduler.confirm.active.message", { name, table }),
+        confirm: t("admin.scheduler.confirm.active.confirm"),
+        cancel: t("admin.scheduler.confirm.active.cancel"),
+      },
+    },
+    cancelZone: {
+      ariaCancel: t("admin.scheduler.cancelZone.ariaCancel"),
+      ariaUndo: t("admin.scheduler.cancelZone.ariaUndo"),
+      labelCancel: t("admin.scheduler.cancelZone.cancel"),
+      labelUndo: t("admin.scheduler.cancelZone.undo"),
+    },
+    dayNav: {
+      prev: t("admin.scheduler.dayNav.prev"),
+      next: t("admin.scheduler.dayNav.next"),
+    },
+    table: {
+      capacity: (count: number) => t("admin.scheduler.table.capacity", { count }),
+    },
+    block: {
+      guests: (count: number) => t("admin.scheduler.block.guests", { count }),
+      duration: (minutes: number) => {
+        const hours = Math.floor(minutes / 60)
+        const mins = minutes % 60
+        if (hours > 0 && mins > 0) {
+          return t("admin.scheduler.block.duration.hoursMinutes", {
+            hours,
+            minutes: mins,
+          })
+        }
+        if (hours > 0) {
+          return t("admin.scheduler.block.duration.hours", { count: hours })
+        }
+        return t("admin.scheduler.block.duration.minutes", { count: mins })
+      },
+      meta: (guests: string, duration: string) =>
+        t("admin.scheduler.block.meta", { guests, duration }),
+      cancelBadge: t("admin.scheduler.block.cancelled"),
+      resizeStart: t("admin.scheduler.block.resizeStart"),
+      resizeEnd: t("admin.scheduler.block.resizeEnd"),
+      aria: (options: {
+        name: string
+        guests: string
+        status: string
+        conflict: boolean
+        modified: boolean
+        cancelling: boolean
+      }) => {
+        const base = t("admin.scheduler.block.aria.base", {
+          name: options.name,
+          guests: options.guests,
+          status: schedulerBlockStatusLabels[options.status] ?? options.status,
+        })
+        const extras = [
+          options.conflict ? t("admin.scheduler.block.aria.conflict") : "",
+          options.modified ? t("admin.scheduler.block.aria.modified") : "",
+          options.cancelling ? t("admin.scheduler.block.aria.cancelling") : "",
+        ].filter(Boolean)
+        return `${base}${extras.join("")}`
+      },
+      statusLabel: (status: string) => schedulerBlockStatusLabels[status] ?? status,
+    },
+    dragOverlay: {
+      meta: (guests: string, time: string) => t("admin.scheduler.drag.meta", { guests, time }),
+    },
+    toasts: {
+      conflict: {
+        generic: t("admin.scheduler.toast.conflict.generic"),
+        overlap: t("admin.scheduler.toast.conflict.overlap"),
+        beforeSeated: t("admin.scheduler.toast.conflict.beforeSeated"),
+        pastDate: t("admin.scheduler.toast.conflict.pastDate"),
+        pastTime: t("admin.scheduler.toast.conflict.pastTime"),
+        activeDifferentDate: t("admin.scheduler.toast.conflict.activeDifferentDate"),
+        beforeOpening: t("admin.scheduler.toast.conflict.beforeOpening"),
+        afterClosing: t("admin.scheduler.toast.conflict.afterClosing"),
+        closedDay: t("admin.scheduler.toast.conflict.closedDay"),
+      },
+      saveSuccess: t("admin.scheduler.toast.saveSuccess"),
+      saveFailed: t("admin.scheduler.toast.saveFailed"),
+    },
+  }
+
   return {
     locale,
     raw,
@@ -70,6 +205,7 @@ export function useAdminStrings() {
         confirm: t("admin.layout.unsaved.confirm"),
       },
     },
+    scheduler: schedulerStrings,
     overview: {
       title: (name?: string | null) =>
         name && name.trim().length > 0
@@ -702,3 +838,6 @@ export function useAdminStrings() {
     },
   }
 }
+
+export type AdminStrings = ReturnType<typeof useAdminStrings>
+export type SchedulerStrings = AdminStrings["scheduler"]

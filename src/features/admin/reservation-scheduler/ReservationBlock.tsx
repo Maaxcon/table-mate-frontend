@@ -1,5 +1,6 @@
 import { useDraggable } from "@dnd-kit/core"
 import { CSS } from "@dnd-kit/utilities"
+import type { SchedulerStrings } from "@/features/admin/strings"
 import type { SchedulerReservation } from "./types"
 
 interface ReservationBlockProps {
@@ -14,6 +15,7 @@ interface ReservationBlockProps {
   workingHourEnd: number
   onResizeStart: (reservationId: string, edge: "start" | "end", e: React.MouseEvent) => void
   onResizeNudge?: (reservationId: string, edge: "start" | "end", direction: -1 | 1) => void
+  strings: SchedulerStrings["block"]
 }
 
 export function ReservationBlock({
@@ -27,6 +29,7 @@ export function ReservationBlock({
   workingHourStart,
   onResizeStart,
   onResizeNudge,
+  strings,
 }: ReservationBlockProps) {
   const displayStart =
     reservation.status === "active" && reservation.opened_at
@@ -87,16 +90,23 @@ export function ReservationBlock({
     .join(" ")
 
   const durationMin = endMinutes - startMinutes
-  const hours = Math.floor(durationMin / 60)
-  const mins = durationMin % 60
-  const durationLabel = hours > 0 ? `${hours}h${mins > 0 ? `${mins}m` : ""}` : `${mins}m`
+  const durationLabel = strings.duration(durationMin)
+  const guestsLabel = strings.guests(reservation.guest_count)
+  const blockMeta = strings.meta(guestsLabel, durationLabel)
 
   return (
     <div
       ref={setNodeRef}
       className={classNames}
       style={style}
-      aria-label={`${reservation.customer_name}, ${reservation.guest_count} guests, ${reservation.status}${isConflict ? ", conflict" : ""}${isModified ? ", modified" : ""}${isCancelling ? ", cancelling" : ""}`}
+      aria-label={strings.aria({
+        name: reservation.customer_name,
+        guests: guestsLabel,
+        status: reservation.status,
+        conflict: isConflict,
+        modified: isModified,
+        cancelling: isCancelling,
+      })}
       aria-grabbed={isDragging}
       {...(crossDay ? {} : attributes)}
       {...listeners}
@@ -106,7 +116,7 @@ export function ReservationBlock({
           type="button"
           data-resize-handle
           className="scheduler__block-resize-handle scheduler__block-resize-handle--left"
-          aria-label="Resize start"
+          aria-label={strings.resizeStart}
           onPointerDown={(e) => {
             e.stopPropagation()
           }}
@@ -125,17 +135,17 @@ export function ReservationBlock({
       )}
       <div className="scheduler__block-content">
         <span className="scheduler__block-name">{reservation.customer_name}</span>
-        <span className="scheduler__block-meta">
-          {reservation.guest_count}p &middot; {durationLabel}
-        </span>
-        {isCancelling && <span className="scheduler__block-cancel-badge">CANCELLED</span>}
+        <span className="scheduler__block-meta">{blockMeta}</span>
+        {isCancelling && (
+          <span className="scheduler__block-cancel-badge">{strings.cancelBadge}</span>
+        )}
       </div>
       {reservation.status !== "completed" && !crossDay && (
         <button
           type="button"
           data-resize-handle
           className="scheduler__block-resize-handle scheduler__block-resize-handle--right"
-          aria-label="Resize end"
+          aria-label={strings.resizeEnd}
           onPointerDown={(e) => {
             e.stopPropagation()
           }}

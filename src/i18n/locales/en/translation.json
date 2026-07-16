@@ -531,6 +531,107 @@
         "confirm": "Leave"
       }
     },
+    "scheduler": {
+      "empty": {
+        "noRestaurant": "No restaurant selected."
+      },
+      "toolbar": {
+        "today": "Today",
+        "single": "Single view",
+        "split": "Split view"
+      },
+      "stale": {
+        "text": "Reservation data changed externally. Your unsaved changes may conflict.",
+        "discard": "Discard & reload",
+        "continue": "Continue editing"
+      },
+      "loading": "Loading…",
+      "errors": {
+        "load": "Failed to load data."
+      },
+      "saveBar": {
+        "changes_one": "{{count}} change",
+        "changes_other": "{{count}} changes",
+        "cancellations_one": "{{count}} cancellation",
+        "cancellations_other": "{{count}} cancellations",
+        "unsaved": "unsaved",
+        "reset": "Reset",
+        "save": "Save changes",
+        "saving": "Saving…"
+      },
+      "confirm": {
+        "nav": {
+          "title": "Unsaved changes",
+          "message": "You have unsaved changes. Discard them and continue?",
+          "confirm": "Discard",
+          "cancel": "Keep editing"
+        },
+        "active": {
+          "title": "Complete active reservation?",
+          "message": "{{name}} at table {{table}} has an active session with a bill. Complete it anyway?",
+          "confirm": "Complete",
+          "cancel": "Keep"
+        }
+      },
+      "cancelZone": {
+        "ariaCancel": "Cancel reservation",
+        "ariaUndo": "Undo cancellation",
+        "cancel": "Cancel",
+        "undo": "Undo"
+      },
+      "dayNav": {
+        "prev": "Previous day",
+        "next": "Next day"
+      },
+      "table": {
+        "capacity": "{{count}}p"
+      },
+      "block": {
+        "guests_one": "{{count}} guest",
+        "guests_other": "{{count}} guests",
+        "duration": {
+          "hoursMinutes": "{{hours}}h{{minutes}}m",
+          "hours_one": "{{count}}h",
+          "hours_other": "{{count}}h",
+          "minutes_one": "{{count}}m",
+          "minutes_other": "{{count}}m"
+        },
+        "meta": "{{guests}} · {{duration}}",
+        "cancelled": "Cancelled",
+        "resizeStart": "Resize start",
+        "resizeEnd": "Resize end",
+        "aria": {
+          "base": "{{name}}, {{guests}}, {{status}}",
+          "conflict": ", conflict",
+          "modified": ", modified",
+          "cancelling": ", cancelling"
+        },
+        "status": {
+          "pending": "pending",
+          "active": "active",
+          "completed": "completed",
+          "cancelled": "cancelled"
+        }
+      },
+      "drag": {
+        "meta": "{{guests}} · {{time}}"
+      },
+      "toast": {
+        "conflict": {
+          "generic": "Cannot place reservation here.",
+          "overlap": "Time slot overlaps with another reservation.",
+          "beforeSeated": "Cannot place before a seated party.",
+          "pastDate": "Cannot move to a past date.",
+          "pastTime": "Cannot move to a past time.",
+          "activeDifferentDate": "Cannot move an active session to a different date.",
+          "beforeOpening": "Cannot start before opening time.",
+          "afterClosing": "Cannot end after closing time.",
+          "closedDay": "Restaurant is closed on this day."
+        },
+        "saveSuccess": "Reservations updated successfully.",
+        "saveFailed": "Failed to save changes."
+      }
+    },
     "overview": {
       "titleGreeting": "Welcome back, {{name}}",
       "titleFallback": "Overview",

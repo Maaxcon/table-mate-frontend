@@ -1,4 +1,4 @@
-import type { PendingChange, SchedulerReservation } from "../types"
+import type { PendingChange, SchedulerReservation, SchedulerConflictReason } from "../types"
 import { isoToDateKey } from "../types"
 
 export interface WorkingHoursDay {
@@ -89,7 +89,7 @@ export function checkOrderingViolation(
   proposed: TimeRange,
   reservations: SchedulerReservation[],
   excludeReservationId?: string,
-): string | null {
+): SchedulerConflictReason | null {
   for (const r of reservations) {
     if (r.public_id === excludeReservationId) continue
     if (r.status !== "active") continue
@@ -99,7 +99,7 @@ export function checkOrderingViolation(
     const openedAt = new Date(r.opened_at)
     const openedMinutes = openedAt.getHours() * 60 + openedAt.getMinutes()
     if (openedMinutes > proposed.start_minutes) {
-      return "Cannot place before a seated party"
+      return "beforeSeated"
     }
   }
   return null
@@ -129,20 +129,20 @@ function hhmmToMinutes(hhmm: string): number {
 export function checkOperatingHours(
   proposed: TimeRange,
   workingHours: Record<string, WorkingHoursDay> | null,
-): string | null {
+): SchedulerConflictReason | null {
   if (!workingHours) return null
   const dayKey = dateToDayKey(proposed.date)
   const dayHours = workingHours[dayKey]
-  if (!dayHours) return "Restaurant is closed on this day"
+  if (!dayHours) return "closedDay"
   const openMin = hhmmToMinutes(dayHours.open)
   const closeMin = hhmmToMinutes(dayHours.close)
 
   if (closeMin > openMin) {
-    if (proposed.start_minutes < openMin) return "Cannot start before opening time"
-    if (proposed.end_minutes > closeMin) return "Cannot end after closing time"
+    if (proposed.start_minutes < openMin) return "beforeOpening"
+    if (proposed.end_minutes > closeMin) return "afterClosing"
   } else {
     if (proposed.start_minutes < openMin && proposed.end_minutes > closeMin) {
-      return "Restaurant is closed on this day"
+      return "closedDay"
     }
   }
   return null
@@ -152,7 +152,7 @@ export function checkPastTimeViolation(
   proposed: TimeRange,
   status?: string,
   restaurantTimezone?: string,
-): string | null {
+): SchedulerConflictReason | null {
   if (status === "active") return null
 
   const now = restaurantTimezone
@@ -170,11 +170,11 @@ export function checkPastTimeViolation(
       )
     : new Date()
   const todayKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`
-  if (proposed.date < todayKey) return "Cannot move to a past date"
+  if (proposed.date < todayKey) return "pastDate"
   if (proposed.date === todayKey) {
     const nowMinutes = now.getHours() * 60 + now.getMinutes()
     if (proposed.start_minutes < nowMinutes) {
-      return "Cannot move to a past time"
+      return "pastTime"
     }
   }
   return null

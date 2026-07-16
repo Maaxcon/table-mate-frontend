@@ -59,6 +59,17 @@ export type SchedulerTable = {
   active?: boolean
 }
 
+export type SchedulerConflictReason =
+  | "generic"
+  | "overlap"
+  | "beforeSeated"
+  | "pastDate"
+  | "pastTime"
+  | "activeDifferentDate"
+  | "beforeOpening"
+  | "afterClosing"
+  | "closedDay"
+
 export function isoToDateKey(iso: string): string {
   const d = new Date(iso)
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`

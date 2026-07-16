@@ -1,5 +1,6 @@
 import type { RefObject } from "react"
 import { LuChevronLeft, LuChevronRight } from "react-icons/lu"
+import type { SchedulerStrings } from "@/features/admin/strings"
 import type { SchedulerReservation, SchedulerTable } from "./types"
 import { isoToDateKey } from "./types"
 import { TimelineHeader } from "./TimelineHeader"
@@ -23,6 +24,10 @@ interface DayPanelProps {
   showNav?: boolean
   onPrevDay?: () => void
   onNextDay?: () => void
+  locale: string
+  navLabels: SchedulerStrings["dayNav"]
+  tableStrings: SchedulerStrings["table"]
+  blockStrings: SchedulerStrings["block"]
 }
 
 export function DayPanel({
@@ -43,9 +48,13 @@ export function DayPanel({
   showNav,
   onPrevDay,
   onNextDay,
+  locale,
+  navLabels,
+  tableStrings,
+  blockStrings,
 }: DayPanelProps) {
   const d = new Date(date + "T00:00:00")
-  const dayLabel = d.toLocaleDateString("en-US", {
+  const dayLabel = d.toLocaleDateString(locale || "en-US", {
     weekday: "short",
     month: "short",
     day: "numeric",
@@ -63,7 +72,7 @@ export function DayPanel({
             type="button"
             className="scheduler__day-header-nav"
             onClick={onPrevDay}
-            aria-label="Previous day"
+            aria-label={navLabels.prev}
           >
             <LuChevronLeft aria-hidden="true" />
           </button>
@@ -72,7 +81,7 @@ export function DayPanel({
             type="button"
             className="scheduler__day-header-nav"
             onClick={onNextDay}
-            aria-label="Next day"
+            aria-label={navLabels.next}
           >
             <LuChevronRight aria-hidden="true" />
           </button>
@@ -103,6 +112,8 @@ export function DayPanel({
             cancellingIds={cancellingIds}
             onResizeStart={onResizeStart}
             onResizeNudge={onResizeNudge}
+            tableStrings={tableStrings}
+            blockStrings={blockStrings}
           />
         ))}
       </div>
