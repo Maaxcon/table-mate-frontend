@@ -18,6 +18,7 @@ import { useTableActions } from "../../hooks/useTableActions"
 import type { FloorTable, ReservationItem, OverlayDetail, UpcomingReservation } from "../../types"
 import { getTableVisualStatus } from "../../types"
 import { fetchOverlayDetail, fetchReservations } from "../../api"
+import { markOrderItemServed, voidOrderItem } from "../../api/orderApi"
 import { apiFetch } from "@/api/client"
 import type { LayoutResponse, Table } from "@/types/api"
 import type { LayoutPayload } from "@/features/editor/types"
@@ -306,6 +307,22 @@ export function WaiterOrderPage() {
     }
   }
 
+  const handleMarkItemServed = async (itemId: string) => {
+    await markOrderItemServed(itemId)
+    const latest = await refreshFloor()
+    if (selectedTableId && latest) {
+      await buildOverlayDetail(selectedTableId, latest.tables, latest.reservations)
+    }
+  }
+
+  const handleVoidItem = async (itemId: string, reasonCode: string) => {
+    await voidOrderItem(itemId, reasonCode)
+    const latest = await refreshFloor()
+    if (selectedTableId && latest) {
+      await buildOverlayDetail(selectedTableId, latest.tables, latest.reservations)
+    }
+  }
+
   const filteredTables = useMemo(() => {
     if (!selectedZoneId) return tables
     const layoutTables = layoutPayload?.tables ?? []
@@ -546,6 +563,8 @@ export function WaiterOrderPage() {
           onModifyReservation={(r) => setModifyTarget(r)}
           onMoveTable={(r) => setMoveTarget(r)}
           onCreateReservation={() => setCreateResModalOpen(true)}
+          onMarkItemServed={handleMarkItemServed}
+          onVoidItem={handleVoidItem}
           onClose={closeOverlay}
         />
       )}

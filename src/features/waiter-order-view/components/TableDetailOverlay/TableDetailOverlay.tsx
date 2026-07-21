@@ -1,10 +1,12 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useFocusTrap } from "@/hooks/useFocusTrap"
 import { formatTimeRange } from "../../types"
 import type { FloorTable, ReservationItem, OverlayDetail, VisualTableStatus } from "../../types"
 import { getCurrencySymbol } from "@/features/menu/utils"
 import { OrderItemRow } from "../OrderItemRow"
 import { CloseCheckModal } from "../CloseCheckModal"
+import { fetchVoidReasons } from "../../api/orderApi"
+import type { VoidReason } from "@/types/api/types.gen"
 import "./TableDetailOverlay.css"
 
 function getOverdueMinutes(endAt: string, nowMs: number): number | null {
@@ -33,6 +35,8 @@ interface TableDetailOverlayProps {
   onModifyReservation?: (reservation: ReservationItem) => void
   onMoveTable?: (reservation: ReservationItem) => void
   onCreateReservation?: () => void
+  onMarkItemServed?: (itemId: string) => void
+  onVoidItem?: (itemId: string, reasonCode: string) => void
   onClose: () => void
 }
 
@@ -54,6 +58,8 @@ export function TableDetailOverlay({
   onModifyReservation,
   onMoveTable,
   onCreateReservation,
+  onMarkItemServed,
+  onVoidItem,
   onClose,
 }: TableDetailOverlayProps) {
   const isOccupied = visualStatus === "occupied"
@@ -63,7 +69,17 @@ export function TableDetailOverlay({
   )
   const [guestCount, setGuestCount] = useState(2)
   const [showCloseCheck, setShowCloseCheck] = useState(false)
+  const [voidReasons, setVoidReasons] = useState<VoidReason[]>([])
   const dialogRef = useFocusTrap<HTMLDivElement>({ onEscape: onClose })
+
+  useEffect(() => {
+    if (!onVoidItem) return
+    const controller = new AbortController()
+    fetchVoidReasons(controller.signal)
+      .then(setVoidReasons)
+      .catch(() => setVoidReasons([]))
+    return () => controller.abort()
+  }, [onVoidItem])
 
   // Use the bill's real currency rather than a hardcoded symbol.
   const currencySymbol = detail ? getCurrencySymbol(detail.currency) : ""
@@ -324,6 +340,9 @@ export function TableDetailOverlay({
                               key={item.public_id}
                               item={item}
                               currencySymbol={currencySymbol}
+                              voidReasons={voidReasons}
+                              onMarkServed={onMarkItemServed}
+                              onVoid={onVoidItem}
                             />
                           ))}
                         </div>

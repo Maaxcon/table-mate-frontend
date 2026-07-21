@@ -69,3 +69,7 @@ export function voidOrderItem(
     { signal },
   )
 }
+
+export function markOrderItemServed(itemId: string, signal?: AbortSignal): Promise<OrderItem> {
+  return api.patch(`/api/orders/order-items/${itemId}/`, { status: "served" }, { signal })
+}
