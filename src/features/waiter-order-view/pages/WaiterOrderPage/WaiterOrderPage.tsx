@@ -264,6 +264,7 @@ export function WaiterOrderPage() {
     handleOpenTable,
     handleActivateReservation,
     handleCloseCheck,
+    handleProcessPayment,
     clearActionError,
   } = useTableActions({
     selectedTableId,
@@ -563,6 +564,11 @@ export function WaiterOrderPage() {
           onActivateReservation={handleActivateReservation}
           onCancelReservation={(reservationId) => handleCancel(reservationId)}
           onCloseCheck={overlayDetail ? () => handleCloseCheck(overlayDetail.public_id) : undefined}
+          onProcessPayment={
+            overlayDetail
+              ? (orderItemIds) => handleProcessPayment(overlayDetail.public_id, orderItemIds)
+              : undefined
+          }
           onAddItem={overlayDetail ? () => setOrderModalOpen(true) : undefined}
           onModifyReservation={(r) => setModifyTarget(r)}
           onMoveTable={(r) => setMoveTarget(r)}

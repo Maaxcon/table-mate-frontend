@@ -43,6 +43,8 @@ interface OrderItemApiItem {
   is_wasted: boolean
   void_reason?: number | null
   unit_price: string
+  payable: string
+  is_paid: boolean
   menu_item_name?: string
   comment?: string | null
 }
@@ -81,6 +83,8 @@ function mapOrderItem(oi: OrderItemApiItem): OverlayOrderItem {
     quantity: oi.quantity,
     name: oi.menu_item_name ?? oi.public_id,
     unit_price: oi.unit_price,
+    payable: oi.payable,
+    is_paid: oi.is_paid,
     status: oi.status as OverlayOrderItem["status"],
     is_wasted: oi.is_wasted,
     void_reason: oi.void_reason,

@@ -22,7 +22,8 @@ export function OrderItemRow({
   onVoid,
 }: OrderItemRowProps) {
   const [pickingVoidReason, setPickingVoidReason] = useState(false)
-  const voidReasonStrings = useWaiterStrings().overlay.voidReasons
+  const overlayStrings = useWaiterStrings().overlay
+  const voidReasonStrings = overlayStrings.voidReasons
   const isVoided = item.status === "voided"
   const reasonKey = item.void_reason != null ? VOID_REASON_LABELS[item.void_reason] : null
   const voidReasonLabel = reasonKey
@@ -83,6 +84,9 @@ export function OrderItemRow({
           >
             VOID
           </button>
+        )}
+        {!isVoided && item.is_paid && (
+          <span className="order-item-row__paid-badge">{overlayStrings.paidBadge}</span>
         )}
         <StatusChip status={item.status} />
       </div>

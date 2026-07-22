@@ -26,6 +26,8 @@ function makeOrderItem(overrides: Partial<OverlayOrderItem> = {}): OverlayOrderI
     quantity: 2,
     name: "Burger",
     unit_price: "29.99",
+    payable: "29.99",
+    is_paid: false,
     status: "pending",
     is_wasted: false,
     void_reason: null,

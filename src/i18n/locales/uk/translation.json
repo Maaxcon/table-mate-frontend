@@ -1161,11 +1161,13 @@
           "reservations": "Для цього столу немає бронювань."
         },
         "guestSlot": "ГОСТЬ {{slot}}",
+        "paidBadge": "Оплачено",
         "totals": {
           "subtotal": "Проміжний підсумок",
           "tax": "Податок",
           "service": "Сервіс",
-          "total": "Разом"
+          "total": "Разом",
+          "outstanding": "Не оплачено"
         },
         "reservation": {
           "tagSeated": "Вже сидять",
@@ -1180,6 +1182,14 @@
           "qualityIssue": "Проблема з якістю",
           "outOfStock": "Немає в наявності"
         }
+      },
+      "payModal": {
+        "title": "Оплата",
+        "empty": "Нема за що платити.",
+        "selectAll": "Вибрати все",
+        "selectedTotal": "Обрано",
+        "pay": "Оплатити",
+        "paying": "Оплачуємо…"
       },
       "reservations": {
         "sidebar": {
@@ -1284,7 +1294,8 @@
       "actions": {
         "openTable": "Не вдалося відкрити стіл",
         "activateReservation": "Не вдалося активувати бронювання",
-        "closeCheck": "Не вдалося закрити рахунок"
+        "closeCheck": "Не вдалося закрити рахунок",
+        "processPayment": "Не вдалося провести оплату"
       }
     },
     "floor": {

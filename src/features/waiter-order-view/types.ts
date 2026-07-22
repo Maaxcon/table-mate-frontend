@@ -51,6 +51,8 @@ export interface OverlayOrderItem {
   quantity: number
   name: string
   unit_price: string
+  payable: string
+  is_paid: boolean
   status: OrderItemStatusEnum
   is_wasted: boolean
   void_reason?: number | null

@@ -98,6 +98,17 @@
   color: #fff;
 }
 
+.order-item-row__paid-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: var(--color-success);
+  color: #fff;
+}
+
 .order-item-row__void-select {
   margin-top: 2px;
   font-size: 0.72rem;

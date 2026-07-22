@@ -5,6 +5,7 @@ import type { FloorTable, ReservationItem, OverlayDetail, VisualTableStatus } fr
 import { getCurrencySymbol } from "@/features/menu/utils"
 import { OrderItemRow } from "../OrderItemRow"
 import { CloseCheckModal } from "../CloseCheckModal"
+import { ProcessPaymentModal } from "../ProcessPaymentModal"
 import { fetchVoidReasons } from "../../api/orderApi"
 import type { VoidReason } from "@/types/api/types.gen"
 import "./TableDetailOverlay.css"
@@ -32,6 +33,7 @@ interface TableDetailOverlayProps {
   onActivateReservation?: (reservationId: string) => void
   onCancelReservation?: (reservationId: string) => void
   onCloseCheck?: () => void
+  onProcessPayment?: (orderItemIds: string[]) => void
   onAddItem?: () => void
   onModifyReservation?: (reservation: ReservationItem) => void
   onMoveTable?: (reservation: ReservationItem) => void
@@ -55,6 +57,7 @@ export function TableDetailOverlay({
   onActivateReservation,
   onCancelReservation,
   onCloseCheck,
+  onProcessPayment,
   onAddItem,
   onModifyReservation,
   onMoveTable,
@@ -72,6 +75,7 @@ export function TableDetailOverlay({
   )
   const [guestCount, setGuestCount] = useState(2)
   const [showCloseCheck, setShowCloseCheck] = useState(false)
+  const [showProcessPayment, setShowProcessPayment] = useState(false)
   const [voidReasons, setVoidReasons] = useState<VoidReason[]>([])
   const dialogRef = useFocusTrap<HTMLDivElement>({ onEscape: onClose })
 
@@ -86,6 +90,13 @@ export function TableDetailOverlay({
 
   // Use the bill's real currency rather than a hardcoded symbol.
   const currencySymbol = detail ? getCurrencySymbol(detail.currency) : ""
+
+  // What the "Process payment" picker offers: ordered, unpaid, non-voided lines.
+  const payableItems = detail ? detail.items.filter((i) => !i.is_paid && i.status !== "voided") : []
+  const outstandingTotal = payableItems.reduce(
+    (sum, i) => sum + (Number.parseFloat(i.payable) || 0),
+    0,
+  )
 
   const guestSlots = detail
     ? [...new Set(detail.items.map((i) => i.guest_slot))].sort((a, b) => a - b)
@@ -413,7 +424,23 @@ export function TableDetailOverlay({
                         {detail.total_amount}
                       </span>
                     </div>
-                    <button type="button" className="overlay__cta">
+                    {payableItems.length > 0 && (
+                      <div className="overlay__total-row">
+                        <span className="overlay__total-label">
+                          {overlayStrings.totals.outstanding}
+                        </span>
+                        <span className="overlay__total-value">
+                          {currencySymbol}
+                          {outstandingTotal.toFixed(2)}
+                        </span>
+                      </div>
+                    )}
+                    <button
+                      type="button"
+                      className="overlay__cta"
+                      onClick={() => setShowProcessPayment(true)}
+                      disabled={!onProcessPayment || payableItems.length === 0}
+                    >
                       {overlayStrings.actions.processPayment}
                     </button>
                   </div>
@@ -515,6 +542,17 @@ export function TableDetailOverlay({
           error={actionError}
           onConfirm={() => onCloseCheck?.()}
           onClose={() => setShowCloseCheck(false)}
+        />
+      )}
+
+      {showProcessPayment && (
+        <ProcessPaymentModal
+          items={payableItems}
+          currencySymbol={currencySymbol}
+          busy={actionBusy}
+          error={actionError}
+          onConfirm={(orderItemIds) => onProcessPayment?.(orderItemIds)}
+          onClose={() => setShowProcessPayment(false)}
         />
       )}
     </>
