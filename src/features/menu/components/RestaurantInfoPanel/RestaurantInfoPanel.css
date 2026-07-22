@@ -281,10 +281,13 @@
 .restaurant-info__day {
   color: var(--color-text-muted);
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .restaurant-info__time {
   color: var(--color-text-primary);
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .restaurant-info__schedule-row--today .restaurant-info__day,
