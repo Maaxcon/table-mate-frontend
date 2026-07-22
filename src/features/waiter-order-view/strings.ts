@@ -104,11 +104,13 @@ export function useWaiterStrings() {
         reservations: t("admin.waiter.overlay.empty.reservations"),
       },
       guestSlot: (slot: number) => t("admin.waiter.overlay.guestSlot", { slot }),
+      paidBadge: t("admin.waiter.overlay.paidBadge"),
       totals: {
         subtotal: t("admin.waiter.overlay.totals.subtotal"),
         tax: t("admin.waiter.overlay.totals.tax"),
         service: t("admin.waiter.overlay.totals.service"),
         total: t("admin.waiter.overlay.totals.total"),
+        outstanding: t("admin.waiter.overlay.totals.outstanding"),
       },
       reservation: {
         tagSeated: t("admin.waiter.overlay.reservation.tagSeated"),
@@ -123,6 +125,14 @@ export function useWaiterStrings() {
         quality_issue: t("admin.waiter.overlay.voidReasons.qualityIssue"),
         out_of_stock: t("admin.waiter.overlay.voidReasons.outOfStock"),
       },
+    },
+    payModal: {
+      title: t("admin.waiter.payModal.title"),
+      empty: t("admin.waiter.payModal.empty"),
+      selectAll: t("admin.waiter.payModal.selectAll"),
+      selectedTotal: t("admin.waiter.payModal.selectedTotal"),
+      pay: t("admin.waiter.payModal.pay"),
+      paying: t("admin.waiter.payModal.paying"),
     },
     reservations: {
       sidebar: {
@@ -139,7 +149,6 @@ export function useWaiterStrings() {
         actions: {
           modify: t("admin.waiter.reservations.sidebar.actions.modify"),
           cancel: t("admin.waiter.reservations.sidebar.actions.cancel"),
-          report: t("admin.waiter.reservations.sidebar.actions.report"),
         },
         confirm: {
           title: t("admin.waiter.reservations.sidebar.confirm.title"),
@@ -230,6 +239,7 @@ export function useWaiterStrings() {
       openTable: t("admin.waiter.actions.openTable"),
       activateReservation: t("admin.waiter.actions.activateReservation"),
       closeCheck: t("admin.waiter.actions.closeCheck"),
+      processPayment: t("admin.waiter.actions.processPayment"),
     },
   }
 }

@@ -81,6 +81,7 @@ export function FloorPlan({
         edgeStyles={edgeStyles}
         canvasCols={canvasCols}
         canvasRows={canvasRows}
+        minScale={0}
         maxScale={maxScale}
         enableZoom={enableZoom}
         enablePan={enablePan}

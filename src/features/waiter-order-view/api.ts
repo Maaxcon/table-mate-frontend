@@ -12,6 +12,7 @@ interface ReservationApiItem {
   public_id: string
   start_at: string
   end_at: string
+  session_ends_at: string | null
   table_info: { public_number: string } | null
   guest_count: number
   status: string
@@ -42,6 +43,8 @@ interface OrderItemApiItem {
   is_wasted: boolean
   void_reason?: number | null
   unit_price: string
+  payable: string
+  is_paid: boolean
   menu_item_name?: string
   comment?: string | null
 }
@@ -52,6 +55,7 @@ function mapReservationItem(r: ReservationApiItem): ReservationItem {
     public_id: r.public_id,
     start_at: r.start_at,
     end_at: r.end_at,
+    session_ends_at: r.session_ends_at,
     table: r.table_info?.public_number ?? "",
     guest_count: r.guest_count,
     status: r.status as ReservationItem["status"],
@@ -79,6 +83,8 @@ function mapOrderItem(oi: OrderItemApiItem): OverlayOrderItem {
     quantity: oi.quantity,
     name: oi.menu_item_name ?? oi.public_id,
     unit_price: oi.unit_price,
+    payable: oi.payable,
+    is_paid: oi.is_paid,
     status: oi.status as OverlayOrderItem["status"],
     is_wasted: oi.is_wasted,
     void_reason: oi.void_reason,

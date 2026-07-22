@@ -18,6 +18,7 @@ import { useTableActions } from "../../hooks/useTableActions"
 import type { FloorTable, ReservationItem, OverlayDetail, UpcomingReservation } from "../../types"
 import { getTableVisualStatus } from "../../types"
 import { fetchOverlayDetail, fetchReservations } from "../../api"
+import { markOrderItemServed, voidOrderItem } from "../../api/orderApi"
 import { apiFetch } from "@/api/client"
 import type { LayoutResponse, Table } from "@/types/api"
 import type { LayoutPayload } from "@/features/editor/types"
@@ -263,6 +264,7 @@ export function WaiterOrderPage() {
     handleOpenTable,
     handleActivateReservation,
     handleCloseCheck,
+    handleProcessPayment,
     clearActionError,
   } = useTableActions({
     selectedTableId,
@@ -309,6 +311,22 @@ export function WaiterOrderPage() {
     }
   }
 
+  const handleMarkItemServed = async (itemId: string) => {
+    await markOrderItemServed(itemId)
+    const latest = await refreshFloor()
+    if (selectedTableId && latest) {
+      await buildOverlayDetail(selectedTableId, latest.tables, latest.reservations)
+    }
+  }
+
+  const handleVoidItem = async (itemId: string, reasonCode: string) => {
+    await voidOrderItem(itemId, reasonCode)
+    const latest = await refreshFloor()
+    if (selectedTableId && latest) {
+      await buildOverlayDetail(selectedTableId, latest.tables, latest.reservations)
+    }
+  }
+
   const filteredTables = useMemo(() => {
     if (!selectedZoneId) return tables
     const layoutTables = layoutPayload?.tables ?? []
@@ -340,6 +358,7 @@ export function WaiterOrderPage() {
         public_id: lr.public_id,
         start_at: lr.start_at,
         end_at: lr.end_at ?? lr.start_at,
+        session_ends_at: null,
         table: table?.public_number ?? "",
         guest_count: lr.guest_count ?? 2,
         status: "pending" as const,
@@ -363,7 +382,7 @@ export function WaiterOrderPage() {
       if (!reservation.table) continue
       const table = tableByNumber.get(reservation.table)
       if (!table || !table.is_occupied) continue
-      const minutes = getOverdueMinutes(reservation.end_at, nowMs)
+      const minutes = getOverdueMinutes(reservation.session_ends_at ?? reservation.end_at, nowMs)
       if (minutes == null) continue
       result[table.public_id] = Math.min(minutes, OVERDUE_UI_CAP_MINUTES)
     }
@@ -545,10 +564,17 @@ export function WaiterOrderPage() {
           onActivateReservation={handleActivateReservation}
           onCancelReservation={(reservationId) => handleCancel(reservationId)}
           onCloseCheck={overlayDetail ? () => handleCloseCheck(overlayDetail.public_id) : undefined}
+          onProcessPayment={
+            overlayDetail
+              ? (orderItemIds) => handleProcessPayment(overlayDetail.public_id, orderItemIds)
+              : undefined
+          }
           onAddItem={overlayDetail ? () => setOrderModalOpen(true) : undefined}
           onModifyReservation={(r) => setModifyTarget(r)}
           onMoveTable={(r) => setMoveTarget(r)}
           onCreateReservation={() => setCreateResModalOpen(true)}
+          onMarkItemServed={handleMarkItemServed}
+          onVoidItem={handleVoidItem}
           onClose={closeOverlay}
         />
       )}

@@ -118,10 +118,6 @@ export function ReservationSidebar({
         ))}
       </div>
 
-      <button type="button" className="reservation-sidebar__action">
-        {sidebarStrings.actions.report}
-      </button>
-
       {confirmingId && (
         <ConfirmCancelModal
           title={sidebarStrings.confirm.title}

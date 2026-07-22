@@ -76,3 +76,73 @@
   background: var(--color-error);
   color: #fff;
 }
+
+.order-item-row__serve-btn {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 3px 8px;
+  border: 1px solid var(--color-success);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--color-success);
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+
+.order-item-row__serve-btn:hover {
+  background: var(--color-success);
+  color: #fff;
+}
+
+.order-item-row__paid-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: var(--color-success);
+  color: #fff;
+}
+
+.order-item-row__void-wrap {
+  position: relative;
+}
+
+.order-item-row__void-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 20;
+  min-width: 180px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px;
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-light);
+  border-radius: 10px;
+  box-shadow: 0 12px 28px -8px color-mix(in srgb, var(--color-border-strong) 30%, transparent);
+}
+
+.order-item-row__void-option {
+  border: none;
+  border-radius: 6px;
+  padding: 8px 10px;
+  background: transparent;
+  color: var(--color-text-primary);
+  font-family: inherit;
+  font-size: 0.78rem;
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+
+.order-item-row__void-option:hover {
+  background: var(--color-bg-page);
+}

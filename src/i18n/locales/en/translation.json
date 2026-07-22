@@ -1135,11 +1135,13 @@
           "reservations": "No reservations for this table."
         },
         "guestSlot": "Guest {{slot}}",
+        "paidBadge": "Paid",
         "totals": {
           "subtotal": "Subtotal",
           "tax": "Tax",
           "service": "Service",
-          "total": "Total"
+          "total": "Total",
+          "outstanding": "Outstanding"
         },
         "reservation": {
           "tagSeated": "Seated now",
@@ -1155,6 +1157,14 @@
           "outOfStock": "Out of stock"
         }
       },
+      "payModal": {
+        "title": "Process payment",
+        "empty": "Nothing left to pay.",
+        "selectAll": "Select all",
+        "selectedTotal": "Selected",
+        "pay": "Pay",
+        "paying": "Paying…"
+      },
       "reservations": {
         "sidebar": {
           "title": "Next reservations",
@@ -1169,8 +1179,7 @@
           },
           "actions": {
             "modify": "Modify",
-            "cancel": "Cancel",
-            "report": "Generate shift report"
+            "cancel": "Cancel"
           },
           "confirm": {
             "title": "Cancel reservation",
@@ -1258,7 +1267,8 @@
       "actions": {
         "openTable": "Failed to open table",
         "activateReservation": "Failed to activate reservation",
-        "closeCheck": "Failed to close the check"
+        "closeCheck": "Failed to close the check",
+        "processPayment": "Failed to process payment"
       }
     },
     "floor": {

@@ -1,10 +1,13 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useFocusTrap } from "@/hooks/useFocusTrap"
 import { formatTimeRange } from "../../types"
 import type { FloorTable, ReservationItem, OverlayDetail, VisualTableStatus } from "../../types"
 import { getCurrencySymbol } from "@/features/menu/utils"
 import { OrderItemRow } from "../OrderItemRow"
 import { CloseCheckModal } from "../CloseCheckModal"
+import { ProcessPaymentModal } from "../ProcessPaymentModal"
+import { fetchVoidReasons } from "../../api/orderApi"
+import type { VoidReason } from "@/types/api/types.gen"
 import "./TableDetailOverlay.css"
 import { useWaiterStrings } from "../../strings"
 
@@ -30,10 +33,13 @@ interface TableDetailOverlayProps {
   onActivateReservation?: (reservationId: string) => void
   onCancelReservation?: (reservationId: string) => void
   onCloseCheck?: () => void
+  onProcessPayment?: (orderItemIds: string[]) => void
   onAddItem?: () => void
   onModifyReservation?: (reservation: ReservationItem) => void
   onMoveTable?: (reservation: ReservationItem) => void
   onCreateReservation?: () => void
+  onMarkItemServed?: (itemId: string) => void
+  onVoidItem?: (itemId: string, reasonCode: string) => void
   onClose: () => void
 }
 
@@ -51,10 +57,13 @@ export function TableDetailOverlay({
   onActivateReservation,
   onCancelReservation,
   onCloseCheck,
+  onProcessPayment,
   onAddItem,
   onModifyReservation,
   onMoveTable,
   onCreateReservation,
+  onMarkItemServed,
+  onVoidItem,
   onClose,
 }: TableDetailOverlayProps) {
   const waiterStrings = useWaiterStrings()
@@ -66,10 +75,28 @@ export function TableDetailOverlay({
   )
   const [guestCount, setGuestCount] = useState(2)
   const [showCloseCheck, setShowCloseCheck] = useState(false)
+  const [showProcessPayment, setShowProcessPayment] = useState(false)
+  const [voidReasons, setVoidReasons] = useState<VoidReason[]>([])
   const dialogRef = useFocusTrap<HTMLDivElement>({ onEscape: onClose })
+
+  useEffect(() => {
+    if (!onVoidItem) return
+    const controller = new AbortController()
+    fetchVoidReasons(controller.signal)
+      .then(setVoidReasons)
+      .catch(() => setVoidReasons([]))
+    return () => controller.abort()
+  }, [onVoidItem])
 
   // Use the bill's real currency rather than a hardcoded symbol.
   const currencySymbol = detail ? getCurrencySymbol(detail.currency) : ""
+
+  // What the "Process payment" picker offers: ordered, unpaid, non-voided lines.
+  const payableItems = detail ? detail.items.filter((i) => !i.is_paid && i.status !== "voided") : []
+  const outstandingTotal = payableItems.reduce(
+    (sum, i) => sum + (Number.parseFloat(i.payable) || 0),
+    0,
+  )
 
   const guestSlots = detail
     ? [...new Set(detail.items.map((i) => i.guest_slot))].sort((a, b) => a - b)
@@ -87,10 +114,16 @@ export function TableDetailOverlay({
   const dayReservations = [...tableReservations].sort(byStart)
   const overdueActiveReservation = dayReservations.find((reservation) => {
     if (reservation.status !== "active") return false
-    return getOverdueMinutes(reservation.end_at, currentTime.getTime()) != null
+    return (
+      getOverdueMinutes(reservation.session_ends_at ?? reservation.end_at, currentTime.getTime()) !=
+      null
+    )
   })
   const overdueMinutes = overdueActiveReservation
-    ? getOverdueMinutes(overdueActiveReservation.end_at, currentTime.getTime())
+    ? getOverdueMinutes(
+        overdueActiveReservation.session_ends_at ?? overdueActiveReservation.end_at,
+        currentTime.getTime(),
+      )
     : null
 
   return (
@@ -342,6 +375,9 @@ export function TableDetailOverlay({
                               key={item.public_id}
                               item={item}
                               currencySymbol={currencySymbol}
+                              voidReasons={voidReasons}
+                              onMarkServed={onMarkItemServed}
+                              onVoid={onVoidItem}
                             />
                           ))}
                         </div>
@@ -388,7 +424,23 @@ export function TableDetailOverlay({
                         {detail.total_amount}
                       </span>
                     </div>
-                    <button type="button" className="overlay__cta">
+                    {payableItems.length > 0 && (
+                      <div className="overlay__total-row">
+                        <span className="overlay__total-label">
+                          {overlayStrings.totals.outstanding}
+                        </span>
+                        <span className="overlay__total-value">
+                          {currencySymbol}
+                          {outstandingTotal.toFixed(2)}
+                        </span>
+                      </div>
+                    )}
+                    <button
+                      type="button"
+                      className="overlay__cta"
+                      onClick={() => setShowProcessPayment(true)}
+                      disabled={!onProcessPayment || payableItems.length === 0}
+                    >
                       {overlayStrings.actions.processPayment}
                     </button>
                   </div>
@@ -490,6 +542,17 @@ export function TableDetailOverlay({
           error={actionError}
           onConfirm={() => onCloseCheck?.()}
           onClose={() => setShowCloseCheck(false)}
+        />
+      )}
+
+      {showProcessPayment && (
+        <ProcessPaymentModal
+          items={payableItems}
+          currencySymbol={currencySymbol}
+          busy={actionBusy}
+          error={actionError}
+          onConfirm={(orderItemIds) => onProcessPayment?.(orderItemIds)}
+          onClose={() => setShowProcessPayment(false)}
         />
       )}
     </>

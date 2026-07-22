@@ -606,10 +606,18 @@
 
 .c-floor-plan__table-number {
   position: relative;
+  max-width: 100%;
+  padding: 0 4px;
+  overflow: hidden;
+  white-space: normal;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  text-align: center;
   font-size: 2rem;
   font-weight: 900;
-  line-height: 1;
+  line-height: 1.05;
   color: var(--color-text-primary);
+  box-sizing: border-box;
 }
 
 /* Keep the badge / number / seats chip upright AND centered as one group when
@@ -659,6 +667,16 @@
 
 .c-floor-plan__table--round .c-floor-plan__table-number {
   font-size: 1.6rem;
+}
+
+@media (max-width: 640px) {
+  .c-floor-plan__table-number {
+    font-size: 1.3rem;
+  }
+
+  .c-floor-plan__table--round .c-floor-plan__table-number {
+    font-size: 1.05rem;
+  }
 }
 
 .c-floor-plan__zones {
@@ -1326,10 +1344,18 @@
 }
 
 .c-floor-plan__card-table-num {
-  font-size: 1.4rem;
+  max-width: 100%;
+  padding: 0 2px;
+  overflow: hidden;
+  white-space: normal;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  text-align: center;
+  font-size: 0.62rem;
   font-weight: 900;
-  line-height: 1;
+  line-height: 1.05;
   color: var(--color-text-primary);
+  box-sizing: border-box;
 }
 
 .c-floor-plan__card--free .c-floor-plan__card-table-num {

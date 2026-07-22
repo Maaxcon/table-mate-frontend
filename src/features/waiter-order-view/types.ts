@@ -38,7 +38,7 @@ export type VisualTableStatus = "free" | "occupied" | "reserved"
 
 export type ReservationItem = Pick<
   Reservation,
-  "public_id" | "start_at" | "end_at" | "guest_count" | "status" | "notes"
+  "public_id" | "start_at" | "end_at" | "session_ends_at" | "guest_count" | "status" | "notes"
 > & {
   table: string
   name: string
@@ -51,6 +51,8 @@ export interface OverlayOrderItem {
   quantity: number
   name: string
   unit_price: string
+  payable: string
+  is_paid: boolean
   status: OrderItemStatusEnum
   is_wasted: boolean
   void_reason?: number | null

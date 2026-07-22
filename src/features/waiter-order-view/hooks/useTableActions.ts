@@ -9,6 +9,7 @@ type UseTableActionsOptions = {
     openTable: string
     activateReservation: string
     closeCheck: string
+    processPayment: string
   }
 }
 
@@ -32,6 +33,7 @@ export function useTableActions({
     openTable: "Failed to open table",
     activateReservation: "Failed to activate reservation",
     closeCheck: "Failed to close the check",
+    processPayment: "Failed to process payment",
   }
 
   const runTableAction = useCallback(
@@ -98,6 +100,23 @@ export function useTableActions({
     [runTableAction, messages.closeCheck],
   )
 
+  // Simulated payment: marks the selected ordered items as paid. Same
+  // simulated flow as the guest cart's bill, just staff-triggered.
+  const handleProcessPayment = useCallback(
+    (sessionId: string, orderItemIds: string[]) => {
+      void runTableAction(
+        () =>
+          apiFetch(`/api/orders/sessions/${sessionId}/pay/`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ order_item_ids: orderItemIds }),
+          }),
+        messages.processPayment,
+      )
+    },
+    [runTableAction, messages.processPayment],
+  )
+
   return {
     actionBusy,
     busyActionId,
@@ -105,6 +124,7 @@ export function useTableActions({
     handleOpenTable,
     handleActivateReservation,
     handleCloseCheck,
+    handleProcessPayment,
     clearActionError,
   }
 }
