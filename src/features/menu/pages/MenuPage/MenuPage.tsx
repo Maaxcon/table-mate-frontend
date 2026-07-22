@@ -85,6 +85,16 @@ function MenuPage() {
     error,
   } = useMenuPage(restaurantId ?? "", guestAuth.deviceId)
 
+  // Show the restaurant's own name in the browser tab instead of the generic default.
+  useEffect(() => {
+    if (!restaurantName) return
+    const previousTitle = document.title
+    document.title = restaurantName
+    return () => {
+      document.title = previousTitle
+    }
+  }, [restaurantName])
+
   const itemsById = useMemo(() => {
     const map: Record<string, MenuItem> = {}
     for (const item of menuItems) {
