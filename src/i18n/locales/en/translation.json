@@ -1179,8 +1179,7 @@
           },
           "actions": {
             "modify": "Modify",
-            "cancel": "Cancel",
-            "report": "Generate shift report"
+            "cancel": "Cancel"
           },
           "confirm": {
             "title": "Cancel reservation",

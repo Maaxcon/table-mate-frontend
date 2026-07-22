@@ -205,25 +205,6 @@
   background: var(--color-error);
 }
 
-.reservation-sidebar__action {
-  width: 100%;
-  padding: 14px 20px;
-  font-size: 0.75rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  color: var(--color-bg-secondary);
-  background: var(--color-text-primary);
-  border: none;
-  border-radius: var(--w-radius-sm);
-  cursor: pointer;
-  font-family: inherit;
-  transition: opacity 0.15s;
-}
-
-.reservation-sidebar__action:hover {
-  opacity: 0.85;
-}
-
 @media (max-width: 1180px) {
   .reservation-sidebar {
     padding: 16px;

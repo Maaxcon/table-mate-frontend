@@ -149,7 +149,6 @@ export function useWaiterStrings() {
         actions: {
           modify: t("admin.waiter.reservations.sidebar.actions.modify"),
           cancel: t("admin.waiter.reservations.sidebar.actions.cancel"),
-          report: t("admin.waiter.reservations.sidebar.actions.report"),
         },
         confirm: {
           title: t("admin.waiter.reservations.sidebar.confirm.title"),
