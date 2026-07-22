@@ -5,7 +5,6 @@ import type {
   AdminMenuItem,
   Employee,
   Restaurant,
-  RestaurantSettings,
 } from "@/types/api/types.gen"
 
 export type { WeekDay, WorkingHours, WorkingHoursDay }
@@ -28,7 +27,16 @@ export type AdminRestaurant = Pick<
   "public_id" | "name" | "address" | "phone" | "telegram_url" | "facebook_url" | "cover_image"
 > & { working_hours: WorkingHours }
 
-export type AdminSettings = Pick<
-  RestaurantSettings,
-  "public_id" | "timezone" | "currency" | "locale" | "default_tax_rate" | "default_service_charge"
->
+// The generated schema only documents the trimmed booking-flow shape for
+// this endpoint (GET /restaurant-settings/ is dynamic: admins get more
+// fields than anonymous booking clients, which the OpenAPI schema can't
+// express). Authenticated admins still receive these fields at runtime —
+// hand-typed here instead of derived, since the generator no longer has them.
+export type AdminSettings = {
+  readonly public_id: string
+  timezone?: string
+  currency: string
+  locale?: string
+  default_tax_rate?: string
+  default_service_charge?: string
+}

@@ -18,6 +18,7 @@ function makeOrderItem(overrides: Partial<OrderItem> = {}): OrderItem {
     comment: null,
     status: "pending",
     unit_price: "10.00",
+    payable: "20.00",
     voided_by: "",
     void_reason: null,
     created_at: "2026-06-23T10:00:00Z",
