@@ -394,6 +394,8 @@ export type OrderItem = {
   total_price?: string
   tax_rate?: string
   tax_amount?: string
+  readonly payable: string
+  is_paid?: boolean
   voided_at?: string | null
   readonly voided_by: string
   readonly void_reason: string | null
@@ -629,6 +631,12 @@ export type PatchedAdminMenuItem = {
   readonly updated_at?: string
 }
 
+export type PatchedBookingSettings = {
+  readonly currency?: string
+  readonly timezone?: string
+  readonly working_hours?: unknown
+}
+
 export type PatchedEditorTable = {
   readonly public_id?: string
   readonly restaurant?: string
@@ -704,6 +712,8 @@ export type PatchedOrderItem = {
   total_price?: string
   tax_rate?: string
   tax_amount?: string
+  readonly payable?: string
+  is_paid?: boolean
   voided_at?: string | null
   readonly voided_by?: string
   readonly void_reason?: string | null
@@ -745,23 +755,6 @@ export type PatchedRestaurant = {
   telegram_url?: string
   facebook_url?: string
   readonly cover_image?: string | null
-  readonly created_at?: string
-  readonly updated_at?: string
-}
-
-export type PatchedRestaurantSettings = {
-  readonly public_id?: string
-  readonly restaurant?: string
-  timezone?: string
-  currency?: string
-  locale?: string
-  default_tax_rate?: string
-  default_service_charge?: string
-  working_hours?: WorkingHours
-  readonly rating?: string | null
-  eta_min_minutes?: number
-  eta_max_minutes?: number
-  price_band?: number
   readonly created_at?: string
   readonly updated_at?: string
 }
@@ -992,23 +985,6 @@ export type RestaurantInfo = {
   name: string
 }
 
-export type RestaurantSettings = {
-  readonly public_id: string
-  readonly restaurant: string
-  timezone?: string
-  currency: string
-  locale?: string
-  default_tax_rate?: string
-  default_service_charge?: string
-  working_hours?: WorkingHours
-  readonly rating: string | null
-  eta_min_minutes?: number
-  eta_max_minutes?: number
-  price_band?: number
-  readonly created_at: string
-  readonly updated_at: string
-}
-
 /**
  * * `admin` - Admin
  * * `waiter` - Waiter
@@ -1033,6 +1009,10 @@ export type Session = {
   readonly opened_at: string
   readonly created_at: string
   readonly updated_at: string
+}
+
+export type SessionPayRequest = {
+  order_item_ids?: Array<string>
 }
 
 /**
@@ -1405,6 +1385,7 @@ export type OrderItemWritable = {
   total_price?: string
   tax_rate?: string
   tax_amount?: string
+  is_paid?: boolean
   voided_at?: string | null
   void_reason_note?: string | null
   is_wasted?: boolean
@@ -1645,6 +1626,7 @@ export type PatchedOrderItemWritable = {
   total_price?: string
   tax_rate?: string
   tax_amount?: string
+  is_paid?: boolean
   voided_at?: string | null
   void_reason_note?: string | null
   is_wasted?: boolean
@@ -1669,18 +1651,6 @@ export type PatchedRestaurantWritable = {
   telegram_url?: string
   facebook_url?: string
   working_hours?: WorkingHours
-}
-
-export type PatchedRestaurantSettingsWritable = {
-  timezone?: string
-  currency?: string
-  locale?: string
-  default_tax_rate?: string
-  default_service_charge?: string
-  working_hours?: WorkingHours
-  eta_min_minutes?: number
-  eta_max_minutes?: number
-  price_band?: number
 }
 
 export type PatchedSessionWritable = {
@@ -1759,18 +1729,6 @@ export type RestaurantWritable = {
 
 export type RestaurantInfoWritable = {
   name: string
-}
-
-export type RestaurantSettingsWritable = {
-  timezone?: string
-  currency: string
-  locale?: string
-  default_tax_rate?: string
-  default_service_charge?: string
-  working_hours?: WorkingHours
-  eta_min_minutes?: number
-  eta_max_minutes?: number
-  price_band?: number
 }
 
 export type SessionWritable = {
@@ -3182,6 +3140,22 @@ export type OrdersSessionsCloseCreateResponses = {
 export type OrdersSessionsCloseCreateResponse =
   OrdersSessionsCloseCreateResponses[keyof OrdersSessionsCloseCreateResponses]
 
+export type OrdersSessionsPayCreateData = {
+  body?: SessionPayRequest
+  path: {
+    public_id: string
+  }
+  query?: never
+  url: "/api/orders/sessions/{public_id}/pay/"
+}
+
+export type OrdersSessionsPayCreateResponses = {
+  200: Session
+}
+
+export type OrdersSessionsPayCreateResponse =
+  OrdersSessionsPayCreateResponses[keyof OrdersSessionsPayCreateResponses]
+
 export type OrdersTicketsListData = {
   body?: never
   path?: never
@@ -3761,7 +3735,7 @@ export type RestaurantsRestaurantSettingsRetrieveResponse =
   RestaurantsRestaurantSettingsRetrieveResponses[keyof RestaurantsRestaurantSettingsRetrieveResponses]
 
 export type RestaurantsRestaurantSettingsPartialUpdateData = {
-  body?: PatchedRestaurantSettingsWritable
+  body?: PatchedBookingSettings
   path: {
     public_id: string
   }
@@ -3770,7 +3744,7 @@ export type RestaurantsRestaurantSettingsPartialUpdateData = {
 }
 
 export type RestaurantsRestaurantSettingsPartialUpdateResponses = {
-  200: RestaurantSettings
+  200: BookingSettings
 }
 
 export type RestaurantsRestaurantSettingsPartialUpdateResponse =
