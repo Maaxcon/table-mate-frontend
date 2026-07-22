@@ -1,6 +1,6 @@
 import { useCallback } from "react"
 import type { DragEndEvent } from "@dnd-kit/core"
-import type { SchedulerReservation, SchedulerTable } from "../types"
+import type { SchedulerReservation, SchedulerTable, SchedulerConflictReason } from "../types"
 import { checkOverlap, checkOrderingViolation, checkPastTimeViolation } from "./useOverlapCheck"
 import type { PendingChange } from "../types"
 import { addDays, isoToDateKey } from "../types"
@@ -22,7 +22,7 @@ interface UseDragAndDropOptions {
     newEndTime: string,
     crossMidnight?: boolean,
   ) => void
-  onConflict: (reservationId: string, reason?: string) => void
+  onConflict: (reservationId: string, reason?: SchedulerConflictReason) => void
   onCancel: (reservationId: string) => void
   onUncancel: (reservationId: string) => void
 }
@@ -90,7 +90,7 @@ export function useDragAndDrop({
           draggedReservation.opened_at ?? draggedReservation.start_at,
         )
         if (currentDate !== date) {
-          onConflict(reservationId, "Cannot move an active session to a different date")
+          onConflict(reservationId, "activeDifferentDate")
           return
         }
 
@@ -147,7 +147,7 @@ export function useDragAndDrop({
       }
 
       if (checkOverlap(proposed, reservations, pendingChanges, reservationId)) {
-        onConflict(reservationId, "Time slot overlaps with another reservation")
+        onConflict(reservationId, "overlap")
         return
       }
 

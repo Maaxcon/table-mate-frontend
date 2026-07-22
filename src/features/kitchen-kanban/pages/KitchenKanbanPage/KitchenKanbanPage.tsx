@@ -20,35 +20,32 @@ import { CompletedColumn } from "../../components/CompletedColumn"
 import { NotificationsPanel } from "../../components/NotificationsPanel"
 import { KanbanFooter } from "../../components/KanbanFooter"
 import { useNotificationStream } from "@/features/notification-stream/hooks/useNotificationStream"
+import { useAdminStrings } from "@/features/admin/strings"
 const KITCHEN_READ_STORAGE_KEY = "tablemate.kitchen.notifications.read"
 
-function useCurrentTime(): string {
-  const [time, setTime] = useState(() =>
-    new Date().toLocaleTimeString([], {
+function useCurrentTime(locale: string): string {
+  const format = () =>
+    new Date().toLocaleTimeString(locale, {
       hour: "2-digit",
       minute: "2-digit",
       second: "2-digit",
       hour12: false,
-    }),
-  )
+    })
+  const [time, setTime] = useState(format)
   useEffect(() => {
     const id = setInterval(() => {
-      setTime(
-        new Date().toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-          hour12: false,
-        }),
-      )
+      setTime(format())
     }, 1000)
     return () => clearInterval(id)
-  }, [])
+  }, [locale])
   return time
 }
 
 export function KitchenKanbanPage() {
-  const currentTime = useCurrentTime()
+  const strings = useAdminStrings()
+  const pageStrings = strings.kitchen.page
+  const mutationStrings = pageStrings.mutations
+  const currentTime = useCurrentTime(strings.locale)
   const { events, isConnected, markEventRead, markAllRead } = useNotificationStream({
     readStorageKey: KITCHEN_READ_STORAGE_KEY,
   })
@@ -101,7 +98,8 @@ export function KitchenKanbanPage() {
         setError(null)
       } catch (err) {
         if (err instanceof DOMException && err.name === "AbortError") return
-        setError("Could not load tickets.")
+        console.error(err)
+        setError(pageStrings.loadError)
       } finally {
         setLoading(false)
       }
@@ -128,11 +126,12 @@ export function KitchenKanbanPage() {
               : t,
           ),
         )
-      } catch {
-        setMutationError("Could not update item.")
+      } catch (err) {
+        console.error(err)
+        setMutationError(mutationStrings.update)
       }
     },
-    [tickets, canManageTickets],
+    [tickets, canManageTickets, mutationStrings],
   )
 
   const bumpOrder = useCallback(
@@ -154,11 +153,12 @@ export function KitchenKanbanPage() {
           ...c,
         ])
         setTickets((prev) => prev.filter((t) => t.id !== ticketId))
-      } catch {
-        setMutationError("Could not bump order.")
+      } catch (err) {
+        console.error(err)
+        setMutationError(mutationStrings.bump)
       }
     },
-    [tickets, canManageTickets],
+    [tickets, canManageTickets, mutationStrings],
   )
 
   const promoteToActive = useCallback(
@@ -167,11 +167,12 @@ export function KitchenKanbanPage() {
       try {
         await updateTicketStatus(ticketId, "active")
         setTickets((prev) => prev.map((t) => (t.id === ticketId ? { ...t, status: "active" } : t)))
-      } catch {
-        setMutationError("Could not accept order.")
+      } catch (err) {
+        console.error(err)
+        setMutationError(mutationStrings.accept)
       }
     },
-    [canManageTickets],
+    [canManageTickets, mutationStrings],
   )
 
   const incoming = useMemo(
@@ -220,7 +221,7 @@ export function KitchenKanbanPage() {
     return (
       <div className="kanban">
         <KanbanHeader currentTime={currentTime} isConnected={isConnected} />
-        <div className="kanban__loading">Loading tickets...</div>
+        <div className="kanban__loading">{pageStrings.loading}</div>
       </div>
     )
   }

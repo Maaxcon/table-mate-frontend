@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react"
+import { useAuthStrings } from "@/features/auth/strings"
 import Card from "@/components/Card"
-import { authStrings } from "@/features/auth/strings"
 import type { GoogleFeedbackType } from "@/features/auth/types"
 import { FcGoogle } from "react-icons/fc"
 import "./SocialAuthGroup.css"
@@ -26,6 +26,7 @@ function SocialAuthGroup({
   // feedback can already be set on first render (e.g. a redirect error), so we
   // start empty and fill it in an effect to force the change screen readers
   // need to hear.
+  const authStrings = useAuthStrings()
   const [liveFeedback, setLiveFeedback] = useState("")
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- deferring to a post-mount render is what makes the live region announce

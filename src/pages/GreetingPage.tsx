@@ -5,15 +5,16 @@ import { GoogleOAuthProvider } from "@react-oauth/google"
 import { AuthHero, GuestAccess, SocialAuthGroup } from "@/features/auth/components"
 import { useGoogleRedirectAuth } from "@/features/auth/hooks"
 import { googleAuthMessage } from "@/features/auth/hooks/googleAuth.constants"
-import { authStrings } from "@/features/auth/strings"
+import { useAuthStrings } from "@/features/auth/strings"
 import { ENV_NOT_CONFIGURED_VALUE, env } from "@/config/env"
 import AuthLayout from "@/layouts/AuthLayout"
+import type { GoogleFeedbackType } from "@/features/auth/types"
 import "./GreetingPage.css"
 
 type GreetingPageContentProps = {
   onGoogleLogin: () => void
   googleFeedback: string
-  googleFeedbackType: "success" | "error"
+  googleFeedbackType: GoogleFeedbackType
   loading: boolean
   googleDisabled?: boolean
 }
@@ -25,6 +26,7 @@ function GreetingPageContent({
   loading,
   googleDisabled = false,
 }: GreetingPageContentProps) {
+  const authStrings = useAuthStrings()
   const navigate = useNavigate()
   const handleContinueAsGuest = useCallback(() => navigate("/restaurants"), [navigate])
 

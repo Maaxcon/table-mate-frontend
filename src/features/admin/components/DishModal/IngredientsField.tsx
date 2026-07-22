@@ -1,5 +1,6 @@
 import { useState } from "react"
 import RemovableChipList from "./RemovableChipList"
+import { useAdminStrings } from "@/features/admin/strings"
 
 type IngredientsFieldProps = {
   value: string[]
@@ -9,6 +10,7 @@ type IngredientsFieldProps = {
 /** Free-text ingredient editor: type + Enter/Add, shown as removable chips. */
 function IngredientsField({ value, onChange }: IngredientsFieldProps) {
   const [input, setInput] = useState("")
+  const strings = useAdminStrings()
 
   const add = () => {
     const ingredient = input.trim()
@@ -19,12 +21,12 @@ function IngredientsField({ value, onChange }: IngredientsFieldProps) {
 
   return (
     <div className="admin-field">
-      <span className="admin-field__label">Ingredients</span>
+      <span className="admin-field__label">{strings.menu.ingredients.label}</span>
       <div className="dish-ingredient-add">
         <input
           className="admin-field__input"
           value={input}
-          placeholder="Type an ingredient, press Enter"
+          placeholder={strings.menu.ingredients.placeholder}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === "Enter") {
@@ -39,11 +41,12 @@ function IngredientsField({ value, onChange }: IngredientsFieldProps) {
           onClick={add}
           disabled={!input.trim()}
         >
-          Add
+          {strings.menu.ingredients.add}
         </button>
       </div>
       <RemovableChipList
         items={value}
+        getRemoveLabel={(item) => strings.menu.ingredients.remove(item)}
         onRemove={(item) => onChange(value.filter((x) => x !== item))}
       />
     </div>

@@ -2,20 +2,26 @@ import "./BatchColumn.css"
 import type { CSSProperties } from "react"
 import { LuLayoutGrid } from "react-icons/lu"
 import type { BatchCount } from "../../types"
+import { useAdminStrings } from "@/features/admin/strings"
 
 interface BatchColumnProps {
   batches: BatchCount[]
 }
 
 export function BatchColumn({ batches }: BatchColumnProps) {
+  const strings = useAdminStrings()
   return (
     <div className="kanban__col kanban__col--batch">
       <div className="kanban__col-header">
-        <span className="kanban__col-title kanban__col-title--dark">BATCH VIEW</span>
+        <span className="kanban__col-title kanban__col-title--dark">
+          {strings.kitchen.batch.title}
+        </span>
         <LuLayoutGrid className="kanban__col-icon" aria-hidden="true" />
       </div>
       <div className="kanban__col-body">
-        {batches.length === 0 && <div className="kanban-card kanban-card--empty">No batches</div>}
+        {batches.length === 0 && (
+          <div className="kanban-card kanban-card--empty">{strings.kitchen.batch.empty}</div>
+        )}
         {batches.map((batch) => (
           <div
             key={batch.label}

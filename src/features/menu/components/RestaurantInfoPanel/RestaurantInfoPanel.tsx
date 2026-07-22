@@ -1,14 +1,12 @@
 import { FaFacebook, FaTelegram } from "react-icons/fa"
 import { LuArrowUpRight, LuClock, LuMapPin, LuPhone, LuWallet } from "react-icons/lu"
 import type { PublicRestaurantSettings, WorkingHours } from "@/features/menu/types"
-import { menuStrings } from "@/features/menu/strings"
+import { useMenuStrings } from "@/features/menu/strings"
 import "./RestaurantInfoPanel.css"
 
 function mapsUrl(address: string): string {
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`
 }
-
-const DAY_LABELS = menuStrings.dayShort
 
 const DAY_ORDER: Array<keyof WorkingHours> = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
 
@@ -36,7 +34,10 @@ function isOpenNow(hours: WorkingHours): boolean {
 
 type ScheduleRow = { label: string; time: string; isToday: boolean }
 
-function groupConsecutiveDays(hours: WorkingHours): ScheduleRow[] {
+function groupConsecutiveDays(
+  hours: WorkingHours,
+  dayLabels: Record<string, string>,
+): ScheduleRow[] {
   const today = todayKey()
   const rows: ScheduleRow[] = []
   let i = 0
@@ -54,8 +55,8 @@ function groupConsecutiveDays(hours: WorkingHours): ScheduleRow[] {
       j++
     }
     const span = DAY_ORDER.slice(i, j)
-    const startLabel = DAY_LABELS[day]
-    const endLabel = j > i + 1 ? `–${DAY_LABELS[DAY_ORDER[j - 1]]}` : ""
+    const startLabel = dayLabels[day]
+    const endLabel = j > i + 1 ? `–${dayLabels[DAY_ORDER[j - 1]]}` : ""
     rows.push({
       label: `${startLabel}${endLabel}`,
       time: `${slot.open} – ${slot.close}`,
@@ -81,6 +82,8 @@ export function RestaurantInfoPanel({
   telegramUrl = "",
   facebookUrl = "",
 }: Props) {
+  const menuStrings = useMenuStrings()
+  const dayLabels = menuStrings.dayShort
   const hours = settings?.working_hours
   const hasSchedule = Boolean(hours && Object.keys(hours).length > 0)
   const hasSocial = Boolean(telegramUrl || facebookUrl)
@@ -88,7 +91,7 @@ export function RestaurantInfoPanel({
 
   if (!hasContent) return null
 
-  const scheduleRows = hours && hasSchedule ? groupConsecutiveDays(hours) : []
+  const scheduleRows = hours && hasSchedule ? groupConsecutiveDays(hours, dayLabels) : []
   const open = hours && hasSchedule ? isOpenNow(hours) : null
 
   return (

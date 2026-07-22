@@ -25,6 +25,7 @@ import {
 import type { EditorEntity, LayoutPayload } from "@/features/editor/types"
 import "./FloorPlanEditorPage.css"
 import { useToast } from "@/features/admin/hooks/toastContext"
+import { useAdminStrings } from "@/features/admin/strings"
 import { useHallSubscription } from "@/features/waiter-order-view/hooks/useHallSubscription"
 
 function getTimeString(): string {
@@ -101,6 +102,8 @@ function FloorPlanEditorPage() {
   const [deleting, setDeleting] = useState(false)
   const [qrTarget, setQrTarget] = useState<{ publicId: string; label: string } | null>(null)
   const toast = useToast()
+  const strings = useAdminStrings()
+  const pageStrings = strings.floor.page
 
   // Tables that currently have guests seated (open session). Deleting one is
   // blocked up front — the publish would reject it anyway — so we warn instead.
@@ -240,10 +243,8 @@ function FloorPlanEditorPage() {
   const handleOtherAdminPublished = useCallback(async () => {
     if (publishingRef.current) return
     if (dirty) {
-      toast.action(
-        "Layout was updated by another admin. Reload to see changes (your unsaved work will be lost).",
-        "Reload now",
-        () => window.location.reload(),
+      toast.action(pageStrings.toasts.stale.message, pageStrings.toasts.stale.action, () =>
+        window.location.reload(),
       )
     } else {
       try {
@@ -323,7 +324,7 @@ function FloorPlanEditorPage() {
       const entity = entities.find((e) => e.id === id)
       const isTable = entity?.type === "table-square" || entity?.type === "table-round"
       if (isTable && entity?.serverId && occupiedTableIds.has(entity.serverId)) {
-        toast.error("Can't delete an occupied table — close its visit first.")
+        toast.error(pageStrings.toasts.occupied)
         return
       }
       removeEntity(id)
@@ -473,7 +474,7 @@ function FloorPlanEditorPage() {
         const entity = entities.find((item) => item.id === id)
         const isTable = entity?.type === "table-square" || entity?.type === "table-round"
         if (isTable && entity?.serverId && occupiedTableIds.has(entity.serverId)) {
-          toast.error("Can't delete an occupied table — close its visit first.")
+          toast.error(pageStrings.toasts.occupied)
           continue
         }
         deletableIds.push(id)
@@ -700,62 +701,72 @@ function FloorPlanEditorPage() {
                 <span className="editor-topbar__logo-dot" />
               </span>
               <div className="editor-topbar__brand-copy">
-                <span className="editor-topbar__brand-title">Floor Plan</span>
-                <span className="editor-topbar__brand-subtitle">Admin Workspace</span>
+                <span className="editor-topbar__brand-title">{pageStrings.brandTitle}</span>
+                <span className="editor-topbar__brand-subtitle">{pageStrings.brandSubtitle}</span>
               </div>
             </div>
-            <h1 className="editor-topbar__title">Floor plan studio</h1>
+            <h1 className="editor-topbar__title">{pageStrings.title}</h1>
             <p className="editor-topbar__subtitle">
               {selectedZone
-                ? `Editing zone: ${selectedZone.name}`
-                : "Create a zone to start mapping the dining room."}
+                ? pageStrings.subtitleEditing(selectedZone.name)
+                : pageStrings.subtitleEmpty}
             </p>
           </div>
           <div className="editor-topbar__meta">
             <span
               className={`editor-topbar__badge ${dirty ? "editor-topbar__badge--dirty" : "editor-topbar__badge--clean"}`}
             >
-              {dirty ? "Unsaved changes" : "All changes synced"}
+              {dirty ? pageStrings.status.dirty : pageStrings.status.clean}
             </span>
             <span
               className={`editor-topbar__live ${isConnected ? "editor-topbar__live--online" : ""}`}
               role="status"
-              aria-label={isConnected ? "Live updates connected" : "Live updates offline"}
+              aria-label={
+                isConnected ? pageStrings.live.ariaConnected : pageStrings.live.ariaDisconnected
+              }
             >
               <span className="editor-topbar__live-dot" aria-hidden="true" />
-              {isConnected ? "Live updates" : "Offline mode"}
+              {isConnected ? pageStrings.live.connected : pageStrings.live.disconnected}
             </span>
-            <div className="editor-topbar__time" aria-label="Local time">
+            <div className="editor-topbar__time" aria-label={pageStrings.live.timeAria}>
               <span className="editor-topbar__clock">{currentTime}</span>
-              <span className="editor-topbar__clock-label">Local time</span>
+              <span className="editor-topbar__clock-label">{pageStrings.live.timeLabel}</span>
             </div>
           </div>
         </div>
 
-        <div className="editor-topbar__metrics" role="group" aria-label="Layout metrics">
+        <div
+          className="editor-topbar__metrics"
+          role="group"
+          aria-label={pageStrings.live.metricsAria}
+        >
           <article className="editor-metric">
-            <span className="editor-metric__label">Zones</span>
+            <span className="editor-metric__label">{pageStrings.metrics.zones.label}</span>
             <span className="editor-metric__value">{allZones.length}</span>
-            <span className="editor-metric__hint">Active zones</span>
+            <span className="editor-metric__hint">{pageStrings.metrics.zones.hint}</span>
           </article>
           <article className="editor-metric">
-            <span className="editor-metric__label">Tables</span>
+            <span className="editor-metric__label">{pageStrings.metrics.tables.label}</span>
             <span className="editor-metric__value">{selectedZone ? zoneTables : "—"}</span>
             <span className="editor-metric__hint">
-              {selectedZone ? "Ready for guests" : "Select zone"}
+              {selectedZone
+                ? pageStrings.metrics.tables.hintSelected
+                : pageStrings.metrics.tables.hintEmpty}
             </span>
           </article>
           <article className="editor-metric">
-            <span className="editor-metric__label">Portals</span>
+            <span className="editor-metric__label">{pageStrings.metrics.portals.label}</span>
             <span className="editor-metric__value">{selectedZone ? zonePortals : "—"}</span>
             <span className="editor-metric__hint">
-              {selectedZone ? "Navigation links" : "Select zone"}
+              {selectedZone
+                ? pageStrings.metrics.portals.hintSelected
+                : pageStrings.metrics.portals.hintEmpty}
             </span>
           </article>
           <article className="editor-metric">
-            <span className="editor-metric__label">Grid</span>
+            <span className="editor-metric__label">{pageStrings.metrics.grid.label}</span>
             <span className="editor-metric__value">{selectedZone ? canvasSizeLabel : "—"}</span>
-            <span className="editor-metric__hint">Columns × rows</span>
+            <span className="editor-metric__hint">{pageStrings.metrics.grid.hint}</span>
           </article>
         </div>
       </header>
@@ -793,7 +804,7 @@ function FloorPlanEditorPage() {
         >
           {noZones ? (
             <div className="editor-page__empty">
-              <p>Please create a zone to start editing the floor plan.</p>
+              <p>{pageStrings.emptyState}</p>
             </div>
           ) : (
             <>
@@ -805,7 +816,9 @@ function FloorPlanEditorPage() {
                     aria-expanded={!isSidebarCollapsed}
                     onClick={() => setIsSidebarCollapsed((prev) => !prev)}
                   >
-                    {isSidebarCollapsed ? "Show side menu" : "Hide side menu"}
+                    {isSidebarCollapsed
+                      ? pageStrings.sidebarToggle.show
+                      : pageStrings.sidebarToggle.hide}
                   </button>
                 </div>
                 <Canvas

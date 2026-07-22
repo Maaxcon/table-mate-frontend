@@ -1,8 +1,9 @@
+import { useAuthStrings } from "@/features/auth/strings"
 import logo from "@/assets/logo.png"
-import { authStrings } from "@/features/auth/strings"
 import "./AuthHero.css"
 
 function AuthHero() {
+  const authStrings = useAuthStrings()
   return (
     <section className="auth-hero">
       <h1 className="auth-hero__brand">

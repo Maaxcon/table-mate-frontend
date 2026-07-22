@@ -1,11 +1,13 @@
 import { useDroppable } from "@dnd-kit/core"
 import { LuTrash2, LuUndo2 } from "react-icons/lu"
+import type { SchedulerStrings } from "@/features/admin/strings"
 
 interface CancelZoneProps {
   activeDragId: string | null
   pendingCancellationIds: string[]
   onCancel?: (id: string) => void
   onUncancel?: (id: string) => void
+  labels: SchedulerStrings["cancelZone"]
 }
 
 export function CancelZone({
@@ -13,6 +15,7 @@ export function CancelZone({
   pendingCancellationIds,
   onCancel,
   onUncancel,
+  labels,
 }: CancelZoneProps) {
   const isUndoMode = activeDragId ? pendingCancellationIds.includes(activeDragId) : false
 
@@ -47,7 +50,7 @@ export function CancelZone({
       className={classNames}
       role="button"
       tabIndex={activeDragId ? 0 : -1}
-      aria-label={isUndoMode ? "Undo cancellation" : "Cancel reservation"}
+      aria-label={isUndoMode ? labels.ariaUndo : labels.ariaCancel}
       onClick={handleActivate}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") {
@@ -57,7 +60,7 @@ export function CancelZone({
       }}
     >
       {isUndoMode ? <LuUndo2 aria-hidden="true" /> : <LuTrash2 aria-hidden="true" />}
-      {activeDragId && <span>{isUndoMode ? "Undo" : "Cancel"}</span>}
+      {activeDragId && <span>{isUndoMode ? labels.labelUndo : labels.labelCancel}</span>}
     </div>
   )
 }

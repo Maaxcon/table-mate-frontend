@@ -3,6 +3,7 @@ import Modal from "@/features/admin/components/Modal"
 import { fetchTableQrCode } from "@/features/editor/api"
 import { downloadBlob } from "@/utils/downloadBlob"
 import "./TableQrModal.css"
+import { useAdminStrings } from "@/features/admin/strings"
 
 interface TableQrModalProps {
   tablePublicId: string
@@ -14,6 +15,9 @@ export function TableQrModal({ tablePublicId, tableLabel, onClose }: TableQrModa
   const [blob, setBlob] = useState<Blob | null>(null)
   const [imageUrl, setImageUrl] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const strings = useAdminStrings()
+  const qrStrings = strings.floor.modals.qr
+  const displayLabel = tableLabel || tablePublicId
 
   useEffect(() => {
     let objectUrl: string | null = null
@@ -27,14 +31,14 @@ export function TableQrModal({ tablePublicId, tableLabel, onClose }: TableQrModa
         setImageUrl(objectUrl)
       })
       .catch(() => {
-        if (!cancelled) setError("Could not load the QR code.")
+        if (!cancelled) setError(qrStrings.error)
       })
 
     return () => {
       cancelled = true
       if (objectUrl) URL.revokeObjectURL(objectUrl)
     }
-  }, [tablePublicId])
+  }, [tablePublicId, qrStrings.error])
 
   const handleDownload = () => {
     if (!blob) return
@@ -42,21 +46,17 @@ export function TableQrModal({ tablePublicId, tableLabel, onClose }: TableQrModa
   }
 
   return (
-    <Modal title={`QR code — Table ${tableLabel}`} onClose={onClose} className="table-qr-modal">
+    <Modal title={qrStrings.title(displayLabel)} onClose={onClose} className="table-qr-modal">
       {error && <p className="admin-modal__message admin-modal__message--warning">{error}</p>}
-      {!error && !imageUrl && <p className="admin-modal__message">Loading...</p>}
+      {!error && !imageUrl && <p className="admin-modal__message">{qrStrings.loading}</p>}
       {imageUrl && (
         <div className="table-qr-modal__image-wrap">
-          <img
-            src={imageUrl}
-            alt={`QR code for table ${tableLabel}`}
-            className="table-qr-modal__image"
-          />
+          <img src={imageUrl} alt={qrStrings.alt(displayLabel)} className="table-qr-modal__image" />
         </div>
       )}
       <div className="admin-modal__actions">
         <button type="button" className="admin-modal__btn" onClick={onClose}>
-          Close
+          {qrStrings.close}
         </button>
         <button
           type="button"
@@ -64,7 +64,7 @@ export function TableQrModal({ tablePublicId, tableLabel, onClose }: TableQrModa
           onClick={handleDownload}
           disabled={!blob}
         >
-          Download
+          {qrStrings.download}
         </button>
       </div>
     </Modal>

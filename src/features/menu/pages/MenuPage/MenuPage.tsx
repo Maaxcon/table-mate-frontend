@@ -22,12 +22,13 @@ import { useCartSocket } from "@/features/menu/hooks/useCartSocket"
 import { useGuestAuth } from "@/features/menu/hooks/useGuestAuth"
 import { useItemLikes } from "@/features/menu/hooks/useItemLikes"
 import { useMenuPage } from "@/features/menu/hooks/useMenuPage"
-import { menuStrings } from "@/features/menu/strings"
+import { useMenuStrings } from "@/features/menu/strings"
 import { formatAmount, getCurrencySymbol } from "@/features/menu/utils"
 import type { MenuItem } from "@/features/menu/types"
 import "./MenuPage.css"
 
 function MenuPage() {
+  const menuStrings = useMenuStrings()
   const { restaurantId } = useParams<{ restaurantId: string }>()
   const [searchParams] = useSearchParams()
   const reservationId = searchParams.get("reservation") ?? undefined

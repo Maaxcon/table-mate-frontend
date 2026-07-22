@@ -1,5 +1,6 @@
 import { useFocusTrap } from "@/hooks/useFocusTrap"
 import "./CloseCheckModal.css"
+import { useWaiterStrings } from "../../strings"
 
 interface CloseCheckModalProps {
   busy?: boolean
@@ -16,6 +17,7 @@ export function CloseCheckModal({
   onConfirm,
   onClose,
 }: CloseCheckModalProps) {
+  const strings = useWaiterStrings().closeCheck
   const dialogRef = useFocusTrap<HTMLDivElement>({
     onEscape: () => {
       if (!busy) onClose()
@@ -38,23 +40,20 @@ export function CloseCheckModal({
       >
         <div className="close-check__header">
           <h2 id="close-check-title" className="close-check__title">
-            Close check
+            {strings.title}
           </h2>
           <button
             type="button"
             className="close-check__close"
             onClick={onClose}
             disabled={busy}
-            aria-label="Close"
+            aria-label={strings.closeAria}
           >
             &times;
           </button>
         </div>
         <div className="close-check__body">
-          <p className="close-check__message">
-            There is no payment system yet. Closing the check will end the visit and free the table.
-            Make sure the guests have paid before you continue.
-          </p>
+          <p className="close-check__message">{strings.message}</p>
           {error && (
             <p className="close-check__error" role="alert">
               {error}
@@ -63,7 +62,7 @@ export function CloseCheckModal({
         </div>
         <div className="close-check__actions">
           <button type="button" className="close-check__btn" onClick={onClose} disabled={busy}>
-            Cancel
+            {strings.cancel}
           </button>
           <button
             type="button"
@@ -71,7 +70,7 @@ export function CloseCheckModal({
             onClick={onConfirm}
             disabled={busy}
           >
-            {busy ? "Closing…" : "Close check"}
+            {busy ? strings.confirming : strings.confirm}
           </button>
         </div>
       </div>

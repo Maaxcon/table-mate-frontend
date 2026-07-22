@@ -5,6 +5,8 @@ import { fetchReservationsForRange } from "../api"
 import type { SchedulerReservation, SchedulerTable } from "../types"
 import { addDays } from "../types"
 
+export const SCHEDULER_FALLBACK_ERROR = "__scheduler_load_error__"
+
 interface UseSchedulerDataReturn {
   tables: SchedulerTable[]
   reservations: SchedulerReservation[]
@@ -53,7 +55,7 @@ export function useSchedulerData(dates: string[]): UseSchedulerDataReturn {
         setError(null)
       } catch (err: unknown) {
         if (controller.signal.aborted) return
-        setError(err instanceof Error ? err.message : "Failed to load data")
+        setError(err instanceof Error ? err.message : SCHEDULER_FALLBACK_ERROR)
       } finally {
         if (!controller.signal.aborted) setLoading(false)
       }

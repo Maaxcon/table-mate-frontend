@@ -1,7 +1,7 @@
 import { memo, type CSSProperties, type RefObject } from "react"
 import { LuUsers } from "react-icons/lu"
 import type { Table } from "@/types/api/types.gen"
-import { bookStrings } from "@/features/reservation/strings"
+import { useBookStrings } from "@/features/reservation/strings"
 import { TableSeats } from "./TableSeats"
 import type { Tile } from "./types"
 
@@ -42,6 +42,7 @@ export const FloorTile = memo(function FloorTile({
   onHoverEnter: (tile: Tile) => void
   onHoverLeave: (tile: Tile) => void
 }) {
+  const bookStrings = useBookStrings()
   return (
     <button
       type="button"

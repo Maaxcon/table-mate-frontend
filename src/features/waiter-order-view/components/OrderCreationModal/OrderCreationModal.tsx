@@ -9,6 +9,7 @@ import {
   type CreateOrderItem,
 } from "../../api/orderApi"
 import "./OrderCreationModal.css"
+import { useWaiterStrings } from "../../strings"
 
 interface OrderCreationModalProps {
   sessionId: string
@@ -34,6 +35,8 @@ export function OrderCreationModal({
   onClose,
   onSuccess,
 }: OrderCreationModalProps) {
+  const waiterStrings = useWaiterStrings()
+  const orderStrings = waiterStrings.orderModal
   const [categories, setCategories] = useState<MenuCategory[]>([])
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null)
   const [menuItems, setMenuItems] = useState<MenuItem[]>([])
@@ -148,13 +151,13 @@ export function OrderCreationModal({
       >
         <div className="ocm__header">
           <h2 id="ocm-title" className="ocm__title">
-            NEW ORDER
+            {orderStrings.title}
           </h2>
           <button
             type="button"
             className="ocm__close"
             onClick={requestClose}
-            aria-label="Close"
+            aria-label={waiterStrings.common.close}
             disabled={submitting}
           >
             &times;
@@ -167,7 +170,7 @@ export function OrderCreationModal({
               <input
                 type="text"
                 className="ocm__search-input"
-                placeholder="Search menu..."
+                placeholder={orderStrings.searchPlaceholder}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -178,7 +181,7 @@ export function OrderCreationModal({
                 className={`ocm__category ${selectedCategoryId === null ? "ocm__category--active" : ""}`}
                 onClick={() => setSelectedCategoryId(null)}
               >
-                All
+                {orderStrings.categories.all}
               </button>
               {categories.map((cat) => (
                 <button
@@ -195,9 +198,9 @@ export function OrderCreationModal({
 
           <div className="ocm__grid">
             {loadingItems ? (
-              <p className="ocm__loading">Loading...</p>
+              <p className="ocm__loading">{orderStrings.loading}</p>
             ) : filteredMenuItems.length === 0 ? (
-              <p className="ocm__empty">No items found.</p>
+              <p className="ocm__empty">{orderStrings.empty}</p>
             ) : (
               filteredMenuItems.map((item) => (
                 <button
@@ -217,9 +220,9 @@ export function OrderCreationModal({
           </div>
 
           <div className="ocm__summary">
-            <h3 className="ocm__summary-title">ORDER SUMMARY</h3>
+            <h3 className="ocm__summary-title">{orderStrings.summary.title}</h3>
             {draftItems.length === 0 ? (
-              <p className="ocm__empty">No items added yet.</p>
+              <p className="ocm__empty">{orderStrings.summary.empty}</p>
             ) : (
               <div className="ocm__summary-items">
                 {draftItems.map((d) => (
@@ -230,7 +233,7 @@ export function OrderCreationModal({
                         type="button"
                         className="ocm__summary-remove"
                         onClick={() => removeDraft(d.menu_item_id)}
-                        aria-label="Remove"
+                        aria-label={orderStrings.removeAria}
                       >
                         &times;
                       </button>
@@ -264,7 +267,7 @@ export function OrderCreationModal({
                       >
                         {Array.from({ length: guestCount }, (_, i) => (
                           <option key={i + 1} value={i + 1}>
-                            Guest {i + 1}
+                            {orderStrings.guestOption(i + 1)}
                           </option>
                         ))}
                       </select>
@@ -272,7 +275,7 @@ export function OrderCreationModal({
                     <input
                       type="text"
                       className="ocm__comment-input"
-                      placeholder="Comment..."
+                      placeholder={orderStrings.commentPlaceholder}
                       value={d.comment}
                       onChange={(e) => updateDraft(d.menu_item_id, { comment: e.target.value })}
                     />
@@ -284,7 +287,7 @@ export function OrderCreationModal({
               </div>
             )}
             <div className="ocm__summary-total">
-              <span>TOTAL</span>
+              <span>{orderStrings.summary.total}</span>
               <span>&euro;{total.toFixed(2)}</span>
             </div>
             <button
@@ -293,7 +296,7 @@ export function OrderCreationModal({
               disabled={draftItems.length === 0 || submitting}
               onClick={handleSubmit}
             >
-              {submitting ? "SENDING..." : "SEND TO KITCHEN"}
+              {submitting ? orderStrings.summary.submitting : orderStrings.summary.submit}
             </button>
           </div>
         </div>

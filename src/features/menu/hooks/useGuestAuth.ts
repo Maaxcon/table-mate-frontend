@@ -7,7 +7,7 @@ import {
 } from "@/features/menu/api"
 import { getGuestToken } from "@/features/menu/guestToken"
 import { decodeJwtPayload } from "@/features/menu/jwt"
-import { menuStrings } from "@/features/menu/strings"
+import { useMenuStrings } from "@/features/menu/strings"
 
 const DISPLAY_NAME_KEY = "tablemate.cart.display_name.v1"
 const REFRESH_MARGIN_MS = 60_000
@@ -79,6 +79,7 @@ export function useGuestAuth({
   reservationId,
   tableId,
 }: UseGuestAuthOptions = {}): UseGuestAuthResult {
+  const menuStrings = useMenuStrings()
   const deviceId = getGuestToken()
   const [authState, dispatch] = useReducer(authReducer, {
     guestJwt: null,

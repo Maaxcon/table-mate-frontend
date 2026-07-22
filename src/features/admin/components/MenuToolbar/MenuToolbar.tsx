@@ -5,6 +5,7 @@ import type { AdminMenu } from "@/features/admin/types"
 import ConfirmDialog from "@/features/admin/components/ConfirmDialog"
 import Modal from "@/features/admin/components/Modal"
 import { useToast } from "@/features/admin/hooks/toastContext"
+import { useAdminStrings } from "@/features/admin/strings"
 
 type MenuToolbarProps = {
   menu: AdminMenu
@@ -16,6 +17,7 @@ type MenuToolbarProps = {
 // selected menu changes.
 function MenuToolbar({ menu, onChanged, onDeleted }: MenuToolbarProps) {
   const toast = useToast()
+  const strings = useAdminStrings()
   const [busy, setBusy] = useState(false)
   const [confirm, setConfirm] = useState<null | "delete" | "hide">(null)
   const [renaming, setRenaming] = useState(false)
@@ -28,7 +30,7 @@ function MenuToolbar({ menu, onChanged, onDeleted }: MenuToolbarProps) {
       after()
       toast.success(successMsg)
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Action failed.")
+      toast.error(err instanceof Error ? err.message : strings.menu.toolbar.toasts.actionError)
     } finally {
       setBusy(false)
     }
@@ -50,21 +52,30 @@ function MenuToolbar({ menu, onChanged, onDeleted }: MenuToolbarProps) {
         setRenaming(false)
         onChanged()
       },
-      "Menu renamed",
+      strings.menu.toolbar.toasts.renamed,
     )
   }
 
   // Showing a menu is harmless; hiding it from customers asks first.
   const handleToggle = () => {
     if (menu.is_active) setConfirm("hide")
-    else void run(() => updateMenu(menu.public_id, { is_active: true }), onChanged, "Menu shown")
+    else
+      void run(
+        () => updateMenu(menu.public_id, { is_active: true }),
+        onChanged,
+        strings.menu.toolbar.toasts.shown,
+      )
   }
 
   const confirmAction = async () => {
     if (confirm === "delete") {
-      await run(() => deleteMenu(menu.public_id), onDeleted, "Menu deleted")
+      await run(() => deleteMenu(menu.public_id), onDeleted, strings.menu.toolbar.toasts.deleted)
     } else if (confirm === "hide") {
-      await run(() => updateMenu(menu.public_id, { is_active: false }), onChanged, "Menu hidden")
+      await run(
+        () => updateMenu(menu.public_id, { is_active: false }),
+        onChanged,
+        strings.menu.toolbar.toasts.hidden,
+      )
     }
     setConfirm(null)
   }
@@ -73,30 +84,30 @@ function MenuToolbar({ menu, onChanged, onDeleted }: MenuToolbarProps) {
     <div className="menu-admin__toolbar">
       <button type="button" className="menu-admin__btn" disabled={busy} onClick={openRename}>
         <LuPencil aria-hidden="true" />
-        <span>Rename</span>
+        <span>{strings.menu.toolbar.rename}</span>
       </button>
       <button type="button" className="menu-admin__btn" disabled={busy} onClick={handleToggle}>
-        {menu.is_active ? "Hide" : "Show"}
+        {menu.is_active ? strings.menu.toolbar.hide : strings.menu.toolbar.show}
       </button>
       <button
         type="button"
         className="menu-admin__btn menu-admin__btn--danger"
         disabled={busy}
         onClick={() => setConfirm("delete")}
-        aria-label="Delete menu"
+        aria-label={strings.menu.toolbar.deleteAria}
       >
         <LuTrash2 aria-hidden="true" />
       </button>
 
       {renaming && (
         <Modal
-          title="Rename menu"
+          title={strings.menu.toolbar.renameTitle}
           onClose={() => setRenaming(false)}
           showClose={false}
           closeDisabled={busy}
           overlayClassName="admin-confirm__overlay"
           className="admin-modal--confirm"
-          backdropLabel="Cancel"
+          backdropLabel={strings.menu.toolbar.cancel}
         >
           <form
             className="admin-form"
@@ -106,7 +117,7 @@ function MenuToolbar({ menu, onChanged, onDeleted }: MenuToolbarProps) {
             }}
           >
             <label className="admin-field">
-              <span className="admin-field__label">Menu name</span>
+              <span className="admin-field__label">{strings.menu.toolbar.nameLabel}</span>
               <input
                 className="admin-field__input"
                 value={name}
@@ -121,14 +132,14 @@ function MenuToolbar({ menu, onChanged, onDeleted }: MenuToolbarProps) {
                 disabled={busy}
                 onClick={() => setRenaming(false)}
               >
-                Cancel
+                {strings.menu.toolbar.cancel}
               </button>
               <button
                 type="submit"
                 className="admin-modal__btn admin-modal__btn--primary"
                 disabled={busy || !name.trim()}
               >
-                {busy ? "…" : "Save"}
+                {busy ? "…" : strings.menu.toolbar.save}
               </button>
             </div>
           </form>
@@ -137,9 +148,9 @@ function MenuToolbar({ menu, onChanged, onDeleted }: MenuToolbarProps) {
 
       {confirm === "delete" && (
         <ConfirmDialog
-          title="Delete menu"
-          message={`Delete "${menu.name}"? All its categories and dishes will be removed.`}
-          confirmLabel="Delete"
+          title={strings.menu.toolbar.confirmDelete.title}
+          message={strings.menu.toolbar.confirmDelete.message(menu.name)}
+          confirmLabel={strings.menu.toolbar.confirmDelete.confirm}
           tone="danger"
           busy={busy}
           onConfirm={() => void confirmAction()}
@@ -148,9 +159,9 @@ function MenuToolbar({ menu, onChanged, onDeleted }: MenuToolbarProps) {
       )}
       {confirm === "hide" && (
         <ConfirmDialog
-          title="Hide menu"
-          message={`Hide "${menu.name}" from customers? You can show it again later.`}
-          confirmLabel="Hide"
+          title={strings.menu.toolbar.confirmHide.title}
+          message={strings.menu.toolbar.confirmHide.message(menu.name)}
+          confirmLabel={strings.menu.toolbar.confirmHide.confirm}
           busy={busy}
           onConfirm={() => void confirmAction()}
           onClose={() => setConfirm(null)}

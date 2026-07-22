@@ -1,6 +1,19 @@
 import "@testing-library/jest-dom/vitest"
 import { cleanup } from "@testing-library/react"
-import { afterEach, vi } from "vitest"
+import { afterAll, afterEach, beforeAll, vi } from "vitest"
+import i18n from "@/i18n/config"
+
+// Ensure i18n is fully initialized before any test runs.
+beforeAll(async () => {
+  if (!i18n.isInitialized) {
+    await i18n.init()
+  }
+  await i18n.changeLanguage("uk")
+})
+
+afterAll(() => {
+  i18n.changeLanguage("uk")
+})
 
 // jsdom has no ResizeObserver; components that observe layout (e.g. FloorPlanView)
 // need a stub.

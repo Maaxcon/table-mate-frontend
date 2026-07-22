@@ -2,7 +2,7 @@ import { memo } from "react"
 import { LuHeart, LuMinus, LuPlus } from "react-icons/lu"
 import type { MenuItem } from "@/features/menu/types"
 import { formatPrice } from "@/features/menu/utils"
-import { menuStrings } from "@/features/menu/strings"
+import { useMenuStrings } from "@/features/menu/strings"
 import "./MenuItemCard.css"
 
 type MenuItemCardProps = {
@@ -30,6 +30,7 @@ function MenuItemCard({
   pending = false,
   index = 0,
 }: MenuItemCardProps) {
+  const menuStrings = useMenuStrings()
   const handleAdd = (e: React.MouseEvent) => {
     e.stopPropagation()
     onAddToCart(item)

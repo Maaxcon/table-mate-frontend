@@ -1,7 +1,30 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { beforeEach, describe, expect, it, vi } from "vitest"
+import i18n from "@/i18n/config"
 import { BookModal } from "./BookModal"
-import { bookStrings } from "./strings"
+
+const bookStrings = {
+  get modal() {
+    return {
+      flow: {
+        get next() {
+          return i18n.t("reservation.modal.flow.next")
+        },
+      },
+      guestNamePlaceholder: i18n.t("reservation.modal.guestNamePlaceholder"),
+      validation: {
+        get guestNameRequired() {
+          return i18n.t("reservation.modal.validation.guestNameRequired")
+        },
+      },
+      actions: {
+        get confirm() {
+          return i18n.t("reservation.modal.actions.confirm")
+        },
+      },
+    }
+  },
+}
 
 // vi.mock's factory below is keyed by "2026-07-08" — it's hoisted above
 // top-level consts, so it can't reference a shared variable. FIXED_DATE

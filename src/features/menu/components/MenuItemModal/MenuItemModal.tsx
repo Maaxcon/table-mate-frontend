@@ -16,7 +16,7 @@ import {
 import type { MenuItem } from "@/features/menu/types"
 import { useFocusTrap } from "@/hooks/useFocusTrap"
 import { formatPrice } from "@/features/menu/utils"
-import { menuStrings } from "@/features/menu/strings"
+import { useMenuStrings } from "@/features/menu/strings"
 import "./MenuItemModal.css"
 
 type AllergenInfo = { icon: ReactElement; color: string }
@@ -50,6 +50,7 @@ type MenuItemModalProps = {
 }
 
 function MenuItemModal({ item, currencySymbol, onClose, onAddToCart }: MenuItemModalProps) {
+  const menuStrings = useMenuStrings()
   const [added, setAdded] = useState(false)
   const [comment, setComment] = useState("")
   const commentId = useId()

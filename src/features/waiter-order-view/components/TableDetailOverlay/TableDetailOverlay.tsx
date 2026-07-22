@@ -8,6 +8,7 @@ import { CloseCheckModal } from "../CloseCheckModal"
 import { fetchVoidReasons } from "../../api/orderApi"
 import type { VoidReason } from "@/types/api/types.gen"
 import "./TableDetailOverlay.css"
+import { useWaiterStrings } from "../../strings"
 
 function getOverdueMinutes(endAt: string, nowMs: number): number | null {
   const endMs = new Date(endAt).getTime()
@@ -62,6 +63,8 @@ export function TableDetailOverlay({
   onVoidItem,
   onClose,
 }: TableDetailOverlayProps) {
+  const waiterStrings = useWaiterStrings()
+  const overlayStrings = waiterStrings.overlay
   const isOccupied = visualStatus === "occupied"
   const isReserved = visualStatus === "reserved"
   const [activeOverlayTab, setActiveOverlayTab] = useState<"order" | "reservations">(
@@ -125,9 +128,14 @@ export function TableDetailOverlay({
         <div className="overlay__header">
           <div className="overlay__header-top">
             <h2 id="table-detail-title" className="overlay__title">
-              TABLE {table.public_number}
+              {overlayStrings.title(table.public_number)}
             </h2>
-            <button type="button" className="overlay__close" onClick={onClose} aria-label="Close">
+            <button
+              type="button"
+              className="overlay__close"
+              onClick={onClose}
+              aria-label={overlayStrings.closeAria}
+            >
               <svg
                 width="20"
                 height="20"
@@ -145,7 +153,11 @@ export function TableDetailOverlay({
           <div className="overlay__status-cards">
             <div className="overlay__status-card">
               <p className="overlay__status-label">
-                {isReserved ? "Reserved" : isOccupied ? "Current Party" : "Capacity"}
+                {isReserved
+                  ? overlayStrings.status.reserved
+                  : isOccupied
+                    ? overlayStrings.status.current
+                    : overlayStrings.status.capacity}
               </p>
               <p className="overlay__status-value">
                 {loading
@@ -153,27 +165,31 @@ export function TableDetailOverlay({
                   : isReserved
                     ? nearestReservation
                       ? `${nearestReservation.name}`
-                      : "Upcoming"
+                      : overlayStrings.values.upcoming
                     : isOccupied && detail
                       ? detail.guest_name
-                      : `${table.capacity} guests`}
+                      : table.capacity != null
+                        ? overlayStrings.values.guests(table.capacity)
+                        : overlayStrings.values.available}
               </p>
             </div>
             <div className="overlay__status-card">
-              <p className="overlay__status-label">Details</p>
+              <p className="overlay__status-label">{overlayStrings.status.details}</p>
               <p className="overlay__status-value">
                 {loading
                   ? ""
                   : isOccupied && detail
-                    ? `${detail.guest_count} guests • ${detail.duration}`
+                    ? `${overlayStrings.values.guests(detail.guest_count)} • ${detail.duration}`
                     : nextReservation
                       ? `${formatTimeRange(nextReservation.start_at, nextReservation.end_at)}`
-                      : "Available"}
+                      : overlayStrings.values.available}
               </p>
             </div>
             {(nextReservation || (isOccupied && detail)) && (
               <div className="overlay__status-card overlay__status-card--muted">
-                <p className="overlay__status-label">{isOccupied ? "Next Booking" : "Next"}</p>
+                <p className="overlay__status-label">
+                  {isOccupied ? overlayStrings.status.nextBooking : overlayStrings.status.next}
+                </p>
                 <p className="overlay__status-value">
                   {isOccupied && detail
                     ? nextReservation
@@ -181,7 +197,7 @@ export function TableDetailOverlay({
                       : detail.duration
                     : nextReservation
                       ? `${nextReservation.name} • ${formatTimeRange(nextReservation.start_at, nextReservation.end_at)}`
-                      : "None"}
+                      : overlayStrings.values.none}
                 </p>
               </div>
             )}
@@ -192,9 +208,9 @@ export function TableDetailOverlay({
           <div className="overlay__overdue-banner" role="alert">
             <div className="overlay__overdue-copy">
               <p className="overlay__overdue-title">
-                Reservation time ended {overdueMinutes} min ago
+                {overlayStrings.overdue.title(overdueMinutes)}
               </p>
-              <p className="overlay__overdue-text">Close this table or prolong the booking.</p>
+              <p className="overlay__overdue-text">{overlayStrings.overdue.message}</p>
             </div>
             <div className="overlay__overdue-actions">
               {onModifyReservation && (
@@ -204,7 +220,7 @@ export function TableDetailOverlay({
                   onClick={() => onModifyReservation(overdueActiveReservation)}
                   disabled={actionBusy}
                 >
-                  PROLONG
+                  {overlayStrings.overdue.prolong}
                 </button>
               )}
               {onCloseCheck && (
@@ -214,7 +230,7 @@ export function TableDetailOverlay({
                   onClick={() => setShowCloseCheck(true)}
                   disabled={actionBusy}
                 >
-                  CLOSE CHECK
+                  {overlayStrings.overdue.close}
                 </button>
               )}
             </div>
@@ -229,11 +245,11 @@ export function TableDetailOverlay({
               </p>
             )}
             {tableReservations.some((r) => r.status === "pending") ? (
-              <p className="overlay__open-hint">Seat a booked guest from the Reservations tab.</p>
+              <p className="overlay__open-hint">{overlayStrings.openPanel.seatHint}</p>
             ) : (
               <div className="overlay__open-row">
                 <label className="overlay__guests">
-                  Guests
+                  {overlayStrings.openPanel.guestLabel}
                   <input
                     type="number"
                     min={1}
@@ -249,7 +265,7 @@ export function TableDetailOverlay({
                   disabled={actionBusy}
                   onClick={() => onOpenTable?.(guestCount)}
                 >
-                  {actionBusy ? "OPENING…" : "OPEN TABLE"}
+                  {actionBusy ? overlayStrings.openPanel.busy : overlayStrings.openPanel.action}
                 </button>
               </div>
             )}
@@ -263,7 +279,7 @@ export function TableDetailOverlay({
               className={`overlay__tab ${activeOverlayTab === "order" ? "overlay__tab--active" : ""}`}
               onClick={() => setActiveOverlayTab("order")}
             >
-              ORDER
+              {overlayStrings.tabs.order}
             </button>
           )}
           <button
@@ -271,7 +287,7 @@ export function TableDetailOverlay({
             className={`overlay__tab ${activeOverlayTab === "reservations" ? "overlay__tab--active" : ""}`}
             onClick={() => setActiveOverlayTab("reservations")}
           >
-            RESERVATIONS
+            {overlayStrings.tabs.reservations}
           </button>
         </div>
 
@@ -309,7 +325,7 @@ export function TableDetailOverlay({
               <>
                 <div className="overlay__actions overlay__actions--pill">
                   <button type="button" className="overlay__action-btn" onClick={onAddItem}>
-                    ADD ITEM
+                    {overlayStrings.actions.addItem}
                   </button>
                   {nearestReservation && onMoveTable && (
                     <button
@@ -317,7 +333,7 @@ export function TableDetailOverlay({
                       className="overlay__action-btn"
                       onClick={() => onMoveTable(nearestReservation)}
                     >
-                      MOVE TABLE
+                      {overlayStrings.actions.moveTable}
                     </button>
                   )}
                   <button
@@ -325,7 +341,7 @@ export function TableDetailOverlay({
                     className="overlay__action-btn"
                     onClick={() => setShowCloseCheck(true)}
                   >
-                    CLOSE CHECK
+                    {overlayStrings.actions.closeCheck}
                   </button>
                 </div>
 
@@ -333,14 +349,16 @@ export function TableDetailOverlay({
 
                 <div className="overlay__body">
                   {detail.items.length === 0 ? (
-                    <p className="overlay__empty">No dishes ordered yet.</p>
+                    <p className="overlay__empty">{overlayStrings.empty.order}</p>
                   ) : (
                     guestSlots.map((slot) => {
                       const slotItems = detail.items.filter((i) => i.guest_slot === slot)
                       const guestName = slotItems[0]?.guest_display_name
                       return (
                         <div key={slot} className="overlay__slot">
-                          <h3 className="overlay__slot-title">{guestName ?? `GUEST ${slot}`}</h3>
+                          <h3 className="overlay__slot-title">
+                            {guestName ?? overlayStrings.guestSlot(slot)}
+                          </h3>
                           {slotItems.map((item) => (
                             <OrderItemRow
                               key={item.public_id}
@@ -362,14 +380,14 @@ export function TableDetailOverlay({
                 {detail.items.length > 0 && (
                   <div className="overlay__footer">
                     <div className="overlay__total-row">
-                      <span className="overlay__total-label">SUBTOTAL</span>
+                      <span className="overlay__total-label">{overlayStrings.totals.subtotal}</span>
                       <span className="overlay__total-value">
                         {currencySymbol}
                         {detail.subtotal}
                       </span>
                     </div>
                     <div className="overlay__total-row">
-                      <span className="overlay__total-label">TAX</span>
+                      <span className="overlay__total-label">{overlayStrings.totals.tax}</span>
                       <span className="overlay__total-value">
                         {currencySymbol}
                         {detail.tax_total}
@@ -377,7 +395,9 @@ export function TableDetailOverlay({
                     </div>
                     {detail.service_charge != null && Number(detail.service_charge) > 0 && (
                       <div className="overlay__total-row">
-                        <span className="overlay__total-label">SERVICE</span>
+                        <span className="overlay__total-label">
+                          {overlayStrings.totals.service}
+                        </span>
                         <span className="overlay__total-value">
                           {currencySymbol}
                           {detail.service_charge}
@@ -386,7 +406,7 @@ export function TableDetailOverlay({
                     )}
                     <div className="overlay__total-row overlay__total-row--final">
                       <span className="overlay__total-label overlay__total-label--large">
-                        TOTAL
+                        {overlayStrings.totals.total}
                       </span>
                       <span className="overlay__total-value overlay__total-value--large">
                         {currencySymbol}
@@ -394,13 +414,13 @@ export function TableDetailOverlay({
                       </span>
                     </div>
                     <button type="button" className="overlay__cta">
-                      PROCESS PAYMENT
+                      {overlayStrings.actions.processPayment}
                     </button>
                   </div>
                 )}
               </>
             ) : (
-              <p className="overlay__empty">No active order for this table.</p>
+              <p className="overlay__empty">{overlayStrings.empty.orderMissing}</p>
             )}
           </>
         )}
@@ -408,7 +428,7 @@ export function TableDetailOverlay({
         {activeOverlayTab === "reservations" && (
           <div className="overlay__body overlay__body--reservations">
             {dayReservations.length === 0 ? (
-              <p className="overlay__empty">No reservations for this table.</p>
+              <p className="overlay__empty">{overlayStrings.empty.reservations}</p>
             ) : (
               <div className="overlay__reservation-list">
                 {dayReservations.map((r) => (
@@ -420,11 +440,14 @@ export function TableDetailOverlay({
                       <span className="overlay__reservation-name">
                         {r.name}
                         {r.status === "active" && (
-                          <span className="overlay__reservation-tag">SEATED NOW</span>
+                          <span className="overlay__reservation-tag">
+                            {overlayStrings.reservation.tagSeated}
+                          </span>
                         )}
                       </span>
                       <span className="overlay__reservation-meta">
-                        {r.guest_count} guests &middot; {formatTimeRange(r.start_at, r.end_at)}
+                        {overlayStrings.values.guests(r.guest_count)} &middot;{" "}
+                        {formatTimeRange(r.start_at, r.end_at)}
                       </span>
                     </div>
                     <div className="overlay__reservation-actions">
@@ -436,7 +459,7 @@ export function TableDetailOverlay({
                             disabled={actionBusy}
                             onClick={() => onActivateReservation?.(r.public_id)}
                           >
-                            {busyActionId === r.public_id ? "…" : "SEAT"}
+                            {busyActionId === r.public_id ? "…" : overlayStrings.reservation.seat}
                           </button>
                           {onModifyReservation && (
                             <button
@@ -445,7 +468,7 @@ export function TableDetailOverlay({
                               disabled={actionBusy}
                               onClick={() => onModifyReservation(r)}
                             >
-                              MODIFY
+                              {overlayStrings.reservation.modify}
                             </button>
                           )}
                           {onCancelReservation && (
@@ -455,7 +478,7 @@ export function TableDetailOverlay({
                               disabled={actionBusy}
                               onClick={() => onCancelReservation(r.public_id)}
                             >
-                              CANCEL
+                              {overlayStrings.reservation.cancel}
                             </button>
                           )}
                         </>
@@ -466,7 +489,7 @@ export function TableDetailOverlay({
                           className="overlay__seat-btn overlay__seat-btn--modify"
                           onClick={() => onModifyReservation(r)}
                         >
-                          MODIFY
+                          {overlayStrings.reservation.modify}
                         </button>
                       )}
                     </div>
@@ -478,7 +501,7 @@ export function TableDetailOverlay({
             {onCreateReservation && (
               <div className="overlay__body-footer overlay__body-footer--sticky">
                 <button type="button" className="overlay__cta" onClick={onCreateReservation}>
-                  NEW RESERVATION
+                  {overlayStrings.reservation.new}
                 </button>
               </div>
             )}

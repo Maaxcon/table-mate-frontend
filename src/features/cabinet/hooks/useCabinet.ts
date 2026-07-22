@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import { setUser } from "@/store/auth/authSlice"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
+import i18n from "@/i18n/config"
 import {
   BOOKINGS_PAGE_SIZE,
   cancelReservation,
@@ -100,14 +101,14 @@ export function useCabinet(): UseCabinetResult {
         setBookingsHasMore(visible.length >= BOOKINGS_PAGE_SIZE)
         setBookingsError(null)
       } else {
-        setBookingsError("We could not load your bookings.")
+        setBookingsError(i18n.t("cabinet.errors.loadBookings"))
       }
 
       if (receiptsResult.status === "fulfilled") {
         setHistory(receiptsResult.value)
         setHistoryError(null)
       } else {
-        setHistoryError("We could not load your history.")
+        setHistoryError(i18n.t("cabinet.errors.loadHistory"))
       }
 
       setLoading(false)
@@ -121,7 +122,7 @@ export function useCabinet(): UseCabinetResult {
     try {
       await loadBookingsPage(0)
     } catch {
-      setBookingsError("We could not refresh your bookings.")
+      setBookingsError(i18n.t("cabinet.errors.refreshBookings"))
     }
   }, [loadBookingsPage])
 
@@ -129,7 +130,7 @@ export function useCabinet(): UseCabinetResult {
     try {
       await loadBookingsPage(currentOffsetRef.current + BOOKINGS_PAGE_SIZE)
     } catch {
-      setBookingsError("We could not load more bookings.")
+      setBookingsError(i18n.t("cabinet.errors.loadMoreBookings"))
     }
   }, [loadBookingsPage])
 
@@ -141,7 +142,7 @@ export function useCabinet(): UseCabinetResult {
       setAllReservations((prev) => prev.filter((r) => r.public_id !== publicId))
       setBookingsError(null)
     } catch (err) {
-      setBookingsError("We could not cancel this booking.")
+      setBookingsError(i18n.t("cabinet.errors.cancelBooking"))
       throw err
     } finally {
       setBookingsActionId(null)

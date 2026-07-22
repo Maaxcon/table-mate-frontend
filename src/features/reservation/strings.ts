@@ -1,191 +1,189 @@
-// Central UI strings for the customer booking flow — one place to translate,
-// matching the menu feature's approach (no i18n library yet). Visual casing
-// (e.g. uppercase tabs/badges) lives in CSS via text-transform, so the text
-// here stays normal-case and localizable.
+import { useTranslation } from "react-i18next"
 
-export const bookStrings = {
-  pageTitle: "Бронювання",
-  backToMenu: "До меню",
-  tabs: {
-    floor: "План залу",
-    bookings: "Мої броні",
-  },
-  loading: "Завантаження…",
-  retry: "Спробувати ще раз",
-  loginCta: {
-    text: "Щоб забронювати стіл, потрібно увійти.",
-    login: "Увійти",
-    cancel: "Скасувати",
-  },
-  errors: {
-    floor: "Не вдалося завантажити план залу.",
-    bookings: "Не вдалося завантажити ваші броні.",
-  },
-  floorPlan: {
-    title: "План залу",
-    status: {
-      free: "Вільно",
-      reserved: "Заброньовано",
-      occupied: "Зайнято",
+export function useBookStrings() {
+  const { t } = useTranslation()
+
+  return {
+    pageTitle: t("reservation.pageTitle"),
+    backToMenu: t("reservation.backToMenu"),
+    tabs: {
+      floor: t("reservation.tabs.floor"),
+      bookings: t("reservation.tabs.bookings"),
     },
-    seats: (n: number) => `${n} міс.`,
-    tableShort: "Стіл",
-    choose: "Обрати",
-    // Spoken label so screen readers announce a table as one phrase, with the
-    // correct Ukrainian plural for "seat".
-    tableAria: (n: string | number, capacity: number, status: string) => {
-      const m10 = capacity % 10
-      const m100 = capacity % 100
-      const word =
-        m10 === 1 && m100 !== 11
-          ? "місце"
-          : m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)
-            ? "місця"
-            : "місць"
-      return `Стіл ${n}, ${capacity} ${word}, ${status}`
+    loading: t("reservation.loading"),
+    retry: t("reservation.retry"),
+    loginCta: {
+      text: t("reservation.loginCta.text"),
+      login: t("reservation.loginCta.login"),
+      cancel: t("reservation.loginCta.cancel"),
     },
-    filterAll: "Усі",
-    filterFree: "Вільні",
-    noFree: "Немає вільних столів на цей час",
-    noTables: "У цій зоні поки немає столів",
-    showAll: "Показати всі",
-    statusSmall: "Замало місць",
-    freeCount: (time?: string | null) => (time ? `вільно на ${time}` : "вільно"),
-    perfectFit: (guests: number) => `Саме на ${guests}`,
-    zoomIn: "Збільшити",
-    zoomOut: "Зменшити",
-    zoomFit: "Показати весь зал",
-    showMap: "На плані",
-    closeMap: "Закрити план",
-    freeShort: "вільно",
-    slot: {
-      title: "Коли вам зручно?",
-      hint: "Оберіть дату, час і кількість гостей — у плані залу підсвітяться столи, вільні саме на цей час.",
-      date: "Дата",
-      time: "Час",
-      guests: "Гості",
-      noTimes: "Цього дня немає вільного часу",
-      today: "Сьогодні",
+    errors: {
+      floor: t("reservation.errors.floor"),
+      bookings: t("reservation.errors.bookings"),
     },
-  },
-  modal: {
-    title: (table: string) => `Бронь столу ${table}`,
-    confirmedTitle: "Бронь підтверджено",
-    today: "Сьогодні",
-    sections: {
-      date: "Дата",
-      time: "Час",
-      table: "Стіл",
-      contacts: "Контакти",
-      duration: "Тривалість (хв)",
-      guests: "Гості",
-      guestName: "Ім'я гостя",
-      notes: "Нотатки (необов'язково)",
-      confirmation: "Підтвердження",
+    floorPlan: {
+      title: t("reservation.floorPlan.title"),
+      status: {
+        free: t("reservation.floorPlan.status.free"),
+        reserved: t("reservation.floorPlan.status.reserved"),
+        occupied: t("reservation.floorPlan.status.occupied"),
+      },
+      seats: (n: number) => t("reservation.floorPlan.seats", { count: n }),
+      tableShort: t("reservation.floorPlan.tableShort"),
+      choose: t("reservation.floorPlan.choose"),
+      tableAria: (number_: string | number, capacity: number, status: string) =>
+        t("reservation.floorPlan.tableAria", {
+          number: String(number_),
+          seats: t("reservation.floorPlan.seats", { count: capacity }),
+          status,
+        }),
+      filterAll: t("reservation.floorPlan.filterAll"),
+      filterFree: t("reservation.floorPlan.filterFree"),
+      noFree: t("reservation.floorPlan.noFree"),
+      noTables: t("reservation.floorPlan.noTables"),
+      showAll: t("reservation.floorPlan.showAll"),
+      statusSmall: t("reservation.floorPlan.statusSmall"),
+      freeCount: (time?: string | null) =>
+        time
+          ? t("reservation.floorPlan.freeCount", { time })
+          : t("reservation.floorPlan.freeCountDefault"),
+      perfectFit: (guests: number) => t("reservation.floorPlan.perfectFit", { guests }),
+      zoomIn: t("reservation.floorPlan.zoomIn"),
+      zoomOut: t("reservation.floorPlan.zoomOut"),
+      zoomFit: t("reservation.floorPlan.zoomFit"),
+      showMap: t("reservation.floorPlan.showMap"),
+      closeMap: t("reservation.floorPlan.closeMap"),
+      freeShort: t("reservation.floorPlan.freeShort"),
+      slot: {
+        title: t("reservation.floorPlan.slot.title"),
+        hint: t("reservation.floorPlan.slot.hint"),
+        date: t("reservation.floorPlan.slot.date"),
+        time: t("reservation.floorPlan.slot.time"),
+        guests: t("reservation.floorPlan.slot.guests"),
+        noTimes: t("reservation.floorPlan.slot.noTimes"),
+        today: t("reservation.floorPlan.slot.today"),
+      },
     },
-    flow: {
-      steps: ["Дата і час", "Стіл", "Контакти", "Підтвердження"],
-      stepLabel: (current: number, total: number) => `Крок ${current} з ${total}`,
-      back: "Назад",
-      next: "Далі",
-      profileHint: "Контакти акаунта будуть використані для цієї броні.",
-      notesHint: "Додайте ім'я, телефон або побажання для команди ресторану.",
-      notesFallback: "Без нотаток",
+    modal: {
+      title: (table: string) => t("reservation.modal.title", { table }),
+      confirmedTitle: t("reservation.modal.confirmedTitle"),
+      today: t("reservation.modal.today"),
+      sections: {
+        date: t("reservation.modal.sections.date"),
+        time: t("reservation.modal.sections.time"),
+        table: t("reservation.modal.sections.table"),
+        contacts: t("reservation.modal.sections.contacts"),
+        duration: t("reservation.modal.sections.duration"),
+        guests: t("reservation.modal.sections.guests"),
+        guestName: t("reservation.modal.sections.guestName"),
+        notes: t("reservation.modal.sections.notes"),
+        confirmation: t("reservation.modal.sections.confirmation"),
+      },
+      flow: {
+        steps: t("reservation.modal.flow.steps", { returnObjects: true }) as string[],
+        stepLabel: (current: number, total: number) =>
+          t("reservation.modal.flow.stepLabel", { current, total }),
+        back: t("reservation.modal.flow.back"),
+        next: t("reservation.modal.flow.next"),
+        profileHint: t("reservation.modal.flow.profileHint"),
+        notesHint: t("reservation.modal.flow.notesHint"),
+        notesFallback: t("reservation.modal.flow.notesFallback"),
+      },
+      tzNote: (tz: string) => t("reservation.modal.tzNote", { tz }),
+      slots: {
+        loading: t("reservation.modal.slots.loading"),
+        closed: t("reservation.modal.slots.closed"),
+        none: t("reservation.modal.slots.none"),
+      },
+      guestNamePlaceholder: t("reservation.modal.guestNamePlaceholder"),
+      notesPlaceholder: t("reservation.modal.notesPlaceholder"),
+      summary: {
+        table: t("reservation.modal.summary.table"),
+        date: t("reservation.modal.summary.date"),
+        time: t("reservation.modal.summary.time"),
+        duration: t("reservation.modal.summary.duration"),
+        guests: t("reservation.modal.summary.guests"),
+      },
+      durationUnit: t("reservation.modal.durationUnit"),
+      success: (table: string) => t("reservation.modal.success", { table }),
+      ticket: {
+        label: t("reservation.modal.ticket.label"),
+        tableLabel: t("reservation.modal.ticket.tableLabel"),
+        reservationNumber: t("reservation.modal.ticket.reservationNumber"),
+        addToCalendar: t("reservation.modal.ticket.addToCalendar"),
+        share: t("reservation.modal.ticket.share"),
+        shareCopied: t("reservation.modal.ticket.shareCopied"),
+        shareUnsupported: t("reservation.modal.ticket.shareUnsupported"),
+        done: t("reservation.modal.ticket.done"),
+      },
+      actions: {
+        ok: t("reservation.modal.actions.ok"),
+        cancel: t("reservation.modal.actions.cancel"),
+        confirm: t("reservation.modal.actions.confirm"),
+        submitting: t("reservation.modal.actions.submitting"),
+      },
+      validation: {
+        closingExceeded: (close: string) =>
+          t("reservation.modal.validation.closingExceeded", { close }),
+        durationUnavailable: t("reservation.modal.validation.durationUnavailable"),
+        guestNameRequired: t("reservation.modal.validation.guestNameRequired"),
+      },
+      createFailed: t("reservation.modal.createFailed"),
     },
-    tzNote: (tz: string) => `Час показано за часом ресторану (${tz})`,
-    slots: {
-      loading: "Завантаження вільних слотів…",
-      closed: "Цього дня ресторан зачинено",
-      none: "Немає вільних слотів",
+    myBookings: {
+      title: t("reservation.myBookings.title"),
+      empty: t("reservation.myBookings.empty"),
+      emptyCta: t("reservation.myBookings.emptyCta"),
+      tzNote: (tz: string) => t("reservation.myBookings.tzNote", { tz }),
+      pastShow: (n: number) => t("reservation.myBookings.pastShow", { count: n }),
+      pastHide: t("reservation.myBookings.pastHide"),
+      cancelFailed: t("reservation.myBookings.cancelFailed"),
+      status: {
+        pending: t("reservation.myBookings.status.pending"),
+        active: t("reservation.myBookings.status.active"),
+        completed: t("reservation.myBookings.status.completed"),
+        cancelled: t("reservation.myBookings.status.cancelled"),
+      },
+      phase: {
+        upcoming: t("reservation.myBookings.phase.upcoming"),
+        in_progress: t("reservation.myBookings.phase.in_progress"),
+        past: t("reservation.myBookings.phase.past"),
+      },
+      card: {
+        table: (table: string) => t("reservation.myBookings.card.table", { table }),
+      },
+      actions: {
+        modify: t("reservation.myBookings.actions.modify"),
+        cancel: t("reservation.myBookings.actions.cancel"),
+        cancelling: t("reservation.myBookings.actions.cancelling"),
+      },
     },
-    guestNamePlaceholder: "Ім'я гостя",
-    notesPlaceholder: "Ім'я гостя, телефон, особливі побажання…",
-    summary: {
-      table: "Стіл",
-      date: "Дата",
-      time: "Час",
-      duration: "Тривалість",
-      guests: "Гості",
+    reschedule: {
+      title: (table: string) => t("reservation.reschedule.title", { table }),
+      updatedTitle: t("reservation.reschedule.updatedTitle"),
+      updatedText: (table: string) => t("reservation.reschedule.updatedText", { table }),
+      sections: {
+        date: t("reservation.reschedule.sections.date"),
+        time: t("reservation.reschedule.sections.time"),
+        duration: t("reservation.reschedule.sections.duration"),
+        guests: t("reservation.reschedule.sections.guests"),
+        summary: t("reservation.reschedule.sections.summary"),
+      },
+      startingFrom: (time: string) => t("reservation.reschedule.startingFrom", { time }),
+      actions: {
+        cancel: t("reservation.reschedule.actions.cancel"),
+        save: t("reservation.reschedule.actions.save"),
+        saving: t("reservation.reschedule.actions.saving"),
+      },
+      modifyFailed: t("reservation.reschedule.modifyFailed"),
     },
-    durationUnit: "хв",
-    success: (table: string) => `Вашу бронь столу ${table} створено.`,
-    ticket: {
-      label: "Електронна бронь",
-      tableLabel: "Стіл",
-      reservationNumber: "Номер броні",
-      addToCalendar: "Додати в календар",
-      share: "Поділитися",
-      shareCopied: "Деталі броні скопійовано",
-      shareUnsupported: "Поділитися не вдалося на цьому пристрої",
-      done: "Готово",
+    cancel: {
+      title: t("reservation.cancel.title"),
+      message: t("reservation.cancel.message"),
+      close: t("reservation.cancel.close"),
+      keep: t("reservation.cancel.keep"),
+      confirm: t("reservation.cancel.confirm"),
+      submitting: t("reservation.cancel.submitting"),
     },
-    actions: {
-      ok: "Гаразд",
-      cancel: "Скасувати",
-      confirm: "Забронювати",
-      submitting: "Бронюємо…",
-    },
-    validation: {
-      closingExceeded: (close: string) => `Час завершення перевищує час закриття (${close})`,
-      durationUnavailable:
-        "Обрана тривалість недоступна повністю в цей час. Оберіть коротшу тривалість або інший початок.",
-      guestNameRequired: "Вкажіть ім'я гостя",
-    },
-    createFailed: "Не вдалося створити бронь",
-  },
-  myBookings: {
-    title: "Мої броні",
-    empty: "Броней поки немає.",
-    emptyCta: "Забронювати стіл",
-    tzNote: (tz: string) => `Час показано за часом ресторану (${tz})`,
-    pastShow: (n: number) => `Показати минулі (${n})`,
-    pastHide: "Сховати минулі",
-    cancelFailed: "Не вдалося скасувати",
-    status: {
-      pending: "Очікує",
-      active: "Активна",
-      completed: "Завершена",
-      cancelled: "Скасована",
-    },
-    phase: {
-      upcoming: "Незабаром",
-      in_progress: "Триває",
-      past: "Минула",
-    },
-    card: {
-      table: (table: string) => `Стіл ${table}`,
-    },
-    actions: {
-      modify: "Змінити",
-      cancel: "Скасувати",
-      cancelling: "Скасування…",
-    },
-  },
-  reschedule: {
-    title: (table: string) => `Змінити бронь столу ${table}`,
-    updatedTitle: "Бронь оновлено",
-    updatedText: (table: string) => `Вашу бронь столу ${table} оновлено.`,
-    sections: {
-      date: "Дата",
-      time: "Час",
-      duration: "Тривалість (хв)",
-      guests: "Гості",
-      summary: "Підсумок",
-    },
-    startingFrom: (time: string) => `Початок о ${time}`,
-    actions: {
-      cancel: "Скасувати",
-      save: "Зберегти",
-      saving: "Збереження…",
-    },
-    modifyFailed: "Не вдалося змінити бронь",
-  },
-  cancel: {
-    title: "Скасувати бронь?",
-    message: "Ви впевнені, що хочете скасувати цю бронь?",
-    close: "Закрити",
-    keep: "Залишити",
-    confirm: "Скасувати бронь",
-    submitting: "Скасування…",
-  },
-} as const
+  } as const
+}

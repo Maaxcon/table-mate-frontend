@@ -1,21 +1,24 @@
-// Central UI strings for the auth/greeting page. One place to edit copy and
-// translate later (no i18n library yet).
-export const authStrings = {
-  hero: {
-    logoAlt: "TableMate",
-    subtitle: "Discover, book, and dine. Effortlessly.",
-  },
-  socialAuth: {
-    title: "Get started",
-    text: "Unlock one-tap booking, favorites, and history.",
-    googleButton: "Continue with Google",
-    googleButtonLoading: "Connecting…",
-    or: "or",
-  },
-  guest: {
-    button: "Continue as Guest",
-    noteLine1: "Anonymous access to maps and menus.",
-    noteLine2: "Registration required for booking.",
-  },
-  footer: "Your table, one tap away.",
-} as const
+import { useTranslation } from "react-i18next"
+
+export function useAuthStrings() {
+  const { t } = useTranslation()
+  return {
+    hero: {
+      logoAlt: t("auth.hero.logoAlt"),
+      subtitle: t("auth.hero.subtitle"),
+    },
+    socialAuth: {
+      title: t("auth.socialAuth.title"),
+      text: t("auth.socialAuth.text"),
+      googleButton: t("auth.socialAuth.googleButton"),
+      googleButtonLoading: t("auth.socialAuth.googleButtonLoading"),
+      or: t("auth.socialAuth.or"),
+    },
+    guest: {
+      button: t("auth.guest.button"),
+      noteLine1: t("auth.guest.noteLine1"),
+      noteLine2: t("auth.guest.noteLine2"),
+    },
+    footer: t("auth.footer"),
+  } as const
+}

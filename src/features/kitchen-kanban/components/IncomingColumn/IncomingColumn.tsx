@@ -2,6 +2,7 @@ import "./IncomingColumn.css"
 import type { CSSProperties } from "react"
 import type { KanbanTicket } from "../../types"
 import { elapsedMinutes, timerUrgencyClass } from "../../utils"
+import { useAdminStrings } from "@/features/admin/strings"
 
 interface IncomingColumnProps {
   tickets: KanbanTicket[]
@@ -10,15 +11,16 @@ interface IncomingColumnProps {
 }
 
 export function IncomingColumn({ tickets, onPromote, canManage }: IncomingColumnProps) {
+  const strings = useAdminStrings()
   return (
     <div className="kanban__col kanban__col--incoming">
       <div className="kanban__col-header">
-        <span className="kanban__col-title">INCOMING</span>
+        <span className="kanban__col-title">{strings.kitchen.incoming.title}</span>
         <span className="kanban__col-badge">{tickets.length}</span>
       </div>
       <div className="kanban__col-body">
         {tickets.length === 0 && (
-          <div className="kanban-card kanban-card--empty">No incoming orders</div>
+          <div className="kanban-card kanban-card--empty">{strings.kitchen.incoming.empty}</div>
         )}
         {tickets.map((ticket) => {
           const elapsed = elapsedMinutes(ticket.startedAt)
@@ -31,7 +33,11 @@ export function IncomingColumn({ tickets, onPromote, canManage }: IncomingColumn
                 if (!canManage) return
                 onPromote(ticket.id)
               }}
-              title={canManage ? "Click to accept order" : "Read only"}
+              title={
+                canManage
+                  ? strings.kitchen.incoming.acceptHint
+                  : strings.kitchen.incoming.readOnlyHint
+              }
               disabled={!canManage}
               aria-disabled={!canManage}
             >

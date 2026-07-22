@@ -6,7 +6,7 @@ import { BookingsSkeleton } from "./BookingSkeleton"
 import { CancellationConfirmationModal } from "./CancellationConfirmationModal"
 import { downloadReservationIcs } from "./ics"
 import { RescheduleModal } from "./RescheduleModal"
-import { bookStrings } from "./strings"
+import { useBookStrings } from "./strings"
 import { formatTimeInTz, safeTimeZone } from "./utils"
 import "./ActiveBookings.css"
 
@@ -43,11 +43,7 @@ function getTemporalPhase(startAt: string, endAt: string): TemporalPhase {
   return "past"
 }
 
-const PHASE_LABELS: Record<TemporalPhase, string> = bookStrings.myBookings.phase
-
 const STATUS_ORDER: ReservationStatus[] = ["pending", "active"]
-
-const STATUS_LABELS: Record<ReservationStatus, string> = bookStrings.myBookings.status
 
 const byStartAsc = (a: ReservationWithTable, b: ReservationWithTable) =>
   new Date(a.start_at).getTime() - new Date(b.start_at).getTime()
@@ -63,6 +59,9 @@ export function ActiveBookings({
   onRefresh,
   onBrowseTables,
 }: ActiveBookingsProps) {
+  const bookStrings = useBookStrings()
+  const PHASE_LABELS: Record<TemporalPhase, string> = bookStrings.myBookings.phase
+  const STATUS_LABELS: Record<ReservationStatus, string> = bookStrings.myBookings.status
   const [actionId, setActionId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [rescheduleTarget, setRescheduleTarget] = useState<ReservationWithTable | null>(null)

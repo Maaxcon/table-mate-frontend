@@ -1,4 +1,5 @@
 import { LuRotateCcw, LuSave } from "react-icons/lu"
+import type { SchedulerStrings } from "@/features/admin/strings"
 
 interface SaveBarProps {
   changeCount: number
@@ -6,21 +7,24 @@ interface SaveBarProps {
   saving: boolean
   onSave: () => void
   onReset: () => void
+  strings: SchedulerStrings["saveBar"]
 }
 
-export function SaveBar({ changeCount, cancellationCount, saving, onSave, onReset }: SaveBarProps) {
+export function SaveBar({
+  changeCount,
+  cancellationCount,
+  saving,
+  onSave,
+  onReset,
+  strings,
+}: SaveBarProps) {
   const total = changeCount + cancellationCount
   if (total === 0) return null
+  const summary = strings.summary(changeCount, cancellationCount)
 
   return (
     <div className="scheduler__save-bar">
-      <span className="scheduler__save-bar-count">
-        {changeCount > 0 && `${changeCount} change${changeCount !== 1 ? "s" : ""}`}
-        {changeCount > 0 && cancellationCount > 0 && ", "}
-        {cancellationCount > 0 &&
-          `${cancellationCount} cancellation${cancellationCount !== 1 ? "s" : ""}`}
-        {" unsaved"}
-      </span>
+      <span className="scheduler__save-bar-count">{summary}</span>
       <div className="scheduler__save-bar-actions">
         <button
           type="button"
@@ -29,7 +33,7 @@ export function SaveBar({ changeCount, cancellationCount, saving, onSave, onRese
           disabled={saving}
         >
           <LuRotateCcw aria-hidden="true" />
-          <span>Reset</span>
+          <span>{strings.reset}</span>
         </button>
         <button
           type="button"
@@ -38,7 +42,7 @@ export function SaveBar({ changeCount, cancellationCount, saving, onSave, onRese
           disabled={saving}
         >
           <LuSave aria-hidden="true" />
-          <span>{saving ? "Saving..." : "Save Changes"}</span>
+          <span>{saving ? strings.saving : strings.save}</span>
         </button>
       </div>
     </div>

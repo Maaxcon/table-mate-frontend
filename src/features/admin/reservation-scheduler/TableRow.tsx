@@ -1,4 +1,5 @@
 import { useDroppable } from "@dnd-kit/core"
+import type { SchedulerStrings } from "@/features/admin/strings"
 import type { SchedulerReservation, SchedulerTable } from "./types"
 import { ReservationBlock } from "./ReservationBlock"
 
@@ -16,6 +17,8 @@ interface TableRowProps {
   cancellingIds: Set<string>
   onResizeStart: (reservationId: string, edge: "start" | "end", e: React.MouseEvent) => void
   onResizeNudge?: (reservationId: string, edge: "start" | "end", direction: -1 | 1) => void
+  tableStrings: SchedulerStrings["table"]
+  blockStrings: SchedulerStrings["block"]
 }
 
 export function TableRow({
@@ -32,6 +35,8 @@ export function TableRow({
   cancellingIds,
   onResizeStart,
   onResizeNudge,
+  tableStrings,
+  blockStrings,
 }: TableRowProps) {
   const { setNodeRef, isOver } = useDroppable({
     id: `${table.public_id}__${date}`,
@@ -62,7 +67,7 @@ export function TableRow({
     <div className={classNames}>
       <div className="scheduler__table-row-label">
         <span className="scheduler__table-row-name">{table.public_number}</span>
-        <span className="scheduler__table-row-cap">{table.capacity}p</span>
+        <span className="scheduler__table-row-cap">{tableStrings.capacity(table.capacity)}</span>
       </div>
       <div ref={setNodeRef} className="scheduler__table-row-cells" style={cellsStyle}>
         {reservations.map((r) => (
@@ -79,6 +84,7 @@ export function TableRow({
             workingHourEnd={workingHourEnd}
             onResizeStart={onResizeStart}
             onResizeNudge={onResizeNudge}
+            strings={blockStrings}
           />
         ))}
       </div>

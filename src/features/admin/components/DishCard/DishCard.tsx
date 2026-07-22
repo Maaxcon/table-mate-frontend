@@ -2,6 +2,7 @@ import { LuEye, LuEyeOff, LuGripVertical } from "react-icons/lu"
 import { useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
 import type { AdminMenuItem } from "@/features/admin/types"
+import { useAdminStrings } from "@/features/admin/strings"
 
 type DishCardProps = {
   item: AdminMenuItem
@@ -24,6 +25,7 @@ function DishCard({
     id: item.public_id,
     disabled,
   })
+  const strings = useAdminStrings()
 
   return (
     <li
@@ -42,14 +44,14 @@ function DishCard({
           className="menu-admin__dish-select"
           checked={selected}
           onChange={() => onToggleSelect(item.public_id)}
-          aria-label={`Select ${item.name}`}
+          aria-label={strings.menu.dishCard.selectAria(item.name)}
         />
       )}
       {!disabled && (
         <button
           type="button"
           className="menu-admin__drag"
-          aria-label={`Drag to reorder ${item.name}`}
+          aria-label={strings.menu.dishCard.dragAria(item.name)}
           {...attributes}
           {...listeners}
         >
@@ -60,18 +62,24 @@ function DishCard({
         {item.image ? (
           <img className="menu-admin__dish-img" src={item.image} alt="" />
         ) : (
-          <span className="menu-admin__dish-img menu-admin__dish-img--empty">No photo</span>
+          <span className="menu-admin__dish-img menu-admin__dish-img--empty">
+            {strings.menu.dishCard.noPhoto}
+          </span>
         )}
         <span className="menu-admin__dish-body">
           <span className="menu-admin__dish-name">{item.name}</span>
           <span className="menu-admin__dish-meta">
             <span className="menu-admin__dish-price">{Number(item.price).toFixed(2)}</span>
             {item.weight_grams != null && (
-              <span className="menu-admin__dish-weight">{item.weight_grams} g</span>
+              <span className="menu-admin__dish-weight">
+                {strings.menu.dishCard.weight(item.weight_grams)}
+              </span>
             )}
           </span>
           {item.allergens && item.allergens.length > 0 && (
-            <span className="menu-admin__dish-allergens">⚠ {item.allergens.join(", ")}</span>
+            <span className="menu-admin__dish-allergens">
+              {strings.menu.dishCard.allergens(item.allergens.join(", "))}
+            </span>
           )}
         </span>
       </button>
@@ -80,12 +88,20 @@ function DishCard({
         className={`menu-admin__avail${item.is_available ? "" : " menu-admin__avail--off"}`}
         onClick={() => onToggleAvailable(item)}
         aria-pressed={item.is_available}
-        aria-label={item.is_available ? `Hide ${item.name} from customers` : `Show ${item.name}`}
-        title={item.is_available ? "Available — click to hide" : "Hidden — click to show"}
+        aria-label={
+          item.is_available
+            ? strings.menu.dishCard.hideAria(item.name)
+            : strings.menu.dishCard.showAria(item.name)
+        }
+        title={
+          item.is_available
+            ? strings.menu.dishCard.availableTitle
+            : strings.menu.dishCard.hiddenTitle
+        }
       >
         {item.is_available ? <LuEye aria-hidden="true" /> : <LuEyeOff aria-hidden="true" />}
         <span className="menu-admin__avail-label">
-          {item.is_available ? "Available" : "Hidden"}
+          {item.is_available ? strings.menu.dishCard.available : strings.menu.dishCard.hidden}
         </span>
       </button>
     </li>

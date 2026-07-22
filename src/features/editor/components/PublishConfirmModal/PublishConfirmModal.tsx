@@ -1,5 +1,6 @@
 import Modal from "@/features/admin/components/Modal"
 import "@/features/admin/components/styles/modal.css"
+import { useAdminStrings } from "@/features/admin/strings"
 
 interface PublishConfirmModalProps {
   onConfirm: () => void
@@ -8,14 +9,16 @@ interface PublishConfirmModalProps {
 }
 
 export function PublishConfirmModal({ onConfirm, onClose, busy }: PublishConfirmModalProps) {
+  const strings = useAdminStrings()
+  const publishStrings = strings.floor.modals.publish
   return (
     <Modal
-      title="Publish Layout"
+      title={publishStrings.title}
       onClose={onClose}
       role="alertdialog"
       showClose={!busy}
       closeDisabled={busy}
-      backdropLabel="Cancel"
+      backdropLabel={publishStrings.cancel}
     >
       <p
         style={{
@@ -26,9 +29,9 @@ export function PublishConfirmModal({ onConfirm, onClose, busy }: PublishConfirm
           margin: "16px 0",
         }}
       >
-        Publishing will instantly update all active waiter tablets.
+        {publishStrings.bodyLine1}
         <br />
-        Active sessions will remain valid.
+        {publishStrings.bodyLine2}
       </p>
 
       <div
@@ -40,7 +43,7 @@ export function PublishConfirmModal({ onConfirm, onClose, busy }: PublishConfirm
         }}
       >
         <button type="button" className="admin-modal__btn" onClick={onClose} disabled={busy}>
-          Cancel
+          {publishStrings.cancel}
         </button>
         <button
           type="button"
@@ -48,7 +51,7 @@ export function PublishConfirmModal({ onConfirm, onClose, busy }: PublishConfirm
           onClick={onConfirm}
           disabled={busy}
         >
-          {busy ? "Publishing..." : "Publish"}
+          {busy ? publishStrings.confirming : publishStrings.confirm}
         </button>
       </div>
     </Modal>

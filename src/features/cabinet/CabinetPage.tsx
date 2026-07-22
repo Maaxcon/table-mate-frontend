@@ -13,12 +13,14 @@ import {
   ReservationCalendar,
 } from "./components"
 import { useCabinet } from "./hooks/useCabinet"
+import { useCabinetStrings } from "./strings"
 import type { HistoryEntry, Reservation } from "./types"
 import "./CabinetPage.css"
 
 function CabinetPage() {
   const navigate = useNavigate()
   const { logout, logoutFailed } = useLogout()
+  const strings = useCabinetStrings()
   const {
     profile,
     bookings,
@@ -67,16 +69,16 @@ function CabinetPage() {
           type="button"
           className="cabinet-page__icon-btn"
           onClick={() => navigate(-1)}
-          aria-label="Go back"
+          aria-label={strings.page.backAria}
         >
           <LuArrowLeft aria-hidden="true" />
         </button>
-        <h1 className="cabinet-page__heading">My cabinet</h1>
+        <h1 className="cabinet-page__heading">{strings.page.heading}</h1>
         <button
           type="button"
           className="cabinet-page__icon-btn"
           onClick={() => void logout()}
-          aria-label="Log out"
+          aria-label={strings.page.logoutAria}
         >
           <LuLogOut aria-hidden="true" />
         </button>
@@ -84,12 +86,12 @@ function CabinetPage() {
 
       {logoutFailed && (
         <p className="cabinet-page__logout-error" role="alert">
-          Couldn't sign you out. Please try again.
+          {strings.page.logoutError}
         </p>
       )}
 
       {loading && !profile ? (
-        <p className="cabinet-page__loading">Loading your cabinet…</p>
+        <p className="cabinet-page__loading">{strings.page.loading}</p>
       ) : profile ? (
         <>
           <ProfileHeader profile={profile} onSave={updateProfile} />
@@ -107,7 +109,7 @@ function CabinetPage() {
           <HistoryList history={history} error={historyError} onOpenReceipt={handleOpenReceipt} />
         </>
       ) : (
-        <p className="cabinet-page__loading">We could not load your profile.</p>
+        <p className="cabinet-page__loading">{strings.page.noProfile}</p>
       )}
 
       {receipt && <ReceiptDialog entry={receipt} onClose={() => setReceipt(null)} />}

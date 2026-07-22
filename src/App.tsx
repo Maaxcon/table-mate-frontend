@@ -4,6 +4,7 @@ import { GoogleOAuthProvider } from "@react-oauth/google"
 import AuthInitializer from "@/components/AuthInitializer"
 import { ThemeProvider } from "@/context/ThemeContext"
 import { ThemeToggle } from "@/components/ThemeToggle/ThemeToggle"
+import { LanguageSwitcher } from "@/components/LanguageSwitcher"
 import CabinetPage from "@/pages/CabinetPage"
 import GreetingPage from "@/pages/GreetingPage"
 import MenuPage from "@/pages/MenuPage"
@@ -32,6 +33,7 @@ function ThemedLayout() {
   return (
     <ThemeProvider>
       <ThemeToggle className="theme-toggle--global" />
+      <LanguageSwitcher className="language-switcher--global" />
       <Outlet />
     </ThemeProvider>
   )

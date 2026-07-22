@@ -1,5 +1,5 @@
 import type { WorkingHoursDay } from "./api"
-import { bookStrings } from "./strings"
+import i18n from "@/i18n/config"
 
 export const MIN_DURATION = 30
 
@@ -173,14 +173,14 @@ export function getDurationError(
     const closeBase = overnight ? closeMins + 24 * 60 : closeMins
     const shift = overnight && windowStartMins < openMins ? 24 * 60 : 0
     if (endMins + shift > closeBase) {
-      return bookStrings.modal.validation.closingExceeded(dayConfig.close)
+      return i18n.t("reservation.modal.validation.closingExceeded", { close: dayConfig.close })
     }
   }
 
   if (availableSlotTimes) {
     for (let m = windowStartMins; m < endMins; m += 30) {
       if (!availableSlotTimes.includes(minutesToTime(m))) {
-        return bookStrings.modal.validation.durationUnavailable
+        return i18n.t("reservation.modal.validation.durationUnavailable")
       }
     }
   }

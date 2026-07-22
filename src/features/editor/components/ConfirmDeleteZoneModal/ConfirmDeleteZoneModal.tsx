@@ -1,4 +1,5 @@
 import Modal from "@/features/admin/components/Modal"
+import { useAdminStrings } from "@/features/admin/strings"
 
 interface ConfirmDeleteZoneModalProps {
   zoneName: string
@@ -15,29 +16,28 @@ export function ConfirmDeleteZoneModal({
   onClose,
   busy,
 }: ConfirmDeleteZoneModalProps) {
+  const strings = useAdminStrings()
+  const deleteStrings = strings.floor.modals.deleteZone
   return (
     <Modal
-      title="Delete zone"
+      title={deleteStrings.title}
       onClose={onClose}
       role="alertdialog"
       showClose={!busy}
       closeDisabled={busy}
       className="admin-modal--confirm"
       overlayClassName="admin-confirm__overlay"
-      backdropLabel="Cancel"
+      backdropLabel={deleteStrings.cancel}
     >
-      <p className="admin-modal__message">
-        Are you sure you want to delete zone <strong>{zoneName}</strong>?
-      </p>
+      <p className="admin-modal__message">{deleteStrings.message(zoneName)}</p>
       {tableCount > 0 && (
         <p className="admin-modal__message admin-modal__message--warning">
-          This zone has {tableCount} table{tableCount !== 1 ? "s" : ""}. They will be deactivated
-          when you publish.
+          {deleteStrings.warning(tableCount)}
         </p>
       )}
       <div className="admin-modal__actions">
         <button type="button" className="admin-modal__btn" onClick={onClose} disabled={busy}>
-          Cancel
+          {deleteStrings.cancel}
         </button>
         <button
           type="button"
@@ -45,7 +45,7 @@ export function ConfirmDeleteZoneModal({
           onClick={onConfirm}
           disabled={busy}
         >
-          {busy ? "Deleting..." : "Delete"}
+          {busy ? deleteStrings.confirming : deleteStrings.confirm}
         </button>
       </div>
     </Modal>
