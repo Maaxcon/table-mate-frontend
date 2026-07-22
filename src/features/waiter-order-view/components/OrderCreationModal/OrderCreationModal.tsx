@@ -209,7 +209,16 @@ export function OrderCreationModal({
                   className="ocm__item-card"
                   onClick={() => addItem(item)}
                 >
-                  <div className="ocm__item-image" />
+                  {item.image ? (
+                    <img
+                      className="ocm__item-image"
+                      src={item.image}
+                      alt={item.name}
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="ocm__item-image ocm__item-image--placeholder" />
+                  )}
                   <div className="ocm__item-info">
                     <span className="ocm__item-name">{item.name}</span>
                     <span className="ocm__item-price">&euro;{item.price}</span>
