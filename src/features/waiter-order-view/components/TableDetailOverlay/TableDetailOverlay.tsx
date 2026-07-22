@@ -100,10 +100,16 @@ export function TableDetailOverlay({
   const dayReservations = [...tableReservations].sort(byStart)
   const overdueActiveReservation = dayReservations.find((reservation) => {
     if (reservation.status !== "active") return false
-    return getOverdueMinutes(reservation.end_at, currentTime.getTime()) != null
+    return (
+      getOverdueMinutes(reservation.session_ends_at ?? reservation.end_at, currentTime.getTime()) !=
+      null
+    )
   })
   const overdueMinutes = overdueActiveReservation
-    ? getOverdueMinutes(overdueActiveReservation.end_at, currentTime.getTime())
+    ? getOverdueMinutes(
+        overdueActiveReservation.session_ends_at ?? overdueActiveReservation.end_at,
+        currentTime.getTime(),
+      )
     : null
 
   return (

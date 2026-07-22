@@ -103,6 +103,7 @@ describe("TableDetailOverlay bill", () => {
       public_id: "r-1",
       start_at: "2026-06-19T10:00:00Z",
       end_at: "2026-06-19T11:30:00Z",
+      session_ends_at: null,
       guest_count: 2,
       status: "active",
       notes: null,

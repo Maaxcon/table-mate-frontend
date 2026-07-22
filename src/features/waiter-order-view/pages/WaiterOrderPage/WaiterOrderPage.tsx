@@ -354,6 +354,7 @@ export function WaiterOrderPage() {
         public_id: lr.public_id,
         start_at: lr.start_at,
         end_at: lr.end_at ?? lr.start_at,
+        session_ends_at: null,
         table: table?.public_number ?? "",
         guest_count: lr.guest_count ?? 2,
         status: "pending" as const,
@@ -377,7 +378,7 @@ export function WaiterOrderPage() {
       if (!reservation.table) continue
       const table = tableByNumber.get(reservation.table)
       if (!table || !table.is_occupied) continue
-      const minutes = getOverdueMinutes(reservation.end_at, nowMs)
+      const minutes = getOverdueMinutes(reservation.session_ends_at ?? reservation.end_at, nowMs)
       if (minutes == null) continue
       result[table.public_id] = Math.min(minutes, OVERDUE_UI_CAP_MINUTES)
     }
