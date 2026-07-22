@@ -38,27 +38,6 @@ export function OrderItemRow({
         </span>
         {item.comment && <span className="order-item-row__comment">{item.comment}</span>}
         {voidReasonLabel && <span className="order-item-row__void-reason">{voidReasonLabel}</span>}
-        {pickingVoidReason && voidReasons && voidReasons.length > 0 && (
-          <select
-            className="order-item-row__void-select"
-            defaultValue=""
-            onChange={(e) => {
-              const code = e.target.value
-              if (code) onVoid?.(item.public_id, code)
-              setPickingVoidReason(false)
-            }}
-            onBlur={() => setPickingVoidReason(false)}
-          >
-            <option value="" disabled>
-              Void reason…
-            </option>
-            {voidReasons.map((reason) => (
-              <option key={reason.code} value={reason.code}>
-                {reason.label}
-              </option>
-            ))}
-          </select>
-        )}
       </div>
       <div className="order-item-row__right">
         <span className="order-item-row__price">
@@ -76,14 +55,42 @@ export function OrderItemRow({
           </button>
         )}
         {!isVoided && onVoid && (
-          <button
-            type="button"
-            className="order-item-row__void-btn"
-            onClick={() => setPickingVoidReason((v) => !v)}
-            title="Void item"
+          <div
+            className="order-item-row__void-wrap"
+            onBlur={(e) => {
+              if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+                setPickingVoidReason(false)
+              }
+            }}
           >
-            VOID
-          </button>
+            <button
+              type="button"
+              className="order-item-row__void-btn"
+              onClick={() => setPickingVoidReason((v) => !v)}
+              title="Void item"
+            >
+              VOID
+            </button>
+            {pickingVoidReason && voidReasons && voidReasons.length > 0 && (
+              <div className="order-item-row__void-menu" role="menu">
+                {voidReasons.map((reason) => (
+                  <button
+                    key={reason.code}
+                    type="button"
+                    role="menuitem"
+                    className="order-item-row__void-option"
+                    onClick={() => {
+                      onVoid?.(item.public_id, reason.code)
+                      setPickingVoidReason(false)
+                    }}
+                  >
+                    {voidReasonStrings[reason.code as keyof typeof voidReasonStrings] ??
+                      reason.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         )}
         {!isVoided && item.is_paid && (
           <span className="order-item-row__paid-badge">{overlayStrings.paidBadge}</span>
