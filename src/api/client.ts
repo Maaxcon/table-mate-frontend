@@ -72,7 +72,8 @@ async function apiFetch(path: string, init: RequestInit = {}): Promise<Response>
     headers.set("Authorization", `Bearer ${accessToken}`)
   }
 
-  const response = await fetch(`${env.apiBaseUrl}${path}`, {
+  const url = path.startsWith("http") ? path : `${env.apiBaseUrl}${path}`
+  const response = await fetch(url, {
     ...init,
     headers,
     credentials: "include",
