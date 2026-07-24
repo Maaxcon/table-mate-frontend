@@ -24,12 +24,27 @@ function playTone(ctx: AudioContext, frequency: number, startTime: number, durat
   oscillator.stop(startTime + duration)
 }
 
+function playChime(ctx: AudioContext): void {
+  const now = ctx.currentTime
+  playTone(ctx, 880, now, 0.18)
+  playTone(ctx, 1175, now + 0.2, 0.22)
+}
+
 /** Plays a short attention chime for an incoming waiter call. */
 export function playWaiterCallSound(): void {
   const ctx = getAudioContext()
   if (!ctx) return
-  if (ctx.state === "suspended") void ctx.resume()
-  const now = ctx.currentTime
-  playTone(ctx, 880, now, 0.18)
-  playTone(ctx, 1175, now + 0.2, 0.22)
+  if (ctx.state === "suspended") {
+    // Scheduling tones before resume() actually completes can silently drop
+    // them, and an unawaited rejection (e.g. autoplay policy denies it
+    // without a prior user gesture) would surface as an unhandled rejection.
+    ctx.resume().then(
+      () => playChime(ctx),
+      () => {
+        // No fallback — the popup still shows silently.
+      },
+    )
+    return
+  }
+  playChime(ctx)
 }
