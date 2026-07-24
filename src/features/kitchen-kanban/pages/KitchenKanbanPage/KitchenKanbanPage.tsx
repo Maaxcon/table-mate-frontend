@@ -116,7 +116,7 @@ export function KitchenKanbanPage() {
       const item = ticket?.items.find((it) => it.id === itemId)
       if (!item) return
 
-      const newStatus = item.status === "ready" ? "pending" : "ready"
+      const newStatus = item.status === "ready" ? "in_progress" : "ready"
       try {
         const updated = await updateOrderItemStatus(itemId, newStatus)
         setTickets((prev) =>

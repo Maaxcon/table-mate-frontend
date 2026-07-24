@@ -8,8 +8,8 @@ interface StatusChipProps {
 
 const LABELS: Record<StatusValue, string> = {
   pending: "PENDING",
-  in_progress: "IN PROGRESS",
-  ready: "READY",
+  in_progress: "COOKING",
+  ready: "WAITING FOR SERVE",
   served: "SERVED",
   voided: "VOIDED",
 }

@@ -645,6 +645,11 @@
   color: var(--color-text-primary);
 }
 
+.cart-drawer__bill-item .status-chip {
+  flex-shrink: 0;
+  margin: 0 8px;
+}
+
 .cart-drawer__bill-price {
   flex-shrink: 0;
   font-size: 0.875rem;

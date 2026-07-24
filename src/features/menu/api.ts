@@ -370,6 +370,8 @@ export type BillItem = {
   // total_price is intentionally not part of the bill response.)
   payable: string
   is_paid: boolean
+  // Kitchen status: pending | in_progress | ready | served | voided
+  status: string
 }
 
 // The bill: items already submitted to the kitchen for this table's visit.

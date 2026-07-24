@@ -292,6 +292,7 @@ describe("CartDrawer checkout state machine", () => {
         quantity: 1,
         payable: "34.50",
         is_paid: false,
+        status: "ready",
       },
       {
         id: "oi-2",
@@ -300,6 +301,7 @@ describe("CartDrawer checkout state machine", () => {
         quantity: 2,
         payable: "23.00",
         is_paid: false,
+        status: "in_progress",
       },
     ]
     renderDrawer({ billItems, onPayBill })
@@ -322,6 +324,7 @@ describe("CartDrawer checkout state machine", () => {
         quantity: 1,
         payable: "34.50",
         is_paid: false,
+        status: "ready",
       },
     ]
     renderDrawer({ billItems, onPayBill })
@@ -351,6 +354,7 @@ describe("CartDrawer checkout state machine", () => {
         quantity: 1,
         payable: "34.50",
         is_paid: false,
+        status: "ready",
       },
       {
         id: "oi-2",
@@ -359,6 +363,7 @@ describe("CartDrawer checkout state machine", () => {
         quantity: 1,
         payable: "11.50",
         is_paid: true,
+        status: "served",
       },
     ]
     renderDrawer({ billItems })
@@ -393,6 +398,7 @@ describe("CartDrawer checkout state machine", () => {
         quantity: 1,
         payable: "34.50",
         is_paid: false,
+        status: "ready",
       },
     ]
     renderDrawer({ billItems })

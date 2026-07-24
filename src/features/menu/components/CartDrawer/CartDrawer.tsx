@@ -18,6 +18,7 @@ import {
 import type { CartItemWithDetails } from "@/features/menu/hooks/useCart"
 import { formatAmount } from "@/features/menu/utils"
 import { useMenuStrings } from "@/features/menu/strings"
+import { StatusChip } from "@/components/StatusChip/StatusChip"
 import "./CartDrawer.css"
 
 type Props = {
@@ -135,6 +136,12 @@ export function CartDrawer({
       return () => clearTimeout(timer)
     }
   }, [error, onClearError])
+
+  useEffect(() => {
+    if (step !== "bill") return
+    const interval = setInterval(onLoadBill, 10_000)
+    return () => clearInterval(interval)
+  }, [step, onLoadBill])
 
   const handleSubmit = async () => {
     if (submitting || items.length === 0) return
@@ -553,6 +560,16 @@ export function CartDrawer({
                                           × {b.quantity}
                                         </span>
                                       </span>
+                                      <StatusChip
+                                        status={
+                                          b.status as
+                                            | "pending"
+                                            | "in_progress"
+                                            | "ready"
+                                            | "served"
+                                            | "voided"
+                                        }
+                                      />
                                       <span className="cart-drawer__bill-price">
                                         {formatAmount(parseFloat(b.payable) || 0)} {currencySymbol}
                                       </span>
@@ -587,6 +604,16 @@ export function CartDrawer({
                               {b.name}
                               <span className="cart-drawer__receipt-qty"> × {b.quantity}</span>
                             </span>
+                            <StatusChip
+                              status={
+                                b.status as
+                                  | "pending"
+                                  | "in_progress"
+                                  | "ready"
+                                  | "served"
+                                  | "voided"
+                              }
+                            />
                             <span className="cart-drawer__bill-price">
                               {formatAmount(parseFloat(b.payable) || 0)} {currencySymbol}
                             </span>
