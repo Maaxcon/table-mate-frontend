@@ -163,6 +163,15 @@ function MenuPage() {
     }
   }, [])
 
+  // Always clears any previously scheduled reset before arming a new one —
+  // otherwise an earlier timer (e.g. the short error-state reset) can still
+  // fire after a later call has already moved the state on to "sent",
+  // flipping the button back to idle mid-cooldown.
+  const scheduleWaiterReset = useCallback((ms: number) => {
+    if (waiterResetTimer.current) clearTimeout(waiterResetTimer.current)
+    waiterResetTimer.current = setTimeout(() => setWaiterCallState("idle"), ms)
+  }, [])
+
   const handleCallWaiter = useCallback(async () => {
     if (!cartSessionId || !guestJwt) return
     if (waiterCallState === "sending" || waiterCallState === "sent") return
@@ -170,29 +179,20 @@ function MenuPage() {
     try {
       await callWaiter(cartSessionId, guestJwt)
       setWaiterCallState("sent")
-      waiterResetTimer.current = setTimeout(
-        () => setWaiterCallState("idle"),
-        WAITER_CALL_SENT_RESET_MS,
-      )
+      scheduleWaiterReset(WAITER_CALL_SENT_RESET_MS)
     } catch (err) {
       // A 429 means staff was already pinged moments ago by this table — treat
       // it as success from the guest's point of view, not a failure to retry.
       const status = (err as Partial<ApiError>)?.status
       if (status === 429) {
         setWaiterCallState("sent")
-        waiterResetTimer.current = setTimeout(
-          () => setWaiterCallState("idle"),
-          WAITER_CALL_SENT_RESET_MS,
-        )
+        scheduleWaiterReset(WAITER_CALL_SENT_RESET_MS)
       } else {
         setWaiterCallState("error")
-        waiterResetTimer.current = setTimeout(
-          () => setWaiterCallState("idle"),
-          WAITER_CALL_ERROR_RESET_MS,
-        )
+        scheduleWaiterReset(WAITER_CALL_ERROR_RESET_MS)
       }
     }
-  }, [cartSessionId, guestJwt, waiterCallState])
+  }, [cartSessionId, guestJwt, waiterCallState, scheduleWaiterReset])
 
   const { sessionExpired } = useCartSocket({
     cartSessionId: guestAuth.cartSessionId,
