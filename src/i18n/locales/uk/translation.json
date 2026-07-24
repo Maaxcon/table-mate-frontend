@@ -133,9 +133,6 @@
       "reservationNotYetActiveDefault": "Цей столик уже заброньований. Зверніться до офіціанта.",
       "unavailable": "\"{{name}}\" більше недоступна",
       "retry": "Спробувати знову",
-      "connecting": "Підключення...",
-      "connected": "Підключено",
-      "disconnected": "Відключено",
       "sessionExpired": "Сесія завершена — відкрийте стіл заново",
       "lobbyTitle": "Ласкаво просимо!",
       "lobbySubtitle": "Як до вас звертатися?",
@@ -144,7 +141,11 @@
       "lobbySkipped": "Пропустити",
       "guestPrefix": "Гість",
       "slotLabel": "Гість {{slot}}",
-      "unknownItem": "Страва"
+      "unknownItem": "Страва",
+      "callWaiter": "Покликати офіціанта",
+      "callWaiterSent": "Офіціант вже йде",
+      "callWaiterCooldown": "Офіціанта вже покликали — зачекайте трохи",
+      "callWaiterError": "Не вдалося покликати офіціанта, спробуйте ще раз"
     },
     "item": {
       "ingredients": "Склад",
