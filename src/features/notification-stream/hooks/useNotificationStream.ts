@@ -6,6 +6,7 @@ import { clearAuth } from "@/store/auth/authSlice"
 import type { NotificationEvent, WSNotificationMessage } from "../types"
 import { getStream, formatEvent } from "../types"
 import { notifyKitchenEvent } from "../kitchenEventBus"
+import { notifyWaiterCallEvent } from "../waiterCallEventBus"
 
 const DEFAULT_STREAM_LIMIT = 50
 const STREAM_LIMITS: Record<string, number> = {
@@ -15,6 +16,35 @@ const STREAM_LIMITS: Record<string, number> = {
 const BASE_DELAY_MS = 1000
 const MAX_DELAY_MS = 30000
 const DEFAULT_READ_IDS_STORAGE_KEY = "tablemate.staff.notifications.read"
+// Waiter-call dismissals are shared across every staff page (kitchen, waiter
+// view, ...) regardless of that page's own readStorageKey, so dismissing the
+// popup on one screen stops the alert from re-firing when another screen's
+// hook instance reconnects and gets the same event replayed to it.
+const WAITER_READ_IDS_STORAGE_KEY = "tablemate.staff.waiterCalls.read"
+
+function loadStoredIds(storage: Storage | null, key: string): string[] {
+  if (!storage) return []
+  try {
+    const raw = storage.getItem(key)
+    if (!raw) return []
+    const parsed = JSON.parse(raw)
+    if (!Array.isArray(parsed)) return []
+    return parsed.filter((id): id is string => typeof id === "string")
+  } catch {
+    return []
+  }
+}
+
+function addWaiterReadId(storage: Storage | null, eventId: string): void {
+  if (!storage) return
+  try {
+    const existing = new Set(loadStoredIds(storage, WAITER_READ_IDS_STORAGE_KEY))
+    existing.add(eventId)
+    storage.setItem(WAITER_READ_IDS_STORAGE_KEY, JSON.stringify([...existing]))
+  } catch {
+    // ignore storage failures
+  }
+}
 
 function jitter(delay: number): number {
   return delay * (0.5 + Math.random() * 0.5)
@@ -68,22 +98,20 @@ export function useNotificationStream(options: NotificationStreamOptions = {}) {
 
   useEffect(() => {
     if (!storage) return
-    try {
-      const raw = storage.getItem(readStorageKey)
-      if (!raw) return
-      const parsed = JSON.parse(raw)
-      if (!Array.isArray(parsed)) return
-      const validIds = parsed.filter((id): id is string => typeof id === "string")
-      readIdsRef.current = new Set(validIds)
-      if (eventsRef.current.length > 0) {
-        const nextEvents = eventsRef.current.map((event) =>
-          readIdsRef.current.has(event.id) ? { ...event, read: true } : event,
-        )
-        eventsRef.current = nextEvents
-        setEvents(nextEvents)
-      }
-    } catch {
-      // ignore corrupted storage
+    // Waiter-call reads are merged in from a page-independent key: dismissing
+    // the popup on one staff screen must also silence it on every other one.
+    const ids = [
+      ...loadStoredIds(storage, readStorageKey),
+      ...loadStoredIds(storage, WAITER_READ_IDS_STORAGE_KEY),
+    ]
+    if (ids.length === 0) return
+    readIdsRef.current = new Set(ids)
+    if (eventsRef.current.length > 0) {
+      const nextEvents = eventsRef.current.map((event) =>
+        readIdsRef.current.has(event.id) ? { ...event, read: true } : event,
+      )
+      eventsRef.current = nextEvents
+      setEvents(nextEvents)
     }
   }, [storage, readStorageKey])
 
@@ -127,13 +155,15 @@ export function useNotificationStream(options: NotificationStreamOptions = {}) {
       if (readIdsRef.current.has(eventId)) return
       readIdsRef.current.add(eventId)
       persistReadIds()
+      const target = eventsRef.current.find((event) => event.id === eventId)
+      if (target?.stream === "waiter") addWaiterReadId(storage, eventId)
       const nextEvents = eventsRef.current.map((event) =>
         event.id === eventId ? { ...event, read: true } : event,
       )
       eventsRef.current = nextEvents
       setEvents(nextEvents)
     },
-    [persistReadIds],
+    [persistReadIds, storage],
   )
 
   const markAllRead = useCallback(() => {
@@ -141,6 +171,7 @@ export function useNotificationStream(options: NotificationStreamOptions = {}) {
     const nextEvents = eventsRef.current.map((event) => {
       if (event.read) return event
       changed = true
+      if (event.stream === "waiter") addWaiterReadId(storage, event.id)
       return { ...event, read: true }
     })
     if (!changed) return
@@ -148,7 +179,7 @@ export function useNotificationStream(options: NotificationStreamOptions = {}) {
     nextEvents.forEach((event) => readIdsRef.current.add(event.id))
     setEvents(nextEvents)
     persistReadIds()
-  }, [persistReadIds])
+  }, [persistReadIds, storage])
 
   const flushPendingEvents = useCallback(() => {
     flushTimeoutRef.current = null
@@ -157,8 +188,16 @@ export function useNotificationStream(options: NotificationStreamOptions = {}) {
     pendingEventsRef.current = []
     queue.forEach((event) => {
       const isNewEvent = upsertEvent(event)
-      if (isNewEvent && event.stream === "kitchen") {
+      // A reconnect (page switch, dropped socket, ...) replays recent events
+      // to the fresh hook instance, so "new to this instance" alone isn't
+      // enough — skip anything already dismissed, or every replay would
+      // re-trigger the alert.
+      const isUnread = !readIdsRef.current.has(event.id)
+      if (isNewEvent && isUnread && event.stream === "kitchen") {
         notifyKitchenEvent()
+      }
+      if (isNewEvent && isUnread && event.stream === "waiter") {
+        notifyWaiterCallEvent()
       }
     })
   }, [upsertEvent])
