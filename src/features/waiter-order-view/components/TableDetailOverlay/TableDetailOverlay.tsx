@@ -39,6 +39,8 @@ interface TableDetailOverlayProps {
   onMoveTable?: (reservation: ReservationItem) => void
   onCreateReservation?: () => void
   onMarkItemServed?: (itemId: string) => void
+  onMarkAllServed?: () => void
+  onMarkAllVoided?: (reasonCode: string) => void
   onVoidItem?: (itemId: string, reasonCode: string) => void
   onClose: () => void
 }
@@ -63,6 +65,8 @@ export function TableDetailOverlay({
   onMoveTable,
   onCreateReservation,
   onMarkItemServed,
+  onMarkAllServed,
+  onMarkAllVoided,
   onVoidItem,
   onClose,
 }: TableDetailOverlayProps) {
@@ -359,6 +363,40 @@ export function TableDetailOverlay({
                 <div className="overlay__divider" />
 
                 <div className="overlay__body">
+                  {(() => {
+                    const readyItems = detail.items.filter((i) => i.status === "ready")
+                    const voidableItems = detail.items.filter(
+                      (i) => i.status !== "voided" && !i.is_paid,
+                    )
+                    const hasAnyAction =
+                      (readyItems.length > 0 && onMarkAllServed) ||
+                      (voidableItems.length > 0 && onMarkAllVoided && voidReasons.length > 0)
+                    if (!hasAnyAction) return null
+                    return (
+                      <div className="overlay__mark-all-row">
+                        {readyItems.length > 0 && onMarkAllServed && (
+                          <button
+                            type="button"
+                            className="overlay__mark-all-btn overlay__mark-all-btn--serve"
+                            onClick={onMarkAllServed}
+                          >
+                            {overlayStrings.actions.markAllServed} ({readyItems.length})
+                          </button>
+                        )}
+                        {voidableItems.length > 0 && onMarkAllVoided && voidReasons.length > 0 && (
+                          <div className="overlay__mark-all-void-wrap">
+                            <button
+                              type="button"
+                              className="overlay__mark-all-btn overlay__mark-all-btn--void"
+                              onClick={() => onMarkAllVoided(voidReasons[0].code)}
+                            >
+                              {overlayStrings.actions.markAllVoided} ({voidableItems.length})
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })()}
                   {detail.items.length === 0 ? (
                     <p className="overlay__empty">{overlayStrings.empty.order}</p>
                   ) : (

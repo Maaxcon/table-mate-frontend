@@ -1153,7 +1153,9 @@
           "addItem": "Додати позицію",
           "moveTable": "Пересадити",
           "closeCheck": "Закрити рахунок",
-          "processPayment": "Провести оплату"
+          "processPayment": "Провести оплату",
+          "markAllServed": "Позначити все поданим",
+          "markAllVoided": "Позначити все скасованим"
         },
         "empty": {
           "order": "Ще немає замовлень.",

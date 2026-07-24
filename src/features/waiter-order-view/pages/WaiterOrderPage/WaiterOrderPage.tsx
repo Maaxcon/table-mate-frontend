@@ -319,6 +319,30 @@ export function WaiterOrderPage() {
     }
   }
 
+  const handleMarkAllServed = async () => {
+    if (!overlayDetail) return
+    const readyIds = overlayDetail.items.filter((i) => i.status === "ready").map((i) => i.public_id)
+    if (readyIds.length === 0) return
+    await Promise.all(readyIds.map((id) => markOrderItemServed(id)))
+    const latest = await refreshFloor()
+    if (selectedTableId && latest) {
+      await buildOverlayDetail(selectedTableId, latest.tables, latest.reservations)
+    }
+  }
+
+  const handleMarkAllVoided = async (reasonCode: string) => {
+    if (!overlayDetail) return
+    const voidableIds = overlayDetail.items
+      .filter((i) => i.status !== "voided" && !i.is_paid)
+      .map((i) => i.public_id)
+    if (voidableIds.length === 0) return
+    await Promise.all(voidableIds.map((id) => voidOrderItem(id, reasonCode)))
+    const latest = await refreshFloor()
+    if (selectedTableId && latest) {
+      await buildOverlayDetail(selectedTableId, latest.tables, latest.reservations)
+    }
+  }
+
   const handleVoidItem = async (itemId: string, reasonCode: string) => {
     await voidOrderItem(itemId, reasonCode)
     const latest = await refreshFloor()
@@ -574,6 +598,8 @@ export function WaiterOrderPage() {
           onMoveTable={(r) => setMoveTarget(r)}
           onCreateReservation={() => setCreateResModalOpen(true)}
           onMarkItemServed={handleMarkItemServed}
+          onMarkAllServed={handleMarkAllServed}
+          onMarkAllVoided={handleMarkAllVoided}
           onVoidItem={handleVoidItem}
           onClose={closeOverlay}
         />

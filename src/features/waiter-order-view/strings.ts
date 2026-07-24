@@ -97,6 +97,8 @@ export function useWaiterStrings() {
         moveTable: t("admin.waiter.overlay.actions.moveTable"),
         closeCheck: t("admin.waiter.overlay.actions.closeCheck"),
         processPayment: t("admin.waiter.overlay.actions.processPayment"),
+        markAllServed: t("admin.waiter.overlay.actions.markAllServed"),
+        markAllVoided: t("admin.waiter.overlay.actions.markAllVoided"),
       },
       empty: {
         order: t("admin.waiter.overlay.empty.order"),

@@ -1127,7 +1127,9 @@
           "addItem": "Add item",
           "moveTable": "Move table",
           "closeCheck": "Close check",
-          "processPayment": "Process payment"
+          "processPayment": "Process payment",
+          "markAllServed": "Mark all served",
+          "markAllVoided": "Mark all voided"
         },
         "empty": {
           "order": "No dishes ordered yet.",
