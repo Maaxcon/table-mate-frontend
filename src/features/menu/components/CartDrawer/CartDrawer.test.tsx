@@ -71,7 +71,6 @@ function renderDrawer(overrides: Overrides = {}) {
     items: [makeItem()],
     totalPrice: 59.98,
     currencySymbol: "₴",
-    isConnected: true,
     error: null,
     errorItemId: null,
     displayName: "Max",
@@ -261,13 +260,6 @@ describe("CartDrawer checkout state machine", () => {
 
     expect(onClearError).toHaveBeenCalledTimes(1)
     vi.useRealTimers()
-  })
-
-  it("hides the connection status indicator when disabled", () => {
-    renderDrawer({ showConnectionStatus: false })
-
-    expect(screen.queryByTitle(S.connected)).not.toBeInTheDocument()
-    expect(screen.queryByTitle(S.disconnected)).not.toBeInTheDocument()
   })
 
   it("opens the bill and loads ordered items when Pay is tapped", async () => {
