@@ -17,6 +17,12 @@ export function createEmployee(payload: NewEmployee): Promise<AdminEmployee> {
   })
 }
 
+export function assignEmployee(payload: NewEmployee): Promise<AdminEmployee> {
+  return api.post<AdminEmployee>(`${EMPLOYEES_PATH}assign/`, payload, {
+    errorMessage: "Could not assign the employee role.",
+  })
+}
+
 export type EmployeePatch = Partial<Pick<AdminEmployee, "role" | "is_active">>
 
 export function updateEmployee(publicId: string, patch: EmployeePatch): Promise<AdminEmployee> {

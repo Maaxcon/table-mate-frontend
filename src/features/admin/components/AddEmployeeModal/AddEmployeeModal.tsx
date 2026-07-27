@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { createEmployee } from "@/features/admin/api/staff"
+import { assignEmployee, createEmployee } from "@/features/admin/api/staff"
 import type { EmployeeRole } from "@/features/admin/types"
 import Modal from "@/features/admin/components/Modal"
 import TextField from "@/features/admin/components/TextField"
@@ -26,6 +26,7 @@ function AddEmployeeModal({ onClose, onCreated }: AddEmployeeModalProps) {
   const [lastName, setLastName] = useState("")
   const [phone, setPhone] = useState("")
   const [role, setRole] = useState<EmployeeRole>("waiter")
+  const [assignExisting, setAssignExisting] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const dirty =
@@ -41,14 +42,15 @@ function AddEmployeeModal({ onClose, onCreated }: AddEmployeeModalProps) {
     setSubmitting(true)
     setError(null)
     try {
-      await createEmployee({
+      const payload = {
         email: email.trim(),
         first_name: firstName.trim(),
         last_name: lastName.trim(),
         phone: phone.trim(),
         role,
-      })
-      toast.success("Employee added")
+      }
+      await (assignExisting ? assignEmployee(payload) : createEmployee(payload))
+      toast.success(assignExisting ? "Staff role assigned" : "Employee added")
       onCreated()
       onClose()
     } catch (err) {
@@ -69,6 +71,16 @@ function AddEmployeeModal({ onClose, onCreated }: AddEmployeeModalProps) {
             placeholder="name@example.com"
             hint="They sign in with Google using this email."
           />
+          <label className="admin-field">
+            <span className="admin-field__label">
+              <input
+                type="checkbox"
+                checked={assignExisting}
+                onChange={(e) => setAssignExisting(e.target.checked)}
+              />{" "}
+              Assign an existing user
+            </span>
+          </label>
           <div className="admin-form__row">
             <TextField label="First name" value={firstName} onChange={setFirstName} />
             <TextField label="Last name" value={lastName} onChange={setLastName} />
@@ -104,7 +116,7 @@ function AddEmployeeModal({ onClose, onCreated }: AddEmployeeModalProps) {
               className="admin-form__save"
               disabled={submitting || !email.trim()}
             >
-              {submitting ? "Adding…" : "Add employee"}
+              {submitting ? "Saving…" : assignExisting ? "Assign staff role" : "Add employee"}
             </button>
           </div>
         </form>
