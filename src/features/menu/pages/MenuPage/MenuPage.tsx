@@ -28,6 +28,9 @@ import { formatAmount, getCurrencySymbol } from "@/features/menu/utils"
 import type { MenuItem } from "@/features/menu/types"
 import "./MenuPage.css"
 
+// Keep in sync with _WAITER_CALL_COOLDOWN_SECONDS in
+// table-mate-backend/apps/orders/services/sessions.py — the button should
+// re-enable right as the backend cooldown expires.
 const WAITER_CALL_SENT_RESET_MS = 60000
 const WAITER_CALL_ERROR_RESET_MS = 4000
 
