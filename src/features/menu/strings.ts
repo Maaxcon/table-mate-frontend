@@ -132,7 +132,6 @@ export function useMenuStrings() {
       unknownItem: t("menu.cart.unknownItem"),
       callWaiter: t("menu.cart.callWaiter"),
       callWaiterSent: t("menu.cart.callWaiterSent"),
-      callWaiterCooldown: t("menu.cart.callWaiterCooldown"),
       callWaiterError: t("menu.cart.callWaiterError"),
     },
     item: {

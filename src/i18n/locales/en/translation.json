@@ -140,7 +140,6 @@
       "unknownItem": "Item",
       "callWaiter": "Call waiter",
       "callWaiterSent": "Waiter is on the way",
-      "callWaiterCooldown": "Waiter already called — please wait a moment",
       "callWaiterError": "Couldn't call the waiter, try again"
     },
     "item": {
