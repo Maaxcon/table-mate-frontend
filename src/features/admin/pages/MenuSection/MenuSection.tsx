@@ -97,7 +97,6 @@ function MenuSection() {
               <span>{strings.menu.addMenu}</span>
             </button>
           </div>
-
           {selectedMenu && (
             <MenuToolbar
               key={selectedMenu.public_id}

@@ -496,6 +496,21 @@ export function useAdminStrings() {
       allergens: {
         label: t("admin.menu.allergens.label"),
         placeholder: t("admin.menu.allergens.placeholder"),
+        manage: t("admin.menu.allergens.manage"),
+        manageTitle: t("admin.menu.allergens.manageTitle"),
+        manageDescription: t("admin.menu.allergens.manageDescription"),
+        newPlaceholder: t("admin.menu.allergens.newPlaceholder"),
+        add: t("admin.menu.allergens.add"),
+        adding: t("admin.menu.allergens.adding"),
+        addError: t("admin.menu.allergens.addError"),
+        loadError: t("admin.menu.allergens.loadError"),
+        deleteAria: (name: string) => t("admin.menu.allergens.deleteAria", { name }),
+        deleteError: t("admin.menu.allergens.deleteError"),
+        confirmDelete: {
+          title: t("admin.menu.allergens.confirmDelete.title"),
+          message: (name: string) => t("admin.menu.allergens.confirmDelete.message", { name }),
+          confirm: t("admin.menu.allergens.confirmDelete.confirm"),
+        },
         remove: (item: string) => t("admin.menu.allergens.remove", { item }),
       },
       toolbar: {

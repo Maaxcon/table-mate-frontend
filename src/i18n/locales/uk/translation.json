@@ -34,21 +34,26 @@
       "closedNow": "Зачинено"
     },
     "controls": {
-      "searchPlaceholder": "Пошук страв...",
+      "ingredientPlaceholder": "Пошук інгредієнтів...",
       "sortAria": "Сортування",
-      "sortTitleDefault": "За замовчуванням",
-      "sortTitlePriceAsc": "Ціна: від низької",
-      "sortTitlePriceDesc": "Ціна: від високої",
-      "sortLabelDefault": "Сорт.",
-      "sortLabelPriceAsc": "↑ Ціна",
-      "sortLabelPriceDesc": "↓ Ціна",
+      "allergensAria": "Фільтрувати за алергенами",
+      "excludeAllergens": "Виключити алергени",
+      "excludeAllergens_one": "Виключити алерген ({{count}})",
+      "excludeAllergens_few": "Виключити алергени ({{count}})",
+      "excludeAllergens_many": "Виключити алергени ({{count}})",
+      "excludeAllergens_other": "Виключити алергени ({{count}})",
+      "excludeAllergensTitle": "Виключити алергени",
+      "excludeAllergensDescription": "Страви з вибраними алергенами не відображатимуться.",
+      "sortRecommended": "Рекомендоване",
+      "sortPopular": "Популярне",
+      "sortPriceAsc": "Ціна: від низької",
+      "sortPriceDesc": "Ціна: від високої",
       "cartAria": "Кошик"
     },
     "grid": {
       "loadMore": "Показати більше",
       "loadingMore": "Завантажуємо...",
-      "noResults": "Немає результатів для \"{{query}}\".",
-      "noItems": "У цій категорії поки немає позицій."
+      "noDishesFound": "Страв не знайдено"
     },
     "cartBar": {
       "openAria": "Відкрити кошик",
@@ -978,6 +983,21 @@
       "allergens": {
         "label": "Алергени",
         "placeholder": "Додайте алерген…",
+        "manage": "Керувати алергенами",
+        "manageTitle": "Керування алергенами",
+        "manageDescription": "Додавайте алергени, доступні для страв і фільтрів меню гостей.",
+        "newPlaceholder": "Новий алерген",
+        "add": "Додати алерген",
+        "adding": "Додаємо…",
+        "addError": "Не вдалося додати алерген.",
+        "loadError": "Не вдалося завантажити алергени.",
+        "deleteAria": "Видалити {{name}}",
+        "deleteError": "Не вдалося видалити алерген.",
+        "confirmDelete": {
+          "title": "Видалити алерген",
+          "message": "Видалити «{{name}}»? Його також буде прибрано з усіх страв, де він використовується.",
+          "confirm": "Видалити"
+        },
         "remove": "Прибрати {{item}}"
       },
       "toolbar": {

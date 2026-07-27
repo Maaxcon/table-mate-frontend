@@ -34,21 +34,24 @@
       "closedNow": "Closed"
     },
     "controls": {
-      "searchPlaceholder": "Search dishes...",
+      "ingredientPlaceholder": "Search ingredients...",
       "sortAria": "Sorting",
-      "sortTitleDefault": "Default",
-      "sortTitlePriceAsc": "Price: Low to High",
-      "sortTitlePriceDesc": "Price: High to Low",
-      "sortLabelDefault": "Sort",
-      "sortLabelPriceAsc": "↑ Price",
-      "sortLabelPriceDesc": "↓ Price",
+      "allergensAria": "Filter by allergens",
+      "excludeAllergens": "Exclude allergens",
+      "excludeAllergens_one": "Exclude allergens ({{count}})",
+      "excludeAllergens_other": "Exclude allergens ({{count}})",
+      "excludeAllergensTitle": "Exclude allergens",
+      "excludeAllergensDescription": "Selected allergens are excluded from the dishes shown.",
+      "sortRecommended": "Recommended",
+      "sortPopular": "Popular",
+      "sortPriceAsc": "Price: Low to High",
+      "sortPriceDesc": "Price: High to Low",
       "cartAria": "Cart"
     },
     "grid": {
       "loadMore": "Load more",
       "loadingMore": "Loading...",
-      "noResults": "No results for \"{{query}}\".",
-      "noItems": "No items in this category."
+      "noDishesFound": "No dishes found"
     },
     "cartBar": {
       "openAria": "Open cart",
@@ -952,6 +955,21 @@
       "allergens": {
         "label": "Allergens",
         "placeholder": "Add allergen…",
+        "manage": "Manage allergens",
+        "manageTitle": "Manage allergens",
+        "manageDescription": "Add allergens available for dishes and customer menu filters.",
+        "newPlaceholder": "New allergen",
+        "add": "Add allergen",
+        "adding": "Adding…",
+        "addError": "Could not add allergen.",
+        "loadError": "Could not load allergens.",
+        "deleteAria": "Delete {{name}}",
+        "deleteError": "Could not delete allergen.",
+        "confirmDelete": {
+          "title": "Delete allergen",
+          "message": "Delete \"{{name}}\"? It will also be removed from every dish using it.",
+          "confirm": "Delete"
+        },
         "remove": "Remove {{item}}"
       },
       "toolbar": {
