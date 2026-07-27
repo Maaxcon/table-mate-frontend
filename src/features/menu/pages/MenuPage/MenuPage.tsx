@@ -43,6 +43,7 @@ function MenuPage() {
   const [lobbyName, setLobbyName] = useState("")
   const sectionRefs = useRef<Map<string, HTMLElement>>(new Map())
   const stickyControlsRef = useRef<HTMLDivElement>(null)
+  const allergenFilterRef = useRef<HTMLDivElement>(null)
   const user = useAppSelector((s) => s.auth.user)
   const dispatch = useAppDispatch()
 
@@ -98,6 +99,17 @@ function MenuPage() {
       document.title = previousTitle
     }
   }, [restaurantName])
+
+  useEffect(() => {
+    if (!allergenFilterOpen) return
+    const handlePointerDown = (event: PointerEvent) => {
+      if (!allergenFilterRef.current?.contains(event.target as Node)) {
+        setAllergenFilterOpen(false)
+      }
+    }
+    document.addEventListener("pointerdown", handlePointerDown)
+    return () => document.removeEventListener("pointerdown", handlePointerDown)
+  }, [allergenFilterOpen])
 
   const itemsById = useMemo(() => {
     const map: Record<string, MenuItem> = {}
@@ -488,7 +500,7 @@ function MenuPage() {
           </button>
         </div>
         {allergenOptions.length > 0 && (
-          <div className="menu-page__allergen-filter">
+          <div className="menu-page__allergen-filter" ref={allergenFilterRef}>
             <button
               type="button"
               className={`menu-page__allergen-filter-toggle${selectedAllergens.length ? " menu-page__allergen-filter-toggle--active" : ""}`}
