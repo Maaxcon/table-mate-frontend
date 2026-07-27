@@ -375,6 +375,36 @@ describe("CartDrawer checkout state machine", () => {
     expect(screen.getByRole("tabpanel")).toHaveAttribute("aria-labelledby", "cart-drawer-tab-bill")
   })
 
+  it("does not render the call-waiter button when onCallWaiter is not provided", () => {
+    renderDrawer()
+    expect(screen.queryByRole("button", { name: S.callWaiter })).not.toBeInTheDocument()
+  })
+
+  it("renders the call-waiter button and calls onCallWaiter when tapped", async () => {
+    const user = userEvent.setup()
+    const onCallWaiter = vi.fn()
+    renderDrawer({ onCallWaiter })
+
+    await user.click(screen.getByRole("button", { name: S.callWaiter }))
+
+    expect(onCallWaiter).toHaveBeenCalledTimes(1)
+  })
+
+  it("disables the call-waiter button and swaps its label while sending/sent", () => {
+    const onCallWaiter = vi.fn()
+    const { rerender, props } = renderDrawer({ onCallWaiter, waiterCallState: "sending" })
+    expect(screen.getByRole("button", { name: S.callWaiter })).toBeDisabled()
+
+    rerender(<CartDrawer {...props} waiterCallState="sent" />)
+    const sentButton = screen.getByRole("button", { name: S.callWaiterSent })
+    expect(sentButton).toBeDisabled()
+  })
+
+  it("shows the call-waiter error toast when the call fails", () => {
+    renderDrawer({ onCallWaiter: vi.fn(), waiterCallState: "error" })
+    expect(screen.getByRole("alert")).toHaveTextContent(S.callWaiterError)
+  })
+
   it("sums the bill on payable (tax + service), not goods-only total_price", async () => {
     const user = userEvent.setup()
     const billItems = [
