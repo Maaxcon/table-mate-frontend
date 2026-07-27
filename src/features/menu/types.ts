@@ -8,7 +8,7 @@ export type { WorkingHours, WorkingHoursDay } from "@/types/workingHours"
 
 // ── Menu list / query types ────────────────────────────
 
-export type SortOrder = "sort_order" | "price" | "-price"
+export type SortOrder = "sort_order" | "-likes_count" | "price" | "-price"
 
 export type FetchItemsParams = {
   restaurantId: string
@@ -17,6 +17,8 @@ export type FetchItemsParams = {
   guestToken?: string
   signal?: AbortSignal
   sortOrder?: SortOrder
+  allergens?: string[]
+  ingredients?: string
 }
 
 export type ToggleLikeResponse = {

@@ -1,6 +1,6 @@
 import { type TouchEvent, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useParams, useSearchParams } from "react-router-dom"
-import { LuArrowDown, LuArrowDownUp, LuLoaderCircle, LuShoppingCart, LuX } from "react-icons/lu"
+import { LuArrowDown, LuLoaderCircle, LuShoppingCart, LuX } from "react-icons/lu"
 import { apiFetch } from "@/api/client"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
 import { clearAuth } from "@/store/auth/authSlice"
@@ -37,6 +37,7 @@ function MenuPage() {
   const [cartOpen, setCartOpen] = useState(false)
   const [cartBarDismissed, setCartBarDismissed] = useState(false)
   const [cartAccessError, setCartAccessError] = useState<string | null>(null)
+  const [allergenFilterOpen, setAllergenFilterOpen] = useState(false)
   const [scrollActiveCategory, setScrollActiveCategory] = useState<string | null>(null)
   const pendingScrollCategory = useRef<string | null>(null)
   const [lobbyName, setLobbyName] = useState("")
@@ -77,8 +78,11 @@ function MenuPage() {
     loadingMore,
     hasMore,
     loadMore,
-    searchQuery,
-    setSearchQuery,
+    ingredientSearch,
+    setIngredientSearch,
+    allergenOptions,
+    selectedAllergens,
+    toggleAllergen,
     sortOrder,
     setSortOrder,
     setItemLikeState,
@@ -191,7 +195,11 @@ function MenuPage() {
   // first page holds the cheapest items and whole (e.g. seafood) categories would
   // render empty until more pages load — making dishes look "deleted". When
   // sorting by price we show one flat, price-ordered list instead.
-  const showAllGrouped = activeCategory === null && !searchQuery && sortOrder === "sort_order"
+  const showAllGrouped =
+    activeCategory === null &&
+    !ingredientSearch &&
+    selectedAllergens.length === 0 &&
+    sortOrder === "sort_order"
 
   const groupedItems = useMemo(() => {
     if (!showAllGrouped || categories.length === 0) return null
@@ -451,39 +459,21 @@ function MenuPage() {
           <input
             className="menu-page__search"
             type="search"
-            placeholder={menuStrings.controls.searchPlaceholder}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder={menuStrings.controls.ingredientPlaceholder}
+            value={ingredientSearch}
+            onChange={(e) => setIngredientSearch(e.target.value)}
           />
-          <button
-            className={`menu-page__sort-btn${sortOrder !== "sort_order" ? " menu-page__sort-btn--active" : ""}`}
-            onClick={() =>
-              setSortOrder(
-                sortOrder === "sort_order"
-                  ? "price"
-                  : sortOrder === "price"
-                    ? "-price"
-                    : "sort_order",
-              )
-            }
+          <select
+            className="menu-page__sort-select"
+            value={sortOrder}
+            onChange={(e) => setSortOrder(e.target.value as typeof sortOrder)}
             aria-label={menuStrings.controls.sortAria}
-            title={
-              sortOrder === "sort_order"
-                ? menuStrings.controls.sortTitleDefault
-                : sortOrder === "price"
-                  ? menuStrings.controls.sortTitlePriceAsc
-                  : menuStrings.controls.sortTitlePriceDesc
-            }
           >
-            <LuArrowDownUp size={16} />
-            <span className="menu-page__sort-label">
-              {sortOrder === "price"
-                ? menuStrings.controls.sortLabelPriceAsc
-                : sortOrder === "-price"
-                  ? menuStrings.controls.sortLabelPriceDesc
-                  : menuStrings.controls.sortLabelDefault}
-            </span>
-          </button>
+            <option value="sort_order">{menuStrings.controls.sortRecommended}</option>
+            <option value="-likes_count">{menuStrings.controls.sortPopular}</option>
+            <option value="price">{menuStrings.controls.sortPriceAsc}</option>
+            <option value="-price">{menuStrings.controls.sortPriceDesc}</option>
+          </select>
           <button
             className="menu-page__cart-btn"
             onClick={() => setCartOpen(true)}
@@ -497,6 +487,50 @@ function MenuPage() {
             )}
           </button>
         </div>
+        {allergenOptions.length > 0 && (
+          <div className="menu-page__allergen-filter">
+            <button
+              type="button"
+              className={`menu-page__allergen-filter-toggle${selectedAllergens.length ? " menu-page__allergen-filter-toggle--active" : ""}`}
+              aria-expanded={allergenFilterOpen}
+              aria-controls="allergen-filter-panel"
+              onClick={() => setAllergenFilterOpen((open) => !open)}
+            >
+              {menuStrings.controls.excludeAllergens(selectedAllergens.length)}
+            </button>
+            {allergenFilterOpen && (
+              <div
+                id="allergen-filter-panel"
+                className="menu-page__allergen-filter-panel"
+                role="dialog"
+                aria-label={menuStrings.controls.allergensAria}
+              >
+                <p className="menu-page__allergen-filter-title">
+                  {menuStrings.controls.excludeAllergensTitle}
+                </p>
+                <p className="menu-page__allergen-filter-description">
+                  {menuStrings.controls.excludeAllergensDescription}
+                </p>
+                <div className="menu-page__allergen-filters">
+                  {allergenOptions.map((allergen) => {
+                    const selected = selectedAllergens.includes(allergen)
+                    return (
+                      <button
+                        key={allergen}
+                        type="button"
+                        className={`menu-page__allergen-chip${selected ? " menu-page__allergen-chip--selected" : ""}`}
+                        aria-pressed={selected}
+                        onClick={() => toggleAllergen(allergen)}
+                      >
+                        {allergen}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
         <CategoryRail
           categories={categories}
           activeCategory={railActiveCategory}
@@ -514,11 +548,7 @@ function MenuPage() {
               <MenuSkeleton count={6} />
             </div>
           ) : menuItems.length === 0 ? (
-            <MenuEmptyState
-              message={
-                searchQuery ? menuStrings.grid.noResults(searchQuery) : menuStrings.grid.noItems
-              }
-            />
+            <MenuEmptyState message={menuStrings.grid.noDishesFound} />
           ) : showAllGrouped && groupedItems ? (
             <>
               {categories.map((cat) => {

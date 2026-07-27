@@ -29,21 +29,25 @@ export function useMenuStrings() {
       closedNow: t("menu.hero.closedNow"),
     },
     controls: {
-      searchPlaceholder: t("menu.controls.searchPlaceholder"),
+      ingredientPlaceholder: t("menu.controls.ingredientPlaceholder"),
       sortAria: t("menu.controls.sortAria"),
-      sortTitleDefault: t("menu.controls.sortTitleDefault"),
-      sortTitlePriceAsc: t("menu.controls.sortTitlePriceAsc"),
-      sortTitlePriceDesc: t("menu.controls.sortTitlePriceDesc"),
-      sortLabelDefault: t("menu.controls.sortLabelDefault"),
-      sortLabelPriceAsc: t("menu.controls.sortLabelPriceAsc"),
-      sortLabelPriceDesc: t("menu.controls.sortLabelPriceDesc"),
+      allergensAria: t("menu.controls.allergensAria"),
+      excludeAllergens: (count: number) =>
+        count
+          ? t("menu.controls.excludeAllergens", { count })
+          : t("menu.controls.excludeAllergens"),
+      excludeAllergensTitle: t("menu.controls.excludeAllergensTitle"),
+      excludeAllergensDescription: t("menu.controls.excludeAllergensDescription"),
+      sortRecommended: t("menu.controls.sortRecommended"),
+      sortPopular: t("menu.controls.sortPopular"),
+      sortPriceAsc: t("menu.controls.sortPriceAsc"),
+      sortPriceDesc: t("menu.controls.sortPriceDesc"),
       cartAria: t("menu.controls.cartAria"),
     },
     grid: {
       loadMore: t("menu.grid.loadMore"),
       loadingMore: t("menu.grid.loadingMore"),
-      noResults: (query: string) => t("menu.grid.noResults", { query }),
-      noItems: t("menu.grid.noItems"),
+      noDishesFound: t("menu.grid.noDishesFound"),
     },
     cartBar: {
       openAria: t("menu.cartBar.openAria"),

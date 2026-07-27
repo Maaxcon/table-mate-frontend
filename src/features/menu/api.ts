@@ -17,13 +17,20 @@ import type {
   UpdateCartItemRequest,
 } from "./types"
 
-function buildUrl(path: string, params: Record<string, string | undefined>): string {
+function buildUrl(
+  path: string,
+  params: Record<string, string | undefined> | URLSearchParams,
+): string {
   if (env.apiBaseUrl === ENV_NOT_CONFIGURED_VALUE) {
     throw new Error("VITE_API_BASE_URL is not configured")
   }
   const url = new URL(`${env.apiBaseUrl}${path}`, window.location.origin)
-  for (const [key, value] of Object.entries(params)) {
-    if (value !== undefined) url.searchParams.set(key, value)
+  if (params instanceof URLSearchParams) {
+    url.search = params.toString()
+  } else {
+    for (const [key, value] of Object.entries(params)) {
+      if (value !== undefined) url.searchParams.set(key, value)
+    }
   }
   return url.toString()
 }
@@ -54,7 +61,7 @@ async function httpError(res: Response): Promise<ApiError> {
 
 async function menuGet<T>(
   path: string,
-  params: Record<string, string | undefined>,
+  params: Record<string, string | undefined> | URLSearchParams,
   signal?: AbortSignal,
 ): Promise<T> {
   const res = await fetch(buildUrl(path, params), { signal })
@@ -90,18 +97,21 @@ export function fetchItems({
   guestToken,
   signal,
   sortOrder = "sort_order",
+  allergens = [],
+  ingredients,
 }: FetchItemsParams): Promise<Paginated<MenuItem>> {
-  return menuGet(
-    MENU_API.items,
-    {
-      restaurant: restaurantId,
-      guest_token: guestToken,
-      ordering: sortOrder,
-      ...(categoryId ? { category: categoryId } : {}),
-      ...(page && page > 1 ? { page: String(page) } : {}),
-    },
-    signal,
-  )
+  const params = new URLSearchParams({ restaurant: restaurantId })
+  if (guestToken) params.set("guest_token", guestToken)
+  if (categoryId) params.set("category", categoryId)
+  if (ingredients?.trim()) params.set("ingredients", ingredients.trim())
+  if (sortOrder !== "sort_order") params.set("ordering", sortOrder)
+  if (page && page > 1) params.set("page", String(page))
+  for (const allergen of allergens) params.append("allergens", allergen)
+  return menuGet(MENU_API.items, params, signal)
+}
+
+export function fetchAllergens(signal?: AbortSignal): Promise<string[]> {
+  return menuGet(MENU_API.allergens, {}, signal)
 }
 
 export async function fetchItem(

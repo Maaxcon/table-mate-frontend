@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useReducer, useRef } from "react"
-import { fetchItems, searchItems } from "@/features/menu/api"
+import { fetchItems } from "@/features/menu/api"
 import type { MenuItem, SortOrder } from "@/features/menu/types"
 
 type State = {
@@ -31,7 +31,7 @@ const initialState: State = {
 function reducer(state: State, action: Action): State {
   switch (action.type) {
     case "LOADING":
-      return { ...state, loading: true, loadingMore: false }
+      return { ...state, loading: true, loadingMore: false, page: 1, hasMore: false, error: null }
     case "LOADING_MORE":
       return { ...state, loadingMore: true }
     case "SUCCESS":
@@ -42,6 +42,7 @@ function reducer(state: State, action: Action): State {
         items: action.results,
         hasMore: action.next !== null,
         page: 1,
+        error: null,
       }
     case "APPEND":
       return {
@@ -79,9 +80,10 @@ type UseMenuItemsResult = {
 function useMenuItems(
   restaurantId: string,
   activeCategory: string | null,
-  searchQuery: string,
+  ingredientSearch: string,
   guestToken: string,
   sortOrder: SortOrder = "sort_order",
+  selectedAllergens: string[] = [],
 ): UseMenuItemsResult {
   const [state, dispatch] = useReducer(reducer, initialState)
   const { loading, loadingMore, hasMore, page } = state
@@ -93,30 +95,28 @@ function useMenuItems(
     const controller = new AbortController()
     abortRef.current = controller
     const { signal } = controller
-    const isSearching = searchQuery.trim().length > 0
-
     const load = () => {
       dispatch({ type: "LOADING" })
-      const promise = isSearching
-        ? searchItems(restaurantId, searchQuery.trim(), guestToken, signal, undefined, sortOrder)
-        : fetchItems({
-            restaurantId,
-            categoryId: activeCategory ?? undefined,
-            guestToken,
-            signal,
-            sortOrder,
-          })
+      const promise = fetchItems({
+        restaurantId,
+        categoryId: activeCategory ?? undefined,
+        guestToken,
+        signal,
+        sortOrder,
+        ingredients: ingredientSearch,
+        allergens: selectedAllergens,
+      })
       promise
         .then((data) => {
           dispatch({ type: "SUCCESS", results: data.results, next: data.next })
         })
-        .catch(() => {
+        .catch((err: Error) => {
           if (signal.aborted) return
-          dispatch({ type: "ERROR", message: "Failed to load items" })
+          dispatch({ type: "ERROR", message: err.message || "Failed to load items" })
         })
     }
 
-    if (isSearching) {
+    if (ingredientSearch.trim()) {
       const timer = setTimeout(load, 400)
       return () => {
         clearTimeout(timer)
@@ -128,38 +128,47 @@ function useMenuItems(
     return () => {
       controller.abort()
     }
-  }, [restaurantId, activeCategory, searchQuery, guestToken, sortOrder])
+  }, [restaurantId, activeCategory, ingredientSearch, guestToken, sortOrder, selectedAllergens])
 
   const loadMore = useCallback(() => {
     if (loading || loadingMoreRef.current || !hasMore) return
     loadingMoreRef.current = true
     dispatch({ type: "LOADING_MORE" })
     const nextPage = page + 1
-    const isSearching = searchQuery.trim().length > 0
     // Reuse the active filter's controller so a filter change (which aborts it)
     // also cancels this in-flight request and prevents a stale APPEND.
     const signal = abortRef.current?.signal
-    const promise = isSearching
-      ? searchItems(restaurantId, searchQuery.trim(), guestToken, signal, nextPage)
-      : fetchItems({
-          restaurantId,
-          categoryId: activeCategory ?? undefined,
-          page: nextPage,
-          guestToken,
-          signal,
-          sortOrder,
-        })
+    const promise = fetchItems({
+      restaurantId,
+      categoryId: activeCategory ?? undefined,
+      page: nextPage,
+      guestToken,
+      signal,
+      sortOrder,
+      ingredients: ingredientSearch,
+      allergens: selectedAllergens,
+    })
     promise
       .then((data) => {
         loadingMoreRef.current = false
         dispatch({ type: "APPEND", results: data.results, next: data.next })
       })
-      .catch(() => {
+      .catch((err: Error) => {
         loadingMoreRef.current = false
         if (signal?.aborted) return
-        dispatch({ type: "ERROR", message: "Failed to load more" })
+        dispatch({ type: "ERROR", message: err.message || "Failed to load more" })
       })
-  }, [loading, hasMore, searchQuery, page, restaurantId, activeCategory, guestToken, sortOrder])
+  }, [
+    loading,
+    hasMore,
+    ingredientSearch,
+    page,
+    restaurantId,
+    activeCategory,
+    guestToken,
+    sortOrder,
+    selectedAllergens,
+  ])
 
   const setItemLikeState = useCallback((publicId: string, isLiked: boolean, likesCount: number) => {
     dispatch({ type: "SET_LIKE", publicId, isLiked, likesCount })

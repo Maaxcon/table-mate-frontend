@@ -2,6 +2,7 @@
 
 export const MENU_API = {
   categories: "/api/menu/categories/",
+  allergens: "/api/menu/allergens/",
   items: "/api/menu/items/",
   itemsSearch: "/api/menu/items/search/",
   item: (itemId: string) => `/api/menu/items/${itemId}/`,

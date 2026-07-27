@@ -1,4 +1,5 @@
-import { useCallback, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
+import { fetchAllergens } from "@/features/menu/api"
 import type {
   MenuCategory,
   MenuItem,
@@ -28,8 +29,11 @@ export type UseMenuPageResult = {
   loadingMore: boolean
   hasMore: boolean
   loadMore: () => void
-  searchQuery: string
-  setSearchQuery: (q: string) => void
+  ingredientSearch: string
+  setIngredientSearch: (q: string) => void
+  allergenOptions: string[]
+  selectedAllergens: string[]
+  toggleAllergen: (allergen: string) => void
   sortOrder: SortOrder
   setSortOrder: (s: SortOrder) => void
   setItemLikeState: (publicId: string, isLiked: boolean, likesCount: number) => void
@@ -38,8 +42,18 @@ export type UseMenuPageResult = {
 
 function useMenuPage(restaurantId: string, guestToken: string): UseMenuPageResult {
   const [activeCategory, setActiveCategoryState] = useState<string | null>(null)
-  const [searchQuery, setSearchQueryState] = useState("")
+  const [ingredientSearch, setIngredientSearchState] = useState("")
   const [sortOrder, setSortOrder] = useState<SortOrder>("sort_order")
+  const [allergenOptions, setAllergenOptions] = useState<string[]>([])
+  const [selectedAllergens, setSelectedAllergens] = useState<string[]>([])
+
+  useEffect(() => {
+    const controller = new AbortController()
+    fetchAllergens(controller.signal)
+      .then(setAllergenOptions)
+      .catch(() => {})
+    return () => controller.abort()
+  }, [])
 
   const {
     name,
@@ -54,16 +68,30 @@ function useMenuPage(restaurantId: string, guestToken: string): UseMenuPageResul
   } = useRestaurantInfo(restaurantId)
   const { categories, categoriesLoading, categoriesError } = useMenuCategories(restaurantId)
   const { items, itemsLoading, loadingMore, hasMore, loadMore, itemsError, setItemLikeState } =
-    useMenuItems(restaurantId, activeCategory, searchQuery, guestToken, sortOrder)
+    useMenuItems(
+      restaurantId,
+      activeCategory,
+      ingredientSearch,
+      guestToken,
+      sortOrder,
+      selectedAllergens,
+    )
 
   const setActiveCategory = useCallback((id: string | null) => {
     setActiveCategoryState(id)
-    setSearchQueryState("")
+    setIngredientSearchState("")
   }, [])
 
-  const setSearchQuery = useCallback((q: string) => {
-    setSearchQueryState(q)
-    if (q) setActiveCategoryState(null)
+  const setIngredientSearch = useCallback((q: string) => {
+    setIngredientSearchState(q)
+  }, [])
+
+  const toggleAllergen = useCallback((allergen: string) => {
+    setSelectedAllergens((current) =>
+      current.includes(allergen)
+        ? current.filter((value) => value !== allergen)
+        : [...current, allergen],
+    )
   }, [])
 
   return {
@@ -85,8 +113,11 @@ function useMenuPage(restaurantId: string, guestToken: string): UseMenuPageResul
     loadingMore,
     hasMore,
     loadMore,
-    searchQuery,
-    setSearchQuery,
+    ingredientSearch,
+    setIngredientSearch,
+    allergenOptions,
+    selectedAllergens,
+    toggleAllergen,
     sortOrder,
     setSortOrder,
     setItemLikeState,

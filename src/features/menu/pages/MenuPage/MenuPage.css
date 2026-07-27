@@ -74,10 +74,7 @@
   background: var(--color-bg-surface);
 }
 
-.menu-page__sort-btn {
-  display: flex;
-  align-items: center;
-  gap: 5px;
+.menu-page__sort-select {
   height: 42px;
   padding: 0 16px;
   border: 1px solid var(--color-border-default);
@@ -96,21 +93,95 @@
     color 150ms ease;
 }
 
-.menu-page__sort-btn:hover {
+.menu-page__sort-select:hover {
   border-color: var(--color-border-strong);
   color: var(--color-text-primary);
 }
 
-.menu-page__sort-btn--active {
-  border-color: var(--color-text-primary);
-  background: var(--color-text-primary);
-  color: var(--color-bg-surface);
+.menu-page__sort-select:focus {
+  border-color: var(--color-border-strong);
+  outline: none;
+  box-shadow: 0 0 0 3px rgb(17 24 39 / 8%);
 }
 
-.menu-page__sort-btn--active:hover {
-  background: var(--color-text-primary);
-  color: var(--color-bg-surface);
-  opacity: 0.88;
+.menu-page__allergen-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.menu-page__allergen-filter {
+  position: relative;
+}
+
+.menu-page__allergen-filter-toggle {
+  padding: 8px 14px;
+  border: 1px solid var(--color-border-default);
+  border-radius: 999px;
+  background: var(--color-bg-surface);
+  color: var(--color-text-secondary);
+  font: 600 0.8rem var(--font-family-base);
+  cursor: pointer;
+}
+
+.menu-page__allergen-filter-toggle:hover,
+.menu-page__allergen-filter-toggle--active {
+  border-color: var(--color-text-primary);
+  color: var(--color-text-primary);
+}
+
+.menu-page__allergen-filter-toggle--active {
+  background: color-mix(in srgb, var(--color-text-primary) 8%, var(--color-bg-surface));
+}
+
+.menu-page__allergen-filter-panel {
+  position: absolute;
+  z-index: 2;
+  top: calc(100% + 8px);
+  left: 0;
+  width: min(420px, calc(100vw - 32px));
+  padding: 16px;
+  border: 1px solid var(--color-border-default);
+  border-radius: 14px;
+  background: var(--color-bg-surface);
+  box-shadow: var(--shadow);
+}
+
+.menu-page__allergen-filter-title,
+.menu-page__allergen-filter-description {
+  margin: 0;
+}
+
+.menu-page__allergen-filter-title {
+  color: var(--color-text-primary);
+  font-weight: 700;
+}
+
+.menu-page__allergen-filter-description {
+  margin: 4px 0 12px;
+  color: var(--color-text-secondary);
+  font-size: 0.82rem;
+}
+
+.menu-page__allergen-chip {
+  flex: 0 0 auto;
+  padding: 7px 12px;
+  border: 1px solid var(--color-border-default);
+  border-radius: 999px;
+  background: var(--color-bg-surface);
+  color: var(--color-text-secondary);
+  font: 600 0.78rem var(--font-family-base);
+  cursor: pointer;
+}
+
+.menu-page__allergen-chip:hover,
+.menu-page__allergen-chip--selected {
+  border-color: var(--color-text-primary);
+  color: var(--color-text-primary);
+}
+
+.menu-page__allergen-chip--selected {
+  background: color-mix(in srgb, var(--color-text-primary) 8%, var(--color-bg-surface));
 }
 
 .menu-page__cart-btn {
