@@ -23,6 +23,8 @@ import { ReservationScheduler } from "@/features/admin/reservation-scheduler/Res
 import FloorPlanEditorPage from "@/features/editor/pages/FloorPlanEditorPage"
 import { KitchenKanban } from "@/features/kitchen-kanban/KitchenKanban"
 import { WaiterOrderPage as WaiterOrderFeature } from "@/features/waiter-order-view"
+import ShiftScheduler from "@/features/admin/shift-scheduler/ShiftScheduler"
+import StaffShiftView from "@/features/staff-shifts/StaffShiftView"
 import AdminRoute from "@/routes/AdminRoute"
 import ProtectedRoute from "@/routes/ProtectedRoute"
 import PublicRoute from "@/routes/PublicRoute"
@@ -71,6 +73,7 @@ function App() {
               {/* Protected staff routes */}
               <Route element={<ProtectedRoute allowedRoles={["admin", "waiter", "cook"]} />}>
                 <Route path="/staff/orders" element={<StaffOrdersPage />} />
+                <Route path="/staff/shifts" element={<StaffShiftView />} />
               </Route>
               <Route element={<ProtectedRoute allowedRoles={["admin", "waiter"]} />}>
                 <Route path="/waiter-order" element={<WaiterOrderPage />} />
@@ -92,6 +95,7 @@ function App() {
                   <Route path="floor-plan/edit" element={<FloorPlanEditorPage />} />
                   <Route path="kitchen" element={<KitchenKanban />} />
                   <Route path="floor" element={<WaiterOrderFeature />} />
+                  <Route path="shifts" element={<ShiftScheduler />} />
                 </Route>
               </Route>
             </Route>

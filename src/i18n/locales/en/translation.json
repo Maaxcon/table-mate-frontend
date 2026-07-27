@@ -522,7 +522,8 @@
         "scheduler": "Scheduler",
         "floorPlan": "Floor Plan",
         "kitchen": "Kitchen",
-        "floor": "Floor"
+        "floor": "Floor",
+        "shifts": "Shifts"
       },
       "logout": {
         "aria": "Log out",
@@ -1511,6 +1512,71 @@
           "close": "Close",
           "alt": "QR code for table {{table}}"
         }
+      }
+    },
+    "shiftScheduler": {
+      "toolbar": {
+        "today": "Today",
+        "prev": "Previous day",
+        "next": "Next day",
+        "addEmployee": "Add employee",
+        "removeEmployee": "Remove",
+        "copy": "Copy shifts",
+        "paste": "Paste shifts",
+        "selectTarget": "Select target date(s)",
+        "clearEmployees": "Clear all"
+      },
+      "grid": {
+        "hour": "{{hour}}:00",
+        "emptyDay": "No shifts scheduled for this day.",
+        "emptyEmployees": "Add employees to start scheduling.",
+        "noRestaurant": "No restaurant selected."
+      },
+      "shift": {
+        "add": "Add shift",
+        "edit": "Edit shift",
+        "delete": "Delete shift",
+        "startTime": "Start",
+        "endTime": "End",
+        "notes": "Notes",
+        "deleteConfirm": "Delete this shift?",
+        "duration": "{{hours}}h {{minutes}}m"
+      },
+      "copyPaste": {
+        "sourceLabel": "Copying from {{date}}",
+        "targetPlaceholder": "Select dates to paste to",
+        "confirm": "Paste to {{count}} day(s)",
+        "success": "Copied {{count}} shift(s).",
+        "conflict": "Some shifts already exist on target dates."
+      },
+      "saveBar": {
+        "save": "Save",
+        "saving": "Saving…"
+      },
+      "toasts": {
+        "saved": "Shifts saved.",
+        "saveFailed": "Could not save shifts.",
+        "created": "Shift created.",
+        "deleted": "Shift deleted.",
+        "copied": "Shifts copied."
+      }
+    },
+    "staffShifts": {
+      "title": "My Shifts",
+      "totalHours": "Total hours: {{hours}}",
+      "noShifts": "No shifts this month.",
+      "noEmployee": "Select an employee to view their shifts.",
+      "loading": "Loading shifts…",
+      "selectEmployee": "Select employee",
+      "today": "Today",
+      "shiftCount": "{{count}} shift(s)",
+      "dayDetail": {
+        "title": "Shifts for {{date}}",
+        "start": "Start",
+        "end": "End",
+        "duration": "Duration",
+        "notes": "Notes",
+        "close": "Close"
       }
     }
   }
