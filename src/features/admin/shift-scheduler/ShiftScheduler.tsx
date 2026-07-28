@@ -1,12 +1,27 @@
 /* eslint-disable react-hooks/set-state-in-effect, jsx-a11y/no-noninteractive-element-interactions */
 import { useCallback, useEffect, useMemo, useState } from "react"
-import { LuChevronLeft, LuChevronRight, LuPlus, LuCopy, LuCheck, LuX } from "react-icons/lu"
+import {
+  LuChevronLeft,
+  LuChevronRight,
+  LuPlus,
+  LuCopy,
+  LuCheck,
+  LuX,
+  LuPencil,
+} from "react-icons/lu"
 import { useAppSelector } from "@/store/hooks"
 import { useToast } from "@/features/admin/hooks/toastContext"
 import { useAdminStrings } from "@/features/admin/strings"
 import { useEmployees } from "@/features/admin/hooks/useEmployees"
 import { useShiftSchedulerState } from "./hooks/useShiftSchedulerState"
-import { fetchShifts, createShift, deleteShift, copyShifts, fetchWorkingHours } from "./api"
+import {
+  fetchShifts,
+  createShift,
+  deleteShift,
+  updateShift,
+  copyShifts,
+  fetchWorkingHours,
+} from "./api"
 import type { ShiftSchedulerShift, EmployeeOnAxis } from "./types"
 import "./ShiftScheduler.css"
 
@@ -68,18 +83,29 @@ function ShiftScheduler() {
     removeEmployeeFromAxis,
     clearEmployees,
     addShift,
+    updateShift: updateShiftState,
     markDeleted,
     setCopySource,
   } = useShiftSchedulerState()
 
   const [dataLoading, setDataLoading] = useState(true)
+  const [dataError, setDataError] = useState<string | null>(null)
   const [showEmployeePicker, setShowEmployeePicker] = useState(false)
   const [creatingShiftFor, setCreatingShiftFor] = useState<string | null>(null)
   const [newShiftStart, setNewShiftStart] = useState("09:00")
   const [newShiftEnd, setNewShiftEnd] = useState("18:00")
+  const [createValidationError, setCreateValidationError] = useState<string | null>(null)
   const [showCopyPicker, setShowCopyPicker] = useState(false)
+  const [copyLoading, setCopyLoading] = useState(false)
   const [copyTargetDates, setCopyTargetDates] = useState<string[]>([])
   const [copyDateInput, setCopyDateInput] = useState("")
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null)
+  const [editShift, setEditShift] = useState<ShiftSchedulerShift | null>(null)
+  const [editStart, setEditStart] = useState("")
+  const [editEnd, setEditEnd] = useState("")
+  const [editNotes, setEditNotes] = useState("")
+  const [editValidationError, setEditValidationError] = useState<string | null>(null)
+  const [editLoading, setEditLoading] = useState(false)
   const [workingHours, setWorkingHours] = useState<Record<
     string,
     { open: string; close: string }
@@ -123,11 +149,14 @@ function ShiftScheduler() {
     if (!restaurantId) return
     let cancelled = false
     setDataLoading(true)
+    setDataError(null)
     fetchShifts({ date: state.date })
       .then((data) => {
         if (!cancelled) setShifts(data)
       })
-      .catch(() => {})
+      .catch(() => {
+        if (!cancelled) setDataError("Could not load shifts. Try again.")
+      })
       .finally(() => {
         if (!cancelled) setDataLoading(false)
       })
@@ -153,10 +182,24 @@ function ShiftScheduler() {
     setCreatingShiftFor(employeeId)
     setNewShiftStart(`${String(hour).padStart(2, "0")}:00`)
     setNewShiftEnd(`${String(hour + 1).padStart(2, "0")}:00`)
+    setCreateValidationError(null)
+  }, [])
+
+  const validateTimeRange = useCallback((start: string, end: string): string | null => {
+    if (timeToMinutes(end) <= timeToMinutes(start)) {
+      return "End time must be after start time."
+    }
+    return null
   }, [])
 
   const handleConfirmCreateShift = useCallback(async () => {
     if (!creatingShiftFor || !restaurantId) return
+    const validationError = validateTimeRange(newShiftStart, newShiftEnd)
+    if (validationError) {
+      setCreateValidationError(validationError)
+      return
+    }
+    setCreateValidationError(null)
     try {
       const shift = await createShift({
         employee: creatingShiftFor,
@@ -168,7 +211,9 @@ function ShiftScheduler() {
       addShift(shift)
       setCreatingShiftFor(null)
       toast.success(strings.toasts.created)
-    } catch {
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : strings.toasts.saveFailed
+      setCreateValidationError(msg)
       toast.error(strings.toasts.saveFailed)
     }
   }, [
@@ -177,6 +222,7 @@ function ShiftScheduler() {
     state.date,
     newShiftStart,
     newShiftEnd,
+    validateTimeRange,
     addShift,
     toast,
     strings,
@@ -187,6 +233,7 @@ function ShiftScheduler() {
       try {
         await deleteShift(shiftId)
         markDeleted(shiftId)
+        setShowDeleteConfirm(null)
         toast.success(strings.toasts.deleted)
       } catch {
         toast.error(strings.toasts.saveFailed)
@@ -194,6 +241,51 @@ function ShiftScheduler() {
     },
     [markDeleted, toast, strings],
   )
+
+  const handleEditShift = useCallback((shift: ShiftSchedulerShift) => {
+    setEditShift(shift)
+    setEditStart(shift.start_time)
+    setEditEnd(shift.end_time)
+    setEditNotes(shift.notes ?? "")
+    setEditValidationError(null)
+  }, [])
+
+  const handleConfirmEditShift = useCallback(async () => {
+    if (!editShift || !restaurantId) return
+    const validationError = validateTimeRange(editStart, editEnd)
+    if (validationError) {
+      setEditValidationError(validationError)
+      return
+    }
+    setEditValidationError(null)
+    setEditLoading(true)
+    try {
+      const updated = await updateShift(editShift.public_id, {
+        start_time: editStart,
+        end_time: editEnd,
+        notes: editNotes,
+      })
+      updateShiftState(editShift.public_id, updated)
+      setEditShift(null)
+      toast.success(strings.toasts.saved)
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : strings.toasts.saveFailed
+      setEditValidationError(msg)
+      toast.error(strings.toasts.saveFailed)
+    } finally {
+      setEditLoading(false)
+    }
+  }, [
+    editShift,
+    restaurantId,
+    editStart,
+    editEnd,
+    editNotes,
+    validateTimeRange,
+    updateShiftState,
+    toast,
+    strings,
+  ])
 
   const handleCopy = useCallback(() => {
     setCopySource(state.date)
@@ -209,6 +301,7 @@ function ShiftScheduler() {
 
   const handleConfirmCopy = useCallback(async () => {
     if (!state.copySourceDate || copyTargetDates.length === 0) return
+    setCopyLoading(true)
     try {
       const result = await copyShifts({
         source_date: state.copySourceDate,
@@ -222,6 +315,8 @@ function ShiftScheduler() {
       setShifts(shifts)
     } catch {
       toast.error(strings.copyPaste.conflict)
+    } finally {
+      setCopyLoading(false)
     }
   }, [state.copySourceDate, copyTargetDates, setCopySource, setShifts, state.date, toast, strings])
 
@@ -347,12 +442,18 @@ function ShiftScheduler() {
         >
           <div className="shift-scheduler__modal">
             <h3>{strings.shift.add}</h3>
+            {createValidationError && (
+              <p className="shift-scheduler__wh-error">{createValidationError}</p>
+            )}
             <div className="shift-scheduler__form-row">
               <label>{strings.shift.startTime}</label>
               <input
                 type="time"
                 value={newShiftStart}
-                onChange={(e) => setNewShiftStart(e.target.value)}
+                onChange={(e) => {
+                  setNewShiftStart(e.target.value)
+                  setCreateValidationError(null)
+                }}
                 className="shift-scheduler__time-input"
               />
             </div>
@@ -361,7 +462,10 @@ function ShiftScheduler() {
               <input
                 type="time"
                 value={newShiftEnd}
-                onChange={(e) => setNewShiftEnd(e.target.value)}
+                onChange={(e) => {
+                  setNewShiftEnd(e.target.value)
+                  setCreateValidationError(null)
+                }}
                 className="shift-scheduler__time-input"
               />
             </div>
@@ -415,6 +519,103 @@ function ShiftScheduler() {
         </div>
       )}
 
+      {/* Edit Shift Modal */}
+      {editShift && (
+        <div
+          className="shift-scheduler__overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-label={strings.shift.edit}
+          onKeyDown={(e) => e.key === "Escape" && setEditShift(null)}
+        >
+          <div className="shift-scheduler__modal">
+            <h3>{strings.shift.edit}</h3>
+            {editValidationError && (
+              <p className="shift-scheduler__wh-error">{editValidationError}</p>
+            )}
+            <div className="shift-scheduler__form-row">
+              <label>{strings.shift.startTime}</label>
+              <input
+                type="time"
+                value={editStart}
+                onChange={(e) => {
+                  setEditStart(e.target.value)
+                  setEditValidationError(null)
+                }}
+                className="shift-scheduler__time-input"
+              />
+            </div>
+            <div className="shift-scheduler__form-row">
+              <label>{strings.shift.endTime}</label>
+              <input
+                type="time"
+                value={editEnd}
+                onChange={(e) => {
+                  setEditEnd(e.target.value)
+                  setEditValidationError(null)
+                }}
+                className="shift-scheduler__time-input"
+              />
+            </div>
+            <div className="shift-scheduler__form-row">
+              <label>{strings.shift.notes}</label>
+              <input
+                type="text"
+                value={editNotes}
+                onChange={(e) => setEditNotes(e.target.value)}
+                className="shift-scheduler__time-input"
+                placeholder={strings.shift.notes}
+              />
+            </div>
+            <div className="shift-scheduler__form-actions">
+              <button
+                onClick={handleConfirmEditShift}
+                className="shift-scheduler__action-btn"
+                disabled={editLoading}
+              >
+                {editLoading ? adminStrings.common.loading : adminStrings.common.save}
+              </button>
+              <button
+                onClick={() => setEditShift(null)}
+                className="shift-scheduler__action-btn shift-scheduler__action-btn--secondary"
+              >
+                {adminStrings.common.cancel}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div
+          className="shift-scheduler__overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-label={strings.shift.delete}
+          onKeyDown={(e) => e.key === "Escape" && setShowDeleteConfirm(null)}
+        >
+          <div className="shift-scheduler__modal">
+            <h3>{strings.shift.delete}</h3>
+            <p>{strings.shift.deleteConfirm}</p>
+            <div className="shift-scheduler__form-actions">
+              <button
+                onClick={() => handleDeleteShift(showDeleteConfirm)}
+                className="shift-scheduler__action-btn shift-scheduler__action-btn--danger"
+              >
+                {strings.shift.delete}
+              </button>
+              <button
+                onClick={() => setShowDeleteConfirm(null)}
+                className="shift-scheduler__action-btn shift-scheduler__action-btn--secondary"
+              >
+                {adminStrings.common.cancel}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Copy Picker Modal */}
       {showCopyPicker && (
         <div
@@ -433,8 +634,13 @@ function ShiftScheduler() {
                 value={copyDateInput}
                 onChange={(e) => setCopyDateInput(e.target.value)}
                 className="shift-scheduler__date-input"
+                disabled={copyLoading}
               />
-              <button onClick={handleAddCopyDate} className="shift-scheduler__action-btn">
+              <button
+                onClick={handleAddCopyDate}
+                className="shift-scheduler__action-btn"
+                disabled={copyLoading}
+              >
                 <LuPlus />
               </button>
             </div>
@@ -445,6 +651,7 @@ function ShiftScheduler() {
                     {d}
                     <button
                       onClick={() => setCopyTargetDates((prev) => prev.filter((x) => x !== d))}
+                      disabled={copyLoading}
                     >
                       <LuX />
                     </button>
@@ -455,10 +662,16 @@ function ShiftScheduler() {
             <div className="shift-scheduler__form-actions">
               <button
                 onClick={handleConfirmCopy}
-                disabled={copyTargetDates.length === 0}
+                disabled={copyTargetDates.length === 0 || copyLoading}
                 className="shift-scheduler__action-btn"
               >
-                <LuCheck /> {strings.copyPaste.confirm(copyTargetDates.length)}
+                {copyLoading ? (
+                  <>{adminStrings.common.loading}...</>
+                ) : (
+                  <>
+                    <LuCheck /> {strings.copyPaste.confirm(copyTargetDates.length)}
+                  </>
+                )}
               </button>
               <button
                 onClick={() => {
@@ -467,6 +680,7 @@ function ShiftScheduler() {
                   setCopySource(null)
                 }}
                 className="shift-scheduler__action-btn shift-scheduler__action-btn--secondary"
+                disabled={copyLoading}
               >
                 {adminStrings.common.cancel}
               </button>
@@ -489,6 +703,13 @@ function ShiftScheduler() {
           </div>
         ) : dataLoading ? (
           <div className="shift-scheduler__empty">{adminStrings.common.loading}</div>
+        ) : dataError ? (
+          <div className="shift-scheduler__empty">
+            <p>{dataError}</p>
+            <button onClick={() => setDataError(null)} className="shift-scheduler__action-btn">
+              Retry
+            </button>
+          </div>
         ) : (
           <div className="shift-scheduler__grid-wrapper">
             <div className="shift-scheduler__grid">
@@ -577,7 +798,17 @@ function ShiftScheduler() {
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation()
-                                    handleDeleteShift(shift.public_id)
+                                    handleEditShift(shift)
+                                  }}
+                                  className="shift-scheduler__shift-edit"
+                                  title={strings.shift.edit}
+                                >
+                                  <LuPencil size={12} />
+                                </button>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    setShowDeleteConfirm(shift.public_id)
                                   }}
                                   className="shift-scheduler__shift-delete"
                                   title={strings.shift.delete}

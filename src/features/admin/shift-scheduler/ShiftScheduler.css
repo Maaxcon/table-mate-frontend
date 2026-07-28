@@ -412,6 +412,7 @@
   opacity: 1;
 }
 
+.shift-scheduler__shift-edit,
 .shift-scheduler__shift-delete {
   background: none;
   border: none;
@@ -422,6 +423,7 @@
   border-radius: 3px;
 }
 
+.shift-scheduler__shift-edit:hover,
 .shift-scheduler__shift-delete:hover {
   background: rgba(255, 255, 255, 0.2);
 }
