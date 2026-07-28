@@ -34,7 +34,8 @@ function AddEmployeeModal({ onClose, onCreated }: AddEmployeeModalProps) {
     firstName.trim() !== "" ||
     lastName.trim() !== "" ||
     phone.trim() !== "" ||
-    role !== "waiter"
+    role !== "waiter" ||
+    assignExisting
   const guard = useUnsavedGuard(dirty, onClose)
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -42,14 +43,17 @@ function AddEmployeeModal({ onClose, onCreated }: AddEmployeeModalProps) {
     setSubmitting(true)
     setError(null)
     try {
-      const payload = {
-        email: email.trim(),
-        first_name: firstName.trim(),
-        last_name: lastName.trim(),
-        phone: phone.trim(),
-        role,
+      if (assignExisting) {
+        await assignEmployee({ email: email.trim(), role })
+      } else {
+        await createEmployee({
+          email: email.trim(),
+          first_name: firstName.trim(),
+          last_name: lastName.trim(),
+          phone: phone.trim(),
+          role,
+        })
       }
-      await (assignExisting ? assignEmployee(payload) : createEmployee(payload))
       toast.success(assignExisting ? "Staff role assigned" : "Employee added")
       onCreated()
       onClose()
@@ -69,7 +73,7 @@ function AddEmployeeModal({ onClose, onCreated }: AddEmployeeModalProps) {
             value={email}
             onChange={setEmail}
             placeholder="name@example.com"
-            hint="They sign in with Google using this email."
+            hint={assignExisting ? undefined : "They sign in with Google using this email."}
           />
           <label className="admin-field">
             <span className="admin-field__label">
@@ -80,18 +84,23 @@ function AddEmployeeModal({ onClose, onCreated }: AddEmployeeModalProps) {
               />{" "}
               Assign an existing user
             </span>
+            <span className="admin-field__hint">Sends only their email and selected role.</span>
           </label>
-          <div className="admin-form__row">
-            <TextField label="First name" value={firstName} onChange={setFirstName} />
-            <TextField label="Last name" value={lastName} onChange={setLastName} />
-          </div>
-          <TextField
-            label="Phone"
-            type="tel"
-            value={phone}
-            onChange={setPhone}
-            placeholder="+380..."
-          />
+          {!assignExisting && (
+            <>
+              <div className="admin-form__row">
+                <TextField label="First name" value={firstName} onChange={setFirstName} />
+                <TextField label="Last name" value={lastName} onChange={setLastName} />
+              </div>
+              <TextField
+                label="Phone"
+                type="tel"
+                value={phone}
+                onChange={setPhone}
+                placeholder="+380..."
+              />
+            </>
+          )}
 
           <label className="admin-field">
             <span className="admin-field__label">Role</span>

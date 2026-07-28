@@ -11,13 +11,15 @@ export type NewEmployee = {
   role: EmployeeRole
 }
 
+export type ExistingEmployeeAssignment = Pick<NewEmployee, "email" | "role">
+
 export function createEmployee(payload: NewEmployee): Promise<AdminEmployee> {
   return api.post<AdminEmployee>(EMPLOYEES_PATH, payload, {
     errorMessage: "Could not add employee.",
   })
 }
 
-export function assignEmployee(payload: NewEmployee): Promise<AdminEmployee> {
+export function assignEmployee(payload: ExistingEmployeeAssignment): Promise<AdminEmployee> {
   return api.post<AdminEmployee>(`${EMPLOYEES_PATH}assign/`, payload, {
     errorMessage: "Could not assign the employee role.",
   })
