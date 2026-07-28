@@ -129,9 +129,6 @@
       "reservationNotYetActiveDefault": "This table is already reserved. Contact a waiter.",
       "unavailable": "\"{{name}}\" is no longer available",
       "retry": "Try again",
-      "connecting": "Connecting...",
-      "connected": "Connected",
-      "disconnected": "Disconnected",
       "sessionExpired": "Session expired — reopen the table",
       "lobbyTitle": "Welcome!",
       "lobbySubtitle": "What's your name?",
@@ -140,7 +137,10 @@
       "lobbySkipped": "Skip",
       "guestPrefix": "Guest",
       "slotLabel": "Guest {{slot}}",
-      "unknownItem": "Item"
+      "unknownItem": "Item",
+      "callWaiter": "Call waiter",
+      "callWaiterSent": "Waiter is on the way",
+      "callWaiterError": "Couldn't call the waiter, try again"
     },
     "item": {
       "ingredients": "Ingredients",

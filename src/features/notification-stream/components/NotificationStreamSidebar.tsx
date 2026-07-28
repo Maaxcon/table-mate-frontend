@@ -52,6 +52,7 @@ export function NotificationStreamSidebar({
   )
   const clientEvents = sortedEvents.filter((event) => event.stream === "client")
   const kitchenEvents = sortedEvents.filter((event) => event.stream === "kitchen")
+  const waiterEvents = sortedEvents.filter((event) => event.stream === "waiter")
   const totalUnread = sortedEvents.filter((event) => !event.read).length
 
   const handleEventClick = (event: NotificationEvent) => {
@@ -114,6 +115,8 @@ export function NotificationStreamSidebar({
   const clientRead = clientEvents.filter((event) => event.read)
   const kitchenUnread = kitchenEvents.filter((event) => !event.read)
   const kitchenRead = kitchenEvents.filter((event) => event.read)
+  const waiterUnread = waiterEvents.filter((event) => !event.read)
+  const waiterRead = waiterEvents.filter((event) => event.read)
 
   const showMarkAll = totalUnread > 0
 
@@ -136,6 +139,7 @@ export function NotificationStreamSidebar({
       </div>
 
       <div className="notification-stream__sections" aria-live="polite" aria-relevant="additions">
+        {renderSection("WAITER CALLS", waiterUnread, waiterRead, "No waiter calls")}
         {renderSection("CLIENT", clientUnread, clientRead, "No client events")}
         {renderSection("KITCHEN", kitchenUnread, kitchenRead, "No kitchen events")}
       </div>

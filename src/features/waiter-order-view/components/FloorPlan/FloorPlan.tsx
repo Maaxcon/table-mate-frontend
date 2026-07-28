@@ -20,6 +20,7 @@ interface FloorPlanProps {
   currentTime: Date
   activeReservationsByTable?: Record<string, ReservationItem>
   overdueByTableId?: Record<string, number>
+  waiterCallingTableNumbers?: Set<string>
   onSelect: (table: FloorTable) => void
   onZoneChange?: (zoneId: string) => void
   canvasCols?: number
@@ -39,6 +40,7 @@ export function FloorPlan({
   currentTime,
   activeReservationsByTable = {},
   overdueByTableId = {},
+  waiterCallingTableNumbers,
   onSelect,
   onZoneChange,
   canvasCols,
@@ -166,7 +168,12 @@ export function FloorPlan({
         tableClassName={(ref) => {
           const table = resolve(ref)
           if (!table) return undefined
-          return overdueByTableId[table.public_id] != null ? "fp-block--overdue" : undefined
+          const classes: string[] = []
+          if (overdueByTableId[table.public_id] != null) classes.push("fp-block--overdue")
+          if (waiterCallingTableNumbers?.has(table.public_number)) {
+            classes.push("fp-block--waiter-calling")
+          }
+          return classes.length > 0 ? classes.join(" ") : undefined
         }}
       />
     </div>

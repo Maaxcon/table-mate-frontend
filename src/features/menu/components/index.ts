@@ -1,5 +1,6 @@
 export { default as CategoryRail } from "./CategoryRail"
 export { CartDrawer } from "./CartDrawer"
+export type { WaiterCallState } from "./CartDrawer"
 export { default as MenuEmptyState } from "./MenuEmptyState"
 export { default as MenuFooter } from "./MenuFooter"
 export { default as MenuHeader } from "./MenuHeader"

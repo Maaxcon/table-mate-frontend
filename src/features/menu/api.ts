@@ -359,6 +359,12 @@ export function setGuestName(sessionId: string, jwt: string, displayName: string
   })
 }
 
+export function callWaiter(sessionId: string, jwt: string): Promise<void> {
+  return authFetch<void>(CART_API.callWaiter(sessionId), jwt, {
+    method: "POST",
+  })
+}
+
 // One line of the bill — an already-ordered item across the table's visit.
 export type BillItem = {
   id: string
