@@ -31,6 +31,7 @@ function StaffShiftView() {
   const [error, setError] = useState<string | null>(null)
   const [shifts, setShifts] = useState<StaffShift[]>([])
   const [selectedDay, setSelectedDay] = useState<number | null>(null)
+  const [refreshTrigger, setRefreshTrigger] = useState(0)
 
   useEffect(() => {
     if (!user) return
@@ -53,7 +54,7 @@ function StaffShiftView() {
     return () => {
       cancelled = true
     }
-  }, [year, month, user])
+  }, [year, month, user, refreshTrigger])
 
   const myPublicId = user?.public_id ?? ""
 
@@ -110,7 +111,8 @@ function StaffShiftView() {
     const d = new Date()
     setYear(d.getFullYear())
     setMonth(d.getMonth() + 1)
-    setSelectedDay(null)
+    setSelectedDay(d.getDate())
+    setRefreshTrigger((r) => r + 1)
   }, [setYear])
 
   const dayShifts = useMemo(

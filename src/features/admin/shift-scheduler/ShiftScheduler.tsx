@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/set-state-in-effect, jsx-a11y/no-noninteractive-element-interactions */
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import {
   LuChevronLeft,
   LuChevronRight,
@@ -110,6 +110,8 @@ function ShiftScheduler() {
     string,
     { open: string; close: string }
   > | null>(null)
+  const [refreshTrigger, setRefreshTrigger] = useState(0)
+  const initialLoadEmployees = useRef(false)
 
   const currentDate = useMemo(() => new Date(state.date + "T00:00:00"), [state.date])
 
@@ -137,12 +139,14 @@ function ShiftScheduler() {
     (direction: number) => {
       const newDate = addDays(currentDate, direction)
       setDate(formatDateKey(newDate))
+      setRefreshTrigger((r) => r + 1)
     },
     [currentDate, setDate],
   )
 
   const goToday = useCallback(() => {
     setDate(formatDateKey(new Date()))
+    setRefreshTrigger((r) => r + 1)
   }, [setDate])
 
   useEffect(() => {
@@ -152,7 +156,23 @@ function ShiftScheduler() {
     setDataError(null)
     fetchShifts({ date: state.date })
       .then((data) => {
-        if (!cancelled) setShifts(data)
+        if (!cancelled) {
+          setShifts(data)
+          if (!initialLoadEmployees.current) {
+            initialLoadEmployees.current = true
+            const seen = new Set<string>()
+            for (const shift of data) {
+              if (!seen.has(shift.employee)) {
+                seen.add(shift.employee)
+                addEmployeeToAxis({
+                  public_id: shift.employee,
+                  name: shift.employee_name,
+                  role: shift.employee_role,
+                })
+              }
+            }
+          }
+        }
       })
       .catch(() => {
         if (!cancelled) setDataError("Could not load shifts. Try again.")
@@ -163,7 +183,7 @@ function ShiftScheduler() {
     return () => {
       cancelled = true
     }
-  }, [restaurantId, state.date, setShifts])
+  }, [restaurantId, state.date, setShifts, refreshTrigger, addEmployeeToAxis])
 
   const availableEmployees = useMemo(
     () => employees.filter((e) => !state.employeesOnAxis.some((a) => a.public_id === e.public_id)),
