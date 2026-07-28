@@ -5,6 +5,7 @@ import "@/styles/colors.css"
 import "@/styles/reset.css"
 import "./index.css"
 import "@/i18n/config"
+import "@/features/feedback/components/styles.css"
 import App from "@/App"
 import { store } from "@/store"
 

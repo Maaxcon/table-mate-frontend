@@ -64,6 +64,8 @@ export type AdminMenuItem = {
   is_available?: boolean
   sort_order?: number
   readonly likes_count: number
+  readonly average_rating?: number | null
+  readonly rating_count?: number
   readonly created_at: string
   readonly updated_at: string
 }
@@ -185,6 +187,7 @@ export type CheckoutResponse = {
   service_charge: string
   total: string
   currency: string
+  feedback_token?: string
 }
 
 /**
@@ -341,6 +344,8 @@ export type MenuItem = {
   price: string
   is_available?: boolean
   sort_order?: number
+  readonly average_rating?: number | null
+  readonly rating_count?: number
   readonly created_at: string
   readonly updated_at: string
 }

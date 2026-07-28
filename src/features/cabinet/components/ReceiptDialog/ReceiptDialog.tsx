@@ -7,6 +7,7 @@ import {
   LuCreditCard,
   LuDownload,
   LuMapPin,
+  LuMessageSquare,
   LuPhone,
   LuShare2,
   LuX,
@@ -18,6 +19,7 @@ import { loadReceiptFont } from "@/features/cabinet/receiptFont"
 import { buildReceiptPdf } from "@/features/cabinet/receiptPdf"
 import { formatDateTime, formatMoney } from "@/features/cabinet/utils"
 import { FeedbackDialog } from "@/features/cabinet/components/FeedbackDialog/FeedbackDialog"
+import { FeedbackModal } from "@/features/feedback/components/FeedbackModal"
 import { downloadBlob } from "@/utils/downloadBlob"
 import "./ReceiptDialog.css"
 
@@ -43,6 +45,7 @@ export function ReceiptDialog({ entry, onClose }: ReceiptDialogProps) {
   const navigate = useNavigate()
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [feedbackOpen, setFeedbackOpen] = useState(false)
 
   const openMenu = () => {
     if (!entry.restaurantId) return
@@ -225,6 +228,17 @@ export function ReceiptDialog({ entry, onClose }: ReceiptDialogProps) {
                 : strings.receipt.savePdf}
           </button>
 
+          {entry.orderId && (
+            <button
+              type="button"
+              className="receipt-dialog__action receipt-dialog__action--secondary"
+              onClick={() => setFeedbackOpen(true)}
+            >
+              <LuMessageSquare aria-hidden="true" size={16} />
+              {strings.receipt.leaveFeedback}
+            </button>
+          )}
+
           <p className="receipt-dialog__thanks">{strings.receipt.thanks}</p>
         </div>
       </div>
@@ -235,6 +249,17 @@ export function ReceiptDialog({ entry, onClose }: ReceiptDialogProps) {
           title={strings.receipt.errorTitle}
           message={error}
           onClose={() => setError(null)}
+        />
+      )}
+
+      {feedbackOpen && entry.orderId && (
+        <FeedbackModal
+          orderPublicId={entry.orderId}
+          orderItems={entry.items.flatMap((item) =>
+            item.publicId ? [{ public_id: item.publicId, name: item.name }] : [],
+          )}
+          onClose={() => setFeedbackOpen(false)}
+          onSuccess={() => setFeedbackOpen(false)}
         />
       )}
     </div>,

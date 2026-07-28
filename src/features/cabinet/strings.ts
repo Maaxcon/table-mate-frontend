@@ -98,6 +98,7 @@ export function useCabinetStrings() {
       preparing: t("cabinet.receipt.preparing"),
       share: t("cabinet.receipt.share"),
       savePdf: t("cabinet.receipt.savePdf"),
+      leaveFeedback: t("cabinet.receipt.leaveFeedback"),
       thanks: t("cabinet.receipt.thanks"),
       errorTitle: t("cabinet.receipt.errorTitle"),
       errorMessage: t("cabinet.receipt.errorMessage"),

@@ -250,6 +250,7 @@ export type CheckoutResult = {
   tax: string
   serviceCharge: string
   total: string
+  feedbackToken?: string
 }
 
 export class CartChangedError extends Error {
@@ -292,6 +293,7 @@ export function checkout(sessionId: string, jwt: string): Promise<CheckoutResult
         tax: body.tax ?? "",
         serviceCharge: body.service_charge ?? "",
         total: body.total ?? "",
+        feedbackToken: body.feedback_token,
       }
     }
     if (res.status === 409) {

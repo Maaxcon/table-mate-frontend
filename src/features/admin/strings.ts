@@ -192,6 +192,7 @@ export function useAdminStrings() {
         settings: t("admin.layout.nav.settings"),
         staff: t("admin.layout.nav.staff"),
         menu: t("admin.layout.nav.menu"),
+        feedback: t("admin.layout.nav.feedback"),
         scheduler: t("admin.layout.nav.scheduler"),
         floorPlan: t("admin.layout.nav.floorPlan"),
         kitchen: t("admin.layout.nav.kitchen"),

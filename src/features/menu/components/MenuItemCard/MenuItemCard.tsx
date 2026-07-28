@@ -1,5 +1,5 @@
 import { memo } from "react"
-import { LuHeart, LuMinus, LuPlus } from "react-icons/lu"
+import { LuHeart, LuMinus, LuPlus, LuStar } from "react-icons/lu"
 import type { MenuItem } from "@/features/menu/types"
 import { formatPrice } from "@/features/menu/utils"
 import { useMenuStrings } from "@/features/menu/strings"
@@ -149,6 +149,15 @@ function MenuItemCard({
               {menuStrings.card.likes(item.likes_count)}
             </span>
           </button>
+          {(item.average_rating != null || (item.rating_count ?? 0) > 0) && (
+            <span className="menu-item-card__rating">
+              <LuStar className="menu-item-card__rating-icon" size={12} />
+              <span className="menu-item-card__rating-value">
+                {item.average_rating != null ? item.average_rating.toFixed(1) : "—"}
+              </span>
+              <span className="menu-item-card__rating-count">({item.rating_count ?? 0})</span>
+            </span>
+          )}
         </div>
       </div>
     </div>

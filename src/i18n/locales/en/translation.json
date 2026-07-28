@@ -476,6 +476,7 @@
       "preparing": "Preparing…",
       "share": "Share receipt",
       "savePdf": "Save PDF",
+      "leaveFeedback": "Leave feedback",
       "thanks": "Thank you for dining with us!",
       "errorTitle": "Something went wrong",
       "errorMessage": "Could not create the PDF. Please check your connection and try again."
@@ -491,6 +492,21 @@
       "cancelBooking": "We could not cancel this booking.",
       "saveChanges": "Could not save changes. Please try again."
     }
+  },
+  "feedback": {
+    "dismissPrompt": "Dismiss feedback prompt",
+    "visitQuestion": "How was your visit?",
+    "leaveFeedback": "Leave feedback",
+    "notNow": "Not now",
+    "close": "Close",
+    "overallRating": "Overall rating",
+    "serviceRating": "Service rating",
+    "commentOptional": "Comment (optional)",
+    "commentPlaceholder": "Tell us about your experience...",
+    "dishRatingsOptional": "Rate your dishes (optional)",
+    "cancel": "Cancel",
+    "submitting": "Submitting...",
+    "submit": "Submit feedback"
   },
   "admin": {
     "common": {
@@ -522,7 +538,8 @@
         "scheduler": "Scheduler",
         "floorPlan": "Floor Plan",
         "kitchen": "Kitchen",
-        "floor": "Floor"
+        "floor": "Floor",
+        "feedback": "Feedback"
       },
       "logout": {
         "aria": "Log out",

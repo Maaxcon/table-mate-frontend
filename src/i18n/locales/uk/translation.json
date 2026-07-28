@@ -492,6 +492,7 @@
       "preparing": "Готуємо…",
       "share": "Поділитися чеком",
       "savePdf": "Зберегти PDF",
+      "leaveFeedback": "Залишити відгук",
       "thanks": "Дякуємо, що завітали!",
       "errorTitle": "Щось пішло не так",
       "errorMessage": "Не вдалося створити PDF. Перевірте підключення та спробуйте ще раз."
@@ -507,6 +508,21 @@
       "cancelBooking": "Не вдалося скасувати цю бронь.",
       "saveChanges": "Не вдалося зберегти зміни. Спробуйте ще раз."
     }
+  },
+  "feedback": {
+    "dismissPrompt": "Закрити запит на відгук",
+    "visitQuestion": "Як вам наш заклад?",
+    "leaveFeedback": "Залишити відгук",
+    "notNow": "Не зараз",
+    "close": "Закрити",
+    "overallRating": "Загальна оцінка",
+    "serviceRating": "Оцінка обслуговування",
+    "commentOptional": "Коментар (необов'язково)",
+    "commentPlaceholder": "Розкажіть про ваші враження...",
+    "dishRatingsOptional": "Оцініть страви (необов'язково)",
+    "cancel": "Скасувати",
+    "submitting": "Надсилаємо...",
+    "submit": "Надіслати відгук"
   },
   "admin": {
     "common": {
@@ -538,7 +554,8 @@
         "scheduler": "Розклад",
         "floorPlan": "План залу",
         "kitchen": "Кухня",
-        "floor": "Зала"
+        "floor": "Зала",
+        "feedback": "Відгуки"
       },
       "logout": {
         "aria": "Вийти",

@@ -25,6 +25,8 @@ import { useMenuPage } from "@/features/menu/hooks/useMenuPage"
 import { useMenuStrings } from "@/features/menu/strings"
 import { formatAmount, getCurrencySymbol } from "@/features/menu/utils"
 import type { MenuItem } from "@/features/menu/types"
+import { FeedbackPrompt } from "@/features/feedback/components/FeedbackPrompt"
+import { FeedbackModal, type OrderItemInfo } from "@/features/feedback/components/FeedbackModal"
 import "./MenuPage.css"
 
 function MenuPage() {
@@ -40,6 +42,13 @@ function MenuPage() {
   const [scrollActiveCategory, setScrollActiveCategory] = useState<string | null>(null)
   const pendingScrollCategory = useRef<string | null>(null)
   const [lobbyName, setLobbyName] = useState("")
+  const [lastCompletedOrder, setLastCompletedOrder] = useState<{
+    orderId: string
+    items: OrderItemInfo[]
+    feedbackToken?: string
+  } | null>(null)
+  const [showFeedbackPrompt, setShowFeedbackPrompt] = useState(false)
+  const [feedbackModalOpen, setFeedbackModalOpen] = useState(false)
   const sectionRefs = useRef<Map<string, HTMLElement>>(new Map())
   const stickyControlsRef = useRef<HTMLDivElement>(null)
   const user = useAppSelector((s) => s.auth.user)
@@ -142,10 +151,19 @@ function MenuPage() {
       return Promise.reject(new Error(menuStrings.cart.sessionUnavailable))
     }
     const result = await checkout(cartSessionId, guestJwt)
+    // Capture completed order info for feedback prompt
+    setLastCompletedOrder({
+      orderId: result.orderId,
+      feedbackToken: result.feedbackToken,
+      items: cartItems.map((ci) => ({
+        public_id: ci.menuItemId,
+        name: ci.item?.name ?? "Unknown",
+      })),
+    })
     // Checkout closed this cart; reopen a fresh one so the guest can order again.
     reinitGuestCart()
     return result
-  }, [cartSessionId, guestJwt, reinitGuestCart])
+  }, [cartSessionId, guestJwt, reinitGuestCart, cartItems, menuStrings.cart.sessionUnavailable])
 
   const { isConnected, sessionExpired } = useCartSocket({
     cartSessionId: guestAuth.cartSessionId,
@@ -276,6 +294,32 @@ function MenuPage() {
     }
   }, [groupedItems, hasMore, loadingMore, loadMore, scrollToCategory])
 
+  const handleCartClose = useCallback(() => {
+    setCartOpen(false)
+    if (lastCompletedOrder) {
+      setShowFeedbackPrompt(true)
+    }
+  }, [lastCompletedOrder])
+
+  const handleFeedbackPromptOpen = useCallback(() => {
+    setShowFeedbackPrompt(false)
+    setFeedbackModalOpen(true)
+  }, [])
+
+  const handleFeedbackPromptDismiss = useCallback(() => {
+    setShowFeedbackPrompt(false)
+    setLastCompletedOrder(null)
+  }, [])
+
+  const handleFeedbackNotNow = useCallback(() => {
+    setShowFeedbackPrompt(false)
+  }, [])
+
+  const handleFeedbackSuccess = useCallback(() => {
+    setFeedbackModalOpen(false)
+    setLastCompletedOrder(null)
+  }, [])
+
   const handleAddToCart = useCallback(
     (item: MenuItem, comment?: string) => {
       if (guestAuth.status === "loading" || guestAuth.status === "init") {
@@ -304,6 +348,9 @@ function MenuPage() {
       guestAuth.status,
       reservationId,
       tableId,
+      menuStrings.cart.initializing,
+      menuStrings.cart.requiresActiveTable,
+      menuStrings.cart.sessionUnavailable,
     ],
   )
 
@@ -653,7 +700,7 @@ function MenuPage() {
           displayName={guestAuth.displayName}
           onChangeQuantity={handleChangeQuantity}
           onRemoveItem={removeItem}
-          onClose={() => setCartOpen(false)}
+          onClose={handleCartClose}
           onClearError={() => {
             setCartAccessError(null)
             clearError()
@@ -665,6 +712,24 @@ function MenuPage() {
           onLoadBill={bill.refresh}
           onPayBill={bill.pay}
           onCartChanged={syncFromServer}
+        />
+      )}
+
+      {showFeedbackPrompt && lastCompletedOrder && !feedbackModalOpen && (
+        <FeedbackPrompt
+          onOpenFeedback={handleFeedbackPromptOpen}
+          onDismiss={handleFeedbackPromptDismiss}
+          onNotNow={handleFeedbackNotNow}
+        />
+      )}
+
+      {feedbackModalOpen && lastCompletedOrder && (
+        <FeedbackModal
+          orderPublicId={lastCompletedOrder.orderId}
+          orderItems={lastCompletedOrder.items}
+          accessToken={lastCompletedOrder.feedbackToken ?? guestJwt ?? undefined}
+          onClose={() => setFeedbackModalOpen(false)}
+          onSuccess={handleFeedbackSuccess}
         />
       )}
     </main>

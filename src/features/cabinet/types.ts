@@ -37,6 +37,8 @@ export type Reservation = {
 
 // A single line on a receipt.
 export type ReceiptItem = {
+  // Menu item public_id. It is unavailable in the current mock history data.
+  publicId?: string
   name: string
   quantity: number
   // Unit price in major currency units.
@@ -71,4 +73,6 @@ export type HistoryEntry = {
   total: number
   paymentMethod: "card" | "cash"
   paymentStatus: string
+  // Order public_id for linking feedback
+  orderId?: string
 }

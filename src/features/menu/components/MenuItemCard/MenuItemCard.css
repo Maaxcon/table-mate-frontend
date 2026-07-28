@@ -396,6 +396,30 @@
   flex-shrink: 0;
 }
 
+.menu-item-card__rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-left: auto;
+  color: var(--color-text-muted);
+  font-size: clamp(0.8rem, 0.15vw + 0.76rem, 0.9rem);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.menu-item-card__rating-icon {
+  color: var(--rating-active, #f59e0b);
+}
+
+.menu-item-card__rating-value {
+  line-height: 1;
+}
+
+.menu-item-card__rating-count {
+  font-size: clamp(0.7rem, 0.12vw + 0.67rem, 0.78rem);
+  color: var(--color-text-muted);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .menu-item-card,
   .menu-item-card__image,

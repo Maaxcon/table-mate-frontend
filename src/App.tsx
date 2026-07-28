@@ -23,6 +23,7 @@ import { ReservationScheduler } from "@/features/admin/reservation-scheduler/Res
 import FloorPlanEditorPage from "@/features/editor/pages/FloorPlanEditorPage"
 import { KitchenKanban } from "@/features/kitchen-kanban/KitchenKanban"
 import { WaiterOrderPage as WaiterOrderFeature } from "@/features/waiter-order-view"
+import FeedbackSection from "@/features/admin/pages/FeedbackSection"
 import AdminRoute from "@/routes/AdminRoute"
 import ProtectedRoute from "@/routes/ProtectedRoute"
 import PublicRoute from "@/routes/PublicRoute"
@@ -88,6 +89,7 @@ function App() {
                   <Route path="settings" element={<SettingsSection />} />
                   <Route path="staff" element={<StaffSection />} />
                   <Route path="menu" element={<MenuSection />} />
+                  <Route path="feedback" element={<FeedbackSection />} />
                   <Route path="scheduler" element={<ReservationScheduler />} />
                   <Route path="floor-plan/edit" element={<FloorPlanEditorPage />} />
                   <Route path="kitchen" element={<KitchenKanban />} />

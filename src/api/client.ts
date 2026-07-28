@@ -68,7 +68,8 @@ async function apiFetch(path: string, init: RequestInit = {}): Promise<Response>
   const accessToken = store.getState().auth.accessToken
 
   const headers = new Headers(init.headers)
-  if (accessToken) {
+  const hasExplicitAuthorization = headers.has("Authorization")
+  if (accessToken && !hasExplicitAuthorization) {
     headers.set("Authorization", `Bearer ${accessToken}`)
   }
 
@@ -79,7 +80,7 @@ async function apiFetch(path: string, init: RequestInit = {}): Promise<Response>
     credentials: "include",
   })
 
-  if (response.status !== 401) {
+  if (response.status !== 401 || hasExplicitAuthorization) {
     return response
   }
 
@@ -159,6 +160,8 @@ type RequestOptions = {
   /** Query-string params; undefined values are skipped. */
   query?: Query
   signal?: AbortSignal
+  /** Overrides the stored access token without triggering a token refresh. */
+  headers?: HeadersInit
   /** Fallback message when the response has no field error. */
   errorMessage?: string
 }
@@ -177,13 +180,14 @@ async function request<T>(
   method: string,
   path: string,
   body?: unknown,
-  { query, signal, errorMessage = "Request failed." }: RequestOptions = {},
+  { query, signal, headers, errorMessage = "Request failed." }: RequestOptions = {},
 ): Promise<T> {
-  const init: RequestInit = { method, signal }
+  const init: RequestInit = { method, signal, headers }
   if (body instanceof FormData) {
     init.body = body // browser sets the multipart boundary
   } else if (body !== undefined) {
-    init.headers = { "Content-Type": "application/json" }
+    init.headers = new Headers(headers)
+    init.headers.set("Content-Type", "application/json")
     init.body = JSON.stringify(body)
   }
   const res = await apiFetch(withQuery(path, query), init)
