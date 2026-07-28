@@ -81,10 +81,12 @@ export function TableDetailOverlay({
   const [showCloseCheck, setShowCloseCheck] = useState(false)
   const [showProcessPayment, setShowProcessPayment] = useState(false)
   const [voidReasons, setVoidReasons] = useState<VoidReason[]>([])
+  const [showBulkVoidForm, setShowBulkVoidForm] = useState(false)
+  const [bulkVoidReason, setBulkVoidReason] = useState("")
   const dialogRef = useFocusTrap<HTMLDivElement>({ onEscape: onClose })
 
   useEffect(() => {
-    if (!onVoidItem) return
+    if (!onVoidItem && !onMarkAllVoided) return
     const controller = new AbortController()
     fetchVoidReasons(controller.signal)
       .then(setVoidReasons)
@@ -363,10 +365,15 @@ export function TableDetailOverlay({
                 <div className="overlay__divider" />
 
                 <div className="overlay__body">
+                  {actionError && (
+                    <p className="overlay__action-error" role="alert">
+                      {actionError}
+                    </p>
+                  )}
                   {(() => {
                     const readyItems = detail.items.filter((i) => i.status === "ready")
                     const voidableItems = detail.items.filter(
-                      (i) => i.status !== "voided" && !i.is_paid,
+                      (i) => i.status !== "voided" && i.status !== "served" && !i.is_paid,
                     )
                     const hasAnyAction =
                       (readyItems.length > 0 && onMarkAllServed) ||
@@ -385,13 +392,62 @@ export function TableDetailOverlay({
                         )}
                         {voidableItems.length > 0 && onMarkAllVoided && voidReasons.length > 0 && (
                           <div className="overlay__mark-all-void-wrap">
-                            <button
-                              type="button"
-                              className="overlay__mark-all-btn overlay__mark-all-btn--void"
-                              onClick={() => onMarkAllVoided(voidReasons[0].code)}
-                            >
-                              {overlayStrings.actions.markAllVoided} ({voidableItems.length})
-                            </button>
+                            {showBulkVoidForm ? (
+                              <div className="overlay__bulk-void-form">
+                                <label className="overlay__bulk-void-label">
+                                  {overlayStrings.actions.bulkVoidReason}
+                                  <select
+                                    className="overlay__bulk-void-select"
+                                    value={bulkVoidReason}
+                                    onChange={(event) => setBulkVoidReason(event.target.value)}
+                                  >
+                                    <option value="" disabled>
+                                      {overlayStrings.actions.selectVoidReason}
+                                    </option>
+                                    {voidReasons.map((reason) => (
+                                      <option key={reason.code} value={reason.code}>
+                                        {overlayStrings.voidReasons[
+                                          reason.code as keyof typeof overlayStrings.voidReasons
+                                        ] ?? reason.label}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </label>
+                                <div className="overlay__bulk-void-actions">
+                                  <button
+                                    type="button"
+                                    className="overlay__mark-all-btn overlay__mark-all-btn--void"
+                                    disabled={!bulkVoidReason}
+                                    onClick={() => {
+                                      onMarkAllVoided(bulkVoidReason)
+                                      setShowBulkVoidForm(false)
+                                      setBulkVoidReason("")
+                                    }}
+                                  >
+                                    {overlayStrings.actions.confirmBulkVoid} ({voidableItems.length}
+                                    )
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="overlay__bulk-void-cancel"
+                                    onClick={() => {
+                                      setShowBulkVoidForm(false)
+                                      setBulkVoidReason("")
+                                    }}
+                                  >
+                                    {overlayStrings.actions.cancel}
+                                  </button>
+                                </div>
+                              </div>
+                            ) : (
+                              <button
+                                type="button"
+                                className="overlay__mark-all-btn overlay__mark-all-btn--void"
+                                onClick={() => setShowBulkVoidForm(true)}
+                              >
+                                {overlayStrings.actions.markAllVoided} ({voidableItems.length})
+                              </button>
+                            )}
                           </div>
                         )}
                       </div>

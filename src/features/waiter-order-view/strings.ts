@@ -99,6 +99,11 @@ export function useWaiterStrings() {
         processPayment: t("admin.waiter.overlay.actions.processPayment"),
         markAllServed: t("admin.waiter.overlay.actions.markAllServed"),
         markAllVoided: t("admin.waiter.overlay.actions.markAllVoided"),
+        bulkUpdateError: t("admin.waiter.overlay.actions.bulkUpdateError"),
+        bulkVoidReason: t("admin.waiter.overlay.actions.bulkVoidReason"),
+        selectVoidReason: t("admin.waiter.overlay.actions.selectVoidReason"),
+        confirmBulkVoid: t("admin.waiter.overlay.actions.confirmBulkVoid"),
+        cancel: t("admin.waiter.overlay.actions.cancel"),
       },
       empty: {
         order: t("admin.waiter.overlay.empty.order"),

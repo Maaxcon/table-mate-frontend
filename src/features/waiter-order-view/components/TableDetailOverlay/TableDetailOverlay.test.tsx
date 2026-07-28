@@ -4,6 +4,13 @@ import { TableDetailOverlay } from "./TableDetailOverlay"
 import type { FloorTable, OverlayDetail, OverlayOrderItem, ReservationItem } from "../../types"
 import i18n from "@/i18n/config"
 
+vi.mock("../../api/orderApi", () => ({
+  fetchVoidReasons: vi.fn().mockResolvedValue([
+    { code: "mispick", label: "Mispick" },
+    { code: "guest_changed_mind", label: "Guest changed mind" },
+  ]),
+}))
+
 function makeTable(overrides: Partial<FloorTable> = {}): FloorTable {
   return {
     public_id: "t-1",
@@ -142,5 +149,43 @@ describe("TableDetailOverlay bill", () => {
     expect(
       screen.getAllByRole("button", { name: i18n.t("admin.waiter.overlay.overdue.close") }).length,
     ).toBeGreaterThan(0)
+  })
+
+  it("requires a reason before bulk voiding and excludes served items", async () => {
+    const onMarkAllVoided = vi.fn()
+    render(
+      <TableDetailOverlay
+        table={makeTable()}
+        detail={makeDetail({
+          items: [
+            makeOrderItem({ status: "pending" }),
+            makeOrderItem({ public_id: "oi-2", status: "served" }),
+          ],
+        })}
+        tableReservations={[]}
+        visualStatus="occupied"
+        loading={false}
+        currentTime={new Date("2026-06-19T12:00:00Z")}
+        onMarkAllVoided={onMarkAllVoided}
+        onClose={vi.fn()}
+      />,
+    )
+
+    const bulkVoid = await screen.findByRole("button", {
+      name: `${i18n.t("admin.waiter.overlay.actions.markAllVoided")} (1)`,
+    })
+    fireEvent.click(bulkVoid)
+
+    const confirm = screen.getByRole("button", {
+      name: `${i18n.t("admin.waiter.overlay.actions.confirmBulkVoid")} (1)`,
+    })
+    expect(confirm).toBeDisabled()
+
+    fireEvent.change(screen.getByLabelText(i18n.t("admin.waiter.overlay.actions.bulkVoidReason")), {
+      target: { value: "guest_changed_mind" },
+    })
+    fireEvent.click(confirm)
+
+    expect(onMarkAllVoided).toHaveBeenCalledWith("guest_changed_mind")
   })
 })

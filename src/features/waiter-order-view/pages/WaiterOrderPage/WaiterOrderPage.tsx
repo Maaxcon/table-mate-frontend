@@ -66,6 +66,7 @@ export function WaiterOrderPage() {
   const [layoutReservations, setLayoutReservations] = useState<UpcomingReservation[]>([])
   const [overlayDetail, setOverlayDetail] = useState<OverlayDetail | null>(null)
   const [overlayLoading, setOverlayLoading] = useState(false)
+  const [orderActionError, setOrderActionError] = useState<string | null>(null)
   const [currentTime, setCurrentTime] = useState(() => new Date())
   const [sidebarActionLoading, setSidebarActionLoading] = useState(false)
   const [sidebarError, setSidebarError] = useState<string | null>(null)
@@ -323,7 +324,18 @@ export function WaiterOrderPage() {
     if (!overlayDetail) return
     const readyIds = overlayDetail.items.filter((i) => i.status === "ready").map((i) => i.public_id)
     if (readyIds.length === 0) return
-    await Promise.all(readyIds.map((id) => markOrderItemServed(id)))
+    setOrderActionError(null)
+    let failed = false
+    for (const id of readyIds) {
+      try {
+        await markOrderItemServed(id)
+      } catch {
+        failed = true
+      }
+    }
+    if (failed) {
+      setOrderActionError(waiterStrings.overlay.actions.bulkUpdateError)
+    }
     const latest = await refreshFloor()
     if (selectedTableId && latest) {
       await buildOverlayDetail(selectedTableId, latest.tables, latest.reservations)
@@ -333,10 +345,21 @@ export function WaiterOrderPage() {
   const handleMarkAllVoided = async (reasonCode: string) => {
     if (!overlayDetail) return
     const voidableIds = overlayDetail.items
-      .filter((i) => i.status !== "voided" && !i.is_paid)
+      .filter((i) => i.status !== "voided" && i.status !== "served" && !i.is_paid)
       .map((i) => i.public_id)
     if (voidableIds.length === 0) return
-    await Promise.all(voidableIds.map((id) => voidOrderItem(id, reasonCode)))
+    setOrderActionError(null)
+    let failed = false
+    for (const id of voidableIds) {
+      try {
+        await voidOrderItem(id, reasonCode)
+      } catch {
+        failed = true
+      }
+    }
+    if (failed) {
+      setOrderActionError(waiterStrings.overlay.actions.bulkUpdateError)
+    }
     const latest = await refreshFloor()
     if (selectedTableId && latest) {
       await buildOverlayDetail(selectedTableId, latest.tables, latest.reservations)
@@ -583,7 +606,7 @@ export function WaiterOrderPage() {
           currentTime={currentTime}
           actionBusy={actionBusy}
           busyActionId={busyActionId}
-          actionError={actionError}
+          actionError={orderActionError ?? actionError}
           onOpenTable={handleOpenTable}
           onActivateReservation={handleActivateReservation}
           onCancelReservation={(reservationId) => handleCancel(reservationId)}
