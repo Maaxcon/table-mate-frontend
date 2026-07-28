@@ -1578,6 +1578,24 @@
         "notes": "Notes",
         "close": "Close"
       }
+    },
+    "monthSummary": {
+      "title": "Hours Summary",
+      "loading": "Loading…",
+      "noData": "No shifts recorded for this month.",
+      "monthLabel": "{{month}} {{year}}",
+      "employee": "Employee",
+      "totalHours": "Total Hours",
+      "shiftCount": "Shifts",
+      "role": "Role",
+      "myHours": "My Hours",
+      "viewSummary": "View Month Summary",
+      "date": "Date",
+      "start": "Start",
+      "end": "End",
+      "duration": "Duration",
+      "error": "Failed to load month summary. Retry.",
+      "retry": "Retry"
     }
   }
 }

@@ -888,6 +888,7 @@ export function useAdminStrings() {
       selectEmployee: t("admin.staffShifts.selectEmployee"),
       today: t("admin.staffShifts.today"),
       shiftCount: (count: number) => t("admin.staffShifts.shiftCount", { count }),
+      viewSummary: t("admin.monthSummary.viewSummary"),
       dayDetail: {
         title: (date: string) => t("admin.staffShifts.dayDetail.title", { date }),
         start: t("admin.staffShifts.dayDetail.start"),
@@ -896,6 +897,25 @@ export function useAdminStrings() {
         notes: t("admin.staffShifts.dayDetail.notes"),
         close: t("admin.staffShifts.dayDetail.close"),
       },
+    },
+    monthSummary: {
+      title: t("admin.monthSummary.title"),
+      loading: t("admin.monthSummary.loading"),
+      noData: t("admin.monthSummary.noData"),
+      monthLabel: (month: string, year: number) =>
+        t("admin.monthSummary.monthLabel", { month, year }),
+      employee: t("admin.monthSummary.employee"),
+      totalHours: t("admin.monthSummary.totalHours"),
+      shiftCount: t("admin.monthSummary.shiftCount"),
+      role: t("admin.monthSummary.role"),
+      myHours: t("admin.monthSummary.myHours"),
+      viewSummary: t("admin.monthSummary.viewSummary"),
+      date: t("admin.monthSummary.date"),
+      start: t("admin.monthSummary.start"),
+      end: t("admin.monthSummary.end"),
+      duration: t("admin.monthSummary.duration"),
+      error: t("admin.monthSummary.error"),
+      retry: t("admin.monthSummary.retry"),
     },
   }
 }
