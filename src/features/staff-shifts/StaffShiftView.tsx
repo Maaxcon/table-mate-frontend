@@ -3,7 +3,6 @@ import { useCallback, useEffect, useMemo, useState } from "react"
 import { LuChevronLeft, LuChevronRight } from "react-icons/lu"
 import { useAppSelector } from "@/store/hooks"
 import { useAdminStrings } from "@/features/admin/strings"
-import { useEmployees } from "@/features/admin/hooks/useEmployees"
 import { fetchMonthSummary } from "./api"
 import type { StaffShift } from "./types"
 import "./StaffShiftView.css"
@@ -24,40 +23,57 @@ function StaffShiftView() {
   const user = useAppSelector((s) => s.auth.user)
   const adminStrings = useAdminStrings()
   const strings = adminStrings.staffShifts
-  const { employees } = useEmployees()
 
   const now = new Date()
   const [year, setYear] = useState(now.getFullYear())
   const [month, setMonth] = useState(now.getMonth() + 1)
-  const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>(user?.restaurantId ?? "")
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [shifts, setShifts] = useState<StaffShift[]>([])
-  const [totalHours, setTotalHours] = useState(0)
   const [selectedDay, setSelectedDay] = useState<number | null>(null)
 
-  const employeeOptions = useMemo(() => {
-    if (!employees) return []
-    return employees.filter((e) => e.role !== "customer")
-  }, [employees])
-
   useEffect(() => {
-    if (!selectedEmployeeId) {
-      setShifts([])
-      setTotalHours(0)
-      return
-    }
+    if (!user) return
     let cancelled = false
-    fetchMonthSummary(year, month, selectedEmployeeId)
+    setLoading(true)
+    setError(null)
+
+    fetchMonthSummary(year, month)
       .then((data) => {
         if (!cancelled) {
           setShifts(data.shifts)
-          setTotalHours(data.total_hours)
         }
       })
-      .catch(() => {})
+      .catch(() => {
+        if (!cancelled) setError("Could not load shifts.")
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
     return () => {
       cancelled = true
     }
-  }, [year, month, selectedEmployeeId])
+  }, [year, month, user])
+
+  const myPublicId = user?.public_id ?? ""
+
+  const myShifts = useMemo(
+    () => shifts.filter((s) => s.employee_id === myPublicId),
+    [shifts, myPublicId],
+  )
+
+  const myTotalHours = useMemo(
+    () => myShifts.reduce((sum, s) => sum + s.duration_hours, 0),
+    [myShifts],
+  )
+
+  const myShiftDaySet = useMemo(() => {
+    const set = new Set<number>()
+    for (const s of myShifts) {
+      set.add(new Date(s.date).getDate())
+    }
+    return set
+  }, [myShifts])
 
   const shiftsByDay = useMemo(() => {
     const map: Record<number, StaffShift[]> = {}
@@ -97,30 +113,33 @@ function StaffShiftView() {
     setSelectedDay(null)
   }, [setYear])
 
-  const dayShifts = selectedDay ? (shiftsByDay[selectedDay] ?? []) : []
+  const dayShifts = useMemo(
+    () => (selectedDay ? (shiftsByDay[selectedDay] ?? []) : []),
+    [selectedDay, shiftsByDay],
+  )
+
+  const groupedDayShifts = useMemo(() => {
+    const groups: Record<
+      string,
+      { employee_id: string; employee_name: string; employee_role: string; shifts: StaffShift[] }
+    > = {}
+    for (const s of dayShifts) {
+      if (!groups[s.employee_id]) {
+        groups[s.employee_id] = {
+          employee_id: s.employee_id,
+          employee_name: s.employee_name,
+          employee_role: s.employee_role,
+          shifts: [],
+        }
+      }
+      groups[s.employee_id].shifts.push(s)
+    }
+    return Object.values(groups)
+  }, [dayShifts])
 
   return (
     <div className="staff-shifts">
-      <div className="staff-shifts__header">
-        <h1 className="staff-shifts__title">{strings.title}</h1>
-        <div className="staff-shifts__controls">
-          <select
-            className="staff-shifts__employee-select"
-            value={selectedEmployeeId}
-            onChange={(e) => {
-              setSelectedEmployeeId(e.target.value)
-              setSelectedDay(null)
-            }}
-          >
-            <option value="">{strings.selectEmployee}</option>
-            {employeeOptions.map((e) => (
-              <option key={e.public_id} value={e.public_id}>
-                {e.first_name && e.last_name ? `${e.first_name} ${e.last_name}` : e.email}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
+      <h1 className="staff-shifts__title">{strings.title}</h1>
 
       <div className="staff-shifts__summary">
         <div className="staff-shifts__nav">
@@ -140,7 +159,7 @@ function StaffShiftView() {
             {strings.today}
           </button>
         </div>
-        <div className="staff-shifts__hours">{strings.totalHours(totalHours)}</div>
+        <div className="staff-shifts__hours">{strings.totalHours(myTotalHours)}</div>
       </div>
 
       <div className="staff-shifts__body">
@@ -153,9 +172,16 @@ function StaffShiftView() {
             ))}
           </div>
           <div className="staff-shifts__days-grid">
-            {!selectedEmployeeId ? (
-              <div className="staff-shifts__message">{strings.noEmployee}</div>
-            ) : dayCells.length === 0 ? (
+            {loading ? (
+              <div className="staff-shifts__message">{strings.loading}</div>
+            ) : error ? (
+              <div className="staff-shifts__message">
+                <p>{error}</p>
+                <button onClick={() => setError(null)} className="staff-shifts__today-btn">
+                  Retry
+                </button>
+              </div>
+            ) : shifts.length === 0 ? (
               <div className="staff-shifts__message">{strings.noShifts}</div>
             ) : (
               dayCells.map((day, idx) => {
@@ -168,6 +194,7 @@ function StaffShiftView() {
                   )
                 const dayShiftsForCell = shiftsByDay[day]
                 const hasShift = !!dayShiftsForCell && dayShiftsForCell.length > 0
+                const hasMyShift = myShiftDaySet.has(day)
                 const isSelected = selectedDay === day
                 const isToday =
                   new Date().getFullYear() === year &&
@@ -179,6 +206,7 @@ function StaffShiftView() {
                     className={[
                       "staff-shifts__day-cell",
                       hasShift ? "staff-shifts__day-cell--has-shift" : "",
+                      hasMyShift ? "staff-shifts__day-cell--my-shift" : "",
                       isSelected ? "staff-shifts__day-cell--selected" : "",
                       isToday ? "staff-shifts__day-cell--today" : "",
                     ]
@@ -187,7 +215,15 @@ function StaffShiftView() {
                     onClick={() => setSelectedDay(isSelected ? null : day)}
                   >
                     <span className="staff-shifts__day-number">{day}</span>
-                    {hasShift && <span className="staff-shifts__day-dot" />}
+                    {hasShift && (
+                      <span
+                        className={
+                          hasMyShift
+                            ? "staff-shifts__day-dot staff-shifts__day-dot--mine"
+                            : "staff-shifts__day-dot"
+                        }
+                      />
+                    )}
                   </button>
                 )
               })
@@ -214,14 +250,28 @@ function StaffShiftView() {
               <p className="staff-shifts__message">{strings.noShifts}</p>
             ) : (
               <div className="staff-shifts__day-shifts">
-                {dayShifts.map((shift) => (
-                  <div key={shift.shift_id} className="staff-shifts__day-shift-card">
-                    <div className="staff-shifts__day-shift-time">
-                      {shift.start_time} — {shift.end_time}
+                {groupedDayShifts.map((group) => (
+                  <div key={group.employee_id} className="staff-shifts__day-employee-group">
+                    <div className="staff-shifts__day-employee-header">
+                      <span className="staff-shifts__day-employee-name">
+                        {group.employee_name}
+                        {group.employee_id === myPublicId ? " (You)" : ""}
+                      </span>
+                      <span className="staff-shifts__day-employee-role">{group.employee_role}</span>
                     </div>
-                    <div className="staff-shifts__day-shift-duration">
-                      {strings.shiftCount(1)} · {shift.duration_hours}h
-                    </div>
+                    {group.shifts.map((shift) => (
+                      <div
+                        key={shift.shift_id}
+                        className={`staff-shifts__day-shift-card${group.employee_id === myPublicId ? " staff-shifts__day-shift-card--mine" : ""}`}
+                      >
+                        <div className="staff-shifts__day-shift-time">
+                          {shift.start_time} — {shift.end_time}
+                        </div>
+                        <div className="staff-shifts__day-shift-duration">
+                          {strings.shiftCount(1)} · {shift.duration_hours}h
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 ))}
               </div>
