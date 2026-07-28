@@ -2707,6 +2707,32 @@ export type OrdersCartSessionsBillListResponses = {
 export type OrdersCartSessionsBillListResponse =
   OrdersCartSessionsBillListResponses[keyof OrdersCartSessionsBillListResponses]
 
+export type OrdersCartSessionsCallWaiterCreateData = {
+  body?: never
+  path: {
+    session_pk: string
+  }
+  query?: never
+  url: "/api/orders/cart/sessions/{session_pk}/call-waiter/"
+}
+
+export type OrdersCartSessionsCallWaiterCreateErrors = {
+  /**
+   * Waiter already called recently (code waiter_call_cooldown).
+   */
+  429: unknown
+}
+
+export type OrdersCartSessionsCallWaiterCreateResponses = {
+  /**
+   * Waiter notified.
+   */
+  204: void
+}
+
+export type OrdersCartSessionsCallWaiterCreateResponse =
+  OrdersCartSessionsCallWaiterCreateResponses[keyof OrdersCartSessionsCallWaiterCreateResponses]
+
 export type OrdersCartSessionsCheckoutCreateData = {
   body?: never
   path: {
