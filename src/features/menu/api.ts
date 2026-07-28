@@ -12,7 +12,6 @@ import type {
   MenuCategory,
   MenuItem,
   PublicRestaurant,
-  SortOrder,
   ToggleLikeResponse,
   UpdateCartItemRequest,
 } from "./types"
@@ -133,24 +132,24 @@ export async function fetchItem(
 }
 
 export function searchItems(
-  restaurantId: string,
   query: string,
-  guestToken?: string,
-  signal?: AbortSignal,
-  page?: number,
-  sortOrder: SortOrder = "sort_order",
-): Promise<Paginated<MenuItem>> {
-  return menuGet(
-    MENU_API.itemsSearch,
-    {
-      restaurant: restaurantId,
-      q: query,
-      guest_token: guestToken,
-      ordering: sortOrder,
-      ...(page && page > 1 ? { page: String(page) } : {}),
-    },
+  {
+    restaurantId,
+    categoryId,
+    page,
+    guestToken,
     signal,
-  )
+    sortOrder = "sort_order",
+    allergens = [],
+  }: Omit<FetchItemsParams, "ingredients">,
+): Promise<Paginated<MenuItem>> {
+  const params = new URLSearchParams({ restaurant: restaurantId, q: query })
+  if (guestToken) params.set("guest_token", guestToken)
+  if (categoryId) params.set("category", categoryId)
+  if (sortOrder !== "sort_order") params.set("ordering", sortOrder)
+  if (page && page > 1) params.set("page", String(page))
+  for (const allergen of allergens) params.append("allergens", allergen)
+  return menuGet(MENU_API.itemsSearch, params, signal)
 }
 
 export function toggleItemLike(

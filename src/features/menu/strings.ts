@@ -29,7 +29,7 @@ export function useMenuStrings() {
       closedNow: t("menu.hero.closedNow"),
     },
     controls: {
-      ingredientPlaceholder: t("menu.controls.ingredientPlaceholder"),
+      searchPlaceholder: t("menu.controls.searchPlaceholder"),
       sortAria: t("menu.controls.sortAria"),
       allergensAria: t("menu.controls.allergensAria"),
       excludeAllergens: (count: number) =>

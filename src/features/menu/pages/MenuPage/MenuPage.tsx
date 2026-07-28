@@ -471,7 +471,7 @@ function MenuPage() {
           <input
             className="menu-page__search"
             type="search"
-            placeholder={menuStrings.controls.ingredientPlaceholder}
+            placeholder={menuStrings.controls.searchPlaceholder}
             value={ingredientSearch}
             onChange={(e) => setIngredientSearch(e.target.value)}
           />

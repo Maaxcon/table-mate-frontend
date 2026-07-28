@@ -34,14 +34,14 @@
       "closedNow": "Closed"
     },
     "controls": {
-      "ingredientPlaceholder": "Search ingredients...",
+      "searchPlaceholder": "Search dishes and ingredients...",
       "sortAria": "Sorting",
       "allergensAria": "Filter by allergens",
       "excludeAllergens": "Exclude allergens",
       "excludeAllergens_one": "Exclude allergens ({{count}})",
       "excludeAllergens_other": "Exclude allergens ({{count}})",
       "excludeAllergensTitle": "Exclude allergens",
-      "excludeAllergensDescription": "Selected allergens are excluded from the dishes shown.",
+      "excludeAllergensDescription": "Excludes dishes with selected declared allergens. Dishes without allergen information may still be shown.",
       "sortRecommended": "Recommended",
       "sortPopular": "Popular",
       "sortPriceAsc": "Price: Low to High",

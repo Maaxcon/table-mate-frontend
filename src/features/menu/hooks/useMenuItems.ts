@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useReducer, useRef } from "react"
-import { fetchItems } from "@/features/menu/api"
+import { fetchItems, searchItems } from "@/features/menu/api"
 import type { MenuItem, SortOrder } from "@/features/menu/types"
 
 type State = {
@@ -97,15 +97,17 @@ function useMenuItems(
     const { signal } = controller
     const load = () => {
       dispatch({ type: "LOADING" })
-      const promise = fetchItems({
+      const params = {
         restaurantId,
         categoryId: activeCategory ?? undefined,
         guestToken,
         signal,
         sortOrder,
-        ingredients: ingredientSearch,
         allergens: selectedAllergens,
-      })
+      }
+      const promise = ingredientSearch.trim()
+        ? searchItems(ingredientSearch.trim(), params)
+        : fetchItems(params)
       promise
         .then((data) => {
           dispatch({ type: "SUCCESS", results: data.results, next: data.next })
@@ -138,16 +140,18 @@ function useMenuItems(
     // Reuse the active filter's controller so a filter change (which aborts it)
     // also cancels this in-flight request and prevents a stale APPEND.
     const signal = abortRef.current?.signal
-    const promise = fetchItems({
+    const params = {
       restaurantId,
       categoryId: activeCategory ?? undefined,
       page: nextPage,
       guestToken,
       signal,
       sortOrder,
-      ingredients: ingredientSearch,
       allergens: selectedAllergens,
-    })
+    }
+    const promise = ingredientSearch.trim()
+      ? searchItems(ingredientSearch.trim(), params)
+      : fetchItems(params)
     promise
       .then((data) => {
         loadingMoreRef.current = false

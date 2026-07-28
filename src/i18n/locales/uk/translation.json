@@ -34,7 +34,7 @@
       "closedNow": "Зачинено"
     },
     "controls": {
-      "ingredientPlaceholder": "Пошук інгредієнтів...",
+      "searchPlaceholder": "Пошук страв та інгредієнтів...",
       "sortAria": "Сортування",
       "allergensAria": "Фільтрувати за алергенами",
       "excludeAllergens": "Виключити алергени",
@@ -43,7 +43,7 @@
       "excludeAllergens_many": "Виключити алергени ({{count}})",
       "excludeAllergens_other": "Виключити алергени ({{count}})",
       "excludeAllergensTitle": "Виключити алергени",
-      "excludeAllergensDescription": "Страви з вибраними алергенами не відображатимуться.",
+      "excludeAllergensDescription": "Виключає страви з вибраними вказаними алергенами. Страви без інформації про алергени все ще можуть відображатися.",
       "sortRecommended": "Рекомендоване",
       "sortPopular": "Популярне",
       "sortPriceAsc": "Ціна: від низької",
