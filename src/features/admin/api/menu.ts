@@ -4,7 +4,6 @@ import type { AdminCategory, AdminMenu, AdminMenuItem } from "@/features/admin/t
 const MENUS_PATH = "/api/menu/admin/menus/"
 const CATEGORIES_PATH = "/api/menu/admin/categories/"
 const ITEMS_PATH = "/api/menu/admin/items/"
-const ALLERGENS_PATH = "/api/menu/admin/allergens/"
 
 export function fetchMenus(signal?: AbortSignal): Promise<AdminMenu[]> {
   return api.getAllList<AdminMenu>(MENUS_PATH, { signal, errorMessage: "Could not load menus." })
@@ -146,32 +145,6 @@ export function fetchAllergens(signal?: AbortSignal): Promise<string[]> {
     signal,
     errorMessage: "Could not load allergens.",
   })
-}
-
-export type AdminAllergen = {
-  public_id: string
-  name: string
-}
-
-export function fetchAdminAllergens(signal?: AbortSignal): Promise<AdminAllergen[]> {
-  return api.getAllList<AdminAllergen>(ALLERGENS_PATH, {
-    signal,
-    errorMessage: "Could not load allergens.",
-  })
-}
-
-export function createAllergen(name: string): Promise<AdminAllergen> {
-  return api.post<AdminAllergen>(
-    ALLERGENS_PATH,
-    { name },
-    {
-      errorMessage: "Could not add allergen.",
-    },
-  )
-}
-
-export function deleteAllergen(publicId: string): Promise<void> {
-  return api.del(`${ALLERGENS_PATH}${publicId}/`, { errorMessage: "Could not delete allergen." })
 }
 
 export function duplicateItem(publicId: string): Promise<AdminMenuItem> {

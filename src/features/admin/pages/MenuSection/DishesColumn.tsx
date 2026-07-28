@@ -5,7 +5,6 @@ import SearchBox from "@/features/admin/components/SearchBox"
 import EmptyState from "@/features/admin/components/EmptyState"
 import DishList from "@/features/admin/components/DishList"
 import DishModal from "@/features/admin/components/DishModal"
-import AllergenManagerModal from "@/features/admin/components/AllergenManagerModal"
 import ConfirmDialog from "@/features/admin/components/ConfirmDialog"
 import DishBulkBar from "./DishBulkBar"
 import { useAdminStrings } from "@/features/admin/strings"
@@ -44,7 +43,6 @@ function DishesColumn({
   const [sortBy, setSortBy] = useState<SortBy>("manual")
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [confirmBulkDelete, setConfirmBulkDelete] = useState(false)
-  const [managingAllergens, setManagingAllergens] = useState(false)
   const [dishModal, setDishModal] = useState<{ open: boolean; item: AdminMenuItem | null }>({
     open: false,
     item: null,
@@ -103,13 +101,6 @@ function DishesColumn({
       <div className="menu-admin__dishes-head">
         <h2 className="menu-admin__subtitle">{strings.menu.dishes.title}</h2>
         <div className="menu-admin__dishes-actions">
-          <button
-            type="button"
-            className="menu-admin__btn"
-            onClick={() => setManagingAllergens(true)}
-          >
-            {strings.menu.allergens.manage}
-          </button>
           <button
             type="button"
             className="menu-admin__btn"
@@ -206,9 +197,6 @@ function DishesColumn({
           }}
           onClose={() => setConfirmBulkDelete(false)}
         />
-      )}
-      {managingAllergens && (
-        <AllergenManagerModal onClose={() => setManagingAllergens(false)} onDeleted={onSaved} />
       )}
     </section>
   )
