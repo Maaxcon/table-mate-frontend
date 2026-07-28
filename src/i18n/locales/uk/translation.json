@@ -18,6 +18,13 @@
     },
     "footer": "Ваш стіл — за один дотик."
   },
+  "orderStatus": {
+    "pending": "ОЧІКУЄТЬСЯ",
+    "in_progress": "ГОТУЄТЬСЯ",
+    "ready": "ОЧІКУЄ НА ПОДАЧУ",
+    "served": "ПОДАНО",
+    "voided": "СКАСОВАНО"
+  },
   "menu": {
     "header": {
       "signIn": "Увійти",
@@ -1155,7 +1162,12 @@
           "closeCheck": "Закрити рахунок",
           "processPayment": "Провести оплату",
           "markAllServed": "Позначити все поданим",
-          "markAllVoided": "Позначити все скасованим"
+          "markAllVoided": "Позначити все скасованим",
+          "bulkUpdateError": "Не вдалося оновити деякі позиції. Спробуйте ще раз.",
+          "bulkVoidReason": "Причина скасування",
+          "selectVoidReason": "Оберіть причину",
+          "confirmBulkVoid": "Підтвердити скасування",
+          "cancel": "Скасувати"
         },
         "empty": {
           "order": "Ще немає замовлень.",

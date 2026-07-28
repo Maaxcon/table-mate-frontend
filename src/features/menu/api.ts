@@ -16,6 +16,7 @@ import type {
   ToggleLikeResponse,
   UpdateCartItemRequest,
 } from "./types"
+import type { OrderItemStatusEnum } from "@/types/api/types.gen"
 
 function buildUrl(path: string, params: Record<string, string | undefined>): string {
   if (env.apiBaseUrl === ENV_NOT_CONFIGURED_VALUE) {
@@ -370,8 +371,7 @@ export type BillItem = {
   // total_price is intentionally not part of the bill response.)
   payable: string
   is_paid: boolean
-  // Kitchen status: pending | in_progress | ready | served | voided
-  status: string
+  status: OrderItemStatusEnum
 }
 
 // The bill: items already submitted to the kitchen for this table's visit.

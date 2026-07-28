@@ -18,6 +18,13 @@
     },
     "footer": "Your table, one tap away."
   },
+  "orderStatus": {
+    "pending": "PENDING",
+    "in_progress": "COOKING",
+    "ready": "WAITING FOR SERVE",
+    "served": "SERVED",
+    "voided": "VOIDED"
+  },
   "menu": {
     "header": {
       "signIn": "Sign in",
@@ -1129,7 +1136,12 @@
           "closeCheck": "Close check",
           "processPayment": "Process payment",
           "markAllServed": "Mark all served",
-          "markAllVoided": "Mark all voided"
+          "markAllVoided": "Mark all voided",
+          "bulkUpdateError": "Some items could not be updated. Please try again.",
+          "bulkVoidReason": "Void reason",
+          "selectVoidReason": "Select a reason",
+          "confirmBulkVoid": "Confirm void",
+          "cancel": "Cancel"
         },
         "empty": {
           "order": "No dishes ordered yet.",

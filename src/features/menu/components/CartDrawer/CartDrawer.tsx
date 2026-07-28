@@ -560,16 +560,7 @@ export function CartDrawer({
                                           × {b.quantity}
                                         </span>
                                       </span>
-                                      <StatusChip
-                                        status={
-                                          b.status as
-                                            | "pending"
-                                            | "in_progress"
-                                            | "ready"
-                                            | "served"
-                                            | "voided"
-                                        }
-                                      />
+                                      <StatusChip status={b.status} />
                                       <span className="cart-drawer__bill-price">
                                         {formatAmount(parseFloat(b.payable) || 0)} {currencySymbol}
                                       </span>
@@ -604,16 +595,7 @@ export function CartDrawer({
                               {b.name}
                               <span className="cart-drawer__receipt-qty"> × {b.quantity}</span>
                             </span>
-                            <StatusChip
-                              status={
-                                b.status as
-                                  | "pending"
-                                  | "in_progress"
-                                  | "ready"
-                                  | "served"
-                                  | "voided"
-                              }
-                            />
+                            <StatusChip status={b.status} />
                             <span className="cart-drawer__bill-price">
                               {formatAmount(parseFloat(b.payable) || 0)} {currencySymbol}
                             </span>
