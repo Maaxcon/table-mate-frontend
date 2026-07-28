@@ -35,6 +35,7 @@ function AuthInitializer({ children }: PropsWithChildren) {
         const me = (await meRes.json()) as MeResponse
         dispatch(
           setUser({
+            public_id: me.public_id,
             email: me.email,
             firstName: me.first_name,
             lastName: me.last_name,
