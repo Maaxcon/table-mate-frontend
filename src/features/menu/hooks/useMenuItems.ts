@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useReducer, useRef } from "react"
 import { fetchItems, searchItems } from "@/features/menu/api"
 import type { MenuItem, SortOrder } from "@/features/menu/types"
+import i18n from "@/i18n/config"
 
 type State = {
   items: MenuItem[]
@@ -128,7 +129,7 @@ function useMenuItems(
     return () => {
       controller.abort()
     }
-  }, [restaurantId, activeCategory, searchQuery, guestToken, sortOrder])
+  }, [restaurantId, activeCategory, searchQuery, guestToken, sortOrder, i18n.language])
 
   const loadMore = useCallback(() => {
     if (loading || loadingMoreRef.current || !hasMore) return
@@ -159,7 +160,17 @@ function useMenuItems(
         if (signal?.aborted) return
         dispatch({ type: "ERROR", message: "Failed to load more" })
       })
-  }, [loading, hasMore, searchQuery, page, restaurantId, activeCategory, guestToken, sortOrder])
+  }, [
+    loading,
+    hasMore,
+    searchQuery,
+    page,
+    restaurantId,
+    activeCategory,
+    guestToken,
+    sortOrder,
+    i18n.language,
+  ])
 
   const setItemLikeState = useCallback((publicId: string, isLiked: boolean, likesCount: number) => {
     dispatch({ type: "SET_LIKE", publicId, isLiked, likesCount })

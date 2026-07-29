@@ -1,6 +1,7 @@
 import { useEffect, useReducer } from "react"
 import { fetchCategories } from "@/features/menu/api"
 import type { MenuCategory } from "@/features/menu/types"
+import i18n from "@/i18n/config"
 
 type State = {
   categories: MenuCategory[]
@@ -51,7 +52,7 @@ function useMenuCategories(restaurantId: string): UseMenuCategoriesResult {
       mounted = false
       controller.abort()
     }
-  }, [restaurantId])
+  }, [restaurantId, i18n.language])
 
   return {
     categories: state.categories,

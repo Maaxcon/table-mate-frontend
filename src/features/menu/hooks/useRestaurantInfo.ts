@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import { fetchRestaurant } from "@/features/menu/api"
 import type { PublicRestaurantSettings } from "@/features/menu/types"
+import i18n from "@/i18n/config"
 
 export type RestaurantInfo = {
   name: string | null
@@ -55,7 +56,7 @@ function useRestaurantInfo(restaurantId: string): UseRestaurantInfoResult {
     return () => {
       mounted = false
     }
-  }, [restaurantId])
+  }, [restaurantId, i18n.language])
 
   return { ...info, notFound, fetchError }
 }
