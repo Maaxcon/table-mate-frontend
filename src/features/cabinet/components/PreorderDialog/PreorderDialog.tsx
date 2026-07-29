@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { createPortal } from "react-dom"
-import { LuUtensilsCrossed, LuX } from "react-icons/lu"
+import { LuFlame, LuUtensilsCrossed, LuX } from "react-icons/lu"
 import { useFocusTrap } from "@/hooks/useFocusTrap"
 import { cancelPreorder, fetchPreorder } from "@/features/cabinet/api"
 import { useCabinetStrings } from "@/features/cabinet/strings"
@@ -141,9 +141,17 @@ export function PreorderDialog({ booking, onClose, onCancelled }: PreorderDialog
                 </div>
               </div>
 
-              <div className="preorder-dialog__status">
-                <LuUtensilsCrossed aria-hidden="true" />
-                {strings.bookings.preorderPaidBadge}
+              <div
+                className={`preorder-dialog__status${!preorder.canCancel ? " preorder-dialog__status--cooking" : ""}`}
+              >
+                {preorder.canCancel ? (
+                  <LuUtensilsCrossed aria-hidden="true" />
+                ) : (
+                  <LuFlame aria-hidden="true" />
+                )}
+                {preorder.canCancel
+                  ? strings.bookings.preorderPaidBadge
+                  : strings.bookings.preorderCookingBadge}
               </div>
 
               {cancelError && <p className="preorder-dialog__error">{cancelError}</p>}

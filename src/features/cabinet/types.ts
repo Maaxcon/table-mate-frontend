@@ -34,6 +34,9 @@ export type Reservation = {
   status: ReservationStatus
   notes: string | null
   has_preorder?: boolean
+  // True once the kitchen has picked up the pre-order (a Ticket exists) —
+  // distinct from just being paid.
+  preorder_cooking?: boolean
 }
 
 // A booking's current paid pre-order (GET .../preorder/), or the shape of

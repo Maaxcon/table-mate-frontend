@@ -133,6 +133,16 @@
   background: rgba(var(--color-primary-rgb), 0.15);
 }
 
+.booking-card__preorder-toggle--cooking {
+  color: var(--color-warning-icon);
+  background: var(--color-warning-bg);
+  border-color: rgba(var(--color-warning-rgb), 0.35);
+}
+
+.booking-card__preorder-toggle--cooking:hover {
+  background: rgba(var(--color-warning-rgb), 0.18);
+}
+
 .booking-card__actions {
   flex: 0 0 auto;
   display: flex;

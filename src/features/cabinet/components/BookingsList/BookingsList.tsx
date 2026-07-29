@@ -1,5 +1,12 @@
 import { useState } from "react"
-import { LuCalendarClock, LuMapPin, LuTable2, LuUsers, LuUtensilsCrossed } from "react-icons/lu"
+import {
+  LuCalendarClock,
+  LuFlame,
+  LuMapPin,
+  LuTable2,
+  LuUsers,
+  LuUtensilsCrossed,
+} from "react-icons/lu"
 import { useNavigate } from "react-router-dom"
 import { useCabinetStrings } from "@/features/cabinet/strings"
 import type { Reservation } from "@/features/cabinet/types"
@@ -103,11 +110,17 @@ export function BookingsList({
                     {showsPreorder && (
                       <button
                         type="button"
-                        className="booking-card__preorder-toggle"
+                        className={`booking-card__preorder-toggle${booking.preorder_cooking ? " booking-card__preorder-toggle--cooking" : ""}`}
                         onClick={() => setViewingPreorder(booking)}
                       >
-                        <LuUtensilsCrossed aria-hidden="true" />
-                        {strings.bookings.preorderShow}
+                        {booking.preorder_cooking ? (
+                          <LuFlame aria-hidden="true" />
+                        ) : (
+                          <LuUtensilsCrossed aria-hidden="true" />
+                        )}
+                        {booking.preorder_cooking
+                          ? strings.bookings.preorderCooking
+                          : strings.bookings.preorderShow}
                       </button>
                     )}
                   </div>
