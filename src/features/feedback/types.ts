@@ -30,7 +30,7 @@ export type AdminFeedbackResponse = FeedbackResponse & {
   guest: string | null
   guest_name: string | null
   guest_identity: string | null
-  review_status: "new" | "reviewed" | "resolved"
+  review_status: "new" | "reviewed"
   prompt_shown_at: string | null
   dismissed: boolean
 }
@@ -39,15 +39,11 @@ export type AdminFeedbackListResponse = Omit<AdminFeedbackResponse, "dish_feedba
 
 export type AdminFeedbackFilters = {
   restaurant_id?: number
-  review_status?: "new" | "reviewed" | "resolved"
+  review_status?: "new" | "reviewed"
   overall_rating?: number
   service_rating?: number
   dish_id?: string
   date_from?: string
   date_to?: string
   ordering?: string
-}
-
-export type ReviewStatusUpdate = {
-  review_status: "new" | "reviewed" | "resolved"
 }

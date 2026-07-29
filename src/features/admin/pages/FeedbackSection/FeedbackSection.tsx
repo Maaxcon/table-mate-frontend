@@ -1,14 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
-import { LuCircleCheck, LuFilter, LuLoaderCircle, LuSearch } from "react-icons/lu"
+import { LuFilter, LuLoaderCircle, LuSearch } from "react-icons/lu"
 import { useTranslation } from "react-i18next"
 import { useToast } from "@/features/admin/hooks/toastContext"
 import Modal from "@/features/admin/components/Modal"
 import { StarRating } from "@/features/feedback/components/StarRating"
-import {
-  fetchAdminFeedbackList,
-  fetchAdminFeedbackDetail,
-  updateFeedbackReviewStatus,
-} from "@/features/feedback/api"
+import { fetchAdminFeedbackList, fetchAdminFeedbackDetail } from "@/features/feedback/api"
 import type {
   AdminFeedbackListResponse,
   AdminFeedbackResponse,
@@ -20,7 +16,6 @@ import "./FeedbackSection.css"
 const STATUS_COLORS: Record<string, string> = {
   new: "status-badge--new",
   reviewed: "status-badge--reviewed",
-  resolved: "status-badge--resolved",
 }
 
 const INITIAL_FILTERS: AdminFeedbackFilters = {}
@@ -82,32 +77,21 @@ function FeedbackSection() {
       try {
         const detail = await fetchAdminFeedbackDetail(publicId)
         setSelectedDetail(detail)
-      } catch {
-        toast.error(t("admin.feedback.errors.detail"))
-      } finally {
-        setDetailLoading(false)
-      }
-    },
-    [t, toast],
-  )
-
-  const handleUpdateStatus = useCallback(
-    async (publicId: string, reviewStatus: "new" | "reviewed" | "resolved") => {
-      try {
-        const updated = await updateFeedbackReviewStatus(publicId, { review_status: reviewStatus })
-        setSelectedDetail(updated)
         setData((prev) => {
           if (!prev) return prev
           return {
             ...prev,
-            results: prev.results.map((r) =>
-              r.public_id === publicId ? { ...r, review_status: reviewStatus } : r,
+            results: prev.results.map((entry) =>
+              entry.public_id === publicId
+                ? { ...entry, review_status: detail.review_status }
+                : entry,
             ),
           }
         })
-        toast.success(t("admin.feedback.statusUpdated"))
       } catch {
-        toast.error(t("admin.feedback.errors.statusUpdate"))
+        toast.error(t("admin.feedback.errors.detail"))
+      } finally {
+        setDetailLoading(false)
       }
     },
     [t, toast],
@@ -156,7 +140,7 @@ function FeedbackSection() {
             className="feedback-filters__select"
           >
             <option value="">{t("admin.feedback.filters.allStatuses")}</option>
-            {(["new", "reviewed", "resolved"] as const).map((status) => (
+            {(["new", "reviewed"] as const).map((status) => (
               <option key={status} value={status}>
                 {t(`admin.feedback.status.${status}`)}
               </option>
@@ -286,19 +270,11 @@ function FeedbackSection() {
                   <span className="feedback-detail__label">
                     {t("admin.feedback.detail.status")}
                   </span>
-                  <div className="feedback-detail__status-actions">
-                    {(["new", "reviewed", "resolved"] as const).map((status) => (
-                      <button
-                        key={status}
-                        type="button"
-                        className={`status-btn${selectedDetail.review_status === status ? " status-btn--active" : ""}`}
-                        onClick={() => void handleUpdateStatus(selectedDetail.public_id, status)}
-                      >
-                        {status === "resolved" && <LuCircleCheck size={14} />}
-                        {t(`admin.feedback.status.${status}`)}
-                      </button>
-                    ))}
-                  </div>
+                  <span
+                    className={`status-badge ${STATUS_COLORS[selectedDetail.review_status] ?? ""}`}
+                  >
+                    {t(`admin.feedback.status.${selectedDetail.review_status}`)}
+                  </span>
                 </div>
               </div>
 

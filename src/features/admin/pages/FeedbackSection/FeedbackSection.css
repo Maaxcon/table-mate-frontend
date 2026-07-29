@@ -190,11 +190,6 @@
   color: #1565c0;
 }
 
-.status-badge--resolved {
-  background: #e8f5e9;
-  color: #2e7d32;
-}
-
 .feedback-detail-modal {
   max-width: 600px;
 }
@@ -239,32 +234,8 @@
   font-size: 0.8125rem;
 }
 
-.feedback-detail__status-actions {
-  display: flex;
-  gap: 0.375rem;
-  flex-wrap: wrap;
-}
-
-.status-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  padding: 0.25rem 0.625rem;
-  border: 1px solid var(--border-color, #ddd);
-  border-radius: 999px;
-  background: var(--bg-primary, #fff);
-  cursor: pointer;
-  font-size: 0.75rem;
-  text-transform: capitalize;
-  color: var(--text-secondary, #666);
-  transition: all 0.15s;
-}
-
-.status-btn--active {
-  border-color: var(--accent-color, #4a90d9);
-  background: var(--accent-bg, #e8f0fe);
-  color: var(--accent-color, #4a90d9);
-  font-weight: 600;
+.feedback-detail__field .status-badge {
+  align-self: flex-start;
 }
 
 .feedback-detail__ratings {

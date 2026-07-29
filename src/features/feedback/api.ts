@@ -5,7 +5,6 @@ import type {
   AdminFeedbackResponse,
   FeedbackCreateRequest,
   FeedbackResponse,
-  ReviewStatusUpdate,
 } from "./types"
 
 export function createFeedback(
@@ -48,11 +47,4 @@ export function fetchAdminFeedbackList(
 
 export function fetchAdminFeedbackDetail(publicId: string): Promise<AdminFeedbackResponse> {
   return api.get<AdminFeedbackResponse>(`/api/feedback/admin/${publicId}/`)
-}
-
-export function updateFeedbackReviewStatus(
-  publicId: string,
-  body: ReviewStatusUpdate,
-): Promise<AdminFeedbackResponse> {
-  return api.patch<AdminFeedbackResponse>(`/api/feedback/admin/${publicId}/`, body)
 }

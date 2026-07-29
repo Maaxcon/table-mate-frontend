@@ -580,8 +580,7 @@
       },
       "status": {
         "new": "New",
-        "reviewed": "Reviewed",
-        "resolved": "Resolved"
+        "reviewed": "Reviewed"
       },
       "detail": {
         "title": "Feedback detail",
@@ -598,10 +597,8 @@
       "errors": {
         "load": "Failed to load feedback",
         "detail": "Could not load feedback detail",
-        "detailLoad": "Could not load detail.",
-        "statusUpdate": "Failed to update status"
-      },
-      "statusUpdated": "Status updated"
+        "detailLoad": "Could not load detail."
+      }
     },
     "scheduler": {
       "empty": {
