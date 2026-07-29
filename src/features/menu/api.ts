@@ -221,6 +221,20 @@ export function guestInit(
   })
 }
 
+// Pre-order: open (or rejoin) the cart for a reservation that hasn't started
+// yet, using the customer's own auth instead of the guest-JWT flow (which
+// requires the reservation to be ACTIVE). Only the reservation's own
+// customer/participants may do this — enforced server-side.
+export function createCartSessionForReservation(
+  reservationId: string,
+  accessToken: string,
+): Promise<{ public_id: string }> {
+  return authFetch<{ public_id: string }>(CART_API.sessions, accessToken, {
+    method: "POST",
+    body: JSON.stringify({ reservation: reservationId }),
+  })
+}
+
 // Best-effort: tell the backend a guest is at this table so a pending booking
 // owned by the logged-in customer flips to active before we open the cart.
 // Silent on failure (guest not logged in / not the owner) — guest-init follows.
@@ -272,11 +286,11 @@ export class ReservationNotYetActiveError extends Error {
   }
 }
 
-export function checkout(sessionId: string, jwt: string): Promise<CheckoutResult> {
+function checkoutRequest(url: string, jwt: string): Promise<CheckoutResult> {
   if (env.apiBaseUrl === ENV_NOT_CONFIGURED_VALUE) {
     throw new Error("VITE_API_BASE_URL is not configured")
   }
-  return fetch(`${env.apiBaseUrl}${CART_API.checkout(sessionId)}`, {
+  return fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${jwt}` },
   }).then(async (res) => {
@@ -305,6 +319,15 @@ export function checkout(sessionId: string, jwt: string): Promise<CheckoutResult
     }
     throw await httpError(res)
   })
+}
+
+export function checkout(sessionId: string, jwt: string): Promise<CheckoutResult> {
+  return checkoutRequest(`${env.apiBaseUrl}${CART_API.checkout(sessionId)}`, jwt)
+}
+
+// Pre-order: pay now (simulated), no kitchen ticket until closer to arrival.
+export function preorderCheckout(sessionId: string, jwt: string): Promise<CheckoutResult> {
+  return checkoutRequest(`${env.apiBaseUrl}${CART_API.preorderCheckout(sessionId)}`, jwt)
 }
 
 const MAX_CART_PAGES = 100

@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useReducer, useRef } from "react"
+import { getAccessToken } from "@/api/client"
 import {
+  createCartSessionForReservation,
   guestInit,
   ReservationNotYetActiveError,
   setGuestName,
@@ -34,6 +36,9 @@ type UseGuestAuthResult = {
   displayName: string
   status: AuthStatus
   error: string | null
+  // True once the cart was opened via the pre-order fallback below (own auth,
+  // reservation still PENDING) rather than the normal guest-JWT flow.
+  isPreorder: boolean
   setDisplayName: (name: string) => void
   initialize: () => void
 }
@@ -43,11 +48,12 @@ type AuthState = {
   cartSessionId: string | null
   status: AuthStatus
   error: string | null
+  isPreorder: boolean
 }
 
 type AuthAction =
   | { type: "LOADING" }
-  | { type: "READY"; jwt: string; sessionId: string | null }
+  | { type: "READY"; jwt: string; sessionId: string | null; isPreorder: boolean }
   | { type: "ERROR"; error: string }
 
 function authReducer(state: AuthState, action: AuthAction): AuthState {
@@ -60,10 +66,18 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
         status: "ready",
         guestJwt: action.jwt,
         cartSessionId: action.sessionId,
+        isPreorder: action.isPreorder,
         error: null,
       }
     case "ERROR":
-      return { ...state, status: "error", error: action.error, guestJwt: null, cartSessionId: null }
+      return {
+        ...state,
+        status: "error",
+        error: action.error,
+        guestJwt: null,
+        cartSessionId: null,
+        isPreorder: false,
+      }
   }
 }
 
@@ -86,6 +100,7 @@ export function useGuestAuth({
     cartSessionId: null,
     status: reservationId || tableId ? "init" : "ready",
     error: null,
+    isPreorder: false,
   })
   const [displayName, setDisplayNameState] = useReducer(
     (_prev: string, next: string) => next,
@@ -120,23 +135,40 @@ export function useGuestAuth({
     initializing.current = true
     dispatch({ type: "LOADING" })
 
-    const run = async () => {
+    const run = async (): Promise<{
+      access: string
+      sessionId: string | null
+      isPreorder: boolean
+    }> => {
       // Static QR carries only the table: try to activate a pending booking
       // (logged-in owner) before opening the cart. Best-effort, errors ignored.
       if (tableId) {
         await verifyScan(tableId)
       }
-      return guestInit({ reservationId, tableId }, guestJwtRef.current)
+      try {
+        const resp = await guestInit({ reservationId, tableId }, guestJwtRef.current)
+        const payload = decodeJwtPayload<{ cart_session_id?: string }>(resp.access)
+        return {
+          access: resp.access,
+          sessionId: payload?.cart_session_id ?? null,
+          isPreorder: false,
+        }
+      } catch (err) {
+        // Pre-order: the reservation exists but hasn't started yet. If the
+        // caller is logged in (as its owner), open the cart directly through
+        // their own auth instead of the guest-JWT gate, which requires ACTIVE.
+        const accessToken = reservationId ? getAccessToken() : null
+        if (err instanceof ReservationNotYetActiveError && accessToken) {
+          const session = await createCartSessionForReservation(reservationId!, accessToken)
+          return { access: accessToken, sessionId: session.public_id, isPreorder: true }
+        }
+        throw err
+      }
     }
 
     run()
-      .then((resp) => {
-        const payload = decodeJwtPayload<{ cart_session_id?: string }>(resp.access)
-        dispatch({
-          type: "READY",
-          jwt: resp.access,
-          sessionId: payload?.cart_session_id ?? null,
-        })
+      .then(({ access, sessionId, isPreorder }) => {
+        dispatch({ type: "READY", jwt: access, sessionId, isPreorder })
       })
       .catch((err: Error) => {
         let msg: string
@@ -192,6 +224,7 @@ export function useGuestAuth({
     displayName,
     status: authState.status,
     error: authState.error,
+    isPreorder: authState.isPreorder,
     setDisplayName,
     initialize,
   }
