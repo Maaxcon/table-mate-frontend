@@ -1156,7 +1156,8 @@
           "seat": "Seat",
           "modify": "Modify",
           "cancel": "Cancel",
-          "new": "New reservation"
+          "new": "New reservation",
+          "preorderBadge": "Food pre-ordered and paid"
         },
         "voidReasons": {
           "mispick": "Sent to wrong table",
@@ -1178,6 +1179,7 @@
           "title": "Next reservations",
           "searchPlaceholder": "Search guests…",
           "guestCount": "{{count}} guests",
+          "preorderBadge": "Food pre-ordered and paid",
           "status": {
             "pending": "Pending",
             "active": "Active",

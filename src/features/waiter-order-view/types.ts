@@ -42,6 +42,10 @@ export type ReservationItem = Pick<
 > & {
   table: string
   name: string
+  // Optional: locally-constructed reservation objects (optimistic updates,
+  // tests) don't know this yet. Only the API mapper (features/waiter-order-view/api.ts)
+  // populates it for real.
+  has_preorder?: boolean
 }
 
 export interface OverlayOrderItem {

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react"
+import { LuUtensilsCrossed } from "react-icons/lu"
 import { useFocusTrap } from "@/hooks/useFocusTrap"
 import { formatTimeRange } from "../../types"
 import type { FloorTable, ReservationItem, OverlayDetail, VisualTableStatus } from "../../types"
@@ -470,6 +471,14 @@ export function TableDetailOverlay({
                           <span className="overlay__reservation-tag">
                             {overlayStrings.reservation.tagSeated}
                           </span>
+                        )}
+                        {r.has_preorder && (
+                          <LuUtensilsCrossed
+                            className="overlay__reservation-preorder-badge"
+                            size={13}
+                            title={overlayStrings.reservation.preorderBadge}
+                            aria-label={overlayStrings.reservation.preorderBadge}
+                          />
                         )}
                       </span>
                       <span className="overlay__reservation-meta">

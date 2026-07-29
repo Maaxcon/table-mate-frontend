@@ -118,6 +118,7 @@ export function useWaiterStrings() {
         modify: t("admin.waiter.overlay.reservation.modify"),
         cancel: t("admin.waiter.overlay.reservation.cancel"),
         new: t("admin.waiter.overlay.reservation.new"),
+        preorderBadge: t("admin.waiter.overlay.reservation.preorderBadge"),
       },
       voidReasons: {
         mispick: t("admin.waiter.overlay.voidReasons.mispick"),
@@ -139,6 +140,7 @@ export function useWaiterStrings() {
         title: t("admin.waiter.reservations.sidebar.title"),
         searchPlaceholder: t("admin.waiter.reservations.sidebar.searchPlaceholder"),
         guestCount: (count: number) => t("admin.waiter.reservations.sidebar.guestCount", { count }),
+        preorderBadge: t("admin.waiter.reservations.sidebar.preorderBadge"),
         status: {
           pending: t("admin.waiter.reservations.sidebar.status.pending"),
           active: t("admin.waiter.reservations.sidebar.status.active"),

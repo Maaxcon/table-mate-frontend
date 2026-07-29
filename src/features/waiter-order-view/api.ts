@@ -18,6 +18,7 @@ interface ReservationApiItem {
   status: string
   notes?: string | null
   customer_name?: string
+  has_preorder?: boolean
 }
 
 interface SessionApiItem {
@@ -61,6 +62,7 @@ function mapReservationItem(r: ReservationApiItem): ReservationItem {
     status: r.status as ReservationItem["status"],
     notes: r.notes,
     name: r.customer_name ?? "Guest",
+    has_preorder: r.has_preorder ?? false,
   }
 }
 

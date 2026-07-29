@@ -542,6 +542,12 @@
   vertical-align: middle;
 }
 
+.overlay__reservation-preorder-badge {
+  margin-left: 6px;
+  color: var(--color-primary);
+  vertical-align: middle;
+}
+
 .overlay__reservation-meta {
   font-size: 0.75rem;
   font-weight: 600;

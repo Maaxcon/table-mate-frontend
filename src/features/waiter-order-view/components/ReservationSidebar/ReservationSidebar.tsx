@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { LuUtensilsCrossed } from "react-icons/lu"
 import type { ReservationItem } from "../../types"
 import { formatTimeRange } from "../../types"
 import { ConfirmCancelModal } from "../ConfirmCancelModal"
@@ -82,7 +83,17 @@ export function ReservationSidebar({
                 {formatTimeRange(r.start_at, r.end_at)}
               </span>
               <div className="reservation-sidebar__item-info">
-                <span className="reservation-sidebar__item-name">{r.name}</span>
+                <span className="reservation-sidebar__item-name">
+                  {r.name}
+                  {r.has_preorder && (
+                    <LuUtensilsCrossed
+                      className="reservation-sidebar__preorder-badge"
+                      size={13}
+                      title={sidebarStrings.preorderBadge}
+                      aria-label={sidebarStrings.preorderBadge}
+                    />
+                  )}
+                </span>
                 <span className="reservation-sidebar__item-meta">
                   {sidebarStrings.guestCount(r.guest_count)}
                   <span

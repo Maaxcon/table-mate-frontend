@@ -112,6 +112,14 @@
   font-size: 1.05rem;
   font-weight: 700;
   color: var(--color-text-primary);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.reservation-sidebar__preorder-badge {
+  color: var(--color-primary);
+  flex-shrink: 0;
 }
 
 .reservation-sidebar__item-meta {
