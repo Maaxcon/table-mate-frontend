@@ -16,7 +16,7 @@ import {
   RestaurantInfoPanel,
   type WaiterCallState,
 } from "@/features/menu/components"
-import { callWaiter, checkout, type ApiError } from "@/features/menu/api"
+import { callWaiter, checkout, preorderCheckout, type ApiError } from "@/features/menu/api"
 import { useBill } from "@/features/menu/hooks/useBill"
 import { useCart } from "@/features/menu/hooks/useCart"
 import { useCartSocket } from "@/features/menu/hooks/useCartSocket"
@@ -143,16 +143,21 @@ function MenuPage() {
 
   // Destructure the stable fields so the callback deps are these values, not
   // the whole guestAuth object (which is a fresh object every render).
-  const { cartSessionId, guestJwt, initialize: reinitGuestCart } = guestAuth
+  const { cartSessionId, guestJwt, isPreorder, initialize: reinitGuestCart } = guestAuth
   const handleCheckout = useCallback(async () => {
     if (!cartSessionId || !guestJwt) {
       return Promise.reject(new Error(menuStrings.cart.sessionUnavailable))
+    }
+    if (isPreorder) {
+      // Pre-order is a one-shot payment — the reservation is still PENDING,
+      // so there's no "next round" to reopen a fresh cart for.
+      return preorderCheckout(cartSessionId, guestJwt)
     }
     const result = await checkout(cartSessionId, guestJwt)
     // Checkout closed this cart; reopen a fresh one so the guest can order again.
     reinitGuestCart()
     return result
-  }, [cartSessionId, guestJwt, reinitGuestCart])
+  }, [cartSessionId, guestJwt, isPreorder, reinitGuestCart])
 
   // Lifted above the cart drawer (rather than local state inside it) so the
   // "waiter is on the way" status survives the guest closing and reopening
@@ -715,12 +720,15 @@ function MenuPage() {
           onCartChanged={syncFromServer}
           waiterCallState={waiterCallState}
           onCallWaiter={
-            guestAuth.cartSessionId && guestAuth.guestJwt
+            // Calling a waiter only makes sense once the guest is actually
+            // at the table — not while pre-ordering ahead of arrival.
+            guestAuth.cartSessionId && guestAuth.guestJwt && !guestAuth.isPreorder
               ? () => {
                   void handleCallWaiter()
                 }
               : undefined
           }
+          isPreorder={guestAuth.isPreorder}
         />
       )}
     </main>

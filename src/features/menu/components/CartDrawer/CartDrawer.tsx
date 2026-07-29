@@ -32,6 +32,10 @@ type Props = {
   onCartChanged?: () => void
   waiterCallState?: WaiterCallState
   onCallWaiter?: () => void
+  // True when the cart belongs to a reservation that hasn't started yet —
+  // checkout pays now (simulated) but food isn't sent to the kitchen until
+  // closer to arrival. Swaps checkout/confirmation copy accordingly.
+  isPreorder?: boolean
 }
 
 // Lifted to MenuPage (rather than local state here) so it survives the
@@ -105,6 +109,7 @@ export function CartDrawer({
   onCartChanged,
   waiterCallState = "idle",
   onCallWaiter,
+  isPreorder = false,
 }: Props) {
   const menuStrings = useMenuStrings()
   const [step, setStep] = useState<"cart" | "confirming" | "confirmed" | "changed" | "bill">("cart")
@@ -348,7 +353,9 @@ export function CartDrawer({
         {step === "confirming" ? (
           /* ── Confirm dialog ── */
           <div className="cart-drawer__confirm-dialog">
-            <p className="cart-drawer__confirm-dialog-title">{menuStrings.cart.confirmTitle}</p>
+            <p className="cart-drawer__confirm-dialog-title">
+              {isPreorder ? menuStrings.cart.preorderConfirmTitle : menuStrings.cart.confirmTitle}
+            </p>
             <p className="cart-drawer__confirm-dialog-sub">
               {menuStrings.cart.positions(totalCount)} · {formatAmount(totalPrice)} {currencySymbol}
             </p>
@@ -363,7 +370,11 @@ export function CartDrawer({
                 onClick={handleSubmit}
                 disabled={submitting}
               >
-                {submitting ? menuStrings.cart.submitting : menuStrings.cart.confirmYes}
+                {submitting
+                  ? menuStrings.cart.submitting
+                  : isPreorder
+                    ? menuStrings.cart.preorderConfirmYes
+                    : menuStrings.cart.confirmYes}
               </button>
               <button
                 className="cart-drawer__confirm-dialog-no"
@@ -411,8 +422,14 @@ export function CartDrawer({
             <div className="cart-drawer__confirm-icon">
               <LuCheck size={52} strokeWidth={1.4} />
             </div>
-            <h3 className="cart-drawer__confirm-title">{menuStrings.cart.confirmedTitle}</h3>
-            <p className="cart-drawer__confirm-sub">{menuStrings.cart.confirmedSub}</p>
+            <h3 className="cart-drawer__confirm-title">
+              {isPreorder
+                ? menuStrings.cart.preorderConfirmedTitle
+                : menuStrings.cart.confirmedTitle}
+            </h3>
+            <p className="cart-drawer__confirm-sub">
+              {isPreorder ? menuStrings.cart.preorderConfirmedSub : menuStrings.cart.confirmedSub}
+            </p>
 
             <div className="cart-drawer__receipt">
               <p className="cart-drawer__receipt-label">{menuStrings.cart.receiptLabel}</p>
@@ -645,6 +662,9 @@ export function CartDrawer({
         ) : items.length === 0 ? (
           /* ── Empty ── */
           <div className="cart-drawer__empty">
+            {isPreorder && (
+              <p className="cart-drawer__preorder-banner">{menuStrings.cart.preorderBanner}</p>
+            )}
             <LuShoppingCart size={48} strokeWidth={1.2} />
             <p className="cart-drawer__empty-title">{menuStrings.cart.emptyTitle}</p>
             <p className="cart-drawer__empty-sub">{menuStrings.cart.emptySub}</p>
@@ -652,6 +672,9 @@ export function CartDrawer({
         ) : (
           /* ── Item list grouped by guest ── */
           <>
+            {isPreorder && (
+              <p className="cart-drawer__preorder-banner">{menuStrings.cart.preorderBanner}</p>
+            )}
             <div
               className="cart-drawer__list"
               id="cart-drawer-panel-cart"
@@ -739,7 +762,7 @@ export function CartDrawer({
                 onClick={openConfirm}
                 disabled={items.length === 0}
               >
-                {menuStrings.cart.checkout}
+                {isPreorder ? menuStrings.cart.preorderCheckout : menuStrings.cart.checkout}
               </button>
             </div>
           </>
