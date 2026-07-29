@@ -224,6 +224,14 @@ export type EditorTable = {
   readonly public_number: string
   readonly capacity: number
   active?: boolean
+  /**
+   *  lang
+   */
+  readonly _lang: string | null
+  /**
+   *  is fallback
+   */
+  readonly _is_fallback: boolean
   readonly created_at: string
   readonly updated_at: string
 }
@@ -704,6 +712,14 @@ export type PatchedEditorTable = {
   readonly public_number?: string
   readonly capacity?: number
   active?: boolean
+  /**
+   *  lang
+   */
+  readonly _lang?: string | null
+  /**
+   *  is fallback
+   */
+  readonly _is_fallback?: boolean
   readonly created_at?: string
   readonly updated_at?: string
 }
@@ -886,6 +902,14 @@ export type PatchedZone = {
   edge_styles?: unknown
   canvas_cols?: number
   canvas_rows?: number
+  /**
+   *  lang
+   */
+  readonly _lang?: string | null
+  /**
+   *  is fallback
+   */
+  readonly _is_fallback?: boolean
 }
 
 export type PayOrderItems = {
@@ -1197,6 +1221,14 @@ export type Table = {
   readonly is_occupied: boolean
   active?: boolean
   zone: Zone | null
+  /**
+   *  lang
+   */
+  readonly _lang: string | null
+  /**
+   *  is fallback
+   */
+  readonly _is_fallback: boolean
   readonly created_at: string
   readonly updated_at: string
 }
@@ -1364,6 +1396,14 @@ export type Zone = {
   edge_styles?: unknown
   canvas_cols?: number
   canvas_rows?: number
+  /**
+   *  lang
+   */
+  readonly _lang: string | null
+  /**
+   *  is fallback
+   */
+  readonly _is_fallback: boolean
 }
 
 export type ZoneCreate = {
