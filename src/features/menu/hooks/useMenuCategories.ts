@@ -1,7 +1,7 @@
 import { useEffect, useReducer } from "react"
+import { useTranslation } from "react-i18next"
 import { fetchCategories } from "@/features/menu/api"
 import type { MenuCategory } from "@/features/menu/types"
-import i18n from "@/i18n/config"
 
 type State = {
   categories: MenuCategory[]
@@ -35,6 +35,7 @@ type UseMenuCategoriesResult = {
 
 function useMenuCategories(restaurantId: string): UseMenuCategoriesResult {
   const [state, dispatch] = useReducer(reducer, initialState)
+  const { i18n } = useTranslation()
 
   useEffect(() => {
     if (!restaurantId) return

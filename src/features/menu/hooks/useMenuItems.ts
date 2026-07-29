@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useReducer, useRef } from "react"
+import { useTranslation } from "react-i18next"
 import { fetchItems, searchItems } from "@/features/menu/api"
 import type { MenuItem, SortOrder } from "@/features/menu/types"
-import i18n from "@/i18n/config"
 
 type State = {
   items: MenuItem[]
@@ -85,6 +85,7 @@ function useMenuItems(
   sortOrder: SortOrder = "sort_order",
 ): UseMenuItemsResult {
   const [state, dispatch] = useReducer(reducer, initialState)
+  const { i18n } = useTranslation()
   const { loading, loadingMore, hasMore, page } = state
   const loadingMoreRef = useRef(false)
   const abortRef = useRef<AbortController | null>(null)

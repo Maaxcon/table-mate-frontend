@@ -14,6 +14,10 @@ export function setAcceptLanguage(lang: string): void {
   _acceptLanguage = lang
 }
 
+export function getAcceptLanguage(): string | undefined {
+  return _acceptLanguage
+}
+
 class RefreshAuthError extends Error {
   constructor() {
     super("Refresh token rejected")

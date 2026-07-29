@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react"
+import { useTranslation } from "react-i18next"
 import { fetchRestaurant } from "@/features/menu/api"
 import type { PublicRestaurantSettings } from "@/features/menu/types"
-import i18n from "@/i18n/config"
 
 export type RestaurantInfo = {
   name: string | null
@@ -16,6 +16,7 @@ export type RestaurantInfo = {
 type UseRestaurantInfoResult = RestaurantInfo & { notFound: boolean; fetchError: string | null }
 
 function useRestaurantInfo(restaurantId: string): UseRestaurantInfoResult {
+  const { i18n } = useTranslation()
   const [info, setInfo] = useState<RestaurantInfo>({
     name: null,
     address: null,

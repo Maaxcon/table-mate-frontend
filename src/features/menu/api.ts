@@ -1,5 +1,5 @@
 import { ENV_NOT_CONFIGURED_VALUE, env } from "@/config/env"
-import { apiFetch, getAccessToken, type Paginated } from "@/api/client"
+import { apiFetch, getAcceptLanguage, getAccessToken, type Paginated } from "@/api/client"
 import { CART_CLIENT_ID } from "./clientId"
 import { CART_API, MENU_API } from "./constants"
 import type {
@@ -53,12 +53,20 @@ async function httpError(res: Response): Promise<ApiError> {
   return err
 }
 
+function acceptLanguageHeaders(): Record<string, string> {
+  const lang = getAcceptLanguage()
+  return lang ? { "Accept-Language": lang } : {}
+}
+
 async function menuGet<T>(
   path: string,
   params: Record<string, string | undefined>,
   signal?: AbortSignal,
 ): Promise<T> {
-  const res = await fetch(buildUrl(path, params), { signal })
+  const res = await fetch(buildUrl(path, params), {
+    signal,
+    headers: acceptLanguageHeaders(),
+  })
   if (!res.ok) throw await httpError(res)
   return res.json() as Promise<T>
 }
@@ -70,7 +78,7 @@ async function menuPost<T>(
 ): Promise<T> {
   const res = await fetch(buildUrl(path, params), {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...acceptLanguageHeaders() },
     body: JSON.stringify(body),
   })
   if (!res.ok) throw await httpError(res)
@@ -116,7 +124,7 @@ export async function fetchItem(
       restaurant: restaurantId,
       guest_token: guestToken,
     }),
-    { signal },
+    { signal, headers: acceptLanguageHeaders() },
   )
   if (res.status === 404) return null
   if (!res.ok) throw await httpError(res)
