@@ -632,10 +632,25 @@
 }
 
 .overlay__reservation-actions {
+  /* Its own full-width row (not squeezed beside .overlay__reservation-info),
+     and never wraps — 3 buttons shrink together to share the row instead of
+     breaking raggedly under longer translations (e.g. Ukrainian). */
+  flex-basis: 100%;
   display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-  justify-content: flex-end;
+  gap: 6px;
+  flex-wrap: nowrap;
+  margin-top: 6px;
+  padding-top: 12px;
+  border-top: 1px solid var(--color-border-light);
+}
+
+.overlay__reservation-actions .overlay__seat-btn {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 9px 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 @keyframes overlay-shimmer {
