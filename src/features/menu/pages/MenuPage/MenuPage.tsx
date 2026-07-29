@@ -148,13 +148,11 @@ function MenuPage() {
     if (!cartSessionId || !guestJwt) {
       return Promise.reject(new Error(menuStrings.cart.sessionUnavailable))
     }
-    if (isPreorder) {
-      // Pre-order is a one-shot payment — the reservation is still PENDING,
-      // so there's no "next round" to reopen a fresh cart for.
-      return preorderCheckout(cartSessionId, guestJwt)
-    }
-    const result = await checkout(cartSessionId, guestJwt)
-    // Checkout closed this cart; reopen a fresh one so the guest can order again.
+    const result = isPreorder
+      ? await preorderCheckout(cartSessionId, guestJwt)
+      : await checkout(cartSessionId, guestJwt)
+    // Checkout closed this cart; reopen a fresh one so the guest can order
+    // again (a second pre-order round pays and gets injected independently).
     reinitGuestCart()
     return result
   }, [cartSessionId, guestJwt, isPreorder, reinitGuestCart])
