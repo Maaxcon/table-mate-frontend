@@ -540,7 +540,9 @@
       "close": "Закрити",
       "search": "Пошук",
       "connected": "Підключено",
-      "disconnected": "Відключено"
+      "disconnected": "Відключено",
+      "today": "Сьогодні",
+      "tomorrow": "Завтра"
     },
     "layout": {
       "brand": "Адмін",
@@ -1195,7 +1197,8 @@
           "modify": "Змінити",
           "cancel": "Скасувати",
           "new": "Нова бронь",
-          "preorderBadge": "Їжу замовлено й оплачено заздалегідь"
+          "preorderBadge": "Їжу замовлено й оплачено заздалегідь",
+          "preorderCooking": "Готується"
         },
         "voidReasons": {
           "mispick": "Не та позиція",
@@ -1228,6 +1231,7 @@
           "searchPlaceholder": "Пошук гостей…",
           "guestCount": "{{count}} гостей",
           "preorderBadge": "Їжу замовлено й оплачено заздалегідь",
+          "preorderCooking": "Готується",
           "status": {
             "pending": "Очікує",
             "active": "Активне",

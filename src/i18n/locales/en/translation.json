@@ -524,7 +524,9 @@
       "close": "Close",
       "search": "Search",
       "connected": "Connected",
-      "disconnected": "Disconnected"
+      "disconnected": "Disconnected",
+      "today": "Today",
+      "tomorrow": "Tomorrow"
     },
     "layout": {
       "brand": "Admin",
@@ -1169,7 +1171,8 @@
           "modify": "Modify",
           "cancel": "Cancel",
           "new": "New reservation",
-          "preorderBadge": "Food pre-ordered and paid"
+          "preorderBadge": "Food pre-ordered and paid",
+          "preorderCooking": "Being prepared"
         },
         "voidReasons": {
           "mispick": "Sent to wrong table",
@@ -1202,6 +1205,7 @@
           "searchPlaceholder": "Search guests…",
           "guestCount": "{{count}} guests",
           "preorderBadge": "Food pre-ordered and paid",
+          "preorderCooking": "Being prepared",
           "status": {
             "pending": "Pending",
             "active": "Active",

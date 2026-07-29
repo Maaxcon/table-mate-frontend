@@ -11,6 +11,8 @@ export function useWaiterStrings() {
       cancel: t("admin.common.cancel"),
       save: t("admin.common.save"),
       saving: t("admin.common.saving"),
+      today: t("admin.common.today"),
+      tomorrow: t("admin.common.tomorrow"),
     },
     page: {
       loading: t("admin.waiter.page.loading"),
@@ -119,6 +121,7 @@ export function useWaiterStrings() {
         cancel: t("admin.waiter.overlay.reservation.cancel"),
         new: t("admin.waiter.overlay.reservation.new"),
         preorderBadge: t("admin.waiter.overlay.reservation.preorderBadge"),
+        preorderCooking: t("admin.waiter.overlay.reservation.preorderCooking"),
       },
       voidReasons: {
         mispick: t("admin.waiter.overlay.voidReasons.mispick"),
@@ -151,6 +154,7 @@ export function useWaiterStrings() {
         searchPlaceholder: t("admin.waiter.reservations.sidebar.searchPlaceholder"),
         guestCount: (count: number) => t("admin.waiter.reservations.sidebar.guestCount", { count }),
         preorderBadge: t("admin.waiter.reservations.sidebar.preorderBadge"),
+        preorderCooking: t("admin.waiter.reservations.sidebar.preorderCooking"),
         status: {
           pending: t("admin.waiter.reservations.sidebar.status.pending"),
           active: t("admin.waiter.reservations.sidebar.status.active"),
