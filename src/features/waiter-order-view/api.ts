@@ -4,6 +4,7 @@ import {
   type FloorTable,
   type OverlayDetail,
   type OverlayOrderItem,
+  type Preorder,
   type ReservationItem,
 } from "./types"
 
@@ -74,6 +75,56 @@ export async function fetchReservations(signal?: AbortSignal): Promise<Reservati
   if (!res.ok) return null
   const data = (await res.json()) as { results?: ReservationApiItem[] }
   return (data.results ?? []).map(mapReservationItem)
+}
+
+// Raw shape from GET .../preorder/ (snake_case, decimals as strings).
+interface PreorderApiItem {
+  currency: string
+  total: string
+  can_cancel: boolean
+  items: { name: string; quantity: number; total_price: string }[]
+}
+
+// What the guest pre-ordered for this reservation, or null if there's none
+// (204) or it couldn't be loaded.
+export async function fetchPreorder(
+  reservationId: string,
+  signal?: AbortSignal,
+): Promise<Preorder | null> {
+  const res = await apiFetch(
+    `/api/reservations/reservations/${reservationId}/preorder/`,
+    signal ? { signal } : undefined,
+  )
+  if (res.status === 204 || !res.ok) return null
+  const data = (await res.json()) as PreorderApiItem
+  return {
+    currency: data.currency,
+    total: Number(data.total),
+    canCancel: data.can_cancel,
+    items: data.items.map((i) => ({
+      name: i.name,
+      quantity: i.quantity,
+      totalPrice: Number(i.total_price),
+    })),
+  }
+}
+
+// Cancel a reservation's pre-order (simulated refund). Only works while the
+// kitchen hasn't started it yet — the backend rejects it otherwise.
+export async function cancelPreorder(reservationId: string): Promise<void> {
+  const res = await apiFetch(`/api/reservations/reservations/${reservationId}/preorder/`, {
+    method: "DELETE",
+  })
+  if (!res.ok) {
+    let message = res.statusText
+    try {
+      const body = (await res.json()) as { detail?: string }
+      if (body.detail) message = body.detail
+    } catch {
+      // ignore
+    }
+    throw new Error(message)
+  }
 }
 
 // ── Open-table overlay ───────────────────────────────────────────────

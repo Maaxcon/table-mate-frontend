@@ -118,8 +118,19 @@
 }
 
 .reservation-sidebar__preorder-badge {
-  color: var(--color-primary);
+  display: inline-grid;
+  place-items: center;
   flex-shrink: 0;
+  padding: 2px;
+  border: none;
+  background: none;
+  color: var(--color-primary);
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.reservation-sidebar__preorder-badge:hover {
+  background: rgba(var(--color-primary-rgb), 0.12);
 }
 
 .reservation-sidebar__item-meta {

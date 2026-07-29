@@ -3,6 +3,7 @@ import { LuUtensilsCrossed } from "react-icons/lu"
 import type { ReservationItem } from "../../types"
 import { formatTimeRange } from "../../types"
 import { ConfirmCancelModal } from "../ConfirmCancelModal"
+import { PreorderModal } from "../PreorderModal/PreorderModal"
 import "./ReservationSidebar.css"
 import { useWaiterStrings } from "../../strings"
 
@@ -24,6 +25,11 @@ export function ReservationSidebar({
   const [searchQuery, setSearchQuery] = useState("")
   const [confirmingId, setConfirmingId] = useState<string | null>(null)
   const sidebarStrings = useWaiterStrings().reservations.sidebar
+
+  const [viewingPreorder, setViewingPreorder] = useState<ReservationItem | null>(null)
+  // Reservations whose pre-order was just cancelled — hides the entry point
+  // without needing to re-fetch the whole reservation list.
+  const [cancelledPreorderIds, setCancelledPreorderIds] = useState<Set<string>>(new Set())
 
   const getReservationStatusLabel = (status?: ReservationItem["status"]) => {
     if (!status) return sidebarStrings.status.unknown
@@ -73,60 +79,67 @@ export function ReservationSidebar({
       )}
 
       <div className="reservation-sidebar__list">
-        {filtered.map((r, i) => (
-          <div
-            key={r.public_id}
-            className={`reservation-sidebar__item ${i < filtered.length - 1 ? "reservation-sidebar__item--bordered" : ""}`}
-          >
-            <div className="reservation-sidebar__item-left">
-              <span className="reservation-sidebar__item-time">
-                {formatTimeRange(r.start_at, r.end_at)}
-              </span>
-              <div className="reservation-sidebar__item-info">
-                <span className="reservation-sidebar__item-name">
-                  {r.name}
-                  {r.has_preorder && (
-                    <LuUtensilsCrossed
-                      className="reservation-sidebar__preorder-badge"
-                      size={13}
-                      title={sidebarStrings.preorderBadge}
-                      aria-label={sidebarStrings.preorderBadge}
-                    />
-                  )}
+        {filtered.map((r, i) => {
+          const showsPreorder = r.has_preorder && !cancelledPreorderIds.has(r.public_id)
+
+          return (
+            <div
+              key={r.public_id}
+              className={`reservation-sidebar__item ${i < filtered.length - 1 ? "reservation-sidebar__item--bordered" : ""}`}
+            >
+              <div className="reservation-sidebar__item-left">
+                <span className="reservation-sidebar__item-time">
+                  {formatTimeRange(r.start_at, r.end_at)}
                 </span>
-                <span className="reservation-sidebar__item-meta">
-                  {sidebarStrings.guestCount(r.guest_count)}
-                  <span
-                    className={`reservation-sidebar__item-status reservation-sidebar__item-status--${(r.status ?? "unknown").toLowerCase()}`}
-                  >
-                    {getReservationStatusLabel(r.status)}
+                <div className="reservation-sidebar__item-info">
+                  <span className="reservation-sidebar__item-name">
+                    {r.name}
+                    {showsPreorder && (
+                      <button
+                        type="button"
+                        className="reservation-sidebar__preorder-badge"
+                        onClick={() => setViewingPreorder(r)}
+                        title={sidebarStrings.preorderBadge}
+                        aria-label={sidebarStrings.preorderBadge}
+                      >
+                        <LuUtensilsCrossed size={13} aria-hidden="true" />
+                      </button>
+                    )}
                   </span>
-                </span>
+                  <span className="reservation-sidebar__item-meta">
+                    {sidebarStrings.guestCount(r.guest_count)}
+                    <span
+                      className={`reservation-sidebar__item-status reservation-sidebar__item-status--${(r.status ?? "unknown").toLowerCase()}`}
+                    >
+                      {getReservationStatusLabel(r.status)}
+                    </span>
+                  </span>
+                </div>
+              </div>
+              <div className="reservation-sidebar__item-right">
+                <span className="reservation-sidebar__item-table">{r.table}</span>
+                <div className="reservation-sidebar__item-actions">
+                  <button
+                    type="button"
+                    className="reservation-sidebar__action-btn reservation-sidebar__action-btn--modify"
+                    onClick={() => onModify(r)}
+                    disabled={actionLoading}
+                  >
+                    {sidebarStrings.actions.modify}
+                  </button>
+                  <button
+                    type="button"
+                    className="reservation-sidebar__action-btn reservation-sidebar__action-btn--cancel"
+                    onClick={() => setConfirmingId(r.public_id)}
+                    disabled={actionLoading}
+                  >
+                    {sidebarStrings.actions.cancel}
+                  </button>
+                </div>
               </div>
             </div>
-            <div className="reservation-sidebar__item-right">
-              <span className="reservation-sidebar__item-table">{r.table}</span>
-              <div className="reservation-sidebar__item-actions">
-                <button
-                  type="button"
-                  className="reservation-sidebar__action-btn reservation-sidebar__action-btn--modify"
-                  onClick={() => onModify(r)}
-                  disabled={actionLoading}
-                >
-                  {sidebarStrings.actions.modify}
-                </button>
-                <button
-                  type="button"
-                  className="reservation-sidebar__action-btn reservation-sidebar__action-btn--cancel"
-                  onClick={() => setConfirmingId(r.public_id)}
-                  disabled={actionLoading}
-                >
-                  {sidebarStrings.actions.cancel}
-                </button>
-              </div>
-            </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
 
       {confirmingId && (
@@ -140,6 +153,16 @@ export function ReservationSidebar({
             setConfirmingId(null)
           }}
           onClose={() => setConfirmingId(null)}
+        />
+      )}
+
+      {viewingPreorder && (
+        <PreorderModal
+          reservation={viewingPreorder}
+          onClose={() => setViewingPreorder(null)}
+          onCancelled={() =>
+            setCancelledPreorderIds((prev) => new Set(prev).add(viewingPreorder.public_id))
+          }
         />
       )}
     </aside>

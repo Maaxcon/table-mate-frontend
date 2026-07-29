@@ -1184,6 +1184,16 @@
         "pay": "Pay",
         "paying": "Paying…"
       },
+      "preorderModal": {
+        "title": "Pre-order",
+        "loading": "Loading pre-order…",
+        "empty": "No pre-order found.",
+        "total": "Total",
+        "cancel": "Cancel pre-order",
+        "cancelling": "Cancelling…",
+        "cancelError": "Could not cancel the pre-order. Please try again.",
+        "locked": "The kitchen has already started this — it can't be cancelled."
+      },
       "reservations": {
         "sidebar": {
           "title": "Next reservations",

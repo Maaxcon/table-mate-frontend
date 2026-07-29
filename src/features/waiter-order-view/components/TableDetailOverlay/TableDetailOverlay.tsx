@@ -7,6 +7,7 @@ import { getCurrencySymbol } from "@/features/menu/utils"
 import { OrderItemRow } from "../OrderItemRow"
 import { CloseCheckModal } from "../CloseCheckModal"
 import { ProcessPaymentModal } from "../ProcessPaymentModal"
+import { PreorderModal } from "../PreorderModal/PreorderModal"
 import { fetchVoidReasons } from "../../api/orderApi"
 import type { VoidReason } from "@/types/api/types.gen"
 import "./TableDetailOverlay.css"
@@ -79,6 +80,11 @@ export function TableDetailOverlay({
   const [showProcessPayment, setShowProcessPayment] = useState(false)
   const [voidReasons, setVoidReasons] = useState<VoidReason[]>([])
   const dialogRef = useFocusTrap<HTMLDivElement>({ onEscape: onClose })
+
+  const [viewingPreorder, setViewingPreorder] = useState<ReservationItem | null>(null)
+  // Reservations whose pre-order was just cancelled — hides the entry point
+  // without needing to re-fetch the whole reservation list.
+  const [cancelledPreorderIds, setCancelledPreorderIds] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     if (!onVoidItem) return
@@ -459,78 +465,85 @@ export function TableDetailOverlay({
               <p className="overlay__empty">{overlayStrings.empty.reservations}</p>
             ) : (
               <div className="overlay__reservation-list">
-                {dayReservations.map((r) => (
-                  <div
-                    key={r.public_id}
-                    className={`overlay__reservation-row overlay__reservation-row--${r.status}`}
-                  >
-                    <div className="overlay__reservation-info">
-                      <span className="overlay__reservation-name">
-                        {r.name}
-                        {r.status === "active" && (
-                          <span className="overlay__reservation-tag">
-                            {overlayStrings.reservation.tagSeated}
-                          </span>
+                {dayReservations.map((r) => {
+                  const showsPreorder = r.has_preorder && !cancelledPreorderIds.has(r.public_id)
+
+                  return (
+                    <div
+                      key={r.public_id}
+                      className={`overlay__reservation-row overlay__reservation-row--${r.status}`}
+                    >
+                      <div className="overlay__reservation-info">
+                        <span className="overlay__reservation-name">
+                          {r.name}
+                          {r.status === "active" && (
+                            <span className="overlay__reservation-tag">
+                              {overlayStrings.reservation.tagSeated}
+                            </span>
+                          )}
+                          {showsPreorder && (
+                            <button
+                              type="button"
+                              className="overlay__reservation-preorder-badge"
+                              onClick={() => setViewingPreorder(r)}
+                              title={overlayStrings.reservation.preorderBadge}
+                              aria-label={overlayStrings.reservation.preorderBadge}
+                            >
+                              <LuUtensilsCrossed size={13} aria-hidden="true" />
+                            </button>
+                          )}
+                        </span>
+                        <span className="overlay__reservation-meta">
+                          {overlayStrings.values.guests(r.guest_count)} &middot;{" "}
+                          {formatTimeRange(r.start_at, r.end_at)}
+                        </span>
+                      </div>
+                      <div className="overlay__reservation-actions">
+                        {!isOccupied && r.status === "pending" && (
+                          <>
+                            <button
+                              type="button"
+                              className="overlay__seat-btn"
+                              disabled={actionBusy}
+                              onClick={() => onActivateReservation?.(r.public_id)}
+                            >
+                              {busyActionId === r.public_id ? "…" : overlayStrings.reservation.seat}
+                            </button>
+                            {onModifyReservation && (
+                              <button
+                                type="button"
+                                className="overlay__seat-btn overlay__seat-btn--modify"
+                                disabled={actionBusy}
+                                onClick={() => onModifyReservation(r)}
+                              >
+                                {overlayStrings.reservation.modify}
+                              </button>
+                            )}
+                            {onCancelReservation && (
+                              <button
+                                type="button"
+                                className="overlay__seat-btn overlay__seat-btn--cancel"
+                                disabled={actionBusy}
+                                onClick={() => onCancelReservation(r.public_id)}
+                              >
+                                {overlayStrings.reservation.cancel}
+                              </button>
+                            )}
+                          </>
                         )}
-                        {r.has_preorder && (
-                          <LuUtensilsCrossed
-                            className="overlay__reservation-preorder-badge"
-                            size={13}
-                            title={overlayStrings.reservation.preorderBadge}
-                            aria-label={overlayStrings.reservation.preorderBadge}
-                          />
-                        )}
-                      </span>
-                      <span className="overlay__reservation-meta">
-                        {overlayStrings.values.guests(r.guest_count)} &middot;{" "}
-                        {formatTimeRange(r.start_at, r.end_at)}
-                      </span>
-                    </div>
-                    <div className="overlay__reservation-actions">
-                      {!isOccupied && r.status === "pending" && (
-                        <>
+                        {r.status === "active" && onModifyReservation && (
                           <button
                             type="button"
-                            className="overlay__seat-btn"
-                            disabled={actionBusy}
-                            onClick={() => onActivateReservation?.(r.public_id)}
+                            className="overlay__seat-btn overlay__seat-btn--modify"
+                            onClick={() => onModifyReservation(r)}
                           >
-                            {busyActionId === r.public_id ? "…" : overlayStrings.reservation.seat}
+                            {overlayStrings.reservation.modify}
                           </button>
-                          {onModifyReservation && (
-                            <button
-                              type="button"
-                              className="overlay__seat-btn overlay__seat-btn--modify"
-                              disabled={actionBusy}
-                              onClick={() => onModifyReservation(r)}
-                            >
-                              {overlayStrings.reservation.modify}
-                            </button>
-                          )}
-                          {onCancelReservation && (
-                            <button
-                              type="button"
-                              className="overlay__seat-btn overlay__seat-btn--cancel"
-                              disabled={actionBusy}
-                              onClick={() => onCancelReservation(r.public_id)}
-                            >
-                              {overlayStrings.reservation.cancel}
-                            </button>
-                          )}
-                        </>
-                      )}
-                      {r.status === "active" && onModifyReservation && (
-                        <button
-                          type="button"
-                          className="overlay__seat-btn overlay__seat-btn--modify"
-                          onClick={() => onModifyReservation(r)}
-                        >
-                          {overlayStrings.reservation.modify}
-                        </button>
-                      )}
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             )}
 
@@ -562,6 +575,16 @@ export function TableDetailOverlay({
           error={actionError}
           onConfirm={(orderItemIds) => onProcessPayment?.(orderItemIds)}
           onClose={() => setShowProcessPayment(false)}
+        />
+      )}
+
+      {viewingPreorder && (
+        <PreorderModal
+          reservation={viewingPreorder}
+          onClose={() => setViewingPreorder(null)}
+          onCancelled={() =>
+            setCancelledPreorderIds((prev) => new Set(prev).add(viewingPreorder.public_id))
+          }
         />
       )}
     </>

@@ -135,6 +135,16 @@ export function useWaiterStrings() {
       pay: t("admin.waiter.payModal.pay"),
       paying: t("admin.waiter.payModal.paying"),
     },
+    preorderModal: {
+      title: t("admin.waiter.preorderModal.title"),
+      loading: t("admin.waiter.preorderModal.loading"),
+      empty: t("admin.waiter.preorderModal.empty"),
+      total: t("admin.waiter.preorderModal.total"),
+      cancel: t("admin.waiter.preorderModal.cancel"),
+      cancelling: t("admin.waiter.preorderModal.cancelling"),
+      cancelError: t("admin.waiter.preorderModal.cancelError"),
+      locked: t("admin.waiter.preorderModal.locked"),
+    },
     reservations: {
       sidebar: {
         title: t("admin.waiter.reservations.sidebar.title"),

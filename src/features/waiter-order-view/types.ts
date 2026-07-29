@@ -48,6 +48,22 @@ export type ReservationItem = Pick<
   has_preorder?: boolean
 }
 
+// A reservation's paid pre-order — what the guest picked ahead of arrival.
+export type PreorderItem = {
+  name: string
+  quantity: number
+  totalPrice: number
+}
+
+export type Preorder = {
+  currency: string
+  total: number
+  items: PreorderItem[]
+  // False once the kitchen has already picked it up — staff can no longer
+  // cancel it from here at that point.
+  canCancel: boolean
+}
+
 export interface OverlayOrderItem {
   public_id: string
   guest_slot: number
