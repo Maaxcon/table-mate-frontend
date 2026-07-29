@@ -64,8 +64,8 @@ export type AdminMenuItem = {
   is_available?: boolean
   sort_order?: number
   readonly likes_count: number
-  readonly average_rating?: number | null
-  readonly rating_count?: number
+  readonly average_rating: number | null
+  readonly rating_count: number
   readonly created_at: string
   readonly updated_at: string
 }
@@ -207,6 +207,22 @@ export type CustomerContext = {
   reservation: string
 }
 
+export type DishFeedback = {
+  readonly public_id: string
+  readonly menu_item: string
+  readonly menu_item_name: string
+  rating: number
+  comment?: string
+  readonly created_at: string
+  readonly updated_at: string
+}
+
+export type DishFeedbackInput = {
+  menu_item: string
+  rating: number
+  comment?: string
+}
+
 export type EditorTable = {
   readonly public_id: string
   readonly restaurant: string
@@ -238,6 +254,41 @@ export type EmployeeCreate = {
   readonly is_active: boolean
 }
 
+export type FeedbackDetail = {
+  readonly public_id: string
+  readonly restaurant: string
+  readonly guest: string
+  readonly guest_name: string
+  readonly guest_identity: string
+  readonly order: string
+  readonly overall_rating: number
+  readonly service_rating: number
+  readonly comment: string
+  review_status?: ReviewStatusEnum
+  readonly prompt_shown_at: string | null
+  readonly dismissed: boolean
+  readonly created_at: string
+  readonly updated_at: string
+  readonly dish_feedback: Array<DishFeedback>
+}
+
+export type FeedbackList = {
+  readonly public_id: string
+  readonly restaurant: string
+  readonly guest: string
+  readonly guest_name: string
+  readonly guest_identity: string
+  readonly order: string
+  readonly overall_rating: number
+  readonly service_rating: number
+  readonly comment: string
+  review_status?: ReviewStatusEnum
+  readonly prompt_shown_at: string | null
+  readonly dismissed: boolean
+  readonly created_at: string
+  readonly updated_at: string
+}
+
 export type GoogleAuth = {
   code: string
   redirect_uri: string
@@ -255,6 +306,26 @@ export type GoogleContext = {
 
 export type GoogleContextResponse = {
   readonly access: string
+}
+
+export type GuestFeedbackCreate = {
+  order: string
+  overall_rating: number
+  service_rating: number
+  comment?: string
+  dish_feedback?: Array<DishFeedbackInput>
+}
+
+export type GuestFeedbackList = {
+  readonly public_id: string
+  readonly restaurant: string
+  readonly order: string
+  readonly overall_rating: number
+  readonly service_rating: number
+  readonly comment: string
+  readonly created_at: string
+  readonly updated_at: string
+  readonly dish_feedback: Array<DishFeedback>
 }
 
 export type GuestInit = {
@@ -341,11 +412,11 @@ export type MenuItem = {
   image?: string | null
   readonly likes_count: number
   readonly is_liked: boolean
+  readonly average_rating: number | null
+  readonly rating_count: number
   price: string
   is_available?: boolean
   sort_order?: number
-  readonly average_rating?: number | null
-  readonly rating_count?: number
   readonly created_at: string
   readonly updated_at: string
 }
@@ -486,6 +557,20 @@ export type PaginatedEmployeeList = {
   next?: string | null
   previous?: string | null
   results: Array<Employee>
+}
+
+export type PaginatedFeedbackListList = {
+  count: number
+  next?: string | null
+  previous?: string | null
+  results: Array<FeedbackList>
+}
+
+export type PaginatedGuestFeedbackListList = {
+  count: number
+  next?: string | null
+  previous?: string | null
+  results: Array<GuestFeedbackList>
 }
 
 export type PaginatedLayoutList = {
@@ -632,6 +717,8 @@ export type PatchedAdminMenuItem = {
   is_available?: boolean
   sort_order?: number
   readonly likes_count?: number
+  readonly average_rating?: number | null
+  readonly rating_count?: number
   readonly created_at?: string
   readonly updated_at?: string
 }
@@ -906,6 +993,7 @@ export type PublishLayout = {
 
 export type Receipt = {
   readonly public_id: string
+  readonly order_public_id: string | null
   order_number: string
   readonly restaurant_public_id: string
   readonly restaurant_name: string
@@ -928,6 +1016,7 @@ export type Receipt = {
 }
 
 export type ReceiptItem = {
+  readonly menu_item_public_id: string | null
   name?: string
   quantity?: number
   unit_price?: string | null
@@ -989,6 +1078,12 @@ export type RestaurantInfo = {
   readonly public_id: string
   name: string
 }
+
+/**
+ * * `new` - New
+ * * `reviewed` - Reviewed
+ */
+export type ReviewStatusEnum = "new" | "reviewed"
 
 /**
  * * `admin` - Admin
@@ -1305,6 +1400,11 @@ export type CustomTokenObtainPairWritable = {
   password: string
 }
 
+export type DishFeedbackWritable = {
+  rating: number
+  comment?: string
+}
+
 export type EditorTableWritable = {
   active?: boolean
 }
@@ -1323,6 +1423,18 @@ export type EmployeeCreateWritable = {
   last_name?: string
   phone?: string | null
   role?: RoleEnum
+}
+
+export type FeedbackDetailWritable = {
+  review_status?: ReviewStatusEnum
+}
+
+export type FeedbackListWritable = {
+  review_status?: ReviewStatusEnum
+}
+
+export type GuestFeedbackListWritable = {
+  [key: string]: unknown
 }
 
 export type LayoutWritable = {
@@ -1450,6 +1562,20 @@ export type PaginatedEmployeeListWritable = {
   next?: string | null
   previous?: string | null
   results: Array<EmployeeWritable>
+}
+
+export type PaginatedFeedbackListListWritable = {
+  count: number
+  next?: string | null
+  previous?: string | null
+  results: Array<FeedbackListWritable>
+}
+
+export type PaginatedGuestFeedbackListListWritable = {
+  count: number
+  next?: string | null
+  previous?: string | null
+  results: Array<GuestFeedbackListWritable>
 }
 
 export type PaginatedLayoutListWritable = {
@@ -1709,6 +1835,12 @@ export type ReceiptWritable = {
   tip?: string
   payment_method?: PaymentMethodEnum
   payment_status?: string
+}
+
+export type ReceiptItemWritable = {
+  name?: string
+  quantity?: number
+  unit_price?: string | null
 }
 
 export type ReservationWritable = {
@@ -2096,6 +2228,128 @@ export type EditorTablesAvailableListResponses = {
 export type EditorTablesAvailableListResponse =
   EditorTablesAvailableListResponses[keyof EditorTablesAvailableListResponses]
 
+export type FeedbackCreateData = {
+  body: GuestFeedbackCreate
+  path?: never
+  query?: never
+  url: "/api/feedback/"
+}
+
+export type FeedbackCreateResponses = {
+  201: GuestFeedbackList
+}
+
+export type FeedbackCreateResponse = FeedbackCreateResponses[keyof FeedbackCreateResponses]
+
+export type FeedbackAdminListData = {
+  body?: never
+  path?: never
+  query?: {
+    /**
+     * Which field to use when ordering the results.
+     */
+    ordering?: string
+    /**
+     * A page number within the paginated result set.
+     */
+    page?: number
+  }
+  url: "/api/feedback/admin/"
+}
+
+export type FeedbackAdminListResponses = {
+  200: PaginatedFeedbackListList
+}
+
+export type FeedbackAdminListResponse = FeedbackAdminListResponses[keyof FeedbackAdminListResponses]
+
+export type FeedbackAdminRetrieveData = {
+  body?: never
+  path: {
+    public_id: string
+  }
+  query?: never
+  url: "/api/feedback/admin/{public_id}/"
+}
+
+export type FeedbackAdminRetrieveResponses = {
+  200: FeedbackDetail
+}
+
+export type FeedbackAdminRetrieveResponse =
+  FeedbackAdminRetrieveResponses[keyof FeedbackAdminRetrieveResponses]
+
+export type FeedbackMyListData = {
+  body?: never
+  path?: never
+  query?: {
+    /**
+     * Which field to use when ordering the results.
+     */
+    ordering?: string
+    /**
+     * A page number within the paginated result set.
+     */
+    page?: number
+  }
+  url: "/api/feedback/my/"
+}
+
+export type FeedbackMyListResponses = {
+  200: PaginatedGuestFeedbackListList
+}
+
+export type FeedbackMyListResponse = FeedbackMyListResponses[keyof FeedbackMyListResponses]
+
+export type FeedbackMyDestroyData = {
+  body?: never
+  path: {
+    id: string
+  }
+  query?: never
+  url: "/api/feedback/my/{id}/"
+}
+
+export type FeedbackMyDestroyResponses = {
+  /**
+   * No response body
+   */
+  204: void
+}
+
+export type FeedbackMyDestroyResponse = FeedbackMyDestroyResponses[keyof FeedbackMyDestroyResponses]
+
+export type FeedbackMyRetrieveData = {
+  body?: never
+  path: {
+    id: string
+  }
+  query?: never
+  url: "/api/feedback/my/{id}/"
+}
+
+export type FeedbackMyRetrieveResponses = {
+  200: GuestFeedbackList
+}
+
+export type FeedbackMyRetrieveResponse =
+  FeedbackMyRetrieveResponses[keyof FeedbackMyRetrieveResponses]
+
+export type FeedbackMyUpdateData = {
+  body: GuestFeedbackCreate
+  path: {
+    id: string
+  }
+  query?: never
+  url: "/api/feedback/my/{id}/"
+}
+
+export type FeedbackMyUpdateResponses = {
+  200: GuestFeedbackList
+}
+
+export type FeedbackMyUpdateResponse = FeedbackMyUpdateResponses[keyof FeedbackMyUpdateResponses]
+
 export type MenuAdminCategoriesListData = {
   body?: never
   path?: never
@@ -2225,6 +2479,7 @@ export type MenuAdminItemsListData = {
     category?: string
     is_available?: boolean
     menu?: string
+    min_rating?: number
     /**
      * Which field to use when ordering the results.
      */
@@ -2538,6 +2793,7 @@ export type MenuItemsListData = {
     category?: string
     is_available?: boolean
     menu?: string
+    min_rating?: number
     /**
      * Which field to use when ordering the results.
      */
