@@ -1,4 +1,5 @@
 import { LuCalendarClock, LuMapPin, LuTable2, LuUsers } from "react-icons/lu"
+import { useNavigate } from "react-router-dom"
 import { useCabinetStrings } from "@/features/cabinet/strings"
 import type { Reservation } from "@/features/cabinet/types"
 import "./BookingsList.css"
@@ -37,6 +38,7 @@ export function BookingsList({
   onLoadMore,
 }: BookingsListProps) {
   const strings = useCabinetStrings()
+  const navigate = useNavigate()
 
   return (
     <section className="cabinet-section" aria-labelledby="cabinet-bookings-title">
@@ -96,6 +98,18 @@ export function BookingsList({
                     </p>
                   ) : (
                     <div className="booking-card__actions">
+                      {booking.status === "pending" && (
+                        <button
+                          type="button"
+                          className="booking-card__btn booking-card__btn--preorder"
+                          onClick={() =>
+                            navigate(`/menu/${booking.restaurant}?reservation=${booking.public_id}`)
+                          }
+                          disabled={isBusy}
+                        >
+                          {strings.bookings.preorder}
+                        </button>
+                      )}
                       <button
                         type="button"
                         className="booking-card__btn"

@@ -143,6 +143,12 @@
   background: var(--color-error-bg);
 }
 
+.booking-card__btn--preorder {
+  color: var(--color-primary);
+  border-color: rgba(var(--color-primary-rgb), 0.4);
+  background: rgba(var(--color-primary-rgb), 0.08);
+}
+
 .cabinet-bookings__more {
   width: 100%;
   margin-top: 12px;

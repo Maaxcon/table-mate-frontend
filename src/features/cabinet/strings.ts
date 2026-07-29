@@ -52,6 +52,7 @@ export function useCabinetStrings() {
       tableLabel: (number: string) => t("cabinet.bookings.tableLabel", { number }),
       guestLabel: (count: number) => t("cabinet.bookings.guests", { count }),
       activeNote: t("cabinet.bookings.activeNote"),
+      preorder: t("cabinet.bookings.preorder"),
       modify: t("cabinet.bookings.modify"),
       cancel: t("cabinet.bookings.cancel"),
       cancelling: t("cabinet.bookings.cancelling"),
