@@ -21,6 +21,7 @@ import {
   getDurationError,
   localDateKey,
   maxDurationBeforeClose,
+  localeFromLang,
   MIN_DURATION,
   minutesToTime,
   normalizeSlots,
@@ -615,7 +616,7 @@ export function BookModal({
                               disabled={isGrayed}
                             >
                               <span className="book-modal__date-day">
-                                {d.toLocaleDateString("uk-UA", { weekday: "short" })}
+                                {d.toLocaleDateString(localeFromLang(), { weekday: "short" })}
                               </span>
                               <span className="book-modal__date-num">{d.getDate()}</span>
                               {isToday && (
@@ -689,7 +690,7 @@ export function BookModal({
                         </div>
                         {selectedTimeValue && (
                           <p className="book-modal__table-slot">
-                            {selectedDate.toLocaleDateString("uk-UA", {
+                            {selectedDate.toLocaleDateString(localeFromLang(), {
                               month: "short",
                               day: "numeric",
                             })}{" "}
@@ -755,7 +756,7 @@ export function BookModal({
                     <SlotSummary
                       title={bookStrings.modal.sections.confirmation}
                       tableNumber={table.public_number}
-                      date={selectedDate.toLocaleDateString("uk-UA", {
+                      date={selectedDate.toLocaleDateString(localeFromLang(), {
                         weekday: "short",
                         month: "short",
                         day: "numeric",

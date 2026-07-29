@@ -16,6 +16,10 @@ export const DEFAULT_GUESTS = 2
 // by Date.getDay() where 0 = Sunday.
 export const DAY_NAMES = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const
 
+export function localeFromLang(): string {
+  return i18n.language.startsWith("uk") ? "uk-UA" : "en-US"
+}
+
 export function localDateKey(d: Date): string {
   const y = d.getFullYear()
   const m = String(d.getMonth() + 1).padStart(2, "0")
@@ -216,7 +220,7 @@ export function normalizeSlots(slots: string[]): string[] {
 // Format an ISO instant as HH:MM in the restaurant's timezone (falls back to the
 // browser's zone when unknown), so a guest in another zone sees the venue's time.
 export function formatTimeInTz(iso: string, timeZone: string | null): string {
-  return new Date(iso).toLocaleTimeString("uk-UA", {
+  return new Date(iso).toLocaleTimeString(localeFromLang(), {
     timeZone: safeTimeZone(timeZone) ?? undefined,
     hour: "2-digit",
     minute: "2-digit",

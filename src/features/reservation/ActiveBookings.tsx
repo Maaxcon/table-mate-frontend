@@ -12,7 +12,7 @@ import { CancellationConfirmationModal } from "./CancellationConfirmationModal"
 import { downloadReservationIcs } from "./ics"
 import { RescheduleModal } from "./RescheduleModal"
 import { useBookStrings } from "./strings"
-import { formatTimeInTz, safeTimeZone } from "./utils"
+import { formatTimeInTz, localeFromLang, safeTimeZone } from "./utils"
 import "./ActiveBookings.css"
 
 interface ActiveBookingsProps {
@@ -31,9 +31,11 @@ function dateParts(iso: string, timeZone: string | null) {
   const d = new Date(iso)
   const tz = safeTimeZone(timeZone) ?? undefined
   return {
-    day: d.toLocaleDateString("uk-UA", { timeZone: tz, day: "numeric" }),
-    month: d.toLocaleDateString("uk-UA", { timeZone: tz, month: "short" }).replace(".", ""),
-    weekday: d.toLocaleDateString("uk-UA", { timeZone: tz, weekday: "short" }),
+    day: d.toLocaleDateString(localeFromLang(), { timeZone: tz, day: "numeric" }),
+    month: d
+      .toLocaleDateString(localeFromLang(), { timeZone: tz, month: "short" })
+      .replace(".", ""),
+    weekday: d.toLocaleDateString(localeFromLang(), { timeZone: tz, weekday: "short" }),
   }
 }
 

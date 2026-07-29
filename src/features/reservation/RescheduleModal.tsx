@@ -13,6 +13,7 @@ import {
   generateTimeSlots,
   getDurationError,
   localDateKey,
+  localeFromLang,
   maxDurationBeforeClose,
   MIN_DURATION,
   minutesToTime,
@@ -274,7 +275,7 @@ function RescheduleForm({
 
   const dialogRef = useFocusTrap<HTMLDivElement>({ onEscape: handleDismiss })
 
-  const formattedDate = parsedDate.toLocaleDateString("uk-UA", {
+  const formattedDate = parsedDate.toLocaleDateString(localeFromLang(), {
     weekday: "short",
     month: "short",
     day: "numeric",

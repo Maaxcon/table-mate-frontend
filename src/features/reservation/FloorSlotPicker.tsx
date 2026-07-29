@@ -3,7 +3,7 @@ import { LuCalendarDays, LuClock, LuMinus, LuPlus, LuSparkles, LuUsers } from "r
 import type { WorkingHoursDay } from "./api"
 import { useDateWindow } from "./hooks/useDateWindow"
 import { useBookStrings } from "./strings"
-import { DAY_NAMES, generateTimeSlots, localDateKey } from "./utils"
+import { DAY_NAMES, generateTimeSlots, localDateKey, localeFromLang } from "./utils"
 import "./FloorSlotPicker.css"
 
 interface FloorSlotPickerProps {
@@ -97,7 +97,7 @@ export function FloorSlotPicker({
                 <span className="c-slot-picker__chip-dow">
                   {isSameDay(d, today)
                     ? bookStrings.floorPlan.slot.today
-                    : d.toLocaleDateString("uk-UA", { weekday: "short" })}
+                    : d.toLocaleDateString(localeFromLang(), { weekday: "short" })}
                 </span>
                 <span className="c-slot-picker__chip-day">{d.getDate()}</span>
               </button>
