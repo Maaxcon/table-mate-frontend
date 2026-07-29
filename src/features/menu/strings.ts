@@ -38,6 +38,7 @@ export function useMenuStrings() {
       sortLabelPriceAsc: t("menu.controls.sortLabelPriceAsc"),
       sortLabelPriceDesc: t("menu.controls.sortLabelPriceDesc"),
       cartAria: t("menu.controls.cartAria"),
+      categoryAll: t("menu.controls.categoryAll"),
     },
     grid: {
       loadMore: t("menu.grid.loadMore"),

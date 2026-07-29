@@ -20,6 +20,7 @@ import {
   LuWine,
 } from "react-icons/lu"
 import type { MenuCategory } from "@/features/menu/types"
+import { useMenuStrings } from "@/features/menu/strings"
 import "./CategoryRail.css"
 
 function getCategoryIcon(name: string): ReactElement {
@@ -58,6 +59,7 @@ type CategoryRailProps = {
 }
 
 function CategoryRail({ categories, activeCategory, onSelect, loading }: CategoryRailProps) {
+  const s = useMenuStrings()
   const railRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -86,7 +88,7 @@ function CategoryRail({ categories, activeCategory, onSelect, loading }: Categor
         onClick={() => onSelect(null)}
       >
         <LuLayoutGrid size={14} />
-        All
+        {s.controls.categoryAll}
       </button>
       {categories.map((cat) => (
         <button

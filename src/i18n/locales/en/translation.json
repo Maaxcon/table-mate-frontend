@@ -42,7 +42,8 @@
       "sortLabelDefault": "Sort",
       "sortLabelPriceAsc": "↑ Price",
       "sortLabelPriceDesc": "↓ Price",
-      "cartAria": "Cart"
+      "cartAria": "Cart",
+      "categoryAll": "All"
     },
     "grid": {
       "loadMore": "Load more",

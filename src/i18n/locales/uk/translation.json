@@ -42,7 +42,8 @@
       "sortLabelDefault": "Сорт.",
       "sortLabelPriceAsc": "↑ Ціна",
       "sortLabelPriceDesc": "↓ Ціна",
-      "cartAria": "Кошик"
+      "cartAria": "Кошик",
+      "categoryAll": "Усі"
     },
     "grid": {
       "loadMore": "Показати більше",
