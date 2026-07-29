@@ -29,6 +29,8 @@ function makeMenuItem(overrides: Partial<MenuItem> = {}): MenuItem {
     allergens: [],
     likes_count: 0,
     is_liked: false,
+    average_rating: null,
+    rating_count: 0,
     price: "29.99",
     is_available: true,
     created_at: "2026-01-01T00:00:00Z",
