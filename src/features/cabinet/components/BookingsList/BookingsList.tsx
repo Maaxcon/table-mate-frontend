@@ -1,10 +1,9 @@
 import { useState } from "react"
-import { LuCalendarClock, LuMapPin, LuTable2, LuUsers } from "react-icons/lu"
+import { LuCalendarClock, LuMapPin, LuTable2, LuUsers, LuUtensilsCrossed } from "react-icons/lu"
 import { useNavigate } from "react-router-dom"
-import { cancelPreorder, fetchPreorder } from "@/features/cabinet/api"
 import { useCabinetStrings } from "@/features/cabinet/strings"
-import type { Preorder, Reservation } from "@/features/cabinet/types"
-import { formatAmount, getCurrencySymbol } from "@/features/menu/utils"
+import type { Reservation } from "@/features/cabinet/types"
+import { PreorderDialog } from "@/features/cabinet/components/PreorderDialog/PreorderDialog"
 import "./BookingsList.css"
 
 type BookingsListProps = {
@@ -43,43 +42,10 @@ export function BookingsList({
   const strings = useCabinetStrings()
   const navigate = useNavigate()
 
-  // Keyed by reservation public_id. undefined = not fetched yet, null =
-  // fetched and there's none (including just-cancelled — cancelling sets it
-  // to null locally instead of re-fetching).
-  const [expandedId, setExpandedId] = useState<string | null>(null)
-  const [preorders, setPreorders] = useState<Record<string, Preorder | null>>({})
-  const [preorderLoadingId, setPreorderLoadingId] = useState<string | null>(null)
-  const [preorderErrors, setPreorderErrors] = useState<Record<string, string>>({})
-  const [cancellingPreorderId, setCancellingPreorderId] = useState<string | null>(null)
-
-  const toggleExpand = (bookingId: string) => {
-    if (expandedId === bookingId) {
-      setExpandedId(null)
-      return
-    }
-    setExpandedId(bookingId)
-    if (preorders[bookingId] !== undefined) return
-    setPreorderLoadingId(bookingId)
-    fetchPreorder(bookingId)
-      .then((p) => setPreorders((prev) => ({ ...prev, [bookingId]: p })))
-      .catch(() =>
-        setPreorderErrors((prev) => ({ ...prev, [bookingId]: strings.bookings.preorderLoadError })),
-      )
-      .finally(() => setPreorderLoadingId(null))
-  }
-
-  const handleCancelPreorder = async (bookingId: string) => {
-    setCancellingPreorderId(bookingId)
-    setPreorderErrors((prev) => ({ ...prev, [bookingId]: "" }))
-    try {
-      await cancelPreorder(bookingId)
-      setPreorders((prev) => ({ ...prev, [bookingId]: null }))
-    } catch {
-      setPreorderErrors((prev) => ({ ...prev, [bookingId]: strings.bookings.preorderCancelError }))
-    } finally {
-      setCancellingPreorderId(null)
-    }
-  }
+  const [viewingPreorder, setViewingPreorder] = useState<Reservation | null>(null)
+  // Bookings whose pre-order was just cancelled — hides the entry point
+  // without needing to re-fetch the whole booking list.
+  const [cancelledPreorderIds, setCancelledPreorderIds] = useState<Set<string>>(new Set())
 
   return (
     <section className="cabinet-section" aria-labelledby="cabinet-bookings-title">
@@ -101,15 +67,8 @@ export function BookingsList({
               const restaurantName =
                 booking.restaurant_info?.name ?? strings.bookings.fallbackRestaurant
               const isBusy = actionId === booking.public_id
-
-              const preorder = preorders[booking.public_id]
-              // Badge/panel stay visible until we've confirmed (via GET or a
-              // successful cancel) that there's nothing to show anymore.
-              const showsPreorder = booking.has_preorder && preorder !== null
-              const isExpanded = expandedId === booking.public_id
-              const preorderLoading = preorderLoadingId === booking.public_id
-              const preorderError = preorderErrors[booking.public_id]
-              const cancellingThis = cancellingPreorderId === booking.public_id
+              const showsPreorder =
+                booking.has_preorder && !cancelledPreorderIds.has(booking.public_id)
 
               return (
                 <li key={booking.public_id} className="booking-card">
@@ -141,67 +100,17 @@ export function BookingsList({
                         {booking.guest_count} {strings.bookings.guestLabel(booking.guest_count)}
                       </span>
                     </p>
-                  </div>
-
-                  {showsPreorder && (
-                    <div className="booking-card__preorder">
+                    {showsPreorder && (
                       <button
                         type="button"
                         className="booking-card__preorder-toggle"
-                        onClick={() => toggleExpand(booking.public_id)}
+                        onClick={() => setViewingPreorder(booking)}
                       >
-                        {isExpanded ? strings.bookings.preorderHide : strings.bookings.preorderShow}
+                        <LuUtensilsCrossed aria-hidden="true" />
+                        {strings.bookings.preorderShow}
                       </button>
-                      {isExpanded && (
-                        <div className="booking-card__preorder-panel">
-                          {preorderLoading ? (
-                            <p className="booking-card__preorder-hint">
-                              {strings.bookings.preorderLoading}
-                            </p>
-                          ) : preorderError ? (
-                            <p className="booking-card__preorder-error">{preorderError}</p>
-                          ) : preorder ? (
-                            <>
-                              <ul className="booking-card__preorder-items">
-                                {preorder.items.map((item, i) => (
-                                  <li key={i} className="booking-card__preorder-item">
-                                    <span>
-                                      {item.name} × {item.quantity}
-                                    </span>
-                                    <span>
-                                      {formatAmount(item.totalPrice)}{" "}
-                                      {getCurrencySymbol(preorder.currency)}
-                                    </span>
-                                  </li>
-                                ))}
-                              </ul>
-                              <p className="booking-card__preorder-total">
-                                {strings.bookings.preorderTotal(
-                                  `${formatAmount(preorder.total)} ${getCurrencySymbol(preorder.currency)}`,
-                                )}
-                              </p>
-                              {preorder.canCancel ? (
-                                <button
-                                  type="button"
-                                  className="booking-card__btn booking-card__btn--danger"
-                                  onClick={() => void handleCancelPreorder(booking.public_id)}
-                                  disabled={cancellingThis}
-                                >
-                                  {cancellingThis
-                                    ? strings.bookings.preorderCancelling
-                                    : strings.bookings.preorderCancel}
-                                </button>
-                              ) : (
-                                <p className="booking-card__preorder-hint">
-                                  {strings.bookings.preorderLocked}
-                                </p>
-                              )}
-                            </>
-                          ) : null}
-                        </div>
-                      )}
-                    </div>
-                  )}
+                    )}
+                  </div>
 
                   {booking.status === "active" ? (
                     <p className="booking-card__row booking-card__row--muted">
@@ -249,6 +158,16 @@ export function BookingsList({
             </button>
           )}
         </>
+      )}
+
+      {viewingPreorder && (
+        <PreorderDialog
+          booking={viewingPreorder}
+          onClose={() => setViewingPreorder(null)}
+          onCancelled={() =>
+            setCancelledPreorderIds((prev) => new Set(prev).add(viewingPreorder.public_id))
+          }
+        />
       )}
     </section>
   )
