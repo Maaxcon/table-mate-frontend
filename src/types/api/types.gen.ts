@@ -740,6 +740,7 @@ export type PatchedReservation = {
   readonly session_ends_at?: string | null
   readonly session_table?: string | null
   readonly session_table_number?: string | null
+  readonly has_preorder?: boolean
   status?: ReservationStatus
   created_by_staff?: boolean
   notes?: string | null
@@ -953,6 +954,7 @@ export type Reservation = {
   readonly session_ends_at: string | null
   readonly session_table: string | null
   readonly session_table_number: string | null
+  readonly has_preorder: boolean
   status?: ReservationStatus
   created_by_staff?: boolean
   notes?: string | null
@@ -2869,6 +2871,33 @@ export type OrdersCartSessionsPayCreateResponses = {
 
 export type OrdersCartSessionsPayCreateResponse =
   OrdersCartSessionsPayCreateResponses[keyof OrdersCartSessionsPayCreateResponses]
+
+export type OrdersCartSessionsPreorderCheckoutCreateData = {
+  body?: never
+  path: {
+    session_pk: string
+  }
+  query?: never
+  url: "/api/orders/cart/sessions/{session_pk}/preorder-checkout/"
+}
+
+export type OrdersCartSessionsPreorderCheckoutCreateErrors = {
+  /**
+   * Cart is empty.
+   */
+  400: unknown
+  /**
+   * Cart changed (code CART_CHANGED), or reservation already started (code preorder_not_allowed).
+   */
+  409: unknown
+}
+
+export type OrdersCartSessionsPreorderCheckoutCreateResponses = {
+  201: CheckoutResponse
+}
+
+export type OrdersCartSessionsPreorderCheckoutCreateResponse =
+  OrdersCartSessionsPreorderCheckoutCreateResponses[keyof OrdersCartSessionsPreorderCheckoutCreateResponses]
 
 export type OrdersOrderItemsListData = {
   body?: never
