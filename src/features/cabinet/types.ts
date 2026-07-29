@@ -33,6 +33,27 @@ export type Reservation = {
   end_at: string
   status: ReservationStatus
   notes: string | null
+  has_preorder?: boolean
+}
+
+// A booking's current paid pre-order (GET .../preorder/), or the shape of
+// nothing to show when there isn't one (204).
+export type PreorderItem = {
+  name: string
+  quantity: number
+  unitPrice: number
+  totalPrice: number
+}
+
+export type Preorder = {
+  orderId: string
+  currency: string
+  subtotal: number
+  tax: number
+  serviceCharge: number
+  total: number
+  canCancel: boolean
+  items: PreorderItem[]
 }
 
 // A single line on a receipt.
