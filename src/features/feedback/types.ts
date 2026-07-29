@@ -1,6 +1,7 @@
 export type DishFeedbackEntry = {
   public_id?: string
   menu_item: string
+  menu_item_name?: string
   rating: number
   comment?: string
 }
@@ -27,6 +28,8 @@ export type FeedbackResponse = {
 
 export type AdminFeedbackResponse = FeedbackResponse & {
   guest: string | null
+  guest_name: string | null
+  guest_identity: string | null
   review_status: "new" | "reviewed" | "resolved"
   prompt_shown_at: string | null
   dismissed: boolean

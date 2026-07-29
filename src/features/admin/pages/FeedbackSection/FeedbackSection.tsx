@@ -228,7 +228,7 @@ function FeedbackSection() {
                     {new Date(entry.created_at).toLocaleDateString()}
                   </td>
                   <td className="feedback-cell feedback-cell--guest">
-                    {entry.guest ? `${entry.guest.slice(0, 8)}...` : "Guest"}
+                    {entry.guest_name ?? "Guest"}
                   </td>
                   <td className="feedback-cell">
                     <StarRating value={entry.overall_rating} readonly size={14} />
@@ -277,11 +277,9 @@ function FeedbackSection() {
               <div className="feedback-detail__grid">
                 <div className="feedback-detail__field">
                   <span className="feedback-detail__label">Guest</span>
-                  <span className="feedback-detail__value">{selectedDetail.guest ?? "Guest"}</span>
-                </div>
-                <div className="feedback-detail__field">
-                  <span className="feedback-detail__label">Order</span>
-                  <span className="feedback-detail__value">{selectedDetail.order}</span>
+                  <span className="feedback-detail__value">
+                    {selectedDetail.guest_name ?? "Guest"}
+                  </span>
                 </div>
                 <div className="feedback-detail__field">
                   <span className="feedback-detail__label">Date</span>
@@ -332,7 +330,7 @@ function FeedbackSection() {
                     {selectedDetail.dish_feedback.map((df) => (
                       <li key={df.public_id} className="feedback-detail__dish-item">
                         <span className="feedback-detail__dish-name">
-                          {df.menu_item.slice(0, 8)}...
+                          {df.menu_item_name ?? `${df.menu_item.slice(0, 8)}...`}
                         </span>
                         <StarRating value={df.rating} readonly size={14} />
                         {df.comment && (

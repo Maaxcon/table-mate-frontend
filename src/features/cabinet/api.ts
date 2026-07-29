@@ -8,9 +8,15 @@ import type { CabinetProfile, HistoryEntry, Reservation } from "./types"
 const ACTIVE_STATUSES = new Set(["pending", "active"])
 
 // Raw receipt shape from GET /api/receipts/my/ (snake_case, decimals as strings).
-type ApiReceiptItem = { name: string; quantity: number; unit_price: string }
+type ApiReceiptItem = {
+  menu_item_public_id: string | null
+  name: string
+  quantity: number
+  unit_price: string
+}
 type ApiReceipt = {
   public_id: string
+  order_public_id: string | null
   order_number: string
   restaurant_public_id: string
   restaurant_name: string
@@ -39,6 +45,7 @@ export async function fetchMyReceipts(signal?: AbortSignal): Promise<HistoryEntr
   const data = (await res.json()) as ApiReceipt[]
   return data.map((r) => ({
     id: r.public_id,
+    orderId: r.order_public_id ?? undefined,
     orderNumber: r.order_number,
     restaurantId: r.restaurant_public_id,
     restaurantName: r.restaurant_name,
@@ -51,6 +58,7 @@ export async function fetchMyReceipts(signal?: AbortSignal): Promise<HistoryEntr
     server: r.server_name,
     guests: r.guests,
     items: r.items.map((i) => ({
+      publicId: i.menu_item_public_id ?? undefined,
       name: i.name,
       quantity: i.quantity,
       unitPrice: Number(i.unit_price),
