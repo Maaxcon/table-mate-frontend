@@ -111,6 +111,69 @@
   color: var(--color-text-secondary);
 }
 
+/* ── Pre-order panel ─────────────────────────────────── */
+.booking-card__preorder {
+  margin-top: 10px;
+}
+
+.booking-card__preorder-toggle {
+  padding: 0;
+  border: none;
+  background: none;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  cursor: pointer;
+}
+
+.booking-card__preorder-panel {
+  margin-top: 8px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(var(--color-primary-rgb), 0.06);
+  border: 1px solid rgba(var(--color-primary-rgb), 0.2);
+}
+
+.booking-card__preorder-items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.booking-card__preorder-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 0.85rem;
+  color: var(--color-text-primary);
+}
+
+.booking-card__preorder-total {
+  margin: 8px 0 0;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.booking-card__preorder-panel .booking-card__btn {
+  margin-top: 10px;
+}
+
+.booking-card__preorder-hint {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--color-text-secondary);
+}
+
+.booking-card__preorder-error {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--color-error-text);
+}
+
 .booking-card__actions {
   flex: 0 0 auto;
   display: flex;

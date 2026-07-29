@@ -1,7 +1,10 @@
+import { useState } from "react"
 import { LuCalendarClock, LuMapPin, LuTable2, LuUsers } from "react-icons/lu"
 import { useNavigate } from "react-router-dom"
+import { cancelPreorder, fetchPreorder } from "@/features/cabinet/api"
 import { useCabinetStrings } from "@/features/cabinet/strings"
-import type { Reservation } from "@/features/cabinet/types"
+import type { Preorder, Reservation } from "@/features/cabinet/types"
+import { formatAmount, getCurrencySymbol } from "@/features/menu/utils"
 import "./BookingsList.css"
 
 type BookingsListProps = {
@@ -40,6 +43,44 @@ export function BookingsList({
   const strings = useCabinetStrings()
   const navigate = useNavigate()
 
+  // Keyed by reservation public_id. undefined = not fetched yet, null =
+  // fetched and there's none (including just-cancelled — cancelling sets it
+  // to null locally instead of re-fetching).
+  const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [preorders, setPreorders] = useState<Record<string, Preorder | null>>({})
+  const [preorderLoadingId, setPreorderLoadingId] = useState<string | null>(null)
+  const [preorderErrors, setPreorderErrors] = useState<Record<string, string>>({})
+  const [cancellingPreorderId, setCancellingPreorderId] = useState<string | null>(null)
+
+  const toggleExpand = (bookingId: string) => {
+    if (expandedId === bookingId) {
+      setExpandedId(null)
+      return
+    }
+    setExpandedId(bookingId)
+    if (preorders[bookingId] !== undefined) return
+    setPreorderLoadingId(bookingId)
+    fetchPreorder(bookingId)
+      .then((p) => setPreorders((prev) => ({ ...prev, [bookingId]: p })))
+      .catch(() =>
+        setPreorderErrors((prev) => ({ ...prev, [bookingId]: strings.bookings.preorderLoadError })),
+      )
+      .finally(() => setPreorderLoadingId(null))
+  }
+
+  const handleCancelPreorder = async (bookingId: string) => {
+    setCancellingPreorderId(bookingId)
+    setPreorderErrors((prev) => ({ ...prev, [bookingId]: "" }))
+    try {
+      await cancelPreorder(bookingId)
+      setPreorders((prev) => ({ ...prev, [bookingId]: null }))
+    } catch {
+      setPreorderErrors((prev) => ({ ...prev, [bookingId]: strings.bookings.preorderCancelError }))
+    } finally {
+      setCancellingPreorderId(null)
+    }
+  }
+
   return (
     <section className="cabinet-section" aria-labelledby="cabinet-bookings-title">
       <h2 className="cabinet-section__title" id="cabinet-bookings-title">
@@ -60,6 +101,15 @@ export function BookingsList({
               const restaurantName =
                 booking.restaurant_info?.name ?? strings.bookings.fallbackRestaurant
               const isBusy = actionId === booking.public_id
+
+              const preorder = preorders[booking.public_id]
+              // Badge/panel stay visible until we've confirmed (via GET or a
+              // successful cancel) that there's nothing to show anymore.
+              const showsPreorder = booking.has_preorder && preorder !== null
+              const isExpanded = expandedId === booking.public_id
+              const preorderLoading = preorderLoadingId === booking.public_id
+              const preorderError = preorderErrors[booking.public_id]
+              const cancellingThis = cancellingPreorderId === booking.public_id
 
               return (
                 <li key={booking.public_id} className="booking-card">
@@ -92,6 +142,67 @@ export function BookingsList({
                       </span>
                     </p>
                   </div>
+
+                  {showsPreorder && (
+                    <div className="booking-card__preorder">
+                      <button
+                        type="button"
+                        className="booking-card__preorder-toggle"
+                        onClick={() => toggleExpand(booking.public_id)}
+                      >
+                        {isExpanded ? strings.bookings.preorderHide : strings.bookings.preorderShow}
+                      </button>
+                      {isExpanded && (
+                        <div className="booking-card__preorder-panel">
+                          {preorderLoading ? (
+                            <p className="booking-card__preorder-hint">
+                              {strings.bookings.preorderLoading}
+                            </p>
+                          ) : preorderError ? (
+                            <p className="booking-card__preorder-error">{preorderError}</p>
+                          ) : preorder ? (
+                            <>
+                              <ul className="booking-card__preorder-items">
+                                {preorder.items.map((item, i) => (
+                                  <li key={i} className="booking-card__preorder-item">
+                                    <span>
+                                      {item.name} × {item.quantity}
+                                    </span>
+                                    <span>
+                                      {formatAmount(item.totalPrice)}{" "}
+                                      {getCurrencySymbol(preorder.currency)}
+                                    </span>
+                                  </li>
+                                ))}
+                              </ul>
+                              <p className="booking-card__preorder-total">
+                                {strings.bookings.preorderTotal(
+                                  `${formatAmount(preorder.total)} ${getCurrencySymbol(preorder.currency)}`,
+                                )}
+                              </p>
+                              {preorder.canCancel ? (
+                                <button
+                                  type="button"
+                                  className="booking-card__btn booking-card__btn--danger"
+                                  onClick={() => void handleCancelPreorder(booking.public_id)}
+                                  disabled={cancellingThis}
+                                >
+                                  {cancellingThis
+                                    ? strings.bookings.preorderCancelling
+                                    : strings.bookings.preorderCancel}
+                                </button>
+                              ) : (
+                                <p className="booking-card__preorder-hint">
+                                  {strings.bookings.preorderLocked}
+                                </p>
+                              )}
+                            </>
+                          ) : null}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                   {booking.status === "active" ? (
                     <p className="booking-card__row booking-card__row--muted">
                       {strings.bookings.activeNote}
