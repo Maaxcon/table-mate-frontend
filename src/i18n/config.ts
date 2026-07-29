@@ -1,6 +1,7 @@
 import i18n from "i18next"
 import { initReactI18next } from "react-i18next"
 import LanguageDetector from "i18next-browser-languagedetector"
+import { setAcceptLanguage } from "@/api/client"
 import en from "./locales/en/translation.json"
 import uk from "./locales/uk/translation.json"
 
@@ -27,6 +28,9 @@ i18n
     },
     returnObjects: true,
   })
+
+i18n.on("languageChanged", setAcceptLanguage)
+setAcceptLanguage(i18n.language)
 
 export { SUPPORTED_LANGUAGES }
 export default i18n

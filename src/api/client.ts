@@ -8,6 +8,12 @@ let refreshFailedForAccessToken: string | null | undefined
 let consecutiveRemintFailures = 0
 const MAX_REMINT_FAILURES = 3
 
+let _acceptLanguage: string | undefined
+
+export function setAcceptLanguage(lang: string): void {
+  _acceptLanguage = lang
+}
+
 class RefreshAuthError extends Error {
   constructor() {
     super("Refresh token rejected")
@@ -70,6 +76,9 @@ async function apiFetch(path: string, init: RequestInit = {}): Promise<Response>
   const headers = new Headers(init.headers)
   if (accessToken) {
     headers.set("Authorization", `Bearer ${accessToken}`)
+  }
+  if (_acceptLanguage) {
+    headers.set("Accept-Language", _acceptLanguage)
   }
 
   const url = path.startsWith("http") ? path : `${env.apiBaseUrl}${path}`
