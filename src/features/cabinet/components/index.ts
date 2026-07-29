@@ -1,6 +1,7 @@
 export { ProfileHeader } from "./ProfileHeader/ProfileHeader"
 export { BookingsList } from "./BookingsList/BookingsList"
 export { HistoryList } from "./HistoryList/HistoryList"
+export { FeedbackHistoryList } from "./FeedbackHistoryList/FeedbackHistoryList"
 export { CabinetStats } from "./CabinetStats/CabinetStats"
 export { ReceiptDialog } from "./ReceiptDialog/ReceiptDialog"
 export { ReservationCalendar } from "./ReservationCalendar/ReservationCalendar"

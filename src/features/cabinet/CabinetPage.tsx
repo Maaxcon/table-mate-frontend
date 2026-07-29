@@ -7,6 +7,7 @@ import { useLogout } from "@/features/auth/hooks/useLogout"
 import {
   BookingsList,
   CabinetStats,
+  FeedbackHistoryList,
   HistoryList,
   ProfileHeader,
   ReceiptDialog,
@@ -26,9 +27,11 @@ function CabinetPage() {
     bookings,
     allReservations,
     history,
+    feedback,
     loading,
     bookingsError,
     historyError,
+    feedbackError,
     bookingsHasMore,
     bookingsActionId,
     cancelBooking,
@@ -107,6 +110,7 @@ function CabinetPage() {
             onLoadMore={() => void loadMoreBookings()}
           />
           <HistoryList history={history} error={historyError} onOpenReceipt={handleOpenReceipt} />
+          <FeedbackHistoryList feedback={feedback} history={history} error={feedbackError} />
         </>
       ) : (
         <p className="cabinet-page__loading">{strings.page.noProfile}</p>

@@ -17,8 +17,8 @@ export function createFeedback(
   })
 }
 
-export function fetchMyFeedback(): Promise<FeedbackResponse[]> {
-  return api.getAllList<FeedbackResponse>("/api/feedback/my/")
+export function fetchMyFeedback(signal?: AbortSignal): Promise<FeedbackResponse[]> {
+  return api.getAllList<FeedbackResponse>("/api/feedback/my/", { signal })
 }
 
 export function fetchMyFeedbackDetail(publicId: string): Promise<FeedbackResponse> {

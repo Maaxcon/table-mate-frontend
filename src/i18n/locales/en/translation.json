@@ -482,11 +482,17 @@
       "errorMessage": "Could not create the PDF. Please check your connection and try again."
     },
     "feedback": {
+      "title": "My feedback",
+      "empty": "You have not left any feedback yet.",
+      "restaurantFallback": "Restaurant",
+      "overall": "Overall",
+      "service": "Service",
       "ok": "OK"
     },
     "errors": {
       "loadBookings": "We could not load your bookings.",
       "loadHistory": "We could not load your history.",
+      "loadFeedback": "We could not load your feedback.",
       "refreshBookings": "We could not refresh your bookings.",
       "loadMoreBookings": "We could not load more bookings.",
       "cancelBooking": "We could not cancel this booking.",

@@ -104,6 +104,11 @@ export function useCabinetStrings() {
       errorMessage: t("cabinet.receipt.errorMessage"),
     },
     feedback: {
+      title: t("cabinet.feedback.title"),
+      empty: t("cabinet.feedback.empty"),
+      restaurantFallback: t("cabinet.feedback.restaurantFallback"),
+      overall: t("cabinet.feedback.overall"),
+      service: t("cabinet.feedback.service"),
       ok: t("cabinet.feedback.ok"),
     },
   }
