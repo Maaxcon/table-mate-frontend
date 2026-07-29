@@ -179,7 +179,11 @@ export function CartDrawer({
         onCartChanged?.()
         setStep("changed")
       } else {
-        setSubmitError(menuStrings.cart.checkoutError)
+        // Prefer the server's own explanation (e.g. "this table's previous
+        // visit hasn't ended yet") over a one-size-fits-all message.
+        setSubmitError(
+          err instanceof Error && err.message ? err.message : menuStrings.cart.checkoutError,
+        )
       }
     } finally {
       setSubmitting(false)
