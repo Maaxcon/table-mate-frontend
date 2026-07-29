@@ -62,10 +62,12 @@ async function menuGet<T>(
   path: string,
   params: Record<string, string | undefined>,
   signal?: AbortSignal,
+  lang?: string,
 ): Promise<T> {
+  const headers = lang ? { "Accept-Language": lang } : acceptLanguageHeaders()
   const res = await fetch(buildUrl(path, params), {
     signal,
-    headers: acceptLanguageHeaders(),
+    headers,
   })
   if (!res.ok) throw await httpError(res)
   return res.json() as Promise<T>
@@ -179,8 +181,8 @@ export function toggleItemLike(
   )
 }
 
-export function fetchRestaurant(restaurantId: string): Promise<PublicRestaurant> {
-  return menuGet(MENU_API.restaurantPublic(restaurantId), {})
+export function fetchRestaurant(restaurantId: string, lang?: string): Promise<PublicRestaurant> {
+  return menuGet(MENU_API.restaurantPublic(restaurantId), {}, undefined, lang)
 }
 
 // ── Cart API ────────────────────────────────────────────

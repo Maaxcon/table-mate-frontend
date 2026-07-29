@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useReducer } from "react"
 import { useTranslation } from "react-i18next"
 import { fetchRestaurant } from "@/features/menu/api"
 import type { PublicRestaurantSettings } from "@/features/menu/types"
@@ -13,53 +13,83 @@ export type RestaurantInfo = {
   settings: PublicRestaurantSettings | null
 }
 
-type UseRestaurantInfoResult = RestaurantInfo & { notFound: boolean; fetchError: string | null }
+type State = RestaurantInfo & { notFound: boolean; fetchError: string | null }
 
-function useRestaurantInfo(restaurantId: string): UseRestaurantInfoResult {
+type Action =
+  | { type: "LOADING" }
+  | {
+      type: "SUCCESS"
+      data: RestaurantInfo
+    }
+  | { type: "NOT_FOUND" }
+  | { type: "ERROR"; message: string }
+
+const initialState: State = {
+  name: null,
+  address: null,
+  phone: null,
+  coverImage: null,
+  telegramUrl: "",
+  facebookUrl: "",
+  settings: null,
+  notFound: false,
+  fetchError: null,
+}
+
+function reducer(state: State, action: Action): State {
+  switch (action.type) {
+    case "LOADING":
+      return { ...initialState, notFound: false, fetchError: null }
+    case "SUCCESS":
+      return { ...action.data, notFound: false, fetchError: null }
+    case "NOT_FOUND":
+      return { ...state, notFound: true, fetchError: null }
+    case "ERROR":
+      return { ...state, fetchError: action.message }
+  }
+}
+
+function useRestaurantInfo(restaurantId: string) {
+  const [state, dispatch] = useReducer(reducer, initialState)
   const { i18n } = useTranslation()
-  const [info, setInfo] = useState<RestaurantInfo>({
-    name: null,
-    address: null,
-    phone: null,
-    coverImage: null,
-    telegramUrl: "",
-    facebookUrl: "",
-    settings: null,
-  })
-  const [notFound, setNotFound] = useState(false)
-  const [fetchError, setFetchError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!restaurantId) return
+    const controller = new AbortController()
     let mounted = true
-    fetchRestaurant(restaurantId)
+    dispatch({ type: "LOADING" })
+    fetchRestaurant(restaurantId, i18n.language)
       .then((data) => {
         if (!mounted) return
-        setInfo({
-          name: data.name,
-          address: data.address,
-          phone: data.phone,
-          coverImage: data.cover_image,
-          telegramUrl: data.telegram_url,
-          facebookUrl: data.facebook_url,
-          settings: data.settings,
+        dispatch({
+          type: "SUCCESS",
+          data: {
+            name: data.name,
+            address: data.address,
+            phone: data.phone,
+            coverImage: data.cover_image,
+            telegramUrl: data.telegram_url,
+            facebookUrl: data.facebook_url,
+            settings: data.settings,
+          },
         })
       })
       .catch((err: unknown) => {
         if (!mounted) return
         const is404 = err instanceof Error && err.message.startsWith("404")
         if (is404) {
-          setNotFound(true)
+          dispatch({ type: "NOT_FOUND" })
         } else {
-          setFetchError("Unable to load restaurant info. Please try again.")
+          dispatch({ type: "ERROR", message: "Unable to load restaurant info. Please try again." })
         }
       })
     return () => {
       mounted = false
+      controller.abort()
     }
   }, [restaurantId, i18n.language])
 
-  return { ...info, notFound, fetchError }
+  return state
 }
 
 export { useRestaurantInfo }
