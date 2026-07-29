@@ -321,6 +321,14 @@ export type Menu = {
   is_active?: boolean
   readonly items: Array<string>
   readonly categories: Array<string>
+  /**
+   *  lang
+   */
+  readonly _lang: string | null
+  /**
+   *  is fallback
+   */
+  readonly _is_fallback: boolean
   readonly created_at: string
   readonly updated_at: string
 }
@@ -334,8 +342,21 @@ export type MenuCategory = {
    * Hex color used for category theming.
    */
   color?: string | null
+  /**
+   *  lang
+   */
+  readonly _lang: string | null
+  /**
+   *  is fallback
+   */
+  readonly _is_fallback: boolean
   readonly created_at: string
   readonly updated_at: string
+}
+
+export type MenuCategoryTranslation = {
+  language_code: string
+  name: string
 }
 
 export type MenuItem = {
@@ -351,11 +372,30 @@ export type MenuItem = {
   image?: string | null
   readonly likes_count: number
   readonly is_liked: boolean
+  /**
+   *  lang
+   */
+  readonly _lang: string | null
+  /**
+   *  is fallback
+   */
+  readonly _is_fallback: boolean
   price: string
   is_available?: boolean
   sort_order?: number
   readonly created_at: string
   readonly updated_at: string
+}
+
+export type MenuItemTranslation = {
+  language_code: string
+  name: string
+  description?: string | null
+}
+
+export type MenuTranslation = {
+  language_code: string
+  name: string
 }
 
 export type ObstacleEntity = {
@@ -2417,6 +2457,75 @@ export type MenuAdminCategoriesUpdateResponses = {
 export type MenuAdminCategoriesUpdateResponse =
   MenuAdminCategoriesUpdateResponses[keyof MenuAdminCategoriesUpdateResponses]
 
+export type MenuAdminCategoriesTranslationsRetrieveData = {
+  body?: never
+  path: {
+    public_id: string
+  }
+  query?: never
+  url: "/api/menu/admin/categories/{public_id}/translations/"
+}
+
+export type MenuAdminCategoriesTranslationsRetrieveResponses = {
+  200: AdminMenuCategory
+}
+
+export type MenuAdminCategoriesTranslationsRetrieveResponse =
+  MenuAdminCategoriesTranslationsRetrieveResponses[keyof MenuAdminCategoriesTranslationsRetrieveResponses]
+
+export type MenuAdminCategoriesTranslationsCreateData = {
+  body: MenuCategoryTranslation
+  path: {
+    public_id: string
+  }
+  query?: never
+  url: "/api/menu/admin/categories/{public_id}/translations/"
+}
+
+export type MenuAdminCategoriesTranslationsCreateResponses = {
+  201: MenuCategoryTranslation
+}
+
+export type MenuAdminCategoriesTranslationsCreateResponse =
+  MenuAdminCategoriesTranslationsCreateResponses[keyof MenuAdminCategoriesTranslationsCreateResponses]
+
+export type MenuAdminCategoriesTranslationsDestroyData = {
+  body?: never
+  path: {
+    lang: string
+    public_id: string
+  }
+  query?: never
+  url: "/api/menu/admin/categories/{public_id}/translations/{lang}/"
+}
+
+export type MenuAdminCategoriesTranslationsDestroyResponses = {
+  /**
+   * No response body
+   */
+  204: void
+}
+
+export type MenuAdminCategoriesTranslationsDestroyResponse =
+  MenuAdminCategoriesTranslationsDestroyResponses[keyof MenuAdminCategoriesTranslationsDestroyResponses]
+
+export type MenuAdminCategoriesTranslationsUpdateData = {
+  body: MenuCategoryTranslation
+  path: {
+    lang: string
+    public_id: string
+  }
+  query?: never
+  url: "/api/menu/admin/categories/{public_id}/translations/{lang}/"
+}
+
+export type MenuAdminCategoriesTranslationsUpdateResponses = {
+  200: MenuCategoryTranslation
+}
+
+export type MenuAdminCategoriesTranslationsUpdateResponse =
+  MenuAdminCategoriesTranslationsUpdateResponses[keyof MenuAdminCategoriesTranslationsUpdateResponses]
+
 export type MenuAdminCategoriesReorderCreateData = {
   body: Array<ReorderEntry>
   path?: never
@@ -2557,6 +2666,75 @@ export type MenuAdminItemsDuplicateCreateResponses = {
 export type MenuAdminItemsDuplicateCreateResponse =
   MenuAdminItemsDuplicateCreateResponses[keyof MenuAdminItemsDuplicateCreateResponses]
 
+export type MenuAdminItemsTranslationsRetrieveData = {
+  body?: never
+  path: {
+    public_id: string
+  }
+  query?: never
+  url: "/api/menu/admin/items/{public_id}/translations/"
+}
+
+export type MenuAdminItemsTranslationsRetrieveResponses = {
+  200: AdminMenuItem
+}
+
+export type MenuAdminItemsTranslationsRetrieveResponse =
+  MenuAdminItemsTranslationsRetrieveResponses[keyof MenuAdminItemsTranslationsRetrieveResponses]
+
+export type MenuAdminItemsTranslationsCreateData = {
+  body: MenuItemTranslation
+  path: {
+    public_id: string
+  }
+  query?: never
+  url: "/api/menu/admin/items/{public_id}/translations/"
+}
+
+export type MenuAdminItemsTranslationsCreateResponses = {
+  201: MenuItemTranslation
+}
+
+export type MenuAdminItemsTranslationsCreateResponse =
+  MenuAdminItemsTranslationsCreateResponses[keyof MenuAdminItemsTranslationsCreateResponses]
+
+export type MenuAdminItemsTranslationsDestroyData = {
+  body?: never
+  path: {
+    lang: string
+    public_id: string
+  }
+  query?: never
+  url: "/api/menu/admin/items/{public_id}/translations/{lang}/"
+}
+
+export type MenuAdminItemsTranslationsDestroyResponses = {
+  /**
+   * No response body
+   */
+  204: void
+}
+
+export type MenuAdminItemsTranslationsDestroyResponse =
+  MenuAdminItemsTranslationsDestroyResponses[keyof MenuAdminItemsTranslationsDestroyResponses]
+
+export type MenuAdminItemsTranslationsUpdateData = {
+  body: MenuItemTranslation
+  path: {
+    lang: string
+    public_id: string
+  }
+  query?: never
+  url: "/api/menu/admin/items/{public_id}/translations/{lang}/"
+}
+
+export type MenuAdminItemsTranslationsUpdateResponses = {
+  200: MenuItemTranslation
+}
+
+export type MenuAdminItemsTranslationsUpdateResponse =
+  MenuAdminItemsTranslationsUpdateResponses[keyof MenuAdminItemsTranslationsUpdateResponses]
+
 export type MenuAdminItemsBulkCreateData = {
   body: BulkItemAction
   path?: never
@@ -2694,6 +2872,75 @@ export type MenuAdminMenusUpdateResponses = {
 export type MenuAdminMenusUpdateResponse =
   MenuAdminMenusUpdateResponses[keyof MenuAdminMenusUpdateResponses]
 
+export type MenuAdminMenusTranslationsRetrieveData = {
+  body?: never
+  path: {
+    public_id: string
+  }
+  query?: never
+  url: "/api/menu/admin/menus/{public_id}/translations/"
+}
+
+export type MenuAdminMenusTranslationsRetrieveResponses = {
+  200: AdminMenu
+}
+
+export type MenuAdminMenusTranslationsRetrieveResponse =
+  MenuAdminMenusTranslationsRetrieveResponses[keyof MenuAdminMenusTranslationsRetrieveResponses]
+
+export type MenuAdminMenusTranslationsCreateData = {
+  body: MenuTranslation
+  path: {
+    public_id: string
+  }
+  query?: never
+  url: "/api/menu/admin/menus/{public_id}/translations/"
+}
+
+export type MenuAdminMenusTranslationsCreateResponses = {
+  201: MenuTranslation
+}
+
+export type MenuAdminMenusTranslationsCreateResponse =
+  MenuAdminMenusTranslationsCreateResponses[keyof MenuAdminMenusTranslationsCreateResponses]
+
+export type MenuAdminMenusTranslationsDestroyData = {
+  body?: never
+  path: {
+    lang: string
+    public_id: string
+  }
+  query?: never
+  url: "/api/menu/admin/menus/{public_id}/translations/{lang}/"
+}
+
+export type MenuAdminMenusTranslationsDestroyResponses = {
+  /**
+   * No response body
+   */
+  204: void
+}
+
+export type MenuAdminMenusTranslationsDestroyResponse =
+  MenuAdminMenusTranslationsDestroyResponses[keyof MenuAdminMenusTranslationsDestroyResponses]
+
+export type MenuAdminMenusTranslationsUpdateData = {
+  body: MenuTranslation
+  path: {
+    lang: string
+    public_id: string
+  }
+  query?: never
+  url: "/api/menu/admin/menus/{public_id}/translations/{lang}/"
+}
+
+export type MenuAdminMenusTranslationsUpdateResponses = {
+  200: MenuTranslation
+}
+
+export type MenuAdminMenusTranslationsUpdateResponse =
+  MenuAdminMenusTranslationsUpdateResponses[keyof MenuAdminMenusTranslationsUpdateResponses]
+
 export type MenuAllergensListData = {
   body?: never
   path?: never
@@ -2746,6 +2993,25 @@ export type MenuCategoriesRetrieveResponses = {
 
 export type MenuCategoriesRetrieveResponse =
   MenuCategoriesRetrieveResponses[keyof MenuCategoriesRetrieveResponses]
+
+export type MenuIngredientsRetrieveData = {
+  body?: never
+  path?: never
+  query: {
+    /**
+     * Restaurant public UUID
+     */
+    restaurant: string
+  }
+  url: "/api/menu/ingredients/"
+}
+
+export type MenuIngredientsRetrieveResponses = {
+  /**
+   * No response body
+   */
+  200: unknown
+}
 
 export type MenuItemsListData = {
   body?: never
