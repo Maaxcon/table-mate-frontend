@@ -92,6 +92,11 @@ export type UpdateCartItemRequest = {
 
 export type GuestInitResponse = {
   access: string
+  // Whether the reservation behind this cart hasn't started yet — set by
+  // the backend from the session's own reservation, not inferred from
+  // which lookup found it (a cart reused from an earlier pre-order round
+  // is found via the active-cart lookup, not the not-yet-active fallback).
+  is_preorder?: boolean
 }
 
 export type GuestInitTarget = {

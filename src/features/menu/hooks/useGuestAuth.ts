@@ -151,7 +151,11 @@ export function useGuestAuth({
         return {
           access: resp.access,
           sessionId: payload?.cart_session_id ?? null,
-          isPreorder: false,
+          // Authoritative from the backend — a cart reused from an earlier
+          // pre-order round succeeds here too, not just via the fallback
+          // below, so this can't be assumed false just because guestInit()
+          // didn't throw.
+          isPreorder: resp.is_preorder ?? false,
         }
       } catch (err) {
         // Pre-order: the reservation exists but hasn't started yet. If the
