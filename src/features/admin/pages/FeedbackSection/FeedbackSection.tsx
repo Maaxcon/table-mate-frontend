@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { LuCircleCheck, LuFilter, LuLoaderCircle, LuSearch } from "react-icons/lu"
+import { useTranslation } from "react-i18next"
 import { useToast } from "@/features/admin/hooks/toastContext"
 import Modal from "@/features/admin/components/Modal"
 import { StarRating } from "@/features/feedback/components/StarRating"
@@ -16,13 +17,6 @@ import type {
 import type { Paginated } from "@/api/client"
 import "./FeedbackSection.css"
 
-const REVIEW_STATUS_OPTIONS = [
-  { value: "", label: "All statuses" },
-  { value: "new", label: "New" },
-  { value: "reviewed", label: "Reviewed" },
-  { value: "resolved", label: "Resolved" },
-] as const
-
 const STATUS_COLORS: Record<string, string> = {
   new: "status-badge--new",
   reviewed: "status-badge--reviewed",
@@ -32,6 +26,7 @@ const STATUS_COLORS: Record<string, string> = {
 const INITIAL_FILTERS: AdminFeedbackFilters = {}
 
 function FeedbackSection() {
+  const { i18n, t } = useTranslation()
   const toast = useToast()
 
   const [data, setData] = useState<Paginated<AdminFeedbackListResponse> | null>(null)
@@ -55,7 +50,8 @@ function FeedbackSection() {
         const result = await fetchAdminFeedbackList(filters)
         if (!cancelled) setData(result)
       } catch (err) {
-        if (!cancelled) setError(err instanceof Error ? err.message : "Failed to load feedback")
+        if (!cancelled)
+          setError(err instanceof Error ? err.message : t("admin.feedback.errors.load"))
       } finally {
         if (!cancelled) setLoading(false)
       }
@@ -64,7 +60,7 @@ function FeedbackSection() {
     return () => {
       cancelled = true
     }
-  }, [filters])
+  }, [filters, t])
 
   const handleFilterChange = (key: keyof AdminFeedbackFilters, value: string | undefined) => {
     setFilters((prev) => {
@@ -87,12 +83,12 @@ function FeedbackSection() {
         const detail = await fetchAdminFeedbackDetail(publicId)
         setSelectedDetail(detail)
       } catch {
-        toast.error("Could not load feedback detail")
+        toast.error(t("admin.feedback.errors.detail"))
       } finally {
         setDetailLoading(false)
       }
     },
-    [toast],
+    [t, toast],
   )
 
   const handleUpdateStatus = useCallback(
@@ -109,12 +105,12 @@ function FeedbackSection() {
             ),
           }
         })
-        toast.success("Status updated")
+        toast.success(t("admin.feedback.statusUpdated"))
       } catch {
-        toast.error("Failed to update status")
+        toast.error(t("admin.feedback.errors.statusUpdate"))
       }
     },
-    [toast],
+    [t, toast],
   )
 
   const filteredResults = useMemo(() => {
@@ -127,10 +123,8 @@ function FeedbackSection() {
   return (
     <section className="admin-section">
       <header className="admin-section__header">
-        <h1 className="admin-section__title">Feedback</h1>
-        <p className="admin-section__description">
-          View and manage guest feedback for your restaurant.
-        </p>
+        <h1 className="admin-section__title">{t("admin.feedback.title")}</h1>
+        <p className="admin-section__description">{t("admin.feedback.description")}</p>
       </header>
 
       <div className="feedback-toolbar">
@@ -138,7 +132,7 @@ function FeedbackSection() {
           <LuSearch className="feedback-toolbar__search-icon" size={16} />
           <input
             type="search"
-            placeholder="Search by ID..."
+            placeholder={t("admin.feedback.searchPlaceholder")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="feedback-toolbar__search-input"
@@ -150,7 +144,7 @@ function FeedbackSection() {
           onClick={() => setFilterOpen((p) => !p)}
         >
           <LuFilter size={16} />
-          Filters
+          {t("admin.feedback.filters.button")}
         </button>
       </div>
 
@@ -161,9 +155,10 @@ function FeedbackSection() {
             onChange={(e) => handleFilterChange("review_status", e.target.value)}
             className="feedback-filters__select"
           >
-            {REVIEW_STATUS_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
+            <option value="">{t("admin.feedback.filters.allStatuses")}</option>
+            {(["new", "reviewed", "resolved"] as const).map((status) => (
+              <option key={status} value={status}>
+                {t(`admin.feedback.status.${status}`)}
               </option>
             ))}
           </select>
@@ -172,10 +167,10 @@ function FeedbackSection() {
             onChange={(e) => handleFilterChange("overall_rating", e.target.value || undefined)}
             className="feedback-filters__select"
           >
-            <option value="">All ratings</option>
+            <option value="">{t("admin.feedback.filters.allRatings")}</option>
             {[5, 4, 3, 2, 1].map((n) => (
               <option key={n} value={n}>
-                {n} star{n > 1 ? "s" : ""}
+                {t("admin.feedback.filters.stars", { count: n })}
               </option>
             ))}
           </select>
@@ -184,14 +179,14 @@ function FeedbackSection() {
             value={filters.date_from ?? ""}
             onChange={(e) => handleFilterChange("date_from", e.target.value || undefined)}
             className="feedback-filters__date"
-            placeholder="From"
+            placeholder={t("admin.feedback.filters.from")}
           />
           <input
             type="date"
             value={filters.date_to ?? ""}
             onChange={(e) => handleFilterChange("date_to", e.target.value || undefined)}
             className="feedback-filters__date"
-            placeholder="To"
+            placeholder={t("admin.feedback.filters.to")}
           />
         </div>
       )}
@@ -203,18 +198,18 @@ function FeedbackSection() {
       ) : error ? (
         <p className="feedback-error">{error}</p>
       ) : filteredResults.length === 0 ? (
-        <p className="feedback-empty">No feedback yet.</p>
+        <p className="feedback-empty">{t("admin.feedback.empty")}</p>
       ) : (
         <div className="feedback-table-wrap">
           <table className="feedback-table">
             <thead>
               <tr>
-                <th>Date</th>
-                <th>Guest</th>
-                <th>Overall</th>
-                <th>Service</th>
-                <th>Status</th>
-                <th>Comment</th>
+                <th>{t("admin.feedback.table.date")}</th>
+                <th>{t("admin.feedback.table.guest")}</th>
+                <th>{t("admin.feedback.table.overall")}</th>
+                <th>{t("admin.feedback.table.service")}</th>
+                <th>{t("admin.feedback.table.status")}</th>
+                <th>{t("admin.feedback.table.comment")}</th>
               </tr>
             </thead>
             <tbody>
@@ -225,10 +220,10 @@ function FeedbackSection() {
                   onClick={() => void handleSelectFeedback(entry.public_id)}
                 >
                   <td className="feedback-cell feedback-cell--date">
-                    {new Date(entry.created_at).toLocaleDateString()}
+                    {new Date(entry.created_at).toLocaleDateString(i18n.language)}
                   </td>
                   <td className="feedback-cell feedback-cell--guest">
-                    {entry.guest_name ?? "Guest"}
+                    {entry.guest_name ?? t("admin.feedback.guestFallback")}
                   </td>
                   <td className="feedback-cell">
                     <StarRating value={entry.overall_rating} readonly size={14} />
@@ -238,7 +233,7 @@ function FeedbackSection() {
                   </td>
                   <td className="feedback-cell">
                     <span className={`status-badge ${STATUS_COLORS[entry.review_status] ?? ""}`}>
-                      {entry.review_status}
+                      {t(`admin.feedback.status.${entry.review_status}`)}
                     </span>
                   </td>
                   <td className="feedback-cell feedback-cell--comment">
@@ -261,7 +256,7 @@ function FeedbackSection() {
 
       {selectedId && (
         <Modal
-          title="Feedback detail"
+          title={t("admin.feedback.detail.title")}
           onClose={() => {
             setSelectedId(null)
             setSelectedDetail(null)
@@ -276,19 +271,21 @@ function FeedbackSection() {
             <div className="feedback-detail">
               <div className="feedback-detail__grid">
                 <div className="feedback-detail__field">
-                  <span className="feedback-detail__label">Guest</span>
+                  <span className="feedback-detail__label">{t("admin.feedback.detail.guest")}</span>
                   <span className="feedback-detail__value">
-                    {selectedDetail.guest_name ?? "Guest"}
+                    {selectedDetail.guest_name ?? t("admin.feedback.guestFallback")}
                   </span>
                 </div>
                 <div className="feedback-detail__field">
-                  <span className="feedback-detail__label">Date</span>
+                  <span className="feedback-detail__label">{t("admin.feedback.detail.date")}</span>
                   <span className="feedback-detail__value">
-                    {new Date(selectedDetail.created_at).toLocaleString()}
+                    {new Date(selectedDetail.created_at).toLocaleString(i18n.language)}
                   </span>
                 </div>
                 <div className="feedback-detail__field">
-                  <span className="feedback-detail__label">Status</span>
+                  <span className="feedback-detail__label">
+                    {t("admin.feedback.detail.status")}
+                  </span>
                   <div className="feedback-detail__status-actions">
                     {(["new", "reviewed", "resolved"] as const).map((status) => (
                       <button
@@ -298,7 +295,7 @@ function FeedbackSection() {
                         onClick={() => void handleUpdateStatus(selectedDetail.public_id, status)}
                       >
                         {status === "resolved" && <LuCircleCheck size={14} />}
-                        {status}
+                        {t(`admin.feedback.status.${status}`)}
                       </button>
                     ))}
                   </div>
@@ -307,25 +304,33 @@ function FeedbackSection() {
 
               <div className="feedback-detail__ratings">
                 <div className="feedback-detail__rating-row">
-                  <span className="feedback-detail__label">Overall</span>
+                  <span className="feedback-detail__label">
+                    {t("admin.feedback.detail.overall")}
+                  </span>
                   <StarRating value={selectedDetail.overall_rating} readonly size={20} />
                 </div>
                 <div className="feedback-detail__rating-row">
-                  <span className="feedback-detail__label">Service</span>
+                  <span className="feedback-detail__label">
+                    {t("admin.feedback.detail.service")}
+                  </span>
                   <StarRating value={selectedDetail.service_rating} readonly size={20} />
                 </div>
               </div>
 
               {selectedDetail.comment && (
                 <div className="feedback-detail__comment">
-                  <span className="feedback-detail__label">Comment</span>
+                  <span className="feedback-detail__label">
+                    {t("admin.feedback.detail.comment")}
+                  </span>
                   <p className="feedback-detail__comment-text">{selectedDetail.comment}</p>
                 </div>
               )}
 
               {selectedDetail.dish_feedback.length > 0 && (
                 <div className="feedback-detail__dishes">
-                  <span className="feedback-detail__label">Dish ratings</span>
+                  <span className="feedback-detail__label">
+                    {t("admin.feedback.detail.dishRatings")}
+                  </span>
                   <ul className="feedback-detail__dish-list">
                     {selectedDetail.dish_feedback.map((df) => (
                       <li key={df.public_id} className="feedback-detail__dish-item">
@@ -343,7 +348,7 @@ function FeedbackSection() {
               )}
             </div>
           ) : (
-            <p className="feedback-error">Could not load detail.</p>
+            <p className="feedback-error">{t("admin.feedback.errors.detailLoad")}</p>
           )}
         </Modal>
       )}

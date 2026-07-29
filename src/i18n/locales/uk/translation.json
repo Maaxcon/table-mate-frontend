@@ -567,6 +567,54 @@
         "confirm": "Вийти"
       }
     },
+    "feedback": {
+      "title": "Відгуки",
+      "description": "Переглядайте та керуйте відгуками гостей вашого закладу.",
+      "searchPlaceholder": "Пошук за ID...",
+      "filters": {
+        "button": "Фільтри",
+        "allStatuses": "Усі статуси",
+        "allRatings": "Усі оцінки",
+        "stars_one": "{{count}} зірка",
+        "stars_few": "{{count}} зірки",
+        "stars_many": "{{count}} зірок",
+        "stars_other": "{{count}} зірки",
+        "from": "Від",
+        "to": "До"
+      },
+      "table": {
+        "date": "Дата",
+        "guest": "Гість",
+        "overall": "Загалом",
+        "service": "Сервіс",
+        "status": "Статус",
+        "comment": "Коментар"
+      },
+      "status": {
+        "new": "Новий",
+        "reviewed": "Переглянуто",
+        "resolved": "Вирішено"
+      },
+      "detail": {
+        "title": "Деталі відгуку",
+        "guest": "Гість",
+        "date": "Дата",
+        "status": "Статус",
+        "overall": "Загалом",
+        "service": "Сервіс",
+        "comment": "Коментар",
+        "dishRatings": "Оцінки страв"
+      },
+      "empty": "Відгуків ще немає.",
+      "guestFallback": "Гість",
+      "errors": {
+        "load": "Не вдалося завантажити відгуки",
+        "detail": "Не вдалося завантажити деталі відгуку",
+        "detailLoad": "Не вдалося завантажити деталі.",
+        "statusUpdate": "Не вдалося оновити статус"
+      },
+      "statusUpdated": "Статус оновлено"
+    },
     "scheduler": {
       "empty": {
         "noRestaurant": "Заклад не вибрано."

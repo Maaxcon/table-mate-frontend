@@ -551,6 +551,52 @@
         "confirm": "Leave"
       }
     },
+    "feedback": {
+      "title": "Feedback",
+      "description": "View and manage guest feedback for your restaurant.",
+      "searchPlaceholder": "Search by ID...",
+      "filters": {
+        "button": "Filters",
+        "allStatuses": "All statuses",
+        "allRatings": "All ratings",
+        "stars_one": "{{count}} star",
+        "stars_other": "{{count}} stars",
+        "from": "From",
+        "to": "To"
+      },
+      "table": {
+        "date": "Date",
+        "guest": "Guest",
+        "overall": "Overall",
+        "service": "Service",
+        "status": "Status",
+        "comment": "Comment"
+      },
+      "status": {
+        "new": "New",
+        "reviewed": "Reviewed",
+        "resolved": "Resolved"
+      },
+      "detail": {
+        "title": "Feedback detail",
+        "guest": "Guest",
+        "date": "Date",
+        "status": "Status",
+        "overall": "Overall",
+        "service": "Service",
+        "comment": "Comment",
+        "dishRatings": "Dish ratings"
+      },
+      "empty": "No feedback yet.",
+      "guestFallback": "Guest",
+      "errors": {
+        "load": "Failed to load feedback",
+        "detail": "Could not load feedback detail",
+        "detailLoad": "Could not load detail.",
+        "statusUpdate": "Failed to update status"
+      },
+      "statusUpdated": "Status updated"
+    },
     "scheduler": {
       "empty": {
         "noRestaurant": "No restaurant selected."
