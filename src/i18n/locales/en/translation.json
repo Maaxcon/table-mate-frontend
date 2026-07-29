@@ -590,7 +590,9 @@
         "overall": "Overall",
         "service": "Service",
         "comment": "Comment",
-        "dishRatings": "Dish ratings"
+        "dishRatings": "Dish ratings",
+        "seeAll": "See all",
+        "showLess": "Show less"
       },
       "empty": "No feedback yet.",
       "guestFallback": "Guest",

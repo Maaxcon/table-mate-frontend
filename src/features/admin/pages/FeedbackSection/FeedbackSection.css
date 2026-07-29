@@ -162,8 +162,12 @@
 }
 
 .feedback-comment-preview {
+  display: block;
+  overflow: hidden;
   color: var(--text-secondary, #666);
   font-size: 0.8125rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .feedback-no-comment {
@@ -258,10 +262,35 @@
 
 .feedback-detail__comment-text {
   margin: 0;
+  max-width: 100%;
+  max-height: 6.75rem;
+  overflow: hidden;
   font-size: 0.875rem;
   color: var(--text-primary, #111);
   line-height: 1.5;
   white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.feedback-detail__comment-text--expanded {
+  max-height: min(50vh, 22rem);
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+
+.feedback-detail__comment-toggle {
+  align-self: flex-start;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--color-link, var(--accent-color, #1565c0));
+  cursor: pointer;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.feedback-detail__comment-toggle:hover {
+  text-decoration: underline;
 }
 
 .feedback-detail__dishes {
@@ -297,4 +326,5 @@
   font-size: 0.8125rem;
   color: var(--text-tertiary, #999);
   margin-left: auto;
+  overflow-wrap: anywhere;
 }

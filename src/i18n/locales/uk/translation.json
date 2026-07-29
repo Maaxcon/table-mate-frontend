@@ -608,7 +608,9 @@
         "overall": "Загалом",
         "service": "Сервіс",
         "comment": "Коментар",
-        "dishRatings": "Оцінки страв"
+        "dishRatings": "Оцінки страв",
+        "seeAll": "Показати все",
+        "showLess": "Згорнути"
       },
       "empty": "Відгуків ще немає.",
       "guestFallback": "Гість",

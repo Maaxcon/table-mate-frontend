@@ -19,6 +19,8 @@ const STATUS_COLORS: Record<string, string> = {
 }
 
 const INITIAL_FILTERS: AdminFeedbackFilters = {}
+const COMMENT_PREVIEW_LENGTH = 280
+const TABLE_COMMENT_PREVIEW_LENGTH = 24
 
 function FeedbackSection() {
   const { i18n, t } = useTranslation()
@@ -35,6 +37,7 @@ function FeedbackSection() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [selectedDetail, setSelectedDetail] = useState<AdminFeedbackResponse | null>(null)
   const [detailLoading, setDetailLoading] = useState(false)
+  const [commentExpanded, setCommentExpanded] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -74,6 +77,7 @@ function FeedbackSection() {
       setSelectedId(publicId)
       setDetailLoading(true)
       setSelectedDetail(null)
+      setCommentExpanded(false)
       try {
         const detail = await fetchAdminFeedbackDetail(publicId)
         setSelectedDetail(detail)
@@ -105,7 +109,7 @@ function FeedbackSection() {
   }, [data, search])
 
   return (
-    <section className="admin-section">
+    <section className="admin-section admin-section--wide">
       <header className="admin-section__header">
         <h1 className="admin-section__title">{t("admin.feedback.title")}</h1>
         <p className="admin-section__description">{t("admin.feedback.description")}</p>
@@ -223,8 +227,8 @@ function FeedbackSection() {
                   <td className="feedback-cell feedback-cell--comment">
                     {entry.comment ? (
                       <span className="feedback-comment-preview">
-                        {entry.comment.length > 60
-                          ? `${entry.comment.slice(0, 60)}...`
+                        {entry.comment.length > TABLE_COMMENT_PREVIEW_LENGTH
+                          ? `${entry.comment.slice(0, TABLE_COMMENT_PREVIEW_LENGTH)}...`
                           : entry.comment}
                       </span>
                     ) : (
@@ -244,6 +248,7 @@ function FeedbackSection() {
           onClose={() => {
             setSelectedId(null)
             setSelectedDetail(null)
+            setCommentExpanded(false)
           }}
           className="feedback-detail-modal"
         >
@@ -298,7 +303,27 @@ function FeedbackSection() {
                   <span className="feedback-detail__label">
                     {t("admin.feedback.detail.comment")}
                   </span>
-                  <p className="feedback-detail__comment-text">{selectedDetail.comment}</p>
+                  <p
+                    id={`feedback-comment-${selectedDetail.public_id}`}
+                    className={`feedback-detail__comment-text${commentExpanded ? " feedback-detail__comment-text--expanded" : ""}`}
+                  >
+                    {selectedDetail.comment}
+                  </p>
+                  {selectedDetail.comment.length > COMMENT_PREVIEW_LENGTH && (
+                    <button
+                      type="button"
+                      className="feedback-detail__comment-toggle"
+                      aria-expanded={commentExpanded}
+                      aria-controls={`feedback-comment-${selectedDetail.public_id}`}
+                      onClick={() => setCommentExpanded((expanded) => !expanded)}
+                    >
+                      {t(
+                        commentExpanded
+                          ? "admin.feedback.detail.showLess"
+                          : "admin.feedback.detail.seeAll",
+                      )}
+                    </button>
+                  )}
                 </div>
               )}
 
