@@ -8,6 +8,8 @@ interface ToolbarProps {
   onToolSelect: (tool: string | null) => void
   onPublish: () => void
   onDiscard: () => void
+  draftSaving?: boolean
+  draftSavedAt?: string | null
 }
 
 export function Toolbar({
@@ -17,9 +19,19 @@ export function Toolbar({
   onToolSelect,
   onPublish,
   onDiscard,
+  draftSaving,
+  draftSavedAt,
 }: ToolbarProps) {
   const strings = useAdminStrings()
   const toolbarStrings = strings.floor.toolbar
+  const pageStrings = strings.floor.page
+
+  const draftStatus = draftSavedAt
+    ? pageStrings.status.draftSaved
+    : dirty
+      ? pageStrings.status.dirty
+      : pageStrings.status.clean
+
   const tools = [
     {
       id: "select",
@@ -93,19 +105,22 @@ export function Toolbar({
       </div>
       <div className="editor-toolbar__actions-panel">
         <span className="editor-toolbar__section-kicker">{toolbarStrings.section.project}</span>
+        <span className="editor-toolbar__status-badge">
+          {draftSaving ? toolbarStrings.actions.savingDraft : draftStatus}
+        </span>
         <div className="editor-toolbar__actions">
           <button
             type="button"
             className="editor-toolbar__btn editor-toolbar__btn--discard"
-            disabled={!dirty || publishing}
+            disabled={(!dirty && !draftSavedAt) || publishing}
             onClick={onDiscard}
           >
-            {toolbarStrings.actions.discard}
+            {draftSavedAt ? toolbarStrings.actions.discardDraft : toolbarStrings.actions.discard}
           </button>
           <button
             type="button"
             className="editor-toolbar__btn editor-toolbar__btn--publish"
-            disabled={!dirty || publishing}
+            disabled={publishing}
             onClick={onPublish}
           >
             {publishing ? toolbarStrings.actions.publishing : toolbarStrings.actions.publish}

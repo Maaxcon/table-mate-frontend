@@ -23,6 +23,7 @@ import {
   deserializeLayout,
 } from "@/features/editor/types"
 import type { EditorEntity, LayoutPayload } from "@/features/editor/types"
+import { fetchDraft, saveDraft, deleteDraft } from "@/features/editor/api"
 import "./FloorPlanEditorPage.css"
 import { useToast } from "@/features/admin/hooks/toastContext"
 import { useAdminStrings } from "@/features/admin/strings"
@@ -212,10 +213,9 @@ function FloorPlanEditorPage() {
 
   useEffect(() => {
     if (!restaurantId) return
-    apiFetch(`/api/editor/layouts/latest/`)
-      .then((res) => (res.ok ? res.json() : { layout_json: null }))
-      .then((data: { layout_json?: LayoutPayload | null }) => {
-        const lp = data.layout_json
+    fetchDraft()
+      .then((data) => {
+        const lp = data.draft_json
         if (lp && typeof lp === "object") {
           const loaded = deserializeLayout(lp as LayoutPayload)
           loadEntities(loaded, serializeEntities(loaded))
@@ -225,6 +225,68 @@ function FloorPlanEditorPage() {
       })
       .catch(() => {})
   }, [restaurantId, loadEntities])
+
+  // ------------------------------------------------------------------
+  // Auto-save draft on entity change (debounced 2s)
+  // ------------------------------------------------------------------
+  const draftTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [draftSaving, setDraftSaving] = useState(false)
+  const [draftSavedAt, setDraftSavedAt] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!restaurantId || !dirty) {
+      if (draftTimerRef.current) {
+        clearTimeout(draftTimerRef.current)
+        draftTimerRef.current = null
+      }
+      return
+    }
+    if (draftTimerRef.current) clearTimeout(draftTimerRef.current)
+    draftTimerRef.current = setTimeout(async () => {
+      setDraftSaving(true)
+      try {
+        const body: Record<string, unknown> = {
+          ...serializeEntities(entities),
+          deleted_table_ids: deletedServerIds,
+        }
+        if (layoutCanvasCols !== undefined) body.canvas_cols = layoutCanvasCols
+        if (layoutCanvasRows !== undefined) body.canvas_rows = layoutCanvasRows
+        if (pendingZones) {
+          body.zones = {
+            created: pendingZones.created.map((z) => ({
+              _client_id: z._clientId,
+              name: z.name,
+              edge_styles: z.edge_styles,
+              canvas_cols: z.canvas_cols,
+              canvas_rows: z.canvas_rows,
+            })),
+            updated: Object.entries(pendingZones.updated).map(([k, v]) => ({
+              public_id: k,
+              ...v,
+            })),
+            deleted: pendingZones.deleted,
+          }
+        }
+        const result = await saveDraft(body)
+        setDraftSavedAt(result.updated_at)
+      } catch {
+        // silent — auto-save failures are non-critical
+      } finally {
+        setDraftSaving(false)
+      }
+    }, 2000)
+    return () => {
+      if (draftTimerRef.current) clearTimeout(draftTimerRef.current)
+    }
+  }, [
+    dirty,
+    entities,
+    deletedServerIds,
+    layoutCanvasCols,
+    layoutCanvasRows,
+    pendingZones,
+    restaurantId,
+  ])
 
   // Another admin created/renamed/deleted a zone: re-pull the zone list so this editor's
   // zone tabs stay current without a manual refresh. Refetching (rather than patching from the
@@ -268,14 +330,14 @@ function FloorPlanEditorPage() {
 
   const handleDiscard = useCallback(async () => {
     clearPendingZones()
+    setDraftSavedAt(null)
     try {
-      const [layoutRes, freshZones] = await Promise.all([
-        apiFetch(`/api/editor/layouts/latest/`),
+      const [draftRes, freshZones] = await Promise.all([
+        restaurantId ? deleteDraft().then(() => fetchDraft()) : Promise.resolve(null),
         restaurantId ? fetchZones(String(restaurantId)) : Promise.resolve([] as Zone[]),
       ])
-      if (layoutRes.ok) {
-        const data: { layout_json?: LayoutPayload | null } = await layoutRes.json()
-        const lp = data.layout_json
+      if (draftRes) {
+        const lp = draftRes.draft_json
         if (lp && typeof lp === "object") {
           const loaded = deserializeLayout(lp as LayoutPayload)
           loadEntities(loaded, serializeEntities(loaded))
@@ -779,6 +841,8 @@ function FloorPlanEditorPage() {
           onToolSelect={setTool}
           onPublish={() => setShowPublishModal(true)}
           onDiscard={handleDiscard}
+          draftSaving={draftSaving}
+          draftSavedAt={draftSavedAt}
         />
         <ZoneHeader
           zones={allZones}

@@ -485,6 +485,15 @@
     color: var(--color-text-primary);
   }
 
+  .editor-toolbar__status-badge {
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    color: var(--color-text-secondary);
+    text-align: center;
+    padding: 2px 0;
+  }
+
   .editor-toolbar__btn--publish {
     background: linear-gradient(
       120deg,

@@ -614,6 +614,8 @@ export function useAdminStrings() {
         status: {
           dirty: t("admin.floor.page.status.dirty"),
           clean: t("admin.floor.page.status.clean"),
+          draftSaved: t("admin.floor.page.status.draftSaved"),
+          draftDiscarded: t("admin.floor.page.status.draftDiscarded"),
         },
         live: {
           ariaConnected: t("admin.floor.page.live.ariaConnected"),
@@ -693,6 +695,9 @@ export function useAdminStrings() {
           discard: t("admin.floor.toolbar.actions.discard"),
           publish: t("admin.floor.toolbar.actions.publish"),
           publishing: t("admin.floor.toolbar.actions.publishing"),
+          saveDraft: t("admin.floor.toolbar.actions.saveDraft"),
+          savingDraft: t("admin.floor.toolbar.actions.savingDraft"),
+          discardDraft: t("admin.floor.toolbar.actions.discardDraft"),
         },
       },
       zoneHeader: {

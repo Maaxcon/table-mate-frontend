@@ -1289,7 +1289,9 @@
         },
         "status": {
           "dirty": "Unsaved changes",
-          "clean": "All changes synced"
+          "clean": "All changes synced",
+          "draftSaved": "Draft saved",
+          "draftDiscarded": "Draft discarded"
         },
         "live": {
           "ariaConnected": "Live updates connected",
@@ -1363,7 +1365,10 @@
         "actions": {
           "discard": "Discard",
           "publish": "Publish Layout",
-          "publishing": "Publishing..."
+          "publishing": "Publishing...",
+          "saveDraft": "Save Draft",
+          "savingDraft": "Saving Draft...",
+          "discardDraft": "Discard Draft"
         }
       },
       "zoneHeader": {
