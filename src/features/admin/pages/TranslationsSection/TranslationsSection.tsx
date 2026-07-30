@@ -1,18 +1,9 @@
-import { useEffect, useState, useCallback } from "react"
+import { useEffect, useState, useRef, useCallback } from "react"
 import "@/features/admin/components/styles/translations.css"
 import { api } from "@/api/client"
 import { useAdminStrings } from "@/features/admin/strings"
 import TranslationEditModal from "@/features/admin/components/TranslationEditModal"
-import {
-  fetchMenusWithTranslations,
-  fetchCategoriesWithTranslations,
-  fetchItemsWithTranslations,
-  fetchAdminAllergens,
-  fetchAdminIngredients,
-  fetchRestaurantsWithTranslations,
-  fetchZonesWithTranslations,
-  fetchTablesWithTranslations,
-} from "@/features/admin/api/menu"
+import * as menuApi from "@/features/admin/api/menu"
 import type {
   AdminAllergen,
   AdminCategoryWithTranslations,
@@ -153,57 +144,170 @@ function TranslationsSection() {
   const [restaurants, setRestaurants] = useState<AdminRestaurantWithTranslations[]>([])
   const [zones, setZones] = useState<AdminZoneWithTranslations[]>([])
   const [tables, setTables] = useState<AdminTableWithTranslations[]>([])
-  const [loading, setLoading] = useState(true)
+  const [initialLoading, setInitialLoading] = useState(true)
+  const [tabLoading, setTabLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<TabKey>("menu")
   const [modal, setModal] = useState<TranslationModalState | null>(null)
 
+  const loadedTabs = useRef<Set<TabKey>>(new Set())
+  const tabAbortRef = useRef<AbortController | null>(null)
+
+  function getEntityList(tab: TabKey): unknown[] {
+    switch (tab) {
+      case "menu":
+        return menus
+      case "category":
+        return categories
+      case "item":
+        return items
+      case "allergen":
+        return allergens
+      case "ingredient":
+        return ingredients
+      case "restaurant":
+        return restaurants
+      case "zone":
+        return zones
+      case "table":
+        return tables
+    }
+  }
+
+  function setEntityList(tab: TabKey, list: unknown[]): void {
+    switch (tab) {
+      case "menu":
+        setMenus(list as AdminMenuWithTranslations[])
+        break
+      case "category":
+        setCategories(list as AdminCategoryWithTranslations[])
+        break
+      case "item":
+        setItems(list as AdminMenuItemWithTranslations[])
+        break
+      case "allergen":
+        setAllergens(list as AdminAllergen[])
+        break
+      case "ingredient":
+        setIngredients(list as AdminIngredient[])
+        break
+      case "restaurant":
+        setRestaurants(list as AdminRestaurantWithTranslations[])
+        break
+      case "zone":
+        setZones(list as AdminZoneWithTranslations[])
+        break
+      case "table":
+        setTables(list as AdminTableWithTranslations[])
+        break
+    }
+  }
+
+  function optimisticallyUpdateTranslation(
+    list: unknown[],
+    publicId: string,
+    languageCode: string,
+    formData: Record<string, string>,
+  ): unknown[] {
+    return list.map((item) => {
+      const entity = item as Record<string, unknown>
+      if (entity.public_id !== publicId) return item
+      const translations = (entity.translations as Record<string, unknown>[] | undefined) ?? []
+      const filtered = translations.filter((t) => t.language_code !== languageCode)
+      const newTranslation: Record<string, unknown> = { language_code: languageCode, ...formData }
+      if (formData.description === "") {
+        newTranslation.description = null
+      }
+      return { ...entity, translations: [...filtered, newTranslation] }
+    })
+  }
+
+  function optimisticallyRemoveTranslation(
+    list: unknown[],
+    publicId: string,
+    languageCode: string,
+  ): unknown[] {
+    return list.map((item) => {
+      const entity = item as Record<string, unknown>
+      if (entity.public_id !== publicId) return item
+      const translations = (entity.translations as Record<string, unknown>[] | undefined) ?? []
+      return {
+        ...entity,
+        translations: translations.filter((t) => t.language_code !== languageCode),
+      }
+    })
+  }
+
   const loadData = useCallback(async (signal?: AbortSignal) => {
-    setLoading(true)
+    setInitialLoading(true)
     setError(null)
     try {
-      const [
-        settingsList,
-        menusData,
-        categoriesData,
-        itemsData,
-        allergensData,
-        ingredientsData,
-        restaurantsData,
-        zonesData,
-        tablesData,
-      ] = await Promise.all([
+      const [settingsList, menusData] = await Promise.all([
         api.getList<{ locale: string; supported_languages: string[] }>(
           "/api/restaurants/restaurant-settings/",
           { signal },
         ),
-        fetchMenusWithTranslations(signal),
-        fetchCategoriesWithTranslations(signal),
-        fetchItemsWithTranslations(signal),
-        fetchAdminAllergens(signal),
-        fetchAdminIngredients(signal),
-        fetchRestaurantsWithTranslations(signal),
-        fetchZonesWithTranslations(signal),
-        fetchTablesWithTranslations(signal),
+        menuApi.fetchMenusWithTranslations(signal),
       ])
       const settings = settingsList[0] ?? {}
       setLocale(settings.locale ?? "en")
       setSupportedLanguages(settings.supported_languages ?? [])
       setMenus(menusData)
-      setCategories(categoriesData)
-      setItems(itemsData)
-      setAllergens(allergensData)
-      setIngredients(ingredientsData)
-      setRestaurants(restaurantsData)
-      setZones(zonesData)
-      setTables(tablesData)
+      loadedTabs.current.add("menu")
     } catch (err) {
       if (err instanceof DOMException && err.name === "AbortError") return
       setError(err instanceof Error ? err.message : "Failed to load data.")
     } finally {
-      setLoading(false)
+      setInitialLoading(false)
     }
   }, [])
+
+  const loadTabData = async (tab: TabKey) => {
+    if (loadedTabs.current.has(tab)) return
+
+    tabAbortRef.current?.abort()
+    const controller = new AbortController()
+    tabAbortRef.current = controller
+
+    setTabLoading(true)
+    setError(null)
+    try {
+      let data: unknown[] = []
+      switch (tab) {
+        case "menu":
+          data = await menuApi.fetchMenusWithTranslations(controller.signal)
+          break
+        case "category":
+          data = await menuApi.fetchCategoriesWithTranslations(controller.signal)
+          break
+        case "item":
+          data = await menuApi.fetchItemsWithTranslations(controller.signal)
+          break
+        case "allergen":
+          data = await menuApi.fetchAdminAllergens(controller.signal)
+          break
+        case "ingredient":
+          data = await menuApi.fetchAdminIngredients(controller.signal)
+          break
+        case "restaurant":
+          data = await menuApi.fetchRestaurantsWithTranslations(controller.signal)
+          break
+        case "zone":
+          data = await menuApi.fetchZonesWithTranslations(controller.signal)
+          break
+        case "table":
+          data = await menuApi.fetchTablesWithTranslations(controller.signal)
+          break
+      }
+      loadedTabs.current.add(tab)
+      setEntityList(tab, data)
+    } catch (err) {
+      if (err instanceof DOMException && err.name === "AbortError") return
+      setError(err instanceof Error ? err.message : "Failed to load data.")
+    } finally {
+      setTabLoading(false)
+    }
+  }
 
   useEffect(() => {
     const controller = new AbortController()
@@ -211,6 +315,11 @@ function TranslationsSection() {
     loadData(controller.signal)
     return () => controller.abort()
   }, [loadData])
+
+  const handleTabChange = (tab: TabKey) => {
+    setActiveTab(tab)
+    loadTabData(tab)
+  }
 
   const handleBadgeClick = (
     entityType: EntityType,
@@ -259,7 +368,7 @@ function TranslationsSection() {
 
   const { list, entityType } = getCurrentEntities()
 
-  if (loading) {
+  if (initialLoading) {
     return (
       <section className="admin-section">
         <header className="admin-section__header">
@@ -298,7 +407,7 @@ function TranslationsSection() {
             key={tab.key}
             type="button"
             className={`translations__tab${activeTab === tab.key ? " translations__tab--active" : ""}`}
-            onClick={() => setActiveTab(tab.key)}
+            onClick={() => handleTabChange(tab.key)}
           >
             {tab.label}
           </button>
@@ -312,53 +421,64 @@ function TranslationsSection() {
       )}
 
       {displayLanguages.length > 0 && (
-        <div className="translations__table">
-          <div className="translations__table-header">
-            <div className="translations__col-name">Name</div>
-            {displayLanguages.map((lang) => (
-              <div key={lang} className="translations__col-lang">
-                {LANGUAGE_NAMES[lang] ?? lang}
-              </div>
-            ))}
+        <div className="translations__table-wrapper">
+          <div className="translations__table">
+            <div className="translations__table-header">
+              <div className="translations__col-name">Name</div>
+              {displayLanguages.map((lang) => (
+                <div key={lang} className="translations__col-lang">
+                  {LANGUAGE_NAMES[lang] ?? lang}
+                </div>
+              ))}
+            </div>
+
+            {(list as Array<Record<string, unknown>>).length === 0 && (
+              <p className="admin-section__description">No {activeTab}s found.</p>
+            )}
+
+            {(list as Array<Record<string, unknown>>).map((entity: Record<string, unknown>) => {
+              const translations = getTranslations(entity as { translations?: Translation[] })
+              const primaryName = getEntityName(entity as AdminMenuWithTranslations)
+
+              return (
+                <div
+                  key={`${entityType}-${getEntityId(entity)}`}
+                  className="translations__table-row"
+                >
+                  <div className="translations__col-name translations__cell-name">
+                    <span className="translations__entity-name">{primaryName}</span>
+                  </div>
+                  {displayLanguages.map((lang) => {
+                    const hasTranslation = translations.some((t) => t.language_code === lang)
+                    return (
+                      <div key={lang} className="translations__col-lang">
+                        <button
+                          type="button"
+                          className={`translations__badge${hasTranslation ? " translations__badge--present" : " translations__badge--missing"}`}
+                          onClick={() =>
+                            handleBadgeClick(entityType, entity as AdminMenuWithTranslations, lang)
+                          }
+                          title={
+                            hasTranslation
+                              ? `Edit ${LANGUAGE_NAMES[lang] ?? lang} translation`
+                              : `Add ${LANGUAGE_NAMES[lang] ?? lang} translation`
+                          }
+                        >
+                          {lang.toUpperCase()}
+                        </button>
+                      </div>
+                    )
+                  })}
+                </div>
+              )
+            })}
           </div>
 
-          {(list as Array<Record<string, unknown>>).length === 0 && (
-            <p className="admin-section__description">No {activeTab}s found.</p>
+          {tabLoading && (
+            <div className="translations__loading-overlay">
+              <span>Loading...</span>
+            </div>
           )}
-
-          {(list as Array<Record<string, unknown>>).map((entity: Record<string, unknown>) => {
-            const translations = getTranslations(entity as { translations?: Translation[] })
-            const primaryName = getEntityName(entity as AdminMenuWithTranslations)
-
-            return (
-              <div key={`${entityType}-${getEntityId(entity)}`} className="translations__table-row">
-                <div className="translations__col-name translations__cell-name">
-                  <span className="translations__entity-name">{primaryName}</span>
-                </div>
-                {displayLanguages.map((lang) => {
-                  const hasTranslation = translations.some((t) => t.language_code === lang)
-                  return (
-                    <div key={lang} className="translations__col-lang">
-                      <button
-                        type="button"
-                        className={`translations__badge${hasTranslation ? " translations__badge--present" : " translations__badge--missing"}`}
-                        onClick={() =>
-                          handleBadgeClick(entityType, entity as AdminMenuWithTranslations, lang)
-                        }
-                        title={
-                          hasTranslation
-                            ? `Edit ${LANGUAGE_NAMES[lang] ?? lang} translation`
-                            : `Add ${LANGUAGE_NAMES[lang] ?? lang} translation`
-                        }
-                      >
-                        {lang.toUpperCase()}
-                      </button>
-                    </div>
-                  )
-                })}
-              </div>
-            )
-          })}
         </div>
       )}
 
@@ -371,7 +491,157 @@ function TranslationsSection() {
           primaryLanguage={locale}
           existingTranslation={modal.existingTranslation}
           onClose={() => setModal(null)}
-          onSaved={() => loadData()}
+          onSave={async (formData) => {
+            const { entityType, entity, languageCode, existingTranslation } = modal
+            const publicId = (entity as Record<string, unknown>).public_id as string
+            const list = getEntityList(entityType)
+            const snapshot = structuredClone(list)
+            setEntityList(
+              entityType,
+              optimisticallyUpdateTranslation(list, publicId, languageCode, formData),
+            )
+            const isNew = !existingTranslation
+            try {
+              if (isNew) {
+                switch (entityType) {
+                  case "menu":
+                    await menuApi.createMenuTranslation(publicId, {
+                      language_code: languageCode,
+                      name: formData.name,
+                    })
+                    break
+                  case "category":
+                    await menuApi.createCategoryTranslation(publicId, {
+                      language_code: languageCode,
+                      name: formData.name,
+                    })
+                    break
+                  case "item":
+                    await menuApi.createItemTranslation(publicId, {
+                      language_code: languageCode,
+                      name: formData.name,
+                      description: formData.description ?? null,
+                    })
+                    break
+                  case "allergen":
+                    await menuApi.createAllergenTranslation(publicId, {
+                      language_code: languageCode,
+                      name: formData.name,
+                    })
+                    break
+                  case "ingredient":
+                    await menuApi.createIngredientTranslation(publicId, {
+                      language_code: languageCode,
+                      name: formData.name,
+                    })
+                    break
+                  case "restaurant":
+                    await menuApi.createRestaurantTranslation(publicId, {
+                      language_code: languageCode,
+                      address: formData.address,
+                    })
+                    break
+                  case "zone":
+                    await menuApi.createZoneTranslation(publicId, {
+                      language_code: languageCode,
+                      name: formData.name,
+                    })
+                    break
+                  case "table":
+                    await menuApi.createTableTranslation(publicId, {
+                      language_code: languageCode,
+                      public_number: formData.public_number,
+                    })
+                    break
+                }
+              } else {
+                switch (entityType) {
+                  case "menu":
+                    await menuApi.updateMenuTranslation(publicId, languageCode, {
+                      name: formData.name,
+                    })
+                    break
+                  case "category":
+                    await menuApi.updateCategoryTranslation(publicId, languageCode, {
+                      name: formData.name,
+                    })
+                    break
+                  case "item":
+                    await menuApi.updateItemTranslation(publicId, languageCode, {
+                      name: formData.name,
+                      description: formData.description ?? null,
+                    })
+                    break
+                  case "allergen":
+                    await menuApi.updateAllergenTranslation(publicId, languageCode, {
+                      name: formData.name,
+                    })
+                    break
+                  case "ingredient":
+                    await menuApi.updateIngredientTranslation(publicId, languageCode, {
+                      name: formData.name,
+                    })
+                    break
+                  case "restaurant":
+                    await menuApi.updateRestaurantTranslation(publicId, languageCode, {
+                      address: formData.address,
+                    })
+                    break
+                  case "zone":
+                    await menuApi.updateZoneTranslation(publicId, languageCode, {
+                      name: formData.name,
+                    })
+                    break
+                  case "table":
+                    await menuApi.updateTableTranslation(publicId, languageCode, {
+                      public_number: formData.public_number,
+                    })
+                    break
+                }
+              }
+            } catch (err) {
+              setEntityList(entityType, snapshot)
+              throw err
+            }
+          }}
+          onDelete={async () => {
+            const { entityType, entity, languageCode } = modal
+            const publicId = (entity as Record<string, unknown>).public_id as string
+            const list = getEntityList(entityType)
+            const snapshot = structuredClone(list)
+            setEntityList(entityType, optimisticallyRemoveTranslation(list, publicId, languageCode))
+            try {
+              switch (entityType) {
+                case "menu":
+                  await menuApi.deleteMenuTranslation(publicId, languageCode)
+                  break
+                case "category":
+                  await menuApi.deleteCategoryTranslation(publicId, languageCode)
+                  break
+                case "item":
+                  await menuApi.deleteItemTranslation(publicId, languageCode)
+                  break
+                case "allergen":
+                  await menuApi.deleteAllergenTranslation(publicId, languageCode)
+                  break
+                case "ingredient":
+                  await menuApi.deleteIngredientTranslation(publicId, languageCode)
+                  break
+                case "restaurant":
+                  await menuApi.deleteRestaurantTranslation(publicId, languageCode)
+                  break
+                case "zone":
+                  await menuApi.deleteZoneTranslation(publicId, languageCode)
+                  break
+                case "table":
+                  await menuApi.deleteTableTranslation(publicId, languageCode)
+                  break
+              }
+            } catch (err) {
+              setEntityList(entityType, snapshot)
+              throw err
+            }
+          }}
         />
       )}
     </section>

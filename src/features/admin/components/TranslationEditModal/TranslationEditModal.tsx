@@ -21,32 +21,6 @@ import type {
   TableTranslation,
   ZoneTranslation,
 } from "@/features/admin/types"
-import {
-  createMenuTranslation,
-  updateMenuTranslation,
-  deleteMenuTranslation,
-  createCategoryTranslation,
-  updateCategoryTranslation,
-  deleteCategoryTranslation,
-  createItemTranslation,
-  updateItemTranslation,
-  deleteItemTranslation,
-  createAllergenTranslation,
-  updateAllergenTranslation,
-  deleteAllergenTranslation,
-  createIngredientTranslation,
-  updateIngredientTranslation,
-  deleteIngredientTranslation,
-  createRestaurantTranslation,
-  updateRestaurantTranslation,
-  deleteRestaurantTranslation,
-  createZoneTranslation,
-  updateZoneTranslation,
-  deleteZoneTranslation,
-  createTableTranslation,
-  updateTableTranslation,
-  deleteTableTranslation,
-} from "@/features/admin/api/menu"
 
 type EntityType =
   | "menu"
@@ -85,7 +59,8 @@ type TranslationEditModalProps = {
     | TableTranslation
     | null
   onClose: () => void
-  onSaved: () => void
+  onSave: (formData: Record<string, string>) => Promise<void>
+  onDelete: () => Promise<void>
 }
 
 const LANGUAGE_NAMES: Record<string, string> = {
@@ -148,12 +123,12 @@ function getTranslateFields(entityType: EntityType): string[] {
 function TranslationEditModal({
   entityType,
   entity,
-  languageCode,
   languageName,
   primaryLanguage,
   existingTranslation,
   onClose,
-  onSaved,
+  onSave,
+  onDelete,
 }: TranslationEditModalProps) {
   const strings = useAdminStrings()
   const toast = useToast()
@@ -171,6 +146,16 @@ function TranslationEditModal({
   })
   const [submitting, setSubmitting] = useState(false)
 
+  const hasChanges = isNew
+    ? translateFields.some((field) => form[field]?.trim())
+    : translateFields.some((field) => {
+        const current = form[field] ?? ""
+        const original = ((existingTranslation as Record<string, unknown>)[field] as string) ?? ""
+        return current !== original
+      })
+
+  const canSave = Boolean(hasChanges && form[translateFields[0]]?.trim())
+
   const handleSave = async () => {
     setSubmitting(true)
     try {
@@ -179,90 +164,9 @@ function TranslationEditModal({
         payload.description ??= ""
       }
 
-      const publicId = (entity as Record<string, unknown>).public_id as string
-
-      if (entityType === "menu") {
-        if (isNew) {
-          await createMenuTranslation(publicId, {
-            language_code: languageCode,
-            name: form.name,
-          })
-        } else {
-          await updateMenuTranslation(publicId, languageCode, { name: form.name })
-        }
-      } else if (entityType === "category") {
-        if (isNew) {
-          await createCategoryTranslation(publicId, {
-            language_code: languageCode,
-            name: form.name,
-          })
-        } else {
-          await updateCategoryTranslation(publicId, languageCode, { name: form.name })
-        }
-      } else if (entityType === "item") {
-        if (isNew) {
-          await createItemTranslation(publicId, {
-            language_code: languageCode,
-            name: form.name,
-            description: form.description ?? null,
-          })
-        } else {
-          await updateItemTranslation(publicId, languageCode, {
-            name: form.name,
-            description: form.description ?? null,
-          })
-        }
-      } else if (entityType === "allergen") {
-        if (isNew) {
-          await createAllergenTranslation(publicId, {
-            language_code: languageCode,
-            name: form.name,
-          })
-        } else {
-          await updateAllergenTranslation(publicId, languageCode, { name: form.name })
-        }
-      } else if (entityType === "ingredient") {
-        if (isNew) {
-          await createIngredientTranslation(publicId, {
-            language_code: languageCode,
-            name: form.name,
-          })
-        } else {
-          await updateIngredientTranslation(publicId, languageCode, { name: form.name })
-        }
-      } else if (entityType === "restaurant") {
-        if (isNew) {
-          await createRestaurantTranslation(publicId, {
-            language_code: languageCode,
-            address: form.address,
-          })
-        } else {
-          await updateRestaurantTranslation(publicId, languageCode, { address: form.address })
-        }
-      } else if (entityType === "zone") {
-        if (isNew) {
-          await createZoneTranslation(publicId, {
-            language_code: languageCode,
-            name: form.name,
-          })
-        } else {
-          await updateZoneTranslation(publicId, languageCode, { name: form.name })
-        }
-      } else if (entityType === "table") {
-        if (isNew) {
-          await createTableTranslation(publicId, {
-            language_code: languageCode,
-            public_number: form.public_number,
-          })
-        } else {
-          await updateTableTranslation(publicId, languageCode, {
-            public_number: form.public_number,
-          })
-        }
-      }
+      await onSave(payload)
 
       toast.success(isNew ? "Translation added" : "Translation saved")
-      onSaved()
       onClose()
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to save translation.")
@@ -274,21 +178,9 @@ function TranslationEditModal({
   const handleDelete = async () => {
     setSubmitting(true)
     try {
-      const publicId = (entity as Record<string, unknown>).public_id as string
-
-      if (entityType === "menu") await deleteMenuTranslation(publicId, languageCode)
-      else if (entityType === "category") await deleteCategoryTranslation(publicId, languageCode)
-      else if (entityType === "item") await deleteItemTranslation(publicId, languageCode)
-      else if (entityType === "allergen") await deleteAllergenTranslation(publicId, languageCode)
-      else if (entityType === "ingredient")
-        await deleteIngredientTranslation(publicId, languageCode)
-      else if (entityType === "restaurant")
-        await deleteRestaurantTranslation(publicId, languageCode)
-      else if (entityType === "zone") await deleteZoneTranslation(publicId, languageCode)
-      else if (entityType === "table") await deleteTableTranslation(publicId, languageCode)
+      await onDelete()
 
       toast.success("Translation deleted")
-      onSaved()
       onClose()
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to delete translation.")
@@ -370,7 +262,7 @@ function TranslationEditModal({
             type="button"
             className="admin-form__save"
             onClick={handleSave}
-            disabled={submitting || !form[translateFields[0]]?.trim()}
+            disabled={submitting || !canSave}
           >
             {submitting ? strings.common.saving : isNew ? strings.common.add : strings.common.save}
           </button>
