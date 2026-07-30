@@ -10,8 +10,10 @@ export async function fetchTableQrCode(tablePublicId: string): Promise<Blob> {
 
 export interface DraftResponse {
   draft_json: LayoutPayload | null
+  is_draft: boolean
+  base_layout_version_id: string | null
   updated_at: string | null
-  updated_by: string | null
+  owner_id: string | null
 }
 
 /** Load the current draft (or latest published if no draft). */

@@ -1332,6 +1332,8 @@
             "message": "Layout was updated by another admin. Reload to see changes (your unsaved work will be lost).",
             "action": "Reload now"
           },
+          "layoutUpdated": "Another admin published a layout. Sync to load the latest plan.",
+          "syncFailed": "Could not sync the floor plan.",
           "occupied": "Can't delete an occupied table — close its visit first."
         }
       },
@@ -1340,6 +1342,10 @@
           "kicker": "Layout Builder",
           "title": "Add Elements",
           "project": "Project"
+        },
+        "source": {
+          "draft": "Your draft",
+          "published": "Published layout"
         },
         "tools": {
           "select": {
@@ -1368,7 +1374,8 @@
           "publishing": "Publishing...",
           "saveDraft": "Save Draft",
           "savingDraft": "Saving Draft...",
-          "discardDraft": "Discard Draft"
+          "discardDraft": "Discard Draft",
+          "sync": "Sync Layout"
         }
       },
       "zoneHeader": {
@@ -1489,6 +1496,13 @@
         }
       },
       "modals": {
+        "sync": {
+          "title": "Sync latest layout?",
+          "message": "Syncing replaces this editor with the latest published layout and discards your draft or unsaved changes.",
+          "cancel": "Keep editing",
+          "confirm": "Sync layout",
+          "syncing": "Syncing..."
+        },
         "publish": {
           "title": "Publish Layout",
           "bodyLine1": "Publishing will instantly update all active waiter tablets.",

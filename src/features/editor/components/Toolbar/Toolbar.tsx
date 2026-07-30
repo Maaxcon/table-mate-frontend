@@ -7,9 +7,11 @@ interface ToolbarProps {
   activeTool: string | null
   onToolSelect: (tool: string | null) => void
   onPublish: () => void
+  onSync: () => void
   onDiscard: () => void
   draftSaving?: boolean
   draftSavedAt?: string | null
+  loadedDraft: boolean | null
 }
 
 export function Toolbar({
@@ -18,9 +20,11 @@ export function Toolbar({
   activeTool,
   onToolSelect,
   onPublish,
+  onSync,
   onDiscard,
   draftSaving,
   draftSavedAt,
+  loadedDraft,
 }: ToolbarProps) {
   const strings = useAdminStrings()
   const toolbarStrings = strings.floor.toolbar
@@ -105,10 +109,25 @@ export function Toolbar({
       </div>
       <div className="editor-toolbar__actions-panel">
         <span className="editor-toolbar__section-kicker">{toolbarStrings.section.project}</span>
+        {loadedDraft !== null && (
+          <span
+            className={`editor-toolbar__layout-source editor-toolbar__layout-source--${loadedDraft ? "draft" : "published"}`}
+          >
+            {loadedDraft ? toolbarStrings.source.draft : toolbarStrings.source.published}
+          </span>
+        )}
         <span className="editor-toolbar__status-badge">
           {draftSaving ? toolbarStrings.actions.savingDraft : draftStatus}
         </span>
         <div className="editor-toolbar__actions">
+          <button
+            type="button"
+            className="editor-toolbar__btn"
+            disabled={publishing || draftSaving}
+            onClick={onSync}
+          >
+            {toolbarStrings.actions.sync}
+          </button>
           <button
             type="button"
             className="editor-toolbar__btn editor-toolbar__btn--discard"

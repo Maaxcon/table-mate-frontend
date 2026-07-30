@@ -8,6 +8,7 @@ import {
   ConfirmDeleteZoneModal,
   PropertiesSidebar,
   PublishConfirmModal,
+  SyncLayoutConfirmModal,
   TableQrModal,
   Toolbar,
   ZoneHeader,
@@ -90,6 +91,8 @@ function FloorPlanEditorPage() {
 
   const restaurantId = useAppSelector((state) => state.auth.user?.restaurantId)
   const [showPublishModal, setShowPublishModal] = useState(false)
+  const [showSyncModal, setShowSyncModal] = useState(false)
+  const [syncing, setSyncing] = useState(false)
   const [zones, setZones] = useState<Zone[]>([])
   const [selectedZoneId, setSelectedZoneId] = useState<string | null>(null)
   const [selectedIds, setSelectedIds] = useState<string[]>([])
@@ -103,6 +106,8 @@ function FloorPlanEditorPage() {
   const [deleting, setDeleting] = useState(false)
   const [qrTarget, setQrTarget] = useState<{ publicId: string; label: string } | null>(null)
   const toast = useToast()
+  const [baseLayoutVersionId, setBaseLayoutVersionId] = useState<string | null>(null)
+  const [loadedDraft, setLoadedDraft] = useState<boolean | null>(null)
   const strings = useAdminStrings()
   const pageStrings = strings.floor.page
 
@@ -213,17 +218,43 @@ function FloorPlanEditorPage() {
 
   useEffect(() => {
     if (!restaurantId) return
-    fetchDraft()
-      .then((data) => {
-        const lp = data.draft_json
+
+    async function loadLayout() {
+      try {
+        const draft = await fetchDraft()
+        const lp = draft.draft_json
+        setLoadedDraft(draft.is_draft)
+        setBaseLayoutVersionId(draft.base_layout_version_id)
+        if (lp && typeof lp === "object") {
+          const loaded = deserializeLayout(lp as LayoutPayload)
+          loadEntities(loaded, serializeEntities(loaded))
+          return
+        }
+      } catch {
+        // draft endpoint unavailable — fall through to latest
+      }
+
+      // Fallback: load latest published layout directly
+      try {
+        const res = await apiFetch("/api/editor/layouts/latest/")
+        if (!res.ok) return
+        const data: { layout_json?: LayoutPayload | null; layout_version_id?: string | null } =
+          await res.json()
+        setLoadedDraft(false)
+        setBaseLayoutVersionId(data.layout_version_id ?? null)
+        const lp = data.layout_json
         if (lp && typeof lp === "object") {
           const loaded = deserializeLayout(lp as LayoutPayload)
           loadEntities(loaded, serializeEntities(loaded))
         } else {
           loadEntities([], {})
         }
-      })
-      .catch(() => {})
+      } catch {
+        loadEntities([], {})
+      }
+    }
+
+    loadLayout()
   }, [restaurantId, loadEntities])
 
   // ------------------------------------------------------------------
@@ -248,6 +279,7 @@ function FloorPlanEditorPage() {
         const body: Record<string, unknown> = {
           ...serializeEntities(entities),
           deleted_table_ids: deletedServerIds,
+          base_layout_version_id: baseLayoutVersionId,
         }
         if (layoutCanvasCols !== undefined) body.canvas_cols = layoutCanvasCols
         if (layoutCanvasRows !== undefined) body.canvas_rows = layoutCanvasRows
@@ -268,6 +300,8 @@ function FloorPlanEditorPage() {
           }
         }
         const result = await saveDraft(body)
+        setLoadedDraft(result.is_draft)
+        setBaseLayoutVersionId(result.base_layout_version_id)
         setDraftSavedAt(result.updated_at)
       } catch {
         // silent — auto-save failures are non-critical
@@ -286,6 +320,7 @@ function FloorPlanEditorPage() {
     layoutCanvasRows,
     pendingZones,
     restaurantId,
+    baseLayoutVersionId,
   ])
 
   // Another admin created/renamed/deleted a zone: re-pull the zone list so this editor's
@@ -301,32 +336,50 @@ function FloorPlanEditorPage() {
     }
   }, [restaurantId])
 
-  // When another admin publishes a layout, warn about stale work or silently reload.
-  const handleOtherAdminPublished = useCallback(async () => {
-    if (publishingRef.current) return
-    if (dirty) {
-      toast.action(pageStrings.toasts.stale.message, pageStrings.toasts.stale.action, () =>
-        window.location.reload(),
-      )
-    } else {
+  const syncLatestLayout = useCallback(
+    async (discardDraft: boolean) => {
+      setSyncing(true)
       try {
-        const res = await apiFetch(`/api/editor/layouts/latest/`)
-        if (res.ok) {
-          const data: { layout_json?: LayoutPayload | null } = await res.json()
-          const lp = data.layout_json
-          if (lp && typeof lp === "object") {
-            const loaded = deserializeLayout(lp as LayoutPayload)
-            loadEntities(loaded, serializeEntities(loaded))
-          } else {
-            loadEntities([], {})
-          }
+        if (discardDraft && loadedDraft) await deleteDraft()
+
+        const res = await apiFetch("/api/editor/layouts/latest/")
+        if (!res.ok) throw new Error("Failed to load latest layout.")
+        const data: { layout_json?: LayoutPayload | null; layout_version_id?: string | null } =
+          await res.json()
+        setLoadedDraft(false)
+        setBaseLayoutVersionId(data.layout_version_id ?? null)
+        setDraftSavedAt(null)
+        const lp = data.layout_json
+        if (lp && typeof lp === "object") {
+          const loaded = deserializeLayout(lp as LayoutPayload)
+          loadEntities(loaded, serializeEntities(loaded))
+        } else {
+          loadEntities([], {})
         }
+        await refreshZones()
+        setShowSyncModal(false)
       } catch {
-        // keep current state
+        toast.error(pageStrings.toasts.syncFailed)
+      } finally {
+        setSyncing(false)
       }
-      refreshZones()
+    },
+    [loadedDraft, loadEntities, pageStrings.toasts.syncFailed, refreshZones, toast],
+  )
+
+  const requestSync = useCallback(() => {
+    if (dirty || loadedDraft) {
+      setShowSyncModal(true)
+      return
     }
-  }, [dirty, loadEntities, toast, refreshZones])
+    void syncLatestLayout(false)
+  }, [dirty, loadedDraft, syncLatestLayout])
+
+  // Notify every editor about a newly published layout; the admin chooses when to sync.
+  const handleOtherAdminPublished = useCallback(() => {
+    if (publishingRef.current) return
+    toast.action(pageStrings.toasts.layoutUpdated, strings.floor.toolbar.actions.sync, requestSync)
+  }, [pageStrings.toasts.layoutUpdated, requestSync, strings.floor.toolbar.actions.sync, toast])
 
   const handleDiscard = useCallback(async () => {
     clearPendingZones()
@@ -336,14 +389,41 @@ function FloorPlanEditorPage() {
         restaurantId ? deleteDraft().then(() => fetchDraft()) : Promise.resolve(null),
         restaurantId ? fetchZones(String(restaurantId)) : Promise.resolve([] as Zone[]),
       ])
+
+      let layoutPayload: LayoutPayload | null = null
+
       if (draftRes) {
+        setLoadedDraft(draftRes.is_draft)
+        setBaseLayoutVersionId(draftRes.base_layout_version_id)
         const lp = draftRes.draft_json
         if (lp && typeof lp === "object") {
-          const loaded = deserializeLayout(lp as LayoutPayload)
-          loadEntities(loaded, serializeEntities(loaded))
-        } else {
-          loadEntities([], {})
+          layoutPayload = lp as LayoutPayload
         }
+      }
+
+      // Fallback to latest published if no draft fallback returned data
+      if (!layoutPayload && restaurantId) {
+        try {
+          const res = await apiFetch("/api/editor/layouts/latest/")
+          if (res.ok) {
+            const data: { layout_json?: LayoutPayload | null; layout_version_id?: string | null } =
+              await res.json()
+            setLoadedDraft(false)
+            setBaseLayoutVersionId(data.layout_version_id ?? null)
+            if (data.layout_json && typeof data.layout_json === "object") {
+              layoutPayload = data.layout_json as LayoutPayload
+            }
+          }
+        } catch {
+          // silent
+        }
+      }
+
+      if (layoutPayload) {
+        const loaded = deserializeLayout(layoutPayload)
+        loadEntities(loaded, serializeEntities(loaded))
+      } else {
+        loadEntities([], {})
       }
       setZones(freshZones)
     } catch {
@@ -418,6 +498,8 @@ function FloorPlanEditorPage() {
       // Apply the new tables' server ids and snapshot the published state in one
       // atomic action so the editor doesn't end up falsely dirty.
       publishSuccess(result?.table_id_map, result?.public_number_map)
+      setLoadedDraft(false)
+      setBaseLayoutVersionId(result?.public_id ?? null)
       setShowPublishModal(false)
       // Refresh zones from the server (newly created zones now exist, etc.)
       if (restaurantId) {
@@ -456,7 +538,14 @@ function FloorPlanEditorPage() {
       past,
       future,
     }
-    publish(entities, deletedServerIds, layoutCanvasCols, layoutCanvasRows, pendingZones)
+    publish(
+      entities,
+      deletedServerIds,
+      layoutCanvasCols,
+      layoutCanvasRows,
+      pendingZones,
+      baseLayoutVersionId,
+    )
   }, [
     publish,
     entities,
@@ -470,6 +559,7 @@ function FloorPlanEditorPage() {
     layoutCanvasCols,
     layoutCanvasRows,
     pendingZones,
+    baseLayoutVersionId,
     past,
     future,
   ])
@@ -840,9 +930,11 @@ function FloorPlanEditorPage() {
           activeTool={activeTool}
           onToolSelect={setTool}
           onPublish={() => setShowPublishModal(true)}
+          onSync={requestSync}
           onDiscard={handleDiscard}
           draftSaving={draftSaving}
           draftSavedAt={draftSavedAt}
+          loadedDraft={loadedDraft}
         />
         <ZoneHeader
           zones={allZones}
@@ -930,6 +1022,14 @@ function FloorPlanEditorPage() {
           onConfirm={handlePublishConfirm}
           onClose={() => setShowPublishModal(false)}
           busy={publishing}
+        />
+      )}
+
+      {showSyncModal && (
+        <SyncLayoutConfirmModal
+          onConfirm={() => void syncLatestLayout(true)}
+          onClose={() => setShowSyncModal(false)}
+          busy={syncing}
         />
       )}
 

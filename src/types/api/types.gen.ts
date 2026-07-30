@@ -889,6 +889,7 @@ export type PublicRestaurantSettings = {
 }
 
 export type PublishLayout = {
+  base_layout_version_id?: string | null
   canvas_cols?: number
   canvas_rows?: number
   tables?: Array<TableEntity>
