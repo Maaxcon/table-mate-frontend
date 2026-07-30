@@ -4,6 +4,9 @@ import type {
   AdminMenuCategory,
   AdminMenuItem,
   Employee,
+  MenuCategoryTranslation,
+  MenuItemTranslation,
+  MenuTranslation,
   Restaurant,
 } from "@/types/api/types.gen"
 
@@ -11,8 +14,42 @@ export type { WeekDay, WorkingHours, WorkingHoursDay }
 
 // Re-exported from the generated OpenAPI types so they can't drift from the API.
 export type { AdminMenu, AdminMenuItem }
+export type { MenuCategoryTranslation, MenuItemTranslation, MenuTranslation }
 export type AdminCategory = AdminMenuCategory
 export type AdminEmployee = Employee
+
+export type AdminMenuWithTranslations = AdminMenu & { translations: MenuTranslation[] }
+export type AdminCategoryWithTranslations = AdminCategory & {
+  translations: MenuCategoryTranslation[]
+}
+export type AdminMenuItemWithTranslations = AdminMenuItem & { translations: MenuItemTranslation[] }
+
+export type AdminAllergen = {
+  key: string
+  sort_order: number
+  translations: AllergenTranslation[]
+  created_at: string
+  updated_at: string
+}
+
+export type AllergenTranslation = {
+  language_code: string
+  name: string
+}
+
+export type AdminIngredient = {
+  public_id: string
+  key: string
+  sort_order: number
+  translations: IngredientTranslation[]
+  created_at: string
+  updated_at: string
+}
+
+export type IngredientTranslation = {
+  language_code: string
+  name: string
+}
 
 // The admin UI only assigns these three roles (the API's RoleEnum also has
 // "customer", which staff management never sets).

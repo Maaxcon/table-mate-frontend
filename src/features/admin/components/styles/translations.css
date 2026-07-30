@@ -1,0 +1,232 @@
+.translations__tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--color-border-default);
+}
+
+.translations__tab {
+  padding: 8px 16px;
+  border: none;
+  background: none;
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+}
+
+.translations__tab:hover {
+  color: var(--color-text-primary);
+}
+
+.translations__tab--active {
+  color: var(--color-text-primary);
+  border-bottom-color: var(--color-border-strong);
+}
+
+.translations__table {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.translations__table-header {
+  display: flex;
+  gap: 8px;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.translations__table-row {
+  display: flex;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  align-items: center;
+}
+
+.translations__table-row:hover {
+  background: var(--color-bg-subtle);
+}
+
+.translations__col-name {
+  flex: 1;
+  min-width: 0;
+}
+
+.translations__col-lang {
+  width: 72px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.translations__cell-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.translations__entity-name {
+  font-size: 14px;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.translations__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 28px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  border: 1.5px solid;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
+}
+
+.translations__badge--present {
+  background: var(--color-success-bg, #e6f7e6);
+  border-color: var(--color-success-text, #2e7d32);
+  color: var(--color-success-text, #2e7d32);
+}
+
+.translations__badge--present:hover {
+  background: var(--color-success-text, #2e7d32);
+  color: white;
+}
+
+.translations__badge--missing {
+  background: transparent;
+  border-color: var(--color-border-default);
+  color: var(--color-text-muted);
+  border-style: dashed;
+}
+
+.translations__badge--missing:hover {
+  border-color: var(--color-border-strong);
+  color: var(--color-text-primary);
+  border-style: solid;
+}
+
+/* Translation modal */
+.admin-modal--translation {
+  max-width: 640px;
+}
+
+.translation-modal__body {
+  display: flex;
+  gap: 20px;
+}
+
+.translation-modal__reference,
+.translation-modal__editor {
+  flex: 1;
+  min-width: 0;
+}
+
+.translation-modal__column-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  margin: 0 0 12px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.translation-modal__reference-fields,
+.translation-modal__editor-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.translation-modal__reference-value {
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--color-bg-subtle);
+  color: var(--color-text-secondary);
+  font-size: 15px;
+  line-height: 1.4;
+  min-height: 42px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.translation-modal__field-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 4px;
+  display: block;
+}
+
+.translation-modal__field {
+  display: flex;
+  flex-direction: column;
+}
+
+.translation-modal__actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-border-default);
+}
+
+.translation-modal__actions-right {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.admin-form__delete {
+  padding: 10px 16px;
+  border: 1px solid var(--color-error-text, #d32f2f);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--color-error-text, #d32f2f);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.admin-form__delete:hover {
+  background: var(--color-error-bg, #fdecea);
+}
+
+.admin-form__delete:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.admin-form__cancel {
+  padding: 10px 16px;
+  border: 1px solid var(--color-border-default);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--color-text-primary);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.admin-form__cancel:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
