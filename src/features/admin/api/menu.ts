@@ -198,8 +198,8 @@ export async function fetchAdminAllergens(signal?: AbortSignal): Promise<AdminAl
   })
   const seen = new Set<string>()
   return all.filter((item) => {
-    if (seen.has(item.key)) return false
-    seen.add(item.key)
+    if (seen.has(item.public_id)) return false
+    seen.add(item.public_id)
     return true
   })
 }
@@ -315,26 +315,26 @@ export function deleteItemTranslation(publicId: string, lang: string): Promise<v
 // ── Allergen Translations ───────────────────────────────────────
 
 export function createAllergenTranslation(
-  key: string,
+  publicId: string,
   data: { language_code: string; name: string },
 ): Promise<AllergenTranslation> {
-  return api.post<AllergenTranslation>(`${ALLERGENS_PATH}${key}/translations/`, data, {
+  return api.post<AllergenTranslation>(`${ALLERGENS_PATH}${publicId}/translations/`, data, {
     errorMessage: "Could not add translation.",
   })
 }
 
 export function updateAllergenTranslation(
-  key: string,
+  publicId: string,
   lang: string,
   data: { name: string },
 ): Promise<AllergenTranslation> {
-  return api.put<AllergenTranslation>(`${ALLERGENS_PATH}${key}/translations/${lang}/`, data, {
+  return api.put<AllergenTranslation>(`${ALLERGENS_PATH}${publicId}/translations/${lang}/`, data, {
     errorMessage: "Could not update translation.",
   })
 }
 
-export function deleteAllergenTranslation(key: string, lang: string): Promise<void> {
-  return api.del(`${ALLERGENS_PATH}${key}/translations/${lang}/`, {
+export function deleteAllergenTranslation(publicId: string, lang: string): Promise<void> {
+  return api.del(`${ALLERGENS_PATH}${publicId}/translations/${lang}/`, {
     errorMessage: "Could not delete translation.",
   })
 }

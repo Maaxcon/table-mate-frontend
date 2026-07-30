@@ -25,6 +25,7 @@ export type AdminCategoryWithTranslations = AdminCategory & {
 export type AdminMenuItemWithTranslations = AdminMenuItem & { translations: MenuItemTranslation[] }
 
 export type AdminAllergen = {
+  public_id: string
   key: string
   sort_order: number
   translations: AllergenTranslation[]
