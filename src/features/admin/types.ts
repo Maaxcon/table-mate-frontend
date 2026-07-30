@@ -52,6 +52,45 @@ export type IngredientTranslation = {
   name: string
 }
 
+export type RestaurantTranslation = {
+  language_code: string
+  address: string
+}
+
+export type ZoneTranslation = {
+  language_code: string
+  name: string
+}
+
+export type TableTranslation = {
+  language_code: string
+  public_number: string
+}
+
+export type AdminZone = {
+  public_id: string
+  name: string
+  translations: ZoneTranslation[]
+}
+
+export type AdminTable = {
+  public_id: string
+  public_number: string
+  translations: TableTranslation[]
+}
+
+export type AdminRestaurantWithTranslations = AdminRestaurant & {
+  translations: RestaurantTranslation[]
+}
+
+export type AdminZoneWithTranslations = AdminZone & {
+  translations: ZoneTranslation[]
+}
+
+export type AdminTableWithTranslations = AdminTable & {
+  translations: TableTranslation[]
+}
+
 // The admin UI only assigns these three roles (the API's RoleEnum also has
 // "customer", which staff management never sets).
 export type EmployeeRole = "admin" | "waiter" | "cook"

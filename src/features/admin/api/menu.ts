@@ -8,11 +8,17 @@ import type {
   AdminMenuItemWithTranslations,
   AdminMenuWithTranslations,
   AdminCategoryWithTranslations,
+  AdminRestaurantWithTranslations,
+  AdminTableWithTranslations,
+  AdminZoneWithTranslations,
   AllergenTranslation,
   IngredientTranslation,
   MenuCategoryTranslation,
   MenuItemTranslation,
   MenuTranslation,
+  RestaurantTranslation,
+  TableTranslation,
+  ZoneTranslation,
 } from "@/features/admin/types"
 
 const MENUS_PATH = "/api/menu/admin/menus/"
@@ -20,6 +26,9 @@ const CATEGORIES_PATH = "/api/menu/admin/categories/"
 const ITEMS_PATH = "/api/menu/admin/items/"
 const ALLERGENS_PATH = "/api/menu/admin/allergens/"
 const INGREDIENTS_PATH = "/api/menu/admin/ingredients/"
+const RESTAURANTS_PATH = "/api/restaurants/restaurants/"
+const ZONES_PATH = "/api/restaurants/zones/"
+const TABLES_PATH = "/api/restaurants/tables/"
 
 export function fetchMenus(signal?: AbortSignal): Promise<AdminMenu[]> {
   return api.getAllList<AdminMenu>(MENUS_PATH, { signal, errorMessage: "Could not load menus." })
@@ -227,6 +236,35 @@ export function deleteItem(publicId: string): Promise<void> {
   return api.del(`${ITEMS_PATH}${publicId}/`, { errorMessage: "Could not delete dish." })
 }
 
+// ── Restaurant, Zone, Table list (with translations) ───────────
+
+export function fetchRestaurantsWithTranslations(
+  signal?: AbortSignal,
+): Promise<AdminRestaurantWithTranslations[]> {
+  return api.getAllList<AdminRestaurantWithTranslations>(RESTAURANTS_PATH, {
+    signal,
+    errorMessage: "Could not load restaurants.",
+  })
+}
+
+export function fetchZonesWithTranslations(
+  signal?: AbortSignal,
+): Promise<AdminZoneWithTranslations[]> {
+  return api.getAllList<AdminZoneWithTranslations>(ZONES_PATH, {
+    signal,
+    errorMessage: "Could not load zones.",
+  })
+}
+
+export function fetchTablesWithTranslations(
+  signal?: AbortSignal,
+): Promise<AdminTableWithTranslations[]> {
+  return api.getAllList<AdminTableWithTranslations>(TABLES_PATH, {
+    signal,
+    errorMessage: "Could not load tables.",
+  })
+}
+
 // ── Menu Translations ──────────────────────────────────────────
 
 export function createMenuTranslation(
@@ -366,6 +404,91 @@ export function updateIngredientTranslation(
 
 export function deleteIngredientTranslation(publicId: string, lang: string): Promise<void> {
   return api.del(`${INGREDIENTS_PATH}${publicId}/translations/${lang}/`, {
+    errorMessage: "Could not delete translation.",
+  })
+}
+
+// ── Restaurant Translations ──────────────────────────────────────
+
+export function createRestaurantTranslation(
+  publicId: string,
+  data: { language_code: string; address: string },
+): Promise<RestaurantTranslation> {
+  return api.post<RestaurantTranslation>(`${RESTAURANTS_PATH}${publicId}/translations/`, data, {
+    errorMessage: "Could not add translation.",
+  })
+}
+
+export function updateRestaurantTranslation(
+  publicId: string,
+  lang: string,
+  data: { address: string },
+): Promise<RestaurantTranslation> {
+  return api.put<RestaurantTranslation>(
+    `${RESTAURANTS_PATH}${publicId}/translations/${lang}/`,
+    data,
+    {
+      errorMessage: "Could not update translation.",
+    },
+  )
+}
+
+export function deleteRestaurantTranslation(publicId: string, lang: string): Promise<void> {
+  return api.del(`${RESTAURANTS_PATH}${publicId}/translations/${lang}/`, {
+    errorMessage: "Could not delete translation.",
+  })
+}
+
+// ── Zone Translations ─────────────────────────────────────────────
+
+export function createZoneTranslation(
+  publicId: string,
+  data: { language_code: string; name: string },
+): Promise<ZoneTranslation> {
+  return api.post<ZoneTranslation>(`${ZONES_PATH}${publicId}/translations/`, data, {
+    errorMessage: "Could not add translation.",
+  })
+}
+
+export function updateZoneTranslation(
+  publicId: string,
+  lang: string,
+  data: { name: string },
+): Promise<ZoneTranslation> {
+  return api.put<ZoneTranslation>(`${ZONES_PATH}${publicId}/translations/${lang}/`, data, {
+    errorMessage: "Could not update translation.",
+  })
+}
+
+export function deleteZoneTranslation(publicId: string, lang: string): Promise<void> {
+  return api.del(`${ZONES_PATH}${publicId}/translations/${lang}/`, {
+    errorMessage: "Could not delete translation.",
+  })
+}
+
+// ── Table Translations ────────────────────────────────────────────
+
+export function createTableTranslation(
+  publicId: string,
+  data: { language_code: string; public_number: string },
+): Promise<TableTranslation> {
+  return api.post<TableTranslation>(`${TABLES_PATH}${publicId}/translations/`, data, {
+    errorMessage: "Could not add translation.",
+  })
+}
+
+export function updateTableTranslation(
+  publicId: string,
+  lang: string,
+  data: { public_number: string },
+): Promise<TableTranslation> {
+  return api.put<TableTranslation>(`${TABLES_PATH}${publicId}/translations/${lang}/`, data, {
+    errorMessage: "Could not update translation.",
+  })
+}
+
+export function deleteTableTranslation(publicId: string, lang: string): Promise<void> {
+  return api.del(`${TABLES_PATH}${publicId}/translations/${lang}/`, {
     errorMessage: "Could not delete translation.",
   })
 }

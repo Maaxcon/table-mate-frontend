@@ -9,6 +9,9 @@ import {
   fetchItemsWithTranslations,
   fetchAdminAllergens,
   fetchAdminIngredients,
+  fetchRestaurantsWithTranslations,
+  fetchZonesWithTranslations,
+  fetchTablesWithTranslations,
 } from "@/features/admin/api/menu"
 import type {
   AdminAllergen,
@@ -16,14 +19,28 @@ import type {
   AdminIngredient,
   AdminMenuItemWithTranslations,
   AdminMenuWithTranslations,
+  AdminRestaurantWithTranslations,
+  AdminTableWithTranslations,
+  AdminZoneWithTranslations,
   AllergenTranslation,
   IngredientTranslation,
   MenuCategoryTranslation,
   MenuItemTranslation,
   MenuTranslation,
+  RestaurantTranslation,
+  TableTranslation,
+  ZoneTranslation,
 } from "@/features/admin/types"
 
-type EntityType = "menu" | "category" | "item" | "allergen" | "ingredient"
+type EntityType =
+  | "menu"
+  | "category"
+  | "item"
+  | "allergen"
+  | "ingredient"
+  | "restaurant"
+  | "zone"
+  | "table"
 
 type Translation =
   | MenuTranslation
@@ -31,6 +48,9 @@ type Translation =
   | MenuItemTranslation
   | AllergenTranslation
   | IngredientTranslation
+  | RestaurantTranslation
+  | ZoneTranslation
+  | TableTranslation
 
 const LANGUAGE_NAMES: Record<string, string> = {
   en: "English",
@@ -58,7 +78,15 @@ const LANGUAGE_NAMES: Record<string, string> = {
   tr: "Türkçe",
 }
 
-type TabKey = "menu" | "category" | "item" | "allergen" | "ingredient"
+type TabKey =
+  | "menu"
+  | "category"
+  | "item"
+  | "allergen"
+  | "ingredient"
+  | "restaurant"
+  | "zone"
+  | "table"
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: "menu", label: "Menus" },
@@ -66,6 +94,9 @@ const TABS: { key: TabKey; label: string }[] = [
   { key: "item", label: "Items" },
   { key: "allergen", label: "Allergens" },
   { key: "ingredient", label: "Ingredients" },
+  { key: "restaurant", label: "Restaurants" },
+  { key: "zone", label: "Zones" },
+  { key: "table", label: "Tables" },
 ]
 
 type TranslationModalState = {
@@ -76,6 +107,9 @@ type TranslationModalState = {
     | AdminMenuItemWithTranslations
     | AdminAllergen
     | AdminIngredient
+    | AdminRestaurantWithTranslations
+    | AdminZoneWithTranslations
+    | AdminTableWithTranslations
   languageCode: string
   languageName: string
   existingTranslation: Translation | null
@@ -91,9 +125,13 @@ function getEntityName(
     | AdminCategoryWithTranslations
     | AdminMenuItemWithTranslations
     | AdminAllergen
-    | AdminIngredient,
+    | AdminIngredient
+    | AdminRestaurantWithTranslations
+    | AdminZoneWithTranslations
+    | AdminTableWithTranslations,
 ): string {
   if ("name" in entity) return entity.name ?? ""
+  if ("public_number" in entity) return entity.public_number
   if ("key" in entity) return entity.key
   return ""
 }
@@ -112,6 +150,9 @@ function TranslationsSection() {
   const [items, setItems] = useState<AdminMenuItemWithTranslations[]>([])
   const [allergens, setAllergens] = useState<AdminAllergen[]>([])
   const [ingredients, setIngredients] = useState<AdminIngredient[]>([])
+  const [restaurants, setRestaurants] = useState<AdminRestaurantWithTranslations[]>([])
+  const [zones, setZones] = useState<AdminZoneWithTranslations[]>([])
+  const [tables, setTables] = useState<AdminTableWithTranslations[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<TabKey>("menu")
@@ -121,18 +162,30 @@ function TranslationsSection() {
     setLoading(true)
     setError(null)
     try {
-      const [settingsList, menusData, categoriesData, itemsData, allergensData, ingredientsData] =
-        await Promise.all([
-          api.getList<{ locale: string; supported_languages: string[] }>(
-            "/api/restaurants/restaurant-settings/",
-            { signal },
-          ),
-          fetchMenusWithTranslations(signal),
-          fetchCategoriesWithTranslations(signal),
-          fetchItemsWithTranslations(signal),
-          fetchAdminAllergens(signal),
-          fetchAdminIngredients(signal),
-        ])
+      const [
+        settingsList,
+        menusData,
+        categoriesData,
+        itemsData,
+        allergensData,
+        ingredientsData,
+        restaurantsData,
+        zonesData,
+        tablesData,
+      ] = await Promise.all([
+        api.getList<{ locale: string; supported_languages: string[] }>(
+          "/api/restaurants/restaurant-settings/",
+          { signal },
+        ),
+        fetchMenusWithTranslations(signal),
+        fetchCategoriesWithTranslations(signal),
+        fetchItemsWithTranslations(signal),
+        fetchAdminAllergens(signal),
+        fetchAdminIngredients(signal),
+        fetchRestaurantsWithTranslations(signal),
+        fetchZonesWithTranslations(signal),
+        fetchTablesWithTranslations(signal),
+      ])
       const settings = settingsList[0] ?? {}
       setLocale(settings.locale ?? "en")
       setSupportedLanguages(settings.supported_languages ?? [])
@@ -141,6 +194,9 @@ function TranslationsSection() {
       setItems(itemsData)
       setAllergens(allergensData)
       setIngredients(ingredientsData)
+      setRestaurants(restaurantsData)
+      setZones(zonesData)
+      setTables(tablesData)
     } catch (err) {
       if (err instanceof DOMException && err.name === "AbortError") return
       setError(err instanceof Error ? err.message : "Failed to load data.")
@@ -163,7 +219,10 @@ function TranslationsSection() {
       | AdminCategoryWithTranslations
       | AdminMenuItemWithTranslations
       | AdminAllergen
-      | AdminIngredient,
+      | AdminIngredient
+      | AdminRestaurantWithTranslations
+      | AdminZoneWithTranslations
+      | AdminTableWithTranslations,
     langCode: string,
   ) => {
     const translations = getTranslations(entity as { translations?: Translation[] })
@@ -189,6 +248,12 @@ function TranslationsSection() {
         return { list: allergens, entityType: "allergen" as EntityType }
       case "ingredient":
         return { list: ingredients, entityType: "ingredient" as EntityType }
+      case "restaurant":
+        return { list: restaurants, entityType: "restaurant" as EntityType }
+      case "zone":
+        return { list: zones, entityType: "zone" as EntityType }
+      case "table":
+        return { list: tables, entityType: "table" as EntityType }
     }
   }
 
