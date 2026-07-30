@@ -31,10 +31,14 @@ interface TableDetailOverlayProps {
   actionBusy?: boolean
   busyActionId?: string | null
   actionError?: string | null
+  // Set once a close attempt was blocked by unserved items (409 code
+  // unserved_items) — passed to CloseCheckModal to switch to a "close
+  // anyway" prompt.
+  closeCheckUnservedCount?: number
   onOpenTable?: (guestCount: number) => void
   onActivateReservation?: (reservationId: string) => void
   onCancelReservation?: (reservationId: string) => void
-  onCloseCheck?: () => void
+  onCloseCheck?: (force: boolean) => void
   onProcessPayment?: (orderItemIds: string[]) => void
   onAddItem?: () => void
   onModifyReservation?: (reservation: ReservationItem) => void
@@ -55,6 +59,7 @@ export function TableDetailOverlay({
   actionBusy = false,
   busyActionId = null,
   actionError = null,
+  closeCheckUnservedCount,
   onOpenTable,
   onActivateReservation,
   onCancelReservation,
@@ -590,7 +595,8 @@ export function TableDetailOverlay({
         <CloseCheckModal
           busy={actionBusy}
           error={actionError}
-          onConfirm={() => onCloseCheck?.()}
+          unservedCount={closeCheckUnservedCount}
+          onConfirm={(force) => onCloseCheck?.(force)}
           onClose={() => setShowCloseCheck(false)}
         />
       )}

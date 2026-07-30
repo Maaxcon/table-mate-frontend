@@ -15,6 +15,12 @@ type UseTableActionsOptions = {
 
 // Owns the open-table / activate-reservation actions for the floor overlay,
 // plus their busy and error state.
+// Structured detail from a failed action's response body, alongside the
+// human-readable message in actionError — lets a caller react to *why* an
+// action failed (e.g. offer a "close anyway" override) instead of just
+// displaying the message.
+type ActionErrorMeta = { code?: string; count?: number } | null
+
 export function useTableActions({
   selectedTableId,
   onActionComplete,
@@ -26,8 +32,12 @@ export function useTableActions({
   // disables the rest to block concurrent submits.
   const [busyActionId, setBusyActionId] = useState<string | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
+  const [actionErrorMeta, setActionErrorMeta] = useState<ActionErrorMeta>(null)
 
-  const clearActionError = useCallback(() => setActionError(null), [])
+  const clearActionError = useCallback(() => {
+    setActionError(null)
+    setActionErrorMeta(null)
+  }, [])
 
   const messages = errorMessages ?? {
     openTable: "Failed to open table",
@@ -41,10 +51,16 @@ export function useTableActions({
       setActionBusy(true)
       setBusyActionId(actionId ?? null)
       setActionError(null)
+      setActionErrorMeta(null)
       try {
         const res = await request()
         if (!res.ok) {
-          const body = (await res.json().catch(() => null)) as { detail?: string } | null
+          const body = (await res.json().catch(() => null)) as {
+            detail?: string
+            code?: string
+            count?: number
+          } | null
+          setActionErrorMeta(body ? { code: body.code, count: body.count } : null)
           throw new Error(body?.detail ?? fallbackMsg)
         }
         await onActionComplete()
@@ -90,10 +106,17 @@ export function useTableActions({
 
   // Close the check (end the visit). No payment step yet: this closes the
   // session, completes the reservation, and closes the cart so the table frees.
+  // `force` overrides the backend's unserved-items guard — used when the
+  // waiter confirms through the "N items not served — close anyway?" prompt.
   const handleCloseCheck = useCallback(
-    (sessionId: string) => {
+    (sessionId: string, force = false) => {
       void runTableAction(
-        () => apiFetch(`/api/orders/sessions/${sessionId}/close/`, { method: "POST" }),
+        () =>
+          apiFetch(`/api/orders/sessions/${sessionId}/close/`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ force }),
+          }),
         messages.closeCheck,
       )
     },
@@ -121,6 +144,7 @@ export function useTableActions({
     actionBusy,
     busyActionId,
     actionError,
+    actionErrorMeta,
     handleOpenTable,
     handleActivateReservation,
     handleCloseCheck,

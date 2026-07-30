@@ -195,8 +195,10 @@ export function useWaiterStrings() {
     closeCheck: {
       title: t("admin.waiter.closeCheck.title"),
       message: t("admin.waiter.closeCheck.message"),
+      unservedMessage: (count: number) => t("admin.waiter.closeCheck.unservedMessage", { count }),
       cancel: t("admin.waiter.closeCheck.cancel"),
       confirm: t("admin.waiter.closeCheck.confirm"),
+      confirmAnyway: t("admin.waiter.closeCheck.confirmAnyway"),
       confirming: t("admin.waiter.closeCheck.confirming"),
       closeAria: t("admin.waiter.closeCheck.closeAria"),
     },

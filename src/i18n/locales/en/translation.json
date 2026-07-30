@@ -1246,8 +1246,11 @@
       "closeCheck": {
         "title": "Close check",
         "message": "There is no payment system yet. Closing the check will end the visit and free the table. Make sure the guests have paid before you continue.",
+        "unservedMessage_one": "{{count}} dish hasn't been served yet. Close anyway?",
+        "unservedMessage_other": "{{count}} dishes haven't been served yet. Close anyway?",
         "cancel": "Cancel",
         "confirm": "Close check",
+        "confirmAnyway": "Close anyway",
         "confirming": "Closing…",
         "closeAria": "Close"
       },

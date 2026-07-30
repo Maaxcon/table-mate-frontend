@@ -267,6 +267,7 @@ export function WaiterOrderPage() {
     actionBusy,
     busyActionId,
     actionError,
+    actionErrorMeta,
     handleOpenTable,
     handleActivateReservation,
     handleCloseCheck,
@@ -578,10 +579,15 @@ export function WaiterOrderPage() {
           actionBusy={actionBusy}
           busyActionId={busyActionId}
           actionError={actionError}
+          closeCheckUnservedCount={
+            actionErrorMeta?.code === "unserved_items" ? actionErrorMeta.count : undefined
+          }
           onOpenTable={handleOpenTable}
           onActivateReservation={handleActivateReservation}
           onCancelReservation={(reservationId) => handleCancel(reservationId)}
-          onCloseCheck={overlayDetail ? () => handleCloseCheck(overlayDetail.public_id) : undefined}
+          onCloseCheck={
+            overlayDetail ? (force) => handleCloseCheck(overlayDetail.public_id, force) : undefined
+          }
           onProcessPayment={
             overlayDetail
               ? (orderItemIds) => handleProcessPayment(overlayDetail.public_id, orderItemIds)
