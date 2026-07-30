@@ -741,6 +741,7 @@ export type PatchedReservation = {
   readonly session_table?: string | null
   readonly session_table_number?: string | null
   readonly has_preorder?: boolean
+  readonly preorder_cooking?: boolean
   status?: ReservationStatus
   created_by_staff?: boolean
   notes?: string | null
@@ -793,6 +794,7 @@ export type PatchedTicket = {
   readonly server_name?: string
   readonly guest_count?: number
   readonly items_count?: number
+  readonly is_preorder?: boolean
   readonly created_at?: string
   readonly updated_at?: string
 }
@@ -955,6 +957,7 @@ export type Reservation = {
   readonly session_table: string | null
   readonly session_table_number: string | null
   readonly has_preorder: boolean
+  readonly preorder_cooking: boolean
   status?: ReservationStatus
   created_by_staff?: boolean
   notes?: string | null
@@ -1013,6 +1016,10 @@ export type Session = {
   readonly updated_at: string
 }
 
+export type SessionCloseRequest = {
+  force?: boolean
+}
+
 export type SessionPayRequest = {
   order_item_ids?: Array<string>
 }
@@ -1039,8 +1046,9 @@ export type ShapeEnum = "rectangle" | "round" | "square" | "booth"
 /**
  * * `waiter_manual` - Waiter manual
  * * `customer_prepaid` - Customer prepaid
+ * * `customer_preorder` - Customer pre-order
  */
-export type SourceEnum = "waiter_manual" | "customer_prepaid"
+export type SourceEnum = "waiter_manual" | "customer_prepaid" | "customer_preorder"
 
 export type Table = {
   readonly public_id: string
@@ -1112,6 +1120,7 @@ export type Ticket = {
   readonly server_name: string
   readonly guest_count: number
   readonly items_count: number
+  readonly is_preorder: boolean
   readonly created_at: string
   readonly updated_at: string
 }
@@ -3034,8 +3043,9 @@ export type OrdersOrdersListData = {
     /**
      * * `waiter_manual` - Waiter manual
      * * `customer_prepaid` - Customer prepaid
+     * * `customer_preorder` - Customer pre-order
      */
-    source?: "customer_prepaid" | "waiter_manual"
+    source?: "customer_preorder" | "customer_prepaid" | "waiter_manual"
     /**
      * * `draft` - Draft
      * * `submitted` - Submitted
@@ -3180,7 +3190,7 @@ export type OrdersSessionsPartialUpdateResponse =
   OrdersSessionsPartialUpdateResponses[keyof OrdersSessionsPartialUpdateResponses]
 
 export type OrdersSessionsCloseCreateData = {
-  body?: never
+  body?: SessionCloseRequest
   path: {
     public_id: string
   }
@@ -3458,6 +3468,25 @@ export type ReservationsReservationsCreateResponses = {
 export type ReservationsReservationsCreateResponse =
   ReservationsReservationsCreateResponses[keyof ReservationsReservationsCreateResponses]
 
+export type ReservationsReservationsDestroyData = {
+  body?: never
+  path: {
+    public_id: string
+  }
+  query?: never
+  url: "/api/reservations/reservations/{public_id}/"
+}
+
+export type ReservationsReservationsDestroyResponses = {
+  /**
+   * No response body
+   */
+  204: void
+}
+
+export type ReservationsReservationsDestroyResponse =
+  ReservationsReservationsDestroyResponses[keyof ReservationsReservationsDestroyResponses]
+
 export type ReservationsReservationsRetrieveData = {
   body?: never
   path: {
@@ -3539,6 +3568,41 @@ export type ReservationsReservationsMoveTableCreateResponses = {
 
 export type ReservationsReservationsMoveTableCreateResponse =
   ReservationsReservationsMoveTableCreateResponses[keyof ReservationsReservationsMoveTableCreateResponses]
+
+export type ReservationsReservationsPreorderDestroyData = {
+  body?: never
+  path: {
+    public_id: string
+  }
+  query?: never
+  url: "/api/reservations/reservations/{public_id}/preorder/"
+}
+
+export type ReservationsReservationsPreorderDestroyResponses = {
+  /**
+   * No response body
+   */
+  204: void
+}
+
+export type ReservationsReservationsPreorderDestroyResponse =
+  ReservationsReservationsPreorderDestroyResponses[keyof ReservationsReservationsPreorderDestroyResponses]
+
+export type ReservationsReservationsPreorderRetrieveData = {
+  body?: never
+  path: {
+    public_id: string
+  }
+  query?: never
+  url: "/api/reservations/reservations/{public_id}/preorder/"
+}
+
+export type ReservationsReservationsPreorderRetrieveResponses = {
+  200: Reservation
+}
+
+export type ReservationsReservationsPreorderRetrieveResponse =
+  ReservationsReservationsPreorderRetrieveResponses[keyof ReservationsReservationsPreorderRetrieveResponses]
 
 export type ReservationsReservationsAvailabilityRetrieveData = {
   body?: never

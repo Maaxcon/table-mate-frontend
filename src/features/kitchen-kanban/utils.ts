@@ -38,6 +38,7 @@ export function mapTicket(ticket: KitchenTicket, items: OrderItem[]): KanbanTick
         : new Date(ticket.started_at ?? ticket.injected_at).getTime(),
     guestCount: ticket.guest_count,
     serverName: ticket.server_name,
+    isPreorder: ticket.is_preorder,
     completedMinutes:
       ticket.completed_at && ticket.started_at
         ? Math.round(
@@ -57,6 +58,7 @@ export function mapTicketShort(ticket: KitchenTicket): KanbanTicket {
     startedAt: new Date(ticket.started_at ?? ticket.injected_at).getTime(),
     guestCount: ticket.guest_count,
     serverName: ticket.server_name,
+    isPreorder: ticket.is_preorder,
     completedMinutes:
       ticket.completed_at && ticket.started_at
         ? Math.round(

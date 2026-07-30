@@ -1031,6 +1031,7 @@
       }
     },
     "kitchen": {
+      "preorderBadgeAria": "Перед-замовлення",
       "header": {
         "brand": "KITCHEN KANBAN",
         "stationLabel": "СТАНЦІЯ:",

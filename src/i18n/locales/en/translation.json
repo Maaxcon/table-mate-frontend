@@ -1005,6 +1005,7 @@
       }
     },
     "kitchen": {
+      "preorderBadgeAria": "Pre-order",
       "header": {
         "brand": "KITCHEN KANBAN",
         "stationLabel": "STATION:",

@@ -45,6 +45,7 @@ function makeTicket(overrides: Partial<KitchenTicket> = {}): KitchenTicket {
     server_name: "Alice",
     guest_count: 3,
     items_count: 2,
+    is_preorder: false,
     ...overrides,
   }
 }

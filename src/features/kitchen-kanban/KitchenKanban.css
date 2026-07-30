@@ -241,6 +241,14 @@
   white-space: nowrap;
 }
 
+.kanban-card__preorder-badge {
+  display: inline-block;
+  margin-left: 6px;
+  color: var(--color-primary);
+  vertical-align: -2px;
+  flex-shrink: 0;
+}
+
 .kanban-card__timer {
   font-size: 0.85rem;
   font-weight: 700;
