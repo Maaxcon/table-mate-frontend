@@ -2,7 +2,13 @@ import { useEffect, useState } from "react"
 import { LuClock3, LuFlame, LuUsers, LuUtensilsCrossed } from "react-icons/lu"
 import { useFocusTrap } from "@/hooks/useFocusTrap"
 import { formatDateGroupLabel, formatTimeRange, groupReservationsByDate } from "../../types"
-import type { FloorTable, ReservationItem, OverlayDetail, VisualTableStatus } from "../../types"
+import type {
+  FloorTable,
+  ReservationItem,
+  OverlayDetail,
+  OverlayOrderItem,
+  VisualTableStatus,
+} from "../../types"
 import { getCurrencySymbol } from "@/features/menu/utils"
 import { OrderItemRow } from "../OrderItemRow"
 import { CloseCheckModal } from "../CloseCheckModal"
@@ -12,6 +18,21 @@ import { fetchVoidReasons } from "../../api/orderApi"
 import type { VoidReason } from "@/types/api/types.gen"
 import "./TableDetailOverlay.css"
 import { useWaiterStrings } from "../../strings"
+
+// Active items stay on top where the waiter is working; served items sink to
+// the bottom of their guest slot (still visible for the bill, just out of
+// the way) instead of disappearing once marked served.
+const ITEM_STATUS_RANK: Record<string, number> = {
+  pending: 0,
+  in_progress: 0,
+  ready: 0,
+  served: 1,
+  voided: 2,
+}
+
+function byServedLast(a: OverlayOrderItem, b: OverlayOrderItem): number {
+  return (ITEM_STATUS_RANK[a.status] ?? 0) - (ITEM_STATUS_RANK[b.status] ?? 0)
+}
 
 function getOverdueMinutes(endAt: string, nowMs: number): number | null {
   const endMs = new Date(endAt).getTime()
@@ -376,7 +397,9 @@ export function TableDetailOverlay({
                     <p className="overlay__empty">{overlayStrings.empty.order}</p>
                   ) : (
                     guestSlots.map((slot) => {
-                      const slotItems = detail.items.filter((i) => i.guest_slot === slot)
+                      const slotItems = detail.items
+                        .filter((i) => i.guest_slot === slot)
+                        .toSorted(byServedLast)
                       const guestName = slotItems[0]?.guest_display_name
                       return (
                         <div key={slot} className="overlay__slot">
