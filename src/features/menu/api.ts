@@ -311,11 +311,19 @@ function checkoutRequest(url: string, jwt: string): Promise<CheckoutResult> {
     if (res.status === 409) {
       const body = (await res.json().catch(() => null)) as {
         code?: string
+        detail?: string
         removed?: RemovedItem[]
       } | null
       if (body?.code === "CART_CHANGED") {
         throw new CartChangedError(body.removed ?? [])
       }
+      // Body already consumed above, so build the error here instead of
+      // calling httpError(res) — a second res.json() call would throw
+      // "body stream already read" and fall back to a bare "Conflict".
+      const err = new Error(body?.detail ?? res.statusText) as ApiError
+      err.code = body?.code
+      err.status = res.status
+      throw err
     }
     throw await httpError(res)
   })
