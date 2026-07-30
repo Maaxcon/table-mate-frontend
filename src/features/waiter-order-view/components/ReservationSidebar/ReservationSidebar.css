@@ -221,6 +221,16 @@
   background: rgba(var(--color-warning-rgb), 0.18);
 }
 
+.reservation-sidebar__preorder-chip--ready {
+  color: var(--color-success);
+  background: var(--color-success-bg);
+  border-color: rgba(var(--color-success-rgb), 0.35);
+}
+
+.reservation-sidebar__preorder-chip--ready:hover {
+  background: rgba(var(--color-success-rgb), 0.18);
+}
+
 .reservation-sidebar__item-actions {
   display: flex;
   justify-content: flex-end;

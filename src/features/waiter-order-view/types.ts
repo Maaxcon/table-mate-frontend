@@ -49,6 +49,21 @@ export type ReservationItem = Pick<
   // True once the kitchen has picked up the pre-order (a Ticket exists) —
   // distinct from just being paid. Same caveat as has_preorder above.
   preorder_cooking?: boolean
+  // True once every item on that same pre-order has reached "ready" — the
+  // kitchen is done, not just started. Same caveat as has_preorder above.
+  preorder_ready?: boolean
+}
+
+export type PreorderChipStatus = "paid" | "cooking" | "ready"
+
+// Priority: ready implies cooking implies paid — collapse the three booleans
+// into one state so callers don't re-derive the same ordering themselves.
+export function getPreorderChipStatus(
+  r: Pick<ReservationItem, "preorder_cooking" | "preorder_ready">,
+): PreorderChipStatus {
+  if (r.preorder_ready) return "ready"
+  if (r.preorder_cooking) return "cooking"
+  return "paid"
 }
 
 // A reservation's paid pre-order — what the guest picked ahead of arrival.

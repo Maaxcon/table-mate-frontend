@@ -1,7 +1,12 @@
 import { useEffect, useState } from "react"
-import { LuClock3, LuFlame, LuUsers, LuUtensilsCrossed } from "react-icons/lu"
+import { LuCircleCheck, LuClock3, LuFlame, LuUsers, LuUtensilsCrossed } from "react-icons/lu"
 import { useFocusTrap } from "@/hooks/useFocusTrap"
-import { formatDateGroupLabel, formatTimeRange, groupReservationsByDate } from "../../types"
+import {
+  formatDateGroupLabel,
+  formatTimeRange,
+  getPreorderChipStatus,
+  groupReservationsByDate,
+} from "../../types"
 import type {
   FloorTable,
   ReservationItem,
@@ -506,6 +511,7 @@ export function TableDetailOverlay({
                     </span>
                     {items.map((r) => {
                       const showsPreorder = r.has_preorder && !cancelledPreorderIds.has(r.public_id)
+                      const preorderChipStatus = getPreorderChipStatus(r)
 
                       return (
                         <div
@@ -536,17 +542,21 @@ export function TableDetailOverlay({
                             {showsPreorder && (
                               <button
                                 type="button"
-                                className={`overlay__reservation-preorder-chip${r.preorder_cooking ? " overlay__reservation-preorder-chip--cooking" : ""}`}
+                                className={`overlay__reservation-preorder-chip overlay__reservation-preorder-chip--${preorderChipStatus}`}
                                 onClick={() => setViewingPreorder(r)}
                               >
-                                {r.preorder_cooking ? (
+                                {preorderChipStatus === "ready" ? (
+                                  <LuCircleCheck size={13} aria-hidden="true" />
+                                ) : preorderChipStatus === "cooking" ? (
                                   <LuFlame size={13} aria-hidden="true" />
                                 ) : (
                                   <LuUtensilsCrossed size={13} aria-hidden="true" />
                                 )}
-                                {r.preorder_cooking
-                                  ? overlayStrings.reservation.preorderCooking
-                                  : overlayStrings.reservation.preorderBadge}
+                                {preorderChipStatus === "ready"
+                                  ? overlayStrings.reservation.preorderReady
+                                  : preorderChipStatus === "cooking"
+                                    ? overlayStrings.reservation.preorderCooking
+                                    : overlayStrings.reservation.preorderBadge}
                               </button>
                             )}
                           </div>

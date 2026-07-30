@@ -1173,7 +1173,8 @@
           "cancel": "Cancel",
           "new": "New reservation",
           "preorderBadge": "Food pre-ordered and paid",
-          "preorderCooking": "Being prepared"
+          "preorderCooking": "Being prepared",
+          "preorderReady": "Ready to serve"
         },
         "voidReasons": {
           "mispick": "Sent to wrong table",
@@ -1207,6 +1208,7 @@
           "guestCount": "{{count}} guests",
           "preorderBadge": "Food pre-ordered and paid",
           "preorderCooking": "Being prepared",
+          "preorderReady": "Ready to serve",
           "status": {
             "pending": "Pending",
             "active": "Active",

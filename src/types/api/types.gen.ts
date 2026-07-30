@@ -742,6 +742,7 @@ export type PatchedReservation = {
   readonly session_table_number?: string | null
   readonly has_preorder?: boolean
   readonly preorder_cooking?: boolean
+  readonly preorder_ready?: boolean
   status?: ReservationStatus
   created_by_staff?: boolean
   notes?: string | null
@@ -958,6 +959,7 @@ export type Reservation = {
   readonly session_table_number: string | null
   readonly has_preorder: boolean
   readonly preorder_cooking: boolean
+  readonly preorder_ready: boolean
   status?: ReservationStatus
   created_by_staff?: boolean
   notes?: string | null

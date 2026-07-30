@@ -1199,7 +1199,8 @@
           "cancel": "Скасувати",
           "new": "Нова бронь",
           "preorderBadge": "Їжу замовлено й оплачено заздалегідь",
-          "preorderCooking": "Готується"
+          "preorderCooking": "Готується",
+          "preorderReady": "Готово, можна подавати"
         },
         "voidReasons": {
           "mispick": "Не та позиція",
@@ -1233,6 +1234,7 @@
           "guestCount": "{{count}} гостей",
           "preorderBadge": "Їжу замовлено й оплачено заздалегідь",
           "preorderCooking": "Готується",
+          "preorderReady": "Готово, можна подавати",
           "status": {
             "pending": "Очікує",
             "active": "Активне",

@@ -21,6 +21,7 @@ interface ReservationApiItem {
   customer_name?: string
   has_preorder?: boolean
   preorder_cooking?: boolean
+  preorder_ready?: boolean
 }
 
 interface SessionApiItem {
@@ -66,6 +67,7 @@ function mapReservationItem(r: ReservationApiItem): ReservationItem {
     name: r.customer_name ?? "Guest",
     has_preorder: r.has_preorder ?? false,
     preorder_cooking: r.preorder_cooking ?? false,
+    preorder_ready: r.preorder_ready ?? false,
   }
 }
 

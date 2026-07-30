@@ -1,7 +1,19 @@
 import { useState } from "react"
-import { LuClock3, LuFlame, LuTable2, LuUsers, LuUtensilsCrossed } from "react-icons/lu"
+import {
+  LuCircleCheck,
+  LuClock3,
+  LuFlame,
+  LuTable2,
+  LuUsers,
+  LuUtensilsCrossed,
+} from "react-icons/lu"
 import type { ReservationItem } from "../../types"
-import { formatDateGroupLabel, formatTimeRange, groupReservationsByDate } from "../../types"
+import {
+  formatDateGroupLabel,
+  formatTimeRange,
+  getPreorderChipStatus,
+  groupReservationsByDate,
+} from "../../types"
 import { ConfirmCancelModal } from "../ConfirmCancelModal"
 import { PreorderModal } from "../PreorderModal/PreorderModal"
 import "./ReservationSidebar.css"
@@ -96,6 +108,7 @@ export function ReservationSidebar({
             {items.map((r) => {
               const showsPreorder = r.has_preorder && !cancelledPreorderIds.has(r.public_id)
               const statusKey = (r.status ?? "unknown").toLowerCase()
+              const preorderChipStatus = getPreorderChipStatus(r)
 
               return (
                 <div key={r.public_id} className="reservation-sidebar__item">
@@ -128,17 +141,21 @@ export function ReservationSidebar({
                   {showsPreorder && (
                     <button
                       type="button"
-                      className={`reservation-sidebar__preorder-chip${r.preorder_cooking ? " reservation-sidebar__preorder-chip--cooking" : ""}`}
+                      className={`reservation-sidebar__preorder-chip reservation-sidebar__preorder-chip--${preorderChipStatus}`}
                       onClick={() => setViewingPreorder(r)}
                     >
-                      {r.preorder_cooking ? (
+                      {preorderChipStatus === "ready" ? (
+                        <LuCircleCheck size={13} aria-hidden="true" />
+                      ) : preorderChipStatus === "cooking" ? (
                         <LuFlame size={13} aria-hidden="true" />
                       ) : (
                         <LuUtensilsCrossed size={13} aria-hidden="true" />
                       )}
-                      {r.preorder_cooking
-                        ? sidebarStrings.preorderCooking
-                        : sidebarStrings.preorderBadge}
+                      {preorderChipStatus === "ready"
+                        ? sidebarStrings.preorderReady
+                        : preorderChipStatus === "cooking"
+                          ? sidebarStrings.preorderCooking
+                          : sidebarStrings.preorderBadge}
                     </button>
                   )}
 

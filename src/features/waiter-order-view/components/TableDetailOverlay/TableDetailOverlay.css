@@ -631,6 +631,16 @@
   background: rgba(var(--color-warning-rgb), 0.18);
 }
 
+.overlay__reservation-preorder-chip--ready {
+  color: var(--color-success);
+  background: var(--color-success-bg);
+  border-color: rgba(var(--color-success-rgb), 0.35);
+}
+
+.overlay__reservation-preorder-chip--ready:hover {
+  background: rgba(var(--color-success-rgb), 0.18);
+}
+
 .overlay__reservation-actions {
   /* Its own full-width row (not squeezed beside .overlay__reservation-info),
      and never wraps — 3 buttons shrink together to share the row instead of
