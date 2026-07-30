@@ -657,6 +657,8 @@ export function useAdminStrings() {
             action: t("admin.floor.page.toasts.stale.action"),
           },
           publishedWhileDraft: t("admin.floor.page.toasts.publishedWhileDraft"),
+          layoutUpdated: t("admin.floor.page.toasts.layoutUpdated"),
+          syncFailed: t("admin.floor.page.toasts.syncFailed"),
           occupied: t("admin.floor.page.toasts.occupied"),
         },
       },
