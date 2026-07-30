@@ -238,6 +238,27 @@ function TranslationsSection() {
     })
   }
 
+  async function fetchEntityList(tab: TabKey): Promise<unknown[]> {
+    switch (tab) {
+      case "menu":
+        return menuApi.fetchMenusWithTranslations()
+      case "category":
+        return menuApi.fetchCategoriesWithTranslations()
+      case "item":
+        return menuApi.fetchItemsWithTranslations()
+      case "allergen":
+        return menuApi.fetchAdminAllergens()
+      case "ingredient":
+        return menuApi.fetchAdminIngredients()
+      case "restaurant":
+        return menuApi.fetchRestaurantsWithTranslations()
+      case "zone":
+        return menuApi.fetchZonesWithTranslations()
+      case "table":
+        return menuApi.fetchTablesWithTranslations()
+    }
+  }
+
   const loadData = useCallback(async (signal?: AbortSignal) => {
     setInitialLoading(true)
     setError(null)
@@ -555,52 +576,83 @@ function TranslationsSection() {
                     break
                 }
               } else {
+                const current = Object.fromEntries(
+                  Object.keys(formData).map((key) => [
+                    key,
+                    ((existingTranslation as Record<string, unknown>)[key] as string) ?? "",
+                  ]),
+                )
+                const updatePayload = { current, updated: formData }
                 switch (entityType) {
                   case "menu":
-                    await menuApi.updateMenuTranslation(publicId, languageCode, {
-                      name: formData.name,
-                    })
+                    await menuApi.updateMenuTranslation(
+                      publicId,
+                      languageCode,
+                      updatePayload as never,
+                    )
                     break
                   case "category":
-                    await menuApi.updateCategoryTranslation(publicId, languageCode, {
-                      name: formData.name,
-                    })
+                    await menuApi.updateCategoryTranslation(
+                      publicId,
+                      languageCode,
+                      updatePayload as never,
+                    )
                     break
                   case "item":
-                    await menuApi.updateItemTranslation(publicId, languageCode, {
-                      name: formData.name,
-                      description: formData.description ?? null,
-                    })
+                    await menuApi.updateItemTranslation(
+                      publicId,
+                      languageCode,
+                      updatePayload as never,
+                    )
                     break
                   case "allergen":
-                    await menuApi.updateAllergenTranslation(publicId, languageCode, {
-                      name: formData.name,
-                    })
+                    await menuApi.updateAllergenTranslation(
+                      publicId,
+                      languageCode,
+                      updatePayload as never,
+                    )
                     break
                   case "ingredient":
-                    await menuApi.updateIngredientTranslation(publicId, languageCode, {
-                      name: formData.name,
-                    })
+                    await menuApi.updateIngredientTranslation(
+                      publicId,
+                      languageCode,
+                      updatePayload as never,
+                    )
                     break
                   case "restaurant":
-                    await menuApi.updateRestaurantTranslation(publicId, languageCode, {
-                      address: formData.address,
-                    })
+                    await menuApi.updateRestaurantTranslation(
+                      publicId,
+                      languageCode,
+                      updatePayload as never,
+                    )
                     break
                   case "zone":
-                    await menuApi.updateZoneTranslation(publicId, languageCode, {
-                      name: formData.name,
-                    })
+                    await menuApi.updateZoneTranslation(
+                      publicId,
+                      languageCode,
+                      updatePayload as never,
+                    )
                     break
                   case "table":
-                    await menuApi.updateTableTranslation(publicId, languageCode, {
-                      public_number: formData.public_number,
-                    })
+                    await menuApi.updateTableTranslation(
+                      publicId,
+                      languageCode,
+                      updatePayload as never,
+                    )
                     break
                 }
               }
             } catch (err) {
-              setEntityList(entityType, snapshot)
+              const isConflict = err instanceof Error && err.message.startsWith("CONFLICT:")
+              if (isConflict) {
+                try {
+                  setEntityList(entityType, await fetchEntityList(entityType))
+                } catch {
+                  setEntityList(entityType, snapshot)
+                }
+              } else {
+                setEntityList(entityType, snapshot)
+              }
               throw err
             }
           }}
