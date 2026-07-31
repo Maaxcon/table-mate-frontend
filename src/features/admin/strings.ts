@@ -614,6 +614,9 @@ export function useAdminStrings() {
         status: {
           dirty: t("admin.floor.page.status.dirty"),
           clean: t("admin.floor.page.status.clean"),
+          draftSaved: t("admin.floor.page.status.draftSaved"),
+          draftConflict: t("admin.floor.page.status.draftConflict"),
+          draftDiscarded: t("admin.floor.page.status.draftDiscarded"),
         },
         live: {
           ariaConnected: t("admin.floor.page.live.ariaConnected"),
@@ -654,6 +657,9 @@ export function useAdminStrings() {
             message: t("admin.floor.page.toasts.stale.message"),
             action: t("admin.floor.page.toasts.stale.action"),
           },
+          publishedWhileDraft: t("admin.floor.page.toasts.publishedWhileDraft"),
+          layoutUpdated: t("admin.floor.page.toasts.layoutUpdated"),
+          syncFailed: t("admin.floor.page.toasts.syncFailed"),
           occupied: t("admin.floor.page.toasts.occupied"),
         },
       },
@@ -662,6 +668,10 @@ export function useAdminStrings() {
           kicker: t("admin.floor.toolbar.section.kicker"),
           title: t("admin.floor.toolbar.section.title"),
           project: t("admin.floor.toolbar.section.project"),
+        },
+        source: {
+          draft: t("admin.floor.toolbar.source.draft"),
+          published: t("admin.floor.toolbar.source.published"),
         },
         tools: {
           select: {
@@ -693,6 +703,10 @@ export function useAdminStrings() {
           discard: t("admin.floor.toolbar.actions.discard"),
           publish: t("admin.floor.toolbar.actions.publish"),
           publishing: t("admin.floor.toolbar.actions.publishing"),
+          saveDraft: t("admin.floor.toolbar.actions.saveDraft"),
+          savingDraft: t("admin.floor.toolbar.actions.savingDraft"),
+          discardDraft: t("admin.floor.toolbar.actions.discardDraft"),
+          sync: t("admin.floor.toolbar.actions.sync"),
         },
       },
       zoneHeader: {
@@ -811,6 +825,13 @@ export function useAdminStrings() {
           cancel: t("admin.floor.modals.publish.cancel"),
           confirm: t("admin.floor.modals.publish.confirm"),
           confirming: t("admin.floor.modals.publish.confirming"),
+        },
+        sync: {
+          title: t("admin.floor.modals.sync.title"),
+          message: t("admin.floor.modals.sync.message"),
+          cancel: t("admin.floor.modals.sync.cancel"),
+          confirm: t("admin.floor.modals.sync.confirm"),
+          syncing: t("admin.floor.modals.sync.syncing"),
         },
         deleteZone: {
           title: t("admin.floor.modals.deleteZone.title"),
