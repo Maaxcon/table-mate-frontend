@@ -24,7 +24,7 @@ import {
   deserializeLayout,
 } from "@/features/editor/types"
 import type { EditorEntity, LayoutPayload } from "@/features/editor/types"
-import { fetchDraft, saveDraft, deleteDraft } from "@/features/editor/api"
+import { DraftSaveConflictError, fetchDraft, saveDraft, deleteDraft } from "@/features/editor/api"
 import "./FloorPlanEditorPage.css"
 import { useToast } from "@/features/admin/hooks/toastContext"
 import { useAdminStrings } from "@/features/admin/strings"
@@ -263,6 +263,7 @@ function FloorPlanEditorPage() {
   const draftTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [draftSaving, setDraftSaving] = useState(false)
   const [draftSavedAt, setDraftSavedAt] = useState<string | null>(null)
+  const [draftConflict, setDraftConflict] = useState(false)
 
   useEffect(() => {
     if (!restaurantId || !dirty) {
@@ -303,8 +304,13 @@ function FloorPlanEditorPage() {
         setLoadedDraft(result.is_draft)
         setBaseLayoutVersionId(result.base_layout_version_id)
         setDraftSavedAt(result.updated_at)
-      } catch {
-        // silent — auto-save failures are non-critical
+        setDraftConflict(false)
+      } catch (error) {
+        if (error instanceof DraftSaveConflictError) {
+          setDraftSavedAt(null)
+          setDraftConflict(true)
+          setShowSyncModal(true)
+        }
       } finally {
         setDraftSaving(false)
       }
@@ -349,6 +355,7 @@ function FloorPlanEditorPage() {
         setLoadedDraft(false)
         setBaseLayoutVersionId(data.layout_version_id ?? null)
         setDraftSavedAt(null)
+        setDraftConflict(false)
         const lp = data.layout_json
         if (lp && typeof lp === "object") {
           const loaded = deserializeLayout(lp as LayoutPayload)
@@ -934,6 +941,7 @@ function FloorPlanEditorPage() {
           onDiscard={handleDiscard}
           draftSaving={draftSaving}
           draftSavedAt={draftSavedAt}
+          draftConflict={draftConflict}
           loadedDraft={loadedDraft}
         />
         <ZoneHeader

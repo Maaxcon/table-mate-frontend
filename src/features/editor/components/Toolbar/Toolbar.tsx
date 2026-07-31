@@ -11,6 +11,7 @@ interface ToolbarProps {
   onDiscard: () => void
   draftSaving?: boolean
   draftSavedAt?: string | null
+  draftConflict?: boolean
   loadedDraft: boolean | null
 }
 
@@ -24,17 +25,20 @@ export function Toolbar({
   onDiscard,
   draftSaving,
   draftSavedAt,
+  draftConflict,
   loadedDraft,
 }: ToolbarProps) {
   const strings = useAdminStrings()
   const toolbarStrings = strings.floor.toolbar
   const pageStrings = strings.floor.page
 
-  const draftStatus = draftSavedAt
-    ? pageStrings.status.draftSaved
-    : dirty
-      ? pageStrings.status.dirty
-      : pageStrings.status.clean
+  const draftStatus = draftConflict
+    ? pageStrings.status.draftConflict
+    : draftSavedAt
+      ? pageStrings.status.draftSaved
+      : dirty
+        ? pageStrings.status.dirty
+        : pageStrings.status.clean
 
   const tools = [
     {
@@ -116,7 +120,9 @@ export function Toolbar({
             {loadedDraft ? toolbarStrings.source.draft : toolbarStrings.source.published}
           </span>
         )}
-        <span className="editor-toolbar__status-badge">
+        <span
+          className={`editor-toolbar__status-badge${draftConflict ? " editor-toolbar__status-badge--conflict" : ""}`}
+        >
           {draftSaving ? toolbarStrings.actions.savingDraft : draftStatus}
         </span>
         <div className="editor-toolbar__actions">

@@ -615,6 +615,7 @@ export function useAdminStrings() {
           dirty: t("admin.floor.page.status.dirty"),
           clean: t("admin.floor.page.status.clean"),
           draftSaved: t("admin.floor.page.status.draftSaved"),
+          draftConflict: t("admin.floor.page.status.draftConflict"),
           draftDiscarded: t("admin.floor.page.status.draftDiscarded"),
         },
         live: {

@@ -1291,6 +1291,7 @@
           "dirty": "Unsaved changes",
           "clean": "All changes synced",
           "draftSaved": "Draft saved",
+          "draftConflict": "Draft needs syncing",
           "draftDiscarded": "Draft discarded"
         },
         "live": {

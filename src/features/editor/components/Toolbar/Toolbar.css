@@ -93,6 +93,11 @@
   gap: 8px;
 }
 
+.editor-toolbar__status-badge--conflict {
+  color: var(--color-error-text);
+  font-weight: 800;
+}
+
 .editor-toolbar__tool {
   display: flex;
   align-items: center;

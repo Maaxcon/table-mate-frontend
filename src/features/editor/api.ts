@@ -16,6 +16,13 @@ export interface DraftResponse {
   owner_id: string | null
 }
 
+export class DraftSaveConflictError extends Error {
+  constructor() {
+    super("Draft save conflict")
+    this.name = "DraftSaveConflictError"
+  }
+}
+
 /** Load the current draft (or latest published if no draft). */
 export async function fetchDraft(): Promise<DraftResponse> {
   const res = await apiFetch("/api/editor/layouts/draft/")
@@ -30,6 +37,7 @@ export async function saveDraft(body: Record<string, unknown>): Promise<DraftRes
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   })
+  if (res.status === 409) throw new DraftSaveConflictError()
   if (!res.ok) throw new Error(await firstError(res, "Failed to save draft."))
   return res.json()
 }
