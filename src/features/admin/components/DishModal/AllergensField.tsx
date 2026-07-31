@@ -1,35 +1,49 @@
+import { useState } from "react"
 import RemovableChipList from "./RemovableChipList"
 import { useAdminStrings } from "@/features/admin/strings"
 
 type AllergensFieldProps = {
   value: string[]
-  options: string[]
   onChange: (next: string[]) => void
 }
 
-/** Allergen editor: pick from a known list, shown as removable chips. */
-function AllergensField({ value, options, onChange }: AllergensFieldProps) {
+/** Free-text allergen editor: type + Enter/Add, shown as removable chips. */
+function AllergensField({ value, onChange }: AllergensFieldProps) {
+  const [input, setInput] = useState("")
   const strings = useAdminStrings()
+
+  const add = () => {
+    const allergen = input.trim()
+    if (!allergen) return
+    if (!value.includes(allergen)) onChange([...value, allergen])
+    setInput("")
+  }
+
   return (
     <div className="admin-field">
       <span className="admin-field__label">{strings.menu.allergens.label}</span>
-      <select
-        className="admin-field__input"
-        value=""
-        onChange={(e) => {
-          const allergen = e.target.value
-          if (allergen) onChange([...value, allergen])
-        }}
-      >
-        <option value="">{strings.menu.allergens.placeholder}</option>
-        {options
-          .filter((a) => !value.includes(a))
-          .map((a) => (
-            <option key={a} value={a}>
-              {a}
-            </option>
-          ))}
-      </select>
+      <div className="dish-ingredient-add">
+        <input
+          className="admin-field__input"
+          value={input}
+          placeholder={strings.menu.allergens.placeholder}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault()
+              add()
+            }
+          }}
+        />
+        <button
+          type="button"
+          className="menu-admin__btn menu-admin__btn--primary"
+          onClick={add}
+          disabled={!input.trim()}
+        >
+          {strings.menu.allergens.add}
+        </button>
+      </div>
       <RemovableChipList
         items={value}
         getRemoveLabel={(item) => strings.menu.allergens.remove(item)}

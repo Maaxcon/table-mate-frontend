@@ -18,7 +18,6 @@ import DishPhotoField from "./DishPhotoField"
 import IngredientsField from "./IngredientsField"
 import AllergensField from "./AllergensField"
 import { useToast } from "@/features/admin/hooks/toastContext"
-import { useAllergens } from "@/features/admin/hooks/useAllergens"
 import { useUnsavedGuard } from "@/features/admin/hooks/useUnsavedGuard"
 import { useAdminStrings } from "@/features/admin/strings"
 import "@/features/admin/components/styles/adminForm.css"
@@ -36,7 +35,6 @@ type DishModalProps = {
 function DishModal({ menuId, categories, item, onClose, onSaved }: DishModalProps) {
   const editing = item !== null
   const toast = useToast()
-  const allergenOptions = useAllergens()
   const strings = useAdminStrings()
   const [name, setName] = useState(item?.name ?? "")
   const [description, setDescription] = useState(item?.description ?? "")
@@ -297,7 +295,7 @@ function DishModal({ menuId, categories, item, onClose, onSaved }: DishModalProp
               </label>
 
               <IngredientsField value={ingredients} onChange={setIngredients} />
-              <AllergensField value={allergens} options={allergenOptions} onChange={setAllergens} />
+              <AllergensField value={allergens} onChange={setAllergens} />
             </div>
           </div>
 

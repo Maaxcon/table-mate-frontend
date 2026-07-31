@@ -193,13 +193,6 @@ export function clearItemImage(publicId: string): Promise<AdminMenuItem> {
   )
 }
 
-export function fetchAllergens(signal?: AbortSignal): Promise<string[]> {
-  return api.get<string[]>("/api/menu/allergens/", {
-    signal,
-    errorMessage: "Could not load allergens.",
-  })
-}
-
 export async function fetchAdminAllergens(signal?: AbortSignal): Promise<AdminAllergen[]> {
   const all = await api.getAllList<AdminAllergen>(ALLERGENS_PATH, {
     signal,
