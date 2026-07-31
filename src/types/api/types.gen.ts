@@ -204,6 +204,13 @@ export type CustomerContext = {
   reservation: string
 }
 
+export type DraftLayout = {
+  draft_json?: PublishLayout | null
+  readonly is_draft: boolean
+  readonly updated_at: string
+  readonly owner_id: string | null
+}
+
 export type EditorTable = {
   readonly public_id: string
   readonly restaurant: string
@@ -889,7 +896,7 @@ export type PublicRestaurantSettings = {
 }
 
 export type PublishLayout = {
-  base_layout_version_id?: string | null
+  base_layout_version_id: string | null
   canvas_cols?: number
   canvas_rows?: number
   tables?: Array<TableEntity>
@@ -1299,6 +1306,10 @@ export type CustomTokenObtainPairWritable = {
   restaurant_id?: number | null
   email: string
   password: string
+}
+
+export type DraftLayoutWritable = {
+  draft_json?: PublishLayout | null
 }
 
 export type EditorTableWritable = {
@@ -1970,6 +1981,60 @@ export type EditorLayoutsRetrieveResponses = {
 export type EditorLayoutsRetrieveResponse =
   EditorLayoutsRetrieveResponses[keyof EditorLayoutsRetrieveResponses]
 
+export type EditorLayoutsDraftDestroyData = {
+  body?: never
+  path?: never
+  query?: never
+  url: "/api/editor/layouts/draft/"
+}
+
+export type EditorLayoutsDraftDestroyResponses = {
+  200: DraftLayout
+  /**
+   * No response body
+   */
+  204: void
+}
+
+export type EditorLayoutsDraftDestroyResponse =
+  EditorLayoutsDraftDestroyResponses[keyof EditorLayoutsDraftDestroyResponses]
+
+export type EditorLayoutsDraftRetrieveData = {
+  body?: never
+  path?: never
+  query?: never
+  url: "/api/editor/layouts/draft/"
+}
+
+export type EditorLayoutsDraftRetrieveResponses = {
+  200: DraftLayout
+  /**
+   * No response body
+   */
+  204: void
+}
+
+export type EditorLayoutsDraftRetrieveResponse =
+  EditorLayoutsDraftRetrieveResponses[keyof EditorLayoutsDraftRetrieveResponses]
+
+export type EditorLayoutsDraftUpdateData = {
+  body: PublishLayout
+  path?: never
+  query?: never
+  url: "/api/editor/layouts/draft/"
+}
+
+export type EditorLayoutsDraftUpdateResponses = {
+  200: DraftLayout
+  /**
+   * No response body
+   */
+  204: void
+}
+
+export type EditorLayoutsDraftUpdateResponse =
+  EditorLayoutsDraftUpdateResponses[keyof EditorLayoutsDraftUpdateResponses]
+
 export type EditorLayoutsLatestRetrieveData = {
   body?: never
   path?: never
@@ -1987,7 +2052,7 @@ export type EditorLayoutsLatestRetrieveResponse =
   EditorLayoutsLatestRetrieveResponses[keyof EditorLayoutsLatestRetrieveResponses]
 
 export type EditorLayoutsPublishCreateData = {
-  body?: PublishLayout
+  body: PublishLayout
   path?: never
   query?: never
   url: "/api/editor/layouts/publish/"
