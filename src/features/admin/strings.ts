@@ -300,6 +300,10 @@ export function useAdminStrings() {
         timezone: {
           label: t("admin.settings.fields.timezone.label"),
         },
+        supportedLanguages: {
+          label: t("admin.settings.fields.supportedLanguages.label"),
+          hint: t("admin.settings.fields.supportedLanguages.hint"),
+        },
       },
     },
     forms: {

@@ -114,6 +114,7 @@ export type AdminSettings = {
   timezone?: string
   currency: string
   locale?: string
+  supported_languages?: string[]
   default_tax_rate?: string
   default_service_charge?: string
 }

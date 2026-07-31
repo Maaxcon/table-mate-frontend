@@ -1,9 +1,11 @@
+import "@/features/admin/components/styles/adminForm.css"
 import AdminSectionForm from "@/features/admin/components/AdminSectionForm"
 import TextField from "@/features/admin/components/TextField"
 import SelectField from "@/features/admin/components/SelectField"
 import {
   CURRENCY_OPTIONS,
   LOCALE_OPTIONS,
+  SUPPORTED_LANGUAGES_OPTIONS,
   TIMEZONE_OPTIONS,
 } from "@/features/admin/constants/settingsOptions"
 import { formatCurrency } from "@/features/menu/utils"
@@ -24,6 +26,16 @@ function rateError(value: string, copy: RateErrorCopy): string | undefined {
   if (!Number.isFinite(n)) return copy.number
   if (n < 0 || n > 1) return copy.range
   return undefined
+}
+
+function toggleLanguage(code: string, current: string[] | undefined): string[] {
+  const set = new Set(current ?? [])
+  if (set.has(code)) {
+    set.delete(code)
+  } else {
+    set.add(code)
+  }
+  return Array.from(set).sort()
 }
 
 function SettingsSection() {
@@ -94,6 +106,37 @@ function SettingsSection() {
             onChange={(v) => setField("timezone", v)}
             options={TIMEZONE_OPTIONS}
           />
+          <label className="admin-field">
+            <span className="admin-field__label">
+              {strings.settings.fields.supportedLanguages.label}
+            </span>
+            <div className="admin-lang-grid">
+              {SUPPORTED_LANGUAGES_OPTIONS.map((lang) => {
+                const checked = (form.supported_languages ?? []).includes(lang.value)
+                const isLocale = lang.value === form.locale
+                return (
+                  <label key={lang.value} className="admin-field admin-field--check">
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      disabled={isLocale}
+                      onChange={() => {
+                        if (isLocale) return
+                        setField(
+                          "supported_languages",
+                          toggleLanguage(lang.value, form.supported_languages),
+                        )
+                      }}
+                    />
+                    <span className="admin-field__label">{lang.label}</span>
+                  </label>
+                )
+              })}
+            </div>
+            <span className="admin-field__hint">
+              {strings.settings.fields.supportedLanguages.hint}
+            </span>
+          </label>
         </>
       )}
     </AdminSectionForm>

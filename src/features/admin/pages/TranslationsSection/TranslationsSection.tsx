@@ -4,6 +4,7 @@ import { api } from "@/api/client"
 import { useAdminStrings } from "@/features/admin/strings"
 import TranslationEditModal from "@/features/admin/components/TranslationEditModal"
 import * as menuApi from "@/features/admin/api/menu"
+import { LANGUAGE_NAMES } from "@/features/admin/constants/settingsOptions"
 import type {
   AdminAllergen,
   AdminCategoryWithTranslations,
@@ -42,32 +43,6 @@ type Translation =
   | RestaurantTranslation
   | ZoneTranslation
   | TableTranslation
-
-const LANGUAGE_NAMES: Record<string, string> = {
-  en: "English",
-  uk: "Українська",
-  de: "Deutsch",
-  fr: "Français",
-  pl: "Polski",
-  es: "Español",
-  it: "Italiano",
-  pt: "Português",
-  nl: "Nederlands",
-  ro: "Română",
-  bg: "Български",
-  cs: "Čeština",
-  da: "Dansk",
-  el: "Ελληνικά",
-  et: "Eesti",
-  fi: "Suomi",
-  hu: "Magyar",
-  lt: "Lietuvių",
-  lv: "Latviešu",
-  sk: "Slovenčina",
-  sl: "Slovenščina",
-  sv: "Svenska",
-  tr: "Türkçe",
-}
 
 type TabKey =
   | "menu"

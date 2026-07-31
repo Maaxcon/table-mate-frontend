@@ -67,6 +67,17 @@
   color: var(--color-text-primary);
 }
 
+.admin-lang-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 4px;
+}
+
+.admin-lang-grid .admin-field--check {
+  gap: 6px;
+  padding: 4px 6px;
+}
+
 .admin-form__actions {
   display: flex;
   flex-wrap: wrap;
