@@ -6468,17 +6468,11 @@ components:
           readOnly: true
       required:
       - created_at
-<<<<<<< HEAD
       - daily_number
       - guest_count
       - injected_at
       - items_count
       - label
-=======
-      - guest_count
-      - injected_at
-      - items_count
->>>>>>> origin/dev
       - order
       - public_id
       - restaurant

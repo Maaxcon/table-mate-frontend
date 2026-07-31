@@ -4,29 +4,49 @@ import type {
   AdminMenuCategory,
   AdminMenuItem,
   Employee,
-  MenuCategoryTranslation,
-  MenuItemTranslation,
-  MenuTranslation,
   Restaurant,
 } from "@/types/api/types.gen"
 
 export type { WeekDay, WorkingHours, WorkingHoursDay }
 
+// The generated AdminMenu/Category/Item types embed `translations` as a lossy
+// array of dicts (drf-spectacular can't name the nested schema), so we keep the
+// precise per-entity translation shapes here and replace the inline field.
+export type MenuTranslation = {
+  language_code: string
+  name: string
+}
+
+export type MenuCategoryTranslation = {
+  language_code: string
+  name: string
+}
+
+export type MenuItemTranslation = {
+  language_code: string
+  name: string
+  description?: string | null
+}
+
 // Re-exported from the generated OpenAPI types so they can't drift from the API.
 export type { AdminMenu, AdminMenuItem }
-export type { MenuCategoryTranslation, MenuItemTranslation, MenuTranslation }
 export type AdminCategory = AdminMenuCategory
 export type AdminEmployee = Employee
 
-export type AdminMenuWithTranslations = AdminMenu & { translations: MenuTranslation[] }
-export type AdminCategoryWithTranslations = AdminCategory & {
+export type AdminMenuWithTranslations = Omit<AdminMenu, "translations"> & {
+  translations: MenuTranslation[]
+}
+export type AdminCategoryWithTranslations = Omit<AdminMenuCategory, "translations"> & {
   translations: MenuCategoryTranslation[]
 }
-export type AdminMenuItemWithTranslations = AdminMenuItem & { translations: MenuItemTranslation[] }
+export type AdminMenuItemWithTranslations = Omit<AdminMenuItem, "translations"> & {
+  translations: MenuItemTranslation[]
+}
 
 export type AdminAllergen = {
   public_id: string
   key: string
+  name: string
   sort_order: number
   translations: AllergenTranslation[]
   created_at: string
@@ -41,6 +61,7 @@ export type AllergenTranslation = {
 export type AdminIngredient = {
   public_id: string
   key: string
+  name: string
   sort_order: number
   translations: IngredientTranslation[]
   created_at: string

@@ -18,6 +18,30 @@ export type AddCartItem = {
   guest_slot?: number | null
 }
 
+export type AdminAllergen = {
+  readonly public_id: string
+  key: string
+  name: string
+  sort_order?: number
+  readonly translations: Array<{
+    [key: string]: string
+  }>
+  readonly created_at: string
+  readonly updated_at: string
+}
+
+export type AdminIngredient = {
+  readonly public_id: string
+  key: string
+  name: string
+  sort_order?: number
+  readonly translations: Array<{
+    [key: string]: string
+  }>
+  readonly created_at: string
+  readonly updated_at: string
+}
+
 /**
  * Writable menu serializer for the admin panel.
  */
@@ -25,6 +49,9 @@ export type AdminMenu = {
   readonly public_id: string
   name: string
   is_active?: boolean
+  readonly translations: Array<{
+    [key: string]: string
+  }>
   readonly created_at: string
   readonly updated_at: string
 }
@@ -42,6 +69,9 @@ export type AdminMenuCategory = {
    * Hex color used for category theming.
    */
   color?: string | null
+  readonly translations: Array<{
+    [key: string]: string
+  }>
   readonly created_at: string
   readonly updated_at: string
 }
@@ -64,6 +94,9 @@ export type AdminMenuItem = {
   is_available?: boolean
   sort_order?: number
   readonly likes_count: number
+  readonly translations: Array<{
+    [key: string]: string | null
+  }>
   readonly created_at: string
   readonly updated_at: string
 }
@@ -113,6 +146,7 @@ export type BookingSettings = {
   readonly currency: string
   readonly timezone: string
   readonly working_hours: unknown
+  readonly supported_languages: unknown
 }
 
 /**
@@ -362,11 +396,6 @@ export type MenuCategory = {
   readonly updated_at: string
 }
 
-export type MenuCategoryTranslation = {
-  language_code: string
-  name: string
-}
-
 export type MenuItem = {
   readonly public_id: string
   readonly restaurant: string
@@ -393,17 +422,6 @@ export type MenuItem = {
   sort_order?: number
   readonly created_at: string
   readonly updated_at: string
-}
-
-export type MenuItemTranslation = {
-  language_code: string
-  name: string
-  description?: string | null
-}
-
-export type MenuTranslation = {
-  language_code: string
-  name: string
 }
 
 export type ObstacleEntity = {
@@ -487,6 +505,20 @@ export type OrderItemVoidRequest = {
  * * `cancelled` - Cancelled
  */
 export type OrderStatusEnum = "draft" | "submitted" | "completed" | "cancelled"
+
+export type PaginatedAdminAllergenList = {
+  count: number
+  next?: string | null
+  previous?: string | null
+  results: Array<AdminAllergen>
+}
+
+export type PaginatedAdminIngredientList = {
+  count: number
+  next?: string | null
+  previous?: string | null
+  results: Array<AdminIngredient>
+}
 
 export type PaginatedAdminMenuCategoryList = {
   count: number
@@ -649,6 +681,30 @@ export type PaginatedZoneList = {
   results: Array<Zone>
 }
 
+export type PatchedAdminAllergen = {
+  readonly public_id?: string
+  key?: string
+  name?: string
+  sort_order?: number
+  readonly translations?: Array<{
+    [key: string]: string
+  }>
+  readonly created_at?: string
+  readonly updated_at?: string
+}
+
+export type PatchedAdminIngredient = {
+  readonly public_id?: string
+  key?: string
+  name?: string
+  sort_order?: number
+  readonly translations?: Array<{
+    [key: string]: string
+  }>
+  readonly created_at?: string
+  readonly updated_at?: string
+}
+
 /**
  * Writable menu serializer for the admin panel.
  */
@@ -656,6 +712,9 @@ export type PatchedAdminMenu = {
   readonly public_id?: string
   name?: string
   is_active?: boolean
+  readonly translations?: Array<{
+    [key: string]: string
+  }>
   readonly created_at?: string
   readonly updated_at?: string
 }
@@ -673,6 +732,9 @@ export type PatchedAdminMenuCategory = {
    * Hex color used for category theming.
    */
   color?: string | null
+  readonly translations?: Array<{
+    [key: string]: string
+  }>
   readonly created_at?: string
   readonly updated_at?: string
 }
@@ -695,6 +757,9 @@ export type PatchedAdminMenuItem = {
   is_available?: boolean
   sort_order?: number
   readonly likes_count?: number
+  readonly translations?: Array<{
+    [key: string]: string | null
+  }>
   readonly created_at?: string
   readonly updated_at?: string
 }
@@ -703,6 +768,7 @@ export type PatchedBookingSettings = {
   readonly currency?: string
   readonly timezone?: string
   readonly working_hours?: unknown
+  readonly supported_languages?: unknown
 }
 
 export type PatchedEditorTable = {
@@ -838,6 +904,9 @@ export type PatchedRestaurant = {
   telegram_url?: string
   facebook_url?: string
   readonly cover_image?: string | null
+  readonly translations?: Array<{
+    [key: string]: string
+  }>
   readonly created_at?: string
   readonly updated_at?: string
 }
@@ -910,6 +979,9 @@ export type PatchedZone = {
    *  is fallback
    */
   readonly _is_fallback?: boolean
+  readonly translations?: Array<{
+    [key: string]: string
+  }>
 }
 
 export type PayOrderItems = {
@@ -1120,6 +1192,9 @@ export type Restaurant = {
   telegram_url?: string
   facebook_url?: string
   readonly cover_image: string | null
+  readonly translations: Array<{
+    [key: string]: string
+  }>
   readonly created_at: string
   readonly updated_at: string
 }
@@ -1229,6 +1304,9 @@ export type Table = {
    *  is fallback
    */
   readonly _is_fallback: boolean
+  readonly translations: Array<{
+    [key: string]: string
+  }>
   readonly created_at: string
   readonly updated_at: string
 }
@@ -1404,6 +1482,9 @@ export type Zone = {
    *  is fallback
    */
   readonly _is_fallback: boolean
+  readonly translations: Array<{
+    [key: string]: string
+  }>
 }
 
 export type ZoneCreate = {
@@ -1423,6 +1504,18 @@ export type ZoneUpdate = {
   canvas_cols?: number
   canvas_rows?: number
   edge_styles?: unknown
+}
+
+export type AdminAllergenWritable = {
+  key: string
+  name: string
+  sort_order?: number
+}
+
+export type AdminIngredientWritable = {
+  key: string
+  name: string
+  sort_order?: number
 }
 
 /**
@@ -1596,6 +1689,20 @@ export type OrderItemWritable = {
   is_wasted?: boolean
 }
 
+export type PaginatedAdminAllergenListWritable = {
+  count: number
+  next?: string | null
+  previous?: string | null
+  results: Array<AdminAllergenWritable>
+}
+
+export type PaginatedAdminIngredientListWritable = {
+  count: number
+  next?: string | null
+  previous?: string | null
+  results: Array<AdminIngredientWritable>
+}
+
 export type PaginatedAdminMenuCategoryListWritable = {
   count: number
   next?: string | null
@@ -1755,6 +1862,18 @@ export type PaginatedZoneListWritable = {
   next?: string | null
   previous?: string | null
   results: Array<ZoneWritable>
+}
+
+export type PatchedAdminAllergenWritable = {
+  key?: string
+  name?: string
+  sort_order?: number
+}
+
+export type PatchedAdminIngredientWritable = {
+  key?: string
+  name?: string
+  sort_order?: number
 }
 
 /**
@@ -2392,6 +2511,179 @@ export type EditorTablesAvailableListResponses = {
 export type EditorTablesAvailableListResponse =
   EditorTablesAvailableListResponses[keyof EditorTablesAvailableListResponses]
 
+export type MenuAdminAllergensListData = {
+  body?: never
+  path?: never
+  query?: {
+    /**
+     * Which field to use when ordering the results.
+     */
+    ordering?: string
+    /**
+     * A page number within the paginated result set.
+     */
+    page?: number
+  }
+  url: "/api/menu/admin/allergens/"
+}
+
+export type MenuAdminAllergensListResponses = {
+  200: PaginatedAdminAllergenList
+}
+
+export type MenuAdminAllergensListResponse =
+  MenuAdminAllergensListResponses[keyof MenuAdminAllergensListResponses]
+
+export type MenuAdminAllergensCreateData = {
+  body: AdminAllergenWritable
+  path?: never
+  query?: never
+  url: "/api/menu/admin/allergens/"
+}
+
+export type MenuAdminAllergensCreateResponses = {
+  201: AdminAllergen
+}
+
+export type MenuAdminAllergensCreateResponse =
+  MenuAdminAllergensCreateResponses[keyof MenuAdminAllergensCreateResponses]
+
+export type MenuAdminAllergensDestroyData = {
+  body?: never
+  path: {
+    public_id: string
+  }
+  query?: never
+  url: "/api/menu/admin/allergens/{public_id}/"
+}
+
+export type MenuAdminAllergensDestroyResponses = {
+  /**
+   * No response body
+   */
+  204: void
+}
+
+export type MenuAdminAllergensDestroyResponse =
+  MenuAdminAllergensDestroyResponses[keyof MenuAdminAllergensDestroyResponses]
+
+export type MenuAdminAllergensRetrieveData = {
+  body?: never
+  path: {
+    public_id: string
+  }
+  query?: never
+  url: "/api/menu/admin/allergens/{public_id}/"
+}
+
+export type MenuAdminAllergensRetrieveResponses = {
+  200: AdminAllergen
+}
+
+export type MenuAdminAllergensRetrieveResponse =
+  MenuAdminAllergensRetrieveResponses[keyof MenuAdminAllergensRetrieveResponses]
+
+export type MenuAdminAllergensPartialUpdateData = {
+  body?: PatchedAdminAllergenWritable
+  path: {
+    public_id: string
+  }
+  query?: never
+  url: "/api/menu/admin/allergens/{public_id}/"
+}
+
+export type MenuAdminAllergensPartialUpdateResponses = {
+  200: AdminAllergen
+}
+
+export type MenuAdminAllergensPartialUpdateResponse =
+  MenuAdminAllergensPartialUpdateResponses[keyof MenuAdminAllergensPartialUpdateResponses]
+
+export type MenuAdminAllergensUpdateData = {
+  body: AdminAllergenWritable
+  path: {
+    public_id: string
+  }
+  query?: never
+  url: "/api/menu/admin/allergens/{public_id}/"
+}
+
+export type MenuAdminAllergensUpdateResponses = {
+  200: AdminAllergen
+}
+
+export type MenuAdminAllergensUpdateResponse =
+  MenuAdminAllergensUpdateResponses[keyof MenuAdminAllergensUpdateResponses]
+
+export type MenuAdminAllergensTranslationsRetrieveData = {
+  body?: never
+  path: {
+    public_id: string
+  }
+  query?: never
+  url: "/api/menu/admin/allergens/{public_id}/translations/"
+}
+
+export type MenuAdminAllergensTranslationsRetrieveResponses = {
+  200: AdminAllergen
+}
+
+export type MenuAdminAllergensTranslationsRetrieveResponse =
+  MenuAdminAllergensTranslationsRetrieveResponses[keyof MenuAdminAllergensTranslationsRetrieveResponses]
+
+export type MenuAdminAllergensTranslationsCreateData = {
+  body: AdminAllergenWritable
+  path: {
+    public_id: string
+  }
+  query?: never
+  url: "/api/menu/admin/allergens/{public_id}/translations/"
+}
+
+export type MenuAdminAllergensTranslationsCreateResponses = {
+  200: AdminAllergen
+}
+
+export type MenuAdminAllergensTranslationsCreateResponse =
+  MenuAdminAllergensTranslationsCreateResponses[keyof MenuAdminAllergensTranslationsCreateResponses]
+
+export type MenuAdminAllergensTranslationsDestroyData = {
+  body?: never
+  path: {
+    lang: string
+    public_id: string
+  }
+  query?: never
+  url: "/api/menu/admin/allergens/{public_id}/translations/{lang}/"
+}
+
+export type MenuAdminAllergensTranslationsDestroyResponses = {
+  /**
+   * No response body
+   */
+  204: void
+}
+
+export type MenuAdminAllergensTranslationsDestroyResponse =
+  MenuAdminAllergensTranslationsDestroyResponses[keyof MenuAdminAllergensTranslationsDestroyResponses]
+
+export type MenuAdminAllergensTranslationsUpdateData = {
+  body: AdminAllergenWritable
+  path: {
+    lang: string
+    public_id: string
+  }
+  query?: never
+  url: "/api/menu/admin/allergens/{public_id}/translations/{lang}/"
+}
+
+export type MenuAdminAllergensTranslationsUpdateResponses = {
+  200: AdminAllergen
+}
+
+export type MenuAdminAllergensTranslationsUpdateResponse =
+  MenuAdminAllergensTranslationsUpdateResponses[keyof MenuAdminAllergensTranslationsUpdateResponses]
+
 export type MenuAdminCategoriesListData = {
   body?: never
   path?: never
@@ -2514,7 +2806,7 @@ export type MenuAdminCategoriesTranslationsRetrieveResponse =
   MenuAdminCategoriesTranslationsRetrieveResponses[keyof MenuAdminCategoriesTranslationsRetrieveResponses]
 
 export type MenuAdminCategoriesTranslationsCreateData = {
-  body: MenuCategoryTranslation
+  body: AdminMenuCategoryWritable
   path: {
     public_id: string
   }
@@ -2523,7 +2815,7 @@ export type MenuAdminCategoriesTranslationsCreateData = {
 }
 
 export type MenuAdminCategoriesTranslationsCreateResponses = {
-  201: MenuCategoryTranslation
+  200: AdminMenuCategory
 }
 
 export type MenuAdminCategoriesTranslationsCreateResponse =
@@ -2550,7 +2842,7 @@ export type MenuAdminCategoriesTranslationsDestroyResponse =
   MenuAdminCategoriesTranslationsDestroyResponses[keyof MenuAdminCategoriesTranslationsDestroyResponses]
 
 export type MenuAdminCategoriesTranslationsUpdateData = {
-  body: MenuCategoryTranslation
+  body: AdminMenuCategoryWritable
   path: {
     lang: string
     public_id: string
@@ -2560,7 +2852,7 @@ export type MenuAdminCategoriesTranslationsUpdateData = {
 }
 
 export type MenuAdminCategoriesTranslationsUpdateResponses = {
-  200: MenuCategoryTranslation
+  200: AdminMenuCategory
 }
 
 export type MenuAdminCategoriesTranslationsUpdateResponse =
@@ -2582,6 +2874,179 @@ export type MenuAdminCategoriesReorderCreateResponses = {
 
 export type MenuAdminCategoriesReorderCreateResponse =
   MenuAdminCategoriesReorderCreateResponses[keyof MenuAdminCategoriesReorderCreateResponses]
+
+export type MenuAdminIngredientsListData = {
+  body?: never
+  path?: never
+  query?: {
+    /**
+     * Which field to use when ordering the results.
+     */
+    ordering?: string
+    /**
+     * A page number within the paginated result set.
+     */
+    page?: number
+  }
+  url: "/api/menu/admin/ingredients/"
+}
+
+export type MenuAdminIngredientsListResponses = {
+  200: PaginatedAdminIngredientList
+}
+
+export type MenuAdminIngredientsListResponse =
+  MenuAdminIngredientsListResponses[keyof MenuAdminIngredientsListResponses]
+
+export type MenuAdminIngredientsCreateData = {
+  body: AdminIngredientWritable
+  path?: never
+  query?: never
+  url: "/api/menu/admin/ingredients/"
+}
+
+export type MenuAdminIngredientsCreateResponses = {
+  201: AdminIngredient
+}
+
+export type MenuAdminIngredientsCreateResponse =
+  MenuAdminIngredientsCreateResponses[keyof MenuAdminIngredientsCreateResponses]
+
+export type MenuAdminIngredientsDestroyData = {
+  body?: never
+  path: {
+    public_id: string
+  }
+  query?: never
+  url: "/api/menu/admin/ingredients/{public_id}/"
+}
+
+export type MenuAdminIngredientsDestroyResponses = {
+  /**
+   * No response body
+   */
+  204: void
+}
+
+export type MenuAdminIngredientsDestroyResponse =
+  MenuAdminIngredientsDestroyResponses[keyof MenuAdminIngredientsDestroyResponses]
+
+export type MenuAdminIngredientsRetrieveData = {
+  body?: never
+  path: {
+    public_id: string
+  }
+  query?: never
+  url: "/api/menu/admin/ingredients/{public_id}/"
+}
+
+export type MenuAdminIngredientsRetrieveResponses = {
+  200: AdminIngredient
+}
+
+export type MenuAdminIngredientsRetrieveResponse =
+  MenuAdminIngredientsRetrieveResponses[keyof MenuAdminIngredientsRetrieveResponses]
+
+export type MenuAdminIngredientsPartialUpdateData = {
+  body?: PatchedAdminIngredientWritable
+  path: {
+    public_id: string
+  }
+  query?: never
+  url: "/api/menu/admin/ingredients/{public_id}/"
+}
+
+export type MenuAdminIngredientsPartialUpdateResponses = {
+  200: AdminIngredient
+}
+
+export type MenuAdminIngredientsPartialUpdateResponse =
+  MenuAdminIngredientsPartialUpdateResponses[keyof MenuAdminIngredientsPartialUpdateResponses]
+
+export type MenuAdminIngredientsUpdateData = {
+  body: AdminIngredientWritable
+  path: {
+    public_id: string
+  }
+  query?: never
+  url: "/api/menu/admin/ingredients/{public_id}/"
+}
+
+export type MenuAdminIngredientsUpdateResponses = {
+  200: AdminIngredient
+}
+
+export type MenuAdminIngredientsUpdateResponse =
+  MenuAdminIngredientsUpdateResponses[keyof MenuAdminIngredientsUpdateResponses]
+
+export type MenuAdminIngredientsTranslationsRetrieveData = {
+  body?: never
+  path: {
+    public_id: string
+  }
+  query?: never
+  url: "/api/menu/admin/ingredients/{public_id}/translations/"
+}
+
+export type MenuAdminIngredientsTranslationsRetrieveResponses = {
+  200: AdminIngredient
+}
+
+export type MenuAdminIngredientsTranslationsRetrieveResponse =
+  MenuAdminIngredientsTranslationsRetrieveResponses[keyof MenuAdminIngredientsTranslationsRetrieveResponses]
+
+export type MenuAdminIngredientsTranslationsCreateData = {
+  body: AdminIngredientWritable
+  path: {
+    public_id: string
+  }
+  query?: never
+  url: "/api/menu/admin/ingredients/{public_id}/translations/"
+}
+
+export type MenuAdminIngredientsTranslationsCreateResponses = {
+  200: AdminIngredient
+}
+
+export type MenuAdminIngredientsTranslationsCreateResponse =
+  MenuAdminIngredientsTranslationsCreateResponses[keyof MenuAdminIngredientsTranslationsCreateResponses]
+
+export type MenuAdminIngredientsTranslationsDestroyData = {
+  body?: never
+  path: {
+    lang: string
+    public_id: string
+  }
+  query?: never
+  url: "/api/menu/admin/ingredients/{public_id}/translations/{lang}/"
+}
+
+export type MenuAdminIngredientsTranslationsDestroyResponses = {
+  /**
+   * No response body
+   */
+  204: void
+}
+
+export type MenuAdminIngredientsTranslationsDestroyResponse =
+  MenuAdminIngredientsTranslationsDestroyResponses[keyof MenuAdminIngredientsTranslationsDestroyResponses]
+
+export type MenuAdminIngredientsTranslationsUpdateData = {
+  body: AdminIngredientWritable
+  path: {
+    lang: string
+    public_id: string
+  }
+  query?: never
+  url: "/api/menu/admin/ingredients/{public_id}/translations/{lang}/"
+}
+
+export type MenuAdminIngredientsTranslationsUpdateResponses = {
+  200: AdminIngredient
+}
+
+export type MenuAdminIngredientsTranslationsUpdateResponse =
+  MenuAdminIngredientsTranslationsUpdateResponses[keyof MenuAdminIngredientsTranslationsUpdateResponses]
 
 export type MenuAdminItemsListData = {
   body?: never
@@ -2723,7 +3188,7 @@ export type MenuAdminItemsTranslationsRetrieveResponse =
   MenuAdminItemsTranslationsRetrieveResponses[keyof MenuAdminItemsTranslationsRetrieveResponses]
 
 export type MenuAdminItemsTranslationsCreateData = {
-  body: MenuItemTranslation
+  body: AdminMenuItemWritable
   path: {
     public_id: string
   }
@@ -2732,7 +3197,7 @@ export type MenuAdminItemsTranslationsCreateData = {
 }
 
 export type MenuAdminItemsTranslationsCreateResponses = {
-  201: MenuItemTranslation
+  200: AdminMenuItem
 }
 
 export type MenuAdminItemsTranslationsCreateResponse =
@@ -2759,7 +3224,7 @@ export type MenuAdminItemsTranslationsDestroyResponse =
   MenuAdminItemsTranslationsDestroyResponses[keyof MenuAdminItemsTranslationsDestroyResponses]
 
 export type MenuAdminItemsTranslationsUpdateData = {
-  body: MenuItemTranslation
+  body: AdminMenuItemWritable
   path: {
     lang: string
     public_id: string
@@ -2769,7 +3234,7 @@ export type MenuAdminItemsTranslationsUpdateData = {
 }
 
 export type MenuAdminItemsTranslationsUpdateResponses = {
-  200: MenuItemTranslation
+  200: AdminMenuItem
 }
 
 export type MenuAdminItemsTranslationsUpdateResponse =
@@ -2929,7 +3394,7 @@ export type MenuAdminMenusTranslationsRetrieveResponse =
   MenuAdminMenusTranslationsRetrieveResponses[keyof MenuAdminMenusTranslationsRetrieveResponses]
 
 export type MenuAdminMenusTranslationsCreateData = {
-  body: MenuTranslation
+  body: AdminMenuWritable
   path: {
     public_id: string
   }
@@ -2938,7 +3403,7 @@ export type MenuAdminMenusTranslationsCreateData = {
 }
 
 export type MenuAdminMenusTranslationsCreateResponses = {
-  201: MenuTranslation
+  200: AdminMenu
 }
 
 export type MenuAdminMenusTranslationsCreateResponse =
@@ -2965,7 +3430,7 @@ export type MenuAdminMenusTranslationsDestroyResponse =
   MenuAdminMenusTranslationsDestroyResponses[keyof MenuAdminMenusTranslationsDestroyResponses]
 
 export type MenuAdminMenusTranslationsUpdateData = {
-  body: MenuTranslation
+  body: AdminMenuWritable
   path: {
     lang: string
     public_id: string
@@ -2975,7 +3440,7 @@ export type MenuAdminMenusTranslationsUpdateData = {
 }
 
 export type MenuAdminMenusTranslationsUpdateResponses = {
-  200: MenuTranslation
+  200: AdminMenu
 }
 
 export type MenuAdminMenusTranslationsUpdateResponse =
@@ -2984,12 +3449,19 @@ export type MenuAdminMenusTranslationsUpdateResponse =
 export type MenuAllergensListData = {
   body?: never
   path?: never
-  query?: never
+  query: {
+    /**
+     * Restaurant public UUID
+     */
+    restaurant: string
+  }
   url: "/api/menu/allergens/"
 }
 
 export type MenuAllergensListResponses = {
-  200: Array<string>
+  200: Array<{
+    [key: string]: unknown
+  }>
 }
 
 export type MenuAllergensListResponse = MenuAllergensListResponses[keyof MenuAllergensListResponses]
@@ -4583,6 +5055,22 @@ export type RestaurantsRestaurantsCoverPartialUpdateResponses = {
 export type RestaurantsRestaurantsCoverPartialUpdateResponse =
   RestaurantsRestaurantsCoverPartialUpdateResponses[keyof RestaurantsRestaurantsCoverPartialUpdateResponses]
 
+export type RestaurantsRestaurantsTranslationsRetrieveData = {
+  body?: never
+  path: {
+    public_id: string
+  }
+  query?: never
+  url: "/api/restaurants/restaurants/{public_id}/translations/"
+}
+
+export type RestaurantsRestaurantsTranslationsRetrieveResponses = {
+  200: Restaurant
+}
+
+export type RestaurantsRestaurantsTranslationsRetrieveResponse =
+  RestaurantsRestaurantsTranslationsRetrieveResponses[keyof RestaurantsRestaurantsTranslationsRetrieveResponses]
+
 export type RestaurantsTablesListData = {
   body?: never
   path?: never
@@ -4639,6 +5127,75 @@ export type RestaurantsTablesQrRetrieveResponses = {
 
 export type RestaurantsTablesQrRetrieveResponse =
   RestaurantsTablesQrRetrieveResponses[keyof RestaurantsTablesQrRetrieveResponses]
+
+export type RestaurantsTablesTranslationsRetrieveData = {
+  body?: never
+  path: {
+    public_id: string
+  }
+  query?: never
+  url: "/api/restaurants/tables/{public_id}/translations/"
+}
+
+export type RestaurantsTablesTranslationsRetrieveResponses = {
+  200: Table
+}
+
+export type RestaurantsTablesTranslationsRetrieveResponse =
+  RestaurantsTablesTranslationsRetrieveResponses[keyof RestaurantsTablesTranslationsRetrieveResponses]
+
+export type RestaurantsTablesTranslationsCreateData = {
+  body: TableWritable
+  path: {
+    public_id: string
+  }
+  query?: never
+  url: "/api/restaurants/tables/{public_id}/translations/"
+}
+
+export type RestaurantsTablesTranslationsCreateResponses = {
+  200: Table
+}
+
+export type RestaurantsTablesTranslationsCreateResponse =
+  RestaurantsTablesTranslationsCreateResponses[keyof RestaurantsTablesTranslationsCreateResponses]
+
+export type RestaurantsTablesTranslationsDestroyData = {
+  body?: never
+  path: {
+    lang: string
+    public_id: string
+  }
+  query?: never
+  url: "/api/restaurants/tables/{public_id}/translations/{lang}/"
+}
+
+export type RestaurantsTablesTranslationsDestroyResponses = {
+  /**
+   * No response body
+   */
+  204: void
+}
+
+export type RestaurantsTablesTranslationsDestroyResponse =
+  RestaurantsTablesTranslationsDestroyResponses[keyof RestaurantsTablesTranslationsDestroyResponses]
+
+export type RestaurantsTablesTranslationsUpdateData = {
+  body: TableWritable
+  path: {
+    lang: string
+    public_id: string
+  }
+  query?: never
+  url: "/api/restaurants/tables/{public_id}/translations/{lang}/"
+}
+
+export type RestaurantsTablesTranslationsUpdateResponses = {
+  200: Table
+}
+
+export type RestaurantsTablesTranslationsUpdateResponse =
+  RestaurantsTablesTranslationsUpdateResponses[keyof RestaurantsTablesTranslationsUpdateResponses]
 
 export type RestaurantsTablesLayoutRetrieveData = {
   body?: never
@@ -4783,6 +5340,75 @@ export type RestaurantsZonesUpdateResponses = {
 
 export type RestaurantsZonesUpdateResponse =
   RestaurantsZonesUpdateResponses[keyof RestaurantsZonesUpdateResponses]
+
+export type RestaurantsZonesTranslationsRetrieveData = {
+  body?: never
+  path: {
+    public_id: string
+  }
+  query?: never
+  url: "/api/restaurants/zones/{public_id}/translations/"
+}
+
+export type RestaurantsZonesTranslationsRetrieveResponses = {
+  200: Zone
+}
+
+export type RestaurantsZonesTranslationsRetrieveResponse =
+  RestaurantsZonesTranslationsRetrieveResponses[keyof RestaurantsZonesTranslationsRetrieveResponses]
+
+export type RestaurantsZonesTranslationsCreateData = {
+  body: ZoneWritable
+  path: {
+    public_id: string
+  }
+  query?: never
+  url: "/api/restaurants/zones/{public_id}/translations/"
+}
+
+export type RestaurantsZonesTranslationsCreateResponses = {
+  200: Zone
+}
+
+export type RestaurantsZonesTranslationsCreateResponse =
+  RestaurantsZonesTranslationsCreateResponses[keyof RestaurantsZonesTranslationsCreateResponses]
+
+export type RestaurantsZonesTranslationsDestroyData = {
+  body?: never
+  path: {
+    lang: string
+    public_id: string
+  }
+  query?: never
+  url: "/api/restaurants/zones/{public_id}/translations/{lang}/"
+}
+
+export type RestaurantsZonesTranslationsDestroyResponses = {
+  /**
+   * No response body
+   */
+  204: void
+}
+
+export type RestaurantsZonesTranslationsDestroyResponse =
+  RestaurantsZonesTranslationsDestroyResponses[keyof RestaurantsZonesTranslationsDestroyResponses]
+
+export type RestaurantsZonesTranslationsUpdateData = {
+  body: ZoneWritable
+  path: {
+    lang: string
+    public_id: string
+  }
+  query?: never
+  url: "/api/restaurants/zones/{public_id}/translations/{lang}/"
+}
+
+export type RestaurantsZonesTranslationsUpdateResponses = {
+  200: Zone
+}
+
+export type RestaurantsZonesTranslationsUpdateResponse =
+  RestaurantsZonesTranslationsUpdateResponses[keyof RestaurantsZonesTranslationsUpdateResponses]
 
 export type ShiftsListData = {
   body?: never
