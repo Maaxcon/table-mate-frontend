@@ -1,4 +1,5 @@
 import type { WorkingHoursDay } from "@/features/reservation/api"
+import type { SchedulerReservation } from "./types"
 import { isoToDateKey } from "./types"
 
 export function toMinutes(hhmm: string): number {
@@ -93,4 +94,36 @@ export function isCrossDayReservation(
   }
   if (isoToDateKey(resEndAt) !== date) return null
   return "prev"
+}
+
+export function getReservationBlockMetrics(
+  reservation: Pick<SchedulerReservation, "start_at" | "end_at">,
+  hourEnd: number,
+  hourStart: number,
+  crossDay: "prev" | "next",
+): { startMinutes: number; endMinutes: number; dragDurationMinutes: number; draggable: boolean } {
+  const startD = new Date(reservation.start_at)
+  const endD = new Date(reservation.end_at)
+  const dragDurationMinutes = (endD.getTime() - startD.getTime()) / 60000
+
+  if (crossDay === "next") {
+    const startMinutes = 24 * 60 + startD.getHours() * 60 + startD.getMinutes()
+    const rawEndMinutes = 24 * 60 + endD.getHours() * 60 + endD.getMinutes()
+    return {
+      startMinutes,
+      endMinutes: Math.min(rawEndMinutes, hourEnd * 60),
+      dragDurationMinutes,
+      draggable: false,
+    }
+  }
+
+  const endMinutes = endD.getHours() * 60 + endD.getMinutes()
+  const dayStartMinutes = hourStart * 60
+  const startMinutes = endMinutes > dayStartMinutes ? dayStartMinutes : 0
+  return {
+    startMinutes,
+    endMinutes,
+    dragDurationMinutes,
+    draggable: endMinutes > dayStartMinutes,
+  }
 }
