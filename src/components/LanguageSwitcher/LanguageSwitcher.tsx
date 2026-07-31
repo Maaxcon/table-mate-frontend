@@ -12,7 +12,7 @@ type LanguageSwitcherProps = {
 
 export function LanguageSwitcher({ className }: LanguageSwitcherProps) {
   const { i18n } = useTranslation()
-  const [languages, setLanguages] = useState<string[]>(FALLBACK_LANGUAGES)
+  const [languages, setLanguages] = useState<string[]>([...FALLBACK_LANGUAGES])
 
   useEffect(() => {
     const controller = new AbortController()
