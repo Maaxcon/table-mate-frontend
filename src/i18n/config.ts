@@ -1,23 +1,52 @@
 import i18n from "i18next"
 import { initReactI18next } from "react-i18next"
 import LanguageDetector from "i18next-browser-languagedetector"
+import HttpBackend from "i18next-http-backend"
 import { setAcceptLanguage } from "@/api/client"
 import en from "./locales/en/translation.json"
 import uk from "./locales/uk/translation.json"
 
-const SUPPORTED_LANGUAGES = ["en", "uk"] as const
-export type SupportedLanguage = (typeof SUPPORTED_LANGUAGES)[number]
+const ALL_LANGUAGE_CODES = [
+  "en",
+  "uk",
+  "de",
+  "fr",
+  "pl",
+  "es",
+  "it",
+  "pt",
+  "nl",
+  "ro",
+  "bg",
+  "cs",
+  "da",
+  "el",
+  "et",
+  "fi",
+  "hu",
+  "lt",
+  "lv",
+  "sk",
+  "sl",
+  "sv",
+  "tr",
+]
 
 i18n
+  .use(HttpBackend)
   .use(LanguageDetector)
   .use(initReactI18next)
   .init({
+    fallbackLng: "uk",
+    supportedLngs: ALL_LANGUAGE_CODES,
+    load: "currentOnly",
     resources: {
       en: { translation: en },
       uk: { translation: uk },
     },
-    fallbackLng: "uk",
-    supportedLngs: ["en", "uk"],
+    backend: {
+      loadPath: "/locales/{{lng}}/translation.json",
+    },
     detection: {
       order: ["localStorage", "navigator"],
       caches: ["localStorage"],
@@ -32,5 +61,5 @@ i18n
 i18n.on("languageChanged", setAcceptLanguage)
 setAcceptLanguage(i18n.language)
 
-export { SUPPORTED_LANGUAGES }
+export { ALL_LANGUAGE_CODES as SUPPORTED_LANGUAGES }
 export default i18n
