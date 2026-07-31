@@ -34,10 +34,10 @@ export function Toolbar({
 
   const draftStatus = draftConflict
     ? pageStrings.status.draftConflict
-    : draftSavedAt
-      ? pageStrings.status.draftSaved
-      : dirty
-        ? pageStrings.status.dirty
+    : dirty
+      ? pageStrings.status.dirty
+      : draftSavedAt
+        ? pageStrings.status.draftSaved
         : pageStrings.status.clean
 
   const tools = [
