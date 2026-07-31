@@ -1,26 +1,31 @@
 import { render, screen } from "@testing-library/react"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import type { LayoutPayload } from "@/features/editor/types"
-import type { Table } from "@/types/api/types.gen"
-import type { Zone } from "./api"
+import type { Table, Zone } from "@/types/api/types.gen"
 import { CustomerFloorPlan } from "./CustomerFloorPlan"
 
-function makeZone(id: string, name: string): Zone {
+// Satisfies both the generated Zone (via Table.zone) and the feature-level
+// Zone used by the zones prop, which requires sort_order.
+type ZoneFixture = Omit<Zone, "sort_order" | "edge_styles"> & {
+  sort_order: number
+  edge_styles?: Record<string, "dashed" | "solid">
+}
+
+function makeZone(id: string, name: string): ZoneFixture {
   return {
     public_id: id,
     name,
     sort_order: 0,
     canvas_cols: 20,
     canvas_rows: 20,
+    _lang: "uk",
+    _is_fallback: false,
+    translations: [],
   }
 }
 
 function makeTable(overrides: Partial<Table>): Table {
-  const zone = overrides.zone ?? {
-    public_id: "main",
-    name: "Main",
-    sort_order: 0,
-  }
+  const zone = overrides.zone ?? makeZone("main", "Main")
 
   return {
     public_id: "table-id",
@@ -30,6 +35,9 @@ function makeTable(overrides: Partial<Table>): Table {
     is_occupied: false,
     active: true,
     zone,
+    _lang: null,
+    _is_fallback: false,
+    translations: [],
     created_at: "2026-07-02T00:00:00Z",
     updated_at: "2026-07-02T00:00:00Z",
     ...overrides,
