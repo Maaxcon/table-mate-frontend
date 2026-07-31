@@ -739,6 +739,41 @@
         }
       }
     },
+    "translations": {
+      "title": "Translations",
+      "primaryLanguage": "Primary language:",
+      "name": "Name",
+      "noLanguages": "No additional languages configured. Add languages in Settings to enable translations.",
+      "empty": "No {{entity}} found.",
+      "loading": "Loading…",
+      "tabs": {
+        "menu": "Menus",
+        "category": "Categories",
+        "item": "Items",
+        "allergen": "Allergens",
+        "ingredient": "Ingredients",
+        "restaurant": "Restaurants",
+        "zone": "Zones",
+        "table": "Tables"
+      },
+      "badge": {
+        "add": "Add {{language}} translation",
+        "edit": "Edit {{language}} translation"
+      },
+      "modal": {
+        "addTitle": "Add {{language}} translation",
+        "editTitle": "Edit {{language}} translation",
+        "original": "{{language}} (original)",
+        "delete": "Delete translation",
+        "toasts": {
+          "added": "Translation added",
+          "saved": "Translation saved",
+          "deleted": "Translation deleted",
+          "saveFailed": "Failed to save translation.",
+          "deleteFailed": "Failed to delete translation."
+        }
+      }
+    },
     "forms": {
       "saved": "Changes saved",
       "saveFailed": "Could not save changes.",
@@ -959,6 +994,7 @@
       "allergens": {
         "label": "Allergens",
         "placeholder": "Add allergen…",
+        "add": "Add",
         "remove": "Remove {{item}}"
       },
       "toolbar": {

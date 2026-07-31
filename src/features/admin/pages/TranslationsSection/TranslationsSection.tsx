@@ -54,17 +54,6 @@ type TabKey =
   | "zone"
   | "table"
 
-const TABS: { key: TabKey; label: string }[] = [
-  { key: "menu", label: "Menus" },
-  { key: "category", label: "Categories" },
-  { key: "item", label: "Items" },
-  { key: "allergen", label: "Allergens" },
-  { key: "ingredient", label: "Ingredients" },
-  { key: "restaurant", label: "Restaurants" },
-  { key: "zone", label: "Zones" },
-  { key: "table", label: "Tables" },
-]
-
 type TranslationModalState = {
   entityType: EntityType
   entity:
@@ -98,7 +87,6 @@ function getEntityName(
 ): string {
   if ("name" in entity) return entity.name ?? ""
   if ("public_number" in entity) return entity.public_number
-  if ("key" in entity) return entity.key
   return ""
 }
 
@@ -106,8 +94,30 @@ function getEntityId(entity: Record<string, unknown>): string {
   return (entity.public_id as string) ?? (entity.key as string) ?? ""
 }
 
+const TABS: { key: TabKey; label: string }[] = [
+  { key: "menu", label: "menu" },
+  { key: "category", label: "category" },
+  { key: "item", label: "item" },
+  { key: "allergen", label: "allergen" },
+  { key: "ingredient", label: "ingredient" },
+  { key: "restaurant", label: "restaurant" },
+  { key: "zone", label: "zone" },
+  { key: "table", label: "table" },
+]
+
 function TranslationsSection() {
   const strings = useAdminStrings()
+
+  const tabLabels: Record<TabKey, string> = {
+    menu: strings.translations.tabs.menu,
+    category: strings.translations.tabs.category,
+    item: strings.translations.tabs.item,
+    allergen: strings.translations.tabs.allergen,
+    ingredient: strings.translations.tabs.ingredient,
+    restaurant: strings.translations.tabs.restaurant,
+    zone: strings.translations.tabs.zone,
+    table: strings.translations.tabs.table,
+  }
 
   const [locale, setLocale] = useState<string>("en")
   const [supportedLanguages, setSupportedLanguages] = useState<string[]>([])
@@ -368,7 +378,7 @@ function TranslationsSection() {
     return (
       <section className="admin-section">
         <header className="admin-section__header">
-          <h1 className="admin-section__title">Translations</h1>
+          <h1 className="admin-section__title">{strings.translations.title}</h1>
           <p className="admin-section__description">{strings.common.loading}</p>
         </header>
       </section>
@@ -379,7 +389,7 @@ function TranslationsSection() {
     return (
       <section className="admin-section">
         <header className="admin-section__header">
-          <h1 className="admin-section__title">Translations</h1>
+          <h1 className="admin-section__title">{strings.translations.title}</h1>
           <p className="admin-form__status admin-form__status--error">{error}</p>
         </header>
       </section>
@@ -391,9 +401,9 @@ function TranslationsSection() {
   return (
     <section className="admin-section">
       <header className="admin-section__header">
-        <h1 className="admin-section__title">Translations</h1>
+        <h1 className="admin-section__title">{strings.translations.title}</h1>
         <p className="admin-section__description">
-          Primary language: <strong>{LANGUAGE_NAMES[locale] ?? locale}</strong>
+          {strings.translations.primaryLanguage} <strong>{LANGUAGE_NAMES[locale] ?? locale}</strong>
         </p>
       </header>
 
@@ -405,22 +415,20 @@ function TranslationsSection() {
             className={`translations__tab${activeTab === tab.key ? " translations__tab--active" : ""}`}
             onClick={() => handleTabChange(tab.key)}
           >
-            {tab.label}
+            {tabLabels[tab.key]}
           </button>
         ))}
       </div>
 
       {displayLanguages.length === 0 && (
-        <p className="admin-section__description">
-          No additional languages configured. Add languages in Settings to enable translations.
-        </p>
+        <p className="admin-section__description">{strings.translations.noLanguages}</p>
       )}
 
       {displayLanguages.length > 0 && (
         <div className="translations__table-wrapper">
           <div className="translations__table">
             <div className="translations__table-header">
-              <div className="translations__col-name">Name</div>
+              <div className="translations__col-name">{strings.translations.name}</div>
               {displayLanguages.map((lang) => (
                 <div key={lang} className="translations__col-lang">
                   {LANGUAGE_NAMES[lang] ?? lang}
@@ -429,7 +437,9 @@ function TranslationsSection() {
             </div>
 
             {(list as Array<Record<string, unknown>>).length === 0 && (
-              <p className="admin-section__description">No {activeTab}s found.</p>
+              <p className="admin-section__description">
+                {strings.translations.empty(tabLabels[activeTab])}
+              </p>
             )}
 
             {(list as Array<Record<string, unknown>>).map((entity: Record<string, unknown>) => {
@@ -456,8 +466,8 @@ function TranslationsSection() {
                           }
                           title={
                             hasTranslation
-                              ? `Edit ${LANGUAGE_NAMES[lang] ?? lang} translation`
-                              : `Add ${LANGUAGE_NAMES[lang] ?? lang} translation`
+                              ? strings.translations.badge.edit(LANGUAGE_NAMES[lang] ?? lang)
+                              : strings.translations.badge.add(LANGUAGE_NAMES[lang] ?? lang)
                           }
                         >
                           {lang.toUpperCase()}
@@ -472,7 +482,7 @@ function TranslationsSection() {
 
           {tabLoading && (
             <div className="translations__loading-overlay">
-              <span>Loading...</span>
+              <span>{strings.translations.loading}</span>
             </div>
           )}
         </div>

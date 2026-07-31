@@ -3,6 +3,7 @@ import Modal from "@/features/admin/components/Modal"
 import TextField from "@/features/admin/components/TextField"
 import { useToast } from "@/features/admin/hooks/toastContext"
 import { useAdminStrings } from "@/features/admin/strings"
+import { LANGUAGE_NAMES } from "@/features/admin/constants/settingsOptions"
 import type {
   AdminAllergen,
   AdminCategoryWithTranslations,
@@ -61,32 +62,6 @@ type TranslationEditModalProps = {
   onClose: () => void
   onSave: (formData: Record<string, string>) => Promise<void>
   onDelete: () => Promise<void>
-}
-
-const LANGUAGE_NAMES: Record<string, string> = {
-  en: "English",
-  uk: "Українська",
-  de: "Deutsch",
-  fr: "Français",
-  pl: "Polski",
-  es: "Español",
-  it: "Italiano",
-  pt: "Português",
-  nl: "Nederlands",
-  ro: "Română",
-  bg: "Български",
-  cs: "Čeština",
-  da: "Dansk",
-  el: "Ελληνικά",
-  et: "Eesti",
-  fi: "Suomi",
-  hu: "Magyar",
-  lt: "Lietuvių",
-  lv: "Latviešu",
-  sk: "Slovenčina",
-  sl: "Slovenščina",
-  sv: "Svenska",
-  tr: "Türkçe",
 }
 
 function getPrimaryValue(entity: Entity, field: string): string {
@@ -166,10 +141,12 @@ function TranslationEditModal({
 
       await onSave(payload)
 
-      toast.success(isNew ? "Translation added" : "Translation saved")
+      toast.success(
+        isNew ? strings.translations.modal.toasts.added : strings.translations.modal.toasts.saved,
+      )
       onClose()
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to save translation.")
+      toast.error(err instanceof Error ? err.message : strings.translations.modal.toasts.saveFailed)
     } finally {
       setSubmitting(false)
     }
@@ -180,10 +157,12 @@ function TranslationEditModal({
     try {
       await onDelete()
 
-      toast.success("Translation deleted")
+      toast.success(strings.translations.modal.toasts.deleted)
       onClose()
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to delete translation.")
+      toast.error(
+        err instanceof Error ? err.message : strings.translations.modal.toasts.deleteFailed,
+      )
     } finally {
       setSubmitting(false)
     }
@@ -193,14 +172,20 @@ function TranslationEditModal({
 
   return (
     <Modal
-      title={`${isNew ? "Add" : "Edit"} ${languageName} translation`}
+      title={
+        isNew
+          ? strings.translations.modal.addTitle(languageName)
+          : strings.translations.modal.editTitle(languageName)
+      }
       onClose={onClose}
       closeDisabled={submitting}
       className="admin-modal--translation"
     >
       <div className="translation-modal__body">
         <div className="translation-modal__reference">
-          <h3 className="translation-modal__column-title">{primaryLanguageName} (original)</h3>
+          <h3 className="translation-modal__column-title">
+            {strings.translations.modal.original(primaryLanguageName)}
+          </h3>
           <div className="translation-modal__reference-fields">
             {translateFields.map((field) => (
               <div key={field} className="translation-modal__field">
@@ -246,7 +231,7 @@ function TranslationEditModal({
             onClick={handleDelete}
             disabled={submitting}
           >
-            Delete translation
+            {strings.translations.modal.delete}
           </button>
         )}
         <div className="translation-modal__actions-right">

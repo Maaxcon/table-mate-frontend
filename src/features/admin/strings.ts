@@ -306,6 +306,41 @@ export function useAdminStrings() {
         },
       },
     },
+    translations: {
+      title: t("admin.translations.title"),
+      primaryLanguage: t("admin.translations.primaryLanguage"),
+      name: t("admin.translations.name"),
+      noLanguages: t("admin.translations.noLanguages"),
+      empty: (entity: string) => t("admin.translations.empty", { entity }),
+      loading: t("admin.translations.loading"),
+      tabs: {
+        menu: t("admin.translations.tabs.menu"),
+        category: t("admin.translations.tabs.category"),
+        item: t("admin.translations.tabs.item"),
+        allergen: t("admin.translations.tabs.allergen"),
+        ingredient: t("admin.translations.tabs.ingredient"),
+        restaurant: t("admin.translations.tabs.restaurant"),
+        zone: t("admin.translations.tabs.zone"),
+        table: t("admin.translations.tabs.table"),
+      },
+      badge: {
+        add: (language: string) => t("admin.translations.badge.add", { language }),
+        edit: (language: string) => t("admin.translations.badge.edit", { language }),
+      },
+      modal: {
+        addTitle: (language: string) => t("admin.translations.modal.addTitle", { language }),
+        editTitle: (language: string) => t("admin.translations.modal.editTitle", { language }),
+        original: (language: string) => t("admin.translations.modal.original", { language }),
+        delete: t("admin.translations.modal.delete"),
+        toasts: {
+          added: t("admin.translations.modal.toasts.added"),
+          saved: t("admin.translations.modal.toasts.saved"),
+          deleted: t("admin.translations.modal.toasts.deleted"),
+          saveFailed: t("admin.translations.modal.toasts.saveFailed"),
+          deleteFailed: t("admin.translations.modal.toasts.deleteFailed"),
+        },
+      },
+    },
     forms: {
       saved: t("admin.forms.saved"),
       saveFailed: t("admin.forms.saveFailed"),
@@ -502,6 +537,7 @@ export function useAdminStrings() {
       allergens: {
         label: t("admin.menu.allergens.label"),
         placeholder: t("admin.menu.allergens.placeholder"),
+        add: t("admin.menu.allergens.add"),
         remove: (item: string) => t("admin.menu.allergens.remove", { item }),
       },
       toolbar: {
