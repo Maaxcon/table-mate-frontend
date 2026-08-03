@@ -20,7 +20,6 @@ export type AddCartItem = {
 
 export type AdminAllergen = {
   readonly public_id: string
-  key: string
   name: string
   sort_order?: number
   readonly translations: Array<{
@@ -32,7 +31,6 @@ export type AdminAllergen = {
 
 export type AdminIngredient = {
   readonly public_id: string
-  key: string
   name: string
   sort_order?: number
   readonly translations: Array<{
@@ -683,7 +681,6 @@ export type PaginatedZoneList = {
 
 export type PatchedAdminAllergen = {
   readonly public_id?: string
-  key?: string
   name?: string
   sort_order?: number
   readonly translations?: Array<{
@@ -695,7 +692,6 @@ export type PatchedAdminAllergen = {
 
 export type PatchedAdminIngredient = {
   readonly public_id?: string
-  key?: string
   name?: string
   sort_order?: number
   readonly translations?: Array<{
@@ -1507,13 +1503,11 @@ export type ZoneUpdate = {
 }
 
 export type AdminAllergenWritable = {
-  key: string
   name: string
   sort_order?: number
 }
 
 export type AdminIngredientWritable = {
-  key: string
   name: string
   sort_order?: number
 }
@@ -1865,13 +1859,11 @@ export type PaginatedZoneListWritable = {
 }
 
 export type PatchedAdminAllergenWritable = {
-  key?: string
   name?: string
   sort_order?: number
 }
 
 export type PatchedAdminIngredientWritable = {
-  key?: string
   name?: string
   sort_order?: number
 }

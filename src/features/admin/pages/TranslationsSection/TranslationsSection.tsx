@@ -91,7 +91,7 @@ function getEntityName(
 }
 
 function getEntityId(entity: Record<string, unknown>): string {
-  return (entity.public_id as string) ?? (entity.key as string) ?? ""
+  return (entity.public_id as string) ?? ""
 }
 
 const TABS: { key: TabKey; label: string }[] = [

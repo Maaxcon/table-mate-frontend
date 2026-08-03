@@ -45,7 +45,6 @@ export type AdminMenuItemWithTranslations = Omit<AdminMenuItem, "translations"> 
 
 export type AdminAllergen = {
   public_id: string
-  key: string
   name: string
   sort_order: number
   translations: AllergenTranslation[]
@@ -60,7 +59,6 @@ export type AllergenTranslation = {
 
 export type AdminIngredient = {
   public_id: string
-  key: string
   name: string
   sort_order: number
   translations: IngredientTranslation[]
