@@ -86,6 +86,38 @@ export type TableTranslation = {
   public_number: string
 }
 
+export type LayoutEntityTranslation = {
+  entity_id: string
+  language_code: string
+  label: string
+}
+
+export type FloorZoneEdgeStyles = {
+  top: "dashed" | "solid"
+  right: "dashed" | "solid"
+  bottom: "dashed" | "solid"
+  left: "dashed" | "solid"
+}
+
+export type AdminFloorZone = {
+  public_id: string
+  name: string
+  sort_order?: number
+  canvas_cols?: number
+  canvas_rows?: number
+  edge_styles?: FloorZoneEdgeStyles
+}
+
+export type AdminLayoutEntity = {
+  /** Stable id in the layout JSON — threshold/portal id, or a table's public_id. */
+  id: string
+  type: "table-square" | "table-round" | "threshold" | "portal"
+  /** Default-locale label (table public_number, threshold/portal label). */
+  label: string
+  zoneId?: string
+  translations: LayoutEntityTranslation[]
+}
+
 export type AdminZone = {
   public_id: string
   name: string
