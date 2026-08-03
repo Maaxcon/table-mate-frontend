@@ -41,6 +41,9 @@ export function PreorderDialog({ booking, onClose, onCancelled }: PreorderDialog
     // eslint-disable-next-line react-hooks/exhaustive-deps -- only re-fetch on a different booking
   }, [booking.public_id])
 
+  // The server refuses the whole pre-order once the kitchen has started any
+  // round of it, and says so — better than "try again", which never works from
+  // that point on. Re-read the pre-order after a refusal so the button locks.
   const handleCancel = async () => {
     setCancelling(true)
     setCancelError(null)
@@ -48,8 +51,12 @@ export function PreorderDialog({ booking, onClose, onCancelled }: PreorderDialog
       await cancelPreorder(booking.public_id)
       onCancelled()
       onClose()
-    } catch {
-      setCancelError(strings.bookings.preorderCancelError)
+    } catch (err) {
+      const message = err instanceof Error ? err.message.trim() : ""
+      setCancelError(message || strings.bookings.preorderCancelError)
+      fetchPreorder(booking.public_id)
+        .then(setPreorder)
+        .catch(() => {})
     } finally {
       setCancelling(false)
     }
