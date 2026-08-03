@@ -56,6 +56,12 @@ jobs:
       # never caught the drift it exists to catch.
       - name: Pick the backend ref to check against
         id: backend-ref
+        # Runs from the workspace root, not the checked-out frontend: checkout
+        # writes a repo-local http.<github>.extraheader holding *this* repo's
+        # token, and that header wins over credentials in the URL — so asking
+        # about the backend from inside table-mate-frontend authenticates with
+        # the wrong token, fails, and silently falls back to dev every time.
+        working-directory: ${{ github.workspace }}
         env:
           TOKEN: ${{ secrets.DEPENDENCY_ACCESS_TOKEN }}
           BRANCH: ${{ github.head_ref || github.ref_name }}
