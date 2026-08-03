@@ -791,6 +791,7 @@ export type PatchedSession = {
 }
 
 export type PatchedShiftWrite = {
+  readonly public_id?: string
   employee?: string
   date?: string
   start_time?: string
@@ -1070,6 +1071,7 @@ export type Shift = {
 }
 
 export type ShiftWrite = {
+  readonly public_id: string
   employee: string
   date: string
   start_time: string
@@ -1709,6 +1711,14 @@ export type PatchedSessionWritable = {
   status?: SessionStatusEnum
 }
 
+export type PatchedShiftWriteWritable = {
+  employee?: string
+  date?: string
+  start_time?: string
+  end_time?: string
+  notes?: string
+}
+
 export type PatchedTicketWritable = {
   session?: string
   order?: string
@@ -1788,6 +1798,14 @@ export type SessionWritable = {
 }
 
 export type ShiftWritable = {
+  employee: string
+  date: string
+  start_time: string
+  end_time: string
+  notes?: string
+}
+
+export type ShiftWriteWritable = {
   employee: string
   date: string
   start_time: string
@@ -4142,7 +4160,7 @@ export type ShiftsListResponses = {
 export type ShiftsListResponse = ShiftsListResponses[keyof ShiftsListResponses]
 
 export type ShiftsCreateData = {
-  body: ShiftWrite
+  body: ShiftWriteWritable
   path?: never
   query?: never
   url: "/api/shifts/"
@@ -4188,7 +4206,7 @@ export type ShiftsRetrieveResponses = {
 export type ShiftsRetrieveResponse = ShiftsRetrieveResponses[keyof ShiftsRetrieveResponses]
 
 export type ShiftsPartialUpdateData = {
-  body?: PatchedShiftWrite
+  body?: PatchedShiftWriteWritable
   path: {
     public_id: string
   }
