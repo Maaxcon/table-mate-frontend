@@ -143,6 +143,7 @@ export function useWaiterStrings() {
       title: t("admin.waiter.preorderModal.title"),
       loading: t("admin.waiter.preorderModal.loading"),
       empty: t("admin.waiter.preorderModal.empty"),
+      loadError: t("admin.waiter.preorderModal.loadError"),
       total: t("admin.waiter.preorderModal.total"),
       cancel: t("admin.waiter.preorderModal.cancel"),
       cancelling: t("admin.waiter.preorderModal.cancelling"),

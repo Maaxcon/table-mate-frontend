@@ -82,8 +82,9 @@ export async function fetchReservations(signal?: AbortSignal): Promise<Reservati
   return (data.results ?? []).map(mapReservationItem)
 }
 
-// What the guest pre-ordered for this reservation, or null if there's none
-// (204) or it couldn't be loaded.
+// What the guest pre-ordered for this reservation, or null when the booking
+// genuinely has none (204). Anything else throws: folding a 500 or a 403 into
+// the same null told the waiter there was no food coming when there was.
 export async function fetchPreorder(
   reservationId: string,
   signal?: AbortSignal,
@@ -92,7 +93,8 @@ export async function fetchPreorder(
     `/api/reservations/reservations/${reservationId}/preorder/`,
     signal ? { signal } : undefined,
   )
-  if (res.status === 204 || !res.ok) return null
+  if (res.status === 204) return null
+  if (!res.ok) throw new Error(`${res.status} ${res.statusText}`)
   const data = (await res.json()) as PreorderDetail
   return {
     currency: data.currency,

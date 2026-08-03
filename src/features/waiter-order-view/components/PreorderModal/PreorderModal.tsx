@@ -22,6 +22,7 @@ export function PreorderModal({ reservation, onClose, onCancelled }: PreorderMod
 
   // undefined = still loading, null = loaded and there's none.
   const [preorder, setPreorder] = useState<Preorder | null | undefined>(undefined)
+  const [loadError, setLoadError] = useState<string | null>(null)
   const [cancelling, setCancelling] = useState(false)
   const [cancelError, setCancelError] = useState<string | null>(null)
 
@@ -31,12 +32,15 @@ export function PreorderModal({ reservation, onClose, onCancelled }: PreorderMod
       .then((p) => {
         if (!stale) setPreorder(p)
       })
+      // A failed load is not an empty pre-order. Saying "none found" here sent
+      // the waiter away from a table that does have food coming.
       .catch(() => {
-        if (!stale) setPreorder(null)
+        if (!stale) setLoadError(strings.loadError)
       })
     return () => {
       stale = true
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only re-fetch on a different reservation
   }, [reservation.public_id])
 
   const handleCancel = async () => {
@@ -90,7 +94,11 @@ export function PreorderModal({ reservation, onClose, onCancelled }: PreorderMod
         </div>
 
         <div className="preorder-modal__body">
-          {preorder === undefined ? (
+          {loadError ? (
+            <p className="preorder-modal__error" role="alert">
+              {loadError}
+            </p>
+          ) : preorder === undefined ? (
             <p className="preorder-modal__hint">{strings.loading}</p>
           ) : preorder === null ? (
             <p className="preorder-modal__hint">{strings.empty}</p>

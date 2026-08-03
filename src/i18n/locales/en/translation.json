@@ -1195,6 +1195,7 @@
         "title": "Pre-order",
         "loading": "Loading pre-order…",
         "empty": "No pre-order found.",
+        "loadError": "Could not load the pre-order. Please try again.",
         "total": "Total",
         "cancel": "Cancel pre-order",
         "cancelling": "Cancelling…",
