@@ -1,10 +1,11 @@
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useFocusTrap } from "@/hooks/useFocusTrap"
 import type { MenuCategory, MenuItem } from "@/types/api/types.gen"
 import {
   createOrderWithItems,
   fetchCategories,
   fetchMenuItems,
+  fetchUpsells,
   searchMenuItems,
   type CreateOrderItem,
 } from "../../api/orderApi"
@@ -43,7 +44,9 @@ export function OrderCreationModal({
   const [loadingItems, setLoadingItems] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
   const [draftItems, setDraftItems] = useState<DraftItem[]>([])
+  const [upsells, setUpsells] = useState<MenuItem[]>([])
   const [submitting, setSubmitting] = useState(false)
+  const upsellRequestRef = useRef(0)
   const requestClose = useCallback(() => {
     if (!submitting) onClose()
   }, [submitting, onClose])
@@ -78,6 +81,29 @@ export function OrderCreationModal({
       : menuItems
   }, [menuItems, selectedCategoryId, searchQuery])
 
+  const loadUpsells = useCallback(
+    (item: MenuItem) => {
+      const requestId = upsellRequestRef.current + 1
+      upsellRequestRef.current = requestId
+      setUpsells([])
+      void fetchUpsells(item.public_id, restaurantId)
+        .then(({ results }) => {
+          if (requestId === upsellRequestRef.current) setUpsells(results)
+        })
+        .catch(() => {
+          if (requestId === upsellRequestRef.current) setUpsells([])
+        })
+    },
+    [restaurantId],
+  )
+
+  useEffect(
+    () => () => {
+      upsellRequestRef.current += 1
+    },
+    [],
+  )
+
   const addItem = (item: MenuItem) => {
     setDraftItems((prev) => {
       const existing = prev.find((d) => d.menu_item_id === item.public_id)
@@ -98,6 +124,7 @@ export function OrderCreationModal({
         },
       ]
     })
+    loadUpsells(item)
   }
 
   const updateDraft = (menuItemId: string, patch: Partial<DraftItem>) => {
@@ -197,6 +224,24 @@ export function OrderCreationModal({
           </div>
 
           <div className="ocm__grid">
+            {upsells.length > 0 && (
+              <section className="ocm__upsells" aria-label={orderStrings.upsells.title}>
+                <span className="ocm__upsells-title">{orderStrings.upsells.title}</span>
+                <div className="ocm__upsells-list">
+                  {upsells.map((upsell) => (
+                    <button
+                      key={upsell.public_id}
+                      type="button"
+                      className="ocm__upsell"
+                      onClick={() => addItem(upsell)}
+                    >
+                      <span>{upsell.name}</span>
+                      <span>&euro;{upsell.price} +</span>
+                    </button>
+                  ))}
+                </div>
+              </section>
+            )}
             {loadingItems ? (
               <p className="ocm__loading">{orderStrings.loading}</p>
             ) : filteredMenuItems.length === 0 ? (

@@ -14,6 +14,7 @@ import type {
   PublicRestaurant,
   SortOrder,
   ToggleLikeResponse,
+  UpsellSuggestionResponse,
   UpdateCartItemRequest,
 } from "./types"
 
@@ -120,6 +121,19 @@ export async function fetchItem(
   if (res.status === 404) return null
   if (!res.ok) throw await httpError(res)
   return res.json() as Promise<MenuItem>
+}
+
+export function fetchUpsells(
+  restaurantId: string,
+  itemPublicId: string,
+  guestToken?: string,
+  signal?: AbortSignal,
+): Promise<UpsellSuggestionResponse> {
+  return menuGet(
+    MENU_API.upsells(itemPublicId),
+    { restaurant: restaurantId, guest_token: guestToken },
+    signal,
+  )
 }
 
 export function searchItems(

@@ -165,6 +165,9 @@ export function useWaiterStrings() {
       },
       loading: t("admin.waiter.orderModal.loading"),
       empty: t("admin.waiter.orderModal.empty"),
+      upsells: {
+        title: t("admin.waiter.orderModal.upsells.title"),
+      },
       summary: {
         title: t("admin.waiter.orderModal.summary.title"),
         empty: t("admin.waiter.orderModal.summary.empty"),

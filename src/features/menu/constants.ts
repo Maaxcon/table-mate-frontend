@@ -5,6 +5,7 @@ export const MENU_API = {
   items: "/api/menu/items/",
   itemsSearch: "/api/menu/items/search/",
   item: (itemId: string) => `/api/menu/items/${itemId}/`,
+  upsells: (itemId: string) => `/api/menu/items/${itemId}/upsells/`,
   toggleLike: (itemId: string) => `/api/menu/items/${itemId}/toggle-like/`,
   restaurantPublic: (restaurantId: string) =>
     `/api/restaurants/restaurants-public/${restaurantId}/`,

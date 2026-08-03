@@ -143,6 +143,8 @@ export function useMenuStrings() {
       close: t("menu.item.close"),
       commentLabel: t("menu.item.commentLabel"),
       commentPlaceholder: t("menu.item.commentPlaceholder"),
+      upsells: t("menu.item.upsells"),
+      addSuggestion: (name: string) => t("menu.item.addSuggestion", { name }),
     },
     info: {
       heading: t("menu.info.heading"),

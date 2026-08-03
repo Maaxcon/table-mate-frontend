@@ -14,6 +14,7 @@ import {
   LuFlame,
 } from "react-icons/lu"
 import type { MenuItem } from "@/features/menu/types"
+import { fetchUpsells } from "@/features/menu/api"
 import { useFocusTrap } from "@/hooks/useFocusTrap"
 import { formatPrice } from "@/features/menu/utils"
 import { useMenuStrings } from "@/features/menu/strings"
@@ -44,20 +45,40 @@ function getAllergenInfo(name: string): AllergenInfo {
 
 type MenuItemModalProps = {
   item: MenuItem
+  restaurantId: string
+  guestToken?: string
   currencySymbol: string
   onClose: () => void
   onAddToCart: (item: MenuItem, comment?: string) => void
 }
 
-function MenuItemModal({ item, currencySymbol, onClose, onAddToCart }: MenuItemModalProps) {
+function MenuItemModal({
+  item,
+  restaurantId,
+  guestToken,
+  currencySymbol,
+  onClose,
+  onAddToCart,
+}: MenuItemModalProps) {
   const menuStrings = useMenuStrings()
   const [added, setAdded] = useState(false)
   const [comment, setComment] = useState("")
+  const [upsells, setUpsells] = useState<MenuItem[]>([])
   const commentId = useId()
   const closeTimerRef = useRef<number | null>(null)
   // Focus trap + Esc-to-close + focus restore (focuses the close button first).
   const dialogRef = useFocusTrap<HTMLDivElement>({ onEscape: onClose })
   const hasWeight = item.weight_grams != null && item.weight_grams > 0
+
+  useEffect(() => {
+    const controller = new AbortController()
+    void fetchUpsells(restaurantId, item.public_id, guestToken, controller.signal)
+      .then(({ results }) => setUpsells(results))
+      .catch((error: unknown) => {
+        if (!(error instanceof DOMException && error.name === "AbortError")) setUpsells([])
+      })
+    return () => controller.abort()
+  }, [guestToken, item.public_id, restaurantId])
 
   const handleAdd = () => {
     // Guard against double/triple taps: once a tap has armed the auto-close
@@ -151,6 +172,28 @@ function MenuItemModal({ item, currencySymbol, onClose, onAddToCart }: MenuItemM
                 })}
               </div>
             </div>
+          )}
+
+          {upsells.length > 0 && (
+            <section className="menu-modal__upsells" aria-label={menuStrings.item.upsells}>
+              <p className="menu-modal__section-label">{menuStrings.item.upsells}</p>
+              <div className="menu-modal__upsell-list">
+                {upsells.map((upsell) => (
+                  <button
+                    key={upsell.public_id}
+                    type="button"
+                    className="menu-modal__upsell"
+                    onClick={() => onAddToCart(upsell)}
+                    aria-label={menuStrings.item.addSuggestion(upsell.name)}
+                  >
+                    <span className="menu-modal__upsell-name">{upsell.name}</span>
+                    <span className="menu-modal__upsell-price">
+                      {formatPrice(upsell.price)} {currencySymbol} +
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </section>
           )}
 
           {item.is_available && (

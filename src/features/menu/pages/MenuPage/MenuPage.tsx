@@ -613,6 +613,8 @@ function MenuPage() {
       {selectedItem && (
         <MenuItemModal
           item={selectedItem}
+          restaurantId={restaurantId}
+          guestToken={guestAuth.deviceId}
           currencySymbol={currencySymbol}
           onClose={() => setSelectedItem(null)}
           onAddToCart={handleAddToCart}
