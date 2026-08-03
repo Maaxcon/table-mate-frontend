@@ -1,6 +1,16 @@
-import { LuCalendarClock, LuMapPin, LuTable2, LuUsers } from "react-icons/lu"
+import { useState } from "react"
+import {
+  LuCalendarClock,
+  LuFlame,
+  LuMapPin,
+  LuTable2,
+  LuUsers,
+  LuUtensilsCrossed,
+} from "react-icons/lu"
+import { useNavigate } from "react-router-dom"
 import { useCabinetStrings } from "@/features/cabinet/strings"
 import type { Reservation } from "@/features/cabinet/types"
+import { PreorderDialog } from "@/features/cabinet/components/PreorderDialog/PreorderDialog"
 import "./BookingsList.css"
 
 type BookingsListProps = {
@@ -37,6 +47,12 @@ export function BookingsList({
   onLoadMore,
 }: BookingsListProps) {
   const strings = useCabinetStrings()
+  const navigate = useNavigate()
+
+  const [viewingPreorder, setViewingPreorder] = useState<Reservation | null>(null)
+  // Bookings whose pre-order was just cancelled — hides the entry point
+  // without needing to re-fetch the whole booking list.
+  const [cancelledPreorderIds, setCancelledPreorderIds] = useState<Set<string>>(new Set())
 
   return (
     <section className="cabinet-section" aria-labelledby="cabinet-bookings-title">
@@ -58,6 +74,8 @@ export function BookingsList({
               const restaurantName =
                 booking.restaurant_info?.name ?? strings.bookings.fallbackRestaurant
               const isBusy = actionId === booking.public_id
+              const showsPreorder =
+                booking.has_preorder && !cancelledPreorderIds.has(booking.public_id)
 
               return (
                 <li key={booking.public_id} className="booking-card">
@@ -89,13 +107,42 @@ export function BookingsList({
                         {booking.guest_count} {strings.bookings.guestLabel(booking.guest_count)}
                       </span>
                     </p>
+                    {showsPreorder && (
+                      <button
+                        type="button"
+                        className={`booking-card__preorder-toggle${booking.preorder_cooking ? " booking-card__preorder-toggle--cooking" : ""}`}
+                        onClick={() => setViewingPreorder(booking)}
+                      >
+                        {booking.preorder_cooking ? (
+                          <LuFlame aria-hidden="true" />
+                        ) : (
+                          <LuUtensilsCrossed aria-hidden="true" />
+                        )}
+                        {booking.preorder_cooking
+                          ? strings.bookings.preorderCooking
+                          : strings.bookings.preorderShow}
+                      </button>
+                    )}
                   </div>
+
                   {booking.status === "active" ? (
                     <p className="booking-card__row booking-card__row--muted">
                       {strings.bookings.activeNote}
                     </p>
                   ) : (
                     <div className="booking-card__actions">
+                      {booking.status === "pending" && (
+                        <button
+                          type="button"
+                          className="booking-card__btn booking-card__btn--preorder"
+                          onClick={() =>
+                            navigate(`/menu/${booking.restaurant}?reservation=${booking.public_id}`)
+                          }
+                          disabled={isBusy}
+                        >
+                          {strings.bookings.preorder}
+                        </button>
+                      )}
                       <button
                         type="button"
                         className="booking-card__btn"
@@ -124,6 +171,16 @@ export function BookingsList({
             </button>
           )}
         </>
+      )}
+
+      {viewingPreorder && (
+        <PreorderDialog
+          booking={viewingPreorder}
+          onClose={() => setViewingPreorder(null)}
+          onCancelled={() =>
+            setCancelledPreorderIds((prev) => new Set(prev).add(viewingPreorder.public_id))
+          }
+        />
       )}
     </section>
   )

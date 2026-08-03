@@ -1,0 +1,276 @@
+.preorder-dialog__overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: var(--color-overlay);
+  animation: preorder-fade 0.15s ease-out;
+}
+
+.preorder-dialog__backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  cursor: default;
+}
+
+.preorder-dialog {
+  position: relative;
+  z-index: 1;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 440px;
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  border-radius: 20px;
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-default);
+  box-shadow: 0 24px 60px rgb(0 0 0 / 30%);
+  overflow: hidden;
+  animation: preorder-pop 0.18s ease-out;
+}
+
+.preorder-dialog__close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 2;
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  font-size: 1.1rem;
+  border-radius: 9px;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  background: var(--color-bg-surface-subtle);
+  border: 1px solid var(--color-border-default);
+}
+
+.preorder-dialog__close:hover {
+  color: var(--color-text-primary);
+  border-color: var(--color-border-strong);
+}
+
+/* Header — no cover photo (a pre-order isn't tied to one), so the elegance
+   comes from restrained typography instead: a small uppercase kicker above
+   the restaurant name, like a menu card or invitation. */
+.preorder-dialog__header {
+  flex: 0 0 auto;
+  padding: 32px 28px 20px;
+  text-align: center;
+  background: linear-gradient(
+    180deg,
+    rgba(var(--color-primary-rgb), 0.07) 0%,
+    rgba(var(--color-primary-rgb), 0) 100%
+  );
+  border-bottom: 1px solid var(--color-border-default);
+}
+
+.preorder-dialog__eyebrow {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--color-primary);
+}
+
+.preorder-dialog__title {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  color: var(--color-text-primary);
+}
+
+.preorder-dialog__subtitle {
+  margin: 6px 0 0;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+
+.preorder-dialog__scroll {
+  overflow-y: auto;
+  padding: 22px 28px 28px;
+}
+
+.preorder-dialog__hint {
+  margin: 8px 0;
+  text-align: center;
+  font-size: 0.88rem;
+  color: var(--color-text-secondary);
+}
+
+.preorder-dialog__error {
+  margin: 8px 0;
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--color-error-text);
+}
+
+/* Dividers */
+.preorder-dialog__divider--dashed {
+  background: none;
+  border-top: 1px dashed var(--color-border-default);
+  height: 0;
+  margin: 18px 0;
+}
+
+/* Items */
+.preorder-dialog__items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.preorder-line {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  font-size: 0.92rem;
+}
+
+.preorder-line__qty {
+  flex: 0 0 auto;
+  min-width: 26px;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+}
+
+.preorder-line__name {
+  flex: 1 1 auto;
+  min-width: 0;
+  color: var(--color-text-primary);
+}
+
+.preorder-line__price {
+  flex: 0 0 auto;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+/* Totals */
+.preorder-dialog__totals {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.preorder-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  font-size: 0.9rem;
+  color: var(--color-text-secondary);
+}
+
+.preorder-row--grand {
+  margin-top: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--color-border-default);
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+
+.preorder-row--grand span:last-child {
+  color: var(--color-success-text);
+}
+
+/* Status pill */
+.preorder-dialog__status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 18px;
+  padding: 10px 14px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-align: center;
+  color: var(--color-success-text);
+  background: var(--color-success-bg);
+  border: 1px solid var(--color-success-border);
+}
+
+.preorder-dialog__status--cooking {
+  color: var(--color-warning-icon);
+  background: var(--color-warning-bg);
+  border-color: rgba(var(--color-warning-rgb), 0.35);
+}
+
+/* Cancel — outlined, not solid: a considered action, not a shout. */
+.preorder-dialog__cancel {
+  display: block;
+  width: 100%;
+  margin-top: 18px;
+  padding: 12px 16px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-align: center;
+  border-radius: 12px;
+  cursor: pointer;
+  color: var(--color-error-text);
+  background: transparent;
+  border: 1px solid var(--color-error-border);
+  transition: background 0.15s ease;
+}
+
+.preorder-dialog__cancel:hover:not(:disabled) {
+  background: var(--color-error-bg);
+}
+
+.preorder-dialog__cancel:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.preorder-dialog__locked {
+  margin: 18px 0 0;
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+@keyframes preorder-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes preorder-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(10px);
+  }
+}
+
+@media (max-width: 480px) {
+  .preorder-dialog__header {
+    padding: 28px 20px 18px;
+  }
+
+  .preorder-dialog__scroll {
+    padding: 20px 20px 22px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .preorder-dialog__overlay,
+  .preorder-dialog {
+    animation: none;
+  }
+}

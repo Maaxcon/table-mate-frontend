@@ -2,7 +2,8 @@ import { apiFetch } from "@/api/client"
 import heroImage from "@/assets/hero.png"
 import i18n from "@/i18n/config"
 import type { MeResponse } from "@/features/auth/types"
-import type { CabinetProfile, HistoryEntry, Reservation } from "./types"
+import type { PreorderDetail } from "@/types/api"
+import type { CabinetProfile, HistoryEntry, Preorder, Reservation } from "./types"
 
 // "Active" bookings are the ones the user can still act on.
 const ACTIVE_STATUSES = new Set(["pending", "active"])
@@ -179,4 +180,46 @@ export async function cancelReservation(publicId: string): Promise<void> {
     body: JSON.stringify({ status: "cancelled" }),
   })
   if (!res.ok) throw new Error(await extractError(res))
+}
+
+// The booking's current paid pre-order, or null if it doesn't have one (204).
+export async function fetchPreorder(reservationId: string): Promise<Preorder | null> {
+  const res = await apiFetch(`/api/reservations/reservations/${reservationId}/preorder/`)
+  if (res.status === 204) return null
+  if (!res.ok) throw new Error(`${res.status} ${res.statusText}`)
+  const data = (await res.json()) as PreorderDetail
+  return {
+    orderId: data.order_id,
+    currency: data.currency,
+    subtotal: Number(data.subtotal),
+    tax: Number(data.tax),
+    serviceCharge: Number(data.service_charge),
+    total: Number(data.total),
+    isCooking: data.is_cooking,
+    canCancel: data.can_cancel,
+    items: data.items.map((i) => ({
+      name: i.name,
+      quantity: i.quantity,
+      unitPrice: Number(i.unit_price),
+      totalPrice: Number(i.total_price),
+    })),
+  }
+}
+
+// Cancel the booking's pre-order (simulated refund). Only works while the
+// kitchen hasn't started it yet — the backend 409s otherwise.
+export async function cancelPreorder(reservationId: string): Promise<void> {
+  const res = await apiFetch(`/api/reservations/reservations/${reservationId}/preorder/`, {
+    method: "DELETE",
+  })
+  if (!res.ok) {
+    const cloned = res.clone()
+    let code: string | undefined
+    try {
+      code = ((await cloned.json()) as { code?: string }).code
+    } catch {
+      // fall through — an uncoded failure translates to the caller's fallback
+    }
+    throw Object.assign(new Error(await extractError(res)), { code })
+  }
 }

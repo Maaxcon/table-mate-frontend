@@ -77,6 +77,15 @@ export function useMenuStrings() {
       confirmedSub: t("menu.cart.confirmedSub"),
       submitting: t("menu.cart.submitting"),
       checkoutError: t("menu.cart.checkoutError"),
+      // Pre-order: guest is paying ahead of arrival, food isn't sent to the
+      // kitchen yet — copy makes that timing explicit instead of implying
+      // it's cooking now.
+      preorderBanner: t("menu.cart.preorderBanner"),
+      preorderCheckout: t("menu.cart.preorderCheckout"),
+      preorderConfirmTitle: t("menu.cart.preorderConfirmTitle"),
+      preorderConfirmYes: t("menu.cart.preorderConfirmYes"),
+      preorderConfirmedTitle: t("menu.cart.preorderConfirmedTitle"),
+      preorderConfirmedSub: t("menu.cart.preorderConfirmedSub"),
       changedTitle: t("menu.cart.changedTitle"),
       changedSub: t("menu.cart.changedSub"),
       confirmRemaining: t("menu.cart.confirmRemaining"),

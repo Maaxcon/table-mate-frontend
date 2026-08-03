@@ -111,6 +111,38 @@
   color: var(--color-text-secondary);
 }
 
+/* ── Pre-order entry point (opens PreorderDialog) ────── */
+.booking-card__preorder-toggle {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  background: rgba(var(--color-primary-rgb), 0.08);
+  border: 1px solid rgba(var(--color-primary-rgb), 0.3);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.booking-card__preorder-toggle:hover {
+  background: rgba(var(--color-primary-rgb), 0.15);
+}
+
+.booking-card__preorder-toggle--cooking {
+  color: var(--color-warning-icon);
+  background: var(--color-warning-bg);
+  border-color: rgba(var(--color-warning-rgb), 0.35);
+}
+
+.booking-card__preorder-toggle--cooking:hover {
+  background: rgba(var(--color-warning-rgb), 0.18);
+}
+
 .booking-card__actions {
   flex: 0 0 auto;
   display: flex;
@@ -141,6 +173,12 @@
   color: var(--color-error-text);
   border-color: var(--color-error-border);
   background: var(--color-error-bg);
+}
+
+.booking-card__btn--preorder {
+  color: var(--color-primary);
+  border-color: rgba(var(--color-primary-rgb), 0.4);
+  background: rgba(var(--color-primary-rgb), 0.08);
 }
 
 .cabinet-bookings__more {

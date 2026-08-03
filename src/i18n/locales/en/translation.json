@@ -87,6 +87,12 @@
       "confirmedSub": "The waiter has received your order",
       "submitting": "Placing order...",
       "checkoutError": "Could not place order. Please try again.",
+      "preorderBanner": "Pre-ordering — your food will start cooking closer to your arrival",
+      "preorderCheckout": "Confirm & Pay",
+      "preorderConfirmTitle": "Pay for your pre-order now?",
+      "preorderConfirmYes": "Yes, pay now",
+      "preorderConfirmedTitle": "Pre-order paid!",
+      "preorderConfirmedSub": "Your food will start cooking closer to your arrival",
       "changedTitle": "Some items are no longer available",
       "changedSub": "These items were removed from your cart. Please review and confirm again:",
       "confirmRemaining": "Confirm remaining",
@@ -307,7 +313,8 @@
         "share": "Share",
         "shareCopied": "Booking details copied",
         "shareUnsupported": "Sharing is not supported on this device",
-        "done": "Done"
+        "done": "Done",
+        "preorder": "Pre-order food"
       },
       "actions": {
         "ok": "OK",
@@ -427,6 +434,20 @@
       "guests_one": "guest",
       "guests_other": "guests",
       "activeNote": "Your table is active — ask the waiter for changes.",
+      "preorder": "Pre-order",
+      "preorderShow": "View pre-order",
+      "preorderCooking": "Being prepared",
+      "preorderLoading": "Loading your order…",
+      "preorderLoadError": "Could not load the pre-order. Please try again.",
+      "preorderEmpty": "No pre-order found.",
+      "preorderEyebrow": "Pre-order",
+      "preorderPaidBadge": "Paid — cooking starts closer to your arrival",
+      "preorderCookingBadge": "Your food is being prepared now",
+      "preorderCancel": "Cancel pre-order",
+      "preorderCancelling": "Cancelling…",
+      "preorderCancelError": "Could not cancel the pre-order. Please try again.",
+      "preorderLocked": "The kitchen has already started this — it can't be cancelled.",
+      "preorderOwnerOnly": "Only the guest who booked the table can cancel this pre-order.",
       "modify": "Modify",
       "cancel": "Cancel",
       "cancelling": "Cancelling...",
@@ -504,7 +525,9 @@
       "close": "Close",
       "search": "Search",
       "connected": "Connected",
-      "disconnected": "Disconnected"
+      "disconnected": "Disconnected",
+      "today": "Today",
+      "tomorrow": "Tomorrow"
     },
     "layout": {
       "brand": "Admin",
@@ -983,6 +1006,7 @@
       }
     },
     "kitchen": {
+      "preorderBadgeAria": "Pre-order",
       "header": {
         "brand": "KITCHEN KANBAN",
         "stationLabel": "STATION:",
@@ -1148,7 +1172,10 @@
           "seat": "Seat",
           "modify": "Modify",
           "cancel": "Cancel",
-          "new": "New reservation"
+          "new": "New reservation",
+          "preorderBadge": "Food pre-ordered and paid",
+          "preorderCooking": "Being prepared",
+          "preorderReady": "Ready to serve"
         },
         "voidReasons": {
           "mispick": "Sent to wrong table",
@@ -1165,11 +1192,25 @@
         "pay": "Pay",
         "paying": "Paying…"
       },
+      "preorderModal": {
+        "title": "Pre-order",
+        "loading": "Loading pre-order…",
+        "empty": "No pre-order found.",
+        "loadError": "Could not load the pre-order. Please try again.",
+        "total": "Total",
+        "cancel": "Cancel pre-order",
+        "cancelling": "Cancelling…",
+        "cancelError": "Could not cancel the pre-order. Please try again.",
+        "locked": "The kitchen has already started this — it can't be cancelled."
+      },
       "reservations": {
         "sidebar": {
           "title": "Next reservations",
           "searchPlaceholder": "Search guests…",
           "guestCount": "{{count}} guests",
+          "preorderBadge": "Food pre-ordered and paid",
+          "preorderCooking": "Being prepared",
+          "preorderReady": "Ready to serve",
           "status": {
             "pending": "Pending",
             "active": "Active",
@@ -1210,8 +1251,11 @@
       "closeCheck": {
         "title": "Close check",
         "message": "There is no payment system yet. Closing the check will end the visit and free the table. Make sure the guests have paid before you continue.",
+        "unservedMessage_one": "{{count}} dish hasn't been served yet. Close anyway?",
+        "unservedMessage_other": "{{count}} dishes haven't been served yet. Close anyway?",
         "cancel": "Cancel",
         "confirm": "Close check",
+        "confirmAnyway": "Close anyway",
         "confirming": "Closing…",
         "closeAria": "Close"
       },
@@ -1532,6 +1576,21 @@
           "alt": "QR code for table {{table}}"
         }
       }
+    }
+  },
+  "errors": {
+    "server": {
+      "preorder_not_allowed": "The kitchen has already started this pre-order, so it can't be changed now.",
+      "unserved_items": "Some items haven't been served yet.",
+      "cart_session_closed": "This cart is already closed. Refresh the page to start a new one.",
+      "empty_cart": "Your cart is empty.",
+      "restaurant_closed": "The restaurant is closed right now.",
+      "table_occupied": "This table's previous visit hasn't ended yet. Please try again shortly.",
+      "menu_item_unavailable": "One of the dishes is no longer available.",
+      "RESERVATION_NOT_YET_ACTIVE": "This booking hasn't started yet.",
+      "NO_ACTIVE_RESERVATION": "This table has no active booking.",
+      "reservation_conflict": "That time is no longer free for this table.",
+      "waiter_call_cooldown": "A waiter was already called for this table. Please wait a moment."
     }
   }
 }

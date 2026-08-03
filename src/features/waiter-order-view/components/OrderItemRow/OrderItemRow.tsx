@@ -25,13 +25,16 @@ export function OrderItemRow({
   const overlayStrings = useWaiterStrings().overlay
   const voidReasonStrings = overlayStrings.voidReasons
   const isVoided = item.status === "voided"
+  const isServed = item.status === "served"
   const reasonKey = item.void_reason != null ? VOID_REASON_LABELS[item.void_reason] : null
   const voidReasonLabel = reasonKey
     ? (voidReasonStrings[reasonKey as keyof typeof voidReasonStrings] ?? reasonKey)
     : null
 
   return (
-    <div className={`order-item-row ${isVoided ? "order-item-row--voided" : ""}`}>
+    <div
+      className={`order-item-row ${isVoided ? "order-item-row--voided" : ""} ${isServed ? "order-item-row--served" : ""}`}
+    >
       <div className="order-item-row__left">
         <span className="order-item-row__name">
           {item.quantity}&times; {item.name}
@@ -54,7 +57,7 @@ export function OrderItemRow({
             SERVED
           </button>
         )}
-        {!isVoided && onVoid && (
+        {!isVoided && !isServed && onVoid && (
           <div
             className="order-item-row__void-wrap"
             onBlur={(e) => {

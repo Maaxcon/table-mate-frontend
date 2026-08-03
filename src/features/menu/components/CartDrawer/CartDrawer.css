@@ -181,6 +181,18 @@
   font-size: 0.85rem;
 }
 
+/* ── Pre-order banner ────────────────────────────────── */
+.cart-drawer__preorder-banner {
+  margin: 12px 24px 0;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--color-primary);
+  background: rgba(var(--color-primary-rgb), 0.08);
+  border: 1px solid rgba(var(--color-primary-rgb), 0.25);
+}
+
 /* ── Toast ───────────────────────────────────────────── */
 .cart-drawer__toast {
   display: flex;

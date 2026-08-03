@@ -1,9 +1,11 @@
 import { apiFetch } from "@/api/client"
+import type { PreorderDetail } from "@/types/api"
 import {
   formatDuration,
   type FloorTable,
   type OverlayDetail,
   type OverlayOrderItem,
+  type Preorder,
   type ReservationItem,
 } from "./types"
 
@@ -18,6 +20,9 @@ interface ReservationApiItem {
   status: string
   notes?: string | null
   customer_name?: string
+  has_preorder?: boolean
+  preorder_cooking?: boolean
+  preorder_ready?: boolean
 }
 
 interface SessionApiItem {
@@ -61,6 +66,9 @@ function mapReservationItem(r: ReservationApiItem): ReservationItem {
     status: r.status as ReservationItem["status"],
     notes: r.notes,
     name: r.customer_name ?? "Guest",
+    has_preorder: r.has_preorder ?? false,
+    preorder_cooking: r.preorder_cooking ?? false,
+    preorder_ready: r.preorder_ready ?? false,
   }
 }
 
@@ -72,6 +80,54 @@ export async function fetchReservations(signal?: AbortSignal): Promise<Reservati
   if (!res.ok) return null
   const data = (await res.json()) as { results?: ReservationApiItem[] }
   return (data.results ?? []).map(mapReservationItem)
+}
+
+// What the guest pre-ordered for this reservation, or null when the booking
+// genuinely has none (204). Anything else throws: folding a 500 or a 403 into
+// the same null told the waiter there was no food coming when there was.
+export async function fetchPreorder(
+  reservationId: string,
+  signal?: AbortSignal,
+): Promise<Preorder | null> {
+  const res = await apiFetch(
+    `/api/reservations/reservations/${reservationId}/preorder/`,
+    signal ? { signal } : undefined,
+  )
+  if (res.status === 204) return null
+  if (!res.ok) throw new Error(`${res.status} ${res.statusText}`)
+  const data = (await res.json()) as PreorderDetail
+  return {
+    currency: data.currency,
+    total: Number(data.total),
+    canCancel: data.can_cancel,
+    items: data.items.map((i) => ({
+      name: i.name,
+      quantity: i.quantity,
+      totalPrice: Number(i.total_price),
+    })),
+  }
+}
+
+// Cancel a reservation's pre-order (simulated refund). Only works while the
+// kitchen hasn't started it yet — the backend rejects it otherwise.
+export async function cancelPreorder(reservationId: string): Promise<void> {
+  const res = await apiFetch(`/api/reservations/reservations/${reservationId}/preorder/`, {
+    method: "DELETE",
+  })
+  if (!res.ok) {
+    let message = res.statusText
+    let code: string | undefined
+    try {
+      const body = (await res.json()) as { detail?: string; code?: string }
+      if (body.detail) message = body.detail
+      if (body.code) code = body.code
+    } catch {
+      // ignore
+    }
+    // The code is what the UI translates off; the message is only a fallback
+    // for a code we don't have a string for.
+    throw Object.assign(new Error(message), { code })
+  }
 }
 
 // ── Open-table overlay ───────────────────────────────────────────────
@@ -103,12 +159,15 @@ const MAX_ITEM_PAGES = 100
 
 // Fetch every order item for a session in one filtered, paginated query —
 // instead of one request per order (the old N+1 waterfall). The BE filter
-// order__session__public_id spans all of the visit's orders/rounds.
+// order__session__public_id spans all of the visit's orders/rounds, and
+// include_served asks for the full bill: the waiter needs served lines too,
+// greyed out rather than gone.
 async function fetchSessionOrderItems(sessionPublicId: string): Promise<OverlayOrderItem[]> {
   const all: OverlayOrderItem[] = []
   for (let page = 1; page <= MAX_ITEM_PAGES; page += 1) {
     const res = await apiFetch(
-      `/api/orders/order-items/?order__session__public_id=${sessionPublicId}&page=${page}`,
+      `/api/orders/order-items/?order__session__public_id=${sessionPublicId}` +
+        `&include_served=true&page=${page}`,
     )
     if (!res.ok) break
     const data = (await res.json()) as { next?: string | null; results?: OrderItemApiItem[] }

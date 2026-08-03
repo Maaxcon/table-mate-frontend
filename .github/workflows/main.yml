@@ -30,22 +30,51 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: Unit tests
+        run: npm test
+
       - name: Smoke test
         run: npm run smoke
 
   api-drift-gate:
     name: Verify API Type Alignment
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
     defaults:
       run:
         working-directory: table-mate-frontend
-        
+
     steps:
       - name: Checkout frontend
         uses: actions/checkout@v4
         with:
           path: table-mate-frontend
+
+      # A cross-repo feature lands under one branch name in both repos, so
+      # check against the matching backend branch when there is one. Comparing
+      # a feature PR against dev would fail on every endpoint its backend PR
+      # adds — which is why this job used to be skipped on PRs entirely, and so
+      # never caught the drift it exists to catch.
+      - name: Pick the backend ref to check against
+        id: backend-ref
+        # Runs from the workspace root, not the checked-out frontend: checkout
+        # writes a repo-local http.<github>.extraheader holding *this* repo's
+        # token, and that header wins over credentials in the URL — so asking
+        # about the backend from inside table-mate-frontend authenticates with
+        # the wrong token, fails, and silently falls back to dev every time.
+        working-directory: ${{ github.workspace }}
+        env:
+          TOKEN: ${{ secrets.DEPENDENCY_ACCESS_TOKEN }}
+          BRANCH: ${{ github.head_ref || github.ref_name }}
+        run: |
+          REMOTE="https://x-access-token:${TOKEN}@github.com/unibrix/table-mate-backend.git"
+          if git ls-remote --exit-code --heads "$REMOTE" "$BRANCH" >/dev/null 2>&1; then
+            echo "ref=$BRANCH" >> "$GITHUB_OUTPUT"
+            echo "Checking against backend branch '$BRANCH'."
+          else
+            echo "ref=dev" >> "$GITHUB_OUTPUT"
+            echo "No backend branch '$BRANCH'; checking against 'dev'."
+            echo "If this PR pairs with a backend PR, give both branches the same name."
+          fi
 
       - name: Checkout backend schema source
         uses: actions/checkout@v4
@@ -53,7 +82,7 @@ jobs:
           repository: unibrix/table-mate-backend
           path: table-mate-backend
           token: ${{ secrets.DEPENDENCY_ACCESS_TOKEN }}
-          ref: dev
+          ref: ${{ steps.backend-ref.outputs.ref }}
           persist-credentials: false
 
       - name: Set up Node

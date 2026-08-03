@@ -1,4 +1,5 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react"
+import { MemoryRouter } from "react-router-dom"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import i18n from "@/i18n/config"
 import { BookModal } from "./BookModal"
@@ -72,15 +73,17 @@ beforeEach(() => {
 describe("BookModal staff guest-name requirement", () => {
   it("disables confirm and blocks submission when the staff flow's guest name is blank", async () => {
     render(
-      <BookModal
-        table={TABLE}
-        workingHours={WORKING_HOURS}
-        showNameField
-        initialDate={FIXED_DATE}
-        initialTime="12:00"
-        onClose={vi.fn()}
-        onSuccess={vi.fn()}
-      />,
+      <MemoryRouter>
+        <BookModal
+          table={TABLE}
+          workingHours={WORKING_HOURS}
+          showNameField
+          initialDate={FIXED_DATE}
+          initialTime="12:00"
+          onClose={vi.fn()}
+          onSuccess={vi.fn()}
+        />
+      </MemoryRouter>,
     )
 
     await waitFor(() =>
@@ -107,15 +110,17 @@ describe("BookModal staff guest-name requirement", () => {
 
   it("allows submission once a guest name is entered in the staff flow", async () => {
     render(
-      <BookModal
-        table={TABLE}
-        workingHours={WORKING_HOURS}
-        showNameField
-        initialDate={FIXED_DATE}
-        initialTime="12:00"
-        onClose={vi.fn()}
-        onSuccess={vi.fn()}
-      />,
+      <MemoryRouter>
+        <BookModal
+          table={TABLE}
+          workingHours={WORKING_HOURS}
+          showNameField
+          initialDate={FIXED_DATE}
+          initialTime="12:00"
+          onClose={vi.fn()}
+          onSuccess={vi.fn()}
+        />
+      </MemoryRouter>,
     )
 
     await waitFor(() =>
@@ -148,14 +153,16 @@ describe("BookModal staff guest-name requirement", () => {
 
   it("does not require a name outside the staff flow (showNameField unset)", async () => {
     render(
-      <BookModal
-        table={TABLE}
-        workingHours={WORKING_HOURS}
-        initialDate={FIXED_DATE}
-        initialTime="12:00"
-        onClose={vi.fn()}
-        onSuccess={vi.fn()}
-      />,
+      <MemoryRouter>
+        <BookModal
+          table={TABLE}
+          workingHours={WORKING_HOURS}
+          initialDate={FIXED_DATE}
+          initialTime="12:00"
+          onClose={vi.fn()}
+          onSuccess={vi.fn()}
+        />
+      </MemoryRouter>,
     )
 
     await waitFor(() =>

@@ -327,6 +327,27 @@
   max-height: clamp(220px, 45vh, 380px);
 }
 
+.overlay__reservation-date-group {
+  margin-bottom: 20px;
+}
+
+.overlay__reservation-date-group:last-child {
+  margin-bottom: 0;
+}
+
+.overlay__reservation-date-heading {
+  display: inline-block;
+  margin-bottom: 10px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--badge-filled-text);
+  background: var(--badge-filled-bg);
+}
+
 .overlay__body-footer--sticky {
   padding: 0 28px 28px;
   border-top: 1px solid var(--color-border-light);
@@ -521,38 +542,125 @@
 .overlay__reservation-info {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 8px;
+  min-width: 0;
+}
+
+.overlay__reservation-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
 }
 
 .overlay__reservation-name {
-  font-size: 0.95rem;
-  font-weight: 700;
+  min-width: 0;
+  font-size: 0.98rem;
+  font-weight: 800;
   color: var(--color-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .overlay__reservation-tag {
-  margin-left: 8px;
-  padding: 1px 6px;
-  font-size: 0.6rem;
+  flex-shrink: 0;
+  padding: 2px 8px;
+  font-size: 0.62rem;
   font-weight: 800;
   letter-spacing: 0.06em;
+  text-transform: uppercase;
   border-radius: var(--w-radius-pill);
-  color: var(--color-bg-secondary);
-  background: var(--color-text-primary);
-  vertical-align: middle;
+  color: var(--color-success-text);
+  background: var(--color-success-bg);
 }
 
+/* Time / guests — icon-labelled chips, matching ReservationSidebar. */
 .overlay__reservation-meta {
-  font-size: 0.75rem;
-  font-weight: 600;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.overlay__reservation-meta-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 9px;
+  border-radius: var(--w-radius-sm);
+  background: var(--color-bg-surface-subtle);
+  color: var(--color-text-primary);
+  font-size: 0.78rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.overlay__reservation-meta-chip svg {
   color: var(--color-text-secondary);
+  flex-shrink: 0;
+}
+
+.overlay__reservation-preorder-chip {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  background: rgba(var(--color-primary-rgb), 0.1);
+  border: 1px solid rgba(var(--color-primary-rgb), 0.3);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.overlay__reservation-preorder-chip:hover {
+  background: rgba(var(--color-primary-rgb), 0.18);
+}
+
+.overlay__reservation-preorder-chip--cooking {
+  color: var(--color-warning-icon);
+  background: var(--color-warning-bg);
+  border-color: rgba(var(--color-warning-rgb), 0.35);
+}
+
+.overlay__reservation-preorder-chip--cooking:hover {
+  background: rgba(var(--color-warning-rgb), 0.18);
+}
+
+.overlay__reservation-preorder-chip--ready {
+  color: var(--color-success);
+  background: var(--color-success-bg);
+  border-color: rgba(var(--color-success-rgb), 0.35);
+}
+
+.overlay__reservation-preorder-chip--ready:hover {
+  background: rgba(var(--color-success-rgb), 0.18);
 }
 
 .overlay__reservation-actions {
+  /* Its own full-width row (not squeezed beside .overlay__reservation-info),
+     and never wraps — 3 buttons shrink together to share the row instead of
+     breaking raggedly under longer translations (e.g. Ukrainian). */
+  flex-basis: 100%;
   display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-  justify-content: flex-end;
+  gap: 6px;
+  flex-wrap: nowrap;
+  margin-top: 6px;
+  padding-top: 12px;
+  border-top: 1px solid var(--color-border-light);
+}
+
+.overlay__reservation-actions .overlay__seat-btn {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 9px 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 @keyframes overlay-shimmer {

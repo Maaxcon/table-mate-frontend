@@ -346,6 +346,7 @@ export function BookingPage() {
           table={selectedTable}
           workingHours={workingHours}
           timeZone={timezone}
+          restaurantId={public_restaurant_id}
           initialDate={slotDate}
           initialTime={slotTime}
           initialGuests={slotGuests}

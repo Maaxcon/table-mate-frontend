@@ -42,6 +42,44 @@ export type ReservationItem = Pick<
 > & {
   table: string
   name: string
+  // Optional: locally-constructed reservation objects (optimistic updates,
+  // tests) don't know this yet. Only the API mapper (features/waiter-order-view/api.ts)
+  // populates it for real.
+  has_preorder?: boolean
+  // True once the kitchen has picked up the pre-order (a Ticket exists) —
+  // distinct from just being paid. Same caveat as has_preorder above.
+  preorder_cooking?: boolean
+  // True once every item on that same pre-order has reached "ready" — the
+  // kitchen is done, not just started. Same caveat as has_preorder above.
+  preorder_ready?: boolean
+}
+
+export type PreorderChipStatus = "paid" | "cooking" | "ready"
+
+// Priority: ready implies cooking implies paid — collapse the three booleans
+// into one state so callers don't re-derive the same ordering themselves.
+export function getPreorderChipStatus(
+  r: Pick<ReservationItem, "preorder_cooking" | "preorder_ready">,
+): PreorderChipStatus {
+  if (r.preorder_ready) return "ready"
+  if (r.preorder_cooking) return "cooking"
+  return "paid"
+}
+
+// A reservation's paid pre-order — what the guest picked ahead of arrival.
+export type PreorderItem = {
+  name: string
+  quantity: number
+  totalPrice: number
+}
+
+export type Preorder = {
+  currency: string
+  total: number
+  items: PreorderItem[]
+  // False once the kitchen has already picked it up — staff can no longer
+  // cancel it from here at that point.
+  canCancel: boolean
 }
 
 export interface OverlayOrderItem {
@@ -91,6 +129,60 @@ export function formatTimeRange(start: string, end?: string | null): string {
   return end
     ? `${getTimeFromDatetime(start)}–${getTimeFromDatetime(end)}`
     : getTimeFromDatetime(start)
+}
+
+function startOfDay(date: Date): Date {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate())
+}
+
+// Stable grouping key for a reservation's date, relative to "now" — "today",
+// "tomorrow", or an ISO "YYYY-MM-DD" for anything further out. Locale-free on
+// purpose so grouping/sorting never depends on how the label is displayed.
+export function dateGroupKey(iso: string, now: Date): string {
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return "unknown"
+  const diffDays = Math.round((startOfDay(d).getTime() - startOfDay(now).getTime()) / 86_400_000)
+  if (diffDays === 0) return "today"
+  if (diffDays === 1) return "tomorrow"
+  const year = d.getFullYear()
+  const month = String(d.getMonth() + 1).padStart(2, "0")
+  const day = String(d.getDate()).padStart(2, "0")
+  return `${year}-${month}-${day}`
+}
+
+// Human label for a dateGroupKey — "Today"/"Tomorrow" (translated by the
+// caller) for those two keys, otherwise a short locale date like "Fri, Aug 1".
+export function formatDateGroupLabel(
+  key: string,
+  todayLabel: string,
+  tomorrowLabel: string,
+  locale?: string,
+): string {
+  if (key === "today") return todayLabel
+  if (key === "tomorrow") return tomorrowLabel
+  const d = new Date(key)
+  if (Number.isNaN(d.getTime())) return key
+  return d.toLocaleDateString(locale, { weekday: "short", month: "short", day: "numeric" })
+}
+
+// Groups reservations by dateGroupKey, preserving each group's relative
+// order, and orders groups today -> tomorrow -> chronological afterwards.
+export function groupReservationsByDate<T extends { start_at: string }>(
+  items: T[],
+  now: Date,
+): [string, T[]][] {
+  const map = new Map<string, T[]>()
+  for (const item of items) {
+    const key = dateGroupKey(item.start_at, now)
+    const group = map.get(key)
+    if (group) group.push(item)
+    else map.set(key, [item])
+  }
+  const rank = (key: string) => (key === "today" ? 0 : key === "tomorrow" ? 1 : 2)
+  return [...map.entries()].sort(([a], [b]) => {
+    const diff = rank(a) - rank(b)
+    return diff !== 0 ? diff : a.localeCompare(b)
+  })
 }
 
 const FIFTEEN_MINUTES_MS = 15 * 60 * 1000
