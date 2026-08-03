@@ -2942,6 +2942,10 @@ export type OrdersOrderItemsListData = {
   body?: never
   path?: never
   query?: {
+    /**
+     * Include served and voided items. Off by default, so the kitchen board only sees outstanding work; the waiter's table overlay sets it to show the full bill.
+     */
+    include_served?: boolean
     is_wasted?: boolean
     menu_item?: number
     order?: number

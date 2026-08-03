@@ -159,12 +159,15 @@ const MAX_ITEM_PAGES = 100
 
 // Fetch every order item for a session in one filtered, paginated query —
 // instead of one request per order (the old N+1 waterfall). The BE filter
-// order__session__public_id spans all of the visit's orders/rounds.
+// order__session__public_id spans all of the visit's orders/rounds, and
+// include_served asks for the full bill: the waiter needs served lines too,
+// greyed out rather than gone.
 async function fetchSessionOrderItems(sessionPublicId: string): Promise<OverlayOrderItem[]> {
   const all: OverlayOrderItem[] = []
   for (let page = 1; page <= MAX_ITEM_PAGES; page += 1) {
     const res = await apiFetch(
-      `/api/orders/order-items/?order__session__public_id=${sessionPublicId}&page=${page}`,
+      `/api/orders/order-items/?order__session__public_id=${sessionPublicId}` +
+        `&include_served=true&page=${page}`,
     )
     if (!res.ok) break
     const data = (await res.json()) as { next?: string | null; results?: OrderItemApiItem[] }
