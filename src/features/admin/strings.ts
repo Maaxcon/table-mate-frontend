@@ -321,7 +321,7 @@ export function useAdminStrings() {
         ingredient: t("admin.translations.tabs.ingredient"),
         restaurant: t("admin.translations.tabs.restaurant"),
         zone: t("admin.translations.tabs.zone"),
-        table: t("admin.translations.tabs.table"),
+        layout: t("admin.translations.tabs.layout"),
       },
       badge: {
         add: (language: string) => t("admin.translations.badge.add", { language }),
@@ -338,6 +338,22 @@ export function useAdminStrings() {
           deleted: t("admin.translations.modal.toasts.deleted"),
           saveFailed: t("admin.translations.modal.toasts.saveFailed"),
           deleteFailed: t("admin.translations.modal.toasts.deleteFailed"),
+        },
+      },
+      layout: {
+        empty: t("admin.translations.layout.empty"),
+        error: t("admin.translations.layout.error"),
+        zones: t("admin.translations.layout.zones"),
+        unassigned: t("admin.translations.layout.unassigned"),
+        edit: (name: string) => t("admin.translations.layout.edit", { name }),
+        modal: {
+          title: (name: string) => t("admin.translations.layout.modal.title", { name }),
+          languages: t("admin.translations.layout.modal.languages"),
+          clearHint: t("admin.translations.layout.modal.clearHint"),
+        },
+        toasts: {
+          saved: t("admin.translations.layout.toasts.saved"),
+          saveFailed: t("admin.translations.layout.toasts.saveFailed"),
         },
       },
     },

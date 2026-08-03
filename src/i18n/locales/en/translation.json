@@ -766,7 +766,7 @@
         "ingredient": "Ingredients",
         "restaurant": "Restaurants",
         "zone": "Zones",
-        "table": "Tables"
+        "layout": "Floor plan"
       },
       "badge": {
         "add": "Add {{language}} translation",
@@ -783,6 +783,22 @@
           "deleted": "Translation deleted",
           "saveFailed": "Failed to save translation.",
           "deleteFailed": "Failed to delete translation."
+        }
+      },
+      "layout": {
+        "empty": "No published floor plan yet.",
+        "error": "Could not load the floor plan.",
+        "zones": "Zones",
+        "unassigned": "Unassigned",
+        "edit": "Edit translations for {{name}}",
+        "modal": {
+          "title": "Translations — {{name}}",
+          "languages": "Languages",
+          "clearHint": "Leave a field empty to remove that translation."
+        },
+        "toasts": {
+          "saved": "Floor plan translations saved.",
+          "saveFailed": "Failed to save floor plan translations."
         }
       }
     },
