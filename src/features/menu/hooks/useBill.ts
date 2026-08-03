@@ -9,7 +9,7 @@ type UseBillOptions = {
 export type UseBillResult = {
   items: BillItem[]
   loading: boolean
-  refresh: () => Promise<void>
+  refresh: () => Promise<BillItem[] | null>
   pay: (orderItemIds: string[]) => Promise<void>
 }
 
@@ -23,12 +23,15 @@ export function useBill({ cartSessionId, guestJwt }: UseBillOptions): UseBillRes
   const [loading, setLoading] = useState(false)
 
   const refresh = useCallback(async () => {
-    if (!cartSessionId || !guestJwt) return
+    if (!cartSessionId || !guestJwt) return null
     setLoading(true)
     try {
-      setItems(await fetchBill(cartSessionId, guestJwt))
+      const items = await fetchBill(cartSessionId, guestJwt)
+      setItems(items)
+      return items
     } catch {
       // Leave the last-known bill in place; the drawer just won't update.
+      return null
     } finally {
       setLoading(false)
     }

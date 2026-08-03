@@ -344,12 +344,17 @@ function MenuPage() {
     }
   }, [groupedItems, hasMore, loadingMore, loadMore, scrollToCategory])
 
-  const handleCartClose = useCallback(() => {
+  const handleCartClose = useCallback(async () => {
     setCartOpen(false)
-    if (lastCompletedOrder) {
+    if (!lastCompletedOrder) return
+    // The feedback prompt must not appear before the guest has paid: ask the
+    // server for the current bill (the pay step is separate from checkout) and
+    // only surface the prompt once every item on the visit is paid.
+    const billItems = await refreshBill()
+    if (billItems && billItems.length > 0 && billItems.every((b) => b.is_paid)) {
       setShowFeedbackPrompt(true)
     }
-  }, [lastCompletedOrder])
+  }, [lastCompletedOrder, refreshBill])
 
   const handleFeedbackPromptOpen = useCallback(() => {
     setShowFeedbackPrompt(false)
