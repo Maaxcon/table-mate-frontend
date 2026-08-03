@@ -48,6 +48,13 @@ jobs:
         uses: actions/checkout@v4
         with:
           path: table-mate-frontend
+          # The PR head, not the merge commit checkout defaults to on
+          # pull_request. The backend below is checked out as its own branch,
+          # unmerged, so pairing a dev-merged frontend with it reports every
+          # endpoint dev has gained since the branch point as drift — types the
+          # backend branch has simply never seen. Compare the two branches as
+          # they are; the test job still builds the merged result.
+          ref: ${{ github.event.pull_request.head.sha || github.ref }}
 
       # A cross-repo feature lands under one branch name in both repos, so
       # check against the matching backend branch when there is one. Comparing
