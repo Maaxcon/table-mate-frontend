@@ -447,6 +447,7 @@
       "preorderCancelling": "Cancelling…",
       "preorderCancelError": "Could not cancel the pre-order. Please try again.",
       "preorderLocked": "The kitchen has already started this — it can't be cancelled.",
+      "preorderOwnerOnly": "Only the guest who booked the table can cancel this pre-order.",
       "modify": "Modify",
       "cancel": "Cancel",
       "cancelling": "Cancelling...",

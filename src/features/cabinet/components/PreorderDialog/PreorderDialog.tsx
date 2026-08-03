@@ -149,16 +149,16 @@ export function PreorderDialog({ booking, onClose, onCancelled }: PreorderDialog
               </div>
 
               <div
-                className={`preorder-dialog__status${!preorder.canCancel ? " preorder-dialog__status--cooking" : ""}`}
+                className={`preorder-dialog__status${preorder.isCooking ? " preorder-dialog__status--cooking" : ""}`}
               >
-                {preorder.canCancel ? (
-                  <LuUtensilsCrossed aria-hidden="true" />
-                ) : (
+                {preorder.isCooking ? (
                   <LuFlame aria-hidden="true" />
+                ) : (
+                  <LuUtensilsCrossed aria-hidden="true" />
                 )}
-                {preorder.canCancel
-                  ? strings.bookings.preorderPaidBadge
-                  : strings.bookings.preorderCookingBadge}
+                {preorder.isCooking
+                  ? strings.bookings.preorderCookingBadge
+                  : strings.bookings.preorderPaidBadge}
               </div>
 
               {cancelError && <p className="preorder-dialog__error">{cancelError}</p>}
@@ -175,7 +175,11 @@ export function PreorderDialog({ booking, onClose, onCancelled }: PreorderDialog
                     : strings.bookings.preorderCancel}
                 </button>
               ) : (
-                <p className="preorder-dialog__locked">{strings.bookings.preorderLocked}</p>
+                <p className="preorder-dialog__locked">
+                  {preorder.isCooking
+                    ? strings.bookings.preorderLocked
+                    : strings.bookings.preorderOwnerOnly}
+                </p>
               )}
             </>
           )}

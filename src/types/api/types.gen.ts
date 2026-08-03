@@ -886,6 +886,7 @@ export type PreorderDetail = {
   tax: string
   service_charge: string
   total: string
+  is_cooking: boolean
   can_cancel: boolean
   items: Array<PreorderItem>
 }
@@ -3609,6 +3610,10 @@ export type ReservationsReservationsPreorderDestroyData = {
 }
 
 export type ReservationsReservationsPreorderDestroyErrors = {
+  /**
+   * Only the booking's owner may cancel.
+   */
+  403: unknown
   /**
    * No pre-order to cancel.
    */

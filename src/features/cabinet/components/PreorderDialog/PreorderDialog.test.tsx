@@ -18,13 +18,16 @@ const booking = {
   table_info: { public_number: "T5" },
 } as Reservation
 
-const preorder = (canCancel: boolean): Preorder => ({
+// isCooking defaults to !canCancel, which is what the existing cases mean:
+// the only reason they can't cancel is that the kitchen started.
+const preorder = (canCancel: boolean, isCooking = !canCancel): Preorder => ({
   orderId: "ord-1",
   currency: "UAH",
   subtotal: 100,
   tax: 10,
   serviceCharge: 5,
   total: 115,
+  isCooking,
   canCancel,
   items: [{ name: "Steak", quantity: 1, unitPrice: 100, totalPrice: 100 }],
 })
@@ -87,5 +90,26 @@ describe("PreorderDialog", () => {
 
     await waitFor(() => expect(onCancelled).toHaveBeenCalledOnce())
     expect(onClose).toHaveBeenCalledOnce()
+  })
+})
+
+describe("PreorderDialog for a participant who isn't the booker", () => {
+  beforeEach(() => {
+    vi.mocked(fetchPreorder).mockReset()
+    vi.mocked(cancelPreorder).mockReset()
+  })
+
+  it("says the booker has to cancel, rather than blaming the kitchen", async () => {
+    // Paid, nothing cooking yet, but this guest didn't make the booking.
+    vi.mocked(fetchPreorder).mockResolvedValue(preorder(false, false))
+
+    render(<PreorderDialog booking={booking} onClose={vi.fn()} onCancelled={vi.fn()} />)
+
+    // Assert through i18n rather than literal copy — the test env renders uk.
+    const ownerOnly = i18n.t("cabinet.bookings.preorderOwnerOnly")
+    const kitchenStarted = i18n.t("cabinet.bookings.preorderLocked")
+    await waitFor(() => expect(screen.getByText(ownerOnly)).toBeTruthy())
+    expect(screen.queryByText(kitchenStarted)).toBeNull()
+    expect(screen.queryByText(i18n.t("cabinet.bookings.preorderCancel"))).toBeNull()
   })
 })

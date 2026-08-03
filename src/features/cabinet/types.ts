@@ -55,6 +55,7 @@ export type Preorder = {
   tax: number
   serviceCharge: number
   total: number
+  isCooking: boolean
   canCancel: boolean
   items: PreorderItem[]
 }

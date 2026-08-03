@@ -65,6 +65,7 @@ export function useCabinetStrings() {
       preorderCancelling: t("cabinet.bookings.preorderCancelling"),
       preorderCancelError: t("cabinet.bookings.preorderCancelError"),
       preorderLocked: t("cabinet.bookings.preorderLocked"),
+      preorderOwnerOnly: t("cabinet.bookings.preorderOwnerOnly"),
       modify: t("cabinet.bookings.modify"),
       cancel: t("cabinet.bookings.cancel"),
       cancelling: t("cabinet.bookings.cancelling"),

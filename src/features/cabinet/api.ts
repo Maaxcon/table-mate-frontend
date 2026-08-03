@@ -195,6 +195,7 @@ export async function fetchPreorder(reservationId: string): Promise<Preorder | n
     tax: Number(data.tax),
     serviceCharge: Number(data.service_charge),
     total: Number(data.total),
+    isCooking: data.is_cooking,
     canCancel: data.can_cancel,
     items: data.items.map((i) => ({
       name: i.name,
