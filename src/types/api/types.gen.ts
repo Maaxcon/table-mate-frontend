@@ -1027,11 +1027,12 @@ export type SessionPayRequest = {
 }
 
 /**
+ * * `scheduled` - Scheduled
  * * `open` - Open
  * * `closed` - Closed
  * * `voided` - Voided
  */
-export type SessionStatusEnum = "open" | "closed" | "voided"
+export type SessionStatusEnum = "scheduled" | "open" | "closed" | "voided"
 
 export type SetGuestName = {
   display_name: string
@@ -3127,11 +3128,12 @@ export type OrdersSessionsListData = {
     page?: number
     reservation?: number
     /**
+     * * `scheduled` - Scheduled
      * * `open` - Open
      * * `closed` - Closed
      * * `voided` - Voided
      */
-    status?: "closed" | "open" | "voided"
+    status?: "closed" | "open" | "scheduled" | "voided"
     table?: number
     table__public_id?: string
   }
