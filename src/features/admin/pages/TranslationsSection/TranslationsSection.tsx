@@ -3,6 +3,7 @@ import "@/features/admin/components/styles/translations.css"
 import { api } from "@/api/client"
 import { useAdminStrings } from "@/features/admin/strings"
 import TranslationEditModal from "@/features/admin/components/TranslationEditModal"
+import LayoutTab from "./LayoutTab"
 import * as menuApi from "@/features/admin/api/menu"
 import { LANGUAGE_NAMES } from "@/features/admin/constants/settingsOptions"
 import type {
@@ -12,7 +13,6 @@ import type {
   AdminMenuItemWithTranslations,
   AdminMenuWithTranslations,
   AdminRestaurantWithTranslations,
-  AdminTableWithTranslations,
   AdminZoneWithTranslations,
   AllergenTranslation,
   IngredientTranslation,
@@ -20,19 +20,10 @@ import type {
   MenuItemTranslation,
   MenuTranslation,
   RestaurantTranslation,
-  TableTranslation,
   ZoneTranslation,
 } from "@/features/admin/types"
 
-type EntityType =
-  | "menu"
-  | "category"
-  | "item"
-  | "allergen"
-  | "ingredient"
-  | "restaurant"
-  | "zone"
-  | "table"
+type EntityType = "menu" | "category" | "item" | "allergen" | "ingredient" | "restaurant" | "zone"
 
 type Translation =
   | MenuTranslation
@@ -42,7 +33,6 @@ type Translation =
   | IngredientTranslation
   | RestaurantTranslation
   | ZoneTranslation
-  | TableTranslation
 
 type TabKey =
   | "menu"
@@ -52,7 +42,7 @@ type TabKey =
   | "ingredient"
   | "restaurant"
   | "zone"
-  | "table"
+  | "layout"
 
 type TranslationModalState = {
   entityType: EntityType
@@ -64,7 +54,6 @@ type TranslationModalState = {
     | AdminIngredient
     | AdminRestaurantWithTranslations
     | AdminZoneWithTranslations
-    | AdminTableWithTranslations
   languageCode: string
   languageName: string
   existingTranslation: Translation | null
@@ -82,11 +71,9 @@ function getEntityName(
     | AdminAllergen
     | AdminIngredient
     | AdminRestaurantWithTranslations
-    | AdminZoneWithTranslations
-    | AdminTableWithTranslations,
+    | AdminZoneWithTranslations,
 ): string {
   if ("name" in entity) return entity.name ?? ""
-  if ("public_number" in entity) return entity.public_number
   return ""
 }
 
@@ -102,7 +89,7 @@ const TABS: { key: TabKey; label: string }[] = [
   { key: "ingredient", label: "ingredient" },
   { key: "restaurant", label: "restaurant" },
   { key: "zone", label: "zone" },
-  { key: "table", label: "table" },
+  { key: "layout", label: "layout" },
 ]
 
 function TranslationsSection() {
@@ -116,7 +103,7 @@ function TranslationsSection() {
     ingredient: strings.translations.tabs.ingredient,
     restaurant: strings.translations.tabs.restaurant,
     zone: strings.translations.tabs.zone,
-    table: strings.translations.tabs.table,
+    layout: strings.translations.tabs.layout,
   }
 
   const [locale, setLocale] = useState<string>("en")
@@ -128,7 +115,6 @@ function TranslationsSection() {
   const [ingredients, setIngredients] = useState<AdminIngredient[]>([])
   const [restaurants, setRestaurants] = useState<AdminRestaurantWithTranslations[]>([])
   const [zones, setZones] = useState<AdminZoneWithTranslations[]>([])
-  const [tables, setTables] = useState<AdminTableWithTranslations[]>([])
   const [initialLoading, setInitialLoading] = useState(true)
   const [tabLoading, setTabLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -154,8 +140,8 @@ function TranslationsSection() {
         return restaurants
       case "zone":
         return zones
-      case "table":
-        return tables
+      case "layout":
+        return []
     }
   }
 
@@ -182,8 +168,7 @@ function TranslationsSection() {
       case "zone":
         setZones(list as AdminZoneWithTranslations[])
         break
-      case "table":
-        setTables(list as AdminTableWithTranslations[])
+      case "layout":
         break
     }
   }
@@ -239,8 +224,8 @@ function TranslationsSection() {
         return menuApi.fetchRestaurantsWithTranslations()
       case "zone":
         return menuApi.fetchZonesWithTranslations()
-      case "table":
-        return menuApi.fetchTablesWithTranslations()
+      case "layout":
+        return []
     }
   }
 
@@ -301,8 +286,7 @@ function TranslationsSection() {
         case "zone":
           data = await menuApi.fetchZonesWithTranslations(controller.signal)
           break
-        case "table":
-          data = await menuApi.fetchTablesWithTranslations(controller.signal)
+        case "layout":
           break
       }
       loadedTabs.current.add(tab)
@@ -336,8 +320,7 @@ function TranslationsSection() {
       | AdminAllergen
       | AdminIngredient
       | AdminRestaurantWithTranslations
-      | AdminZoneWithTranslations
-      | AdminTableWithTranslations,
+      | AdminZoneWithTranslations,
     langCode: string,
   ) => {
     const translations = getTranslations(entity as { translations?: Translation[] })
@@ -367,8 +350,8 @@ function TranslationsSection() {
         return { list: restaurants, entityType: "restaurant" as EntityType }
       case "zone":
         return { list: zones, entityType: "zone" as EntityType }
-      case "table":
-        return { list: tables, entityType: "table" as EntityType }
+      case "layout":
+        return { list: [], entityType: "zone" as EntityType }
     }
   }
 
@@ -399,7 +382,7 @@ function TranslationsSection() {
   const displayLanguages = supportedLanguages.filter((l) => l !== locale)
 
   return (
-    <section className="admin-section">
+    <section className="admin-section admin-section--wide">
       <header className="admin-section__header">
         <h1 className="admin-section__title">{strings.translations.title}</h1>
         <p className="admin-section__description">
@@ -424,68 +407,76 @@ function TranslationsSection() {
         <p className="admin-section__description">{strings.translations.noLanguages}</p>
       )}
 
-      {displayLanguages.length > 0 && (
-        <div className="translations__table-wrapper">
-          <div className="translations__table">
-            <div className="translations__table-header">
-              <div className="translations__col-name">{strings.translations.name}</div>
-              {displayLanguages.map((lang) => (
-                <div key={lang} className="translations__col-lang">
-                  {LANGUAGE_NAMES[lang] ?? lang}
-                </div>
-              ))}
-            </div>
-
-            {(list as Array<Record<string, unknown>>).length === 0 && (
-              <p className="admin-section__description">
-                {strings.translations.empty(tabLabels[activeTab])}
-              </p>
-            )}
-
-            {(list as Array<Record<string, unknown>>).map((entity: Record<string, unknown>) => {
-              const translations = getTranslations(entity as { translations?: Translation[] })
-              const primaryName = getEntityName(entity as AdminMenuWithTranslations)
-
-              return (
-                <div
-                  key={`${entityType}-${getEntityId(entity)}`}
-                  className="translations__table-row"
-                >
-                  <div className="translations__col-name translations__cell-name">
-                    <span className="translations__entity-name">{primaryName}</span>
+      {activeTab === "layout" ? (
+        <LayoutTab locale={locale} supportedLanguages={supportedLanguages} />
+      ) : (
+        displayLanguages.length > 0 && (
+          <div className="translations__table-wrapper">
+            <div className="translations__table">
+              <div className="translations__table-header">
+                <div className="translations__col-name">{strings.translations.name}</div>
+                {displayLanguages.map((lang) => (
+                  <div key={lang} className="translations__col-lang">
+                    {LANGUAGE_NAMES[lang] ?? lang}
                   </div>
-                  {displayLanguages.map((lang) => {
-                    const hasTranslation = translations.some((t) => t.language_code === lang)
-                    return (
-                      <div key={lang} className="translations__col-lang">
-                        <button
-                          type="button"
-                          className={`translations__badge${hasTranslation ? " translations__badge--present" : " translations__badge--missing"}`}
-                          onClick={() =>
-                            handleBadgeClick(entityType, entity as AdminMenuWithTranslations, lang)
-                          }
-                          title={
-                            hasTranslation
-                              ? strings.translations.badge.edit(LANGUAGE_NAMES[lang] ?? lang)
-                              : strings.translations.badge.add(LANGUAGE_NAMES[lang] ?? lang)
-                          }
-                        >
-                          {lang.toUpperCase()}
-                        </button>
-                      </div>
-                    )
-                  })}
-                </div>
-              )
-            })}
-          </div>
+                ))}
+              </div>
 
-          {tabLoading && (
-            <div className="translations__loading-overlay">
-              <span>{strings.translations.loading}</span>
+              {(list as Array<Record<string, unknown>>).length === 0 && (
+                <p className="admin-section__description">
+                  {strings.translations.empty(tabLabels[activeTab])}
+                </p>
+              )}
+
+              {(list as Array<Record<string, unknown>>).map((entity: Record<string, unknown>) => {
+                const translations = getTranslations(entity as { translations?: Translation[] })
+                const primaryName = getEntityName(entity as AdminMenuWithTranslations)
+
+                return (
+                  <div
+                    key={`${entityType}-${getEntityId(entity)}`}
+                    className="translations__table-row"
+                  >
+                    <div className="translations__col-name translations__cell-name">
+                      <span className="translations__entity-name">{primaryName}</span>
+                    </div>
+                    {displayLanguages.map((lang) => {
+                      const hasTranslation = translations.some((t) => t.language_code === lang)
+                      return (
+                        <div key={lang} className="translations__col-lang">
+                          <button
+                            type="button"
+                            className={`translations__badge${hasTranslation ? " translations__badge--present" : " translations__badge--missing"}`}
+                            onClick={() =>
+                              handleBadgeClick(
+                                entityType,
+                                entity as AdminMenuWithTranslations,
+                                lang,
+                              )
+                            }
+                            title={
+                              hasTranslation
+                                ? strings.translations.badge.edit(LANGUAGE_NAMES[lang] ?? lang)
+                                : strings.translations.badge.add(LANGUAGE_NAMES[lang] ?? lang)
+                            }
+                          >
+                            {lang.toUpperCase()}
+                          </button>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )
+              })}
             </div>
-          )}
-        </div>
+
+            {tabLoading && (
+              <div className="translations__loading-overlay">
+                <span>{strings.translations.loading}</span>
+              </div>
+            )}
+          </div>
+        )
       )}
 
       {modal && (
@@ -553,12 +544,6 @@ function TranslationsSection() {
                       name: formData.name,
                     })
                     break
-                  case "table":
-                    await menuApi.createTableTranslation(publicId, {
-                      language_code: languageCode,
-                      public_number: formData.public_number,
-                    })
-                    break
                 }
               } else {
                 const current = Object.fromEntries(
@@ -618,13 +603,6 @@ function TranslationsSection() {
                       updatePayload as never,
                     )
                     break
-                  case "table":
-                    await menuApi.updateTableTranslation(
-                      publicId,
-                      languageCode,
-                      updatePayload as never,
-                    )
-                    break
                 }
               }
             } catch (err) {
@@ -669,9 +647,6 @@ function TranslationsSection() {
                   break
                 case "zone":
                   await menuApi.deleteZoneTranslation(publicId, languageCode)
-                  break
-                case "table":
-                  await menuApi.deleteTableTranslation(publicId, languageCode)
                   break
               }
             } catch (err) {
