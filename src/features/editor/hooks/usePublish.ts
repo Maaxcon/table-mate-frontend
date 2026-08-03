@@ -34,12 +34,14 @@ export function usePublish({ onSuccess, onRollback }: UsePublishOptions) {
       canvasCols?: number,
       canvasRows?: number,
       pendingZones?: PendingZones,
+      baseLayoutVersionId?: string | null,
     ) => {
       setPublishing(true)
       setError(null)
       const body: Record<string, unknown> = {
         ...serializeEntities(entities),
         deleted_table_ids: deletedTableIds,
+        base_layout_version_id: baseLayoutVersionId ?? null,
       }
       if (canvasCols !== undefined) body.canvas_cols = canvasCols
       if (canvasRows !== undefined) body.canvas_rows = canvasRows

@@ -223,6 +223,13 @@ export type DishFeedbackInput = {
   comment?: string
 }
 
+export type DraftLayout = {
+  draft_json?: PublishLayout | null
+  readonly is_draft: boolean
+  readonly updated_at: string
+  readonly owner_id: string | null
+}
+
 export type EditorTable = {
   readonly public_id: string
   readonly restaurant: string
@@ -981,6 +988,7 @@ export type PublicRestaurantSettings = {
 }
 
 export type PublishLayout = {
+  base_layout_version_id: string | null
   canvas_cols?: number
   canvas_rows?: number
   tables?: Array<TableEntity>
@@ -1403,6 +1411,10 @@ export type CustomTokenObtainPairWritable = {
 export type DishFeedbackWritable = {
   rating: number
   comment?: string
+}
+
+export type DraftLayoutWritable = {
+  draft_json?: PublishLayout | null
 }
 
 export type EditorTableWritable = {
@@ -2106,6 +2118,60 @@ export type EditorLayoutsRetrieveResponses = {
 export type EditorLayoutsRetrieveResponse =
   EditorLayoutsRetrieveResponses[keyof EditorLayoutsRetrieveResponses]
 
+export type EditorLayoutsDraftDestroyData = {
+  body?: never
+  path?: never
+  query?: never
+  url: "/api/editor/layouts/draft/"
+}
+
+export type EditorLayoutsDraftDestroyResponses = {
+  200: DraftLayout
+  /**
+   * No response body
+   */
+  204: void
+}
+
+export type EditorLayoutsDraftDestroyResponse =
+  EditorLayoutsDraftDestroyResponses[keyof EditorLayoutsDraftDestroyResponses]
+
+export type EditorLayoutsDraftRetrieveData = {
+  body?: never
+  path?: never
+  query?: never
+  url: "/api/editor/layouts/draft/"
+}
+
+export type EditorLayoutsDraftRetrieveResponses = {
+  200: DraftLayout
+  /**
+   * No response body
+   */
+  204: void
+}
+
+export type EditorLayoutsDraftRetrieveResponse =
+  EditorLayoutsDraftRetrieveResponses[keyof EditorLayoutsDraftRetrieveResponses]
+
+export type EditorLayoutsDraftUpdateData = {
+  body: PublishLayout
+  path?: never
+  query?: never
+  url: "/api/editor/layouts/draft/"
+}
+
+export type EditorLayoutsDraftUpdateResponses = {
+  200: DraftLayout
+  /**
+   * No response body
+   */
+  204: void
+}
+
+export type EditorLayoutsDraftUpdateResponse =
+  EditorLayoutsDraftUpdateResponses[keyof EditorLayoutsDraftUpdateResponses]
+
 export type EditorLayoutsLatestRetrieveData = {
   body?: never
   path?: never
@@ -2123,7 +2189,7 @@ export type EditorLayoutsLatestRetrieveResponse =
   EditorLayoutsLatestRetrieveResponses[keyof EditorLayoutsLatestRetrieveResponses]
 
 export type EditorLayoutsPublishCreateData = {
-  body?: PublishLayout
+  body: PublishLayout
   path?: never
   query?: never
   url: "/api/editor/layouts/publish/"
@@ -2967,6 +3033,32 @@ export type OrdersCartSessionsBillListResponses = {
 
 export type OrdersCartSessionsBillListResponse =
   OrdersCartSessionsBillListResponses[keyof OrdersCartSessionsBillListResponses]
+
+export type OrdersCartSessionsCallWaiterCreateData = {
+  body?: never
+  path: {
+    session_pk: string
+  }
+  query?: never
+  url: "/api/orders/cart/sessions/{session_pk}/call-waiter/"
+}
+
+export type OrdersCartSessionsCallWaiterCreateErrors = {
+  /**
+   * Waiter already called recently (code waiter_call_cooldown).
+   */
+  429: unknown
+}
+
+export type OrdersCartSessionsCallWaiterCreateResponses = {
+  /**
+   * Waiter notified.
+   */
+  204: void
+}
+
+export type OrdersCartSessionsCallWaiterCreateResponse =
+  OrdersCartSessionsCallWaiterCreateResponses[keyof OrdersCartSessionsCallWaiterCreateResponses]
 
 export type OrdersCartSessionsCheckoutCreateData = {
   body?: never

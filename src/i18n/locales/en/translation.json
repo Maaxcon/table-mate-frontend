@@ -129,9 +129,6 @@
       "reservationNotYetActiveDefault": "This table is already reserved. Contact a waiter.",
       "unavailable": "\"{{name}}\" is no longer available",
       "retry": "Try again",
-      "connecting": "Connecting...",
-      "connected": "Connected",
-      "disconnected": "Disconnected",
       "sessionExpired": "Session expired — reopen the table",
       "lobbyTitle": "Welcome!",
       "lobbySubtitle": "What's your name?",
@@ -140,7 +137,10 @@
       "lobbySkipped": "Skip",
       "guestPrefix": "Guest",
       "slotLabel": "Guest {{slot}}",
-      "unknownItem": "Item"
+      "unknownItem": "Item",
+      "callWaiter": "Call waiter",
+      "callWaiterSent": "Waiter is on the way",
+      "callWaiterError": "Couldn't call the waiter, try again"
     },
     "item": {
       "ingredients": "Ingredients",
@@ -1357,7 +1357,10 @@
         },
         "status": {
           "dirty": "Unsaved changes",
-          "clean": "All changes synced"
+          "clean": "All changes synced",
+          "draftSaved": "Draft saved",
+          "draftConflict": "Draft needs syncing",
+          "draftDiscarded": "Draft discarded"
         },
         "live": {
           "ariaConnected": "Live updates connected",
@@ -1398,6 +1401,8 @@
             "message": "Layout was updated by another admin. Reload to see changes (your unsaved work will be lost).",
             "action": "Reload now"
           },
+          "layoutUpdated": "Another admin published a layout. Sync to load the latest plan.",
+          "syncFailed": "Could not sync the floor plan.",
           "occupied": "Can't delete an occupied table — close its visit first."
         }
       },
@@ -1406,6 +1411,10 @@
           "kicker": "Layout Builder",
           "title": "Add Elements",
           "project": "Project"
+        },
+        "source": {
+          "draft": "Your draft",
+          "published": "Published layout"
         },
         "tools": {
           "select": {
@@ -1431,7 +1440,11 @@
         "actions": {
           "discard": "Discard",
           "publish": "Publish Layout",
-          "publishing": "Publishing..."
+          "publishing": "Publishing...",
+          "saveDraft": "Save Draft",
+          "savingDraft": "Saving Draft...",
+          "discardDraft": "Discard Draft",
+          "sync": "Sync Layout"
         }
       },
       "zoneHeader": {
@@ -1552,6 +1565,13 @@
         }
       },
       "modals": {
+        "sync": {
+          "title": "Sync latest layout?",
+          "message": "Syncing replaces this editor with the latest published layout and discards your draft or unsaved changes.",
+          "cancel": "Keep editing",
+          "confirm": "Sync layout",
+          "syncing": "Syncing..."
+        },
         "publish": {
           "title": "Publish Layout",
           "bodyLine1": "Publishing will instantly update all active waiter tablets.",

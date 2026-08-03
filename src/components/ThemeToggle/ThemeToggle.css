@@ -32,7 +32,8 @@
 }
 
 /* Booking modal owns the whole screen; hide the global theme switch there. */
-body.has-book-modal .theme-toggle--global {
+body.has-book-modal .theme-toggle--global,
+body.has-cart-drawer .theme-toggle--global {
   opacity: 0;
   pointer-events: none;
   transform: translateY(8px);
