@@ -164,12 +164,13 @@ export function serializeEntities(entities: EditorEntity[]): object {
     } else if (e.type === "obstacle") {
       obstacles.push(base)
     } else if (e.type === "threshold") {
-      thresholds.push({ ...base, threshold_label: e.label ?? "" })
+      thresholds.push({ ...base, id: e.serverId || null, label: e.label ?? "" })
     } else if (e.type === "portal") {
       portals.push({
         ...base,
+        id: e.serverId || null,
         target_zone_id: e.targetZoneId || null,
-        portal_label: e.label ?? "",
+        label: e.label ?? "",
       })
     }
   }
@@ -200,15 +201,18 @@ export interface LayoutPayload {
     zone_id: string | null
   }>
   thresholds: Array<{
+    id?: string | null
     x: number
     y: number
     width: number
     height: number
     rotation?: number
     label?: string
+    threshold_label?: string
     zone_id: string | null
   }>
   portals: Array<{
+    id?: string | null
     x: number
     y: number
     width: number
@@ -280,13 +284,14 @@ export function deserializeLayout(layout: LayoutPayload): EditorEntity[] {
 
   for (const th of layout.thresholds) {
     entities.push({
-      id: generateId(),
+      id: th.id ?? generateId(),
+      serverId: th.id ?? undefined,
       type: "threshold",
       x: Math.round(th.x / GRID),
       y: Math.round(th.y / GRID),
       w: Math.round(th.width / GRID),
       h: Math.round(th.height / GRID),
-      label: th.label || undefined,
+      label: th.label ?? th.threshold_label ?? undefined,
       zoneId: th.zone_id ?? undefined,
       rotation: th.rotation,
     })
@@ -294,14 +299,15 @@ export function deserializeLayout(layout: LayoutPayload): EditorEntity[] {
 
   for (const p of layout.portals) {
     entities.push({
-      id: generateId(),
+      id: p.id ?? generateId(),
+      serverId: p.id ?? undefined,
       type: "portal",
       x: Math.round(p.x / GRID),
       y: Math.round(p.y / GRID),
       w: Math.round(p.width / GRID),
       h: Math.round(p.height / GRID),
       targetZoneId: p.target_zone_id ?? undefined,
-      label: p.label || p.portal_label || undefined,
+      label: p.label ?? p.portal_label ?? undefined,
       zoneId: p.zone_id ?? undefined,
       rotation: p.rotation,
     })
