@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useReducer, useRef } from "react"
-import { getAccessToken } from "@/api/client"
+import { ensureSession, getAccessToken } from "@/api/client"
 import {
   createCartSessionForReservation,
   guestInit,
@@ -161,10 +161,18 @@ export function useGuestAuth({
         // Pre-order: the reservation exists but hasn't started yet. If the
         // caller is logged in (as its owner), open the cart directly through
         // their own auth instead of the guest-JWT gate, which requires ACTIVE.
-        const accessToken = reservationId ? getAccessToken() : null
-        if (err instanceof ReservationNotYetActiveError && accessToken) {
-          const session = await createCartSessionForReservation(reservationId!, accessToken)
-          return { access: accessToken, sessionId: session.public_id, isPreorder: true }
+        //
+        // Mint a fresh token rather than reusing whatever sits in the store.
+        // This cart rides a customer access token, which lives 15 minutes
+        // where a guest token lives 4 hours, and the refresh timer below just
+        // re-runs initialize() — handed back the same near-expired token, it
+        // scheduled nothing new and the cart died mid-browse.
+        if (err instanceof ReservationNotYetActiveError && reservationId && getAccessToken()) {
+          const accessToken = await ensureSession()
+          if (accessToken) {
+            const session = await createCartSessionForReservation(reservationId, accessToken)
+            return { access: accessToken, sessionId: session.public_id, isPreorder: true }
+          }
         }
         throw err
       }
