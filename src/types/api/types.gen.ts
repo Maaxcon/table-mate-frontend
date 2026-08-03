@@ -324,6 +324,12 @@ export type Layout = {
   readonly updated_at: string
 }
 
+export type LayoutEntityTranslation = {
+  entity_id: string
+  language_code: string
+  label: string
+}
+
 export type LayoutResponse = {
   tables: Array<Table>
   layout?: unknown
@@ -572,6 +578,13 @@ export type PaginatedEmployeeList = {
   next?: string | null
   previous?: string | null
   results: Array<Employee>
+}
+
+export type PaginatedLayoutEntityTranslationList = {
+  count: number
+  next?: string | null
+  previous?: string | null
+  results: Array<LayoutEntityTranslation>
 }
 
 export type PaginatedLayoutList = {
@@ -1026,13 +1039,18 @@ export type PendingZone = {
 }
 
 export type PortalEntity = {
+  id?: string | null
+  /**
+   *  client id
+   */
+  _client_id?: string | null
   x: number
   y: number
   width: number
   height: number
   rotation?: number
   target_zone_id?: string | null
-  portal_label?: string
+  label?: string
   zone_id: string
 }
 
@@ -1341,12 +1359,17 @@ export type TableInfo = {
 }
 
 export type ThresholdEntity = {
+  id?: string | null
+  /**
+   *  client id
+   */
+  _client_id?: string | null
   x: number
   y: number
   width: number
   height: number
   rotation?: number
-  threshold_label?: string
+  label?: string
   zone_id: string
 }
 
@@ -2380,6 +2403,87 @@ export type EditorLayoutsDraftUpdateResponses = {
 
 export type EditorLayoutsDraftUpdateResponse =
   EditorLayoutsDraftUpdateResponses[keyof EditorLayoutsDraftUpdateResponses]
+
+export type EditorLayoutsEntityTranslationsListData = {
+  body?: never
+  path?: never
+  query?: {
+    /**
+     * Filter translations to a single language code.
+     */
+    language?: string
+    /**
+     * Which field to use when ordering the results.
+     */
+    ordering?: string
+    /**
+     * A page number within the paginated result set.
+     */
+    page?: number
+    published_at?: string
+    published_by?: number
+    version?: number
+  }
+  url: "/api/editor/layouts/entity-translations/"
+}
+
+export type EditorLayoutsEntityTranslationsListResponses = {
+  200: PaginatedLayoutEntityTranslationList
+}
+
+export type EditorLayoutsEntityTranslationsListResponse =
+  EditorLayoutsEntityTranslationsListResponses[keyof EditorLayoutsEntityTranslationsListResponses]
+
+export type EditorLayoutsEntityTranslationsCreateData = {
+  body: LayoutEntityTranslation
+  path?: never
+  query?: never
+  url: "/api/editor/layouts/entity-translations/"
+}
+
+export type EditorLayoutsEntityTranslationsCreateResponses = {
+  201: LayoutEntityTranslation
+}
+
+export type EditorLayoutsEntityTranslationsCreateResponse =
+  EditorLayoutsEntityTranslationsCreateResponses[keyof EditorLayoutsEntityTranslationsCreateResponses]
+
+export type EditorLayoutsEntityTranslationsDestroyData = {
+  body?: never
+  path: {
+    entity_id: string
+    lang: string
+  }
+  query?: never
+  url: "/api/editor/layouts/entity-translations/{entity_id}/{lang}/"
+}
+
+export type EditorLayoutsEntityTranslationsDestroyResponses = {
+  /**
+   * No response body
+   */
+  204: void
+}
+
+export type EditorLayoutsEntityTranslationsDestroyResponse =
+  EditorLayoutsEntityTranslationsDestroyResponses[keyof EditorLayoutsEntityTranslationsDestroyResponses]
+
+export type EditorLayoutsEntityTranslationsUpdateData = {
+  body: LayoutEntityTranslation
+  path: {
+    entity_id: string
+    lang: string
+  }
+  query?: never
+  url: "/api/editor/layouts/entity-translations/{entity_id}/{lang}/"
+}
+
+export type EditorLayoutsEntityTranslationsUpdateResponses = {
+  200: LayoutEntityTranslation
+}
+
+export type EditorLayoutsEntityTranslationsUpdateResponse =
+  EditorLayoutsEntityTranslationsUpdateResponses[keyof EditorLayoutsEntityTranslationsUpdateResponses]
 
 export type EditorLayoutsLatestRetrieveData = {
   body?: never
@@ -5031,6 +5135,22 @@ export type RestaurantsRestaurantsPartialUpdateResponses = {
 export type RestaurantsRestaurantsPartialUpdateResponse =
   RestaurantsRestaurantsPartialUpdateResponses[keyof RestaurantsRestaurantsPartialUpdateResponses]
 
+export type RestaurantsRestaurantsUpdateData = {
+  body: RestaurantWritable
+  path: {
+    public_id: string
+  }
+  query?: never
+  url: "/api/restaurants/restaurants/{public_id}/"
+}
+
+export type RestaurantsRestaurantsUpdateResponses = {
+  200: Restaurant
+}
+
+export type RestaurantsRestaurantsUpdateResponse =
+  RestaurantsRestaurantsUpdateResponses[keyof RestaurantsRestaurantsUpdateResponses]
+
 export type RestaurantsRestaurantsCoverPartialUpdateData = {
   body?: never
   path: {
@@ -5062,6 +5182,59 @@ export type RestaurantsRestaurantsTranslationsRetrieveResponses = {
 
 export type RestaurantsRestaurantsTranslationsRetrieveResponse =
   RestaurantsRestaurantsTranslationsRetrieveResponses[keyof RestaurantsRestaurantsTranslationsRetrieveResponses]
+
+export type RestaurantsRestaurantsTranslationsCreateData = {
+  body: RestaurantWritable
+  path: {
+    public_id: string
+  }
+  query?: never
+  url: "/api/restaurants/restaurants/{public_id}/translations/"
+}
+
+export type RestaurantsRestaurantsTranslationsCreateResponses = {
+  200: Restaurant
+}
+
+export type RestaurantsRestaurantsTranslationsCreateResponse =
+  RestaurantsRestaurantsTranslationsCreateResponses[keyof RestaurantsRestaurantsTranslationsCreateResponses]
+
+export type RestaurantsRestaurantsTranslationsDestroyData = {
+  body?: never
+  path: {
+    lang: string
+    public_id: string
+  }
+  query?: never
+  url: "/api/restaurants/restaurants/{public_id}/translations/{lang}/"
+}
+
+export type RestaurantsRestaurantsTranslationsDestroyResponses = {
+  /**
+   * No response body
+   */
+  204: void
+}
+
+export type RestaurantsRestaurantsTranslationsDestroyResponse =
+  RestaurantsRestaurantsTranslationsDestroyResponses[keyof RestaurantsRestaurantsTranslationsDestroyResponses]
+
+export type RestaurantsRestaurantsTranslationsUpdateData = {
+  body: RestaurantWritable
+  path: {
+    lang: string
+    public_id: string
+  }
+  query?: never
+  url: "/api/restaurants/restaurants/{public_id}/translations/{lang}/"
+}
+
+export type RestaurantsRestaurantsTranslationsUpdateResponses = {
+  200: Restaurant
+}
+
+export type RestaurantsRestaurantsTranslationsUpdateResponse =
+  RestaurantsRestaurantsTranslationsUpdateResponses[keyof RestaurantsRestaurantsTranslationsUpdateResponses]
 
 export type RestaurantsTablesListData = {
   body?: never
