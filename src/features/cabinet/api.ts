@@ -2,6 +2,7 @@ import { apiFetch } from "@/api/client"
 import heroImage from "@/assets/hero.png"
 import i18n from "@/i18n/config"
 import type { MeResponse } from "@/features/auth/types"
+import type { PreorderDetail } from "@/types/api"
 import type { CabinetProfile, HistoryEntry, Preorder, Reservation } from "./types"
 
 // "Active" bookings are the ones the user can still act on.
@@ -181,24 +182,12 @@ export async function cancelReservation(publicId: string): Promise<void> {
   if (!res.ok) throw new Error(await extractError(res))
 }
 
-// Raw shape from GET .../preorder/ (snake_case, decimals as strings).
-type ApiPreorder = {
-  order_id: string
-  currency: string
-  subtotal: string
-  tax: string
-  service_charge: string
-  total: string
-  can_cancel: boolean
-  items: { name: string; quantity: number; unit_price: string; total_price: string }[]
-}
-
 // The booking's current paid pre-order, or null if it doesn't have one (204).
 export async function fetchPreorder(reservationId: string): Promise<Preorder | null> {
   const res = await apiFetch(`/api/reservations/reservations/${reservationId}/preorder/`)
   if (res.status === 204) return null
   if (!res.ok) throw new Error(`${res.status} ${res.statusText}`)
-  const data = (await res.json()) as ApiPreorder
+  const data = (await res.json()) as PreorderDetail
   return {
     orderId: data.order_id,
     currency: data.currency,

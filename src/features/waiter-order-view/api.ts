@@ -1,4 +1,5 @@
 import { apiFetch } from "@/api/client"
+import type { PreorderDetail } from "@/types/api"
 import {
   formatDuration,
   type FloorTable,
@@ -81,14 +82,6 @@ export async function fetchReservations(signal?: AbortSignal): Promise<Reservati
   return (data.results ?? []).map(mapReservationItem)
 }
 
-// Raw shape from GET .../preorder/ (snake_case, decimals as strings).
-interface PreorderApiItem {
-  currency: string
-  total: string
-  can_cancel: boolean
-  items: { name: string; quantity: number; total_price: string }[]
-}
-
 // What the guest pre-ordered for this reservation, or null if there's none
 // (204) or it couldn't be loaded.
 export async function fetchPreorder(
@@ -100,7 +93,7 @@ export async function fetchPreorder(
     signal ? { signal } : undefined,
   )
   if (res.status === 204 || !res.ok) return null
-  const data = (await res.json()) as PreorderApiItem
+  const data = (await res.json()) as PreorderDetail
   return {
     currency: data.currency,
     total: Number(data.total),

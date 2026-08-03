@@ -871,6 +871,32 @@ export type PortalEntity = {
   zone_id: string
 }
 
+/**
+ * A reservation's paid pre-order rounds, combined into one check.
+ *
+ * Response-shape contract for the `preorder` action. Declared (and used to
+ * render) so the published schema matches what the endpoint actually
+ * returns — without it drf-spectacular falls back to the viewset's
+ * ReservationSerializer, and the generated clients are wrong.
+ */
+export type PreorderDetail = {
+  order_id: string
+  currency: string
+  subtotal: string
+  tax: string
+  service_charge: string
+  total: string
+  can_cancel: boolean
+  items: Array<PreorderItem>
+}
+
+export type PreorderItem = {
+  name: string
+  quantity: number
+  unit_price: string
+  total_price: string
+}
+
 export type PublicRestaurant = {
   readonly public_id: string
   readonly name: string
@@ -3582,9 +3608,20 @@ export type ReservationsReservationsPreorderDestroyData = {
   url: "/api/reservations/reservations/{public_id}/preorder/"
 }
 
+export type ReservationsReservationsPreorderDestroyErrors = {
+  /**
+   * No pre-order to cancel.
+   */
+  404: unknown
+  /**
+   * The kitchen has already started a round (code preorder_not_allowed).
+   */
+  409: unknown
+}
+
 export type ReservationsReservationsPreorderDestroyResponses = {
   /**
-   * No response body
+   * Every round was cancelled.
    */
   204: void
 }
@@ -3602,7 +3639,11 @@ export type ReservationsReservationsPreorderRetrieveData = {
 }
 
 export type ReservationsReservationsPreorderRetrieveResponses = {
-  200: Reservation
+  200: PreorderDetail
+  /**
+   * No paid pre-order for this reservation.
+   */
+  204: void
 }
 
 export type ReservationsReservationsPreorderRetrieveResponse =
