@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import { getCurrencySymbol } from "@/features/menu/utils"
 import { useFocusTrap } from "@/hooks/useFocusTrap"
+import { serverErrorMessage } from "@/utils/serverError"
 import { cancelPreorder, fetchPreorder } from "../../api"
 import type { Preorder, ReservationItem } from "../../types"
 import { formatTimeRange } from "../../types"
@@ -51,7 +52,7 @@ export function PreorderModal({ reservation, onClose, onCancelled }: PreorderMod
       onCancelled()
       onClose()
     } catch (err) {
-      setCancelError(err instanceof Error ? err.message : strings.cancelError)
+      setCancelError(serverErrorMessage(err, strings.cancelError))
     } finally {
       setCancelling(false)
     }

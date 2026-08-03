@@ -8,6 +8,7 @@ import {
 } from "@/features/menu/api"
 import type { CartItemWithDetails } from "@/features/menu/hooks/useCart"
 import { formatAmount } from "@/features/menu/utils"
+import { serverErrorMessage } from "@/utils/serverError"
 import { useMenuStrings } from "@/features/menu/strings"
 import "./CartDrawer.css"
 
@@ -180,10 +181,9 @@ export function CartDrawer({
         setStep("changed")
       } else {
         // Prefer the server's own explanation (e.g. "this table's previous
-        // visit hasn't ended yet") over a one-size-fits-all message.
-        setSubmitError(
-          err instanceof Error && err.message ? err.message : menuStrings.cart.checkoutError,
-        )
+        // visit hasn't ended yet") over a one-size-fits-all message — but
+        // translated off its error code, not its English `detail`.
+        setSubmitError(serverErrorMessage(err, menuStrings.cart.checkoutError))
       }
     } finally {
       setSubmitting(false)

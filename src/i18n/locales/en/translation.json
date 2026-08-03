@@ -1557,5 +1557,20 @@
         }
       }
     }
+  },
+  "errors": {
+    "server": {
+      "preorder_not_allowed": "The kitchen has already started this pre-order, so it can't be changed now.",
+      "unserved_items": "Some items haven't been served yet.",
+      "cart_session_closed": "This cart is already closed. Refresh the page to start a new one.",
+      "empty_cart": "Your cart is empty.",
+      "restaurant_closed": "The restaurant is closed right now.",
+      "table_occupied": "This table's previous visit hasn't ended yet. Please try again shortly.",
+      "menu_item_unavailable": "One of the dishes is no longer available.",
+      "RESERVATION_NOT_YET_ACTIVE": "This booking hasn't started yet.",
+      "NO_ACTIVE_RESERVATION": "This table has no active booking.",
+      "reservation_conflict": "That time is no longer free for this table.",
+      "waiter_call_cooldown": "A waiter was already called for this table. Please wait a moment."
+    }
   }
 }

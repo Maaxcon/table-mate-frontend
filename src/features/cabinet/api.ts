@@ -212,5 +212,14 @@ export async function cancelPreorder(reservationId: string): Promise<void> {
   const res = await apiFetch(`/api/reservations/reservations/${reservationId}/preorder/`, {
     method: "DELETE",
   })
-  if (!res.ok) throw new Error(await extractError(res))
+  if (!res.ok) {
+    const cloned = res.clone()
+    let code: string | undefined
+    try {
+      code = ((await cloned.json()) as { code?: string }).code
+    } catch {
+      // fall through — an uncoded failure translates to the caller's fallback
+    }
+    throw Object.assign(new Error(await extractError(res)), { code })
+  }
 }

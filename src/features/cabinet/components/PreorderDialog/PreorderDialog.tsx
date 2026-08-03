@@ -2,6 +2,7 @@ import { useEffect, useState } from "react"
 import { createPortal } from "react-dom"
 import { LuFlame, LuUtensilsCrossed, LuX } from "react-icons/lu"
 import { useFocusTrap } from "@/hooks/useFocusTrap"
+import { serverErrorMessage } from "@/utils/serverError"
 import { cancelPreorder, fetchPreorder } from "@/features/cabinet/api"
 import { useCabinetStrings } from "@/features/cabinet/strings"
 import type { Preorder, Reservation } from "@/features/cabinet/types"
@@ -52,8 +53,7 @@ export function PreorderDialog({ booking, onClose, onCancelled }: PreorderDialog
       onCancelled()
       onClose()
     } catch (err) {
-      const message = err instanceof Error ? err.message.trim() : ""
-      setCancelError(message || strings.bookings.preorderCancelError)
+      setCancelError(serverErrorMessage(err, strings.bookings.preorderCancelError))
       fetchPreorder(booking.public_id)
         .then(setPreorder)
         .catch(() => {})

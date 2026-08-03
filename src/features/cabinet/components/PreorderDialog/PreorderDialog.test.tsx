@@ -39,9 +39,14 @@ describe("PreorderDialog", () => {
   })
 
   it("shows the server's reason when the kitchen already started a round", async () => {
+    // The backend's own `detail` is English-only, so the dialog translates off
+    // the error code instead and must never render the raw text.
     const serverMessage = "The kitchen has already started this pre-order — it can't be cancelled."
+    const translated = i18n.t("errors.server.preorder_not_allowed")
     vi.mocked(fetchPreorder).mockResolvedValue(preorder(true))
-    vi.mocked(cancelPreorder).mockRejectedValue(new Error(serverMessage))
+    vi.mocked(cancelPreorder).mockRejectedValue(
+      Object.assign(new Error(serverMessage), { code: "preorder_not_allowed" }),
+    )
 
     render(<PreorderDialog booking={booking} onClose={vi.fn()} onCancelled={vi.fn()} />)
 
@@ -50,7 +55,8 @@ describe("PreorderDialog", () => {
     })
     await userEvent.click(cancel)
 
-    expect(await screen.findByText(serverMessage)).toBeInTheDocument()
+    expect(await screen.findByText(translated)).toBeInTheDocument()
+    expect(screen.queryByText(serverMessage)).not.toBeInTheDocument()
     expect(
       screen.queryByText(i18n.t("cabinet.bookings.preorderCancelError")),
     ).not.toBeInTheDocument()

@@ -116,13 +116,17 @@ export async function cancelPreorder(reservationId: string): Promise<void> {
   })
   if (!res.ok) {
     let message = res.statusText
+    let code: string | undefined
     try {
-      const body = (await res.json()) as { detail?: string }
+      const body = (await res.json()) as { detail?: string; code?: string }
       if (body.detail) message = body.detail
+      if (body.code) code = body.code
     } catch {
       // ignore
     }
-    throw new Error(message)
+    // The code is what the UI translates off; the message is only a fallback
+    // for a code we don't have a string for.
+    throw Object.assign(new Error(message), { code })
   }
 }
 
