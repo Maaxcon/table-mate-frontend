@@ -64,8 +64,10 @@ function MenuItemModal({
   const [added, setAdded] = useState(false)
   const [comment, setComment] = useState("")
   const [upsells, setUpsells] = useState<MenuItem[]>([])
+  const [addedUpsellId, setAddedUpsellId] = useState<string | null>(null)
   const commentId = useId()
   const closeTimerRef = useRef<number | null>(null)
+  const upsellTimerRef = useRef<number | null>(null)
   // Focus trap + Esc-to-close + focus restore (focuses the close button first).
   const dialogRef = useFocusTrap<HTMLDivElement>({ onEscape: onClose })
   const hasWeight = item.weight_grams != null && item.weight_grams > 0
@@ -73,12 +75,23 @@ function MenuItemModal({
   useEffect(() => {
     const controller = new AbortController()
     void fetchUpsells(restaurantId, item.public_id, guestToken, controller.signal)
-      .then(({ results }) => setUpsells(results))
+      .then(({ results }) => setUpsells(results.filter((r) => r.is_available)))
       .catch((error: unknown) => {
-        if (!(error instanceof DOMException && error.name === "AbortError")) setUpsells([])
+        if (error instanceof Error && error.name === "AbortError") return
+        setUpsells([])
       })
     return () => controller.abort()
   }, [guestToken, item.public_id, restaurantId])
+
+  const handleAddUpsell = (upsell: MenuItem) => {
+    if (upsellTimerRef.current != null) return
+    onAddToCart(upsell)
+    setAddedUpsellId(upsell.public_id)
+    upsellTimerRef.current = window.setTimeout(() => {
+      upsellTimerRef.current = null
+      setAddedUpsellId(null)
+    }, 900)
+  }
 
   const handleAdd = () => {
     // Guard against double/triple taps: once a tap has armed the auto-close
@@ -98,6 +111,7 @@ function MenuItemModal({
   useEffect(() => {
     return () => {
       if (closeTimerRef.current != null) window.clearTimeout(closeTimerRef.current)
+      if (upsellTimerRef.current != null) window.clearTimeout(upsellTimerRef.current)
     }
   }, [])
 
@@ -178,20 +192,25 @@ function MenuItemModal({
             <section className="menu-modal__upsells" aria-label={menuStrings.item.upsells}>
               <p className="menu-modal__section-label">{menuStrings.item.upsells}</p>
               <div className="menu-modal__upsell-list">
-                {upsells.map((upsell) => (
-                  <button
-                    key={upsell.public_id}
-                    type="button"
-                    className="menu-modal__upsell"
-                    onClick={() => onAddToCart(upsell)}
-                    aria-label={menuStrings.item.addSuggestion(upsell.name)}
-                  >
-                    <span className="menu-modal__upsell-name">{upsell.name}</span>
-                    <span className="menu-modal__upsell-price">
-                      {formatPrice(upsell.price)} {currencySymbol} +
-                    </span>
-                  </button>
-                ))}
+                {upsells.map((upsell) => {
+                  const isAdded = addedUpsellId === upsell.public_id
+                  return (
+                    <button
+                      key={upsell.public_id}
+                      type="button"
+                      className={`menu-modal__upsell${isAdded ? " menu-modal__upsell--added" : ""}`}
+                      onClick={() => handleAddUpsell(upsell)}
+                      disabled={isAdded}
+                      aria-label={menuStrings.item.addSuggestion(upsell.name)}
+                    >
+                      {isAdded && <LuCheck size={13} />}
+                      <span className="menu-modal__upsell-name">{upsell.name}</span>
+                      <span className="menu-modal__upsell-price">
+                        {formatPrice(upsell.price)} {currencySymbol} +
+                      </span>
+                    </button>
+                  )
+                })}
               </div>
             </section>
           )}

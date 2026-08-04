@@ -85,14 +85,13 @@ export function OrderCreationModal({
     (item: MenuItem) => {
       const requestId = upsellRequestRef.current + 1
       upsellRequestRef.current = requestId
-      setUpsells([])
       void fetchUpsells(item.public_id, restaurantId)
         .then(({ results }) => {
-          if (requestId === upsellRequestRef.current) setUpsells(results)
+          if (requestId === upsellRequestRef.current) {
+            setUpsells(results.filter((r) => r.is_available))
+          }
         })
-        .catch(() => {
-          if (requestId === upsellRequestRef.current) setUpsells([])
-        })
+        .catch(() => {})
     },
     [restaurantId],
   )

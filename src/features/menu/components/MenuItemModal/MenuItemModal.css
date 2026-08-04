@@ -315,6 +315,16 @@
   border-color: var(--color-text-secondary);
 }
 
+.menu-modal__upsell:disabled {
+  cursor: default;
+  opacity: 1;
+}
+
+.menu-modal__upsell--added {
+  border-color: var(--color-text-secondary);
+  background: var(--color-bg-surface-subtle);
+}
+
 .menu-modal__upsell-name {
   overflow: hidden;
   text-overflow: ellipsis;
