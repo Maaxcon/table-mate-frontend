@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest"
 import { render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
+import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom"
 import { PreorderDialog } from "./PreorderDialog"
 import type { Preorder, Reservation } from "@/features/cabinet/types"
 import i18n from "@/i18n/config"
@@ -14,9 +15,32 @@ import { cancelPreorder, fetchPreorder } from "@/features/cabinet/api"
 
 const booking = {
   public_id: "res-1",
+  restaurant: "rest-1",
+  status: "pending",
   start_at: "2026-08-04T18:00:00Z",
   table_info: { public_number: "T5" },
 } as Reservation
+
+function MenuProbe() {
+  const location = useLocation()
+  return <div data-testid="menu-route">{`${location.pathname}${location.search}`}</div>
+}
+
+function renderDialog(props: Partial<React.ComponentProps<typeof PreorderDialog>> = {}) {
+  return render(
+    <MemoryRouter initialEntries={["/cabinet"]}>
+      <Routes>
+        <Route
+          path="/cabinet"
+          element={
+            <PreorderDialog booking={booking} onClose={vi.fn()} onCancelled={vi.fn()} {...props} />
+          }
+        />
+        <Route path="/menu/:restaurantId" element={<MenuProbe />} />
+      </Routes>
+    </MemoryRouter>,
+  )
+}
 
 // isCooking defaults to !canCancel, which is what the existing cases mean:
 // the only reason they can't cancel is that the kitchen started.
@@ -48,7 +72,7 @@ describe("PreorderDialog", () => {
       Object.assign(new Error(serverMessage), { code: "preorder_not_allowed" }),
     )
 
-    render(<PreorderDialog booking={booking} onClose={vi.fn()} onCancelled={vi.fn()} />)
+    renderDialog()
 
     const cancel = await screen.findByRole("button", {
       name: i18n.t("cabinet.bookings.preorderCancel"),
@@ -68,7 +92,7 @@ describe("PreorderDialog", () => {
       .mockResolvedValueOnce(preorder(false))
     vi.mocked(cancelPreorder).mockRejectedValue(new Error("kitchen started"))
 
-    render(<PreorderDialog booking={booking} onClose={vi.fn()} onCancelled={vi.fn()} />)
+    renderDialog()
 
     await userEvent.click(
       await screen.findByRole("button", { name: i18n.t("cabinet.bookings.preorderCancel") }),
@@ -88,7 +112,7 @@ describe("PreorderDialog", () => {
     const onClose = vi.fn()
     const onCancelled = vi.fn()
 
-    render(<PreorderDialog booking={booking} onClose={onClose} onCancelled={onCancelled} />)
+    renderDialog({ onClose, onCancelled })
 
     await userEvent.click(
       await screen.findByRole("button", { name: i18n.t("cabinet.bookings.preorderCancel") }),
@@ -96,6 +120,31 @@ describe("PreorderDialog", () => {
 
     await waitFor(() => expect(onCancelled).toHaveBeenCalledOnce())
     expect(onClose).toHaveBeenCalledOnce()
+  })
+
+  it("opens the menu for this booking when the guest adds more items", async () => {
+    vi.mocked(fetchPreorder).mockResolvedValue(preorder(true))
+
+    renderDialog()
+
+    await userEvent.click(
+      await screen.findByRole("button", { name: i18n.t("cabinet.bookings.preorderAddMore") }),
+    )
+
+    expect(await screen.findByTestId("menu-route")).toHaveTextContent(
+      "/menu/rest-1?reservation=res-1",
+    )
+  })
+
+  it("hides adding more once the booking has started", async () => {
+    vi.mocked(fetchPreorder).mockResolvedValue(preorder(true))
+
+    renderDialog({ booking: { ...booking, status: "active" } })
+
+    await screen.findByRole("button", { name: i18n.t("cabinet.bookings.preorderCancel") })
+    expect(
+      screen.queryByRole("button", { name: i18n.t("cabinet.bookings.preorderAddMore") }),
+    ).not.toBeInTheDocument()
   })
 })
 
@@ -109,7 +158,7 @@ describe("PreorderDialog for a participant who isn't the booker", () => {
     // Paid, nothing cooking yet, but this guest didn't make the booking.
     vi.mocked(fetchPreorder).mockResolvedValue(preorder(false, false))
 
-    render(<PreorderDialog booking={booking} onClose={vi.fn()} onCancelled={vi.fn()} />)
+    renderDialog()
 
     // Assert through i18n rather than literal copy — the test env renders uk.
     const ownerOnly = i18n.t("cabinet.bookings.preorderOwnerOnly")

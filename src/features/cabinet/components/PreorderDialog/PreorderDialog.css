@@ -213,6 +213,33 @@
 }
 
 /* Cancel — outlined, not solid: a considered action, not a shout. */
+.preorder-dialog__add {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  margin-top: 18px;
+  padding: 12px 16px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border-radius: 12px;
+  cursor: pointer;
+  color: var(--color-bg-surface);
+  background: var(--color-primary);
+  border: 1px solid var(--color-primary);
+  transition: background 0.15s ease;
+}
+
+.preorder-dialog__add svg {
+  width: 16px;
+  height: 16px;
+}
+
+.preorder-dialog__add:hover {
+  background: color-mix(in srgb, var(--color-primary) 85%, #000);
+}
+
 .preorder-dialog__cancel {
   display: block;
   width: 100%;

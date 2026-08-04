@@ -61,6 +61,7 @@ export function useCabinetStrings() {
       preorderEyebrow: t("cabinet.bookings.preorderEyebrow"),
       preorderPaidBadge: t("cabinet.bookings.preorderPaidBadge"),
       preorderCookingBadge: t("cabinet.bookings.preorderCookingBadge"),
+      preorderAddMore: t("cabinet.bookings.preorderAddMore"),
       preorderCancel: t("cabinet.bookings.preorderCancel"),
       preorderCancelling: t("cabinet.bookings.preorderCancelling"),
       preorderCancelError: t("cabinet.bookings.preorderCancelError"),

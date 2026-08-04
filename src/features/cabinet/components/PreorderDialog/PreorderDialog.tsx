@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import { createPortal } from "react-dom"
-import { LuFlame, LuUtensilsCrossed, LuX } from "react-icons/lu"
+import { LuFlame, LuPlus, LuUtensilsCrossed, LuX } from "react-icons/lu"
+import { useNavigate } from "react-router-dom"
 import { useFocusTrap } from "@/hooks/useFocusTrap"
 import { serverErrorMessage } from "@/utils/serverError"
 import { cancelPreorder, fetchPreorder } from "@/features/cabinet/api"
@@ -13,10 +14,12 @@ import "./PreorderDialog.css"
 // booking page's "My bookings" tab can pass their own reservation shape.
 export type PreorderDialogBooking = {
   public_id: string
+  restaurant: string
   table: string | null
   table_info?: { public_number: string }
   restaurant_info?: { name: string }
   start_at: string
+  status: string
 }
 
 type PreorderDialogProps = {
@@ -29,6 +32,7 @@ type PreorderDialogProps = {
 
 export function PreorderDialog({ booking, onClose, onCancelled }: PreorderDialogProps) {
   const strings = useCabinetStrings()
+  const navigate = useNavigate()
   const dialogRef = useFocusTrap<HTMLDivElement>({ onEscape: onClose })
 
   // undefined = still loading, null = loaded and there's none.
@@ -170,6 +174,19 @@ export function PreorderDialog({ booking, onClose, onCancelled }: PreorderDialog
                   ? strings.bookings.preorderCookingBadge
                   : strings.bookings.preorderPaidBadge}
               </div>
+
+              {booking.status === "pending" && (
+                <button
+                  type="button"
+                  className="preorder-dialog__add"
+                  onClick={() =>
+                    navigate(`/menu/${booking.restaurant}?reservation=${booking.public_id}`)
+                  }
+                >
+                  <LuPlus aria-hidden="true" />
+                  {strings.bookings.preorderAddMore}
+                </button>
+              )}
 
               {cancelError && <p className="preorder-dialog__error">{cancelError}</p>}
 

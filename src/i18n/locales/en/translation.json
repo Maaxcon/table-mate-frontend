@@ -447,6 +447,7 @@
       "preorderEyebrow": "Pre-order",
       "preorderPaidBadge": "Paid — cooking starts closer to your arrival",
       "preorderCookingBadge": "Your food is being prepared now",
+      "preorderAddMore": "Add more items",
       "preorderCancel": "Cancel pre-order",
       "preorderCancelling": "Cancelling…",
       "preorderCancelError": "Could not cancel the pre-order. Please try again.",
