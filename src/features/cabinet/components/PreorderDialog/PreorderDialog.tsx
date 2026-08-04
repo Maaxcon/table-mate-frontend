@@ -5,12 +5,22 @@ import { useFocusTrap } from "@/hooks/useFocusTrap"
 import { serverErrorMessage } from "@/utils/serverError"
 import { cancelPreorder, fetchPreorder } from "@/features/cabinet/api"
 import { useCabinetStrings } from "@/features/cabinet/strings"
-import type { Preorder, Reservation } from "@/features/cabinet/types"
+import type { Preorder } from "@/features/cabinet/types"
 import { formatDateTime, formatMoney } from "@/features/cabinet/utils"
 import "./PreorderDialog.css"
 
+// Only the fields the dialog reads, so both the cabinet booking list and the
+// booking page's "My bookings" tab can pass their own reservation shape.
+export type PreorderDialogBooking = {
+  public_id: string
+  table: string | null
+  table_info?: { public_number: string }
+  restaurant_info?: { name: string }
+  start_at: string
+}
+
 type PreorderDialogProps = {
-  booking: Reservation
+  booking: PreorderDialogBooking
   onClose: () => void
   // Tells the parent list this booking's pre-order is gone, so it can hide
   // the entry point without re-fetching the whole booking list.
