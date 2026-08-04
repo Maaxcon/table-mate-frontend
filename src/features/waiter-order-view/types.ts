@@ -54,17 +54,10 @@ export type ReservationItem = Pick<
   preorder_ready?: boolean
 }
 
-export type PreorderChipStatus = "paid" | "cooking" | "ready"
-
-// Priority: ready implies cooking implies paid — collapse the three booleans
-// into one state so callers don't re-derive the same ordering themselves.
-export function getPreorderChipStatus(
-  r: Pick<ReservationItem, "preorder_cooking" | "preorder_ready">,
-): PreorderChipStatus {
-  if (r.preorder_ready) return "ready"
-  if (r.preorder_cooking) return "cooking"
-  return "paid"
-}
+// Lives in utils now that the guest-facing booking list needs the same rule;
+// re-exported here so staff-side callers keep their existing import.
+export { getPreorderChipStatus } from "@/utils/preorderStatus"
+export type { PreorderChipStatus } from "@/utils/preorderStatus"
 
 // A reservation's paid pre-order — what the guest picked ahead of arrival.
 export type PreorderItem = {
