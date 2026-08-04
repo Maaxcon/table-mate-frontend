@@ -349,9 +349,15 @@ function MenuPage() {
     if (!lastCompletedOrder) return
     // The feedback prompt must not appear before the guest has paid: ask the
     // server for the current bill (the pay step is separate from checkout) and
-    // only surface the prompt once every item on the visit is paid.
+    // only surface the prompt once every item on the visit is paid. Mirror the
+    // backend (`_validate_order_for_feedback`): every item must also be served
+    // or voided — otherwise the guest would pay, rate, and hit a 400.
     const billItems = await refreshBill()
-    if (billItems && billItems.length > 0 && billItems.every((b) => b.is_paid)) {
+    const feedbackEligible =
+      billItems &&
+      billItems.length > 0 &&
+      billItems.every((b) => b.is_paid && (b.status === "served" || b.status === "voided"))
+    if (feedbackEligible) {
       setShowFeedbackPrompt(true)
     }
   }, [lastCompletedOrder, refreshBill])

@@ -377,8 +377,13 @@ export type BillItem = {
   // Summing it reconciles with the checkout receipt total. (The goods-only
   // total_price is intentionally not part of the bill response.)
   payable: string
+  // Live kitchen status. The feedback gate mirrors the backend: every item must
+  // be served or voided before feedback is accepted, regardless of payment.
+  status: BillItemStatus
   is_paid: boolean
 }
+
+export type BillItemStatus = "pending" | "in_progress" | "ready" | "served" | "voided"
 
 // The bill: items already submitted to the kitchen for this table's visit.
 export function fetchBill(sessionId: string, jwt: string): Promise<BillItem[]> {

@@ -108,6 +108,7 @@ export type BillItem = {
   guest_slot: number
   quantity: number
   readonly payable: string
+  readonly status: string
   is_paid?: boolean
 }
 

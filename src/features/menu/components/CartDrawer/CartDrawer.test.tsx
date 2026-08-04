@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest"
 import { fireEvent, render, screen, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { CartDrawer } from "./CartDrawer"
-import { CartChangedError, type CheckoutResult } from "@/features/menu/api"
+import { CartChangedError, type BillItem, type CheckoutResult } from "@/features/menu/api"
 import type { CartItemWithDetails } from "@/features/menu/hooks/useCart"
 import { formatAmount } from "@/features/menu/utils"
 import i18n from "@/i18n/config"
@@ -278,13 +278,14 @@ describe("CartDrawer checkout state machine", () => {
   it("pays the selected ordered items by their order-item ids", async () => {
     const user = userEvent.setup()
     const onPayBill = vi.fn<(ids: string[]) => Promise<void>>().mockResolvedValue(undefined)
-    const billItems = [
+    const billItems: BillItem[] = [
       {
         id: "oi-1",
         name: "Pizza",
         guest_slot: 1,
         quantity: 1,
         payable: "34.50",
+        status: "served",
         is_paid: false,
       },
       {
@@ -293,6 +294,7 @@ describe("CartDrawer checkout state machine", () => {
         guest_slot: 1,
         quantity: 2,
         payable: "23.00",
+        status: "served",
         is_paid: false,
       },
     ]
@@ -308,13 +310,14 @@ describe("CartDrawer checkout state machine", () => {
   it("surfaces an error and keeps the selection when payment fails", async () => {
     const user = userEvent.setup()
     const onPayBill = vi.fn<(ids: string[]) => Promise<void>>().mockRejectedValue(new Error("boom"))
-    const billItems = [
+    const billItems: BillItem[] = [
       {
         id: "oi-1",
         name: "Pizza",
         guest_slot: 1,
         quantity: 1,
         payable: "34.50",
+        status: "served",
         is_paid: false,
       },
     ]
@@ -337,13 +340,14 @@ describe("CartDrawer checkout state machine", () => {
 
   it("exposes accessible bill controls (progressbar, select-all, tabpanel)", async () => {
     const user = userEvent.setup()
-    const billItems = [
+    const billItems: BillItem[] = [
       {
         id: "oi-1",
         name: "Pizza",
         guest_slot: 1,
         quantity: 1,
         payable: "34.50",
+        status: "served",
         is_paid: false,
       },
       {
@@ -352,6 +356,7 @@ describe("CartDrawer checkout state machine", () => {
         guest_slot: 1,
         quantity: 1,
         payable: "11.50",
+        status: "served",
         is_paid: true,
       },
     ]
@@ -409,13 +414,14 @@ describe("CartDrawer checkout state machine", () => {
 
   it("sums the bill on payable (tax + service), not goods-only total_price", async () => {
     const user = userEvent.setup()
-    const billItems = [
+    const billItems: BillItem[] = [
       {
         id: "oi-1",
         name: "Pizza",
         guest_slot: 1,
         quantity: 1,
         payable: "34.50",
+        status: "served",
         is_paid: false,
       },
     ]
