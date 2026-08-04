@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { useNavigate, useParams } from "react-router-dom"
+import { useNavigate, useParams, useSearchParams } from "react-router-dom"
 import { LuArrowLeft } from "react-icons/lu"
 import type { Table } from "@/types/api/types.gen"
 import { ActiveBookings } from "@/features/reservation/ActiveBookings"
@@ -61,7 +61,22 @@ export function BookingPage() {
     setUpcomingReservations,
   } = useBookingData(public_restaurant_id, isAuthenticated)
 
-  const [tab, setTab] = useState<Tab>("floor")
+  const [searchParams, setSearchParams] = useSearchParams()
+  const tab: Tab = searchParams.get("tab") === "bookings" && isAuthenticated ? "bookings" : "floor"
+  const setTab = useCallback(
+    (next: Tab) => {
+      setSearchParams(
+        (prev) => {
+          const params = new URLSearchParams(prev)
+          if (next === "floor") params.delete("tab")
+          else params.set("tab", next)
+          return params
+        },
+        { replace: true },
+      )
+    },
+    [setSearchParams],
+  )
   const [selectedTable, setSelectedTable] = useState<Table | null>(null)
   const [bookModalOpen, setBookModalOpen] = useState(false)
   const [loginCtaOpen, setLoginCtaOpen] = useState(false)
