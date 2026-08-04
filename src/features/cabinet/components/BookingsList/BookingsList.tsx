@@ -1,17 +1,9 @@
 import { useState } from "react"
-import {
-  LuCalendarClock,
-  LuFlame,
-  LuMapPin,
-  LuTable2,
-  LuUsers,
-  LuUtensilsCrossed,
-} from "react-icons/lu"
-import { useNavigate } from "react-router-dom"
+import { LuCalendarClock, LuMapPin, LuTable2, LuUsers } from "react-icons/lu"
 import { useCabinetStrings } from "@/features/cabinet/strings"
 import type { Reservation } from "@/features/cabinet/types"
-import { PreorderDialog } from "@/features/cabinet/components/PreorderDialog/PreorderDialog"
-import { formatMoney } from "@/features/cabinet/utils"
+import { PreorderDialog } from "@/features/preorder/PreorderDialog/PreorderDialog"
+import { PreorderEntry } from "@/features/preorder/PreorderEntry"
 import "./BookingsList.css"
 
 type BookingsListProps = {
@@ -48,7 +40,6 @@ export function BookingsList({
   onLoadMore,
 }: BookingsListProps) {
   const strings = useCabinetStrings()
-  const navigate = useNavigate()
 
   const [viewingPreorder, setViewingPreorder] = useState<Reservation | null>(null)
   // Bookings whose pre-order was just cancelled — hides the entry point
@@ -77,16 +68,6 @@ export function BookingsList({
               const isBusy = actionId === booking.public_id
               const showsPreorder =
                 booking.has_preorder && !cancelledPreorderIds.has(booking.public_id)
-              const preorderNote = [
-                booking.preorder_items_count
-                  ? strings.bookings.preorderDishes(booking.preorder_items_count)
-                  : null,
-                booking.preorder_total && booking.preorder_currency
-                  ? formatMoney(Number(booking.preorder_total), booking.preorder_currency)
-                  : null,
-              ]
-                .filter(Boolean)
-                .join(" · ")
 
               return (
                 <li key={booking.public_id} className="booking-card">
@@ -118,27 +99,12 @@ export function BookingsList({
                         {booking.guest_count} {strings.bookings.guestLabel(booking.guest_count)}
                       </span>
                     </p>
-                    {showsPreorder && (
-                      <button
-                        type="button"
-                        className={`booking-card__preorder-toggle${booking.preorder_cooking ? " booking-card__preorder-toggle--cooking" : ""}`}
-                        onClick={() => setViewingPreorder(booking)}
-                      >
-                        {booking.preorder_cooking ? (
-                          <LuFlame aria-hidden="true" />
-                        ) : (
-                          <LuUtensilsCrossed aria-hidden="true" />
-                        )}
-                        {booking.preorder_cooking
-                          ? strings.bookings.preorderCooking
-                          : strings.bookings.preorderShow}
-                        {preorderNote && (
-                          <span className="booking-card__preorder-note">
-                            &middot; {preorderNote}
-                          </span>
-                        )}
-                      </button>
-                    )}
+                    <PreorderEntry
+                      booking={booking}
+                      hasPreorder={showsPreorder}
+                      className="booking-card__preorder-toggle"
+                      onOpen={() => setViewingPreorder(booking)}
+                    />
                   </div>
 
                   {booking.status === "active" ? (
@@ -147,18 +113,6 @@ export function BookingsList({
                     </p>
                   ) : (
                     <div className="booking-card__actions">
-                      {booking.can_preorder && (
-                        <button
-                          type="button"
-                          className="booking-card__btn booking-card__btn--preorder"
-                          onClick={() =>
-                            navigate(`/menu/${booking.restaurant}?reservation=${booking.public_id}`)
-                          }
-                          disabled={isBusy}
-                        >
-                          {strings.bookings.preorder}
-                        </button>
-                      )}
                       <button
                         type="button"
                         className="booking-card__btn"

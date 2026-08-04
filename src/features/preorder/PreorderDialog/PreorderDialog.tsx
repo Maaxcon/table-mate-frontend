@@ -4,25 +4,14 @@ import { LuFlame, LuPlus, LuTrash2, LuUtensilsCrossed, LuX } from "react-icons/l
 import { useNavigate } from "react-router-dom"
 import { useFocusTrap } from "@/hooks/useFocusTrap"
 import { serverErrorMessage } from "@/utils/serverError"
-import { cancelPreorder, cancelPreorderItem, fetchPreorder } from "@/features/cabinet/api"
-import { useCabinetStrings } from "@/features/cabinet/strings"
-import type { Preorder } from "@/features/cabinet/types"
 import { formatDateTime, formatMoney } from "@/features/cabinet/utils"
+import { cancelPreorder, cancelPreorderItem, fetchPreorder } from "../api"
+import { usePreorderStrings } from "../strings"
+import type { Preorder, PreorderBooking } from "../types"
 import "./PreorderDialog.css"
 
-// Only the fields the dialog reads, so both the cabinet booking list and the
-// booking page's "My bookings" tab can pass their own reservation shape.
-export type PreorderDialogBooking = {
-  public_id: string
-  restaurant: string
-  table: string | null
-  table_info?: { public_number: string }
-  restaurant_info?: { name: string }
-  start_at: string
-}
-
 type PreorderDialogProps = {
-  booking: PreorderDialogBooking
+  booking: PreorderBooking
   onClose: () => void
   // Tells the parent list this booking's pre-order is gone, so it can hide
   // the entry point without re-fetching the whole booking list.
@@ -30,7 +19,7 @@ type PreorderDialogProps = {
 }
 
 export function PreorderDialog({ booking, onClose, onCancelled }: PreorderDialogProps) {
-  const strings = useCabinetStrings()
+  const strings = usePreorderStrings()
   const navigate = useNavigate()
   const dialogRef = useFocusTrap<HTMLDivElement>({ onEscape: onClose })
 
@@ -48,7 +37,7 @@ export function PreorderDialog({ booking, onClose, onCancelled }: PreorderDialog
         if (!stale) setPreorder(p)
       })
       .catch(() => {
-        if (!stale) setLoadError(strings.bookings.preorderLoadError)
+        if (!stale) setLoadError(strings.loadError)
       })
     return () => {
       stale = true
@@ -67,7 +56,7 @@ export function PreorderDialog({ booking, onClose, onCancelled }: PreorderDialog
       onCancelled()
       onClose()
     } catch (err) {
-      setCancelError(serverErrorMessage(err, strings.bookings.preorderCancelError))
+      setCancelError(serverErrorMessage(err, strings.cancelError))
       fetchPreorder(booking.public_id)
         .then(setPreorder)
         .catch(() => {})
@@ -90,7 +79,7 @@ export function PreorderDialog({ booking, onClose, onCancelled }: PreorderDialog
       }
       setPreorder(updated)
     } catch (err) {
-      setCancelError(serverErrorMessage(err, strings.bookings.preorderItemRemoveError))
+      setCancelError(serverErrorMessage(err, strings.itemRemoveError))
       fetchPreorder(booking.public_id)
         .then(setPreorder)
         .catch(() => {})
@@ -99,9 +88,8 @@ export function PreorderDialog({ booking, onClose, onCancelled }: PreorderDialog
     }
   }
 
-  const tableNumber =
-    booking.table_info?.public_number ?? booking.table ?? strings.bookings.unknownTable
-  const restaurantName = booking.restaurant_info?.name ?? strings.bookings.fallbackRestaurant
+  const tableNumber = booking.table_info?.public_number ?? booking.table ?? strings.unknownTable
+  const restaurantName = booking.restaurant_info?.name ?? strings.fallbackRestaurant
   const itemCount = preorder?.items.reduce((n, i) => n + i.quantity, 0) ?? 0
 
   return createPortal(
@@ -109,7 +97,7 @@ export function PreorderDialog({ booking, onClose, onCancelled }: PreorderDialog
       <button
         type="button"
         className="preorder-dialog__backdrop"
-        aria-label={strings.receipt.closeAria}
+        aria-label={strings.closeAria}
         tabIndex={-1}
         onClick={onClose}
       />
@@ -125,18 +113,18 @@ export function PreorderDialog({ booking, onClose, onCancelled }: PreorderDialog
           type="button"
           className="preorder-dialog__close"
           onClick={onClose}
-          aria-label={strings.receipt.closeAria}
+          aria-label={strings.closeAria}
         >
           <LuX aria-hidden="true" />
         </button>
 
         <header className="preorder-dialog__header">
-          <span className="preorder-dialog__eyebrow">{strings.bookings.preorderEyebrow}</span>
+          <span className="preorder-dialog__eyebrow">{strings.eyebrow}</span>
           <h2 className="preorder-dialog__title" id="preorder-dialog-title">
             {restaurantName}
           </h2>
           <p className="preorder-dialog__subtitle">
-            {strings.bookings.tableLabel(tableNumber)} &middot;{" "}
+            {strings.tableLabel(tableNumber)} &middot;{" "}
             {formatDateTime(booking.start_at, strings.locale)}
           </p>
         </header>
@@ -145,9 +133,9 @@ export function PreorderDialog({ booking, onClose, onCancelled }: PreorderDialog
           {loadError ? (
             <p className="preorder-dialog__error">{loadError}</p>
           ) : preorder === undefined ? (
-            <p className="preorder-dialog__hint">{strings.bookings.preorderLoading}</p>
+            <p className="preorder-dialog__hint">{strings.loading}</p>
           ) : preorder === null ? (
-            <p className="preorder-dialog__hint">{strings.bookings.preorderEmpty}</p>
+            <p className="preorder-dialog__hint">{strings.empty}</p>
           ) : (
             <>
               <div className="preorder-dialog__divider preorder-dialog__divider--dashed" />
@@ -166,7 +154,7 @@ export function PreorderDialog({ booking, onClose, onCancelled }: PreorderDialog
                         className="preorder-line__remove"
                         onClick={() => void handleRemoveItem(item.id)}
                         disabled={removingItemId !== null || cancelling}
-                        aria-label={strings.bookings.preorderItemRemove(item.name)}
+                        aria-label={strings.itemRemove(item.name)}
                       >
                         <LuTrash2 aria-hidden="true" />
                       </button>
@@ -179,19 +167,19 @@ export function PreorderDialog({ booking, onClose, onCancelled }: PreorderDialog
 
               <div className="preorder-dialog__totals">
                 <div className="preorder-row">
-                  <span>{strings.receipt.subtotal(itemCount)}</span>
+                  <span>{strings.subtotal(itemCount)}</span>
                   <span>{formatMoney(preorder.subtotal, preorder.currency)}</span>
                 </div>
                 <div className="preorder-row">
-                  <span>{strings.receipt.tax}</span>
+                  <span>{strings.tax}</span>
                   <span>{formatMoney(preorder.tax, preorder.currency)}</span>
                 </div>
                 <div className="preorder-row">
-                  <span>{strings.receipt.serviceCharge}</span>
+                  <span>{strings.serviceCharge}</span>
                   <span>{formatMoney(preorder.serviceCharge, preorder.currency)}</span>
                 </div>
                 <div className="preorder-row preorder-row--grand">
-                  <span>{strings.receipt.total}</span>
+                  <span>{strings.total}</span>
                   <span>{formatMoney(preorder.total, preorder.currency)}</span>
                 </div>
               </div>
@@ -204,9 +192,7 @@ export function PreorderDialog({ booking, onClose, onCancelled }: PreorderDialog
                 ) : (
                   <LuUtensilsCrossed aria-hidden="true" />
                 )}
-                {preorder.isCooking
-                  ? strings.bookings.preorderCookingBadge
-                  : strings.bookings.preorderPaidBadge}
+                {preorder.isCooking ? strings.cookingBadge : strings.paidBadge}
               </div>
 
               {preorder.canAddMore && (
@@ -218,7 +204,7 @@ export function PreorderDialog({ booking, onClose, onCancelled }: PreorderDialog
                   }
                 >
                   <LuPlus aria-hidden="true" />
-                  {strings.bookings.preorderAddMore}
+                  {strings.addMore}
                 </button>
               )}
 
@@ -231,15 +217,11 @@ export function PreorderDialog({ booking, onClose, onCancelled }: PreorderDialog
                   onClick={() => void handleCancel()}
                   disabled={cancelling}
                 >
-                  {cancelling
-                    ? strings.bookings.preorderCancelling
-                    : strings.bookings.preorderCancel}
+                  {cancelling ? strings.cancelling : strings.cancel}
                 </button>
               ) : (
                 <p className="preorder-dialog__locked">
-                  {preorder.isCooking
-                    ? strings.bookings.preorderLocked
-                    : strings.bookings.preorderOwnerOnly}
+                  {preorder.isCooking ? strings.locked : strings.ownerOnly}
                 </p>
               )}
             </>

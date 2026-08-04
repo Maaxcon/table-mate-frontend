@@ -46,29 +46,6 @@ export type Reservation = {
   can_preorder?: boolean
 }
 
-// A booking's current paid pre-order (GET .../preorder/), or the shape of
-// nothing to show when there isn't one (204).
-export type PreorderItem = {
-  id: string
-  name: string
-  quantity: number
-  unitPrice: number
-  totalPrice: number
-}
-
-export type Preorder = {
-  orderId: string
-  currency: string
-  subtotal: number
-  tax: number
-  serviceCharge: number
-  total: number
-  isCooking: boolean
-  canCancel: boolean
-  canAddMore: boolean
-  items: PreorderItem[]
-}
-
 // A single line on a receipt.
 export type ReceiptItem = {
   name: string

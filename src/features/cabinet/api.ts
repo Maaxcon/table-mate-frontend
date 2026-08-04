@@ -2,8 +2,7 @@ import { apiFetch } from "@/api/client"
 import heroImage from "@/assets/hero.png"
 import i18n from "@/i18n/config"
 import type { MeResponse } from "@/features/auth/types"
-import type { PreorderDetail } from "@/types/api"
-import type { CabinetProfile, HistoryEntry, Preorder, Reservation } from "./types"
+import type { CabinetProfile, HistoryEntry, Reservation } from "./types"
 
 // "Active" bookings are the ones the user can still act on.
 const ACTIVE_STATUSES = new Set(["pending", "active"])
@@ -182,76 +181,4 @@ export async function cancelReservation(publicId: string): Promise<void> {
     body: JSON.stringify({ status: "cancelled" }),
   })
   if (!res.ok) throw new Error(await extractError(res))
-}
-
-function toPreorder(data: PreorderDetail): Preorder {
-  return {
-    orderId: data.order_id,
-    currency: data.currency,
-    subtotal: Number(data.subtotal),
-    tax: Number(data.tax),
-    serviceCharge: Number(data.service_charge),
-    total: Number(data.total),
-    isCooking: data.is_cooking,
-    canCancel: data.can_cancel,
-    canAddMore: data.can_add_more,
-    items: data.items.map((i) => ({
-      id: i.public_id,
-      name: i.name,
-      quantity: i.quantity,
-      unitPrice: Number(i.unit_price),
-      totalPrice: Number(i.total_price),
-    })),
-  }
-}
-
-// The booking's current paid pre-order, or null if it doesn't have one (204).
-export async function fetchPreorder(reservationId: string): Promise<Preorder | null> {
-  const res = await apiFetch(`/api/reservations/reservations/${reservationId}/preorder/`)
-  if (res.status === 204) return null
-  if (!res.ok) throw new Error(`${res.status} ${res.statusText}`)
-  return toPreorder((await res.json()) as PreorderDetail)
-}
-
-// Drop one dish off the pre-order (simulated refund for that dish). Returns
-// the updated check, or null when it was the last dish and the whole round
-// went with it (204).
-export async function cancelPreorderItem(
-  reservationId: string,
-  itemId: string,
-): Promise<Preorder | null> {
-  const res = await apiFetch(
-    `/api/reservations/reservations/${reservationId}/preorder/items/${itemId}/`,
-    { method: "DELETE" },
-  )
-  if (res.status === 204) return null
-  if (!res.ok) {
-    const cloned = res.clone()
-    let code: string | undefined
-    try {
-      code = ((await cloned.json()) as { code?: string }).code
-    } catch {
-      // fall through — an uncoded failure translates to the caller's fallback
-    }
-    throw Object.assign(new Error(await extractError(res)), { code })
-  }
-  return toPreorder((await res.json()) as PreorderDetail)
-}
-
-// Cancel the booking's pre-order (simulated refund). Only works while the
-// kitchen hasn't started it yet — the backend 409s otherwise.
-export async function cancelPreorder(reservationId: string): Promise<void> {
-  const res = await apiFetch(`/api/reservations/reservations/${reservationId}/preorder/`, {
-    method: "DELETE",
-  })
-  if (!res.ok) {
-    const cloned = res.clone()
-    let code: string | undefined
-    try {
-      code = ((await cloned.json()) as { code?: string }).code
-    } catch {
-      // fall through — an uncoded failure translates to the caller's fallback
-    }
-    throw Object.assign(new Error(await extractError(res)), { code })
-  }
 }

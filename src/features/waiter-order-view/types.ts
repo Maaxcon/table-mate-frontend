@@ -60,20 +60,7 @@ export { getPreorderChipStatus } from "@/utils/preorderStatus"
 export type { PreorderChipStatus } from "@/utils/preorderStatus"
 
 // A reservation's paid pre-order — what the guest picked ahead of arrival.
-export type PreorderItem = {
-  name: string
-  quantity: number
-  totalPrice: number
-}
-
-export type Preorder = {
-  currency: string
-  total: number
-  items: PreorderItem[]
-  // False once the kitchen has already picked it up — staff can no longer
-  // cancel it from here at that point.
-  canCancel: boolean
-}
+export type { Preorder, PreorderItem } from "@/features/preorder/types"
 
 export interface OverlayOrderItem {
   public_id: string

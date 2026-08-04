@@ -3,24 +3,24 @@ import { render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom"
 import { PreorderDialog } from "./PreorderDialog"
-import type { Preorder, Reservation } from "@/features/cabinet/types"
+import type { Preorder, PreorderBooking } from "../types"
 import i18n from "@/i18n/config"
 
-vi.mock("@/features/cabinet/api", () => ({
+vi.mock("../api", () => ({
   fetchPreorder: vi.fn(),
   cancelPreorder: vi.fn(),
   cancelPreorderItem: vi.fn(),
 }))
 
-import { cancelPreorder, cancelPreorderItem, fetchPreorder } from "@/features/cabinet/api"
+import { cancelPreorder, cancelPreorderItem, fetchPreorder } from "../api"
 
-const booking = {
+const booking: PreorderBooking = {
   public_id: "res-1",
   restaurant: "rest-1",
-  status: "pending",
+  table: "table-1",
   start_at: "2026-08-04T18:00:00Z",
   table_info: { public_number: "T5" },
-} as Reservation
+}
 
 function MenuProbe() {
   const location = useLocation()
@@ -81,15 +81,13 @@ describe("PreorderDialog", () => {
     renderDialog()
 
     const cancel = await screen.findByRole("button", {
-      name: i18n.t("cabinet.bookings.preorderCancel"),
+      name: i18n.t("preorder.cancel"),
     })
     await userEvent.click(cancel)
 
     expect(await screen.findByText(translated)).toBeInTheDocument()
     expect(screen.queryByText(serverMessage)).not.toBeInTheDocument()
-    expect(
-      screen.queryByText(i18n.t("cabinet.bookings.preorderCancelError")),
-    ).not.toBeInTheDocument()
+    expect(screen.queryByText(i18n.t("preorder.cancelError"))).not.toBeInTheDocument()
   })
 
   it("locks the button after a refusal instead of inviting another try", async () => {
@@ -100,15 +98,13 @@ describe("PreorderDialog", () => {
 
     renderDialog()
 
-    await userEvent.click(
-      await screen.findByRole("button", { name: i18n.t("cabinet.bookings.preorderCancel") }),
-    )
+    await userEvent.click(await screen.findByRole("button", { name: i18n.t("preorder.cancel") }))
 
     await waitFor(() => {
-      expect(screen.getByText(i18n.t("cabinet.bookings.preorderLocked"))).toBeInTheDocument()
+      expect(screen.getByText(i18n.t("preorder.locked"))).toBeInTheDocument()
     })
     expect(
-      screen.queryByRole("button", { name: i18n.t("cabinet.bookings.preorderCancel") }),
+      screen.queryByRole("button", { name: i18n.t("preorder.cancel") }),
     ).not.toBeInTheDocument()
   })
 
@@ -120,9 +116,7 @@ describe("PreorderDialog", () => {
 
     renderDialog({ onClose, onCancelled })
 
-    await userEvent.click(
-      await screen.findByRole("button", { name: i18n.t("cabinet.bookings.preorderCancel") }),
-    )
+    await userEvent.click(await screen.findByRole("button", { name: i18n.t("preorder.cancel") }))
 
     await waitFor(() => expect(onCancelled).toHaveBeenCalledOnce())
     expect(onClose).toHaveBeenCalledOnce()
@@ -133,9 +127,7 @@ describe("PreorderDialog", () => {
 
     renderDialog()
 
-    await userEvent.click(
-      await screen.findByRole("button", { name: i18n.t("cabinet.bookings.preorderAddMore") }),
-    )
+    await userEvent.click(await screen.findByRole("button", { name: i18n.t("preorder.addMore") }))
 
     expect(await screen.findByTestId("menu-route")).toHaveTextContent(
       "/menu/rest-1?reservation=res-1",
@@ -152,7 +144,7 @@ describe("PreorderDialog", () => {
 
     await userEvent.click(
       await screen.findByRole("button", {
-        name: i18n.t("cabinet.bookings.preorderItemRemove", { name: "Steak" }),
+        name: i18n.t("preorder.itemRemove", { name: "Steak" }),
       }),
     )
 
@@ -172,7 +164,7 @@ describe("PreorderDialog", () => {
 
     await userEvent.click(
       await screen.findByRole("button", {
-        name: i18n.t("cabinet.bookings.preorderItemRemove", { name: "Steak" }),
+        name: i18n.t("preorder.itemRemove", { name: "Steak" }),
       }),
     )
 
@@ -185,10 +177,10 @@ describe("PreorderDialog", () => {
 
     renderDialog()
 
-    await screen.findByText(i18n.t("cabinet.bookings.preorderLocked"))
+    await screen.findByText(i18n.t("preorder.locked"))
     expect(
       screen.queryByRole("button", {
-        name: i18n.t("cabinet.bookings.preorderItemRemove", { name: "Steak" }),
+        name: i18n.t("preorder.itemRemove", { name: "Steak" }),
       }),
     ).not.toBeInTheDocument()
   })
@@ -200,9 +192,9 @@ describe("PreorderDialog", () => {
 
     renderDialog()
 
-    await screen.findByRole("button", { name: i18n.t("cabinet.bookings.preorderCancel") })
+    await screen.findByRole("button", { name: i18n.t("preorder.cancel") })
     expect(
-      screen.queryByRole("button", { name: i18n.t("cabinet.bookings.preorderAddMore") }),
+      screen.queryByRole("button", { name: i18n.t("preorder.addMore") }),
     ).not.toBeInTheDocument()
   })
 })
@@ -220,10 +212,10 @@ describe("PreorderDialog for a participant who isn't the booker", () => {
     renderDialog()
 
     // Assert through i18n rather than literal copy — the test env renders uk.
-    const ownerOnly = i18n.t("cabinet.bookings.preorderOwnerOnly")
-    const kitchenStarted = i18n.t("cabinet.bookings.preorderLocked")
+    const ownerOnly = i18n.t("preorder.ownerOnly")
+    const kitchenStarted = i18n.t("preorder.locked")
     await waitFor(() => expect(screen.getByText(ownerOnly)).toBeTruthy())
     expect(screen.queryByText(kitchenStarted)).toBeNull()
-    expect(screen.queryByText(i18n.t("cabinet.bookings.preorderCancel"))).toBeNull()
+    expect(screen.queryByText(i18n.t("preorder.cancel"))).toBeNull()
   })
 })

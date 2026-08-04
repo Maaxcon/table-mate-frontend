@@ -1,22 +1,10 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactElement } from "react"
-import {
-  LuCalendarPlus,
-  LuCircleCheck,
-  LuClock,
-  LuFlame,
-  LuPencil,
-  LuReceiptText,
-  LuUsers,
-  LuUtensilsCrossed,
-  LuX,
-} from "react-icons/lu"
-import { useNavigate } from "react-router-dom"
-import { getPreorderChipStatus, type PreorderChipStatus } from "@/utils/preorderStatus"
-import { PreorderDialog } from "@/features/cabinet/components/PreorderDialog/PreorderDialog"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { LuCalendarPlus, LuClock, LuPencil, LuReceiptText, LuUsers, LuX } from "react-icons/lu"
+import { PreorderDialog } from "@/features/preorder/PreorderDialog/PreorderDialog"
+import { PreorderEntry } from "@/features/preorder/PreorderEntry"
 import { ReceiptDialog } from "@/features/cabinet/components/ReceiptDialog/ReceiptDialog"
 import { fetchMyReceipts } from "@/features/cabinet/api"
 import type { HistoryEntry } from "@/features/cabinet/types"
-import { formatMoney } from "@/features/cabinet/utils"
 import type { ReservationStatus, ReservationWithTable, WorkingHoursDay } from "./api"
 import { cancelReservation, fetchMyReservations } from "./api"
 import { BookingsSkeleton } from "./BookingSkeleton"
@@ -62,12 +50,6 @@ function getTemporalPhase(startAt: string, endAt: string): TemporalPhase {
 
 const STATUS_ORDER: ReservationStatus[] = ["pending", "active"]
 
-const PREORDER_ICONS: Record<PreorderChipStatus, ReactElement> = {
-  paid: <LuUtensilsCrossed aria-hidden="true" />,
-  cooking: <LuFlame aria-hidden="true" />,
-  ready: <LuCircleCheck aria-hidden="true" />,
-}
-
 const byStartAsc = (a: ReservationWithTable, b: ReservationWithTable) =>
   new Date(a.start_at).getTime() - new Date(b.start_at).getTime()
 const byStartDesc = (a: ReservationWithTable, b: ReservationWithTable) =>
@@ -83,14 +65,8 @@ export function ActiveBookings({
   onBrowseTables,
 }: ActiveBookingsProps) {
   const bookStrings = useBookStrings()
-  const navigate = useNavigate()
   const PHASE_LABELS: Record<TemporalPhase, string> = bookStrings.myBookings.phase
   const STATUS_LABELS: Record<ReservationStatus, string> = bookStrings.myBookings.status
-  const PREORDER_LABELS: Record<PreorderChipStatus, string> = {
-    paid: bookStrings.myBookings.actions.preorderPaid,
-    cooking: bookStrings.myBookings.actions.preorderCooking,
-    ready: bookStrings.myBookings.actions.preorderReady,
-  }
   const [actionId, setActionId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [rescheduleTarget, setRescheduleTarget] = useState<ReservationWithTable | null>(null)
@@ -195,18 +171,7 @@ export function ActiveBookings({
       const endTime = formatTimeInTz(r.end_at, timeZone)
       const isBusy = actionId === r.public_id
       const phase = getTemporalPhase(r.start_at, r.end_at)
-      const preorderStatus = getPreorderChipStatus(r)
       const receipt = receipts.get(r.public_id)
-      const preorderSummary = [
-        r.preorder_items_count
-          ? bookStrings.myBookings.actions.preorderDishes(r.preorder_items_count)
-          : null,
-        r.preorder_total && r.preorder_currency
-          ? formatMoney(Number(r.preorder_total), r.preorder_currency)
-          : null,
-      ]
-        .filter(Boolean)
-        .join(" · ")
 
       return (
         <article key={r.public_id} className={`ab__card${withActions ? "" : " ab__card--past"}`}>
@@ -255,32 +220,12 @@ export function ActiveBookings({
 
             {withActions && (
               <div className="ab__card-actions">
-                {r.has_preorder ? (
-                  <button
-                    className={`ab__action ab__action--preorder ab__action--preorder-${preorderStatus}`}
-                    onClick={() => setPreorderTarget(r)}
-                    type="button"
-                  >
-                    {PREORDER_ICONS[preorderStatus]}
-                    {PREORDER_LABELS[preorderStatus]}
-                    {preorderSummary && (
-                      <span className="ab__action-note">&middot; {preorderSummary}</span>
-                    )}
-                  </button>
-                ) : (
-                  r.can_preorder &&
-                  r.restaurant && (
-                    <button
-                      className="ab__action ab__action--preorder"
-                      onClick={() => navigate(`/menu/${r.restaurant}?reservation=${r.public_id}`)}
-                      disabled={isBusy}
-                      type="button"
-                    >
-                      <LuUtensilsCrossed aria-hidden="true" />
-                      {bookStrings.myBookings.actions.preorder}
-                    </button>
-                  )
-                )}
+                <PreorderEntry
+                  booking={r}
+                  className="ab__preorder"
+                  onOpen={() => setPreorderTarget(r)}
+                  disabled={isBusy}
+                />
                 <button
                   className="ab__action ab__action--edit ab__action--cta"
                   onClick={() => setRescheduleTarget(r)}

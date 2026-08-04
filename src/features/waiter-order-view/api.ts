@@ -1,11 +1,9 @@
 import { apiFetch } from "@/api/client"
-import type { PreorderDetail } from "@/types/api"
 import {
   formatDuration,
   type FloorTable,
   type OverlayDetail,
   type OverlayOrderItem,
-  type Preorder,
   type ReservationItem,
 } from "./types"
 
@@ -82,53 +80,9 @@ export async function fetchReservations(signal?: AbortSignal): Promise<Reservati
   return (data.results ?? []).map(mapReservationItem)
 }
 
-// What the guest pre-ordered for this reservation, or null when the booking
-// genuinely has none (204). Anything else throws: folding a 500 or a 403 into
-// the same null told the waiter there was no food coming when there was.
-export async function fetchPreorder(
-  reservationId: string,
-  signal?: AbortSignal,
-): Promise<Preorder | null> {
-  const res = await apiFetch(
-    `/api/reservations/reservations/${reservationId}/preorder/`,
-    signal ? { signal } : undefined,
-  )
-  if (res.status === 204) return null
-  if (!res.ok) throw new Error(`${res.status} ${res.statusText}`)
-  const data = (await res.json()) as PreorderDetail
-  return {
-    currency: data.currency,
-    total: Number(data.total),
-    canCancel: data.can_cancel,
-    items: data.items.map((i) => ({
-      name: i.name,
-      quantity: i.quantity,
-      totalPrice: Number(i.total_price),
-    })),
-  }
-}
-
-// Cancel a reservation's pre-order (simulated refund). Only works while the
-// kitchen hasn't started it yet — the backend rejects it otherwise.
-export async function cancelPreorder(reservationId: string): Promise<void> {
-  const res = await apiFetch(`/api/reservations/reservations/${reservationId}/preorder/`, {
-    method: "DELETE",
-  })
-  if (!res.ok) {
-    let message = res.statusText
-    let code: string | undefined
-    try {
-      const body = (await res.json()) as { detail?: string; code?: string }
-      if (body.detail) message = body.detail
-      if (body.code) code = body.code
-    } catch {
-      // ignore
-    }
-    // The code is what the UI translates off; the message is only a fallback
-    // for a code we don't have a string for.
-    throw Object.assign(new Error(message), { code })
-  }
-}
+// The pre-order endpoints live in features/preorder — one copy for the
+// guest's booking lists and the waiter's reservation panel alike.
+export { cancelPreorder, fetchPreorder } from "@/features/preorder/api"
 
 // ── Open-table overlay ───────────────────────────────────────────────
 function mapOrderItem(oi: OrderItemApiItem): OverlayOrderItem {
