@@ -22,6 +22,7 @@ import type {
   FloorTableStatusEvent,
   FloorNewReservationEvent,
   FloorReservationCancelledEvent,
+  FloorPreorderStatusEvent,
 } from "@/features/reservation/hooks/useFloorSubscription"
 import { useAppSelector } from "@/store/hooks"
 import "./BookingPage.css"
@@ -239,6 +240,14 @@ export function BookingPage() {
     [setUpcomingReservations],
   )
 
+  const handlePreorderStatusChanged = useCallback(
+    (event: FloorPreorderStatusEvent) => {
+      if (!reservations.some((r) => r.public_id === event.reservation_id)) return
+      reloadReservations()
+    },
+    [reservations, reloadReservations],
+  )
+
   const handleLayoutPublished = useCallback(() => {
     // reloadTables now refreshes tables + layout + upcoming in one call.
     reloadTables()
@@ -250,6 +259,7 @@ export function BookingPage() {
     onTableStatusChanged: handleTableStatusChanged,
     onNewReservation: handleNewReservation,
     onReservationCancelled: handleReservationCancelled,
+    onPreorderStatusChanged: handlePreorderStatusChanged,
     onLayoutPublished: handleLayoutPublished,
     onZoneCreated: reloadZones,
     onZoneUpdated: reloadZones,
