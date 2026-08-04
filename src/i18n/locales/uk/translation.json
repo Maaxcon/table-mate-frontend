@@ -538,7 +538,8 @@
         "scheduler": "Розклад",
         "floorPlan": "План залу",
         "kitchen": "Кухня",
-        "floor": "Зала"
+        "floor": "Зала",
+        "shifts": "Зміни"
       },
       "logout": {
         "aria": "Вийти",
@@ -1558,6 +1559,89 @@
           "alt": "QR-код для столика {{table}}"
         }
       }
+    },
+    "shiftScheduler": {
+      "toolbar": {
+        "today": "Сьогодні",
+        "prev": "Попередній день",
+        "next": "Наступний день",
+        "addEmployee": "Додати працівника",
+        "removeEmployee": "Видалити",
+        "copy": "Копіювати зміни",
+        "paste": "Вставити зміни",
+        "selectTarget": "Виберіть цільову дату(и)",
+        "clearEmployees": "Очистити всіх"
+      },
+      "grid": {
+        "hour": "{{hour}}:00",
+        "emptyDay": "На цей день зміни не заплановано.",
+        "emptyEmployees": "Додайте працівників, щоб почати планування.",
+        "noRestaurant": "Заклад не обрано."
+      },
+      "shift": {
+        "add": "Додати зміну",
+        "edit": "Редагувати зміну",
+        "delete": "Видалити зміну",
+        "startTime": "Початок",
+        "endTime": "Кінець",
+        "notes": "Нотатки",
+        "deleteConfirm": "Видалити цю зміну?",
+        "duration": "{{hours}} год {{minutes}} хв"
+      },
+      "copyPaste": {
+        "sourceLabel": "Копіювання з {{date}}",
+        "targetPlaceholder": "Виберіть дати для вставки",
+        "confirm": "Вставити в {{count}} днів",
+        "success": "Скопійовано {{count}} змін.",
+        "conflict": "Деякі зміни вже існують на цільових датах."
+      },
+      "saveBar": {
+        "save": "Зберегти",
+        "saving": "Зберігаємо…"
+      },
+      "toasts": {
+        "saved": "Зміни збережено.",
+        "saveFailed": "Не вдалося зберегти зміни.",
+        "created": "Зміну створено.",
+        "deleted": "Зміну видалено.",
+        "copied": "Зміни скопійовано."
+      }
+    },
+    "staffShifts": {
+      "title": "Мої зміни",
+      "totalHours": "Всього годин: {{hours}}",
+      "noShifts": "Цього місяця змін немає.",
+      "noEmployee": "Виберіть працівника для перегляду змін.",
+      "loading": "Завантаження змін…",
+      "selectEmployee": "Виберіть працівника",
+      "today": "Сьогодні",
+      "shiftCount": "{{count}} змін(и)",
+      "dayDetail": {
+        "title": "Зміни на {{date}}",
+        "start": "Початок",
+        "end": "Кінець",
+        "duration": "Тривалість",
+        "notes": "Нотатки",
+        "close": "Закрити"
+      }
+    },
+    "monthSummary": {
+      "title": "Зведення годин",
+      "loading": "Завантаження…",
+      "noData": "Цього місяця змін не зареєстровано.",
+      "monthLabel": "{{month}} {{year}}",
+      "employee": "Працівник",
+      "totalHours": "Всього годин",
+      "shiftCount": "Змін",
+      "role": "Роль",
+      "myHours": "Мої години",
+      "viewSummary": "Переглянути зведення",
+      "date": "Дата",
+      "start": "Початок",
+      "end": "Кінець",
+      "duration": "Тривалість",
+      "error": "Не вдалося завантажити зведення. Спробуйте ще раз.",
+      "retry": "Повторити"
     }
   }
 }

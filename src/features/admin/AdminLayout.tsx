@@ -12,6 +12,7 @@ import {
   LuStore,
   LuUsers,
   LuUtensilsCrossed,
+  LuClock,
 } from "react-icons/lu"
 import { useAppSelector } from "@/store/hooks"
 import { useLogout } from "@/features/auth/hooks/useLogout"
@@ -31,6 +32,7 @@ const NAV_ITEMS = [
   { to: "/admin/floor-plan/edit", key: "floorPlan", icon: LuPencilRuler },
   { to: "/admin/kitchen", key: "kitchen", icon: LuChefHat },
   { to: "/admin/floor", key: "floor", icon: LuMap },
+  { to: "/admin/shifts", key: "shifts", icon: LuClock },
 ] as const
 
 const useMediaQuery = (query: string) => {
@@ -88,7 +90,8 @@ function AdminLayout() {
     return (
       location.pathname.startsWith("/admin/kitchen") ||
       location.pathname.startsWith("/admin/floor") ||
-      location.pathname.startsWith("/admin/scheduler")
+      location.pathname.startsWith("/admin/scheduler") ||
+      location.pathname.startsWith("/admin/shifts")
     )
   }, [location.pathname])
 

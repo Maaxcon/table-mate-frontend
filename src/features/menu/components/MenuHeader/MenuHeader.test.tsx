@@ -5,6 +5,7 @@ import MenuHeader from "@/features/menu/components/MenuHeader/MenuHeader"
 import type { AuthUser } from "@/store/auth/authSlice"
 
 const admin: AuthUser = {
+  public_id: "admin-uuid",
   email: "admin@example.com",
   firstName: "Ada",
   lastName: "Min",

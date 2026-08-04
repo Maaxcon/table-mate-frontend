@@ -187,6 +187,12 @@ export type CheckoutResponse = {
   currency: string
 }
 
+export type CopyShifts = {
+  source_date: string
+  target_dates: Array<string>
+  employee_ids?: Array<string>
+}
+
 /**
  * * `staff` - Staff
  * * `customer` - Customer
@@ -567,6 +573,13 @@ export type PaginatedSessionList = {
   results: Array<Session>
 }
 
+export type PaginatedShiftList = {
+  count: number
+  next?: string | null
+  previous?: string | null
+  results: Array<Shift>
+}
+
 export type PaginatedTableList = {
   count: number
   next?: string | null
@@ -782,6 +795,15 @@ export type PatchedSession = {
   readonly opened_at?: string
   readonly created_at?: string
   readonly updated_at?: string
+}
+
+export type PatchedShiftWrite = {
+  readonly public_id?: string
+  employee?: string
+  date?: string
+  start_time?: string
+  end_time?: string
+  notes?: string
 }
 
 export type PatchedTicket = {
@@ -1041,6 +1063,29 @@ export type SetGuestName = {
  * * `booth` - booth
  */
 export type ShapeEnum = "rectangle" | "round" | "square" | "booth"
+
+export type Shift = {
+  readonly public_id: string
+  employee: string
+  readonly employee_name: string
+  readonly employee_role: string
+  date: string
+  start_time: string
+  end_time: string
+  notes?: string
+  readonly duration_hours: number
+  readonly created_at: string
+  readonly updated_at: string
+}
+
+export type ShiftWrite = {
+  readonly public_id: string
+  employee: string
+  date: string
+  start_time: string
+  end_time: string
+  notes?: string
+}
 
 /**
  * * `waiter_manual` - Waiter manual
@@ -1536,6 +1581,13 @@ export type PaginatedSessionListWritable = {
   results: Array<SessionWritable>
 }
 
+export type PaginatedShiftListWritable = {
+  count: number
+  next?: string | null
+  previous?: string | null
+  results: Array<ShiftWritable>
+}
+
 export type PaginatedTableListWritable = {
   count: number
   next?: string | null
@@ -1671,6 +1723,14 @@ export type PatchedSessionWritable = {
   status?: SessionStatusEnum
 }
 
+export type PatchedShiftWriteWritable = {
+  employee?: string
+  date?: string
+  start_time?: string
+  end_time?: string
+  notes?: string
+}
+
 export type PatchedTicketWritable = {
   session?: string
   order?: string
@@ -1747,6 +1807,22 @@ export type SessionWritable = {
   table: string
   guest_count: number
   status?: SessionStatusEnum
+}
+
+export type ShiftWritable = {
+  employee: string
+  date: string
+  start_time: string
+  end_time: string
+  notes?: string
+}
+
+export type ShiftWriteWritable = {
+  employee: string
+  date: string
+  start_time: string
+  end_time: string
+  notes?: string
 }
 
 export type TableWritable = {
@@ -4152,3 +4228,114 @@ export type RestaurantsZonesUpdateResponses = {
 
 export type RestaurantsZonesUpdateResponse =
   RestaurantsZonesUpdateResponses[keyof RestaurantsZonesUpdateResponses]
+
+export type ShiftsListData = {
+  body?: never
+  path?: never
+  query?: {
+    /**
+     * Which field to use when ordering the results.
+     */
+    ordering?: string
+    /**
+     * A page number within the paginated result set.
+     */
+    page?: number
+  }
+  url: "/api/shifts/"
+}
+
+export type ShiftsListResponses = {
+  200: PaginatedShiftList
+}
+
+export type ShiftsListResponse = ShiftsListResponses[keyof ShiftsListResponses]
+
+export type ShiftsCreateData = {
+  body: ShiftWriteWritable
+  path?: never
+  query?: never
+  url: "/api/shifts/"
+}
+
+export type ShiftsCreateResponses = {
+  201: ShiftWrite
+}
+
+export type ShiftsCreateResponse = ShiftsCreateResponses[keyof ShiftsCreateResponses]
+
+export type ShiftsDestroyData = {
+  body?: never
+  path: {
+    public_id: string
+  }
+  query?: never
+  url: "/api/shifts/{public_id}/"
+}
+
+export type ShiftsDestroyResponses = {
+  /**
+   * No response body
+   */
+  204: void
+}
+
+export type ShiftsDestroyResponse = ShiftsDestroyResponses[keyof ShiftsDestroyResponses]
+
+export type ShiftsRetrieveData = {
+  body?: never
+  path: {
+    public_id: string
+  }
+  query?: never
+  url: "/api/shifts/{public_id}/"
+}
+
+export type ShiftsRetrieveResponses = {
+  200: Shift
+}
+
+export type ShiftsRetrieveResponse = ShiftsRetrieveResponses[keyof ShiftsRetrieveResponses]
+
+export type ShiftsPartialUpdateData = {
+  body?: PatchedShiftWriteWritable
+  path: {
+    public_id: string
+  }
+  query?: never
+  url: "/api/shifts/{public_id}/"
+}
+
+export type ShiftsPartialUpdateResponses = {
+  200: ShiftWrite
+}
+
+export type ShiftsPartialUpdateResponse =
+  ShiftsPartialUpdateResponses[keyof ShiftsPartialUpdateResponses]
+
+export type ShiftsCopyCreateData = {
+  body: CopyShifts
+  path?: never
+  query?: never
+  url: "/api/shifts/copy/"
+}
+
+export type ShiftsCopyCreateResponses = {
+  200: CopyShifts
+}
+
+export type ShiftsCopyCreateResponse = ShiftsCopyCreateResponses[keyof ShiftsCopyCreateResponses]
+
+export type ShiftsMonthSummaryRetrieveData = {
+  body?: never
+  path?: never
+  query?: never
+  url: "/api/shifts/month_summary/"
+}
+
+export type ShiftsMonthSummaryRetrieveResponses = {
+  200: Shift
+}
+
+export type ShiftsMonthSummaryRetrieveResponse =
+  ShiftsMonthSummaryRetrieveResponses[keyof ShiftsMonthSummaryRetrieveResponses]
