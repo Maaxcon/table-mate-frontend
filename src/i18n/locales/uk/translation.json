@@ -466,6 +466,8 @@
       "preorderDishes_few": "{{count}} страви",
       "preorderDishes_many": "{{count}} страв",
       "preorderDishes_other": "{{count}} страви",
+      "preorderItemRemove": "Прибрати «{{name}}» із замовлення",
+      "preorderItemRemoveError": "Не вдалося прибрати цю страву. Спробуйте ще раз.",
       "preorderCancel": "Скасувати замовлення",
       "preorderCancelling": "Скасування…",
       "preorderCancelError": "Не вдалося скасувати замовлення. Спробуйте ще раз.",

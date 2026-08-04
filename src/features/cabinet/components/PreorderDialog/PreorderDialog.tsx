@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react"
 import { createPortal } from "react-dom"
-import { LuFlame, LuPlus, LuUtensilsCrossed, LuX } from "react-icons/lu"
+import { LuFlame, LuPlus, LuTrash2, LuUtensilsCrossed, LuX } from "react-icons/lu"
 import { useNavigate } from "react-router-dom"
 import { useFocusTrap } from "@/hooks/useFocusTrap"
 import { serverErrorMessage } from "@/utils/serverError"
-import { cancelPreorder, fetchPreorder } from "@/features/cabinet/api"
+import { cancelPreorder, cancelPreorderItem, fetchPreorder } from "@/features/cabinet/api"
 import { useCabinetStrings } from "@/features/cabinet/strings"
 import type { Preorder } from "@/features/cabinet/types"
 import { formatDateTime, formatMoney } from "@/features/cabinet/utils"
@@ -40,6 +40,7 @@ export function PreorderDialog({ booking, onClose, onCancelled }: PreorderDialog
   const [loadError, setLoadError] = useState<string | null>(null)
   const [cancelling, setCancelling] = useState(false)
   const [cancelError, setCancelError] = useState<string | null>(null)
+  const [removingItemId, setRemovingItemId] = useState<string | null>(null)
 
   useEffect(() => {
     let stale = false
@@ -73,6 +74,29 @@ export function PreorderDialog({ booking, onClose, onCancelled }: PreorderDialog
         .catch(() => {})
     } finally {
       setCancelling(false)
+    }
+  }
+
+  // Dropping the last dish takes the whole round with it, and the server
+  // answers 204 — same end state as cancelling, so close and tell the list.
+  const handleRemoveItem = async (itemId: string) => {
+    setRemovingItemId(itemId)
+    setCancelError(null)
+    try {
+      const updated = await cancelPreorderItem(booking.public_id, itemId)
+      if (updated === null) {
+        onCancelled()
+        onClose()
+        return
+      }
+      setPreorder(updated)
+    } catch (err) {
+      setCancelError(serverErrorMessage(err, strings.bookings.preorderItemRemoveError))
+      fetchPreorder(booking.public_id)
+        .then(setPreorder)
+        .catch(() => {})
+    } finally {
+      setRemovingItemId(null)
     }
   }
 
@@ -130,13 +154,24 @@ export function PreorderDialog({ booking, onClose, onCancelled }: PreorderDialog
               <div className="preorder-dialog__divider preorder-dialog__divider--dashed" />
 
               <ul className="preorder-dialog__items">
-                {preorder.items.map((item, i) => (
-                  <li className="preorder-line" key={i}>
+                {preorder.items.map((item) => (
+                  <li className="preorder-line" key={item.id}>
                     <span className="preorder-line__qty">{item.quantity}&times;</span>
                     <span className="preorder-line__name">{item.name}</span>
                     <span className="preorder-line__price">
                       {formatMoney(item.totalPrice, preorder.currency)}
                     </span>
+                    {preorder.canCancel && (
+                      <button
+                        type="button"
+                        className="preorder-line__remove"
+                        onClick={() => void handleRemoveItem(item.id)}
+                        disabled={removingItemId !== null || cancelling}
+                        aria-label={strings.bookings.preorderItemRemove(item.name)}
+                      >
+                        <LuTrash2 aria-hidden="true" />
+                      </button>
+                    )}
                   </li>
                 ))}
               </ul>

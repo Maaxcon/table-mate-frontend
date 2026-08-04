@@ -46,6 +46,7 @@ export type Reservation = {
 // A booking's current paid pre-order (GET .../preorder/), or the shape of
 // nothing to show when there isn't one (204).
 export type PreorderItem = {
+  id: string
   name: string
   quantity: number
   unitPrice: number

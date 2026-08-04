@@ -9,9 +9,10 @@ import i18n from "@/i18n/config"
 vi.mock("@/features/cabinet/api", () => ({
   fetchPreorder: vi.fn(),
   cancelPreorder: vi.fn(),
+  cancelPreorderItem: vi.fn(),
 }))
 
-import { cancelPreorder, fetchPreorder } from "@/features/cabinet/api"
+import { cancelPreorder, cancelPreorderItem, fetchPreorder } from "@/features/cabinet/api"
 
 const booking = {
   public_id: "res-1",
@@ -53,13 +54,17 @@ const preorder = (canCancel: boolean, isCooking = !canCancel): Preorder => ({
   total: 115,
   isCooking,
   canCancel,
-  items: [{ name: "Steak", quantity: 1, unitPrice: 100, totalPrice: 100 }],
+  items: [
+    { id: "item-1", name: "Steak", quantity: 1, unitPrice: 100, totalPrice: 100 },
+    { id: "item-2", name: "Salad", quantity: 1, unitPrice: 40, totalPrice: 40 },
+  ],
 })
 
 describe("PreorderDialog", () => {
   beforeEach(() => {
     vi.mocked(fetchPreorder).mockReset()
     vi.mocked(cancelPreorder).mockReset()
+    vi.mocked(cancelPreorderItem).mockReset()
   })
 
   it("shows the server's reason when the kitchen already started a round", async () => {
@@ -134,6 +139,57 @@ describe("PreorderDialog", () => {
     expect(await screen.findByTestId("menu-route")).toHaveTextContent(
       "/menu/rest-1?reservation=res-1",
     )
+  })
+
+  it("shows the shortened check after one dish is removed", async () => {
+    const rest = preorder(true)
+    rest.items = rest.items.filter((i) => i.id !== "item-1")
+    vi.mocked(fetchPreorder).mockResolvedValue(preorder(true))
+    vi.mocked(cancelPreorderItem).mockResolvedValue(rest)
+
+    renderDialog()
+
+    await userEvent.click(
+      await screen.findByRole("button", {
+        name: i18n.t("cabinet.bookings.preorderItemRemove", { name: "Steak" }),
+      }),
+    )
+
+    await waitFor(() => expect(screen.queryByText("Steak")).not.toBeInTheDocument())
+    expect(screen.getByText("Salad")).toBeInTheDocument()
+    expect(cancelPreorderItem).toHaveBeenCalledWith("res-1", "item-1")
+  })
+
+  it("closes when the removed dish was the last one", async () => {
+    vi.mocked(fetchPreorder).mockResolvedValue(preorder(true))
+    // 204: the round went with the dish.
+    vi.mocked(cancelPreorderItem).mockResolvedValue(null)
+    const onClose = vi.fn()
+    const onCancelled = vi.fn()
+
+    renderDialog({ onClose, onCancelled })
+
+    await userEvent.click(
+      await screen.findByRole("button", {
+        name: i18n.t("cabinet.bookings.preorderItemRemove", { name: "Steak" }),
+      }),
+    )
+
+    await waitFor(() => expect(onCancelled).toHaveBeenCalledOnce())
+    expect(onClose).toHaveBeenCalledOnce()
+  })
+
+  it("offers no remove buttons once the kitchen has the round", async () => {
+    vi.mocked(fetchPreorder).mockResolvedValue(preorder(false))
+
+    renderDialog()
+
+    await screen.findByText(i18n.t("cabinet.bookings.preorderLocked"))
+    expect(
+      screen.queryByRole("button", {
+        name: i18n.t("cabinet.bookings.preorderItemRemove", { name: "Steak" }),
+      }),
+    ).not.toBeInTheDocument()
   })
 
   it("hides adding more once the booking has started", async () => {

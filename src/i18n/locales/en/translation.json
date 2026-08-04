@@ -452,6 +452,8 @@
       "preorderAddMore": "Add more items",
       "preorderDishes_one": "{{count}} dish",
       "preorderDishes_other": "{{count}} dishes",
+      "preorderItemRemove": "Remove {{name}} from the pre-order",
+      "preorderItemRemoveError": "Could not remove this dish. Please try again.",
       "preorderCancel": "Cancel pre-order",
       "preorderCancelling": "Cancelling…",
       "preorderCancelError": "Could not cancel the pre-order. Please try again.",
