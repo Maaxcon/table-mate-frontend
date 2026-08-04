@@ -267,6 +267,7 @@ export function WaiterOrderPage() {
     actionBusy,
     busyActionId,
     actionError,
+    actionErrorMeta,
     handleOpenTable,
     handleActivateReservation,
     handleCloseCheck,
@@ -429,10 +430,9 @@ export function WaiterOrderPage() {
     ? getTableVisualStatus(selectedTable, layoutReservations, currentTime)
     : "free"
 
-  const pendingTodayReservations = mergedReservations.filter(
-    (r) =>
-      r.status === "pending" && new Date(r.start_at).toDateString() === currentTime.toDateString(),
-  )
+  // Every upcoming pending reservation, not just today's — ReservationSidebar
+  // groups them by date so tomorrow's (and later) bookings are visible too.
+  const pendingUpcomingReservations = mergedReservations.filter((r) => r.status === "pending")
 
   const activeReservationsByTable = useMemo(() => {
     const map: Record<string, ReservationItem> = {}
@@ -529,7 +529,8 @@ export function WaiterOrderPage() {
             <div className="waiter-view__sidebar-panel">
               {sidebarTab === "reservations" ? (
                 <ReservationSidebar
-                  reservations={pendingTodayReservations}
+                  reservations={pendingUpcomingReservations}
+                  currentTime={currentTime}
                   onCancel={handleCancel}
                   onModify={handleModify}
                   actionLoading={sidebarActionLoading}
@@ -548,7 +549,8 @@ export function WaiterOrderPage() {
         ) : (
           <div className="waiter-view__side-grid">
             <ReservationSidebar
-              reservations={pendingTodayReservations}
+              reservations={pendingUpcomingReservations}
+              currentTime={currentTime}
               onCancel={handleCancel}
               onModify={handleModify}
               actionLoading={sidebarActionLoading}
@@ -577,10 +579,15 @@ export function WaiterOrderPage() {
           actionBusy={actionBusy}
           busyActionId={busyActionId}
           actionError={actionError}
+          closeCheckUnservedCount={
+            actionErrorMeta?.code === "unserved_items" ? actionErrorMeta.count : undefined
+          }
           onOpenTable={handleOpenTable}
           onActivateReservation={handleActivateReservation}
           onCancelReservation={(reservationId) => handleCancel(reservationId)}
-          onCloseCheck={overlayDetail ? () => handleCloseCheck(overlayDetail.public_id) : undefined}
+          onCloseCheck={
+            overlayDetail ? (force) => handleCloseCheck(overlayDetail.public_id, force) : undefined
+          }
           onProcessPayment={
             overlayDetail
               ? (orderItemIds) => handleProcessPayment(overlayDetail.public_id, orderItemIds)

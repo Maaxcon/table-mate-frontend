@@ -16,6 +16,7 @@ function makeTicket(overrides: Partial<KanbanTicket> = {}): KanbanTicket {
     startedAt: Date.now() - 5 * 60 * 1000,
     guestCount: 3,
     serverName: "Alice",
+    isPreorder: false,
     ...overrides,
   }
 }

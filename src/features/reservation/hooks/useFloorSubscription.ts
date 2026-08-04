@@ -66,6 +66,13 @@ export interface FloorSessionAutoExtendedEvent {
   occurred_at: string
 }
 
+export interface FloorPreorderStatusEvent {
+  event_name: "HALL_PREORDER_STATUS_CHANGED"
+  reservation_id: string
+  status: "paid" | "cooking" | "ready"
+  occurred_at: string
+}
+
 export type FloorEvent =
   | FloorTableStatusEvent
   | FloorNewReservationEvent
@@ -76,6 +83,7 @@ export type FloorEvent =
   | FloorZoneDeletedEvent
   | FloorReservationsUpdatedEvent
   | FloorSessionAutoExtendedEvent
+  | FloorPreorderStatusEvent
 
 interface UseFloorSubscriptionOptions {
   onTableStatusChanged?: (event: FloorTableStatusEvent) => void
@@ -87,6 +95,7 @@ interface UseFloorSubscriptionOptions {
   onZoneUpdated?: (event: FloorZoneUpdatedEvent) => void
   onZoneDeleted?: (event: FloorZoneDeletedEvent) => void
   onReservationsUpdated?: (event: FloorReservationsUpdatedEvent) => void
+  onPreorderStatusChanged?: (event: FloorPreorderStatusEvent) => void
   onClose?: () => void
   onError?: (error: Event) => void
   // Customers carry no restaurant in their token, so the restaurant they're
@@ -121,6 +130,7 @@ export function useFloorSubscription({
   onZoneUpdated,
   onZoneDeleted,
   onReservationsUpdated,
+  onPreorderStatusChanged,
   onClose,
   onError,
   restaurantId,
@@ -141,6 +151,7 @@ export function useFloorSubscription({
     onZoneUpdated,
     onZoneDeleted,
     onReservationsUpdated,
+    onPreorderStatusChanged,
     onClose,
     onError,
   })
@@ -156,6 +167,7 @@ export function useFloorSubscription({
       onZoneUpdated,
       onZoneDeleted,
       onReservationsUpdated,
+      onPreorderStatusChanged,
       onClose,
       onError,
     }
@@ -169,6 +181,7 @@ export function useFloorSubscription({
     onZoneUpdated,
     onZoneDeleted,
     onReservationsUpdated,
+    onPreorderStatusChanged,
     onClose,
     onError,
   ])
@@ -216,6 +229,8 @@ export function useFloorSubscription({
           callbacksRef.current.onReservationsUpdated?.(data as FloorReservationsUpdatedEvent)
         } else if (data.event_name === "HALL_SESSION_AUTO_EXTENDED") {
           callbacksRef.current.onSessionAutoExtended?.(data as FloorSessionAutoExtendedEvent)
+        } else if (data.event_name === "HALL_PREORDER_STATUS_CHANGED") {
+          callbacksRef.current.onPreorderStatusChanged?.(data as FloorPreorderStatusEvent)
         }
       } catch (err) {
         wsLog("Failed to parse message:", err)

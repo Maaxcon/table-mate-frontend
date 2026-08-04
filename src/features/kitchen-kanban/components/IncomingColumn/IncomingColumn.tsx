@@ -1,5 +1,6 @@
 import "./IncomingColumn.css"
 import type { CSSProperties } from "react"
+import { LuCalendarClock } from "react-icons/lu"
 import type { KanbanTicket } from "../../types"
 import { elapsedMinutes, timerUrgencyClass } from "../../utils"
 import { useAdminStrings } from "@/features/admin/strings"
@@ -42,7 +43,15 @@ export function IncomingColumn({ tickets, onPromote, canManage }: IncomingColumn
               aria-disabled={!canManage}
             >
               <div className="kanban-card__header">
-                <span className="kanban-card__id">{ticket.label}</span>
+                <span className="kanban-card__id">
+                  {ticket.label}
+                  {ticket.isPreorder && (
+                    <LuCalendarClock
+                      className="kanban-card__preorder-badge"
+                      aria-label={strings.kitchen.preorderBadgeAria}
+                    />
+                  )}
+                </span>
                 <span className={`kanban-card__timer ${timerUrgencyClass(elapsed)}`}>
                   {elapsed}m
                 </span>

@@ -11,6 +11,8 @@ export function useWaiterStrings() {
       cancel: t("admin.common.cancel"),
       save: t("admin.common.save"),
       saving: t("admin.common.saving"),
+      today: t("admin.common.today"),
+      tomorrow: t("admin.common.tomorrow"),
     },
     page: {
       loading: t("admin.waiter.page.loading"),
@@ -118,6 +120,9 @@ export function useWaiterStrings() {
         modify: t("admin.waiter.overlay.reservation.modify"),
         cancel: t("admin.waiter.overlay.reservation.cancel"),
         new: t("admin.waiter.overlay.reservation.new"),
+        preorderBadge: t("admin.waiter.overlay.reservation.preorderBadge"),
+        preorderCooking: t("admin.waiter.overlay.reservation.preorderCooking"),
+        preorderReady: t("admin.waiter.overlay.reservation.preorderReady"),
       },
       voidReasons: {
         mispick: t("admin.waiter.overlay.voidReasons.mispick"),
@@ -134,11 +139,25 @@ export function useWaiterStrings() {
       pay: t("admin.waiter.payModal.pay"),
       paying: t("admin.waiter.payModal.paying"),
     },
+    preorderModal: {
+      title: t("admin.waiter.preorderModal.title"),
+      loading: t("admin.waiter.preorderModal.loading"),
+      empty: t("admin.waiter.preorderModal.empty"),
+      loadError: t("admin.waiter.preorderModal.loadError"),
+      total: t("admin.waiter.preorderModal.total"),
+      cancel: t("admin.waiter.preorderModal.cancel"),
+      cancelling: t("admin.waiter.preorderModal.cancelling"),
+      cancelError: t("admin.waiter.preorderModal.cancelError"),
+      locked: t("admin.waiter.preorderModal.locked"),
+    },
     reservations: {
       sidebar: {
         title: t("admin.waiter.reservations.sidebar.title"),
         searchPlaceholder: t("admin.waiter.reservations.sidebar.searchPlaceholder"),
         guestCount: (count: number) => t("admin.waiter.reservations.sidebar.guestCount", { count }),
+        preorderBadge: t("admin.waiter.reservations.sidebar.preorderBadge"),
+        preorderCooking: t("admin.waiter.reservations.sidebar.preorderCooking"),
+        preorderReady: t("admin.waiter.reservations.sidebar.preorderReady"),
         status: {
           pending: t("admin.waiter.reservations.sidebar.status.pending"),
           active: t("admin.waiter.reservations.sidebar.status.active"),
@@ -179,8 +198,10 @@ export function useWaiterStrings() {
     closeCheck: {
       title: t("admin.waiter.closeCheck.title"),
       message: t("admin.waiter.closeCheck.message"),
+      unservedMessage: (count: number) => t("admin.waiter.closeCheck.unservedMessage", { count }),
       cancel: t("admin.waiter.closeCheck.cancel"),
       confirm: t("admin.waiter.closeCheck.confirm"),
+      confirmAnyway: t("admin.waiter.closeCheck.confirmAnyway"),
       confirming: t("admin.waiter.closeCheck.confirming"),
       closeAria: t("admin.waiter.closeCheck.closeAria"),
     },

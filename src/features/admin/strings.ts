@@ -549,6 +549,9 @@ export function useAdminStrings() {
       closeAria: (day: string) => t("admin.workingHours.closeAria", { day }),
     },
     kitchen: {
+      // Badge on a ticket injected from a paid pre-order rather than a live
+      // order — tells staff it was placed well ahead of the guests' arrival.
+      preorderBadgeAria: t("admin.kitchen.preorderBadgeAria"),
       header: {
         brand: t("admin.kitchen.header.brand"),
         stationLabel: t("admin.kitchen.header.stationLabel"),

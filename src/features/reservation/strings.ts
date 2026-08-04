@@ -115,6 +115,7 @@ export function useBookStrings() {
         shareCopied: t("reservation.modal.ticket.shareCopied"),
         shareUnsupported: t("reservation.modal.ticket.shareUnsupported"),
         done: t("reservation.modal.ticket.done"),
+        preorder: t("reservation.modal.ticket.preorder"),
       },
       actions: {
         ok: t("reservation.modal.actions.ok"),
@@ -156,6 +157,7 @@ export function useBookStrings() {
         modify: t("reservation.myBookings.actions.modify"),
         cancel: t("reservation.myBookings.actions.cancel"),
         cancelling: t("reservation.myBookings.actions.cancelling"),
+        receipt: t("reservation.myBookings.actions.receipt"),
       },
     },
     reschedule: {

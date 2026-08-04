@@ -200,19 +200,35 @@ describe("CartDrawer checkout state machine", () => {
     expect(onCartChanged).toHaveBeenCalledTimes(1)
   })
 
-  it("shows a checkout error and clears it when the confirm dialog is reopened", async () => {
+  it("shows the server's checkout error and clears it when the confirm dialog is reopened", async () => {
     const user = userEvent.setup()
-    const onCheckout = vi.fn<() => Promise<CheckoutResult>>().mockRejectedValue(new Error("boom"))
+    // The server's English `detail` never reaches the UI — the drawer renders
+    // the translated string for the error's code instead.
+    const onCheckout = vi
+      .fn<() => Promise<CheckoutResult>>()
+      .mockRejectedValue(Object.assign(new Error("boom"), { code: "table_occupied" }))
+    const translated = i18n.t("errors.server.table_occupied")
+    renderDrawer({ onCheckout })
+
+    await openConfirm(user)
+    await user.click(screen.getByRole("button", { name: S.confirmYes }))
+    expect(await screen.findByText(translated)).toBeInTheDocument()
+    expect(screen.queryByText("boom")).not.toBeInTheDocument()
+
+    // Cancel back to cart, then reopen confirm — the stale error must be gone.
+    await user.click(screen.getByRole("button", { name: S.confirmNo }))
+    await openConfirm(user)
+    expect(screen.queryByText(translated)).not.toBeInTheDocument()
+  })
+
+  it("falls back to the generic checkout error for a non-Error rejection", async () => {
+    const user = userEvent.setup()
+    const onCheckout = vi.fn<() => Promise<CheckoutResult>>().mockRejectedValue("not an Error")
     renderDrawer({ onCheckout })
 
     await openConfirm(user)
     await user.click(screen.getByRole("button", { name: S.confirmYes }))
     expect(await screen.findByText(S.checkoutError)).toBeInTheDocument()
-
-    // Cancel back to cart, then reopen confirm — the stale error must be gone.
-    await user.click(screen.getByRole("button", { name: S.confirmNo }))
-    await openConfirm(user)
-    expect(screen.queryByText(S.checkoutError)).not.toBeInTheDocument()
   })
 
   it("calls onRetry from the checkout error toast when available", () => {

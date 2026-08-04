@@ -1,15 +1,43 @@
 import { useEffect, useState } from "react"
+import { LuCircleCheck, LuClock3, LuFlame, LuUsers, LuUtensilsCrossed } from "react-icons/lu"
 import { useFocusTrap } from "@/hooks/useFocusTrap"
-import { formatTimeRange } from "../../types"
-import type { FloorTable, ReservationItem, OverlayDetail, VisualTableStatus } from "../../types"
+import {
+  formatDateGroupLabel,
+  formatTimeRange,
+  getPreorderChipStatus,
+  groupReservationsByDate,
+} from "../../types"
+import type {
+  FloorTable,
+  ReservationItem,
+  OverlayDetail,
+  OverlayOrderItem,
+  VisualTableStatus,
+} from "../../types"
 import { getCurrencySymbol } from "@/features/menu/utils"
 import { OrderItemRow } from "../OrderItemRow"
 import { CloseCheckModal } from "../CloseCheckModal"
 import { ProcessPaymentModal } from "../ProcessPaymentModal"
+import { PreorderModal } from "../PreorderModal/PreorderModal"
 import { fetchVoidReasons } from "../../api/orderApi"
 import type { VoidReason } from "@/types/api/types.gen"
 import "./TableDetailOverlay.css"
 import { useWaiterStrings } from "../../strings"
+
+// Active items stay on top where the waiter is working; served items sink to
+// the bottom of their guest slot (still visible for the bill, just out of
+// the way) instead of disappearing once marked served.
+const ITEM_STATUS_RANK: Record<string, number> = {
+  pending: 0,
+  in_progress: 0,
+  ready: 0,
+  served: 1,
+  voided: 2,
+}
+
+function byServedLast(a: OverlayOrderItem, b: OverlayOrderItem): number {
+  return (ITEM_STATUS_RANK[a.status] ?? 0) - (ITEM_STATUS_RANK[b.status] ?? 0)
+}
 
 function getOverdueMinutes(endAt: string, nowMs: number): number | null {
   const endMs = new Date(endAt).getTime()
@@ -29,10 +57,14 @@ interface TableDetailOverlayProps {
   actionBusy?: boolean
   busyActionId?: string | null
   actionError?: string | null
+  // Set once a close attempt was blocked by unserved items (409 code
+  // unserved_items) — passed to CloseCheckModal to switch to a "close
+  // anyway" prompt.
+  closeCheckUnservedCount?: number
   onOpenTable?: (guestCount: number) => void
   onActivateReservation?: (reservationId: string) => void
   onCancelReservation?: (reservationId: string) => void
-  onCloseCheck?: () => void
+  onCloseCheck?: (force: boolean) => void
   onProcessPayment?: (orderItemIds: string[]) => void
   onAddItem?: () => void
   onModifyReservation?: (reservation: ReservationItem) => void
@@ -53,6 +85,7 @@ export function TableDetailOverlay({
   actionBusy = false,
   busyActionId = null,
   actionError = null,
+  closeCheckUnservedCount,
   onOpenTable,
   onActivateReservation,
   onCancelReservation,
@@ -78,6 +111,11 @@ export function TableDetailOverlay({
   const [showProcessPayment, setShowProcessPayment] = useState(false)
   const [voidReasons, setVoidReasons] = useState<VoidReason[]>([])
   const dialogRef = useFocusTrap<HTMLDivElement>({ onEscape: onClose })
+
+  const [viewingPreorder, setViewingPreorder] = useState<ReservationItem | null>(null)
+  // Reservations whose pre-order was just cancelled — hides the entry point
+  // without needing to re-fetch the whole reservation list.
+  const [cancelledPreorderIds, setCancelledPreorderIds] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     if (!onVoidItem) return
@@ -110,8 +148,9 @@ export function TableDetailOverlay({
     [...tableReservations]
       .filter((r) => new Date(r.start_at).getTime() > currentTime.getTime())
       .sort(byStart)[0] ?? null
-  // All of the table's bookings for the day (active + upcoming), earliest first.
+  // All of the table's bookings, any date (active + upcoming), earliest first.
   const dayReservations = [...tableReservations].sort(byStart)
+  const reservationDateGroups = groupReservationsByDate(dayReservations, currentTime)
   const overdueActiveReservation = dayReservations.find((reservation) => {
     if (reservation.status !== "active") return false
     return (
@@ -363,7 +402,9 @@ export function TableDetailOverlay({
                     <p className="overlay__empty">{overlayStrings.empty.order}</p>
                   ) : (
                     guestSlots.map((slot) => {
-                      const slotItems = detail.items.filter((i) => i.guest_slot === slot)
+                      const slotItems = detail.items
+                        .filter((i) => i.guest_slot === slot)
+                        .toSorted(byServedLast)
                       const guestName = slotItems[0]?.guest_display_name
                       return (
                         <div key={slot} className="overlay__slot">
@@ -458,68 +499,115 @@ export function TableDetailOverlay({
               <p className="overlay__empty">{overlayStrings.empty.reservations}</p>
             ) : (
               <div className="overlay__reservation-list">
-                {dayReservations.map((r) => (
-                  <div
-                    key={r.public_id}
-                    className={`overlay__reservation-row overlay__reservation-row--${r.status}`}
-                  >
-                    <div className="overlay__reservation-info">
-                      <span className="overlay__reservation-name">
-                        {r.name}
-                        {r.status === "active" && (
-                          <span className="overlay__reservation-tag">
-                            {overlayStrings.reservation.tagSeated}
-                          </span>
-                        )}
-                      </span>
-                      <span className="overlay__reservation-meta">
-                        {overlayStrings.values.guests(r.guest_count)} &middot;{" "}
-                        {formatTimeRange(r.start_at, r.end_at)}
-                      </span>
-                    </div>
-                    <div className="overlay__reservation-actions">
-                      {!isOccupied && r.status === "pending" && (
-                        <>
-                          <button
-                            type="button"
-                            className="overlay__seat-btn"
-                            disabled={actionBusy}
-                            onClick={() => onActivateReservation?.(r.public_id)}
-                          >
-                            {busyActionId === r.public_id ? "…" : overlayStrings.reservation.seat}
-                          </button>
-                          {onModifyReservation && (
-                            <button
-                              type="button"
-                              className="overlay__seat-btn overlay__seat-btn--modify"
-                              disabled={actionBusy}
-                              onClick={() => onModifyReservation(r)}
-                            >
-                              {overlayStrings.reservation.modify}
-                            </button>
-                          )}
-                          {onCancelReservation && (
-                            <button
-                              type="button"
-                              className="overlay__seat-btn overlay__seat-btn--cancel"
-                              disabled={actionBusy}
-                              onClick={() => onCancelReservation(r.public_id)}
-                            >
-                              {overlayStrings.reservation.cancel}
-                            </button>
-                          )}
-                        </>
+                {reservationDateGroups.map(([groupKey, items]) => (
+                  <div key={groupKey} className="overlay__reservation-date-group">
+                    <span className="overlay__reservation-date-heading">
+                      {formatDateGroupLabel(
+                        groupKey,
+                        waiterStrings.common.today,
+                        waiterStrings.common.tomorrow,
+                        waiterStrings.locale,
                       )}
-                      {r.status === "active" && onModifyReservation && (
-                        <button
-                          type="button"
-                          className="overlay__seat-btn overlay__seat-btn--modify"
-                          onClick={() => onModifyReservation(r)}
+                    </span>
+                    {items.map((r) => {
+                      const showsPreorder = r.has_preorder && !cancelledPreorderIds.has(r.public_id)
+                      const preorderChipStatus = getPreorderChipStatus(r)
+
+                      return (
+                        <div
+                          key={r.public_id}
+                          className={`overlay__reservation-row overlay__reservation-row--${r.status}`}
                         >
-                          {overlayStrings.reservation.modify}
-                        </button>
-                      )}
-                    </div>
+                          <div className="overlay__reservation-info">
+                            <div className="overlay__reservation-header">
+                              <span className="overlay__reservation-name" title={r.name}>
+                                {r.name}
+                              </span>
+                              {r.status === "active" && (
+                                <span className="overlay__reservation-tag">
+                                  {overlayStrings.reservation.tagSeated}
+                                </span>
+                              )}
+                            </div>
+                            <div className="overlay__reservation-meta">
+                              <span className="overlay__reservation-meta-chip">
+                                <LuClock3 size={13} aria-hidden="true" />
+                                {formatTimeRange(r.start_at, r.end_at)}
+                              </span>
+                              <span className="overlay__reservation-meta-chip">
+                                <LuUsers size={13} aria-hidden="true" />
+                                {r.guest_count}
+                              </span>
+                            </div>
+                            {showsPreorder && (
+                              <button
+                                type="button"
+                                className={`overlay__reservation-preorder-chip overlay__reservation-preorder-chip--${preorderChipStatus}`}
+                                onClick={() => setViewingPreorder(r)}
+                              >
+                                {preorderChipStatus === "ready" ? (
+                                  <LuCircleCheck size={13} aria-hidden="true" />
+                                ) : preorderChipStatus === "cooking" ? (
+                                  <LuFlame size={13} aria-hidden="true" />
+                                ) : (
+                                  <LuUtensilsCrossed size={13} aria-hidden="true" />
+                                )}
+                                {preorderChipStatus === "ready"
+                                  ? overlayStrings.reservation.preorderReady
+                                  : preorderChipStatus === "cooking"
+                                    ? overlayStrings.reservation.preorderCooking
+                                    : overlayStrings.reservation.preorderBadge}
+                              </button>
+                            )}
+                          </div>
+                          <div className="overlay__reservation-actions">
+                            {!isOccupied && r.status === "pending" && (
+                              <>
+                                <button
+                                  type="button"
+                                  className="overlay__seat-btn"
+                                  disabled={actionBusy}
+                                  onClick={() => onActivateReservation?.(r.public_id)}
+                                >
+                                  {busyActionId === r.public_id
+                                    ? "…"
+                                    : overlayStrings.reservation.seat}
+                                </button>
+                                {onModifyReservation && (
+                                  <button
+                                    type="button"
+                                    className="overlay__seat-btn overlay__seat-btn--modify"
+                                    disabled={actionBusy}
+                                    onClick={() => onModifyReservation(r)}
+                                  >
+                                    {overlayStrings.reservation.modify}
+                                  </button>
+                                )}
+                                {onCancelReservation && (
+                                  <button
+                                    type="button"
+                                    className="overlay__seat-btn overlay__seat-btn--cancel"
+                                    disabled={actionBusy}
+                                    onClick={() => onCancelReservation(r.public_id)}
+                                  >
+                                    {overlayStrings.reservation.cancel}
+                                  </button>
+                                )}
+                              </>
+                            )}
+                            {r.status === "active" && onModifyReservation && (
+                              <button
+                                type="button"
+                                className="overlay__seat-btn overlay__seat-btn--modify"
+                                onClick={() => onModifyReservation(r)}
+                              >
+                                {overlayStrings.reservation.modify}
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      )
+                    })}
                   </div>
                 ))}
               </div>
@@ -540,7 +628,8 @@ export function TableDetailOverlay({
         <CloseCheckModal
           busy={actionBusy}
           error={actionError}
-          onConfirm={() => onCloseCheck?.()}
+          unservedCount={closeCheckUnservedCount}
+          onConfirm={(force) => onCloseCheck?.(force)}
           onClose={() => setShowCloseCheck(false)}
         />
       )}
@@ -553,6 +642,16 @@ export function TableDetailOverlay({
           error={actionError}
           onConfirm={(orderItemIds) => onProcessPayment?.(orderItemIds)}
           onClose={() => setShowProcessPayment(false)}
+        />
+      )}
+
+      {viewingPreorder && (
+        <PreorderModal
+          reservation={viewingPreorder}
+          onClose={() => setViewingPreorder(null)}
+          onCancelled={() =>
+            setCancelledPreorderIds((prev) => new Set(prev).add(viewingPreorder.public_id))
+          }
         />
       )}
     </>

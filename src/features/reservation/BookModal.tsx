@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import type { CSSProperties } from "react"
+import { useNavigate } from "react-router-dom"
 import type { Table } from "@/types/api/types.gen"
 import { useFocusTrap } from "@/hooks/useFocusTrap"
 import type { WorkingHoursDay, ReservationWithTable } from "./api"
@@ -64,6 +65,7 @@ export function BookModal({
   showNameField,
 }: BookModalProps) {
   const bookStrings = useBookStrings()
+  const navigate = useNavigate()
   // Keyed to the venue's calendar day (not the guest's device clock), so
   // "today" matches the working day the backend checks.
   const { today, dates } = useDateWindow(timeZone ?? null)
@@ -98,6 +100,7 @@ export function BookModal({
     guests: number
     startISO: string
     endISO: string
+    canPreorder: boolean
   } | null>(null)
   const [shareFeedback, setShareFeedback] = useState<string | null>(null)
 
@@ -318,6 +321,7 @@ export function BookModal({
         guests: guestCount,
         startISO,
         endISO,
+        canPreorder: reservationRef.current.can_preorder ?? true,
       })
     } catch (err) {
       setError(err instanceof Error ? err.message : bookStrings.modal.createFailed)
@@ -498,6 +502,20 @@ export function BookModal({
                   {bookStrings.modal.ticket.share}
                 </button>
               </div>
+              {/* Staff booking on behalf of a guest (showNameField) has no menu
+                  to hand off to, so pre-order only makes sense in the customer
+                  self-service flow. */}
+              {!showNameField && restaurantId && success.canPreorder && (
+                <button
+                  className="book-modal__btn book-modal__btn--confirm"
+                  onClick={() =>
+                    navigate(`/menu/${restaurantId}?reservation=${success.reservationId}`)
+                  }
+                  type="button"
+                >
+                  {bookStrings.modal.ticket.preorder}
+                </button>
+              )}
               <button
                 className="book-modal__btn book-modal__btn--confirm book-modal__btn--done"
                 onClick={handleDismiss}

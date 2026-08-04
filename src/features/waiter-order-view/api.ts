@@ -18,6 +18,9 @@ interface ReservationApiItem {
   status: string
   notes?: string | null
   customer_name?: string
+  has_preorder?: boolean
+  preorder_cooking?: boolean
+  preorder_ready?: boolean
 }
 
 interface SessionApiItem {
@@ -61,6 +64,9 @@ function mapReservationItem(r: ReservationApiItem): ReservationItem {
     status: r.status as ReservationItem["status"],
     notes: r.notes,
     name: r.customer_name ?? "Guest",
+    has_preorder: r.has_preorder ?? false,
+    preorder_cooking: r.preorder_cooking ?? false,
+    preorder_ready: r.preorder_ready ?? false,
   }
 }
 
@@ -73,6 +79,10 @@ export async function fetchReservations(signal?: AbortSignal): Promise<Reservati
   const data = (await res.json()) as { results?: ReservationApiItem[] }
   return (data.results ?? []).map(mapReservationItem)
 }
+
+// The pre-order endpoints live in features/preorder — one copy for the
+// guest's booking lists and the waiter's reservation panel alike.
+export { cancelPreorder, fetchPreorder } from "@/features/preorder/api"
 
 // ── Open-table overlay ───────────────────────────────────────────────
 function mapOrderItem(oi: OrderItemApiItem): OverlayOrderItem {
@@ -103,12 +113,15 @@ const MAX_ITEM_PAGES = 100
 
 // Fetch every order item for a session in one filtered, paginated query —
 // instead of one request per order (the old N+1 waterfall). The BE filter
-// order__session__public_id spans all of the visit's orders/rounds.
+// order__session__public_id spans all of the visit's orders/rounds, and
+// include_served asks for the full bill: the waiter needs served lines too,
+// greyed out rather than gone.
 async function fetchSessionOrderItems(sessionPublicId: string): Promise<OverlayOrderItem[]> {
   const all: OverlayOrderItem[] = []
   for (let page = 1; page <= MAX_ITEM_PAGES; page += 1) {
     const res = await apiFetch(
-      `/api/orders/order-items/?order__session__public_id=${sessionPublicId}&page=${page}`,
+      `/api/orders/order-items/?order__session__public_id=${sessionPublicId}` +
+        `&include_served=true&page=${page}`,
     )
     if (!res.ok) break
     const data = (await res.json()) as { next?: string | null; results?: OrderItemApiItem[] }
