@@ -356,8 +356,9 @@
         "cancel": "Cancel",
         "cancelling": "Cancelling…",
         "preorder": "Pre-order",
-        "preorderView": "View pre-order",
-        "preorderCooking": "Being prepared"
+        "preorderPaid": "View pre-order",
+        "preorderCooking": "Being prepared",
+        "preorderReady": "Ready for you"
       }
     },
     "reschedule": {

@@ -362,8 +362,9 @@
         "cancel": "Скасувати",
         "cancelling": "Скасування…",
         "preorder": "Замовити заздалегідь",
-        "preorderView": "Переглянути замовлення",
-        "preorderCooking": "Готується"
+        "preorderPaid": "Переглянути замовлення",
+        "preorderCooking": "Готується",
+        "preorderReady": "Готово до вашого приходу"
       }
     },
     "reschedule": {

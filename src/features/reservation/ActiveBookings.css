@@ -415,6 +415,17 @@
   background: rgba(var(--color-warning-rgb), 0.18);
 }
 
+.ab__action--preorder-ready {
+  color: var(--color-success-text);
+  border-color: var(--color-success-border);
+  background: var(--color-success-bg);
+}
+
+.ab__action--preorder-ready:hover:not(:disabled) {
+  border-color: var(--color-success);
+  background: rgba(var(--color-success-rgb), 0.18);
+}
+
 .ab__action--calendar {
   color: var(--color-text-secondary);
 }

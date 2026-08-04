@@ -158,8 +158,9 @@ export function useBookStrings() {
         cancel: t("reservation.myBookings.actions.cancel"),
         cancelling: t("reservation.myBookings.actions.cancelling"),
         preorder: t("reservation.myBookings.actions.preorder"),
-        preorderView: t("reservation.myBookings.actions.preorderView"),
+        preorderPaid: t("reservation.myBookings.actions.preorderPaid"),
         preorderCooking: t("reservation.myBookings.actions.preorderCooking"),
+        preorderReady: t("reservation.myBookings.actions.preorderReady"),
       },
     },
     reschedule: {

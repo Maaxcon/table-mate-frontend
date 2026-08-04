@@ -58,6 +58,7 @@ export type ReservationWithTable = {
   updated_at: string
   has_preorder?: boolean
   preorder_cooking?: boolean
+  preorder_ready?: boolean
 }
 
 export type Zone = {
