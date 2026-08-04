@@ -12,6 +12,7 @@ import {
 import { useNavigate } from "react-router-dom"
 import { getPreorderChipStatus, type PreorderChipStatus } from "@/utils/preorderStatus"
 import { PreorderDialog } from "@/features/cabinet/components/PreorderDialog/PreorderDialog"
+import { formatMoney } from "@/features/cabinet/utils"
 import type { ReservationStatus, ReservationWithTable, WorkingHoursDay } from "./api"
 import { cancelReservation, fetchMyReservations } from "./api"
 import { BookingsSkeleton } from "./BookingSkeleton"
@@ -170,6 +171,16 @@ export function ActiveBookings({
       const isBusy = actionId === r.public_id
       const phase = getTemporalPhase(r.start_at, r.end_at)
       const preorderStatus = getPreorderChipStatus(r)
+      const preorderSummary = [
+        r.preorder_items_count
+          ? bookStrings.myBookings.actions.preorderDishes(r.preorder_items_count)
+          : null,
+        r.preorder_total && r.preorder_currency
+          ? formatMoney(Number(r.preorder_total), r.preorder_currency)
+          : null,
+      ]
+        .filter(Boolean)
+        .join(" · ")
 
       return (
         <article key={r.public_id} className={`ab__card${withActions ? "" : " ab__card--past"}`}>
@@ -213,6 +224,9 @@ export function ActiveBookings({
                   >
                     {PREORDER_ICONS[preorderStatus]}
                     {PREORDER_LABELS[preorderStatus]}
+                    {preorderSummary && (
+                      <span className="ab__action-note">&middot; {preorderSummary}</span>
+                    )}
                   </button>
                 ) : (
                   statusKey === "pending" &&

@@ -62,6 +62,7 @@ export function useCabinetStrings() {
       preorderPaidBadge: t("cabinet.bookings.preorderPaidBadge"),
       preorderCookingBadge: t("cabinet.bookings.preorderCookingBadge"),
       preorderAddMore: t("cabinet.bookings.preorderAddMore"),
+      preorderDishes: (n: number) => t("cabinet.bookings.preorderDishes", { count: n }),
       preorderCancel: t("cabinet.bookings.preorderCancel"),
       preorderCancelling: t("cabinet.bookings.preorderCancelling"),
       preorderCancelError: t("cabinet.bookings.preorderCancelError"),

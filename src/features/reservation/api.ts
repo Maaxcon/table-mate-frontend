@@ -59,6 +59,9 @@ export type ReservationWithTable = {
   has_preorder?: boolean
   preorder_cooking?: boolean
   preorder_ready?: boolean
+  preorder_total?: string | null
+  preorder_items_count?: number
+  preorder_currency?: string | null
 }
 
 export type Zone = {

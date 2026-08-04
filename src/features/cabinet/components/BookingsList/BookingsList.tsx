@@ -11,6 +11,7 @@ import { useNavigate } from "react-router-dom"
 import { useCabinetStrings } from "@/features/cabinet/strings"
 import type { Reservation } from "@/features/cabinet/types"
 import { PreorderDialog } from "@/features/cabinet/components/PreorderDialog/PreorderDialog"
+import { formatMoney } from "@/features/cabinet/utils"
 import "./BookingsList.css"
 
 type BookingsListProps = {
@@ -76,6 +77,16 @@ export function BookingsList({
               const isBusy = actionId === booking.public_id
               const showsPreorder =
                 booking.has_preorder && !cancelledPreorderIds.has(booking.public_id)
+              const preorderNote = [
+                booking.preorder_items_count
+                  ? strings.bookings.preorderDishes(booking.preorder_items_count)
+                  : null,
+                booking.preorder_total && booking.preorder_currency
+                  ? formatMoney(Number(booking.preorder_total), booking.preorder_currency)
+                  : null,
+              ]
+                .filter(Boolean)
+                .join(" · ")
 
               return (
                 <li key={booking.public_id} className="booking-card">
@@ -121,6 +132,11 @@ export function BookingsList({
                         {booking.preorder_cooking
                           ? strings.bookings.preorderCooking
                           : strings.bookings.preorderShow}
+                        {preorderNote && (
+                          <span className="booking-card__preorder-note">
+                            &middot; {preorderNote}
+                          </span>
+                        )}
                       </button>
                     )}
                   </div>

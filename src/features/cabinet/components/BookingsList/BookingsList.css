@@ -133,6 +133,10 @@
   background: rgba(var(--color-primary-rgb), 0.15);
 }
 
+.booking-card__preorder-note {
+  opacity: 0.75;
+}
+
 .booking-card__preorder-toggle--cooking {
   color: var(--color-warning-icon);
   background: var(--color-warning-bg);

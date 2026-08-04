@@ -358,7 +358,9 @@
         "preorder": "Pre-order",
         "preorderPaid": "View pre-order",
         "preorderCooking": "Being prepared",
-        "preorderReady": "Ready for you"
+        "preorderReady": "Ready for you",
+        "preorderDishes_one": "{{count}} dish",
+        "preorderDishes_other": "{{count}} dishes"
       }
     },
     "reschedule": {
@@ -448,6 +450,8 @@
       "preorderPaidBadge": "Paid — cooking starts closer to your arrival",
       "preorderCookingBadge": "Your food is being prepared now",
       "preorderAddMore": "Add more items",
+      "preorderDishes_one": "{{count}} dish",
+      "preorderDishes_other": "{{count}} dishes",
       "preorderCancel": "Cancel pre-order",
       "preorderCancelling": "Cancelling…",
       "preorderCancelError": "Could not cancel the pre-order. Please try again.",

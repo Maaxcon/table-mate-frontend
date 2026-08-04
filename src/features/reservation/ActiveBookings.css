@@ -393,6 +393,11 @@
   background: var(--color-error-bg);
 }
 
+.ab__action-note {
+  font-weight: 600;
+  opacity: 0.75;
+}
+
 .ab__action--preorder {
   color: var(--color-primary);
   border-color: color-mix(in srgb, var(--color-primary) 45%, var(--color-border-default));

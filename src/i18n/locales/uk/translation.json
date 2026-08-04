@@ -364,7 +364,11 @@
         "preorder": "Замовити заздалегідь",
         "preorderPaid": "Переглянути замовлення",
         "preorderCooking": "Готується",
-        "preorderReady": "Готово до вашого приходу"
+        "preorderReady": "Готово до вашого приходу",
+        "preorderDishes_one": "{{count}} страва",
+        "preorderDishes_few": "{{count}} страви",
+        "preorderDishes_many": "{{count}} страв",
+        "preorderDishes_other": "{{count}} страви"
       }
     },
     "reschedule": {
@@ -458,6 +462,10 @@
       "preorderPaidBadge": "Оплачено — готування почнеться ближче до вашого приходу",
       "preorderCookingBadge": "Вашу їжу вже готують",
       "preorderAddMore": "Додати ще страви",
+      "preorderDishes_one": "{{count}} страва",
+      "preorderDishes_few": "{{count}} страви",
+      "preorderDishes_many": "{{count}} страв",
+      "preorderDishes_other": "{{count}} страви",
       "preorderCancel": "Скасувати замовлення",
       "preorderCancelling": "Скасування…",
       "preorderCancelError": "Не вдалося скасувати замовлення. Спробуйте ще раз.",
