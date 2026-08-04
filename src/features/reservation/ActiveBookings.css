@@ -393,6 +393,28 @@
   background: var(--color-error-bg);
 }
 
+.ab__action--preorder {
+  color: var(--color-primary);
+  border-color: color-mix(in srgb, var(--color-primary) 45%, var(--color-border-default));
+  background: color-mix(in srgb, var(--color-primary) 8%, var(--color-bg-surface));
+}
+
+.ab__action--preorder:hover:not(:disabled) {
+  border-color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 14%, var(--color-bg-surface));
+}
+
+.ab__action--preorder-cooking {
+  color: var(--color-warning-icon);
+  border-color: rgba(var(--color-warning-rgb), 0.35);
+  background: var(--color-warning-bg);
+}
+
+.ab__action--preorder-cooking:hover:not(:disabled) {
+  border-color: var(--color-warning-icon);
+  background: rgba(var(--color-warning-rgb), 0.18);
+}
+
 .ab__action--calendar {
   color: var(--color-text-secondary);
 }

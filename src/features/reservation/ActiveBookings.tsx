@@ -1,5 +1,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { LuCalendarPlus, LuClock, LuPencil, LuUsers, LuX } from "react-icons/lu"
+import {
+  LuCalendarPlus,
+  LuClock,
+  LuFlame,
+  LuPencil,
+  LuUsers,
+  LuUtensilsCrossed,
+  LuX,
+} from "react-icons/lu"
+import { useNavigate } from "react-router-dom"
+import { PreorderDialog } from "@/features/cabinet/components/PreorderDialog/PreorderDialog"
 import type { ReservationStatus, ReservationWithTable, WorkingHoursDay } from "./api"
 import { cancelReservation, fetchMyReservations } from "./api"
 import { BookingsSkeleton } from "./BookingSkeleton"
@@ -60,12 +70,14 @@ export function ActiveBookings({
   onBrowseTables,
 }: ActiveBookingsProps) {
   const bookStrings = useBookStrings()
+  const navigate = useNavigate()
   const PHASE_LABELS: Record<TemporalPhase, string> = bookStrings.myBookings.phase
   const STATUS_LABELS: Record<ReservationStatus, string> = bookStrings.myBookings.status
   const [actionId, setActionId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [rescheduleTarget, setRescheduleTarget] = useState<ReservationWithTable | null>(null)
   const [cancelTarget, setCancelTarget] = useState<ReservationWithTable | null>(null)
+  const [preorderTarget, setPreorderTarget] = useState<ReservationWithTable | null>(null)
   const [showPast, setShowPast] = useState(false)
 
   // History (completed/cancelled) is a separate, lazy-loaded list: the /my/
@@ -179,6 +191,35 @@ export function ActiveBookings({
 
             {withActions && (
               <div className="ab__card-actions">
+                {r.has_preorder ? (
+                  <button
+                    className={`ab__action ab__action--preorder${r.preorder_cooking ? " ab__action--preorder-cooking" : ""}`}
+                    onClick={() => setPreorderTarget(r)}
+                    type="button"
+                  >
+                    {r.preorder_cooking ? (
+                      <LuFlame aria-hidden="true" />
+                    ) : (
+                      <LuUtensilsCrossed aria-hidden="true" />
+                    )}
+                    {r.preorder_cooking
+                      ? bookStrings.myBookings.actions.preorderCooking
+                      : bookStrings.myBookings.actions.preorderView}
+                  </button>
+                ) : (
+                  statusKey === "pending" &&
+                  r.restaurant && (
+                    <button
+                      className="ab__action ab__action--preorder"
+                      onClick={() => navigate(`/menu/${r.restaurant}?reservation=${r.public_id}`)}
+                      disabled={isBusy}
+                      type="button"
+                    >
+                      <LuUtensilsCrossed aria-hidden="true" />
+                      {bookStrings.myBookings.actions.preorder}
+                    </button>
+                  )
+                )}
                 <button
                   className="ab__action ab__action--edit ab__action--cta"
                   onClick={() => setRescheduleTarget(r)}
@@ -266,6 +307,14 @@ export function ActiveBookings({
           endTimeOnly={rescheduleTarget.status === "active"}
           onClose={() => setRescheduleTarget(null)}
           onSuccess={onRefresh}
+        />
+      )}
+
+      {preorderTarget && (
+        <PreorderDialog
+          booking={preorderTarget}
+          onClose={() => setPreorderTarget(null)}
+          onCancelled={onRefresh}
         />
       )}
 
