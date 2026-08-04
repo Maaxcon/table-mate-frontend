@@ -64,10 +64,9 @@ function MenuItemModal({
   const [added, setAdded] = useState(false)
   const [comment, setComment] = useState("")
   const [upsells, setUpsells] = useState<MenuItem[]>([])
-  const [addedUpsellId, setAddedUpsellId] = useState<string | null>(null)
+  const [addedUpsellIds, setAddedUpsellIds] = useState<Set<string>>(() => new Set())
   const commentId = useId()
   const closeTimerRef = useRef<number | null>(null)
-  const upsellTimerRef = useRef<number | null>(null)
   // Focus trap + Esc-to-close + focus restore (focuses the close button first).
   const dialogRef = useFocusTrap<HTMLDivElement>({ onEscape: onClose })
   const hasWeight = item.weight_grams != null && item.weight_grams > 0
@@ -84,13 +83,9 @@ function MenuItemModal({
   }, [guestToken, item.public_id, restaurantId])
 
   const handleAddUpsell = (upsell: MenuItem) => {
-    if (upsellTimerRef.current != null) return
+    if (addedUpsellIds.has(upsell.public_id)) return
     onAddToCart(upsell)
-    setAddedUpsellId(upsell.public_id)
-    upsellTimerRef.current = window.setTimeout(() => {
-      upsellTimerRef.current = null
-      setAddedUpsellId(null)
-    }, 900)
+    setAddedUpsellIds((prev) => new Set(prev).add(upsell.public_id))
   }
 
   const handleAdd = () => {
@@ -111,7 +106,6 @@ function MenuItemModal({
   useEffect(() => {
     return () => {
       if (closeTimerRef.current != null) window.clearTimeout(closeTimerRef.current)
-      if (upsellTimerRef.current != null) window.clearTimeout(upsellTimerRef.current)
     }
   }, [])
 
@@ -193,7 +187,7 @@ function MenuItemModal({
               <p className="menu-modal__section-label">{menuStrings.item.upsells}</p>
               <div className="menu-modal__upsell-list">
                 {upsells.map((upsell) => {
-                  const isAdded = addedUpsellId === upsell.public_id
+                  const isAdded = addedUpsellIds.has(upsell.public_id)
                   return (
                     <button
                       key={upsell.public_id}
