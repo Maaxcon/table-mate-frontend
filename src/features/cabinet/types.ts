@@ -41,6 +41,9 @@ export type Reservation = {
   preorder_total?: string | null
   preorder_items_count?: number
   preorder_currency?: string | null
+  // False from PREORDER_LEAD_MINUTES before the start: the kitchen has the
+  // food by then, so the backend refuses another round.
+  can_preorder?: boolean
 }
 
 // A booking's current paid pre-order (GET .../preorder/), or the shape of
@@ -62,6 +65,7 @@ export type Preorder = {
   total: number
   isCooking: boolean
   canCancel: boolean
+  canAddMore: boolean
   items: PreorderItem[]
 }
 

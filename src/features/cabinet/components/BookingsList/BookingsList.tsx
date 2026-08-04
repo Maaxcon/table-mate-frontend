@@ -147,7 +147,7 @@ export function BookingsList({
                     </p>
                   ) : (
                     <div className="booking-card__actions">
-                      {booking.status === "pending" && (
+                      {booking.can_preorder && (
                         <button
                           type="button"
                           className="booking-card__btn booking-card__btn--preorder"

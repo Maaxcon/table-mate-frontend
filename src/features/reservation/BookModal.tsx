@@ -100,6 +100,7 @@ export function BookModal({
     guests: number
     startISO: string
     endISO: string
+    canPreorder: boolean
   } | null>(null)
   const [shareFeedback, setShareFeedback] = useState<string | null>(null)
 
@@ -320,6 +321,7 @@ export function BookModal({
         guests: guestCount,
         startISO,
         endISO,
+        canPreorder: reservationRef.current.can_preorder ?? true,
       })
     } catch (err) {
       setError(err instanceof Error ? err.message : bookStrings.modal.createFailed)
@@ -503,7 +505,7 @@ export function BookModal({
               {/* Staff booking on behalf of a guest (showNameField) has no menu
                   to hand off to, so pre-order only makes sense in the customer
                   self-service flow. */}
-              {!showNameField && restaurantId && (
+              {!showNameField && restaurantId && success.canPreorder && (
                 <button
                   className="book-modal__btn book-modal__btn--confirm"
                   onClick={() =>

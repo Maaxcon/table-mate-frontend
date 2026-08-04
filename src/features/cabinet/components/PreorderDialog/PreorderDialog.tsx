@@ -19,7 +19,6 @@ export type PreorderDialogBooking = {
   table_info?: { public_number: string }
   restaurant_info?: { name: string }
   start_at: string
-  status: string
 }
 
 type PreorderDialogProps = {
@@ -210,7 +209,7 @@ export function PreorderDialog({ booking, onClose, onCancelled }: PreorderDialog
                   : strings.bookings.preorderPaidBadge}
               </div>
 
-              {booking.status === "pending" && (
+              {preorder.canAddMore && (
                 <button
                   type="button"
                   className="preorder-dialog__add"

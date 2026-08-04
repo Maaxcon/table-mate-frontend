@@ -54,6 +54,7 @@ const preorder = (canCancel: boolean, isCooking = !canCancel): Preorder => ({
   total: 115,
   isCooking,
   canCancel,
+  canAddMore: canCancel,
   items: [
     { id: "item-1", name: "Steak", quantity: 1, unitPrice: 100, totalPrice: 100 },
     { id: "item-2", name: "Salad", quantity: 1, unitPrice: 40, totalPrice: 40 },
@@ -192,10 +193,12 @@ describe("PreorderDialog", () => {
     ).not.toBeInTheDocument()
   })
 
-  it("hides adding more once the booking has started", async () => {
-    vi.mocked(fetchPreorder).mockResolvedValue(preorder(true))
+  it("hides adding more once the kitchen window has closed", async () => {
+    const closed = preorder(true)
+    closed.canAddMore = false
+    vi.mocked(fetchPreorder).mockResolvedValue(closed)
 
-    renderDialog({ booking: { ...booking, status: "active" } })
+    renderDialog()
 
     await screen.findByRole("button", { name: i18n.t("cabinet.bookings.preorderCancel") })
     expect(

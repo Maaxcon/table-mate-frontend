@@ -746,6 +746,7 @@ export type PatchedReservation = {
   readonly preorder_total?: string | null
   readonly preorder_items_count?: number
   readonly preorder_currency?: string | null
+  readonly can_preorder?: boolean
   status?: ReservationStatus
   created_by_staff?: boolean
   notes?: string | null
@@ -891,6 +892,7 @@ export type PreorderDetail = {
   total: string
   is_cooking: boolean
   can_cancel: boolean
+  can_add_more: boolean
   items: Array<PreorderItem>
 }
 
@@ -994,6 +996,7 @@ export type Reservation = {
   readonly preorder_total: string | null
   readonly preorder_items_count: number
   readonly preorder_currency: string | null
+  readonly can_preorder: boolean
   status?: ReservationStatus
   created_by_staff?: boolean
   notes?: string | null

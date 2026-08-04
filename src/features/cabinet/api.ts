@@ -192,6 +192,7 @@ function toPreorder(data: PreorderDetail): Preorder {
     total: Number(data.total),
     isCooking: data.is_cooking,
     canCancel: data.can_cancel,
+    canAddMore: data.can_add_more,
     items: data.items.map((i) => ({
       id: i.public_id,
       name: i.name,

@@ -229,7 +229,7 @@ export function ActiveBookings({
                     )}
                   </button>
                 ) : (
-                  statusKey === "pending" &&
+                  r.can_preorder &&
                   r.restaurant && (
                     <button
                       className="ab__action ab__action--preorder"
