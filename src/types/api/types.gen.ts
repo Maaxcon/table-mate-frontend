@@ -743,6 +743,9 @@ export type PatchedReservation = {
   readonly has_preorder?: boolean
   readonly preorder_cooking?: boolean
   readonly preorder_ready?: boolean
+  readonly preorder_total?: string | null
+  readonly preorder_items_count?: number
+  readonly preorder_currency?: string | null
   status?: ReservationStatus
   created_by_staff?: boolean
   notes?: string | null
@@ -892,6 +895,7 @@ export type PreorderDetail = {
 }
 
 export type PreorderItem = {
+  public_id: string
   name: string
   quantity: number
   unit_price: string
@@ -987,6 +991,9 @@ export type Reservation = {
   readonly has_preorder: boolean
   readonly preorder_cooking: boolean
   readonly preorder_ready: boolean
+  readonly preorder_total: string | null
+  readonly preorder_items_count: number
+  readonly preorder_currency: string | null
   status?: ReservationStatus
   created_by_staff?: boolean
   notes?: string | null
@@ -3657,6 +3664,45 @@ export type ReservationsReservationsPreorderRetrieveResponses = {
 
 export type ReservationsReservationsPreorderRetrieveResponse =
   ReservationsReservationsPreorderRetrieveResponses[keyof ReservationsReservationsPreorderRetrieveResponses]
+
+export type ReservationsReservationsPreorderItemsDestroyData = {
+  body?: never
+  path: {
+    /**
+     * Public id of the dish, as returned in the pre-order's items.
+     */
+    item_id: string
+    public_id: string
+  }
+  query?: never
+  url: "/api/reservations/reservations/{public_id}/preorder/items/{item_id}/"
+}
+
+export type ReservationsReservationsPreorderItemsDestroyErrors = {
+  /**
+   * Only the booking's owner may change it.
+   */
+  403: unknown
+  /**
+   * No such dish on this booking's pre-order.
+   */
+  404: unknown
+  /**
+   * The kitchen has already started the round (code preorder_not_allowed).
+   */
+  409: unknown
+}
+
+export type ReservationsReservationsPreorderItemsDestroyResponses = {
+  200: PreorderDetail
+  /**
+   * That was the last dish; the pre-order is gone.
+   */
+  204: void
+}
+
+export type ReservationsReservationsPreorderItemsDestroyResponse =
+  ReservationsReservationsPreorderItemsDestroyResponses[keyof ReservationsReservationsPreorderItemsDestroyResponses]
 
 export type ReservationsReservationsAvailabilityRetrieveData = {
   body?: never
