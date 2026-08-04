@@ -354,7 +354,10 @@
       "actions": {
         "modify": "Modify",
         "cancel": "Cancel",
-        "cancelling": "Cancelling…"
+        "cancelling": "Cancelling…",
+        "preorder": "Pre-order",
+        "preorderView": "View pre-order",
+        "preorderCooking": "Being prepared"
       }
     },
     "reschedule": {
