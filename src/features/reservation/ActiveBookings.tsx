@@ -5,6 +5,7 @@ import {
   LuClock,
   LuFlame,
   LuPencil,
+  LuReceiptText,
   LuUsers,
   LuUtensilsCrossed,
   LuX,
@@ -12,6 +13,9 @@ import {
 import { useNavigate } from "react-router-dom"
 import { getPreorderChipStatus, type PreorderChipStatus } from "@/utils/preorderStatus"
 import { PreorderDialog } from "@/features/cabinet/components/PreorderDialog/PreorderDialog"
+import { ReceiptDialog } from "@/features/cabinet/components/ReceiptDialog/ReceiptDialog"
+import { fetchMyReceipts } from "@/features/cabinet/api"
+import type { HistoryEntry } from "@/features/cabinet/types"
 import { formatMoney } from "@/features/cabinet/utils"
 import type { ReservationStatus, ReservationWithTable, WorkingHoursDay } from "./api"
 import { cancelReservation, fetchMyReservations } from "./api"
@@ -92,6 +96,10 @@ export function ActiveBookings({
   const [rescheduleTarget, setRescheduleTarget] = useState<ReservationWithTable | null>(null)
   const [cancelTarget, setCancelTarget] = useState<ReservationWithTable | null>(null)
   const [preorderTarget, setPreorderTarget] = useState<ReservationWithTable | null>(null)
+  const [receiptTarget, setReceiptTarget] = useState<HistoryEntry | null>(null)
+  // Receipts keyed by the booking they came from — a past booking shows its
+  // own receipt without the guest hunting for it in the cabinet.
+  const [receipts, setReceipts] = useState<Map<string, HistoryEntry>>(new Map())
   const [showPast, setShowPast] = useState(false)
 
   // History (completed/cancelled) is a separate, lazy-loaded list: the /my/
@@ -126,6 +134,23 @@ export function ActiveBookings({
   useEffect(() => {
     loadPast()
   }, [loadPast])
+
+  useEffect(() => {
+    fetchMyReceipts()
+      .then((entries) => {
+        if (!mountedRef.current) return
+        setReceipts(
+          new Map(
+            entries
+              .filter(
+                (e): e is HistoryEntry & { reservationId: string } => e.reservationId !== null,
+              )
+              .map((e) => [e.reservationId, e]),
+          ),
+        )
+      })
+      .catch(() => {})
+  }, [])
 
   const handleCancel = useCallback(async () => {
     if (!cancelTarget) return
@@ -171,6 +196,7 @@ export function ActiveBookings({
       const isBusy = actionId === r.public_id
       const phase = getTemporalPhase(r.start_at, r.end_at)
       const preorderStatus = getPreorderChipStatus(r)
+      const receipt = receipts.get(r.public_id)
       const preorderSummary = [
         r.preorder_items_count
           ? bookStrings.myBookings.actions.preorderDishes(r.preorder_items_count)
@@ -213,6 +239,19 @@ export function ActiveBookings({
                 <span className="ab__meta ab__meta--phase">{PHASE_LABELS[phase]}</span>
               )}
             </div>
+
+            {!withActions && receipt && (
+              <div className="ab__card-actions">
+                <button
+                  className="ab__action ab__action--receipt"
+                  onClick={() => setReceiptTarget(receipt)}
+                  type="button"
+                >
+                  <LuReceiptText aria-hidden="true" />
+                  {bookStrings.myBookings.actions.receipt}
+                </button>
+              </div>
+            )}
 
             {withActions && (
               <div className="ab__card-actions">
@@ -285,7 +324,7 @@ export function ActiveBookings({
         </article>
       )
     },
-    [actionId, timeZone],
+    [actionId, timeZone, receipts],
   )
 
   if (loading) {
@@ -338,6 +377,10 @@ export function ActiveBookings({
           onClose={() => setPreorderTarget(null)}
           onCancelled={onRefresh}
         />
+      )}
+
+      {receiptTarget && (
+        <ReceiptDialog entry={receiptTarget} onClose={() => setReceiptTarget(null)} />
       )}
 
       {cancelTarget && (

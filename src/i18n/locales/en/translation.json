@@ -359,6 +359,7 @@
         "preorderPaid": "View pre-order",
         "preorderCooking": "Being prepared",
         "preorderReady": "Ready for you",
+        "receipt": "View receipt",
         "preorderDishes_one": "{{count}} dish",
         "preorderDishes_other": "{{count}} dishes"
       }

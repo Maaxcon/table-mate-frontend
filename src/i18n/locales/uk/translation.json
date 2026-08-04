@@ -365,6 +365,7 @@
         "preorderPaid": "Переглянути замовлення",
         "preorderCooking": "Готується",
         "preorderReady": "Готово до вашого приходу",
+        "receipt": "Переглянути чек",
         "preorderDishes_one": "{{count}} страва",
         "preorderDishes_few": "{{count}} страви",
         "preorderDishes_many": "{{count}} страв",

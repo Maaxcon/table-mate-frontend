@@ -90,6 +90,9 @@ export type HistoryEntry = {
   restaurantImage: string
   restaurantAddress: string
   restaurantPhone: string
+  // The booking this visit came from, so a past booking can offer its
+  // receipt. Null for receipts entered by hand.
+  reservationId: string | null
   // ISO date string of the visit.
   date: string
   currency: string

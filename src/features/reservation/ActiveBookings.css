@@ -431,6 +431,15 @@
   background: rgba(var(--color-success-rgb), 0.18);
 }
 
+.ab__action--receipt {
+  color: var(--color-text-secondary);
+}
+
+.ab__action--receipt:hover:not(:disabled) {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
 .ab__action--calendar {
   color: var(--color-text-secondary);
 }

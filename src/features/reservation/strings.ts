@@ -161,6 +161,7 @@ export function useBookStrings() {
         preorderPaid: t("reservation.myBookings.actions.preorderPaid"),
         preorderCooking: t("reservation.myBookings.actions.preorderCooking"),
         preorderReady: t("reservation.myBookings.actions.preorderReady"),
+        receipt: t("reservation.myBookings.actions.receipt"),
         preorderDishes: (n: number) =>
           t("reservation.myBookings.actions.preorderDishes", { count: n }),
       },

@@ -944,6 +944,12 @@ export type Receipt = {
   readonly restaurant_address: string
   readonly restaurant_phone: string
   readonly restaurant_image: string | null
+  /**
+   * The booking this visit came from, so the guest's booking history can
+   * offer the receipt. None for receipts entered by hand in the admin, and
+   * for orders that never belonged to a booking.
+   */
+  readonly reservation_public_id: string | null
   visited_at: string
   currency?: string
   table_label?: string
