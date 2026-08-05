@@ -56,11 +56,9 @@ jobs:
           # they are; the test job still builds the merged result.
           ref: ${{ github.event.pull_request.head.sha || github.ref }}
 
-      # A cross-repo feature lands under one branch name in both repos, so
-      # check against the matching backend branch when there is one. Comparing
-      # a feature PR against dev would fail on every endpoint its backend PR
-      # adds — which is why this job used to be skipped on PRs entirely, and so
-      # never caught the drift it exists to catch.
+      # Check a cross-repo feature against its matching backend branch. Feature
+      # branches use -fe- and -be- names respectively; retain the same-name
+      # lookup for branches that do not follow that convention.
       - name: Pick the backend ref to check against
         id: backend-ref
         # Runs from the workspace root, not the checked-out frontend: checkout
@@ -74,14 +72,16 @@ jobs:
           BRANCH: ${{ github.head_ref || github.ref_name }}
         run: |
           REMOTE="https://x-access-token:${TOKEN}@github.com/unibrix/table-mate-backend.git"
-          if git ls-remote --exit-code --heads "$REMOTE" "$BRANCH" >/dev/null 2>&1; then
-            echo "ref=$BRANCH" >> "$GITHUB_OUTPUT"
-            echo "Checking against backend branch '$BRANCH'."
-          else
-            echo "ref=dev" >> "$GITHUB_OUTPUT"
-            echo "No backend branch '$BRANCH'; checking against 'dev'."
-            echo "If this PR pairs with a backend PR, give both branches the same name."
-          fi
+          BACKEND_BRANCH="${BRANCH/-fe-/-be-}"
+          for REF in "$BRANCH" "$BACKEND_BRANCH"; do
+            if git ls-remote --exit-code --heads "$REMOTE" "$REF" >/dev/null 2>&1; then
+              echo "ref=$REF" >> "$GITHUB_OUTPUT"
+              echo "Checking against backend branch '$REF'."
+              exit 0
+            fi
+          done
+          echo "ref=dev" >> "$GITHUB_OUTPUT"
+          echo "No matching backend branch; checking against 'dev'."
 
       - name: Checkout backend schema source
         uses: actions/checkout@v4
