@@ -8,6 +8,7 @@ import { markHadSession } from "@/store/auth/sessionFlag"
 vi.mock("@/api/client", () => ({
   ensureSession: vi.fn().mockResolvedValue(null),
   apiFetch: vi.fn(),
+  setAcceptLanguage: vi.fn(),
 }))
 
 import { ensureSession } from "@/api/client"

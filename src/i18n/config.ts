@@ -3,8 +3,6 @@ import { initReactI18next } from "react-i18next"
 import LanguageDetector from "i18next-browser-languagedetector"
 import HttpBackend from "i18next-http-backend"
 import { setAcceptLanguage } from "@/api/client"
-import en from "./locales/en/translation.json"
-import uk from "./locales/uk/translation.json"
 
 const ALL_LANGUAGE_CODES = [
   "en",
@@ -40,10 +38,6 @@ i18n
     fallbackLng: "uk",
     supportedLngs: ALL_LANGUAGE_CODES,
     load: "currentOnly",
-    resources: {
-      en: { translation: en },
-      uk: { translation: uk },
-    },
     backend: {
       loadPath: "/locales/{{lng}}/translation.json",
     },

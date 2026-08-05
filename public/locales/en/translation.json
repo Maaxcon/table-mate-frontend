@@ -141,7 +141,16 @@
       "lobbySkipped": "Skip",
       "guestPrefix": "Guest",
       "slotLabel": "Guest {{slot}}",
-      "unknownItem": "Item"
+      "unknownItem": "Item",
+      "preorderBanner": "Pre-ordering — your food will start cooking closer to your arrival",
+      "preorderCheckout": "Confirm & Pay",
+      "preorderConfirmTitle": "Pay for your pre-order now?",
+      "preorderConfirmYes": "Yes, pay now",
+      "preorderConfirmedTitle": "Pre-order paid!",
+      "preorderConfirmedSub": "Your food will start cooking closer to your arrival",
+      "callWaiter": "Call waiter",
+      "callWaiterSent": "Waiter is on the way",
+      "callWaiterError": "Couldn't call the waiter, try again"
     },
     "item": {
       "ingredients": "Ingredients",
@@ -151,7 +160,9 @@
       "unavailable": "Unavailable",
       "close": "Close",
       "commentLabel": "Comment (optional)",
-      "commentPlaceholder": "E.g., no onions"
+      "commentPlaceholder": "E.g., no onions",
+      "upsells": "Goes well with",
+      "addSuggestion": "Add {{name}}"
     },
     "info": {
       "heading": "About",
@@ -308,7 +319,8 @@
         "share": "Share",
         "shareCopied": "Booking details copied",
         "shareUnsupported": "Sharing is not supported on this device",
-        "done": "Done"
+        "done": "Done",
+        "preorder": "Pre-order food"
       },
       "actions": {
         "ok": "OK",
@@ -348,7 +360,8 @@
       "actions": {
         "modify": "Modify",
         "cancel": "Cancel",
-        "cancelling": "Cancelling…"
+        "cancelling": "Cancelling…",
+        "receipt": "View receipt"
       }
     },
     "reschedule": {
@@ -505,7 +518,9 @@
       "close": "Close",
       "search": "Search",
       "connected": "Connected",
-      "disconnected": "Disconnected"
+      "disconnected": "Disconnected",
+      "today": "Today",
+      "tomorrow": "Tomorrow"
     },
     "layout": {
       "brand": "Admin",
@@ -754,7 +769,7 @@
         "ingredient": "Ingredients",
         "restaurant": "Restaurants",
         "zone": "Zones",
-        "table": "Tables"
+        "layout": "Floor plan"
       },
       "badge": {
         "add": "Add {{language}} translation",
@@ -771,6 +786,22 @@
           "deleted": "Translation deleted",
           "saveFailed": "Failed to save translation.",
           "deleteFailed": "Failed to delete translation."
+        }
+      },
+      "layout": {
+        "empty": "No published floor plan yet.",
+        "error": "Could not load the floor plan.",
+        "zones": "Zones",
+        "unassigned": "Unassigned",
+        "edit": "Edit translations for {{name}}",
+        "modal": {
+          "title": "Translations — {{name}}",
+          "languages": "Languages",
+          "clearHint": "Leave a field empty to remove that translation."
+        },
+        "toasts": {
+          "saved": "Floor plan translations saved.",
+          "saveFailed": "Failed to save floor plan translations."
         }
       }
     },
@@ -1079,7 +1110,8 @@
           "bump": "Could not bump order.",
           "accept": "Could not accept order."
         }
-      }
+      },
+      "preorderBadgeAria": "Pre-order"
     },
     "waiter": {
       "page": {
@@ -1191,7 +1223,10 @@
           "seat": "Seat",
           "modify": "Modify",
           "cancel": "Cancel",
-          "new": "New reservation"
+          "new": "New reservation",
+          "preorderBadge": "Food pre-ordered and paid",
+          "preorderCooking": "Being prepared",
+          "preorderReady": "Ready to serve"
         },
         "voidReasons": {
           "mispick": "Sent to wrong table",
@@ -1228,7 +1263,10 @@
             "title": "Cancel reservation",
             "message": "Are you sure you want to cancel this reservation? This action cannot be undone.",
             "confirm": "Cancel reservation"
-          }
+          },
+          "preorderBadge": "Food pre-ordered and paid",
+          "preorderCooking": "Being prepared",
+          "preorderReady": "Ready to serve"
         }
       },
       "orderModal": {
@@ -1248,7 +1286,10 @@
         },
         "removeAria": "Remove",
         "guestOption": "Guest {{slot}}",
-        "commentPlaceholder": "Comment…"
+        "commentPlaceholder": "Comment…",
+        "upsells": {
+          "title": "Suggested"
+        }
       },
       "closeCheck": {
         "title": "Close check",
@@ -1256,7 +1297,10 @@
         "cancel": "Cancel",
         "confirm": "Close check",
         "confirming": "Closing…",
-        "closeAria": "Close"
+        "closeAria": "Close",
+        "unservedMessage_one": "{{count}} dish hasn't been served yet. Close anyway?",
+        "unservedMessage_other": "{{count}} dishes haven't been served yet. Close anyway?",
+        "confirmAnyway": "Close anyway"
       },
       "modifyModal": {
         "title": "Modify reservation",
@@ -1312,6 +1356,17 @@
         "activateReservation": "Failed to activate reservation",
         "closeCheck": "Failed to close the check",
         "processPayment": "Failed to process payment"
+      },
+      "preorderModal": {
+        "title": "Pre-order",
+        "loading": "Loading pre-order…",
+        "empty": "No pre-order found.",
+        "loadError": "Could not load the pre-order. Please try again.",
+        "total": "Total",
+        "cancel": "Cancel pre-order",
+        "cancelling": "Cancelling…",
+        "cancelError": "Could not cancel the pre-order. Please try again.",
+        "locked": "The kitchen has already started this — it can't be cancelled."
       }
     },
     "floor": {
@@ -1332,7 +1387,10 @@
         },
         "status": {
           "dirty": "Unsaved changes",
-          "clean": "All changes synced"
+          "clean": "All changes synced",
+          "draftSaved": "Draft saved",
+          "draftConflict": "Draft needs syncing",
+          "draftDiscarded": "Draft discarded"
         },
         "live": {
           "ariaConnected": "Live updates connected",
@@ -1373,7 +1431,9 @@
             "message": "Layout was updated by another admin. Reload to see changes (your unsaved work will be lost).",
             "action": "Reload now"
           },
-          "occupied": "Can't delete an occupied table — close its visit first."
+          "occupied": "Can't delete an occupied table — close its visit first.",
+          "layoutUpdated": "Another admin published a layout. Sync to load the latest plan.",
+          "syncFailed": "Could not sync the floor plan."
         }
       },
       "toolbar": {
@@ -1406,7 +1466,15 @@
         "actions": {
           "discard": "Discard",
           "publish": "Publish Layout",
-          "publishing": "Publishing..."
+          "publishing": "Publishing...",
+          "saveDraft": "Save Draft",
+          "savingDraft": "Saving Draft...",
+          "discardDraft": "Discard Draft",
+          "sync": "Sync Layout"
+        },
+        "source": {
+          "draft": "Your draft",
+          "published": "Published layout"
         }
       },
       "zoneHeader": {
@@ -1553,6 +1621,13 @@
           "download": "Download",
           "close": "Close",
           "alt": "QR code for table {{table}}"
+        },
+        "sync": {
+          "title": "Sync latest layout?",
+          "message": "Syncing replaces this editor with the latest published layout and discards your draft or unsaved changes.",
+          "cancel": "Keep editing",
+          "confirm": "Sync layout",
+          "syncing": "Syncing..."
         }
       }
     },
@@ -1639,5 +1714,51 @@
       "error": "Failed to load month summary. Retry.",
       "retry": "Retry"
     }
+  },
+  "errors": {
+    "server": {
+      "preorder_not_allowed": "The kitchen has already started this pre-order, so it can't be changed now.",
+      "unserved_items": "Some items haven't been served yet.",
+      "cart_session_closed": "This cart is already closed. Refresh the page to start a new one.",
+      "empty_cart": "Your cart is empty.",
+      "restaurant_closed": "The restaurant is closed right now.",
+      "table_occupied": "This table's previous visit hasn't ended yet. Please try again shortly.",
+      "menu_item_unavailable": "One of the dishes is no longer available.",
+      "RESERVATION_NOT_YET_ACTIVE": "This booking hasn't started yet.",
+      "NO_ACTIVE_RESERVATION": "This table has no active booking.",
+      "reservation_conflict": "That time is no longer free for this table.",
+      "waiter_call_cooldown": "A waiter was already called for this table. Please wait a moment."
+    }
+  },
+  "preorder": {
+    "add": "Pre-order",
+    "view": "View pre-order",
+    "cooking": "Being prepared",
+    "loading": "Loading your order…",
+    "loadError": "Could not load the pre-order. Please try again.",
+    "empty": "No pre-order found.",
+    "eyebrow": "Pre-order",
+    "paidBadge": "Paid — cooking starts closer to your arrival",
+    "cookingBadge": "Your food is being prepared now",
+    "addMore": "Add more items",
+    "itemRemove": "Remove {{name}} from the pre-order",
+    "itemRemoveError": "Could not remove this dish. Please try again.",
+    "cancel": "Cancel pre-order",
+    "cancelling": "Cancelling…",
+    "cancelError": "Could not cancel the pre-order. Please try again.",
+    "locked": "The kitchen has already started this — it can't be cancelled.",
+    "ownerOnly": "Only the guest who booked the table can cancel this pre-order.",
+    "ready": "Ready for you",
+    "dishes_one": "{{count}} dish",
+    "dishes_other": "{{count}} dishes",
+    "unknownTable": "Unknown",
+    "fallbackRestaurant": "Restaurant",
+    "tableLabel": "Table {{number}}",
+    "closeAria": "Close",
+    "subtotal_one": "Subtotal ({{count}} item)",
+    "subtotal_other": "Subtotal ({{count}} items)",
+    "tax": "Tax",
+    "serviceCharge": "Service charge",
+    "total": "Total"
   }
 }
