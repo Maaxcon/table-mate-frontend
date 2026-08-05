@@ -1,7 +1,12 @@
 import type { WorkingHours } from "@/types/workingHours"
 
 // Re-exported from the generated OpenAPI types so they can't drift from the API.
-export type { CheckoutResponse, MenuCategory, MenuItem } from "@/types/api/types.gen"
+export type {
+  CheckoutResponse,
+  MenuCategory,
+  MenuItem,
+  UpsellSuggestionResponse,
+} from "@/types/api/types.gen"
 
 // Re-exported so menu consumers import working-hours types from one place.
 export type { WorkingHours, WorkingHoursDay } from "@/types/workingHours"

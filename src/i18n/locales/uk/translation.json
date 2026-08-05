@@ -160,7 +160,9 @@
       "unavailable": "Недоступно",
       "close": "Закрити",
       "commentLabel": "Коментар (необов'язково)",
-      "commentPlaceholder": "Напр., без цибулі"
+      "commentPlaceholder": "Напр., без цибулі",
+      "upsells": "Смакує разом",
+      "addSuggestion": "Додати {{name}}"
     },
     "info": {
       "heading": "Про заклад",
@@ -1251,6 +1253,9 @@
         },
         "loading": "Завантажуємо…",
         "empty": "Нічого не знайдено.",
+        "upsells": {
+          "title": "Рекомендуємо"
+        },
         "summary": {
           "title": "Підсумок замовлення",
           "empty": "Ще не додано жодної позиції.",

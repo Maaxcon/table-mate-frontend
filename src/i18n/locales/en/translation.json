@@ -156,7 +156,9 @@
       "unavailable": "Unavailable",
       "close": "Close",
       "commentLabel": "Comment (optional)",
-      "commentPlaceholder": "E.g., no onions"
+      "commentPlaceholder": "E.g., no onions",
+      "upsells": "Goes well with",
+      "addSuggestion": "Add {{name}}"
     },
     "info": {
       "heading": "About",
@@ -1225,6 +1227,9 @@
         },
         "loading": "Loading…",
         "empty": "No items found.",
+        "upsells": {
+          "title": "Suggested"
+        },
         "summary": {
           "title": "Order summary",
           "empty": "No items added yet.",

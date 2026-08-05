@@ -125,6 +125,51 @@
   align-content: start;
 }
 
+.ocm__upsells {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--w-radius-sm);
+  background: var(--color-bg-secondary);
+}
+
+.ocm__upsells-title {
+  flex: 0 0 auto;
+  color: var(--color-text-secondary);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.ocm__upsells-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.ocm__upsell {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  border: 1px solid var(--color-border-default);
+  border-radius: 999px;
+  background: var(--color-bg-surface);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 5px 9px;
+}
+
+.ocm__upsell:hover {
+  border-color: var(--color-text-secondary);
+}
+
 .ocm__item-card {
   display: flex;
   flex-direction: column;

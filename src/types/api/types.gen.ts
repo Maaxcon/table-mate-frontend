@@ -1264,6 +1264,17 @@ export type UpcomingReservation = {
   end_at: string
 }
 
+/**
+ * Read-only envelope for smart upsell suggestions.
+ *
+ * ``results`` reuses the canonical ``MenuItemSerializer`` so clients render
+ * suggestions with the same item component used across the menu.
+ */
+export type UpsellSuggestionResponse = {
+  count: number
+  results: Array<MenuItem>
+}
+
 export type User = {
   readonly public_id: string
   email: string
@@ -1900,6 +1911,17 @@ export type TicketWritable = {
   injected_at: string
   started_at?: string | null
   completed_at?: string | null
+}
+
+/**
+ * Read-only envelope for smart upsell suggestions.
+ *
+ * ``results`` reuses the canonical ``MenuItemSerializer`` so clients render
+ * suggestions with the same item component used across the menu.
+ */
+export type UpsellSuggestionResponseWritable = {
+  count: number
+  results: Array<MenuItemWritable>
 }
 
 export type UserWritable = {
@@ -2785,6 +2807,31 @@ export type MenuItemsToggleLikeCreateResponses = {
 
 export type MenuItemsToggleLikeCreateResponse =
   MenuItemsToggleLikeCreateResponses[keyof MenuItemsToggleLikeCreateResponses]
+
+export type MenuItemsUpsellsRetrieveData = {
+  body?: never
+  path: {
+    public_id: string
+  }
+  query: {
+    /**
+     * Anonymous client token for personalized like state.
+     */
+    guest_token?: string
+    /**
+     * Restaurant public UUID
+     */
+    restaurant: string
+  }
+  url: "/api/menu/items/{public_id}/upsells/"
+}
+
+export type MenuItemsUpsellsRetrieveResponses = {
+  200: UpsellSuggestionResponse
+}
+
+export type MenuItemsUpsellsRetrieveResponse =
+  MenuItemsUpsellsRetrieveResponses[keyof MenuItemsUpsellsRetrieveResponses]
 
 export type MenuItemsSearchRetrieveData = {
   body?: never
