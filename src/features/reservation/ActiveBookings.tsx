@@ -1,5 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { LuCalendarPlus, LuClock, LuPencil, LuUsers, LuX } from "react-icons/lu"
+import { LuCalendarPlus, LuClock, LuPencil, LuReceiptText, LuUsers, LuX } from "react-icons/lu"
+import { PreorderDialog } from "@/features/preorder/PreorderDialog/PreorderDialog"
+import { PreorderEntry } from "@/features/preorder/PreorderEntry"
+import { ReceiptDialog } from "@/features/cabinet/components/ReceiptDialog/ReceiptDialog"
+import { fetchMyReceipts } from "@/features/cabinet/api"
+import type { HistoryEntry } from "@/features/cabinet/types"
 import type { ReservationStatus, ReservationWithTable, WorkingHoursDay } from "./api"
 import { cancelReservation, fetchMyReservations } from "./api"
 import { BookingsSkeleton } from "./BookingSkeleton"
@@ -66,6 +71,11 @@ export function ActiveBookings({
   const [error, setError] = useState<string | null>(null)
   const [rescheduleTarget, setRescheduleTarget] = useState<ReservationWithTable | null>(null)
   const [cancelTarget, setCancelTarget] = useState<ReservationWithTable | null>(null)
+  const [preorderTarget, setPreorderTarget] = useState<ReservationWithTable | null>(null)
+  const [receiptTarget, setReceiptTarget] = useState<HistoryEntry | null>(null)
+  // Receipts keyed by the booking they came from — a past booking shows its
+  // own receipt without the guest hunting for it in the cabinet.
+  const [receipts, setReceipts] = useState<Map<string, HistoryEntry>>(new Map())
   const [showPast, setShowPast] = useState(false)
 
   // History (completed/cancelled) is a separate, lazy-loaded list: the /my/
@@ -100,6 +110,23 @@ export function ActiveBookings({
   useEffect(() => {
     loadPast()
   }, [loadPast])
+
+  useEffect(() => {
+    fetchMyReceipts()
+      .then((entries) => {
+        if (!mountedRef.current) return
+        setReceipts(
+          new Map(
+            entries
+              .filter(
+                (e): e is HistoryEntry & { reservationId: string } => e.reservationId !== null,
+              )
+              .map((e) => [e.reservationId, e]),
+          ),
+        )
+      })
+      .catch(() => {})
+  }, [])
 
   const handleCancel = useCallback(async () => {
     if (!cancelTarget) return
@@ -144,6 +171,7 @@ export function ActiveBookings({
       const endTime = formatTimeInTz(r.end_at, timeZone)
       const isBusy = actionId === r.public_id
       const phase = getTemporalPhase(r.start_at, r.end_at)
+      const receipt = receipts.get(r.public_id)
 
       return (
         <article key={r.public_id} className={`ab__card${withActions ? "" : " ab__card--past"}`}>
@@ -177,8 +205,27 @@ export function ActiveBookings({
               )}
             </div>
 
+            {!withActions && receipt && (
+              <div className="ab__card-actions">
+                <button
+                  className="ab__action ab__action--receipt"
+                  onClick={() => setReceiptTarget(receipt)}
+                  type="button"
+                >
+                  <LuReceiptText aria-hidden="true" />
+                  {bookStrings.myBookings.actions.receipt}
+                </button>
+              </div>
+            )}
+
             {withActions && (
               <div className="ab__card-actions">
+                <PreorderEntry
+                  booking={r}
+                  className="ab__preorder"
+                  onOpen={() => setPreorderTarget(r)}
+                  disabled={isBusy}
+                />
                 <button
                   className="ab__action ab__action--edit ab__action--cta"
                   onClick={() => setRescheduleTarget(r)}
@@ -222,7 +269,7 @@ export function ActiveBookings({
         </article>
       )
     },
-    [actionId, timeZone],
+    [actionId, timeZone, receipts],
   )
 
   if (loading) {
@@ -267,6 +314,18 @@ export function ActiveBookings({
           onClose={() => setRescheduleTarget(null)}
           onSuccess={onRefresh}
         />
+      )}
+
+      {preorderTarget && (
+        <PreorderDialog
+          booking={preorderTarget}
+          onClose={() => setPreorderTarget(null)}
+          onCancelled={onRefresh}
+        />
+      )}
+
+      {receiptTarget && (
+        <ReceiptDialog entry={receiptTarget} onClose={() => setReceiptTarget(null)} />
       )}
 
       {cancelTarget && (

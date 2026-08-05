@@ -5,19 +5,26 @@ import { useWaiterStrings } from "../../strings"
 interface CloseCheckModalProps {
   busy?: boolean
   error?: string | null
-  onConfirm: () => void
+  // Set once the backend has rejected a close attempt because items are
+  // still unserved (409 code "unserved_items") — switches the dialog to a
+  // "close anyway" prompt instead of the plain confirm.
+  unservedCount?: number
+  onConfirm: (force: boolean) => void
   onClose: () => void
 }
 
 // Confirms closing the check (the visit Session). There is no payment step yet,
-// so this explains that and just frees the table on confirm.
+// so this explains that and just frees the table on confirm. If a previous
+// attempt was blocked by unserved items, offers to force it through instead.
 export function CloseCheckModal({
   busy = false,
   error = null,
+  unservedCount,
   onConfirm,
   onClose,
 }: CloseCheckModalProps) {
   const strings = useWaiterStrings().closeCheck
+  const isUnserved = typeof unservedCount === "number" && unservedCount > 0
   const dialogRef = useFocusTrap<HTMLDivElement>({
     onEscape: () => {
       if (!busy) onClose()
@@ -53,7 +60,9 @@ export function CloseCheckModal({
           </button>
         </div>
         <div className="close-check__body">
-          <p className="close-check__message">{strings.message}</p>
+          <p className="close-check__message">
+            {isUnserved ? strings.unservedMessage(unservedCount) : strings.message}
+          </p>
           {error && (
             <p className="close-check__error" role="alert">
               {error}
@@ -67,10 +76,10 @@ export function CloseCheckModal({
           <button
             type="button"
             className="close-check__btn close-check__btn--primary"
-            onClick={onConfirm}
+            onClick={() => onConfirm(isUnserved)}
             disabled={busy}
           >
-            {busy ? strings.confirming : strings.confirm}
+            {busy ? strings.confirming : isUnserved ? strings.confirmAnyway : strings.confirm}
           </button>
         </div>
       </div>

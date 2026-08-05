@@ -1,0 +1,279 @@
+.staff-shifts {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 24px 20px;
+  color: var(--color-text-primary);
+}
+
+.staff-shifts__title {
+  margin: 0 0 20px;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.staff-shifts__summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.staff-shifts__nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.staff-shifts__nav-btn {
+  background: none;
+  border: 1px solid var(--color-border-default);
+  border-radius: 6px;
+  padding: 6px;
+  cursor: pointer;
+  color: var(--color-text-primary);
+  display: flex;
+  align-items: center;
+}
+
+.staff-shifts__nav-btn:hover {
+  background: var(--color-bg-surface-hover);
+}
+
+.staff-shifts__month-label {
+  font-weight: 600;
+  font-size: 16px;
+  min-width: 160px;
+  text-align: center;
+}
+
+.staff-shifts__today-btn {
+  background: none;
+  border: 1px solid var(--color-primary);
+  border-radius: 6px;
+  padding: 6px 14px;
+  cursor: pointer;
+  color: var(--color-primary);
+  font-size: 13px;
+}
+
+.staff-shifts__today-btn:hover {
+  background: var(--color-primary);
+  color: white;
+}
+
+.staff-shifts__hours {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.staff-shifts__body {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.staff-shifts__calendar {
+  background: var(--color-bg-surface);
+  border-radius: 12px;
+  border: 1px solid var(--color-border-default);
+  overflow: hidden;
+}
+
+.staff-shifts__weekday-row {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  background: var(--color-bg-page);
+  border-bottom: 1px solid var(--color-border-default);
+}
+
+.staff-shifts__weekday-cell {
+  padding: 10px 8px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+}
+
+.staff-shifts__days-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+}
+
+.staff-shifts__message {
+  grid-column: 1 / -1;
+  padding: 40px;
+  text-align: center;
+  color: var(--color-text-muted);
+}
+
+.staff-shifts__day-cell {
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: var(--color-text-primary);
+  font-size: 14px;
+  position: relative;
+  padding: 4px;
+}
+
+.staff-shifts__day-cell:hover {
+  background: var(--color-bg-surface-hover);
+}
+
+.staff-shifts__day-cell--empty {
+  cursor: default;
+}
+
+.staff-shifts__day-cell--empty:hover {
+  background: none;
+}
+
+.staff-shifts__day-cell--today {
+  font-weight: 700;
+}
+
+.staff-shifts__day-number {
+  z-index: 1;
+}
+
+.staff-shifts__day-cell--selected {
+  background: var(--color-primary);
+  color: white;
+  border-radius: 8px;
+}
+
+.staff-shifts__day-cell--selected:hover {
+  background: var(--color-primary);
+}
+
+.staff-shifts__day-cell--has-shift:not(.staff-shifts__day-cell--selected) {
+  background: rgba(25, 118, 210, 0.08);
+}
+
+.staff-shifts__day-cell--my-shift:not(.staff-shifts__day-cell--selected) {
+  background: rgba(76, 175, 80, 0.12);
+  box-shadow: inset 0 0 0 2px var(--color-primary);
+  border-radius: 8px;
+}
+
+.staff-shifts__day-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  z-index: 1;
+}
+
+.staff-shifts__day-dot--mine {
+  width: 8px;
+  height: 8px;
+  background: var(--color-success, #4caf50);
+}
+
+.staff-shifts__day-cell--selected .staff-shifts__day-dot {
+  background: white;
+}
+
+.staff-shifts__day-cell--selected .staff-shifts__day-dot--mine {
+  background: white;
+}
+
+/* Day Detail */
+.staff-shifts__day-detail {
+  background: var(--color-bg-surface);
+  border-radius: 12px;
+  border: 1px solid var(--color-border-default);
+  padding: 20px;
+}
+
+.staff-shifts__day-detail-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.staff-shifts__day-detail-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.staff-shifts__day-detail-close {
+  background: none;
+  border: 1px solid var(--color-border-default);
+  border-radius: 6px;
+  padding: 6px 14px;
+  cursor: pointer;
+  color: var(--color-text-primary);
+  font-size: 13px;
+}
+
+.staff-shifts__day-detail-close:hover {
+  background: var(--color-bg-surface-hover);
+}
+
+.staff-shifts__day-shifts {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.staff-shifts__day-employee-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.staff-shifts__day-employee-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--color-border-default);
+  margin-bottom: 4px;
+}
+
+.staff-shifts__day-employee-name {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.staff-shifts__day-employee-role {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  text-transform: capitalize;
+}
+
+.staff-shifts__day-shift-card {
+  padding: 10px 14px;
+  border: 1px solid var(--color-border-default);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.staff-shifts__day-shift-card--mine {
+  border-color: var(--color-primary);
+  background: rgba(25, 118, 210, 0.04);
+}
+
+.staff-shifts__day-shift-time {
+  font-weight: 600;
+}
+
+.staff-shifts__day-shift-duration {
+  color: var(--color-text-muted);
+  font-size: 13px;
+}

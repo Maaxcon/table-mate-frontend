@@ -1,6 +1,9 @@
 .order-item-row {
   display: flex;
-  align-items: center;
+  /* flex-start, not center: a long dish name wraps to several lines, and
+     center-aligning would float the price/status column into the middle of
+     that wrapped text instead of next to its first line. */
+  align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
   padding: 12px 0;
@@ -9,6 +12,10 @@
 
 .order-item-row--voided {
   opacity: 0.5;
+}
+
+.order-item-row--served {
+  opacity: 0.6;
 }
 
 .order-item-row__left {

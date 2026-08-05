@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { useNavigate, useParams } from "react-router-dom"
+import { useNavigate, useParams, useSearchParams } from "react-router-dom"
 import { LuArrowLeft } from "react-icons/lu"
 import type { Table } from "@/types/api/types.gen"
 import { ActiveBookings } from "@/features/reservation/ActiveBookings"
@@ -22,6 +22,7 @@ import type {
   FloorTableStatusEvent,
   FloorNewReservationEvent,
   FloorReservationCancelledEvent,
+  FloorPreorderStatusEvent,
 } from "@/features/reservation/hooks/useFloorSubscription"
 import { useAppSelector } from "@/store/hooks"
 import "./BookingPage.css"
@@ -61,7 +62,22 @@ export function BookingPage() {
     setUpcomingReservations,
   } = useBookingData(public_restaurant_id, isAuthenticated)
 
-  const [tab, setTab] = useState<Tab>("floor")
+  const [searchParams, setSearchParams] = useSearchParams()
+  const tab: Tab = searchParams.get("tab") === "bookings" && isAuthenticated ? "bookings" : "floor"
+  const setTab = useCallback(
+    (next: Tab) => {
+      setSearchParams(
+        (prev) => {
+          const params = new URLSearchParams(prev)
+          if (next === "floor") params.delete("tab")
+          else params.set("tab", next)
+          return params
+        },
+        { replace: true },
+      )
+    },
+    [setSearchParams],
+  )
   const [selectedTable, setSelectedTable] = useState<Table | null>(null)
   const [bookModalOpen, setBookModalOpen] = useState(false)
   const [loginCtaOpen, setLoginCtaOpen] = useState(false)
@@ -224,6 +240,14 @@ export function BookingPage() {
     [setUpcomingReservations],
   )
 
+  const handlePreorderStatusChanged = useCallback(
+    (event: FloorPreorderStatusEvent) => {
+      if (!reservations.some((r) => r.public_id === event.reservation_id)) return
+      reloadReservations()
+    },
+    [reservations, reloadReservations],
+  )
+
   const handleLayoutPublished = useCallback(() => {
     // reloadTables now refreshes tables + layout + upcoming in one call.
     reloadTables()
@@ -235,6 +259,7 @@ export function BookingPage() {
     onTableStatusChanged: handleTableStatusChanged,
     onNewReservation: handleNewReservation,
     onReservationCancelled: handleReservationCancelled,
+    onPreorderStatusChanged: handlePreorderStatusChanged,
     onLayoutPublished: handleLayoutPublished,
     onZoneCreated: reloadZones,
     onZoneUpdated: reloadZones,
@@ -346,6 +371,7 @@ export function BookingPage() {
           table={selectedTable}
           workingHours={workingHours}
           timeZone={timezone}
+          restaurantId={public_restaurant_id}
           initialDate={slotDate}
           initialTime={slotTime}
           initialGuests={slotGuests}

@@ -16,7 +16,7 @@ import {
   RestaurantInfoPanel,
   type WaiterCallState,
 } from "@/features/menu/components"
-import { callWaiter, checkout, type ApiError } from "@/features/menu/api"
+import { callWaiter, checkout, preorderCheckout, type ApiError } from "@/features/menu/api"
 import { useBill } from "@/features/menu/hooks/useBill"
 import { useCart } from "@/features/menu/hooks/useCart"
 import { useCartSocket } from "@/features/menu/hooks/useCartSocket"
@@ -152,25 +152,37 @@ function MenuPage() {
 
   // Destructure the stable fields so the callback deps are these values, not
   // the whole guestAuth object (which is a fresh object every render).
-  const { cartSessionId, guestJwt, initialize: reinitGuestCart } = guestAuth
+  const { cartSessionId, guestJwt, isPreorder, initialize: reinitGuestCart } = guestAuth
   const handleCheckout = useCallback(async () => {
     if (!cartSessionId || !guestJwt) {
       return Promise.reject(new Error(menuStrings.cart.sessionUnavailable))
     }
-    const result = await checkout(cartSessionId, guestJwt)
-    // Capture completed order info for feedback prompt
-    setLastCompletedOrder({
-      orderId: result.orderId,
-      feedbackToken: result.feedbackToken,
-      items: cartItems.map((ci) => ({
-        public_id: ci.menuItemId,
-        name: ci.item?.name ?? "Unknown",
-      })),
-    })
-    // Checkout closed this cart; reopen a fresh one so the guest can order again.
+    const result = isPreorder
+      ? await preorderCheckout(cartSessionId, guestJwt)
+      : await checkout(cartSessionId, guestJwt)
+    if (!isPreorder) {
+      // Capture completed order info for feedback prompt.
+      setLastCompletedOrder({
+        orderId: result.orderId,
+        feedbackToken: result.feedbackToken,
+        items: cartItems.map((ci) => ({
+          public_id: ci.menuItemId,
+          name: ci.item?.name ?? "Unknown",
+        })),
+      })
+    }
+    // Checkout closed this cart; reopen a fresh one so the guest can order
+    // again (a second pre-order round pays and gets injected independently).
     reinitGuestCart()
     return result
-  }, [cartSessionId, guestJwt, reinitGuestCart, cartItems, menuStrings.cart.sessionUnavailable])
+  }, [
+    cartSessionId,
+    guestJwt,
+    isPreorder,
+    reinitGuestCart,
+    cartItems,
+    menuStrings.cart.sessionUnavailable,
+  ])
 
   // Lifted above the cart drawer (rather than local state inside it) so the
   // "waiter is on the way" status survives the guest closing and reopening
@@ -671,6 +683,8 @@ function MenuPage() {
       {selectedItem && (
         <MenuItemModal
           item={selectedItem}
+          restaurantId={restaurantId}
+          guestToken={guestAuth.deviceId}
           currencySymbol={currencySymbol}
           onClose={() => setSelectedItem(null)}
           onAddToCart={handleAddToCart}
@@ -773,12 +787,15 @@ function MenuPage() {
           onCartChanged={syncFromServer}
           waiterCallState={waiterCallState}
           onCallWaiter={
-            guestAuth.cartSessionId && guestAuth.guestJwt
+            // Calling a waiter only makes sense once the guest is actually
+            // at the table — not while pre-ordering ahead of arrival.
+            guestAuth.cartSessionId && guestAuth.guestJwt && !guestAuth.isPreorder
               ? () => {
                   void handleCallWaiter()
                 }
               : undefined
           }
+          isPreorder={guestAuth.isPreorder}
         />
       )}
 

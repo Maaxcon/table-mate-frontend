@@ -1,0 +1,197 @@
+.month-summary {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 24px 20px;
+  color: var(--color-text-primary);
+}
+
+.month-summary__header {
+  margin-bottom: 20px;
+}
+
+.month-summary__title {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.month-summary__nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.month-summary__nav-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.month-summary__nav-btn {
+  background: none;
+  border: 1px solid var(--color-border-default);
+  border-radius: 6px;
+  padding: 6px;
+  cursor: pointer;
+  color: var(--color-text-primary);
+  display: flex;
+  align-items: center;
+}
+
+.month-summary__nav-btn:hover {
+  background: var(--color-bg-surface-hover);
+}
+
+.month-summary__month-label {
+  font-weight: 600;
+  font-size: 16px;
+  min-width: 180px;
+  text-align: center;
+}
+
+.month-summary__today-btn {
+  background: none;
+  border: 1px solid var(--color-primary);
+  border-radius: 6px;
+  padding: 6px 14px;
+  cursor: pointer;
+  color: var(--color-primary);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.month-summary__today-btn:hover {
+  background: var(--color-primary);
+  color: white;
+}
+
+.month-summary__body {
+  background: var(--color-bg-surface);
+  border-radius: 12px;
+  border: 1px solid var(--color-border-default);
+  overflow: hidden;
+}
+
+.month-summary__state {
+  padding: 60px 20px;
+  text-align: center;
+  color: var(--color-text-muted);
+}
+
+.month-summary__retry-btn {
+  background: none;
+  border: 1px solid var(--color-primary);
+  border-radius: 6px;
+  padding: 8px 16px;
+  cursor: pointer;
+  color: var(--color-primary);
+  font-size: 13px;
+  margin-top: 12px;
+}
+
+.month-summary__retry-btn:hover {
+  background: var(--color-primary);
+  color: white;
+}
+
+.month-summary__table-wrap {
+  overflow-x: auto;
+}
+
+.month-summary__table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.month-summary__th {
+  padding: 12px 16px;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  border-bottom: 2px solid var(--color-border-default);
+  background: var(--color-bg-page);
+}
+
+.month-summary__th--sortable {
+  cursor: pointer;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.month-summary__th--name {
+  min-width: 180px;
+}
+
+.month-summary__row {
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.month-summary__row:hover {
+  background: var(--color-bg-surface-hover);
+}
+
+.month-summary__td {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--color-border-default);
+  font-size: 14px;
+}
+
+.month-summary__td--name {
+  font-weight: 600;
+}
+
+.month-summary__td--role {
+  color: var(--color-text-muted);
+  text-transform: capitalize;
+  font-size: 13px;
+}
+
+.month-summary__td--hours {
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.month-summary__td--count {
+  color: var(--color-text-muted);
+}
+
+.month-summary__td--expand {
+  text-align: center;
+  color: var(--color-text-muted);
+}
+
+.month-summary__detail-row td {
+  padding: 0;
+}
+
+.month-summary__detail {
+  padding: 12px 16px 16px;
+  background: var(--color-bg-page);
+}
+
+.month-summary__detail-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.month-summary__detail-th {
+  padding: 8px 12px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--color-border-default);
+}
+
+.month-summary__detail-td {
+  padding: 8px 12px;
+  font-size: 13px;
+  border-bottom: 1px solid var(--color-border-default);
+}

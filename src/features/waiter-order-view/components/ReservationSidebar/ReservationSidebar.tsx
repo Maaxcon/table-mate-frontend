@@ -1,12 +1,27 @@
 import { useState } from "react"
+import {
+  LuCircleCheck,
+  LuClock3,
+  LuFlame,
+  LuTable2,
+  LuUsers,
+  LuUtensilsCrossed,
+} from "react-icons/lu"
 import type { ReservationItem } from "../../types"
-import { formatTimeRange } from "../../types"
+import {
+  formatDateGroupLabel,
+  formatTimeRange,
+  getPreorderChipStatus,
+  groupReservationsByDate,
+} from "../../types"
 import { ConfirmCancelModal } from "../ConfirmCancelModal"
+import { PreorderModal } from "../PreorderModal/PreorderModal"
 import "./ReservationSidebar.css"
 import { useWaiterStrings } from "../../strings"
 
 interface ReservationSidebarProps {
   reservations: ReservationItem[]
+  currentTime: Date
   onCancel: (reservationId: string) => void
   onModify: (reservation: ReservationItem) => void
   actionLoading: boolean
@@ -15,6 +30,7 @@ interface ReservationSidebarProps {
 
 export function ReservationSidebar({
   reservations,
+  currentTime,
   onCancel,
   onModify,
   actionLoading,
@@ -22,7 +38,13 @@ export function ReservationSidebar({
 }: ReservationSidebarProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [confirmingId, setConfirmingId] = useState<string | null>(null)
-  const sidebarStrings = useWaiterStrings().reservations.sidebar
+  const waiterStrings = useWaiterStrings()
+  const sidebarStrings = waiterStrings.reservations.sidebar
+
+  const [viewingPreorder, setViewingPreorder] = useState<ReservationItem | null>(null)
+  // Reservations whose pre-order was just cancelled — hides the entry point
+  // without needing to re-fetch the whole reservation list.
+  const [cancelledPreorderIds, setCancelledPreorderIds] = useState<Set<string>>(new Set())
 
   const getReservationStatusLabel = (status?: ReservationItem["status"]) => {
     if (!status) return sidebarStrings.status.unknown
@@ -35,6 +57,7 @@ export function ReservationSidebar({
   )
 
   const filtered = sorted.filter((r) => r.name.toLowerCase().includes(searchQuery.toLowerCase()))
+  const dateGroups = groupReservationsByDate(filtered, currentTime)
 
   return (
     <aside className="reservation-sidebar">
@@ -72,48 +95,91 @@ export function ReservationSidebar({
       )}
 
       <div className="reservation-sidebar__list">
-        {filtered.map((r, i) => (
-          <div
-            key={r.public_id}
-            className={`reservation-sidebar__item ${i < filtered.length - 1 ? "reservation-sidebar__item--bordered" : ""}`}
-          >
-            <div className="reservation-sidebar__item-left">
-              <span className="reservation-sidebar__item-time">
-                {formatTimeRange(r.start_at, r.end_at)}
-              </span>
-              <div className="reservation-sidebar__item-info">
-                <span className="reservation-sidebar__item-name">{r.name}</span>
-                <span className="reservation-sidebar__item-meta">
-                  {sidebarStrings.guestCount(r.guest_count)}
-                  <span
-                    className={`reservation-sidebar__item-status reservation-sidebar__item-status--${(r.status ?? "unknown").toLowerCase()}`}
-                  >
-                    {getReservationStatusLabel(r.status)}
-                  </span>
-                </span>
-              </div>
-            </div>
-            <div className="reservation-sidebar__item-right">
-              <span className="reservation-sidebar__item-table">{r.table}</span>
-              <div className="reservation-sidebar__item-actions">
-                <button
-                  type="button"
-                  className="reservation-sidebar__action-btn reservation-sidebar__action-btn--modify"
-                  onClick={() => onModify(r)}
-                  disabled={actionLoading}
-                >
-                  {sidebarStrings.actions.modify}
-                </button>
-                <button
-                  type="button"
-                  className="reservation-sidebar__action-btn reservation-sidebar__action-btn--cancel"
-                  onClick={() => setConfirmingId(r.public_id)}
-                  disabled={actionLoading}
-                >
-                  {sidebarStrings.actions.cancel}
-                </button>
-              </div>
-            </div>
+        {dateGroups.map(([groupKey, items]) => (
+          <div key={groupKey} className="reservation-sidebar__date-group">
+            <span className="reservation-sidebar__date-heading">
+              {formatDateGroupLabel(
+                groupKey,
+                waiterStrings.common.today,
+                waiterStrings.common.tomorrow,
+                waiterStrings.locale,
+              )}
+            </span>
+            {items.map((r) => {
+              const showsPreorder = r.has_preorder && !cancelledPreorderIds.has(r.public_id)
+              const statusKey = (r.status ?? "unknown").toLowerCase()
+              const preorderChipStatus = getPreorderChipStatus(r)
+
+              return (
+                <div key={r.public_id} className="reservation-sidebar__item">
+                  <div className="reservation-sidebar__item-header">
+                    <span className="reservation-sidebar__item-name" title={r.name}>
+                      {r.name}
+                    </span>
+                    <span
+                      className={`reservation-sidebar__item-status reservation-sidebar__item-status--${statusKey}`}
+                    >
+                      {getReservationStatusLabel(r.status)}
+                    </span>
+                  </div>
+
+                  <div className="reservation-sidebar__item-meta">
+                    <span className="reservation-sidebar__meta-chip">
+                      <LuClock3 size={13} aria-hidden="true" />
+                      {formatTimeRange(r.start_at, r.end_at)}
+                    </span>
+                    <span className="reservation-sidebar__meta-chip">
+                      <LuTable2 size={13} aria-hidden="true" />
+                      {r.table}
+                    </span>
+                    <span className="reservation-sidebar__meta-chip">
+                      <LuUsers size={13} aria-hidden="true" />
+                      {r.guest_count}
+                    </span>
+                  </div>
+
+                  {showsPreorder && (
+                    <button
+                      type="button"
+                      className={`reservation-sidebar__preorder-chip reservation-sidebar__preorder-chip--${preorderChipStatus}`}
+                      onClick={() => setViewingPreorder(r)}
+                    >
+                      {preorderChipStatus === "ready" ? (
+                        <LuCircleCheck size={13} aria-hidden="true" />
+                      ) : preorderChipStatus === "cooking" ? (
+                        <LuFlame size={13} aria-hidden="true" />
+                      ) : (
+                        <LuUtensilsCrossed size={13} aria-hidden="true" />
+                      )}
+                      {preorderChipStatus === "ready"
+                        ? sidebarStrings.preorderReady
+                        : preorderChipStatus === "cooking"
+                          ? sidebarStrings.preorderCooking
+                          : sidebarStrings.preorderBadge}
+                    </button>
+                  )}
+
+                  <div className="reservation-sidebar__item-actions">
+                    <button
+                      type="button"
+                      className="reservation-sidebar__action-btn reservation-sidebar__action-btn--modify"
+                      onClick={() => onModify(r)}
+                      disabled={actionLoading}
+                    >
+                      {sidebarStrings.actions.modify}
+                    </button>
+                    <button
+                      type="button"
+                      className="reservation-sidebar__action-btn reservation-sidebar__action-btn--cancel"
+                      onClick={() => setConfirmingId(r.public_id)}
+                      disabled={actionLoading}
+                    >
+                      {sidebarStrings.actions.cancel}
+                    </button>
+                  </div>
+                </div>
+              )
+            })}
           </div>
         ))}
       </div>
@@ -129,6 +195,16 @@ export function ReservationSidebar({
             setConfirmingId(null)
           }}
           onClose={() => setConfirmingId(null)}
+        />
+      )}
+
+      {viewingPreorder && (
+        <PreorderModal
+          reservation={viewingPreorder}
+          onClose={() => setViewingPreorder(null)}
+          onCancelled={() =>
+            setCancelledPreorderIds((prev) => new Set(prev).add(viewingPreorder.public_id))
+          }
         />
       )}
     </aside>
