@@ -28,6 +28,7 @@ vi.mock("@/features/menu/api", () => ({
 vi.mock("@/api/client", () => ({
   getAccessToken: () => getAccessToken(),
   ensureSession: () => ensureSession(),
+  setAcceptLanguage: vi.fn(),
 }))
 
 const { useGuestAuth } = await import("./useGuestAuth")

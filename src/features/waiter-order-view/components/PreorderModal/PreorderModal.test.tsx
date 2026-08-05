@@ -5,6 +5,7 @@ const apiFetch = vi.fn()
 
 vi.mock("@/api/client", () => ({
   apiFetch: (...args: unknown[]) => apiFetch(...args),
+  setAcceptLanguage: vi.fn(),
 }))
 
 const { PreorderModal } = await import("./PreorderModal")
