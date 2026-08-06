@@ -24,7 +24,12 @@ export function assignEmployee(payload: ExistingEmployeeAssignment): Promise<Adm
   })
 }
 
-export type EmployeePatch = Partial<Pick<AdminEmployee, "role" | "is_active">>
+export type EmployeePatch = Partial<
+  Pick<
+    AdminEmployee,
+    "role" | "is_active" | "staff_display_name" | "first_name" | "last_name" | "phone"
+  >
+>
 
 export function updateEmployee(publicId: string, patch: EmployeePatch): Promise<AdminEmployee> {
   return api.patch<AdminEmployee>(`${EMPLOYEES_PATH}${publicId}/`, patch, {

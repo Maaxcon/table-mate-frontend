@@ -93,9 +93,29 @@
   background: var(--color-bg-surface-subtle);
 }
 
+.staff-row__details {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+.staff-row__details:focus-visible {
+  outline: 2px solid var(--color-border-strong);
+  outline-offset: -3px;
+}
+
 /* name + email become two real columns of the table grid */
 .staff-row__main {
   display: contents;
+}
+
+.staff-row__name,
+.staff-row__email {
+  pointer-events: none;
 }
 
 .staff-row__controls {
@@ -103,6 +123,8 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  position: relative;
+  z-index: 1;
 }
 
 .staff-row__name {

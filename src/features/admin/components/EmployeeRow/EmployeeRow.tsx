@@ -13,10 +13,16 @@ const ROLES: { value: EmployeeRole; label: string }[] = [
 type EmployeeRowProps = {
   employee: AdminEmployee
   onUpdated: (updated: AdminEmployee) => void
+  onEditRequested: (employee: AdminEmployee) => void
   onRemoveRequested: (employee: AdminEmployee) => void
 }
 
-function EmployeeRow({ employee, onUpdated, onRemoveRequested }: EmployeeRowProps) {
+function EmployeeRow({
+  employee,
+  onUpdated,
+  onEditRequested,
+  onRemoveRequested,
+}: EmployeeRowProps) {
   const toast = useToast()
   const [saving, setSaving] = useState(false)
   const [confirmDisable, setConfirmDisable] = useState(false)
@@ -51,6 +57,12 @@ function EmployeeRow({ employee, onUpdated, onRemoveRequested }: EmployeeRowProp
 
   return (
     <li className={`staff-row${employee.is_active ? "" : " staff-row--disabled"}`}>
+      <button
+        type="button"
+        className="staff-row__details"
+        aria-label={`View and edit ${name}`}
+        onClick={() => onEditRequested(employee)}
+      />
       <div className="staff-row__main">
         <span className="staff-row__name">{name}</span>
         <span className="staff-row__email">{employee.email}</span>

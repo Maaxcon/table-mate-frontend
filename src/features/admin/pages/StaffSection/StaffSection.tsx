@@ -2,6 +2,7 @@ import { useMemo, useState } from "react"
 import { LuPlus } from "react-icons/lu"
 import { removeEmployee as removeStaffEmployee } from "@/features/admin/api/staff"
 import ConfirmDialog from "@/features/admin/components/ConfirmDialog"
+import EditEmployeeModal from "@/features/admin/components/EditEmployeeModal"
 import { useEmployees } from "@/features/admin/hooks/useEmployees"
 import AddEmployeeModal from "@/features/admin/components/AddEmployeeModal"
 import EmployeeRow from "@/features/admin/components/EmployeeRow"
@@ -24,6 +25,7 @@ function StaffSection() {
   const toast = useToast()
   const [adding, setAdding] = useState(false)
   const [query, setQuery] = useState("")
+  const [employeeToEdit, setEmployeeToEdit] = useState<AdminEmployee | null>(null)
   const [employeeToRemove, setEmployeeToRemove] = useState<AdminEmployee | null>(null)
   const [removing, setRemoving] = useState(false)
   const strings = useAdminStrings()
@@ -97,6 +99,7 @@ function StaffSection() {
                     key={e.public_id}
                     employee={e}
                     onUpdated={applyUpdate}
+                    onEditRequested={setEmployeeToEdit}
                     onRemoveRequested={setEmployeeToRemove}
                   />
                 ))}
@@ -107,6 +110,13 @@ function StaffSection() {
       )}
 
       {adding && <AddEmployeeModal onClose={() => setAdding(false)} onCreated={reload} />}
+      {employeeToEdit && (
+        <EditEmployeeModal
+          employee={employeeToEdit}
+          onClose={() => setEmployeeToEdit(null)}
+          onUpdated={applyUpdate}
+        />
+      )}
       {employeeToRemove && (
         <ConfirmDialog
           title="Remove employee"
