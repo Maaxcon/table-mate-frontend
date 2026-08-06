@@ -1,5 +1,5 @@
 import "./CompletedColumn.css"
-import { LuCheck } from "react-icons/lu"
+import { LuCalendarClock, LuCheck } from "react-icons/lu"
 import type { KanbanTicket } from "../../types"
 import { useAdminStrings } from "@/features/admin/strings"
 
@@ -22,7 +22,15 @@ export function CompletedColumn({ tickets }: CompletedColumnProps) {
         {tickets.map((ticket) => (
           <div key={ticket.id} className="kanban-card kanban-card--completed">
             <div className="kanban-card__completed-top">
-              <span className="kanban-card__id">{ticket.label}</span>
+              <span className="kanban-card__id">
+                {ticket.label}
+                {ticket.isPreorder && (
+                  <LuCalendarClock
+                    className="kanban-card__preorder-badge"
+                    aria-label={strings.kitchen.preorderBadgeAria}
+                  />
+                )}
+              </span>
               <LuCheck className="kanban-card__check" aria-label={strings.kitchen.completed.aria} />
             </div>
             <span className="kanban-card__timer">{ticket.completedMinutes}m</span>

@@ -10,7 +10,10 @@ import {
   MoveTableModal,
 } from "../../components"
 import { NotificationStreamSidebar } from "@/features/notification-stream/components/NotificationStreamSidebar"
+import { WaiterCallOverlay } from "@/features/notification-stream/components/WaiterCallOverlay"
 import { useNotificationStream } from "@/features/notification-stream/hooks/useNotificationStream"
+import { onWaiterCallEvent } from "@/features/notification-stream/waiterCallEventBus"
+import { playWaiterCallSound } from "@/features/notification-stream/waiterCallSound"
 import { BookModal } from "@/features/reservation/BookModal"
 import { fetchRestaurantSettings } from "@/features/reservation/api"
 import type { WorkingHoursDay, Zone } from "@/features/reservation/api"
@@ -89,6 +92,9 @@ export function WaiterOrderPage() {
   } = useNotificationStream()
   const tablesRef = useRef<FloorTable[]>([])
   const reservationsRef = useRef<ReservationItem[]>([])
+
+  useEffect(() => onWaiterCallEvent(playWaiterCallSound), [])
+
   const showNotificationReminder =
     isTabletLayout && sidebarTab !== "notifications" && notificationUnreadCount > 0
 
@@ -261,6 +267,7 @@ export function WaiterOrderPage() {
     actionBusy,
     busyActionId,
     actionError,
+    actionErrorMeta,
     handleOpenTable,
     handleActivateReservation,
     handleCloseCheck,
@@ -389,6 +396,16 @@ export function WaiterOrderPage() {
     return result
   }, [tables, mergedReservations, currentTime])
 
+  const waiterCallingTableNumbers = useMemo(() => {
+    const result = new Set<string>()
+    for (const event of notificationEvents) {
+      if (event.stream === "waiter" && !event.read && event.tableNumber) {
+        result.add(event.tableNumber)
+      }
+    }
+    return result
+  }, [notificationEvents])
+
   const handleTableSelect = (table: FloorTable) => {
     clearActionError()
     setSelectedTableId(table.public_id)
@@ -413,10 +430,9 @@ export function WaiterOrderPage() {
     ? getTableVisualStatus(selectedTable, layoutReservations, currentTime)
     : "free"
 
-  const pendingTodayReservations = mergedReservations.filter(
-    (r) =>
-      r.status === "pending" && new Date(r.start_at).toDateString() === currentTime.toDateString(),
-  )
+  // Every upcoming pending reservation, not just today's — ReservationSidebar
+  // groups them by date so tomorrow's (and later) bookings are visible too.
+  const pendingUpcomingReservations = mergedReservations.filter((r) => r.status === "pending")
 
   const activeReservationsByTable = useMemo(() => {
     const map: Record<string, ReservationItem> = {}
@@ -465,6 +481,7 @@ export function WaiterOrderPage() {
             currentTime={currentTime}
             activeReservationsByTable={activeReservationsByTable}
             overdueByTableId={overdueByTableId}
+            waiterCallingTableNumbers={waiterCallingTableNumbers}
             onSelect={handleTableSelect}
             onZoneChange={setSelectedZoneId}
             canvasCols={zones.find((z) => z.public_id === selectedZoneId)?.canvas_cols}
@@ -512,7 +529,8 @@ export function WaiterOrderPage() {
             <div className="waiter-view__sidebar-panel">
               {sidebarTab === "reservations" ? (
                 <ReservationSidebar
-                  reservations={pendingTodayReservations}
+                  reservations={pendingUpcomingReservations}
+                  currentTime={currentTime}
                   onCancel={handleCancel}
                   onModify={handleModify}
                   actionLoading={sidebarActionLoading}
@@ -531,7 +549,8 @@ export function WaiterOrderPage() {
         ) : (
           <div className="waiter-view__side-grid">
             <ReservationSidebar
-              reservations={pendingTodayReservations}
+              reservations={pendingUpcomingReservations}
+              currentTime={currentTime}
               onCancel={handleCancel}
               onModify={handleModify}
               actionLoading={sidebarActionLoading}
@@ -560,10 +579,15 @@ export function WaiterOrderPage() {
           actionBusy={actionBusy}
           busyActionId={busyActionId}
           actionError={actionError}
+          closeCheckUnservedCount={
+            actionErrorMeta?.code === "unserved_items" ? actionErrorMeta.count : undefined
+          }
           onOpenTable={handleOpenTable}
           onActivateReservation={handleActivateReservation}
           onCancelReservation={(reservationId) => handleCancel(reservationId)}
-          onCloseCheck={overlayDetail ? () => handleCloseCheck(overlayDetail.public_id) : undefined}
+          onCloseCheck={
+            overlayDetail ? (force) => handleCloseCheck(overlayDetail.public_id, force) : undefined
+          }
           onProcessPayment={
             overlayDetail
               ? (orderItemIds) => handleProcessPayment(overlayDetail.public_id, orderItemIds)
@@ -634,6 +658,8 @@ export function WaiterOrderPage() {
           }}
         />
       )}
+
+      <WaiterCallOverlay events={notificationEvents} markEventRead={markEventRead} />
     </div>
   )
 }

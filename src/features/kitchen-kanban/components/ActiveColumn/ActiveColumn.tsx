@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react"
-import { LuCircleCheck } from "react-icons/lu"
+import { LuCalendarClock, LuCircleCheck } from "react-icons/lu"
 import "./ActiveColumn.css"
 import type { KanbanTicket } from "../../types"
 import { elapsedMinutes, timerUrgencyClass } from "../../utils"
@@ -31,7 +31,15 @@ export function ActiveColumn({ tickets, onToggleItem, onBump, canManage }: Activ
             <div key={ticket.id} className="kanban-card kanban-card--active">
               <div className="kanban-card__top">
                 <div className="kanban-card__header">
-                  <span className="kanban-card__id">{ticket.label}</span>
+                  <span className="kanban-card__id">
+                    {ticket.label}
+                    {ticket.isPreorder && (
+                      <LuCalendarClock
+                        className="kanban-card__preorder-badge"
+                        aria-label={strings.kitchen.preorderBadgeAria}
+                      />
+                    )}
+                  </span>
                   <span className={`kanban-card__timer ${timerUrgencyClass(elapsed)}`}>
                     {elapsed}m
                   </span>

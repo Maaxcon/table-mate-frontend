@@ -135,6 +135,7 @@ function useGoogleRedirectAuth(): UseGoogleRedirectAuthResult {
 
         dispatch(
           setUser({
+            public_id: me.public_id,
             email: me.email,
             firstName: me.first_name,
             lastName: me.last_name,

@@ -1,6 +1,9 @@
+import { useState } from "react"
 import { LuCalendarClock, LuMapPin, LuTable2, LuUsers } from "react-icons/lu"
 import { useCabinetStrings } from "@/features/cabinet/strings"
 import type { Reservation } from "@/features/cabinet/types"
+import { PreorderDialog } from "@/features/preorder/PreorderDialog/PreorderDialog"
+import { PreorderEntry } from "@/features/preorder/PreorderEntry"
 import "./BookingsList.css"
 
 type BookingsListProps = {
@@ -38,6 +41,11 @@ export function BookingsList({
 }: BookingsListProps) {
   const strings = useCabinetStrings()
 
+  const [viewingPreorder, setViewingPreorder] = useState<Reservation | null>(null)
+  // Bookings whose pre-order was just cancelled — hides the entry point
+  // without needing to re-fetch the whole booking list.
+  const [cancelledPreorderIds, setCancelledPreorderIds] = useState<Set<string>>(new Set())
+
   return (
     <section className="cabinet-section" aria-labelledby="cabinet-bookings-title">
       <h2 className="cabinet-section__title" id="cabinet-bookings-title">
@@ -58,6 +66,8 @@ export function BookingsList({
               const restaurantName =
                 booking.restaurant_info?.name ?? strings.bookings.fallbackRestaurant
               const isBusy = actionId === booking.public_id
+              const showsPreorder =
+                booking.has_preorder && !cancelledPreorderIds.has(booking.public_id)
 
               return (
                 <li key={booking.public_id} className="booking-card">
@@ -89,7 +99,14 @@ export function BookingsList({
                         {booking.guest_count} {strings.bookings.guestLabel(booking.guest_count)}
                       </span>
                     </p>
+                    <PreorderEntry
+                      booking={booking}
+                      hasPreorder={showsPreorder}
+                      className="booking-card__preorder-toggle"
+                      onOpen={() => setViewingPreorder(booking)}
+                    />
                   </div>
+
                   {booking.status === "active" ? (
                     <p className="booking-card__row booking-card__row--muted">
                       {strings.bookings.activeNote}
@@ -124,6 +141,16 @@ export function BookingsList({
             </button>
           )}
         </>
+      )}
+
+      {viewingPreorder && (
+        <PreorderDialog
+          booking={viewingPreorder}
+          onClose={() => setViewingPreorder(null)}
+          onCancelled={() =>
+            setCancelledPreorderIds((prev) => new Set(prev).add(viewingPreorder.public_id))
+          }
+        />
       )}
     </section>
   )

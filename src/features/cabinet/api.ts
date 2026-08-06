@@ -17,6 +17,7 @@ type ApiReceipt = {
   restaurant_address: string
   restaurant_phone: string
   restaurant_image: string | null
+  reservation_public_id: string | null
   visited_at: string
   currency: string
   table_label: string
@@ -45,6 +46,7 @@ export async function fetchMyReceipts(signal?: AbortSignal): Promise<HistoryEntr
     restaurantImage: r.restaurant_image ?? heroImage,
     restaurantAddress: r.restaurant_address,
     restaurantPhone: r.restaurant_phone,
+    reservationId: r.reservation_public_id,
     date: r.visited_at,
     currency: r.currency,
     tableLabel: r.table_label,

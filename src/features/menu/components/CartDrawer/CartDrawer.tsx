@@ -1,14 +1,5 @@
 import { useEffect, useState } from "react"
-import {
-  LuCheck,
-  LuMinus,
-  LuPlus,
-  LuShoppingCart,
-  LuTrash2,
-  LuWifi,
-  LuWifiOff,
-  LuX,
-} from "react-icons/lu"
+import { LuBellRing, LuCheck, LuMinus, LuPlus, LuShoppingCart, LuTrash2, LuX } from "react-icons/lu"
 import {
   CartChangedError,
   type BillItem,
@@ -17,6 +8,7 @@ import {
 } from "@/features/menu/api"
 import type { CartItemWithDetails } from "@/features/menu/hooks/useCart"
 import { formatAmount } from "@/features/menu/utils"
+import { serverErrorMessage } from "@/utils/serverError"
 import { useMenuStrings } from "@/features/menu/strings"
 import "./CartDrawer.css"
 
@@ -24,8 +16,6 @@ type Props = {
   items: CartItemWithDetails[]
   totalPrice: number
   currencySymbol: string
-  isConnected: boolean
-  showConnectionStatus?: boolean
   sessionExpired?: boolean
   error: string | null
   errorItemId: string | null
@@ -41,7 +31,18 @@ type Props = {
   onLoadBill: () => void
   onPayBill: (orderItemIds: string[]) => Promise<void>
   onCartChanged?: () => void
+  waiterCallState?: WaiterCallState
+  onCallWaiter?: () => void
+  // True when the cart belongs to a reservation that hasn't started yet —
+  // checkout pays now (simulated) but food isn't sent to the kitchen until
+  // closer to arrival. Swaps checkout/confirmation copy accordingly.
+  isPreorder?: boolean
 }
+
+// Lifted to MenuPage (rather than local state here) so it survives the
+// drawer closing and reopening — the guest closing the cart right after
+// tapping the button must not lose the "waiter is on the way" status.
+export type WaiterCallState = "idle" | "sending" | "sent" | "error"
 
 type ReceiptTotals = {
   subtotal: number
@@ -92,8 +93,6 @@ export function CartDrawer({
   items,
   totalPrice,
   currencySymbol,
-  isConnected,
-  showConnectionStatus = true,
   sessionExpired = false,
   error,
   errorItemId,
@@ -109,6 +108,9 @@ export function CartDrawer({
   onLoadBill,
   onPayBill,
   onCartChanged,
+  waiterCallState = "idle",
+  onCallWaiter,
+  isPreorder = false,
 }: Props) {
   const menuStrings = useMenuStrings()
   const [step, setStep] = useState<"cart" | "confirming" | "confirmed" | "changed" | "bill">("cart")
@@ -128,6 +130,13 @@ export function CartDrawer({
     document.addEventListener("keydown", onKey)
     return () => document.removeEventListener("keydown", onKey)
   }, [onClose])
+
+  // The floating language switcher sits bottom-right and overlaps the drawer;
+  // hide it for as long as the drawer is mounted.
+  useEffect(() => {
+    document.body.classList.add("has-cart-drawer")
+    return () => document.body.classList.remove("has-cart-drawer")
+  }, [])
 
   useEffect(() => {
     if (error) {
@@ -171,7 +180,10 @@ export function CartDrawer({
         onCartChanged?.()
         setStep("changed")
       } else {
-        setSubmitError(menuStrings.cart.checkoutError)
+        // Prefer the server's own explanation (e.g. "this table's previous
+        // visit hasn't ended yet") over a one-size-fits-all message — but
+        // translated off its error code, not its English `detail`.
+        setSubmitError(serverErrorMessage(err, menuStrings.cart.checkoutError))
       }
     } finally {
       setSubmitting(false)
@@ -252,20 +264,7 @@ export function CartDrawer({
       <aside className="cart-drawer" aria-label={menuStrings.cart.title}>
         {/* ── Header ── */}
         <div className="cart-drawer__header">
-          <div className="cart-drawer__title-row">
-            <LuShoppingCart size={18} />
-            <h2 className="cart-drawer__title">{menuStrings.cart.title}</h2>
-            {totalCount > 0 && <span className="cart-drawer__count">{totalCount}</span>}
-          </div>
-          <div className="cart-drawer__header-right">
-            {showConnectionStatus && (
-              <span
-                className={`cart-drawer__status ${isConnected ? "cart-drawer__status--connected" : "cart-drawer__status--disconnected"}`}
-                title={isConnected ? menuStrings.cart.connected : menuStrings.cart.disconnected}
-              >
-                {isConnected ? <LuWifi size={12} /> : <LuWifiOff size={12} />}
-              </span>
-            )}
+          <div className="cart-drawer__header-icons">
             <button
               className="cart-drawer__close"
               onClick={onClose}
@@ -274,6 +273,27 @@ export function CartDrawer({
               <LuX size={16} />
             </button>
           </div>
+          <div className="cart-drawer__title-row">
+            <LuShoppingCart size={18} />
+            <h2 className="cart-drawer__title">{menuStrings.cart.title}</h2>
+            {totalCount > 0 && <span className="cart-drawer__count">{totalCount}</span>}
+          </div>
+          {onCallWaiter && (
+            <button
+              type="button"
+              className={`cart-drawer__call-waiter${waiterCallState === "sent" ? " cart-drawer__call-waiter--sent" : ""}`}
+              onClick={onCallWaiter}
+              disabled={waiterCallState === "sending" || waiterCallState === "sent"}
+              title={menuStrings.cart.callWaiter}
+            >
+              <LuBellRing size={14} />
+              <span className="cart-drawer__call-waiter-label">
+                {waiterCallState === "sent"
+                  ? menuStrings.cart.callWaiterSent
+                  : menuStrings.cart.callWaiter}
+              </span>
+            </button>
+          )}
         </div>
 
         {/* ── Cart / Bill tabs ── */}
@@ -310,6 +330,13 @@ export function CartDrawer({
           </div>
         )}
 
+        {/* ── Call-waiter feedback ── */}
+        {waiterCallState === "error" && (
+          <div className="cart-drawer__toast" role="alert">
+            <span className="cart-drawer__toast-text">{menuStrings.cart.callWaiterError}</span>
+          </div>
+        )}
+
         {/* ── Error toast ── */}
         {error && (
           <div className="cart-drawer__toast" role="alert">
@@ -330,7 +357,9 @@ export function CartDrawer({
         {step === "confirming" ? (
           /* ── Confirm dialog ── */
           <div className="cart-drawer__confirm-dialog">
-            <p className="cart-drawer__confirm-dialog-title">{menuStrings.cart.confirmTitle}</p>
+            <p className="cart-drawer__confirm-dialog-title">
+              {isPreorder ? menuStrings.cart.preorderConfirmTitle : menuStrings.cart.confirmTitle}
+            </p>
             <p className="cart-drawer__confirm-dialog-sub">
               {menuStrings.cart.positions(totalCount)} · {formatAmount(totalPrice)} {currencySymbol}
             </p>
@@ -345,7 +374,11 @@ export function CartDrawer({
                 onClick={handleSubmit}
                 disabled={submitting}
               >
-                {submitting ? menuStrings.cart.submitting : menuStrings.cart.confirmYes}
+                {submitting
+                  ? menuStrings.cart.submitting
+                  : isPreorder
+                    ? menuStrings.cart.preorderConfirmYes
+                    : menuStrings.cart.confirmYes}
               </button>
               <button
                 className="cart-drawer__confirm-dialog-no"
@@ -393,8 +426,14 @@ export function CartDrawer({
             <div className="cart-drawer__confirm-icon">
               <LuCheck size={52} strokeWidth={1.4} />
             </div>
-            <h3 className="cart-drawer__confirm-title">{menuStrings.cart.confirmedTitle}</h3>
-            <p className="cart-drawer__confirm-sub">{menuStrings.cart.confirmedSub}</p>
+            <h3 className="cart-drawer__confirm-title">
+              {isPreorder
+                ? menuStrings.cart.preorderConfirmedTitle
+                : menuStrings.cart.confirmedTitle}
+            </h3>
+            <p className="cart-drawer__confirm-sub">
+              {isPreorder ? menuStrings.cart.preorderConfirmedSub : menuStrings.cart.confirmedSub}
+            </p>
 
             <div className="cart-drawer__receipt">
               <p className="cart-drawer__receipt-label">{menuStrings.cart.receiptLabel}</p>
@@ -627,6 +666,9 @@ export function CartDrawer({
         ) : items.length === 0 ? (
           /* ── Empty ── */
           <div className="cart-drawer__empty">
+            {isPreorder && (
+              <p className="cart-drawer__preorder-banner">{menuStrings.cart.preorderBanner}</p>
+            )}
             <LuShoppingCart size={48} strokeWidth={1.2} />
             <p className="cart-drawer__empty-title">{menuStrings.cart.emptyTitle}</p>
             <p className="cart-drawer__empty-sub">{menuStrings.cart.emptySub}</p>
@@ -634,6 +676,9 @@ export function CartDrawer({
         ) : (
           /* ── Item list grouped by guest ── */
           <>
+            {isPreorder && (
+              <p className="cart-drawer__preorder-banner">{menuStrings.cart.preorderBanner}</p>
+            )}
             <div
               className="cart-drawer__list"
               id="cart-drawer-panel-cart"
@@ -721,7 +766,7 @@ export function CartDrawer({
                 onClick={openConfirm}
                 disabled={items.length === 0}
               >
-                {menuStrings.cart.checkout}
+                {isPreorder ? menuStrings.cart.preorderCheckout : menuStrings.cart.checkout}
               </button>
             </div>
           </>

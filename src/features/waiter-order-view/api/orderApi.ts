@@ -1,5 +1,5 @@
 import { api } from "@/api/client"
-import type { OrderItem, VoidReason } from "@/types/api/types.gen"
+import type { OrderItem, UpsellSuggestionResponse, VoidReason } from "@/types/api/types.gen"
 import type { MenuCategory, MenuItem } from "@/types/api/types.gen"
 
 export type CreateOrderItem = {
@@ -46,6 +46,17 @@ export function searchMenuItems(
 ): Promise<MenuItem[]> {
   return api.getList<MenuItem>("/api/menu/items/search/", {
     query: { q: query, restaurant: restaurantId },
+    signal,
+  })
+}
+
+export function fetchUpsells(
+  itemId: string,
+  restaurantId: string,
+  signal?: AbortSignal,
+): Promise<UpsellSuggestionResponse> {
+  return api.get<UpsellSuggestionResponse>(`/api/menu/items/${itemId}/upsells/`, {
+    query: { restaurant: restaurantId },
     signal,
   })
 }

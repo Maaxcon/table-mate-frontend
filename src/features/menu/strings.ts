@@ -77,6 +77,15 @@ export function useMenuStrings() {
       confirmedSub: t("menu.cart.confirmedSub"),
       submitting: t("menu.cart.submitting"),
       checkoutError: t("menu.cart.checkoutError"),
+      // Pre-order: guest is paying ahead of arrival, food isn't sent to the
+      // kitchen yet — copy makes that timing explicit instead of implying
+      // it's cooking now.
+      preorderBanner: t("menu.cart.preorderBanner"),
+      preorderCheckout: t("menu.cart.preorderCheckout"),
+      preorderConfirmTitle: t("menu.cart.preorderConfirmTitle"),
+      preorderConfirmYes: t("menu.cart.preorderConfirmYes"),
+      preorderConfirmedTitle: t("menu.cart.preorderConfirmedTitle"),
+      preorderConfirmedSub: t("menu.cart.preorderConfirmedSub"),
       changedTitle: t("menu.cart.changedTitle"),
       changedSub: t("menu.cart.changedSub"),
       confirmRemaining: t("menu.cart.confirmRemaining"),
@@ -121,9 +130,6 @@ export function useMenuStrings() {
           : t("menu.cart.reservationNotYetActiveDefault"),
       unavailable: (name: string) => t("menu.cart.unavailable", { name }),
       retry: t("menu.cart.retry"),
-      connecting: t("menu.cart.connecting"),
-      connected: t("menu.cart.connected"),
-      disconnected: t("menu.cart.disconnected"),
       sessionExpired: t("menu.cart.sessionExpired"),
       lobbyTitle: t("menu.cart.lobbyTitle"),
       lobbySubtitle: t("menu.cart.lobbySubtitle"),
@@ -133,6 +139,9 @@ export function useMenuStrings() {
       guestPrefix: t("menu.cart.guestPrefix"),
       slotLabel: (slot: number) => t("menu.cart.slotLabel", { slot }),
       unknownItem: t("menu.cart.unknownItem"),
+      callWaiter: t("menu.cart.callWaiter"),
+      callWaiterSent: t("menu.cart.callWaiterSent"),
+      callWaiterError: t("menu.cart.callWaiterError"),
     },
     item: {
       ingredients: t("menu.item.ingredients"),
@@ -143,6 +152,8 @@ export function useMenuStrings() {
       close: t("menu.item.close"),
       commentLabel: t("menu.item.commentLabel"),
       commentPlaceholder: t("menu.item.commentPlaceholder"),
+      upsells: t("menu.item.upsells"),
+      addSuggestion: (name: string) => t("menu.item.addSuggestion", { name }),
     },
     info: {
       heading: t("menu.info.heading"),

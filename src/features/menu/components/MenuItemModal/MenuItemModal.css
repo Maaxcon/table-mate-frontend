@@ -280,6 +280,65 @@
   border-color: #fecaca;
 }
 
+/* ── Smart upsells ────────────────────────────────────── */
+.menu-modal__upsells {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.menu-modal__upsells .menu-modal__section-label {
+  margin-bottom: 0;
+}
+
+.menu-modal__upsell-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.menu-modal__upsell {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+  border: 1px solid var(--color-border-default);
+  border-radius: 999px;
+  background: var(--color-bg-surface-subtle);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  font-family: inherit;
+  padding: 7px 10px 7px 12px;
+}
+
+.menu-modal__upsell:hover {
+  border-color: var(--color-text-secondary);
+}
+
+.menu-modal__upsell:disabled {
+  cursor: default;
+  opacity: 1;
+}
+
+.menu-modal__upsell--added {
+  border-color: var(--color-text-secondary);
+  background: var(--color-bg-surface-subtle);
+}
+
+.menu-modal__upsell-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.menu-modal__upsell-price {
+  color: var(--color-text-secondary);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+}
+
 /* ── Footer (sticky) ─────────────────────────────────── */
 .menu-modal__footer {
   position: sticky;

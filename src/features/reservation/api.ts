@@ -45,6 +45,10 @@ export type ReservationWithTable = {
     public_number: string
     capacity: number
   }
+  restaurant_info?: {
+    public_id: string
+    name: string
+  }
   guest_count: number
   start_at: string
   end_at: string
@@ -52,6 +56,13 @@ export type ReservationWithTable = {
   notes: string | null
   created_at: string
   updated_at: string
+  has_preorder?: boolean
+  preorder_cooking?: boolean
+  preorder_ready?: boolean
+  preorder_total?: string | null
+  preorder_items_count?: number
+  preorder_currency?: string | null
+  can_preorder?: boolean
 }
 
 export type Zone = {

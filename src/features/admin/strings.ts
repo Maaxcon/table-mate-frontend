@@ -196,6 +196,7 @@ export function useAdminStrings() {
         floorPlan: t("admin.layout.nav.floorPlan"),
         kitchen: t("admin.layout.nav.kitchen"),
         floor: t("admin.layout.nav.floor"),
+        shifts: t("admin.layout.nav.shifts"),
       },
       logoutAria: t("admin.layout.logout.aria"),
       logoutError: t("admin.layout.logout.error"),
@@ -548,6 +549,9 @@ export function useAdminStrings() {
       closeAria: (day: string) => t("admin.workingHours.closeAria", { day }),
     },
     kitchen: {
+      // Badge on a ticket injected from a paid pre-order rather than a live
+      // order — tells staff it was placed well ahead of the guests' arrival.
+      preorderBadgeAria: t("admin.kitchen.preorderBadgeAria"),
       header: {
         brand: t("admin.kitchen.header.brand"),
         stationLabel: t("admin.kitchen.header.stationLabel"),
@@ -614,6 +618,9 @@ export function useAdminStrings() {
         status: {
           dirty: t("admin.floor.page.status.dirty"),
           clean: t("admin.floor.page.status.clean"),
+          draftSaved: t("admin.floor.page.status.draftSaved"),
+          draftConflict: t("admin.floor.page.status.draftConflict"),
+          draftDiscarded: t("admin.floor.page.status.draftDiscarded"),
         },
         live: {
           ariaConnected: t("admin.floor.page.live.ariaConnected"),
@@ -654,6 +661,9 @@ export function useAdminStrings() {
             message: t("admin.floor.page.toasts.stale.message"),
             action: t("admin.floor.page.toasts.stale.action"),
           },
+          publishedWhileDraft: t("admin.floor.page.toasts.publishedWhileDraft"),
+          layoutUpdated: t("admin.floor.page.toasts.layoutUpdated"),
+          syncFailed: t("admin.floor.page.toasts.syncFailed"),
           occupied: t("admin.floor.page.toasts.occupied"),
         },
       },
@@ -662,6 +672,10 @@ export function useAdminStrings() {
           kicker: t("admin.floor.toolbar.section.kicker"),
           title: t("admin.floor.toolbar.section.title"),
           project: t("admin.floor.toolbar.section.project"),
+        },
+        source: {
+          draft: t("admin.floor.toolbar.source.draft"),
+          published: t("admin.floor.toolbar.source.published"),
         },
         tools: {
           select: {
@@ -693,6 +707,10 @@ export function useAdminStrings() {
           discard: t("admin.floor.toolbar.actions.discard"),
           publish: t("admin.floor.toolbar.actions.publish"),
           publishing: t("admin.floor.toolbar.actions.publishing"),
+          saveDraft: t("admin.floor.toolbar.actions.saveDraft"),
+          savingDraft: t("admin.floor.toolbar.actions.savingDraft"),
+          discardDraft: t("admin.floor.toolbar.actions.discardDraft"),
+          sync: t("admin.floor.toolbar.actions.sync"),
         },
       },
       zoneHeader: {
@@ -812,6 +830,13 @@ export function useAdminStrings() {
           confirm: t("admin.floor.modals.publish.confirm"),
           confirming: t("admin.floor.modals.publish.confirming"),
         },
+        sync: {
+          title: t("admin.floor.modals.sync.title"),
+          message: t("admin.floor.modals.sync.message"),
+          cancel: t("admin.floor.modals.sync.cancel"),
+          confirm: t("admin.floor.modals.sync.confirm"),
+          syncing: t("admin.floor.modals.sync.syncing"),
+        },
         deleteZone: {
           title: t("admin.floor.modals.deleteZone.title"),
           message: (name: string) => t("admin.floor.modals.deleteZone.message", { name }),
@@ -829,6 +854,92 @@ export function useAdminStrings() {
           alt: (table: string) => t("admin.floor.modals.qr.alt", { table }),
         },
       },
+    },
+    shiftScheduler: {
+      toolbar: {
+        today: t("admin.shiftScheduler.toolbar.today"),
+        prev: t("admin.shiftScheduler.toolbar.prev"),
+        next: t("admin.shiftScheduler.toolbar.next"),
+        addEmployee: t("admin.shiftScheduler.toolbar.addEmployee"),
+        removeEmployee: t("admin.shiftScheduler.toolbar.removeEmployee"),
+        copy: t("admin.shiftScheduler.toolbar.copy"),
+        paste: t("admin.shiftScheduler.toolbar.paste"),
+        selectTarget: t("admin.shiftScheduler.toolbar.selectTarget"),
+        clearEmployees: t("admin.shiftScheduler.toolbar.clearEmployees"),
+      },
+      grid: {
+        hour: (hour: number) => t("admin.shiftScheduler.grid.hour", { hour }),
+        emptyDay: t("admin.shiftScheduler.grid.emptyDay"),
+        emptyEmployees: t("admin.shiftScheduler.grid.emptyEmployees"),
+        noRestaurant: t("admin.shiftScheduler.grid.noRestaurant"),
+      },
+      shift: {
+        add: t("admin.shiftScheduler.shift.add"),
+        edit: t("admin.shiftScheduler.shift.edit"),
+        delete: t("admin.shiftScheduler.shift.delete"),
+        startTime: t("admin.shiftScheduler.shift.startTime"),
+        endTime: t("admin.shiftScheduler.shift.endTime"),
+        notes: t("admin.shiftScheduler.shift.notes"),
+        deleteConfirm: t("admin.shiftScheduler.shift.deleteConfirm"),
+        duration: (hours: number, minutes: number) =>
+          t("admin.shiftScheduler.shift.duration", { hours, minutes }),
+      },
+      copyPaste: {
+        sourceLabel: (date: string) => t("admin.shiftScheduler.copyPaste.sourceLabel", { date }),
+        targetPlaceholder: t("admin.shiftScheduler.copyPaste.targetPlaceholder"),
+        confirm: (count: number) => t("admin.shiftScheduler.copyPaste.confirm", { count }),
+        success: (count: number) => t("admin.shiftScheduler.copyPaste.success", { count }),
+        conflict: t("admin.shiftScheduler.copyPaste.conflict"),
+      },
+      saveBar: {
+        save: t("admin.shiftScheduler.saveBar.save"),
+        saving: t("admin.shiftScheduler.saveBar.saving"),
+      },
+      toasts: {
+        saved: t("admin.shiftScheduler.toasts.saved"),
+        saveFailed: t("admin.shiftScheduler.toasts.saveFailed"),
+        created: t("admin.shiftScheduler.toasts.created"),
+        deleted: t("admin.shiftScheduler.toasts.deleted"),
+        copied: t("admin.shiftScheduler.toasts.copied"),
+      },
+    },
+    staffShifts: {
+      title: t("admin.staffShifts.title"),
+      totalHours: (hours: number) => t("admin.staffShifts.totalHours", { hours }),
+      noShifts: t("admin.staffShifts.noShifts"),
+      noEmployee: t("admin.staffShifts.noEmployee"),
+      loading: t("admin.staffShifts.loading"),
+      selectEmployee: t("admin.staffShifts.selectEmployee"),
+      today: t("admin.staffShifts.today"),
+      shiftCount: (count: number) => t("admin.staffShifts.shiftCount", { count }),
+      viewSummary: t("admin.monthSummary.viewSummary"),
+      dayDetail: {
+        title: (date: string) => t("admin.staffShifts.dayDetail.title", { date }),
+        start: t("admin.staffShifts.dayDetail.start"),
+        end: t("admin.staffShifts.dayDetail.end"),
+        duration: t("admin.staffShifts.dayDetail.duration"),
+        notes: t("admin.staffShifts.dayDetail.notes"),
+        close: t("admin.staffShifts.dayDetail.close"),
+      },
+    },
+    monthSummary: {
+      title: t("admin.monthSummary.title"),
+      loading: t("admin.monthSummary.loading"),
+      noData: t("admin.monthSummary.noData"),
+      monthLabel: (month: string, year: number) =>
+        t("admin.monthSummary.monthLabel", { month, year }),
+      employee: t("admin.monthSummary.employee"),
+      totalHours: t("admin.monthSummary.totalHours"),
+      shiftCount: t("admin.monthSummary.shiftCount"),
+      role: t("admin.monthSummary.role"),
+      myHours: t("admin.monthSummary.myHours"),
+      viewSummary: t("admin.monthSummary.viewSummary"),
+      date: t("admin.monthSummary.date"),
+      start: t("admin.monthSummary.start"),
+      end: t("admin.monthSummary.end"),
+      duration: t("admin.monthSummary.duration"),
+      error: t("admin.monthSummary.error"),
+      retry: t("admin.monthSummary.retry"),
     },
   }
 }

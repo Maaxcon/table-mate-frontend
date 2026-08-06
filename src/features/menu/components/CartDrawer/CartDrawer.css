@@ -42,41 +42,34 @@
 
 /* ── Header ─────────────────────────────────────────── */
 .cart-drawer__header {
+  position: relative;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 20px 24px;
+  flex-wrap: nowrap;
+  gap: 10px;
+  /* Extra right padding reserves room for the close button, which is pinned
+     in the corner (absolutely positioned, outside this flex flow) so it
+     never moves. */
+  padding: 20px 52px 20px 20px;
   border-bottom: 1px solid var(--color-border-default);
   flex-shrink: 0;
 }
 
-.cart-drawer__header-right {
+.cart-drawer__header-icons {
+  position: absolute;
+  top: 20px;
+  right: 12px;
   display: flex;
   align-items: center;
   gap: 8px;
-}
-
-.cart-drawer__status {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-}
-
-.cart-drawer__status--connected {
-  color: var(--color-success-text, #16a34a);
-}
-
-.cart-drawer__status--disconnected {
-  color: var(--color-error-text, #dc2626);
 }
 
 .cart-drawer__title-row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  min-width: 0;
+  flex-shrink: 0;
   color: var(--color-text-primary);
 }
 
@@ -101,6 +94,46 @@
   color: var(--color-bg-surface);
   font-size: 0.72rem;
   font-weight: 700;
+}
+
+.cart-drawer__call-waiter {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 28px;
+  padding: 0 8px;
+  border-radius: 14px;
+  border: 1px solid var(--color-border-default);
+  background: transparent;
+  color: var(--color-text-primary);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  flex-shrink: 0;
+  margin-left: auto;
+  transition:
+    background 140ms ease,
+    color 140ms ease,
+    border-color 140ms ease;
+}
+
+.cart-drawer__call-waiter-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cart-drawer__call-waiter:hover:not(:disabled) {
+  background: var(--color-bg-page);
+}
+
+.cart-drawer__call-waiter:disabled {
+  cursor: default;
+}
+
+.cart-drawer__call-waiter--sent {
+  color: var(--color-success-text, #16a34a);
+  border-color: var(--color-success-text, #16a34a);
 }
 
 .cart-drawer__close {
@@ -146,6 +179,18 @@
 .cart-drawer__empty-sub {
   margin: 0;
   font-size: 0.85rem;
+}
+
+/* ── Pre-order banner ────────────────────────────────── */
+.cart-drawer__preorder-banner {
+  margin: 12px 24px 0;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--color-primary);
+  background: rgba(var(--color-primary-rgb), 0.08);
+  border: 1px solid rgba(var(--color-primary-rgb), 0.25);
 }
 
 /* ── Toast ───────────────────────────────────────────── */

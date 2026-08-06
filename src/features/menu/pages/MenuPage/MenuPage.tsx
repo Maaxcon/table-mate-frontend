@@ -14,8 +14,9 @@ import {
   MenuItemModal,
   MenuSkeleton,
   RestaurantInfoPanel,
+  type WaiterCallState,
 } from "@/features/menu/components"
-import { checkout } from "@/features/menu/api"
+import { callWaiter, checkout, preorderCheckout, type ApiError } from "@/features/menu/api"
 import { useBill } from "@/features/menu/hooks/useBill"
 import { useCart } from "@/features/menu/hooks/useCart"
 import { useCartSocket } from "@/features/menu/hooks/useCartSocket"
@@ -26,6 +27,12 @@ import { useMenuStrings } from "@/features/menu/strings"
 import { formatAmount, getCurrencySymbol } from "@/features/menu/utils"
 import type { MenuItem } from "@/features/menu/types"
 import "./MenuPage.css"
+
+// Keep in sync with _WAITER_CALL_COOLDOWN_SECONDS in
+// table-mate-backend/apps/orders/services/sessions.py — the button should
+// re-enable right as the backend cooldown expires.
+const WAITER_CALL_SENT_RESET_MS = 60000
+const WAITER_CALL_ERROR_RESET_MS = 4000
 
 function MenuPage() {
   const menuStrings = useMenuStrings()
@@ -136,18 +143,64 @@ function MenuPage() {
 
   // Destructure the stable fields so the callback deps are these values, not
   // the whole guestAuth object (which is a fresh object every render).
-  const { cartSessionId, guestJwt, initialize: reinitGuestCart } = guestAuth
+  const { cartSessionId, guestJwt, isPreorder, initialize: reinitGuestCart } = guestAuth
   const handleCheckout = useCallback(async () => {
     if (!cartSessionId || !guestJwt) {
       return Promise.reject(new Error(menuStrings.cart.sessionUnavailable))
     }
-    const result = await checkout(cartSessionId, guestJwt)
-    // Checkout closed this cart; reopen a fresh one so the guest can order again.
+    const result = isPreorder
+      ? await preorderCheckout(cartSessionId, guestJwt)
+      : await checkout(cartSessionId, guestJwt)
+    // Checkout closed this cart; reopen a fresh one so the guest can order
+    // again (a second pre-order round pays and gets injected independently).
     reinitGuestCart()
     return result
-  }, [cartSessionId, guestJwt, reinitGuestCart])
+  }, [cartSessionId, guestJwt, isPreorder, reinitGuestCart])
 
-  const { isConnected, sessionExpired } = useCartSocket({
+  // Lifted above the cart drawer (rather than local state inside it) so the
+  // "waiter is on the way" status survives the guest closing and reopening
+  // the drawer right after tapping the button.
+  const [waiterCallState, setWaiterCallState] = useState<WaiterCallState>("idle")
+  const waiterResetTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (waiterResetTimer.current) clearTimeout(waiterResetTimer.current)
+    }
+  }, [])
+
+  // Always clears any previously scheduled reset before arming a new one —
+  // otherwise an earlier timer (e.g. the short error-state reset) can still
+  // fire after a later call has already moved the state on to "sent",
+  // flipping the button back to idle mid-cooldown.
+  const scheduleWaiterReset = useCallback((ms: number) => {
+    if (waiterResetTimer.current) clearTimeout(waiterResetTimer.current)
+    waiterResetTimer.current = setTimeout(() => setWaiterCallState("idle"), ms)
+  }, [])
+
+  const handleCallWaiter = useCallback(async () => {
+    if (!cartSessionId || !guestJwt) return
+    if (waiterCallState === "sending" || waiterCallState === "sent") return
+    setWaiterCallState("sending")
+    try {
+      await callWaiter(cartSessionId, guestJwt)
+      setWaiterCallState("sent")
+      scheduleWaiterReset(WAITER_CALL_SENT_RESET_MS)
+    } catch (err) {
+      // A 429 means staff was already pinged moments ago by this table — treat
+      // it as success from the guest's point of view, not a failure to retry.
+      const status = (err as Partial<ApiError>)?.status
+      if (status === 429) {
+        setWaiterCallState("sent")
+        scheduleWaiterReset(WAITER_CALL_SENT_RESET_MS)
+      } else {
+        setWaiterCallState("error")
+        scheduleWaiterReset(WAITER_CALL_ERROR_RESET_MS)
+      }
+    }
+  }, [cartSessionId, guestJwt, waiterCallState, scheduleWaiterReset])
+
+  const { sessionExpired } = useCartSocket({
     cartSessionId: guestAuth.cartSessionId,
     guestJwt: guestAuth.guestJwt,
     onCartUpdated: handleCartUpdated,
@@ -563,6 +616,8 @@ function MenuPage() {
       {selectedItem && (
         <MenuItemModal
           item={selectedItem}
+          restaurantId={restaurantId}
+          guestToken={guestAuth.deviceId}
           currencySymbol={currencySymbol}
           onClose={() => setSelectedItem(null)}
           onAddToCart={handleAddToCart}
@@ -645,9 +700,7 @@ function MenuPage() {
           items={cartItems}
           totalPrice={totalPrice}
           currencySymbol={currencySymbol}
-          isConnected={isConnected}
           sessionExpired={sessionExpired}
-          showConnectionStatus={Boolean(guestAuth.cartSessionId && guestAuth.guestJwt)}
           error={cartAccessError ?? cartError}
           errorItemId={errorItemId}
           displayName={guestAuth.displayName}
@@ -665,6 +718,17 @@ function MenuPage() {
           onLoadBill={bill.refresh}
           onPayBill={bill.pay}
           onCartChanged={syncFromServer}
+          waiterCallState={waiterCallState}
+          onCallWaiter={
+            // Calling a waiter only makes sense once the guest is actually
+            // at the table — not while pre-ordering ahead of arrival.
+            guestAuth.cartSessionId && guestAuth.guestJwt && !guestAuth.isPreorder
+              ? () => {
+                  void handleCallWaiter()
+                }
+              : undefined
+          }
+          isPreorder={guestAuth.isPreorder}
         />
       )}
     </main>

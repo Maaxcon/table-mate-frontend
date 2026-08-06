@@ -1,7 +1,12 @@
 import type { WorkingHours } from "@/types/workingHours"
 
 // Re-exported from the generated OpenAPI types so they can't drift from the API.
-export type { CheckoutResponse, MenuCategory, MenuItem } from "@/types/api/types.gen"
+export type {
+  CheckoutResponse,
+  MenuCategory,
+  MenuItem,
+  UpsellSuggestionResponse,
+} from "@/types/api/types.gen"
 
 // Re-exported so menu consumers import working-hours types from one place.
 export type { WorkingHours, WorkingHoursDay } from "@/types/workingHours"
@@ -92,6 +97,11 @@ export type UpdateCartItemRequest = {
 
 export type GuestInitResponse = {
   access: string
+  // Whether the reservation behind this cart hasn't started yet — set by
+  // the backend from the session's own reservation, not inferred from
+  // which lookup found it (a cart reused from an earlier pre-order round
+  // is found via the active-cart lookup, not the not-yet-active fallback).
+  is_preorder?: boolean
 }
 
 export type GuestInitTarget = {

@@ -102,6 +102,33 @@
   color: var(--color-bg-surface);
 }
 
+.fp-block--waiter-calling {
+  border-color: var(--color-error);
+  animation: fpBlockWaiterCallingPulse 1s ease-in-out infinite;
+}
+
+@keyframes fpBlockWaiterCallingPulse {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-error) 65%, transparent);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 0 18px color-mix(in srgb, var(--color-error) 0%, transparent);
+    transform: scale(1.05);
+  }
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-error) 0%, transparent);
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fp-block--waiter-calling {
+    animation: none;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-error) 55%, transparent);
+  }
+}
+
 .fp-block__label {
   font-weight: 900;
   font-size: 1.4rem;

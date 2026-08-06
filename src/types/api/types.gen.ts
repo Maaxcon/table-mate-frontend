@@ -187,6 +187,12 @@ export type CheckoutResponse = {
   currency: string
 }
 
+export type CopyShifts = {
+  source_date: string
+  target_dates: Array<string>
+  employee_ids?: Array<string>
+}
+
 /**
  * * `staff` - Staff
  * * `customer` - Customer
@@ -202,6 +208,13 @@ export type CustomTokenObtainPair = {
 
 export type CustomerContext = {
   reservation: string
+}
+
+export type DraftLayout = {
+  draft_json?: PublishLayout | null
+  readonly is_draft: boolean
+  readonly updated_at: string
+  readonly owner_id: string | null
 }
 
 export type EditorTable = {
@@ -565,6 +578,13 @@ export type PaginatedSessionList = {
   results: Array<Session>
 }
 
+export type PaginatedShiftList = {
+  count: number
+  next?: string | null
+  previous?: string | null
+  results: Array<Shift>
+}
+
 export type PaginatedTableList = {
   count: number
   next?: string | null
@@ -746,6 +766,13 @@ export type PatchedReservation = {
   readonly session_ends_at?: string | null
   readonly session_table?: string | null
   readonly session_table_number?: string | null
+  readonly has_preorder?: boolean
+  readonly preorder_cooking?: boolean
+  readonly preorder_ready?: boolean
+  readonly preorder_total?: string | null
+  readonly preorder_items_count?: number
+  readonly preorder_currency?: string | null
+  readonly can_preorder?: boolean
   status?: ReservationStatus
   created_by_staff?: boolean
   notes?: string | null
@@ -783,6 +810,15 @@ export type PatchedSession = {
   readonly updated_at?: string
 }
 
+export type PatchedShiftWrite = {
+  readonly public_id?: string
+  employee?: string
+  date?: string
+  start_time?: string
+  end_time?: string
+  notes?: string
+}
+
 export type PatchedTicket = {
   readonly public_id?: string
   readonly label?: string
@@ -798,6 +834,7 @@ export type PatchedTicket = {
   readonly server_name?: string
   readonly guest_count?: number
   readonly items_count?: number
+  readonly is_preorder?: boolean
   readonly created_at?: string
   readonly updated_at?: string
 }
@@ -873,6 +910,35 @@ export type PortalEntity = {
   zone_id: string
 }
 
+/**
+ * A reservation's paid pre-order rounds, combined into one check.
+ *
+ * Response-shape contract for the `preorder` action. Declared (and used to
+ * render) so the published schema matches what the endpoint actually
+ * returns — without it drf-spectacular falls back to the viewset's
+ * ReservationSerializer, and the generated clients are wrong.
+ */
+export type PreorderDetail = {
+  order_id: string
+  currency: string
+  subtotal: string
+  tax: string
+  service_charge: string
+  total: string
+  is_cooking: boolean
+  can_cancel: boolean
+  can_add_more: boolean
+  items: Array<PreorderItem>
+}
+
+export type PreorderItem = {
+  public_id: string
+  name: string
+  quantity: number
+  unit_price: string
+  total_price: string
+}
+
 export type PublicRestaurant = {
   readonly public_id: string
   readonly name: string
@@ -895,6 +961,7 @@ export type PublicRestaurantSettings = {
 }
 
 export type PublishLayout = {
+  base_layout_version_id: string | null
   canvas_cols?: number
   canvas_rows?: number
   tables?: Array<TableEntity>
@@ -913,6 +980,12 @@ export type Receipt = {
   readonly restaurant_address: string
   readonly restaurant_phone: string
   readonly restaurant_image: string | null
+  /**
+   * The booking this visit came from, so the guest's booking history can
+   * offer the receipt. None for receipts entered by hand in the admin, and
+   * for orders that never belonged to a booking.
+   */
+  readonly reservation_public_id: string | null
   visited_at: string
   currency?: string
   table_label?: string
@@ -959,6 +1032,13 @@ export type Reservation = {
   readonly session_ends_at: string | null
   readonly session_table: string | null
   readonly session_table_number: string | null
+  readonly has_preorder: boolean
+  readonly preorder_cooking: boolean
+  readonly preorder_ready: boolean
+  readonly preorder_total: string | null
+  readonly preorder_items_count: number
+  readonly preorder_currency: string | null
+  readonly can_preorder: boolean
   status?: ReservationStatus
   created_by_staff?: boolean
   notes?: string | null
@@ -1017,16 +1097,21 @@ export type Session = {
   readonly updated_at: string
 }
 
+export type SessionCloseRequest = {
+  force?: boolean
+}
+
 export type SessionPayRequest = {
   order_item_ids?: Array<string>
 }
 
 /**
+ * * `scheduled` - Scheduled
  * * `open` - Open
  * * `closed` - Closed
  * * `voided` - Voided
  */
-export type SessionStatusEnum = "open" | "closed" | "voided"
+export type SessionStatusEnum = "scheduled" | "open" | "closed" | "voided"
 
 export type SetGuestName = {
   display_name: string
@@ -1040,11 +1125,35 @@ export type SetGuestName = {
  */
 export type ShapeEnum = "rectangle" | "round" | "square" | "booth"
 
+export type Shift = {
+  readonly public_id: string
+  employee: string
+  readonly employee_name: string
+  readonly employee_role: string
+  date: string
+  start_time: string
+  end_time: string
+  notes?: string
+  readonly duration_hours: number
+  readonly created_at: string
+  readonly updated_at: string
+}
+
+export type ShiftWrite = {
+  readonly public_id: string
+  employee: string
+  date: string
+  start_time: string
+  end_time: string
+  notes?: string
+}
+
 /**
  * * `waiter_manual` - Waiter manual
  * * `customer_prepaid` - Customer prepaid
+ * * `customer_preorder` - Customer pre-order
  */
-export type SourceEnum = "waiter_manual" | "customer_prepaid"
+export type SourceEnum = "waiter_manual" | "customer_prepaid" | "customer_preorder"
 
 export type Table = {
   readonly public_id: string
@@ -1116,6 +1225,7 @@ export type Ticket = {
   readonly server_name: string
   readonly guest_count: number
   readonly items_count: number
+  readonly is_preorder: boolean
   readonly created_at: string
   readonly updated_at: string
 }
@@ -1158,6 +1268,17 @@ export type UpcomingReservation = {
   table_id: string
   start_at: string
   end_at: string
+}
+
+/**
+ * Read-only envelope for smart upsell suggestions.
+ *
+ * ``results`` reuses the canonical ``MenuItemSerializer`` so clients render
+ * suggestions with the same item component used across the menu.
+ */
+export type UpsellSuggestionResponse = {
+  count: number
+  results: Array<MenuItem>
 }
 
 export type User = {
@@ -1304,6 +1425,10 @@ export type CustomTokenObtainPairWritable = {
   restaurant_id?: number | null
   email: string
   password: string
+}
+
+export type DraftLayoutWritable = {
+  draft_json?: PublishLayout | null
 }
 
 export type EditorTableWritable = {
@@ -1530,6 +1655,13 @@ export type PaginatedSessionListWritable = {
   results: Array<SessionWritable>
 }
 
+export type PaginatedShiftListWritable = {
+  count: number
+  next?: string | null
+  previous?: string | null
+  results: Array<ShiftWritable>
+}
+
 export type PaginatedTableListWritable = {
   count: number
   next?: string | null
@@ -1666,6 +1798,14 @@ export type PatchedSessionWritable = {
   status?: SessionStatusEnum
 }
 
+export type PatchedShiftWriteWritable = {
+  employee?: string
+  date?: string
+  start_time?: string
+  end_time?: string
+  notes?: string
+}
+
 export type PatchedTicketWritable = {
   session?: string
   order?: string
@@ -1744,6 +1884,22 @@ export type SessionWritable = {
   status?: SessionStatusEnum
 }
 
+export type ShiftWritable = {
+  employee: string
+  date: string
+  start_time: string
+  end_time: string
+  notes?: string
+}
+
+export type ShiftWriteWritable = {
+  employee: string
+  date: string
+  start_time: string
+  end_time: string
+  notes?: string
+}
+
 export type TableWritable = {
   public_number: string
   capacity: number
@@ -1762,6 +1918,17 @@ export type TicketWritable = {
   injected_at: string
   started_at?: string | null
   completed_at?: string | null
+}
+
+/**
+ * Read-only envelope for smart upsell suggestions.
+ *
+ * ``results`` reuses the canonical ``MenuItemSerializer`` so clients render
+ * suggestions with the same item component used across the menu.
+ */
+export type UpsellSuggestionResponseWritable = {
+  count: number
+  results: Array<MenuItemWritable>
 }
 
 export type UserWritable = {
@@ -1976,6 +2143,60 @@ export type EditorLayoutsRetrieveResponses = {
 export type EditorLayoutsRetrieveResponse =
   EditorLayoutsRetrieveResponses[keyof EditorLayoutsRetrieveResponses]
 
+export type EditorLayoutsDraftDestroyData = {
+  body?: never
+  path?: never
+  query?: never
+  url: "/api/editor/layouts/draft/"
+}
+
+export type EditorLayoutsDraftDestroyResponses = {
+  200: DraftLayout
+  /**
+   * No response body
+   */
+  204: void
+}
+
+export type EditorLayoutsDraftDestroyResponse =
+  EditorLayoutsDraftDestroyResponses[keyof EditorLayoutsDraftDestroyResponses]
+
+export type EditorLayoutsDraftRetrieveData = {
+  body?: never
+  path?: never
+  query?: never
+  url: "/api/editor/layouts/draft/"
+}
+
+export type EditorLayoutsDraftRetrieveResponses = {
+  200: DraftLayout
+  /**
+   * No response body
+   */
+  204: void
+}
+
+export type EditorLayoutsDraftRetrieveResponse =
+  EditorLayoutsDraftRetrieveResponses[keyof EditorLayoutsDraftRetrieveResponses]
+
+export type EditorLayoutsDraftUpdateData = {
+  body: PublishLayout
+  path?: never
+  query?: never
+  url: "/api/editor/layouts/draft/"
+}
+
+export type EditorLayoutsDraftUpdateResponses = {
+  200: DraftLayout
+  /**
+   * No response body
+   */
+  204: void
+}
+
+export type EditorLayoutsDraftUpdateResponse =
+  EditorLayoutsDraftUpdateResponses[keyof EditorLayoutsDraftUpdateResponses]
+
 export type EditorLayoutsLatestRetrieveData = {
   body?: never
   path?: never
@@ -1993,7 +2214,7 @@ export type EditorLayoutsLatestRetrieveResponse =
   EditorLayoutsLatestRetrieveResponses[keyof EditorLayoutsLatestRetrieveResponses]
 
 export type EditorLayoutsPublishCreateData = {
-  body?: PublishLayout
+  body: PublishLayout
   path?: never
   query?: never
   url: "/api/editor/layouts/publish/"
@@ -2594,6 +2815,31 @@ export type MenuItemsToggleLikeCreateResponses = {
 export type MenuItemsToggleLikeCreateResponse =
   MenuItemsToggleLikeCreateResponses[keyof MenuItemsToggleLikeCreateResponses]
 
+export type MenuItemsUpsellsRetrieveData = {
+  body?: never
+  path: {
+    public_id: string
+  }
+  query: {
+    /**
+     * Anonymous client token for personalized like state.
+     */
+    guest_token?: string
+    /**
+     * Restaurant public UUID
+     */
+    restaurant: string
+  }
+  url: "/api/menu/items/{public_id}/upsells/"
+}
+
+export type MenuItemsUpsellsRetrieveResponses = {
+  200: UpsellSuggestionResponse
+}
+
+export type MenuItemsUpsellsRetrieveResponse =
+  MenuItemsUpsellsRetrieveResponses[keyof MenuItemsUpsellsRetrieveResponses]
+
 export type MenuItemsSearchRetrieveData = {
   body?: never
   path?: never
@@ -2713,6 +2959,32 @@ export type OrdersCartSessionsBillListResponses = {
 
 export type OrdersCartSessionsBillListResponse =
   OrdersCartSessionsBillListResponses[keyof OrdersCartSessionsBillListResponses]
+
+export type OrdersCartSessionsCallWaiterCreateData = {
+  body?: never
+  path: {
+    session_pk: string
+  }
+  query?: never
+  url: "/api/orders/cart/sessions/{session_pk}/call-waiter/"
+}
+
+export type OrdersCartSessionsCallWaiterCreateErrors = {
+  /**
+   * Waiter already called recently (code waiter_call_cooldown).
+   */
+  429: unknown
+}
+
+export type OrdersCartSessionsCallWaiterCreateResponses = {
+  /**
+   * Waiter notified.
+   */
+  204: void
+}
+
+export type OrdersCartSessionsCallWaiterCreateResponse =
+  OrdersCartSessionsCallWaiterCreateResponses[keyof OrdersCartSessionsCallWaiterCreateResponses]
 
 export type OrdersCartSessionsCheckoutCreateData = {
   body?: never
@@ -2851,10 +3123,41 @@ export type OrdersCartSessionsPayCreateResponses = {
 export type OrdersCartSessionsPayCreateResponse =
   OrdersCartSessionsPayCreateResponses[keyof OrdersCartSessionsPayCreateResponses]
 
+export type OrdersCartSessionsPreorderCheckoutCreateData = {
+  body?: never
+  path: {
+    session_pk: string
+  }
+  query?: never
+  url: "/api/orders/cart/sessions/{session_pk}/preorder-checkout/"
+}
+
+export type OrdersCartSessionsPreorderCheckoutCreateErrors = {
+  /**
+   * Cart is empty.
+   */
+  400: unknown
+  /**
+   * Cart changed (code CART_CHANGED), or reservation already started (code preorder_not_allowed).
+   */
+  409: unknown
+}
+
+export type OrdersCartSessionsPreorderCheckoutCreateResponses = {
+  201: CheckoutResponse
+}
+
+export type OrdersCartSessionsPreorderCheckoutCreateResponse =
+  OrdersCartSessionsPreorderCheckoutCreateResponses[keyof OrdersCartSessionsPreorderCheckoutCreateResponses]
+
 export type OrdersOrderItemsListData = {
   body?: never
   path?: never
   query?: {
+    /**
+     * Include served and voided items. Off by default, so the kitchen board only sees outstanding work; the waiter's table overlay sets it to show the full bill.
+     */
+    include_served?: boolean
     is_wasted?: boolean
     menu_item?: number
     order?: number
@@ -2986,8 +3289,9 @@ export type OrdersOrdersListData = {
     /**
      * * `waiter_manual` - Waiter manual
      * * `customer_prepaid` - Customer prepaid
+     * * `customer_preorder` - Customer pre-order
      */
-    source?: "customer_prepaid" | "waiter_manual"
+    source?: "customer_preorder" | "customer_prepaid" | "waiter_manual"
     /**
      * * `draft` - Draft
      * * `submitted` - Submitted
@@ -3067,11 +3371,12 @@ export type OrdersSessionsListData = {
     page?: number
     reservation?: number
     /**
+     * * `scheduled` - Scheduled
      * * `open` - Open
      * * `closed` - Closed
      * * `voided` - Voided
      */
-    status?: "closed" | "open" | "voided"
+    status?: "closed" | "open" | "scheduled" | "voided"
     table?: number
     table__public_id?: string
   }
@@ -3132,7 +3437,7 @@ export type OrdersSessionsPartialUpdateResponse =
   OrdersSessionsPartialUpdateResponses[keyof OrdersSessionsPartialUpdateResponses]
 
 export type OrdersSessionsCloseCreateData = {
-  body?: never
+  body?: SessionCloseRequest
   path: {
     public_id: string
   }
@@ -3410,6 +3715,25 @@ export type ReservationsReservationsCreateResponses = {
 export type ReservationsReservationsCreateResponse =
   ReservationsReservationsCreateResponses[keyof ReservationsReservationsCreateResponses]
 
+export type ReservationsReservationsDestroyData = {
+  body?: never
+  path: {
+    public_id: string
+  }
+  query?: never
+  url: "/api/reservations/reservations/{public_id}/"
+}
+
+export type ReservationsReservationsDestroyResponses = {
+  /**
+   * No response body
+   */
+  204: void
+}
+
+export type ReservationsReservationsDestroyResponse =
+  ReservationsReservationsDestroyResponses[keyof ReservationsReservationsDestroyResponses]
+
 export type ReservationsReservationsRetrieveData = {
   body?: never
   path: {
@@ -3491,6 +3815,99 @@ export type ReservationsReservationsMoveTableCreateResponses = {
 
 export type ReservationsReservationsMoveTableCreateResponse =
   ReservationsReservationsMoveTableCreateResponses[keyof ReservationsReservationsMoveTableCreateResponses]
+
+export type ReservationsReservationsPreorderDestroyData = {
+  body?: never
+  path: {
+    public_id: string
+  }
+  query?: never
+  url: "/api/reservations/reservations/{public_id}/preorder/"
+}
+
+export type ReservationsReservationsPreorderDestroyErrors = {
+  /**
+   * Only the booking's owner may cancel.
+   */
+  403: unknown
+  /**
+   * No pre-order to cancel.
+   */
+  404: unknown
+  /**
+   * The kitchen has already started a round (code preorder_not_allowed).
+   */
+  409: unknown
+}
+
+export type ReservationsReservationsPreorderDestroyResponses = {
+  /**
+   * Every round was cancelled.
+   */
+  204: void
+}
+
+export type ReservationsReservationsPreorderDestroyResponse =
+  ReservationsReservationsPreorderDestroyResponses[keyof ReservationsReservationsPreorderDestroyResponses]
+
+export type ReservationsReservationsPreorderRetrieveData = {
+  body?: never
+  path: {
+    public_id: string
+  }
+  query?: never
+  url: "/api/reservations/reservations/{public_id}/preorder/"
+}
+
+export type ReservationsReservationsPreorderRetrieveResponses = {
+  200: PreorderDetail
+  /**
+   * No paid pre-order for this reservation.
+   */
+  204: void
+}
+
+export type ReservationsReservationsPreorderRetrieveResponse =
+  ReservationsReservationsPreorderRetrieveResponses[keyof ReservationsReservationsPreorderRetrieveResponses]
+
+export type ReservationsReservationsPreorderItemsDestroyData = {
+  body?: never
+  path: {
+    /**
+     * Public id of the dish, as returned in the pre-order's items.
+     */
+    item_id: string
+    public_id: string
+  }
+  query?: never
+  url: "/api/reservations/reservations/{public_id}/preorder/items/{item_id}/"
+}
+
+export type ReservationsReservationsPreorderItemsDestroyErrors = {
+  /**
+   * Only the booking's owner may change it.
+   */
+  403: unknown
+  /**
+   * No such dish on this booking's pre-order.
+   */
+  404: unknown
+  /**
+   * The kitchen has already started the round (code preorder_not_allowed).
+   */
+  409: unknown
+}
+
+export type ReservationsReservationsPreorderItemsDestroyResponses = {
+  200: PreorderDetail
+  /**
+   * That was the last dish; the pre-order is gone.
+   */
+  204: void
+}
+
+export type ReservationsReservationsPreorderItemsDestroyResponse =
+  ReservationsReservationsPreorderItemsDestroyResponses[keyof ReservationsReservationsPreorderItemsDestroyResponses]
 
 export type ReservationsReservationsAvailabilityRetrieveData = {
   body?: never
@@ -4100,3 +4517,114 @@ export type RestaurantsZonesUpdateResponses = {
 
 export type RestaurantsZonesUpdateResponse =
   RestaurantsZonesUpdateResponses[keyof RestaurantsZonesUpdateResponses]
+
+export type ShiftsListData = {
+  body?: never
+  path?: never
+  query?: {
+    /**
+     * Which field to use when ordering the results.
+     */
+    ordering?: string
+    /**
+     * A page number within the paginated result set.
+     */
+    page?: number
+  }
+  url: "/api/shifts/"
+}
+
+export type ShiftsListResponses = {
+  200: PaginatedShiftList
+}
+
+export type ShiftsListResponse = ShiftsListResponses[keyof ShiftsListResponses]
+
+export type ShiftsCreateData = {
+  body: ShiftWriteWritable
+  path?: never
+  query?: never
+  url: "/api/shifts/"
+}
+
+export type ShiftsCreateResponses = {
+  201: ShiftWrite
+}
+
+export type ShiftsCreateResponse = ShiftsCreateResponses[keyof ShiftsCreateResponses]
+
+export type ShiftsDestroyData = {
+  body?: never
+  path: {
+    public_id: string
+  }
+  query?: never
+  url: "/api/shifts/{public_id}/"
+}
+
+export type ShiftsDestroyResponses = {
+  /**
+   * No response body
+   */
+  204: void
+}
+
+export type ShiftsDestroyResponse = ShiftsDestroyResponses[keyof ShiftsDestroyResponses]
+
+export type ShiftsRetrieveData = {
+  body?: never
+  path: {
+    public_id: string
+  }
+  query?: never
+  url: "/api/shifts/{public_id}/"
+}
+
+export type ShiftsRetrieveResponses = {
+  200: Shift
+}
+
+export type ShiftsRetrieveResponse = ShiftsRetrieveResponses[keyof ShiftsRetrieveResponses]
+
+export type ShiftsPartialUpdateData = {
+  body?: PatchedShiftWriteWritable
+  path: {
+    public_id: string
+  }
+  query?: never
+  url: "/api/shifts/{public_id}/"
+}
+
+export type ShiftsPartialUpdateResponses = {
+  200: ShiftWrite
+}
+
+export type ShiftsPartialUpdateResponse =
+  ShiftsPartialUpdateResponses[keyof ShiftsPartialUpdateResponses]
+
+export type ShiftsCopyCreateData = {
+  body: CopyShifts
+  path?: never
+  query?: never
+  url: "/api/shifts/copy/"
+}
+
+export type ShiftsCopyCreateResponses = {
+  200: CopyShifts
+}
+
+export type ShiftsCopyCreateResponse = ShiftsCopyCreateResponses[keyof ShiftsCopyCreateResponses]
+
+export type ShiftsMonthSummaryRetrieveData = {
+  body?: never
+  path?: never
+  query?: never
+  url: "/api/shifts/month_summary/"
+}
+
+export type ShiftsMonthSummaryRetrieveResponses = {
+  200: Shift
+}
+
+export type ShiftsMonthSummaryRetrieveResponse =
+  ShiftsMonthSummaryRetrieveResponses[keyof ShiftsMonthSummaryRetrieveResponses]

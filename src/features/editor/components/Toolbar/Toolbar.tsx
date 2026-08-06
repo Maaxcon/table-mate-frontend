@@ -7,7 +7,12 @@ interface ToolbarProps {
   activeTool: string | null
   onToolSelect: (tool: string | null) => void
   onPublish: () => void
+  onSync: () => void
   onDiscard: () => void
+  draftSaving?: boolean
+  draftSavedAt?: string | null
+  draftConflict?: boolean
+  loadedDraft: boolean | null
 }
 
 export function Toolbar({
@@ -16,10 +21,25 @@ export function Toolbar({
   activeTool,
   onToolSelect,
   onPublish,
+  onSync,
   onDiscard,
+  draftSaving,
+  draftSavedAt,
+  draftConflict,
+  loadedDraft,
 }: ToolbarProps) {
   const strings = useAdminStrings()
   const toolbarStrings = strings.floor.toolbar
+  const pageStrings = strings.floor.page
+
+  const draftStatus = draftConflict
+    ? pageStrings.status.draftConflict
+    : dirty
+      ? pageStrings.status.dirty
+      : draftSavedAt
+        ? pageStrings.status.draftSaved
+        : pageStrings.status.clean
+
   const tools = [
     {
       id: "select",
@@ -93,19 +113,39 @@ export function Toolbar({
       </div>
       <div className="editor-toolbar__actions-panel">
         <span className="editor-toolbar__section-kicker">{toolbarStrings.section.project}</span>
+        {loadedDraft !== null && (
+          <span
+            className={`editor-toolbar__layout-source editor-toolbar__layout-source--${loadedDraft ? "draft" : "published"}`}
+          >
+            {loadedDraft ? toolbarStrings.source.draft : toolbarStrings.source.published}
+          </span>
+        )}
+        <span
+          className={`editor-toolbar__status-badge${draftConflict ? " editor-toolbar__status-badge--conflict" : ""}`}
+        >
+          {draftSaving ? toolbarStrings.actions.savingDraft : draftStatus}
+        </span>
         <div className="editor-toolbar__actions">
           <button
             type="button"
+            className="editor-toolbar__btn"
+            disabled={publishing || draftSaving}
+            onClick={onSync}
+          >
+            {toolbarStrings.actions.sync}
+          </button>
+          <button
+            type="button"
             className="editor-toolbar__btn editor-toolbar__btn--discard"
-            disabled={!dirty || publishing}
+            disabled={(!dirty && !draftSavedAt) || publishing}
             onClick={onDiscard}
           >
-            {toolbarStrings.actions.discard}
+            {draftSavedAt ? toolbarStrings.actions.discardDraft : toolbarStrings.actions.discard}
           </button>
           <button
             type="button"
             className="editor-toolbar__btn editor-toolbar__btn--publish"
-            disabled={!dirty || publishing}
+            disabled={publishing}
             onClick={onPublish}
           >
             {publishing ? toolbarStrings.actions.publishing : toolbarStrings.actions.publish}

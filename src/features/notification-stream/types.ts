@@ -1,10 +1,12 @@
-export type StreamType = "client" | "kitchen"
+export type StreamType = "client" | "kitchen" | "waiter"
 
 export type ClientEventType = "CART_CREATED" | "CART_CHECKED_OUT" | "HALL_NEW_RESERVATION"
 
 export type KitchenEventType = "ORDER_ITEM_STATUS_CHANGED" | "KITCHEN_TICKET_INJECTED"
 
-export type KnownWSMessageType = ClientEventType | KitchenEventType
+export type WaiterEventType = "WAITER_CALLED"
+
+export type KnownWSMessageType = ClientEventType | KitchenEventType | WaiterEventType
 
 export type WSMessageType = KnownWSMessageType | string
 
@@ -52,7 +54,10 @@ const KITCHEN_EVENTS = new Set<KnownWSMessageType>([
   "KITCHEN_TICKET_INJECTED",
 ])
 
+const WAITER_EVENTS = new Set<KnownWSMessageType>(["WAITER_CALLED"])
+
 function inferStreamFromType(type: string): StreamType | null {
+  if (type.includes("WAITER")) return "waiter"
   if (type.includes("KITCHEN") || type.includes("TICKET") || type.includes("ORDER_"))
     return "kitchen"
   if (type.includes("CART") || type.includes("HALL") || type.includes("RESERVATION"))
@@ -63,6 +68,7 @@ function inferStreamFromType(type: string): StreamType | null {
 export function getStream(type: WSMessageType): StreamType | null {
   if (CLIENT_EVENTS.has(type as KnownWSMessageType)) return "client"
   if (KITCHEN_EVENTS.has(type as KnownWSMessageType)) return "kitchen"
+  if (WAITER_EVENTS.has(type as KnownWSMessageType)) return "waiter"
   return inferStreamFromType(type)
 }
 
@@ -106,6 +112,7 @@ export function formatEvent(
     HALL_NEW_RESERVATION: "New reservation",
     ORDER_ITEM_STATUS_CHANGED: "Item status changed",
     KITCHEN_TICKET_INJECTED: "New ticket",
+    WAITER_CALLED: "Waiter called",
   }
 
   const descriptions: Record<KnownWSMessageType, string> = {
@@ -114,6 +121,7 @@ export function formatEvent(
     HALL_NEW_RESERVATION: `Table ${data.table_number} — ${data.guest_name ?? "Guest"}, ${data.guest_count} guests`,
     ORDER_ITEM_STATUS_CHANGED: `Table ${data.table_number} — ${data.menu_item_name ?? "Item"} → ${data.status}`,
     KITCHEN_TICKET_INJECTED: `Table ${data.table_number} — ${data.items_count ?? 0} item(s)`,
+    WAITER_CALLED: `Table ${data.table_number} — ${data.guest_name ?? "Guest"} needs a waiter`,
   }
 
   const title = titles[type as KnownWSMessageType] ?? humanizeFallbackTitle(type)

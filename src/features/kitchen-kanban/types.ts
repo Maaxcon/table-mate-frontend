@@ -16,6 +16,10 @@ export interface KanbanTicket {
   startedAt: number
   guestCount: number
   serverName: string
+  // Injected from a paid pre-order (inject_scheduled_preorders) rather than
+  // a live order — the kitchen flags these so staff know it was ordered
+  // well ahead of arrival.
+  isPreorder: boolean
   completedMinutes?: number
   completedAt?: number
 }

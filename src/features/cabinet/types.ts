@@ -33,6 +33,17 @@ export type Reservation = {
   end_at: string
   status: ReservationStatus
   notes: string | null
+  has_preorder?: boolean
+  // True once the kitchen has picked up the pre-order (a Ticket exists) —
+  // distinct from just being paid.
+  preorder_cooking?: boolean
+  preorder_ready?: boolean
+  preorder_total?: string | null
+  preorder_items_count?: number
+  preorder_currency?: string | null
+  // False from PREORDER_LEAD_MINUTES before the start: the kitchen has the
+  // food by then, so the backend refuses another round.
+  can_preorder?: boolean
 }
 
 // A single line on a receipt.
@@ -56,6 +67,9 @@ export type HistoryEntry = {
   restaurantImage: string
   restaurantAddress: string
   restaurantPhone: string
+  // The booking this visit came from, so a past booking can offer its
+  // receipt. Null for receipts entered by hand.
+  reservationId: string | null
   // ISO date string of the visit.
   date: string
   currency: string

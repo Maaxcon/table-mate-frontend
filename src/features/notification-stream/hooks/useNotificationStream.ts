@@ -6,6 +6,7 @@ import { clearAuth } from "@/store/auth/authSlice"
 import type { NotificationEvent, WSNotificationMessage } from "../types"
 import { getStream, formatEvent } from "../types"
 import { notifyKitchenEvent } from "../kitchenEventBus"
+import { notifyWaiterCallEvent } from "../waiterCallEventBus"
 
 const DEFAULT_STREAM_LIMIT = 50
 const STREAM_LIMITS: Record<string, number> = {
@@ -15,6 +16,46 @@ const STREAM_LIMITS: Record<string, number> = {
 const BASE_DELAY_MS = 1000
 const MAX_DELAY_MS = 30000
 const DEFAULT_READ_IDS_STORAGE_KEY = "tablemate.staff.notifications.read"
+// Waiter-call dismissals are shared across every staff page (kitchen, waiter
+// view, ...) regardless of that page's own readStorageKey, so dismissing the
+// popup on one screen stops the alert from re-firing when another screen's
+// hook instance reconnects and gets the same event replayed to it.
+const WAITER_READ_IDS_STORAGE_KEY = "tablemate.staff.waiterCalls.read"
+
+function loadStoredIds(storage: Storage | null, key: string): string[] {
+  if (!storage) return []
+  try {
+    const raw = storage.getItem(key)
+    if (!raw) return []
+    const parsed = JSON.parse(raw)
+    if (!Array.isArray(parsed)) return []
+    return parsed.filter((id): id is string => typeof id === "string")
+  } catch {
+    return []
+  }
+}
+
+// `extraKnownIds` re-includes every waiter id this tab already believes is
+// read (not just the new one) on every write. Two tabs dismissing different
+// calls at nearly the same moment can otherwise race a plain read-then-write
+// and silently drop one tab's update; folding in what this tab already knows
+// makes the next write from either tab self-heal the lost id instead of
+// leaving it lost until that specific tab writes again.
+function addWaiterReadId(
+  storage: Storage | null,
+  eventId: string,
+  extraKnownIds: Iterable<string> = [],
+): void {
+  if (!storage) return
+  try {
+    const existing = new Set(loadStoredIds(storage, WAITER_READ_IDS_STORAGE_KEY))
+    for (const id of extraKnownIds) existing.add(id)
+    existing.add(eventId)
+    storage.setItem(WAITER_READ_IDS_STORAGE_KEY, JSON.stringify([...existing]))
+  } catch {
+    // ignore storage failures
+  }
+}
 
 function jitter(delay: number): number {
   return delay * (0.5 + Math.random() * 0.5)
@@ -68,23 +109,50 @@ export function useNotificationStream(options: NotificationStreamOptions = {}) {
 
   useEffect(() => {
     if (!storage) return
-    try {
-      const raw = storage.getItem(readStorageKey)
-      if (!raw) return
-      const parsed = JSON.parse(raw)
-      if (!Array.isArray(parsed)) return
-      const validIds = parsed.filter((id): id is string => typeof id === "string")
-      readIdsRef.current = new Set(validIds)
-      if (eventsRef.current.length > 0) {
-        const nextEvents = eventsRef.current.map((event) =>
-          readIdsRef.current.has(event.id) ? { ...event, read: true } : event,
-        )
-        eventsRef.current = nextEvents
-        setEvents(nextEvents)
-      }
-    } catch {
-      // ignore corrupted storage
+    // Waiter-call reads are merged in from a page-independent key: dismissing
+    // the popup on one staff screen must also silence it on every other one.
+    const ids = [
+      ...loadStoredIds(storage, readStorageKey),
+      ...loadStoredIds(storage, WAITER_READ_IDS_STORAGE_KEY),
+    ]
+    if (ids.length === 0) return
+    readIdsRef.current = new Set(ids)
+    if (eventsRef.current.length > 0) {
+      const nextEvents = eventsRef.current.map((event) =>
+        readIdsRef.current.has(event.id) ? { ...event, read: true } : event,
+      )
+      eventsRef.current = nextEvents
+      setEvents(nextEvents)
     }
+  }, [storage, readStorageKey])
+
+  // Picks up dismissals made in other tabs/windows as soon as they happen,
+  // instead of only at the next mount — narrows the window in which two
+  // tabs' near-simultaneous writes could otherwise race each other.
+  useEffect(() => {
+    if (!storage) return
+    const onStorage = (event: StorageEvent) => {
+      if (event.key !== readStorageKey && event.key !== WAITER_READ_IDS_STORAGE_KEY) return
+      const ids = [
+        ...loadStoredIds(storage, readStorageKey),
+        ...loadStoredIds(storage, WAITER_READ_IDS_STORAGE_KEY),
+      ]
+      let changed = false
+      for (const id of ids) {
+        if (!readIdsRef.current.has(id)) {
+          readIdsRef.current.add(id)
+          changed = true
+        }
+      }
+      if (!changed) return
+      const nextEvents = eventsRef.current.map((e) =>
+        readIdsRef.current.has(e.id) ? { ...e, read: true } : e,
+      )
+      eventsRef.current = nextEvents
+      setEvents(nextEvents)
+    }
+    window.addEventListener("storage", onStorage)
+    return () => window.removeEventListener("storage", onStorage)
   }, [storage, readStorageKey])
 
   const enforceStreamLimits = useCallback((eventsToClamp: NotificationEvent[]) => {
@@ -122,25 +190,37 @@ export function useNotificationStream(options: NotificationStreamOptions = {}) {
     [enforceStreamLimits],
   )
 
+  const knownWaiterReadIds = useCallback(
+    () =>
+      eventsRef.current
+        .filter((event) => event.stream === "waiter" && readIdsRef.current.has(event.id))
+        .map((event) => event.id),
+    [],
+  )
+
   const markEventRead = useCallback(
     (eventId: string) => {
       if (readIdsRef.current.has(eventId)) return
       readIdsRef.current.add(eventId)
       persistReadIds()
+      const target = eventsRef.current.find((event) => event.id === eventId)
+      if (target?.stream === "waiter") addWaiterReadId(storage, eventId, knownWaiterReadIds())
       const nextEvents = eventsRef.current.map((event) =>
         event.id === eventId ? { ...event, read: true } : event,
       )
       eventsRef.current = nextEvents
       setEvents(nextEvents)
     },
-    [persistReadIds],
+    [persistReadIds, storage, knownWaiterReadIds],
   )
 
   const markAllRead = useCallback(() => {
     let changed = false
+    const knownIds = knownWaiterReadIds()
     const nextEvents = eventsRef.current.map((event) => {
       if (event.read) return event
       changed = true
+      if (event.stream === "waiter") addWaiterReadId(storage, event.id, knownIds)
       return { ...event, read: true }
     })
     if (!changed) return
@@ -148,7 +228,7 @@ export function useNotificationStream(options: NotificationStreamOptions = {}) {
     nextEvents.forEach((event) => readIdsRef.current.add(event.id))
     setEvents(nextEvents)
     persistReadIds()
-  }, [persistReadIds])
+  }, [persistReadIds, storage, knownWaiterReadIds])
 
   const flushPendingEvents = useCallback(() => {
     flushTimeoutRef.current = null
@@ -157,8 +237,16 @@ export function useNotificationStream(options: NotificationStreamOptions = {}) {
     pendingEventsRef.current = []
     queue.forEach((event) => {
       const isNewEvent = upsertEvent(event)
-      if (isNewEvent && event.stream === "kitchen") {
+      // A reconnect (page switch, dropped socket, ...) replays recent events
+      // to the fresh hook instance, so "new to this instance" alone isn't
+      // enough — skip anything already dismissed, or every replay would
+      // re-trigger the alert.
+      const isUnread = !readIdsRef.current.has(event.id)
+      if (isNewEvent && isUnread && event.stream === "kitchen") {
         notifyKitchenEvent()
+      }
+      if (isNewEvent && isUnread && event.stream === "waiter") {
+        notifyWaiterCallEvent()
       }
     })
   }, [upsertEvent])

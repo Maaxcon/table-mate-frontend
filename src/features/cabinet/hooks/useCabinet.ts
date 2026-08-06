@@ -155,6 +155,7 @@ export function useCabinet(): UseCabinetResult {
       setProfile(updated)
       dispatch(
         setUser({
+          public_id: storeUserRef.current?.public_id ?? "",
           email: updated.email,
           firstName: updated.firstName,
           lastName: updated.lastName,
