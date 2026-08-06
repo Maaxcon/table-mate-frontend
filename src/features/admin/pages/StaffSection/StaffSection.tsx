@@ -32,7 +32,7 @@ function StaffSection() {
     const q = query.trim().toLowerCase()
     if (!q) return employees
     return employees.filter((e) => {
-      const name = `${e.first_name} ${e.last_name}`.toLowerCase()
+      const name = (e.staff_display_name ?? "").toLowerCase()
       return name.includes(q) || e.email.toLowerCase().includes(q)
     })
   }, [employees, query])

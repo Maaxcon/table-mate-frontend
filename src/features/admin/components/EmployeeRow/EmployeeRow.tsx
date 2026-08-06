@@ -36,7 +36,7 @@ function EmployeeRow({ employee, onUpdated, onRemoveRequested }: EmployeeRowProp
     }
   }
 
-  const name = `${employee.first_name} ${employee.last_name}`.trim() || employee.email
+  const name = employee.staff_display_name || employee.email
 
   // Enabling is safe and instant; disabling asks for confirmation first.
   const handleToggle = () => {

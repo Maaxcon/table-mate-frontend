@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { assignEmployee, createEmployee } from "@/features/admin/api/staff"
+import { createEmployee } from "@/features/admin/api/staff"
 import type { EmployeeRole } from "@/features/admin/types"
 import Modal from "@/features/admin/components/Modal"
 import TextField from "@/features/admin/components/TextField"
@@ -22,20 +22,16 @@ const ROLES: { value: EmployeeRole; label: string }[] = [
 function AddEmployeeModal({ onClose, onCreated }: AddEmployeeModalProps) {
   const toast = useToast()
   const [email, setEmail] = useState("")
-  const [firstName, setFirstName] = useState("")
-  const [lastName, setLastName] = useState("")
+  const [staffDisplayName, setStaffDisplayName] = useState("")
   const [phone, setPhone] = useState("")
   const [role, setRole] = useState<EmployeeRole>("waiter")
-  const [assignExisting, setAssignExisting] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const dirty =
     email.trim() !== "" ||
-    firstName.trim() !== "" ||
-    lastName.trim() !== "" ||
+    staffDisplayName.trim() !== "" ||
     phone.trim() !== "" ||
-    role !== "waiter" ||
-    assignExisting
+    role !== "waiter"
   const guard = useUnsavedGuard(dirty, onClose)
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -43,18 +39,13 @@ function AddEmployeeModal({ onClose, onCreated }: AddEmployeeModalProps) {
     setSubmitting(true)
     setError(null)
     try {
-      if (assignExisting) {
-        await assignEmployee({ email: email.trim(), role })
-      } else {
-        await createEmployee({
-          email: email.trim(),
-          first_name: firstName.trim(),
-          last_name: lastName.trim(),
-          phone: phone.trim(),
-          role,
-        })
-      }
-      toast.success(assignExisting ? "Staff role assigned" : "Employee added")
+      await createEmployee({
+        email: email.trim(),
+        staff_display_name: staffDisplayName.trim(),
+        phone: phone.trim(),
+        role,
+      })
+      toast.success("Employee added")
       onCreated()
       onClose()
     } catch (err) {
@@ -73,34 +64,16 @@ function AddEmployeeModal({ onClose, onCreated }: AddEmployeeModalProps) {
             value={email}
             onChange={setEmail}
             placeholder="name@example.com"
-            hint={assignExisting ? undefined : "They sign in with Google using this email."}
+            hint="Existing customer accounts keep their profile; this staff name is shown only to admins."
           />
-          <label className="admin-field">
-            <span className="admin-field__label">
-              <input
-                type="checkbox"
-                checked={assignExisting}
-                onChange={(e) => setAssignExisting(e.target.checked)}
-              />{" "}
-              Assign an existing user
-            </span>
-            <span className="admin-field__hint">Sends only their email and selected role.</span>
-          </label>
-          {!assignExisting && (
-            <>
-              <div className="admin-form__row">
-                <TextField label="First name" value={firstName} onChange={setFirstName} />
-                <TextField label="Last name" value={lastName} onChange={setLastName} />
-              </div>
-              <TextField
-                label="Phone"
-                type="tel"
-                value={phone}
-                onChange={setPhone}
-                placeholder="+380..."
-              />
-            </>
-          )}
+          <TextField label="Staff name" value={staffDisplayName} onChange={setStaffDisplayName} />
+          <TextField
+            label="Phone"
+            type="tel"
+            value={phone}
+            onChange={setPhone}
+            placeholder="+380..."
+          />
 
           <label className="admin-field">
             <span className="admin-field__label">Role</span>
@@ -123,9 +96,9 @@ function AddEmployeeModal({ onClose, onCreated }: AddEmployeeModalProps) {
             <button
               type="submit"
               className="admin-form__save"
-              disabled={submitting || !email.trim()}
+              disabled={submitting || !email.trim() || !staffDisplayName.trim()}
             >
-              {submitting ? "Saving…" : assignExisting ? "Assign staff role" : "Add employee"}
+              {submitting ? "Saving…" : "Add employee"}
             </button>
           </div>
         </form>

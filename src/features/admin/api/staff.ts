@@ -5,8 +5,7 @@ const EMPLOYEES_PATH = "/api/restaurants/employees/"
 
 export type NewEmployee = {
   email: string
-  first_name: string
-  last_name: string
+  staff_display_name: string
   phone: string
   role: EmployeeRole
 }

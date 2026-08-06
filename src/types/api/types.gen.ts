@@ -220,6 +220,7 @@ export type Employee = {
   readonly email: string
   first_name?: string
   last_name?: string
+  staff_display_name?: string
   phone?: string | null
   role?: RoleEnum
   is_active?: boolean
@@ -233,8 +234,7 @@ export type EmployeeAssign = {
 export type EmployeeCreate = {
   readonly public_id: string
   email: string
-  first_name?: string
-  last_name?: string
+  staff_display_name: string
   phone?: string | null
   role?: RoleEnum
   readonly is_active: boolean
@@ -658,6 +658,7 @@ export type PatchedEmployee = {
   readonly email?: string
   first_name?: string
   last_name?: string
+  staff_display_name?: string
   phone?: string | null
   role?: RoleEnum
   is_active?: boolean
@@ -1312,6 +1313,7 @@ export type EditorTableWritable = {
 export type EmployeeWritable = {
   first_name?: string
   last_name?: string
+  staff_display_name?: string
   phone?: string | null
   role?: RoleEnum
   is_active?: boolean
@@ -1319,8 +1321,7 @@ export type EmployeeWritable = {
 
 export type EmployeeCreateWritable = {
   email: string
-  first_name?: string
-  last_name?: string
+  staff_display_name: string
   phone?: string | null
   role?: RoleEnum
 }
@@ -1597,6 +1598,7 @@ export type PatchedEditorTableWritable = {
 export type PatchedEmployeeWritable = {
   first_name?: string
   last_name?: string
+  staff_display_name?: string
   phone?: string | null
   role?: RoleEnum
   is_active?: boolean
