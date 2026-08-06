@@ -39,8 +39,8 @@
 /* Desktop: a single bordered table — header + rows share one column grid. */
 .staff-table {
   /* name | email | role | action */
-  --staff-cols: minmax(0, 1.1fr) minmax(0, 1.5fr) 152px 96px;
-  max-width: 720px;
+  --staff-cols: minmax(0, 1.1fr) minmax(0, 1.5fr) 152px 184px;
+  max-width: 800px;
   border: 1px solid var(--color-border-default);
   border-radius: 14px;
   overflow: hidden;
@@ -99,7 +99,10 @@
 }
 
 .staff-row__controls {
-  display: contents;
+  grid-column: 3 / -1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .staff-row__name {
@@ -125,7 +128,8 @@
 }
 
 .staff-row__select,
-.staff-row__toggle {
+.staff-row__toggle,
+.staff-row__remove {
   height: 36px;
   border: 1px solid var(--color-border-default);
   border-radius: 9px;
@@ -138,6 +142,7 @@
 }
 
 .staff-row__select {
+  flex: 0 0 152px;
   padding: 0 10px;
   color: var(--color-text-primary);
 }
@@ -148,8 +153,15 @@
   font-weight: 600;
 }
 
+.staff-row__remove {
+  padding: 0 12px;
+  color: var(--color-error-text);
+  font-weight: 600;
+}
+
 .staff-row__select:hover:not(:disabled),
-.staff-row__toggle:hover:not(:disabled) {
+.staff-row__toggle:hover:not(:disabled),
+.staff-row__remove:hover:not(:disabled) {
   border-color: var(--color-border-strong);
 }
 
@@ -157,14 +169,20 @@
   background: var(--color-bg-surface-subtle);
 }
 
+.staff-row__remove:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-error-text) 8%, var(--color-bg-surface));
+}
+
 .staff-row__select:focus-visible,
-.staff-row__toggle:focus-visible {
+.staff-row__toggle:focus-visible,
+.staff-row__remove:focus-visible {
   outline: 2px solid var(--color-border-strong);
   outline-offset: 2px;
 }
 
 .staff-row__select:disabled,
-.staff-row__toggle:disabled {
+.staff-row__toggle:disabled,
+.staff-row__remove:disabled {
   opacity: 0.6;
   cursor: default;
 }
@@ -269,6 +287,13 @@
     height: auto;
     min-height: 44px;
     min-width: 96px;
+    font-size: 14px;
+  }
+
+  .staff-row__remove {
+    height: auto;
+    min-height: 44px;
+    min-width: 78px;
     font-size: 14px;
   }
 

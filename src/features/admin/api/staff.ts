@@ -32,3 +32,9 @@ export function updateEmployee(publicId: string, patch: EmployeePatch): Promise<
     errorMessage: "Could not update employee.",
   })
 }
+
+export function removeEmployee(publicId: string): Promise<void> {
+  return api.del(`${EMPLOYEES_PATH}${publicId}/`, {
+    errorMessage: "Could not remove employee.",
+  })
+}

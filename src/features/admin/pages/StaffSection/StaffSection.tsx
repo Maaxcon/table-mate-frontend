@@ -1,17 +1,31 @@
 import { useMemo, useState } from "react"
 import { LuPlus } from "react-icons/lu"
+import { removeEmployee as removeStaffEmployee } from "@/features/admin/api/staff"
+import ConfirmDialog from "@/features/admin/components/ConfirmDialog"
 import { useEmployees } from "@/features/admin/hooks/useEmployees"
 import AddEmployeeModal from "@/features/admin/components/AddEmployeeModal"
 import EmployeeRow from "@/features/admin/components/EmployeeRow"
 import SearchBox from "@/features/admin/components/SearchBox"
+import { useToast } from "@/features/admin/hooks/toastContext"
 import { useAdminStrings } from "@/features/admin/strings"
+import type { AdminEmployee } from "@/features/admin/types"
 import "@/features/admin/components/styles/SectionPlaceholder.css"
 import "./staff.css"
 
 function StaffSection() {
-  const { employees, loading, error, reload, applyUpdate } = useEmployees()
+  const {
+    employees,
+    loading,
+    error,
+    reload,
+    applyUpdate,
+    removeEmployee: removeFromList,
+  } = useEmployees()
+  const toast = useToast()
   const [adding, setAdding] = useState(false)
   const [query, setQuery] = useState("")
+  const [employeeToRemove, setEmployeeToRemove] = useState<AdminEmployee | null>(null)
+  const [removing, setRemoving] = useState(false)
   const strings = useAdminStrings()
 
   const filtered = useMemo(() => {
@@ -22,6 +36,22 @@ function StaffSection() {
       return name.includes(q) || e.email.toLowerCase().includes(q)
     })
   }, [employees, query])
+
+  const confirmRemove = async () => {
+    if (!employeeToRemove) return
+
+    setRemoving(true)
+    try {
+      await removeStaffEmployee(employeeToRemove.public_id)
+      removeFromList(employeeToRemove.public_id)
+      setEmployeeToRemove(null)
+      toast.success("Employee removed")
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not remove employee.")
+    } finally {
+      setRemoving(false)
+    }
+  }
 
   return (
     <section className="admin-section">
@@ -63,7 +93,12 @@ function StaffSection() {
               </div>
               <ul className="staff-list">
                 {filtered.map((e) => (
-                  <EmployeeRow key={e.public_id} employee={e} onUpdated={applyUpdate} />
+                  <EmployeeRow
+                    key={e.public_id}
+                    employee={e}
+                    onUpdated={applyUpdate}
+                    onRemoveRequested={setEmployeeToRemove}
+                  />
                 ))}
               </ul>
             </div>
@@ -72,6 +107,17 @@ function StaffSection() {
       )}
 
       {adding && <AddEmployeeModal onClose={() => setAdding(false)} onCreated={reload} />}
+      {employeeToRemove && (
+        <ConfirmDialog
+          title="Remove employee"
+          message={`Remove ${employeeToRemove.email} from this restaurant? Their account will remain available as a customer.`}
+          confirmLabel="Remove"
+          tone="danger"
+          busy={removing}
+          onConfirm={() => void confirmRemove()}
+          onClose={() => setEmployeeToRemove(null)}
+        />
+      )}
     </section>
   )
 }

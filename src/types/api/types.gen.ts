@@ -225,6 +225,11 @@ export type Employee = {
   is_active?: boolean
 }
 
+export type EmployeeAssign = {
+  email: string
+  role: RoleEnum
+}
+
 export type EmployeeCreate = {
   readonly public_id: string
   email: string
@@ -3663,6 +3668,25 @@ export type RestaurantsEmployeesCreateResponses = {
 export type RestaurantsEmployeesCreateResponse =
   RestaurantsEmployeesCreateResponses[keyof RestaurantsEmployeesCreateResponses]
 
+export type RestaurantsEmployeesDestroyData = {
+  body?: never
+  path: {
+    public_id: string
+  }
+  query?: never
+  url: "/api/restaurants/employees/{public_id}/"
+}
+
+export type RestaurantsEmployeesDestroyResponses = {
+  /**
+   * No response body
+   */
+  204: void
+}
+
+export type RestaurantsEmployeesDestroyResponse =
+  RestaurantsEmployeesDestroyResponses[keyof RestaurantsEmployeesDestroyResponses]
+
 export type RestaurantsEmployeesRetrieveData = {
   body?: never
   path: {
@@ -3694,6 +3718,20 @@ export type RestaurantsEmployeesPartialUpdateResponses = {
 
 export type RestaurantsEmployeesPartialUpdateResponse =
   RestaurantsEmployeesPartialUpdateResponses[keyof RestaurantsEmployeesPartialUpdateResponses]
+
+export type RestaurantsEmployeesAssignCreateData = {
+  body: EmployeeAssign
+  path?: never
+  query?: never
+  url: "/api/restaurants/employees/assign/"
+}
+
+export type RestaurantsEmployeesAssignCreateResponses = {
+  200: Employee
+}
+
+export type RestaurantsEmployeesAssignCreateResponse =
+  RestaurantsEmployeesAssignCreateResponses[keyof RestaurantsEmployeesAssignCreateResponses]
 
 export type RestaurantsRestaurantSettingsListData = {
   body?: never

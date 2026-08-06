@@ -13,9 +13,10 @@ const ROLES: { value: EmployeeRole; label: string }[] = [
 type EmployeeRowProps = {
   employee: AdminEmployee
   onUpdated: (updated: AdminEmployee) => void
+  onRemoveRequested: (employee: AdminEmployee) => void
 }
 
-function EmployeeRow({ employee, onUpdated }: EmployeeRowProps) {
+function EmployeeRow({ employee, onUpdated, onRemoveRequested }: EmployeeRowProps) {
   const toast = useToast()
   const [saving, setSaving] = useState(false)
   const [confirmDisable, setConfirmDisable] = useState(false)
@@ -77,6 +78,14 @@ function EmployeeRow({ employee, onUpdated }: EmployeeRowProps) {
           onClick={handleToggle}
         >
           {employee.is_active ? "Disable" : "Enable"}
+        </button>
+        <button
+          type="button"
+          className="staff-row__remove"
+          disabled={saving}
+          onClick={() => onRemoveRequested(employee)}
+        >
+          Remove
         </button>
       </div>
 

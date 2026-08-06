@@ -11,6 +11,7 @@ type UseEmployeesResult = {
   error: string | null
   reload: () => void
   applyUpdate: (updated: AdminEmployee) => void
+  removeEmployee: (publicId: string) => void
 }
 
 /** Loads the staff of the admin's restaurant (scoped by the auth context). */
@@ -31,5 +32,11 @@ export function useEmployees(): UseEmployeesResult {
     [setData],
   )
 
-  return { employees: data ?? [], loading, error, reload, applyUpdate }
+  const removeEmployee = useCallback(
+    (publicId: string) =>
+      setData((prev) => (prev ?? []).filter((employee) => employee.public_id !== publicId)),
+    [setData],
+  )
+
+  return { employees: data ?? [], loading, error, reload, applyUpdate, removeEmployee }
 }
